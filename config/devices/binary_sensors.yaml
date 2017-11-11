@@ -1,0 +1,34 @@
+- platform: template
+  sensors:
+    binnen_warm:
+      entity_id:
+        - sensor.temp_living
+      value_template: "{{ states.sensor.temp_living | float > 25 }}"
+    buiten_warm:
+      entity_id:
+        - sensor.garage_5_0
+      value_template: "{{ states('sensor.garage_5_0') | float > 25 }}"
+    buiten_fris_genoeg:
+      entity_id:
+        - sensor.garage_5_0
+      value_template: "{{ states('sensor.garage_5_0') | float < 24 }}"
+
+- platform: iss
+
+- platform: netatmo
+  presence_sensors:
+    - Outdoor human
+    # - Outdoor animal
+
+- platform: device_tracker_sensor
+  entities:
+    - device_tracker.edgegiel
+    - device_tracker.fpod
+    - device_tracker.npod
+    - device_tracker.garage_mint
+    - device_tracker.imac_24
+    - device_tracker.imac_5k
+    - device_tracker.noorpad
+    - device_tracker.fienpad
+    - device_tracker.macbook
+    - device_tracker.mphone

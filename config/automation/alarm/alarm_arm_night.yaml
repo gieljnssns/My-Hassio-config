@@ -1,0 +1,26 @@
+alias: 'Alarm arm night'
+
+trigger:
+  platform: state
+  entity_id: media_player.philips_tv
+  from: 'on'
+  to: 'off'
+condition:
+  condition: and
+  conditions:
+    - condition: time
+      after: '20:15:00'
+      before: '04:00:00'
+    - condition: or
+      conditions:
+        - condition: state
+          entity_id: input_boolean.gielthuis
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.martinethuis
+          state: 'on'
+action:
+  service: alarm_control_panel.alarm_arm_home
+  entity_id: alarm_control_panel.ha_alarm
+  data:
+    code: !secret alarm_code

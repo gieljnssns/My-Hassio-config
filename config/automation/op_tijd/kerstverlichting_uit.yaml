@@ -1,0 +1,18 @@
+alias: 'Kerstverlichting Uit tijd'
+trigger:
+  - platform: time
+    at: '23:00'
+condition:
+  - condition: time
+    weekday:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+      - sat
+      - sun
+action:
+  - service: input_boolean.turn_off
+    entity_id:
+      - input_boolean.kerstverlichting

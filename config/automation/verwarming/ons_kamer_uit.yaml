@@ -1,0 +1,14 @@
+# - {"event": "Slaapkamer_uit"}
+
+alias: 'Verwarming Slaapkamer Uit'
+
+trigger:
+  - platform: time
+    at: '00:30'
+action:
+  - service: automation.turn_off
+    entity_id: automation.verwarming_bij_beweging_slaapkamer
+  - service: climate.set_temperature
+    entity_id: climate.slaapkamer
+    data:
+      temperature: 10

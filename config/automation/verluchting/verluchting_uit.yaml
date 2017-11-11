@@ -1,0 +1,17 @@
+# - {"event": "Verluchting_uit"}
+
+alias: 'Verluchting Uit'
+trigger:
+  - platform: time
+    at: '13:00'
+  - platform: time
+    at: '02:00'
+  - platform: time
+    at: '18:00'
+condition:
+    condition: state
+    entity_id: input_boolean.verluchting_afkoeling
+    state: 'off'
+action:
+  - service: switch.turn_off
+    entity_id: switch.verluchting

@@ -1,0 +1,19 @@
+alias: Licht Slaapkamer
+trigger:
+  - platform: state
+    entity_id: light.slaapkamer
+    from: 'off'
+    to: 'on'
+condition:
+  - condition: state
+    entity_id: script.timer_slaapkamer
+    state: 'off'
+action:
+  - service: light.turn_on
+    entity_id: light.slaapkamer
+    data:
+      # xy_color: [0.4448, 0.4066]
+      effect: random
+      brightness: 240
+  - service: script.turn_on
+    entity_id: script.timer_slaapkamer

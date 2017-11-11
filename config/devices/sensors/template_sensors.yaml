@@ -1,0 +1,111 @@
+- platform: template
+  sensors:
+    verluchting:
+      entity_id:
+        - switch.verluchting
+      value_template: >-
+            {%- if is_state("switch.verluchting", "off") %}
+                Uit
+            {% elif is_state("switch.verluchting", "on") %}
+                Aan
+            {% else %}
+                ??
+            {%- endif %}
+    badkamer:
+      entity_id:
+        - switch.verwarming_badkamer
+      value_template: >-
+            {%- if is_state("switch.verwarming_badkamer", "off") %}
+                Uit
+            {% elif is_state("switch.verwarming_badkamer", "on") %}
+                Aan
+            {% else %}
+                failed
+            {%- endif %}
+    noor:
+      entity_id:
+        - switch.verwarming_noor
+      value_template: >-
+            {%- if is_state("switch.verwarming_noor", "off") %}
+                Uit
+            {% elif is_state("switch.verwarming_noor", "on") %}
+                Aan
+            {% else %}
+                failed
+            {%- endif %}
+    fien:
+      entity_id:
+        - switch.verwarming_fien
+      value_template: >-
+            {%- if is_state("switch.verwarming_fien", "off") %}
+                Uit
+            {% elif is_state("switch.verwarming_fien", "on") %}
+                Aan
+            {% else %}
+                failed
+            {%- endif %}
+    slaapkamer:
+      entity_id:
+        - switch.verwarming_slaapkamer
+      value_template: >-
+            {%- if is_state("switch.verwarming_slaapkamer", "off") %}
+                Uit
+            {% elif is_state("switch.verwarming_slaapkamer", "on") %}
+                Aan
+            {% else %}
+                failed
+            {%- endif %}
+    opladers:
+      entity_id:
+        - input_boolean.opladers
+      value_template: >-
+            {%- if is_state("input_boolean.opladers", "off") %}
+                Uit
+            {% elif is_state("input_boolean.opladers", "on") %}
+                Aan
+            {% else %}
+                failed
+            {%- endif %}
+    wc:
+      entity_id:
+        - switch.verwarming_wc
+      value_template: >-
+            {%- if is_state("switch.verwarming_wc", "off") %}
+                Uit
+            {% elif is_state("switch.verwarming_wc", "on") %}
+                Aan
+            {% else %}
+                failed
+            {%- endif %}
+    bureau:
+      entity_id:
+        - input_boolean.verwarming_bureau
+      value_template: >-
+            {%- if is_state("input_boolean.verwarming_bureau", "off") %}
+                Uit
+            {% elif is_state("input_boolean.verwarming_bureau", "on") %}
+                Aan
+            {% else %}
+                failed
+            {%- endif %}
+
+    temp_living:
+      entity_id:
+        - climate.living
+      value_template: "{{ states.climate.living.attributes.current_temperature }}"
+      unit_of_measurement: '°C'
+
+    next_rising:
+      entity_id:
+        - binary_sensor.iss
+      value_template: "{{ states.binary_sensor.iss.attributes.next_rise }}"
+
+    people_in_space:
+      entity_id:
+        - binary_sensor.iss
+      value_template: "{{ states.binary_sensor.iss.attributes.number_of_people_in_space }}"
+
+    verwarming_beneden:
+      entity_id:
+        - climate.living
+      value_template: "{{states.climate.living.attributes.operation_mode}}"

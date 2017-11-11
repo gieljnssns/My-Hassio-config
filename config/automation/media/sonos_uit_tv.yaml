@@ -1,0 +1,19 @@
+# Sonos uit als tv op springt
+alias: 'sonos uit tv'
+trigger:
+  platform: state
+  entity_id: media_player.philips_tv
+  from: 'off'
+  to: 'on'
+condition:
+  condition: and
+  conditions:
+    - condition: time
+      after: '12:15:00'
+      before: '23:00:00'
+    - condition: state
+      entity_id: media_player.keuken
+      state: playing
+action:
+  service: media_player.media_pause
+  entity_id: media_player.keuken

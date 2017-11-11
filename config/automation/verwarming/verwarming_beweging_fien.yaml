@@ -1,0 +1,18 @@
+alias: Verwarming bij beweging Fien
+trigger:
+  - platform: state
+    entity_id: binary_sensor.fien_3_3
+    to: 'on'
+  - platform: state
+    entity_id: binary_sensor.fien_3_3
+    to: 'off'
+action:
+  service: climate.set_temperature
+  data_template:
+    entity_id: climate.fien
+    temperature: >
+      {% if is_state('binary_sensor.fien_3_3', 'on') %}
+        {{states('input_select.setpunt_fien')}}
+      {% elif is_state('binary_sensor.fien_3_3', 'off') %}
+        10
+      {% endif %}

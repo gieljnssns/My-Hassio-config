@@ -1,0 +1,32 @@
+alias: 'sonos smorgens aan'
+trigger:
+  platform: state
+  entity_id: binary_sensor.keuken_6_3
+  from: 'off'
+  to: 'on'
+condition:
+  condition: and
+  conditions:
+    - condition: time
+      after: '06:45:00'
+      before: '12:00:00'
+    - condition: state
+      entity_id: media_player.keuken
+      state: paused
+      for:
+        hours: 5
+    - condition: or
+      conditions:
+        - condition: state
+          entity_id: input_boolean.gielthuis
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.martinethuis
+          state: 'on'
+action:
+  - service: media_player.volume_set
+    data_template:
+      entity_id: media_player.keuken
+      volume_level: 0.20
+  - service: media_player.media_play
+    entity_id: media_player.keuken

@@ -1,0 +1,209 @@
+####################################################
+#                                                  #
+#                  Basic Settings                  #
+#                                                  #
+####################################################
+
+###  Global configuration  ###
+homeassistant:
+  # Name of the location where Home Assistant is running
+  name: Home
+  # Location required to calculate the time the sun rises and sets
+  latitude: !secret latitude
+  longitude: !secret longitude
+  # Impacts weather/sunrise data (altitude above sea level)
+  elevation: !secret elevation
+  # 'metric' for Metric, 'imperial' for Imperial
+  unit_system: metric
+  # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time_zone: Europe/Brussels
+  customize: !include_dir_merge_named customized
+
+###   HTTP  ###
+http:
+  api_password: !secret http_password
+  ssl_certificate: !secret ssl_certificate
+  ssl_key: !secret ssl_key
+  base_url: !secret base_url
+  ip_ban_enabled: True
+  login_attempts_threshold: 5
+
+####################################################
+#                                                  #
+#                     Includes                     #
+#                                                  #
+####################################################
+
+###  Devices  ###
+device_tracker: !include devices/device_trackers.yaml
+media_player: !include devices/media_players.yaml
+switch: !include devices/switches.yaml
+sensor: !include_dir_merge_list devices/sensors
+light: !include devices/light.yaml
+binary_sensor: !include devices/binary_sensors.yaml
+climate: !include devices/climate.yaml
+input_select: !include devices/input_select.yaml
+input_number: !include devices/input_numbers.yaml
+input_boolean: !include devices/input_boolean.yaml
+camera: !include devices/cameras.yaml
+alarm_control_panel: !include devices/alarm.yaml
+weather: !include devices/weather.yaml
+weblink: !include devices/weblink.yaml
+history_graph: !include devices/history_graph.yaml
+# image_processing: !include devices/image_processing.yaml
+
+### Groups ###
+group: !include_dir_merge_named groups/
+
+###  Scenes  ###
+scene: !include scenes.yaml
+
+### Scripts ###
+script: !include scripts.yaml
+
+### Automation ###
+automation old: !include_dir_list automation
+automation: !include automations.yaml
+
+### Notification ###
+notify: !include notify.yaml
+
+###  Panels  ###
+panel_iframe: !include panels/iframe.yaml
+# panel_custom: !include panels/panel_custom.yaml
+
+###  Logbook  ###
+logbook: !include logbook.yaml
+
+###  History  ###
+history: !include history.yaml
+
+###  Frontend  ###
+frontend:
+  themes: !include themes.yaml
+
+###  Logger  ###
+# logger: !include logger.yaml
+
+####################################################
+#                                                  #
+#                     Hubs                         #
+#                                                  #
+####################################################
+netatmo:
+  api_key: !secret netatmo_api_key
+  secret_key: !secret netatmo_secret_key
+  username: !secret netatmo_username
+  password: !secret netatmo_password
+  discovery: False
+
+smappee:
+    host: !secret smappee_host
+    client_id: !secret smappee_client_id
+    client_secret: !secret smappee_client_secret
+    username: !secret smappee_username
+    password: !secret smappee_password
+    host_password: !secret smappee_host_password
+
+mysensors:
+  gateways:
+    - device: !secret mysensors_device
+      persistence_file: !secret mysensors_persistence_file
+
+###  If This Then That ###
+ifttt:
+  key: !secret ifttt_key
+
+###  Apple Tv  ###
+# apple_tv:
+#   - host: !secret apple_tv_host
+#     login_id: !secret apple_tv_login_id
+#     name: Apple Tv
+#     # start_off: START_OFF_1
+#     credentials: !secret apple_tv_credentials
+
+###  Google Kalender  ###
+google:
+  client_id: !secret google_client_id
+  client_secret: !secret google_client_secret
+
+####################################################
+#                                                  #
+#                     Enables                      #
+#                                                  #
+####################################################
+
+###  Hassio  ###
+hassio:
+
+### Discover some devices automatically  ###
+discovery:
+
+###  Config  ###
+config:
+
+###  IOS  ###
+ios:
+  push:
+    categories:
+      - name: Alarm 79
+        identifier: 'ALARM_79'
+        actions:
+          - identifier: 'SOUND_ALARM'
+            title: 'Alarm opzetten'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: yes
+            behavior: 'default'
+          - identifier: 'DISARM_ALARM_79'
+            title: 'Alarm afzetten'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: no
+            behavior: 'default'
+
+###  Recorder  ###
+recorder:
+  purge_interval: 7
+  purge_keep_days: 31
+  db_url: !secret mysql    #mysql://dbuser:password@localhost/dbname
+
+###  Sun  ###
+sun:
+
+###  Browser  ###
+browser:
+
+###  Allows you to issue voice commands from the frontend  ###
+#conversation:
+
+###  Checks for available updates  ###
+updater:
+  include_used_components: true
+
+####################################################
+#                                                  #
+#                     Zones                        #
+#                                                  #
+####################################################
+
+zone:
+  name: Home
+  latitude: !secret latitude
+  longitude: !secret longitude
+  radius: 10
+  icon: mdi:castle
+
+zone 2:
+  name: Werk Giel
+  latitude: !secret latitude_werk_giel
+  longitude: !secret longitude_werk_giel
+  radius: 270
+  icon: mdi:worker
+
+zone 3:
+  name: Werk Martine
+  latitude: !secret latitude_werk_martine
+  longitude: !secret longitude_werk_martine
+  radius: 100
+  icon: mdi:worker

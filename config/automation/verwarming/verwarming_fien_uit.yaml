@@ -1,0 +1,14 @@
+# - {"event": "Fien_uit"}
+
+alias: 'Verwarming Fien Uit'
+
+trigger:
+  - platform: time
+    at: '21:00'
+action:
+  - service: automation.turn_off
+    entity_id: automation.verwarming_bij_beweging_fien
+  - service: climate.set_temperature
+    entity_id: climate.fien
+    data:
+      temperature: 10

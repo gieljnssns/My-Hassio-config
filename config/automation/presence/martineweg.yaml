@@ -1,0 +1,14 @@
+alias: 'Martine niet Thuis'
+# initial_state: 'on'
+trigger:
+  - platform: state
+    entity_id: device_tracker.mphone
+    to: 'not_home'
+    for: '00:04:00'
+condition:
+  - condition: state
+    entity_id: input_boolean.martinethuis
+    state: 'on'
+action:
+  - service: homeassistant.turn_off
+    entity_id: input_boolean.martinethuis
