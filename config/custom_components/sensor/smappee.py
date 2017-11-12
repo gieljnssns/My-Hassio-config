@@ -101,19 +101,21 @@ class SmappeeSensor(Entity):
             # consumption = data.get('consumptions')[-1]
             try:
                 consumption = data2.get('consumptions')[-1]
+                self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._state = round(consumption.get('solar') / 1000, 2)
             except IndexError:
                 consumption = 0
-            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self._state = round(consumption.get('solar') / 1000, 2)
+                self._state = 0
         elif SENSOR_TYPES[self._sensor][0] == 'Current Today':
             # data = self._smappee.get_consumption(self._location_id, aggregation=3, delta=1440)
             # consumption = data.get('consumptions')[-1]
             try:
                 consumption = data2.get('consumptions')[-1]
+                self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._state = round(consumption.get('consumption') / 1000, 2)
             except IndexError:
                 consumption = 0
-            self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self._state = round(consumption.get('consumption') / 1000, 2)
+                self._state = 0
         elif SENSOR_TYPES[self._sensor][0] is 'Current':
             # data = self._smappee.load_instantaneous()
             # value1 = [float(i['value']) for i in data if i['key'].endswith('phase0ActivePower')]
