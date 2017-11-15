@@ -14,47 +14,12 @@ condition:
       state: 'armed_home'
 action:
   - service: notify.ios
-    data_template:
-      message: "Der is iemand in den hof!!!"
-      data:
-        push:
-          badge: 5
-          category: camera
-        entity_id: camera.den_hof
-  # - service: notify.ios
-  #   data_template:
-  #     message: "Der is iemand in den hof!!!"
-  #     data:
-  #       push:
-  #         badge: 5
-  #         category: camera
-  #       entity_id: camera.den_hof
-
-  - service: notify.ios
     data:
-      message: 'Volk in den hof!'
+      message: "Bezoek! -- Alarm opzetten?"
       data:
         push:
           badge: 0
-          category: "ALARM_79"
-
-# - alias: "Alarme déclenché manuellement"
-#   trigger:
-#       platform: event
-#       event_type: ios.notification_action_fired
-#       event_data:
-#           actionName: 'FIRE_ALARM'
-#   action:
-#       service: notify.pushbullet
-#       data:
-#           message: "Test"
-
-# - alias: "Désactiver alarm"
-#   trigger:
-#       platform: event
-#       event_type: ios.notification_action_fired
-#       event_data:
-#           actionName: 'CANCEL_ALARM'
-#   action:
-#       service: alarm_control_panel.alarm_disarm
-#       entity_id: alarm_control_panel.ha_alarm
+          category: 'camera'
+        entity_id: camera.den_hof
+        action_data:
+          entity_id: input_boolean.alarm_test
