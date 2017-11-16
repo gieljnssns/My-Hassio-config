@@ -8,13 +8,16 @@ condition:
   condition: and
   conditions:
     - condition: time
-      after: '07:30:00'
+      after: '07:20:00'
       before: '12:00:00'
     - condition: state
       entity_id: media_player.keuken
       state: paused
       for:
         hours: 5
+    - condition: state
+      entity_id: binary_sensor.v_werken
+      state: 'on'
     - condition: or
       conditions:
         - condition: state

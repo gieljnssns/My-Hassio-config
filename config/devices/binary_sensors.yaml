@@ -4,21 +4,110 @@
       entity_id:
         - sensor.temp_living
       value_template: "{{ states.sensor.temp_living | float > 25 }}"
+
     buiten_warm:
       entity_id:
         - sensor.garage_5_0
       value_template: "{{ states('sensor.garage_5_0') | float > 25 }}"
+
     buiten_fris_genoeg:
       entity_id:
         - sensor.garage_5_0
       value_template: "{{ states('sensor.garage_5_0') | float < 24 }}"
+
+    v_vroege:
+      entity_id:
+        - calendar.vroege
+      value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(now()) | float < 21600}}"
+
+    v_late:
+      entity_id:
+        - calendar.late
+      value_template: "{{as_timestamp(states.calendar.late.attributes.start_time) - as_timestamp(now()) | float < 50400}}"
+
+    v_nacht:
+      entity_id:
+        - calendar.nacht
+      value_template: "{{as_timestamp(states.calendar.nacht.attributes.start_time) - as_timestamp(now()) | float < 79200}}"
+
+    v_w_nacht:
+      entity_id:
+        - calendar.w_nacht
+      value_template: "{{as_timestamp(states.calendar.w_nacht.attributes.start_time) - as_timestamp(now()) | float < 79200}}"
+
+    v_w_dag:
+      entity_id:
+        - calendar.w_dag
+      value_template: "{{as_timestamp(states.calendar.w_dag.attributes.start_time) - as_timestamp(now()) | float < 21600}}"
+
+    m_vroege:
+      entity_id:
+        - calendar.vroege
+      value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(now()) | float < 108000}}"
+
+    m_late:
+      entity_id:
+        - calendar.late
+      value_template: "{{as_timestamp(states.calendar.late.attributes.start_time) - as_timestamp(now()) | float < 136.800}}"
+
+    m_nacht:
+      entity_id:
+        - calendar.nacht
+      value_template: "{{as_timestamp(states.calendar.nacht.attributes.start_time) - as_timestamp(now()) | float < 165.600}}"
+
+    m_w_nacht:
+      entity_id:
+        - calendar.w_nacht
+      value_template: "{{as_timestamp(states.calendar.w_nacht.attributes.start_time) - as_timestamp(now()) | float < 165.600}}"
+
+    m_w_dag:
+      entity_id:
+        - calendar.w_dag
+      value_template: "{{as_timestamp(states.calendar.w_dag.attributes.start_time) - as_timestamp(now()) | float < 108000}}"
+
+    v_monnikenheide:
+      entity_id:
+        - calendar.monnikenheide
+      value_template: "{{as_timestamp(states.calendar.monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 28800}}"
+
+    m_monnikenheide:
+      entity_id:
+        - calendar.monnikenheide
+      value_template: "{{as_timestamp(states.calendar.monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 115200}}"
+
+    v_werken:
+      entity_id:
+        - binary_sensor.v_late
+        - binary_sensor.v_monnikenheide
+        - binary_sensor.v_vroege
+        - binary_sensor.v_w_dag
+      value_template: "{{ is_state('binary_sensor.v_late', 'on')
+             or is_state('binary_sensor.v_monnikenheide', 'on')
+             or is_state('binary_sensor.v_vroege', 'on')
+             or is_state('binary_sensor.v_w_dag', 'on') }}"
+
+    m_werken:
+      entity_id:
+        - binary_sensor.m_late
+        - binary_sensor.m_monnikenheide
+        - binary_sensor.m_nacht
+        - binary_sensor.m_vroege
+        - binary_sensor.m_w_dag
+        - binary_sensor.m_w_nacht
+      value_template: "{{ is_state('binary_sensor.m_late', 'on')
+             or is_state('binary_sensor.m_monnikenheide', 'on')
+             or is_state('binary_sensor.m_nacht', 'on')
+             or is_state('binary_sensor.m_vroege', 'on')
+             or is_state('binary_sensor.m_w_dag', 'on')
+             or is_state('binary_sensor.m_w_nacht', 'on') }}"
 
 - platform: iss
 
 - platform: netatmo
   presence_sensors:
     - Outdoor human
-    # - Outdoor animal
+    - Outdoor animal
+    - Outdoor vehicle
 
 - platform: device_tracker_sensor
   entities:
