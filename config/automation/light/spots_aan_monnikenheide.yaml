@@ -1,0 +1,18 @@
+alias: Spots aan monnikenheide
+trigger:
+  platform: time
+  at: '06:30'
+condition:
+  condition: and
+  conditions:
+    - condition: state
+      entity_id: binary_sensor.v_monnikenheide
+      state: 'on'
+    - condition: sun
+      before: sunrise
+      before_offset: "-00:30:00"
+action:
+  - service: light.turn_on
+    entity_id: group.spots_tv
+    data:
+      profile: reading

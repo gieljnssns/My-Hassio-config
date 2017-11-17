@@ -3,19 +3,21 @@ trigger:
   - platform: time
     at: '06:00'
 condition:
-  - condition: time
-    weekday:
-      - mon
-      - tue
-      - wed
-      - thu
-      - fri
-      - sat
-      - sun
-  - condition: state
-    entity_id: input_boolean.op_verlof
-    state: 'off'
+  condition: and
+  conditions:
+    - condition: time
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+        - sat
+        - sun
+    - condition: state
+      entity_id: input_boolean.op_verlof
+      state: 'off'
 action:
-  - service: input_boolean.turn_on
+  - service: switch.turn_on
     entity_id:
-      - input_boolean.kerstverlichting
+      - switch.kerstverlichting
