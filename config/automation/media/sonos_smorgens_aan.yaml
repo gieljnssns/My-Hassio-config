@@ -15,9 +15,12 @@ condition:
       state: paused
       for:
         hours: 5
-    - condition: state
-      entity_id: binary_sensor.v_werken
-      state: 'on'
+    - condition: or
+      conditions:
+        - condition: template
+          value_template: "{{as_timestamp(states.calendar.monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 26.640}}"
+        - condition: template
+          value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(now()) | float < 108000}}"
     - condition: or
       conditions:
         - condition: state

@@ -43,12 +43,12 @@ light: !include devices/light.yaml
 binary_sensor: !include devices/binary_sensors.yaml
 climate: !include devices/climate.yaml
 input_select: !include devices/input_select.yaml
-input_number: !include devices/input_numbers.yaml
+# input_number: !include devices/input_numbers.yaml
 input_boolean: !include devices/input_boolean.yaml
 camera: !include devices/cameras.yaml
 alarm_control_panel: !include devices/alarm.yaml
 weather: !include devices/weather.yaml
-weblink: !include devices/weblink.yaml
+# weblink: !include devices/weblink.yaml
 history_graph: !include devices/history_graph.yaml
 # image_processing: !include devices/image_processing.yaml
 
@@ -59,7 +59,7 @@ group: !include_dir_merge_named groups/
 scene: !include scenes.yaml
 
 ### Scripts ###
-script: !include scripts.yaml
+script: !include_dir_merge_named scripts
 
 ### Automation ###
 automation old: !include_dir_list automation
@@ -138,6 +138,9 @@ hassio:
 
 ### Discover some devices automatically  ###
 discovery:
+  ignore:
+    - apple_tv
+    - plex_mediaserver
 
 ###  Config  ###
 config:

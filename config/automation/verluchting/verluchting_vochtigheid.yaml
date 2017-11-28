@@ -1,0 +1,11 @@
+alias: Verluchting te vochtig
+trigger:
+  - platform: numeric_state
+    entity_id: sensor.keuken_6_2
+    above: 77
+  - platform: numeric_state
+    entity_id: sensor.badkamer_1_2
+    above: 70
+action:
+  service: script.turn_on
+  entity_id: script.verluchting_1_uur
