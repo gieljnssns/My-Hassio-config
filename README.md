@@ -12,7 +12,7 @@ My HA installation runs on a Pi 3 with the following devices:
 * [Smappee](http://www.smappee.com/be_nl/energiemonitor) for monitoring my energy usage
 * [Pioneer VSX-921](http://www.pioneerelectronics.com/PUSA/Home/AV-Receivers/Pioneer+Receivers/VSX-921-K)
 * [MySensors](https://www.mysensors.org)
-  4 Multisensors with Lightlevel, motion, humidity, temperature [photos](https://github.com/gieljnssns/My_Home-Assistant/tree/master/Foto's%20Multisensor)
+  4 Multisensors with Lightlevel, motion, humidity, temperature [photos](https://github.com/gieljnssns/My-Hassio-config/tree/master/Foto's%20Multisensor)
 
   * 1x [UN3F 1pcs DS18b20 Waterproof Temperature Sensors Thermistor Temperature Control](http://www.ebay.com/itm/350930753839)
   * 5x [Mini USB Nano V3.0 ATmega328P 5V 16M Micro-controller Board FT232RL For Arduino](http://www.ebay.com/itm/130977189883)
