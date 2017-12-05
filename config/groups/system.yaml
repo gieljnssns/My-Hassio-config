@@ -7,10 +7,19 @@ system:
     - script.ha_restart
     - group.automations
     - group.smappee
+    - group.test
     - configurator.plex_media_server
     - configurator.philips_hue
     - switch.reserve
     - switch.reserve_2
+
+test:
+  name: Test
+  entities:
+    - binary_sensor.living_7_3
+    - sensor.living_7_0
+    - sensor.living_7_1
+    - sensor.living_7_2
 smappee:
   name: Smappee
   control: hidden
@@ -25,10 +34,9 @@ smappee:
     - switch.reserve5
 systeem:
   entities:
-    - sensor.cpu_speed
-    - sensor.cpu_use
-    - sensor.ram_free
-    - sensor.ram_use
+    - sensor.cpu_used
+    - sensor.ram_available
+    - sensor.ram_used
     - sensor.since_last_boot
     - sensor.gieljnssnsha
     - sensor.pihole_dns_queries_today

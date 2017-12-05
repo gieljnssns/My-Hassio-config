@@ -1,0 +1,12 @@
+alias: Martine thuis weg
+trigger:
+  platform: state
+  entity_id: input_boolean.martineoma, input_boolean.martinewerk, input_boolean.martinebompa, input_boolean.martinemoemoe_vava
+  to: 'on'
+condition:
+  condition: state
+  entity_id: input_boolean.martinethuis
+  state: 'on'
+action:
+  service: input_boolean.turn_off
+  entity_id: input_boolean.martinethuis

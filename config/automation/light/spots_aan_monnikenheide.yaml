@@ -1,12 +1,16 @@
 alias: Spots aan monnikenheide
 trigger:
-  platform: time
-  at: '06:30'
+  platform: state
+  entity_id: binary_sensor.living_7_3
+  to: 'on'
 condition:
   condition: and
   conditions:
-    - condition: template
-      value_template: "{{as_timestamp(states.calendar.monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 26.640}}"
+    - condition: time
+      after: '06:00:00'
+    - condition: state
+      entity_id: binary_sensor.v_monnikenheide
+      state: 'on'
     - condition: sun
       before: sunrise
       before_offset: "-00:30:00"
