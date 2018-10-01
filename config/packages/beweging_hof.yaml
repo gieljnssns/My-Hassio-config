@@ -1,0 +1,15 @@
+input_boolean:
+  beweging_hof:
+
+timer:
+  timer_beweging_hof:
+    duration: '00:02:00'
+
+binary_sensor:
+  - platform: template
+    sensors:
+      beweging_hof:
+        device_class: motion
+        friendly_name: "Beweging hof"
+        value_template: >-
+          {{ is_state('input_boolean.beweging_hof', 'on') }}

@@ -1,18 +1,18 @@
-alias: 'Verluchting Afkoeling'
+  alias: 'Verluchting Afkoeling'
 
-trigger:
-  - platform: template
-    value_template: "{{ states('sensor.temp_living') > states('sensor.garage_5_0') }}"
-condition:
-  - condition: and
-    conditions:
-      - condition: template
-        value_template: "{{ states.sensor.temp_living | float > 25 }}"
-      - condition: state
-        entity_id: input_boolean.op_verlof
-        state: 'off'
-action:
-  - service: switch.turn_on
-    entity_id: switch.verluchting
-  - service: input_boolean.turn_on
-    entity_id: input_boolean.verluchting_afkoeling
+  trigger:
+    - platform: template
+      value_template: "{{ states('sensor.temp_living') > states('sensor.garage_5_0') }}"
+  condition:
+    - condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ states.sensor.temp_living | float > 25 }}"
+        - condition: state
+          entity_id: input_boolean.op_verlof
+          state: 'off'
+  action:
+    - service: switch.turn_on
+      entity_id: switch.verluchting
+    - service: input_boolean.turn_on
+      entity_id: input_boolean.verluchting_afkoeling

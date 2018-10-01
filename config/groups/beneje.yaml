@@ -1,4 +1,4 @@
-benje:
+beneje:
   name: Beneje
   icon: mdi:download
   view: yes
@@ -6,12 +6,15 @@ benje:
     - sensor.gemiddelde_temp_beneden
     - group.keuken
     - group.living
-    - group.wc
     - group.garage
+    - group.den_hof
+    - group.wc
+
 
 keuken:
   name: Keuken
   entities:
+    - binary_sensor.beweging_keuken
     - binary_sensor.keuken_6_3
     - sensor.keuken_6_1
     - sensor.keuken_6_2
@@ -21,13 +24,17 @@ living:
   name: Living
   control: hidden
   entities:
+    - binary_sensor.beweging_living
     - binary_sensor.living_7_3
     - sensor.temp_living
     - sensor.living_7_1
     - sensor.living_7_2
     - sensor.living_7_0
-    - input_select.scene_selection
-    - group.spots_tv
+    # - input_select.scene_selection
+    # - light.spotjes_living
+    # - group.spots_tv
+    - light.spots_tv
+    - light.achterste_spots
     - switch.opladers
     - switch.kerstverlichting
     - switch.tv
@@ -52,3 +59,20 @@ garage:
   entities:
     - binary_sensor.garage_5_3
     - sensor.garage_5_1
+
+den_hof:
+  name: Den hof
+  control: hidden
+  entities:
+    - binary_sensor.den_hof_outdoor_animal
+    # - binary_sensor.dier_in_den_hof
+    - binary_sensor.den_hof_outdoor_vehicle
+    - binary_sensor.beweging_hof
+    - binary_sensor.den_hof_outdoor_human
+    - binary_sensor.volk_in_den_hof
+    - light.alle_tuinverlichting
+    # - group.terras
+    - light.terras
+    # - group.den_hof
+    - light.den_hof
+    - binary_sensor.presence_licht_aan

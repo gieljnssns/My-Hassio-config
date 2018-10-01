@@ -7,7 +7,7 @@
 ###  Global configuration  ###
 homeassistant:
   # Name of the location where Home Assistant is running
-  name: Home
+  name: Nummer 79
   # Location required to calculate the time the sun rises and sets
   latitude: !secret latitude
   longitude: !secret longitude
@@ -18,6 +18,7 @@ homeassistant:
   # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   time_zone: Europe/Brussels
   customize: !include_dir_merge_named customized
+  packages: !include_dir_named packages/
 
 ###   HTTP  ###
 http:
@@ -47,12 +48,14 @@ input_select: !include devices/input_select.yaml
 input_boolean: !include devices/input_boolean.yaml
 camera: !include devices/cameras.yaml
 alarm_control_panel: !include devices/alarm.yaml
-weather: !include devices/weather.yaml
+# weather: !include devices/weather.yaml
 # weblink: !include devices/weblink.yaml
 history_graph: !include devices/history_graph.yaml
 # image_processing: !include devices/image_processing.yaml
+calendar: !include devices/calendar.yaml
+shell_command: !include devices/shell_command.yaml
 
-### Groups ###
+###  Groups  ###
 group: !include_dir_merge_named groups/
 
 ###  Scenes  ###
@@ -90,6 +93,8 @@ frontend:
 #                     Hubs                         #
 #                                                  #
 ####################################################
+
+###  Netatmo  ###
 netatmo:
   api_key: !secret netatmo_api_key
   secret_key: !secret netatmo_secret_key
@@ -97,6 +102,7 @@ netatmo:
   password: !secret netatmo_password
   discovery: False
 
+###  Smappee  ###
 smappee:
     host: !secret smappee_host
     client_id: !secret smappee_client_id
@@ -105,10 +111,34 @@ smappee:
     password: !secret smappee_password
     host_password: !secret smappee_host_password
 
+###  MySensors  ###
 mysensors:
   gateways:
     - device: !secret mysensors_device
       persistence_file: !secret mysensors_persistence_file
+  version: '2.2'
+    # - device: '/dev/ttyUSB0'
+    #   persistence_file: 'mysensors_serial.json'
+
+###  MQTT  ###
+mqtt:
+  broker: !secret mqtt_broker
+  port: 1883
+  client_id: homepi
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+
+###  Philips Hue  ###
+hue:
+  bridges:
+    - host: 192.168.0.26
+      filename: deconz.conf
+      # allow_unreachable: true
+      allow_hue_groups: false
+    - host: 192.168.0.36
+      filename: phue.conf
+      # allow_unreachable: true
+      allow_hue_groups: false
 
 ###  If This Then That ###
 ifttt:
@@ -126,6 +156,11 @@ ifttt:
 google:
   client_id: !secret google_client_id
   client_secret: !secret google_client_secret
+
+# Text to speech
+tts:
+  - platform: google
+    language: 'nl'
 
 ####################################################
 #                                                  #
@@ -167,9 +202,9 @@ ios:
 
 ###  Recorder  ###
 recorder:
-  purge_interval: 7
-  purge_keep_days: 31
-  db_url: !secret mysql    #mysql://dbuser:password@localhost/dbname
+  # purge_interval: 7
+  # purge_keep_days: 31
+  # db_url: !secret mysql    #mysql://dbuser:password@localhost/dbname
 
 ###  Sun  ###
 sun:

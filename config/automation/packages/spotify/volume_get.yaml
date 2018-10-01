@@ -1,0 +1,13 @@
+  alias: 'Spotify Volume (Sync)'
+  trigger:
+    - platform: homeassistant
+      event: start
+    - platform: state
+      entity_id: sensor.spotify_volume
+  action:
+    - delay:
+        seconds: 5
+    - service: input_number.set_value
+      data_template:
+        entity_id: input_number.spotify_volume
+        value: '{{  states.sensor.spotify_volume.state | float | round(2) * 100  }}'

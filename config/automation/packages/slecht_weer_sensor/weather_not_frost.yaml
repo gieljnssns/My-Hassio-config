@@ -1,0 +1,18 @@
+  alias: 'Bad weather notification - frost'
+  initial_state: 'on'
+  trigger:
+    platform: template
+    value_template: '{{ states.sensor.time.state == states.sensor.notification_time_long.state }}'
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: sensor.bad_weather
+        state: 'frost'
+      - condition: state
+        entity_id: binary_sensor.v_monnikenheide
+        state: 'on'
+  action:
+    - service: notify.ios_mphone
+      data:
+        message: 'Er wordt ijzel voorspeld, op tijd vertrekken! Het is nu {{ states.sensor.garage_5_0.state_with_unit }}. De voorspelling voor de komende 12 u is: {{ states.sensor.pws_weather_1d_metric.state }}'

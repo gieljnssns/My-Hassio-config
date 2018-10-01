@@ -1,14 +1,14 @@
-alias: Spots tv aan bij schemering
-trigger:
-  - platform: sun
-    event: sunset
-    offset: '-00:30:00'
-condition:
-  condition: state
-  entity_id: alarm_control_panel.ha_alarm
-  state: disarmed
-action:
-  - service: light.turn_on
-    entity_id: group.spots_tv
-    data:
-      profile: reading
+  alias: Spots tv aan bij schemering
+  trigger:
+    - platform: state
+      entity_id: sensor.dark_outside
+      to: 'true'
+  condition:
+    condition: state
+    entity_id: alarm_control_panel.ha_alarm
+    state: disarmed
+  action:
+    - service: light.turn_on
+      entity_id: light.spots_tv
+      data:
+        profile: reading

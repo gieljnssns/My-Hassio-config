@@ -1,0 +1,127 @@
+homeassistant:
+  customize:
+    sensor.dark_outside:
+      friendly_name: Donker buiten
+      icon: mdi:theme-light-dark
+
+    sensor.bad_weather:
+      friendly_name: Slecht weer
+      icon: mdi:weather-snowy-rainy
+
+    sensor.notification_time:
+      friendly_name: 'Meldingstijd'
+      icon: mdi:alarm
+
+    sensor.notification_time_long:
+      hidden: true
+
+    sensor.notification_hour:
+      hidden: true
+
+    sensor.notification_minute:
+      hidden: true
+
+    input_boolean.sunset_offset:
+      hidden: true
+
+    input_boolean.donker_buiten_lowpass:
+      hidden: true
+
+input_boolean:
+  sunset_offset:
+  donker_buiten_lowpass:
+
+
+input_number:
+  notification_hour:
+    name: Uur
+    icon: mdi:timer
+    initial: 7
+    min: 0
+    max: 23
+    step: 1
+
+  notification_minute:
+    name: Minuten
+    icon: mdi:timer
+    initial: 0
+    min: 0
+    max: 55
+    step: 5
+
+
+sensor:
+  - platform: template
+    sensors:
+      dark_outside:
+        friendly_name: 'Donker buiten'
+        value_template: >
+          {% if (states.input_boolean.donker_buiten_lowpass.state == 'on') %}true
+          {% else %}false
+          {% endif %}
+
+      # dark_outside_lowpass:
+      #   friendly_name: 'Donker buiten lowpass'
+      #   value_template: >
+      #     {% if (states.input_boolean.donker_buiten_lowpass.state == 'on') %}true
+      #     {% else %}false
+      #     {% endif %}
+      #
+      # dark_outside_throttle:
+      #   friendly_name: 'Donker buiten throttle'
+      #   value_template: >
+      #     {% if (states.input_boolean.donker_buiten_throttle.state == 'on') %}true
+      #     {% else %}false
+      #     {% endif %}
+
+      bad_weather:
+        friendly_name: 'Slecht weer'
+        value_template: >
+          {% if (states.sensor.dark_sky_precip.state == "snow") %}snow
+          {% elif ((states.sensor.dark_sky_daily_low_temperature.state | int < 4) and (states.sensor.dark_sky_dew_point.state | int < 6) and (states.sensor.dark_sky_wind_speed.state | int < 12) and (states.sensor.dark_sky_cloud_coverage.state | int < 20) and (states.sensor.dark_sky_humidity.state | int > 50)) %} frost
+          {% elif (states.sensor.dark_sky_precip_intensity | int > 7) %} heavy_rain
+          {% else %} clear
+          {% endif %}
+
+      notification_hour:
+        value_template: '{{ states.input_number.notification_hour.state | int }}'
+
+      notification_minute:
+        value_template: '{{ states.input_number.notification_minute.state | int }}'
+
+      notification_time:
+        value_template: >-
+          {{ states.sensor.notification_hour.state }}:
+          {%- if states.sensor.notification_minute.state|length == 1 -%}
+            0
+          {%- endif -%}
+            {{ states.sensor.notification_minute.state }}
+
+      notification_time_long:
+        value_template: >-
+          {% if states.sensor.notification_hour.state|length == 1 -%}
+            0
+          {%- endif -%}
+            {{ states.sensor.notification_hour.state }}:
+          {%- if states.sensor.notification_minute.state|length == 1 -%}
+            0
+          {%- endif -%}
+            {{ states.sensor.notification_minute.state }}
+
+group:
+  slecht_weer_sensor:
+    name: Slecht weer sensor
+    control: hidden
+    entities:
+      - sensor.dark_outside
+      - sensor.bad_weather
+      - sensor.notification_time
+      - input_number.notification_hour
+      - input_number.notification_minute
+      - sensor.dark_sky_precip
+      - sensor.dark_sky_precip_intensity
+      - sensor.dark_sky_humidity
+      - sensor.dark_sky_cloud_coverage
+      - sensor.dark_sky_wind_speed
+      - sensor.dark_sky_dew_point
+      - sensor.dark_sky_daily_low_temperature

@@ -1,0 +1,10 @@
+  alias: Beweging noor aan
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.noor_4_3
+      to: 'on'
+  action:
+    - service: timer.start
+      entity_id: timer.timer_beweging_noor
+    - service: input_boolean.turn_on
+      entity_id: input_boolean.beweging_noor

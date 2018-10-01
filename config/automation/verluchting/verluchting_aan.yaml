@@ -1,21 +1,21 @@
-# - {"event": "Verluchting_aan"}
+  # - {"event": "Verluchting_aan"}
 
-alias: 'Verluchting Aan'
+  alias: 'Verluchting Aan'
 
-trigger:
-  - platform: time
-    at: '01:00'
-  - platform: time
-    at: '16:00'
-condition:
-  condition: and
-  conditions:
-    - condition: state
-      entity_id: binary_sensor.buiten_fris_genoeg
-      state: 'on'
-    - condition: numeric_state
-      entity_id: sensor.pws_temp_c
-      above: 10
-action:
-  - service: switch.turn_on
-    entity_id: switch.verluchting
+  trigger:
+    - platform: time
+      at: '01:00'
+    - platform: time
+      at: '16:00'
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.buiten_fris_genoeg
+        state: 'on'
+      - condition: numeric_state
+        entity_id: sensor.pws_temp_c
+        above: 10
+  action:
+    - service: switch.turn_on
+      entity_id: switch.verluchting

@@ -1,0 +1,28 @@
+  alias: Tuinverlichting aan bij thuiskomst
+  trigger:
+    - platform: state
+      entity_id: input_boolean.gielthuis
+      to: 'on'
+    - platform: state
+      entity_id: input_boolean.martinethuis
+      to: 'on'
+    - platform: state
+      entity_id: input_boolean.noorthuis
+      to: 'on'
+    - platform: state
+      entity_id: input_boolean.fienthuis
+      to: 'on'
+  condition:
+    - condition: state
+      entity_id: sensor.dark_outside
+      state: 'true'
+
+  action:
+    - service: light.turn_on
+      entity_id:
+        - light.alle_tuinverlichting
+    - delay:
+        minutes: 20
+    - service: light.turn_off
+      entity_id:
+        - light.alle_tuinverlichting

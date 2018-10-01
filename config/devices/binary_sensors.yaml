@@ -1,145 +1,102 @@
-- platform: template
-  sensors:
-    binnen_warm:
-      entity_id:
-        - sensor.temp_living
-      value_template: "{{ states.sensor.temp_living | float > 25 }}"
+  - platform: template
+    sensors:
+      binnen_warm:
+        value_template: "{{ states.sensor.temp_living | float > 25 }}"
 
-    buiten_warm:
-      entity_id:
-        - sensor.garage_5_0
-      value_template: "{{ states('sensor.garage_5_0') | float > 25 }}"
+      buiten_warm:
+        value_template: "{{ states('sensor.garage_5_0') | float > 25 }}"
 
-    buiten_fris_genoeg:
-      entity_id:
-        - sensor.garage_5_0
-      value_template: "{{ states('sensor.garage_5_0') | float < 24 }}"
+      buiten_fris_genoeg:
+        value_template: "{{ states('sensor.garage_5_0') | float < 24 }}"
 
-    v_vroege:
-      entity_id:
-        - calendar.vroege
-        - sensor.date
-      value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(now()) | float < 21610}}"
+      v_vroege:
+        # value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(now()) | float < 21610}}"
+        value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 21610}}"
 
-    v_late:
-      entity_id:
-        - calendar.late
-        - sensor.date
-      value_template: "{{as_timestamp(states.calendar.late.attributes.start_time) - as_timestamp(now()) | float < 50410}}"
+      v_late:
+        # value_template: "{{as_timestamp(states.calendar.late.attributes.start_time) - as_timestamp(now()) | float < 50410}}"
+        value_template: "{{as_timestamp(states.calendar.late.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 50410}}"
 
-    v_nacht:
-      entity_id:
-        - calendar.nacht
-        - sensor.date
-      value_template: "{{as_timestamp(states.calendar.nacht.attributes.start_time) - as_timestamp(now()) | float < 79210}}"
+      v_nacht:
+        # value_template: "{{as_timestamp(states.calendar.nacht.attributes.start_time) - as_timestamp(now()) | float < 79210}}"
+        value_template: "{{as_timestamp(states.calendar.nacht.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 79210}}"
 
-    v_w_nacht:
-      entity_id:
-        - calendar.w_nacht
-        - sensor.date
-      value_template: "{{as_timestamp(states.calendar.w_nacht.attributes.start_time) - as_timestamp(now()) | float < 64810}}"
+      v_w_nacht:
+        # value_template: "{{as_timestamp(states.calendar.w_nacht.attributes.start_time) - as_timestamp(now()) | float < 64810}}"
+        value_template: "{{as_timestamp(states.calendar.w_nacht.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 64810}}"
 
-    v_w_dag:
-      entity_id:
-        - calendar.w_dag
-        - sensor.date
-      value_template: "{{as_timestamp(states.calendar.w_dag.attributes.start_time) - as_timestamp(now()) | float < 21610}}"
+      v_w_dag:
+        value_template: "{{as_timestamp(states.calendar.w_dag.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 21610}}"
 
-    # m_vroege:
-    #   entity_id:
-    #     - calendar.vroege
-    #     - sensor.date
-    #   value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(now()) | float < 108000}}"
-    #
-    # m_late:
-    #   entity_id:
-    #     - calendar.late
-    #     - sensor.date
-    #   value_template: "{{as_timestamp(states.calendar.late.attributes.start_time) - as_timestamp(now()) | float < 136800}}"
-    #
-    # m_nacht:
-    #   entity_id:
-    #     - calendar.nacht
-    #     - sensor.date
-    #   value_template: "{{as_timestamp(states.calendar.nacht.attributes.start_time) - as_timestamp(now()) | float < 165600}}"
-    #
-    # m_w_nacht:
-    #   entity_id:
-    #     - calendar.w_nacht
-    #     - sensor.date
-    #   value_template: "{{as_timestamp(states.calendar.w_nacht.attributes.start_time) - as_timestamp(now()) | float < 165600}}"
-    #
-    # m_w_dag:
-    #   entity_id:
-    #     - calendar.w_dag
-    #     - sensor.date
-    #   value_template: "{{as_timestamp(states.calendar.w_dag.attributes.start_time) - as_timestamp(now()) | float < 108000}}"
-    #
-    v_monnikenheide:
-      entity_id:
-        - calendar.monnikenheide
-        - sensor.date
-      value_template: "{{as_timestamp(states.calendar.monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 28810}}"
+      # m_vroege:
+      #   value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(now()) | float < 108000}}"
+      #
+      # m_late:
+      #   value_template: "{{as_timestamp(states.calendar.late.attributes.start_time) - as_timestamp(now()) | float < 136800}}"
+      #
+      # m_nacht:
+      #   value_template: "{{as_timestamp(states.calendar.nacht.attributes.start_time) - as_timestamp(now()) | float < 165600}}"
+      #
+      # m_w_nacht:
+      #   value_template: "{{as_timestamp(states.calendar.w_nacht.attributes.start_time) - as_timestamp(now()) | float < 165600}}"
+      #
+      # m_w_dag:
+      #   value_template: "{{as_timestamp(states.calendar.w_dag.attributes.start_time) - as_timestamp(now()) | float < 108000}}"
+      #
+      v_monnikenheide:
+        # value_template: "{{as_timestamp(states.calendar.monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 28810}}"
+        value_template: "{{as_timestamp(states.calendar.monnikenheide_google.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 28810}}"
 
-    # m_monnikenheide:
-    #   entity_id:
-    #     - calendar.monnikenheide
-    #     - sensor.date
-    #   value_template: "{{as_timestamp(states.calendar.monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 113040}}"
+      # m_monnikenheide:
+      #   value_template: "{{as_timestamp(states.calendar.monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 113040}}"
 
-    v_werken:
-      entity_id:
-        - sensor.date
-        - calendar.late
-        - calendar.monnikenheide
-        - calendar.vroege
-        - calendar.w_dag
-        - binary_sensor.v_late
-        - binary_sensor.v_monnikenheide
-        - binary_sensor.v_vroege
-        - binary_sensor.v_w_dag
-      value_template: "{{ is_state('binary_sensor.v_late', 'on')
-             or is_state('calendar.monnikenheide', 'on')
-             or is_state('calendar.vroege', 'on')
-             or is_state('calendar.late', 'on')
-             or is_state('calendar.w_dag', 'on')
-             or is_state('binary_sensor.v_monnikenheide', 'on')
-             or is_state('binary_sensor.v_vroege', 'on')
-             or is_state('binary_sensor.v_w_dag', 'on') }}"
+      v_werken:
+        value_template: "{{ is_state('binary_sensor.v_late', 'on')
+               or is_state('calendar.monnikenheide_google', 'on')
+               or is_state('calendar.vroege', 'on')
+               or is_state('calendar.late', 'on')
+               or is_state('calendar.w_dag', 'on')
+               or is_state('binary_sensor.v_monnikenheide', 'on')
+               or is_state('binary_sensor.v_vroege', 'on')
+               or is_state('binary_sensor.v_w_dag', 'on') }}"
 
-    # m_werken:
-    #   entity_id:
-    #     - sensor.date
-    #     - binary_sensor.m_late
-    #     - binary_sensor.m_monnikenheide
-    #     - binary_sensor.m_nacht
-    #     - binary_sensor.m_vroege
-    #     - binary_sensor.m_w_dag
-    #     - binary_sensor.m_w_nacht
-    #   value_template: "{{ is_state('binary_sensor.m_late', 'on')
-    #          or is_state('binary_sensor.m_monnikenheide', 'on')
-    #          or is_state('binary_sensor.m_nacht', 'on')
-    #          or is_state('binary_sensor.m_vroege', 'on')
-    #          or is_state('binary_sensor.m_w_dag', 'on')
-    #          or is_state('binary_sensor.m_w_nacht', 'on') }}"
+      schooldag:
+        value_template: "{{ is_state('calendar.schoolvakanties', 'off') }}"
 
-- platform: iss
+      volk_in_den_hof:
+        device_class: motion
+        value_template: "{{ is_state('binary_sensor.den_hof_outdoor_human', 'on')
+                or is_state('input_boolean.volk_in_den_hof', 'on') }}"
 
-- platform: netatmo
-  presence_sensors:
-    - Outdoor human
-    - Outdoor animal
-    - Outdoor vehicle
+      dier_in_den_hof:
+        device_class: motion
+        value_template: "{{ is_state('binary_sensor.den_hof_outdoor_annimal', 'on')
+                or is_state('input_boolean.dier_in_den_hof', 'on') }}"
 
-- platform: device_tracker_sensor
-  entities:
-    - device_tracker.edgegiel
-    - device_tracker.fpod
-    - device_tracker.npod
-    - device_tracker.garage_mint
-    - device_tracker.imac_24
-    - device_tracker.imac_5k
-    - device_tracker.noorpad
-    - device_tracker.fienpad
-    - device_tracker.macbook
-    - device_tracker.mphone
+      auto_in_den_hof:
+        device_class: motion
+        value_template: "{{ is_state('binary_sensor.den_hof_outdoor_vehicle', 'on')
+                or is_state('input_boolean.auto_in_den_hof', 'on') }}"
+
+      presence_licht_aan:
+        device_class: light
+        value_template: "{{ is_state('input_boolean.presence_licht_aan', 'on') }}"
+
+      verluchting_afkoeling:
+        value_template: "{{ is_state('input_boolean.verluchting_afkoeling', 'on') }}"
+
+  - platform: iss
+
+  - platform: netatmo
+    presence_sensors:
+      - Outdoor human
+      - Outdoor animal
+      - Outdoor vehicle
+
+  # - platform: device_tracker_sensor
+  #   entities:
+  #     - device_tracker.garage_mint
+  #     - device_tracker.noorpad
+  #     - device_tracker.fienpad
+  #     - device_tracker.macbook
+  #     - device_tracker.mphone

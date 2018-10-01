@@ -1,0 +1,15 @@
+input_boolean:
+  beweging_fien:
+
+timer:
+  timer_beweging_fien:
+    duration: '00:02:00'
+
+binary_sensor:
+  - platform: template
+    sensors:
+      beweging_fien:
+        device_class: occupancy
+        friendly_name: "Beweging fien"
+        value_template: >-
+          {{ is_state('input_boolean.beweging_fien', 'on') }}

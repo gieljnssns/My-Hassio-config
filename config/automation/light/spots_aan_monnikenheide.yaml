@@ -1,21 +1,24 @@
-alias: Spots aan monnikenheide
-trigger:
-  platform: state
-  entity_id: binary_sensor.living_7_3
-  to: 'on'
-condition:
-  condition: and
-  conditions:
-    - condition: time
-      after: '06:00:00'
-    - condition: state
-      entity_id: binary_sensor.v_monnikenheide
-      state: 'on'
-    - condition: sun
-      before: sunrise
-      before_offset: "-00:30:00"
-action:
-  - service: light.turn_on
-    entity_id: group.spots_tv
-    data:
-      profile: reading
+  alias: Spots aan monnikenheide
+  trigger:
+    platform: state
+    entity_id: binary_sensor.living_7_3
+    to: 'on'
+  condition:
+    condition: and
+    conditions:
+      - condition: time
+        after: '06:25:00'
+      - condition: state
+        entity_id: binary_sensor.v_monnikenheide
+        state: 'on'
+      - condition: state
+        entity_id: calendar.monnikenheide_google
+        state: 'off'
+      - condition: state
+        entity_id: sensor.dark_outside
+        state: 'true'
+  action:
+    - service: light.turn_on
+      entity_id: light.spots_tv
+      data:
+        profile: reading

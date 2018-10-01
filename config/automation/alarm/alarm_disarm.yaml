@@ -1,17 +1,17 @@
-alias: 'Alarm disarm'
+  alias: 'Alarm disarm'
 
-trigger:
-  - platform: state
-    entity_id: input_boolean.martinethuis
-    to: 'on'
-  - platform: state
-    entity_id: input_boolean.gielthuis
-    to: 'on'
-  - platform: state
-    entity_id: media_player.keuken
-    to: playing
-action:
-  service: alarm_control_panel.alarm_disarm
-  entity_id: alarm_control_panel.ha_alarm
-  data:
-    code: !secret alarm_code
+  trigger:
+    - platform: state
+      entity_id: input_boolean.martinethuis
+      to: 'on'
+    - platform: state
+      entity_id: input_boolean.gielthuis
+      to: 'on'
+    - platform: state
+      entity_id: media_player.keuken
+      to: playing
+  action:
+    service: alarm_control_panel.alarm_disarm
+    entity_id: alarm_control_panel.ha_alarm
+    data:
+      code: !secret alarm_code

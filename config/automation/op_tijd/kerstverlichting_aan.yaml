@@ -1,23 +1,23 @@
-alias: 'Kerstverlichting Aan tijd'
-trigger:
-  - platform: time
-    at: '06:00'
-condition:
-  condition: and
-  conditions:
-    - condition: time
-      weekday:
-        - mon
-        - tue
-        - wed
-        - thu
-        - fri
-        - sat
-        - sun
-    - condition: state
-      entity_id: input_boolean.op_verlof
-      state: 'off'
-action:
-  - service: switch.turn_on
-    entity_id:
-      - switch.kerstverlichting
+  alias: 'Kerstverlichting Aan tijd'
+  trigger:
+    - platform: time
+      at: '06:00'
+  condition:
+    condition: and
+    conditions:
+      - condition: time
+        weekday:
+          - mon
+          - tue
+          - wed
+          - thu
+          - fri
+          - sat
+          - sun
+      - condition: state
+        entity_id: input_boolean.op_verlof
+        state: 'off'
+  action:
+    - service: switch.turn_on
+      entity_id:
+        - switch.kerstverlichting

@@ -1,0 +1,16 @@
+  alias: Beweging hof aan
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.den_hof_outdoor_human
+      to: 'on'
+    - platform: state
+      entity_id: binary_sensor.volk_in_den_hof
+      to: 'on'
+    - platform: state
+      entity_id: input_boolean.presence_licht_aan
+      to: 'on'
+  action:
+    - service: timer.start
+      entity_id: timer.timer_beweging_hof
+    - service: input_boolean.turn_on
+      entity_id: input_boolean.beweging_hof

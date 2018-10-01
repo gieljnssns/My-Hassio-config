@@ -1,0 +1,10 @@
+  alias: Beweging living aan
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.living_7_3
+      to: 'on'
+  action:
+    - service: timer.start
+      entity_id: timer.timer_beweging_living
+    - service: input_boolean.turn_on
+      entity_id: input_boolean.beweging_living

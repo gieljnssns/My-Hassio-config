@@ -1,0 +1,11 @@
+  alias: 'Op verlof'
+
+  trigger:
+    - platform: sun
+      event: sunset
+  condition:
+    - condition: state
+      entity_id: input_boolean.op_verlof
+      state: 'on'
+  action:
+    - service: script.op_verlof

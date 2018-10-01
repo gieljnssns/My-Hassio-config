@@ -1,25 +1,25 @@
-alias: Spots tv aan bij schemering niemand thuis
-trigger:
-  - platform: sun
-    event: sunset
-    offset: '-00:30:00'
-condition:
-  condition: or
-  conditions:
-    - condition: state
-      entity_id: alarm_control_panel.ha_alarm
-      state: armed_home
-    - condition: state
-      entity_id: alarm_control_panel.ha_alarm
-      state: armed_away
-action:
-  - service: light.turn_on
-    entity_id: group.spots_tv
-    data:
-      effect: random
-      brightness: 250
-  - delay: 0:01
-  - service: light.turn_on
-    entity_id: group.spots_tv
-    data:
-      effect: colorloop
+  alias: Spots tv aan bij schemering niemand thuis
+  trigger:
+    - platform: state
+      entity_id: sensor.dark_outside
+      to: 'true'
+  condition:
+    condition: or
+    conditions:
+      - condition: state
+        entity_id: alarm_control_panel.ha_alarm
+        state: armed_home
+      - condition: state
+        entity_id: alarm_control_panel.ha_alarm
+        state: armed_away
+  action:
+    - service: light.turn_on
+      entity_id: light.spots_tv
+      data:
+        effect: random
+        brightness: 250
+    - delay: 0:01
+    - service: light.turn_on
+      entity_id: light.spots_tv
+      data:
+        effect: colorloop
