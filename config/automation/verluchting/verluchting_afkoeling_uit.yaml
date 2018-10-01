@@ -1,18 +1,55 @@
   # Zet de verluchting uit als bool verluchting_afkoeling aan is en
   # de temperatuur binnen onder de 24,5 graden zakt.
 
-  alias: 'Verluchting Afkoeling  Uit'
+  alias: 'Verluchting Afkoeling Uit'
   trigger:
-    - platform: template
-      value_template: "{{ states('sensor.temp_living') | float < 25 }}"
-    - platform: template
-      value_template: "{{ states('sensor.temp_living')  <  states('sensor.garage_5_0') }}"
+    - platform: time
+      minutes: '/5'
+      seconds: 00
   condition:
-      condition: state
-      entity_id: input_boolean.verluchting_afkoeling
-      state: 'on'
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.afkoeling_gewenst
+        state: 'off'
+      - condition: state
+        entity_id: script.verluchting_1_uur
+        state: 'off'
+      - condition: state
+        entity_id: script.verluchting_2_uur
+        state: 'off'
+    # - condition: or
+    #   conditions:
+    #     - condition: state
+    #       entity_id: binary_sensor.buiten_fris_genoeg
+    #       state: 'off'
+    #     - condition: and
+    #       conditions:
+    #         - condition: state
+    #           entity_id: binary_sensor.binnen_warm
+    #           state: 'off'
+    #         - condition: state
+    #           entity_id: input_boolean.verluchting_afkoeling
+    #           state: 'on'
   action:
     - service: switch.turn_off
       entity_id: switch.verluchting
     - service: input_boolean.turn_off
       entity_id: input_boolean.verluchting_afkoeling
+
+
+  # alias: 'Verluchting Afkoeling Uit'
+  # trigger:
+  #   - platform: template
+  #     value_template: "{{ states('sensor.temp_living') | float < 25 }}"
+  #   - platform: template
+  #     value_template: "{{ states('sensor.temp_living')  <  states('sensor.garage_5_0') }}"
+  # condition:
+  #     condition: state
+  #     entity_id: input_boolean.verluchting_afkoeling
+  #     state: 'on'
+  # action:
+  #   - service: switch.turn_off
+  #     entity_id: switch.verluchting
+  #   - service: input_boolean.turn_off
+  #     entity_id: input_boolean.verluchting_afkoeling

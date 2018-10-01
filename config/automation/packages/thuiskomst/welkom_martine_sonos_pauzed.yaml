@@ -1,0 +1,43 @@
+  alias: Welkom Martine, sonos paused
+  hide_entity: false
+  trigger:
+    platform: state
+    entity_id: sensor.martine_komt_thuis
+    to: 'arriving'
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: media_player.keuken
+        state: paused
+      - condition: state
+        entity_id: input_boolean.giel_komt_thuis
+        state: 'off'
+  action:
+    - service: script.turn_off
+      entity_id: script.begroeting_paused
+    - service: script.turn_off
+      entity_id: script.begroeting_playing
+    - service: script.turn_off
+      entity_id: script.sonos_pauze_spreek
+    - service: script.turn_off
+      entity_id: script.sonos_playing_spreek
+    - service: script.reload
+      entity_id: script.begroeting_paused
+    - service: script.reload
+      entity_id: script.begroeting_playing
+    - service: script.reload
+      entity_id: script.sonos_pauze_spreek
+    - service: script.reload
+      entity_id: script.sonos_playing_spreek
+    - delay: '00:00:02'
+    - service: script.begroeting_paused
+      data_template:
+        speech_message: >
+           {% set person = 'Martine' %}
+           {{ [
+           "Hallo " + person + ", welkom thuis.",
+           "Hallo " + person,
+           "Welkom thuis " + person + ", zware dag gehad?",
+           "Blij dat je thuis bent " + person
+           ] | random }}

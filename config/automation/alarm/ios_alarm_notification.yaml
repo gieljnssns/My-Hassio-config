@@ -1,20 +1,37 @@
   alias: "Beweging in den hof"
   trigger:
-    platform: state
-    entity_id: binary_sensor.den_hof_outdoor_human
-    to: 'on'
+    - platform: state
+      entity_id: binary_sensor.beweging_hof
+      to: 'on'
+    # - platform: state
+    #   entity_id: binary_sensor.volk_in_den_hof
+    #   to: 'on'
+    # - platform: state
+    #   entity_id: binary_sensor.nummer_79__den_hof_outdoor_human
+    #   to: 'on'
+    # - platform: state
+    #   entity_id: binary_sensor.presence_licht_aan
+    #   to: 'on'
   condition:
-    condition: or
+    condition: and
     conditions:
       - condition: state
-        entity_id: alarm_control_panel.ha_alarm
-        state: 'armed_away'
+        entity_id: binary_sensor.martine_vertrekt_naart_werk
+        state: 'off'
       - condition: state
-        entity_id: alarm_control_panel.ha_alarm
-        state: 'armed_home'
-      - condition: state
-        entity_id: alarm_control_panel.ha_alarm
-        state: 'armed_night'
+        entity_id: binary_sensor.giel_vertrekt_naart_werk
+        state: 'off'
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: alarm_control_panel.ha_alarm
+            state: 'armed_away'
+          - condition: state
+            entity_id: alarm_control_panel.ha_alarm
+            state: 'armed_home'
+          - condition: state
+            entity_id: alarm_control_panel.ha_alarm
+            state: 'armed_night'
   action:
     - service: notify.ios
       data:

@@ -1,0 +1,22 @@
+  alias: RAFC_lichten_aan
+  trigger:
+    - entity_id: calendar.rafc
+      platform: state
+      to: 'on'
+  condition: []
+  action:
+    - service: light.turn_on
+      data:
+        rgb_color: [206, 21, 55]
+        brightness: 255
+        entity_id: light.spots_tv
+    - service: script.rafc2_1
+      data_template:
+        delay_template: >
+           {{ [
+           1,
+           2,
+           3,
+           4,
+           5
+           ] | random }}

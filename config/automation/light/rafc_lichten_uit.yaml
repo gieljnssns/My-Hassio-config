@@ -1,0 +1,18 @@
+  alias: RAFC_lichten_uit
+  trigger:
+    - entity_id: calendar.rafc
+      platform: state
+      to: 'off'
+  condition: []
+  action:
+    - service: script.turn_off
+      entity_id:
+        - script.rafc2_1
+        - script.rafc2_2
+    - condition: and
+      conditions:
+        - condition: state
+          entity_id: sensor.dark_outside
+          state: 'false'
+    - service: light.turn_off
+      entity_id: light.spots_tv

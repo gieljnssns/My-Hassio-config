@@ -1,4 +1,4 @@
-  alias: 'sonos smorgens aan'
+  alias: 'sonos smorgens geen werkdag'
   trigger:
     platform: state
     entity_id: binary_sensor.keuken_6_3
@@ -8,19 +8,22 @@
     condition: and
     conditions:
       - condition: time
-        after: '07:20:00'
+        after: '08:30:00'
         before: '12:00:00'
       - condition: state
         entity_id: media_player.keuken
-        state: paused     # {{ states('media_player.keuken') != 'playing' }}
+        state: paused
         for:
           hours: 5
-      - condition: or
-        conditions:
-          - condition: template
-            value_template: "{{as_timestamp(states.calendar.monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 26.640}}"
-          - condition: template
-            value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(now()) | float < 108000}}"
+      - condition: state
+        entity_id: binary_sensor.v_werken
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.v_nacht
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.v_w_nacht
+        state: 'off'
       - condition: or
         conditions:
           - condition: state
@@ -33,8 +36,8 @@
     - service: media_player.volume_set
       data_template:
         entity_id: media_player.keuken
-        volume_level: 0.12
+        volume_level: 0.20
     - service: media_player.select_source
       data_template:
         entity_id: media_player.keuken
-        source: 'Arrow Classic Rock'
+        source: 'Fuzz FM'

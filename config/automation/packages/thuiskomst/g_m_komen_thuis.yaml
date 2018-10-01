@@ -1,0 +1,41 @@
+  alias: Giel en Martine komen thuis
+  hide_entity: false
+  trigger:
+    - platform: state
+      entity_id: sensor.martine_komt_thuis
+      to: 'arriving'
+    - platform: state
+      entity_id: sensor.giel_komt_thuis
+      to: 'arriving'
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: input_boolean.giel_komt_thuis
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.martine_komt_thuis
+        state: 'on'
+  action:
+    - service: script.turn_off
+      entity_id: script.begroeting_paused
+    - service: script.turn_off
+      entity_id: script.begroeting_playing
+    - service: script.turn_off
+      entity_id: script.sonos_pauze_spreek
+    - service: script.turn_off
+      entity_id: script.sonos_playing_spreek
+    - service: script.reload
+      entity_id: script.begroeting_paused
+    - service: script.reload
+      entity_id: script.begroeting_playing
+    - service: script.reload
+      entity_id: script.sonos_pauze_spreek
+    - service: script.reload
+      entity_id: script.sonos_playing_spreek
+    - delay: '00:00:02'
+    - service: input_boolean.turn_on
+      entity_id: input_boolean.g_m_komen_thuis
+    - delay: 0:03
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.g_m_komen_thuis
