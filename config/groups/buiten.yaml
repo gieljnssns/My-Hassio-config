@@ -1,0 +1,42 @@
+buiten:
+  name: Buiten
+  icon: mdi:flower
+  view: yes
+  entities:
+    - sensor.garage_5_0
+    - sensor.garage_5_1
+    - sensor.buiten_lowpass
+    - group.den_hof_light
+    - group.den_hof_beweging
+    - group.garage
+
+
+den_hof_beweging:
+  name: Beweging in den hof
+  control: hidden
+  entities:
+    - binary_sensor.den_hof_outdoor_animal
+    - binary_sensor.nummer_79__den_hof_outdoor_animal
+    # - binary_sensor.dier_in_den_hof
+    - binary_sensor.den_hof_outdoor_vehicle
+    - binary_sensor.nummer_79__den_hof_outdoor_vehicle
+    - binary_sensor.beweging_hof
+    - binary_sensor.den_hof_outdoor_human
+    - binary_sensor.nummer_79__den_hof_outdoor_human
+    # - binary_sensor.volk_in_den_hof
+
+den_hof_light:
+  name: Verlichting in den hof
+  control: hidden
+  entities:
+    - light.alle_tuinverlichting
+    # - group.terras
+    - light.terras
+    # - group.den_hof
+    - light.den_hof
+    - binary_sensor.presence_licht_aan
+
+garage:
+  name: Garage
+  entities:
+    - binary_sensor.garage_5_3

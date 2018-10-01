@@ -3,9 +3,48 @@ mediaplayers:
   icon: mdi:library-music
   view: yes
   entities:
-    - media_player.spotify
+    # - media_player.spotify
+    # - group.music_spotify
+    # - media_player.keuken
+    # - media_player.badkamer
+    # - media_player.vsx921
+    # - media_player.philips_tv
+    - group.media_keuken
+    - group.media_badkamer
+    - group.media_living
+    - group.spotify
     - group.music_spotify
+
+media_keuken:
+  name: Keuken
+  icon: mdi:library-music
+  control: hidden
+  entities:
     - media_player.keuken
+    - script.keuken_shuffle
+    - script.keuken_snapshot
+    - script.keuken_restore
+
+media_badkamer:
+  name: Badkamer
+  icon: mdi:library-music
+  control: hidden
+  entities:
     - media_player.badkamer
-    - media_player.vsx921
+    - script.badkamer_shuffle
+    - script.badkamer_snapshot
+    - script.badkamer_restore
+
+media_living:
+  name: Living
+  icon: mdi:library-music
+  entities:
     - media_player.philips_tv
+    - media_player.philips_tv_wifi
+    - media_player.vsx921
+
+spotify:
+  name: Spotify
+  icon: mdi:spotify
+  entities:
+    - media_player.spotify

@@ -1,0 +1,60 @@
+homeassistant:
+  customize:
+    input_boolean.giel_komt_thuis:
+      hidden: true
+    input_boolean.martine_komt_thuis:
+      hidden: true
+    input_boolean.g_m_komen_thuis:
+      hidden: true
+    sensor.giel_komt_thuis:
+      icon: mdi:account-key
+    sensor.martine_komt_thuis:
+      icon: mdi:account-key
+    sensor.g_m_komen_thuis:
+      icon: mdi:account-key
+
+input_boolean:
+   giel_komt_thuis:
+     name: Giel komt thuis
+     initial: off
+     icon: mdi:account-key
+
+   martine_komt_thuis:
+     name: Martine komt thuis
+     initial: off
+     icon: mdi:account-key
+
+   g_m_komen_thuis:
+     name: Giel en Martine komen thuis
+     initial: off
+     icon: mdi:account-key
+
+sensor:
+  - platform: template
+    sensors:
+      giel_komt_thuis:
+        friendly_name: 'Giel komt thuis'
+        value_template: >-
+          {%- if is_state('input_boolean.giel_komt_thuis','on') -%}
+            arriving
+          {%- else -%}
+            N/A
+          {%- endif -%}
+
+      martine_komt_thuis:
+        friendly_name: 'Martine komt thuis'
+        value_template: >-
+          {%- if is_state('input_boolean.martine_komt_thuis','on') -%}
+            arriving
+          {%- else -%}
+            N/A
+          {%- endif -%}
+
+      g_m_komen_thuis:
+        friendly_name: 'Giel en Martine komen thuis'
+        value_template: >-
+          {%- if is_state('input_boolean.g_m_komen_thuis','on') -%}
+            arriving
+          {%- else -%}
+            N/A
+          {%- endif -%}

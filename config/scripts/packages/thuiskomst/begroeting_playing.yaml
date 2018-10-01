@@ -1,0 +1,12 @@
+  begroeting_playing:
+    sequence:
+      - wait_template: "{{ states.binary_sensor.beweging_hof.state == 'on' }}"
+        timeout: '00:03:00'
+      - wait_template: "{{ states.binary_sensor.keuken_6_3.state == 'on' }}"
+        timeout: '00:03:00'
+      - service: script.sonos_playing_spreek
+        data_template:
+          sonos_entity: media_player.keuken
+          volume: 0.55
+          message: "{{ speech_message }}"
+          delay: '00:00:08'

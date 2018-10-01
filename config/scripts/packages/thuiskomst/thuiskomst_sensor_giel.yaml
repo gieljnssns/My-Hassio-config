@@ -1,0 +1,10 @@
+  set_arrive_sensor_giel:
+    sequence:
+      - service: input_boolean.turn_on
+        data_template:
+          entity_id: "{{ tracker }}"
+      - delay:
+          minutes: 3
+      - service: input_boolean.turn_off
+        data_template:
+          entity_id: "{{ tracker }}"

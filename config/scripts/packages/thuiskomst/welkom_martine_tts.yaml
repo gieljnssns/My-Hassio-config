@@ -1,0 +1,14 @@
+  welkom_martine_tts:
+    sequence:
+      - service: tts.voicerss_say
+      # - service: tts.google_say
+        data_template:
+          entity_id: media_player.keuken
+          message: >
+             {% set person = 'Martine' %}
+             {{ [
+             "Hallo " + person + ", welkom thuis.",
+             "Hallo " + person,
+             "Welkom thuis " + person + ", zware dag gehad?",
+             "Blij dat je thuis bent " + person
+             ] | random }}

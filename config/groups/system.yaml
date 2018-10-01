@@ -7,8 +7,7 @@ system:
     - group.pihole
     - group.dietpi
     - group.diethass
-    - group.automations
-    - group.test
+    # - group.test
     - configurator.plex_media_server
     - configurator.philips_hue
     - switch.reserve
@@ -16,6 +15,7 @@ system:
 
 test:
   name: Test
+  control: hidden
   entities:
     - switch.relay_8_11_1
     - switch.relay_8_11_2
@@ -25,22 +25,25 @@ test:
     - switch.relay_8_11_6
     - switch.relay_8_11_7
     - switch.relay_8_11_8
+    - switch.badkamer
+    - switch.noor
+    - switch.fien
+    - switch.slaapkamer
+    - switch.reserve_mqtt
+    - switch.verluchting
+    - switch.wc
 
 systeem:
   name: Systeem
   entities:
     - sensor.disk_use
     - sensor.processor_use
-    - sensor.load_1m
-    - sensor.load_15m
     - sensor.memory_free
     - sensor.memory_use
     - sensor.swap_use
     - sensor.since_last_boot
-    - sensor.network_in
-    - sensor.network_out
-    - sensor.gieljnssnsha
-    - script.restart_hassio
+    - sensor.gieljnssns
+    - sensor.gieljnssnsport
 
 pihole:
   name: PiHole
@@ -57,7 +60,6 @@ diethass:
   name: DietHass
   entities:
     - sensor.diethass_uptime
-    - sensor.diethass_system_load
     - sensor.diethass_cpu_user
     - sensor.diethass_cpu_system
     - sensor.diethass_ram_free
@@ -66,14 +68,12 @@ diethass:
     - sensor.diethass_ipv4_in
     - sensor.diethass_ipv4_out
     - sensor.diethass_processes_running
-    - sensor.diethass_processes_blocked
     - sensor.diethass_active_connections
 
 dietpi:
   name: DietPi
   entities:
     - sensor.dietpi_uptime
-    - sensor.dietpi_system_load
     - sensor.dietpi_cpu_user
     - sensor.dietpi_cpu_system
     - sensor.dietpi_ram_free
@@ -82,17 +82,4 @@ dietpi:
     - sensor.dietpi_ipv4_in
     - sensor.dietpi_ipv4_out
     - sensor.dietpi_processes_running
-    - sensor.dietpi_processes_blocked
     - sensor.dietpi_active_connections
-
-automations:
-  name: Automatisaties
-  control: hidden
-  entities:
-    - automation.verwarming_bij_beweging_noor
-    - automation.verwarming_bij_beweging_fien
-    - automation.verwarming_bij_beweging_badkamer
-    - automation.verwarming_bij_beweging_slaapkamer
-    - automation.kerstverlichting_aan
-    - automation.verluchting_aan
-    - automation.verluchting_afkoeling

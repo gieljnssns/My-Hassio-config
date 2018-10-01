@@ -48,12 +48,10 @@ input_select: !include devices/input_select.yaml
 input_boolean: !include devices/input_boolean.yaml
 camera: !include devices/cameras.yaml
 alarm_control_panel: !include devices/alarm.yaml
-# weather: !include devices/weather.yaml
+weather: !include devices/weather.yaml
 # weblink: !include devices/weblink.yaml
 history_graph: !include devices/history_graph.yaml
-# image_processing: !include devices/image_processing.yaml
 calendar: !include devices/calendar.yaml
-shell_command: !include devices/shell_command.yaml
 
 ###  Groups  ###
 group: !include_dir_merge_named groups/
@@ -81,12 +79,24 @@ logbook: !include logbook.yaml
 ###  History  ###
 history: !include history.yaml
 
+# influxdb:
+#   host: !secret influxdb_host
+#   port: 8086
+#   database: !secret influxdb_db
+#   username: !secret influxdb_user
+#   password: !secret http_password
+#   max_retries: 3
+#   default_measurement: state
+
 ###  Frontend  ###
 frontend:
   themes: !include themes.yaml
 
 ###  Logger  ###
-# logger: !include logger.yaml
+logger: !include logger.yaml
+
+###  Homekit  ###
+homekit: !include homekit.yaml
 
 ####################################################
 #                                                  #
@@ -117,28 +127,29 @@ mysensors:
     - device: !secret mysensors_device
       persistence_file: !secret mysensors_persistence_file
   version: '2.2'
-    # - device: '/dev/ttyUSB0'
-    #   persistence_file: 'mysensors_serial.json'
+
 
 ###  MQTT  ###
 mqtt:
-  broker: !secret mqtt_broker
-  port: 1883
-  client_id: homepi
+  broker: core-mosquitto
   username: !secret mqtt_username
   password: !secret mqtt_password
 
 ###  Philips Hue  ###
-hue:
-  bridges:
-    - host: 192.168.0.26
-      filename: deconz.conf
-      # allow_unreachable: true
-      allow_hue_groups: false
-    - host: 192.168.0.36
-      filename: phue.conf
-      # allow_unreachable: true
-      allow_hue_groups: false
+# hue:
+#   bridges:
+#     - host: 192.168.0.26
+#       filename: deconz.conf
+#       # allow_unreachable: true
+#       allow_hue_groups: false
+#     - host: 192.168.0.36
+#       filename: phue.conf
+#       # allow_unreachable: true
+#       allow_hue_groups: false
+
+# ###  ZoneMinder  ###
+# zoneminder:
+#   host: 192.168.0.35
 
 ###  If This Then That ###
 ifttt:
@@ -148,8 +159,7 @@ ifttt:
 # apple_tv:
 #   - host: !secret apple_tv_host
 #     login_id: !secret apple_tv_login_id
-#     name: Apple Tv
-#     # start_off: START_OFF_1
+#     name: Living
 #     credentials: !secret apple_tv_credentials
 
 ###  Google Kalender  ###
@@ -161,12 +171,19 @@ google:
 tts:
   - platform: google
     language: 'nl'
+  - platform: voicerss
+    api_key: !secret voicerss_api
+    language: 'nl-nl'
+    format: '44khz_16bit_stereo'
 
 ####################################################
 #                                                  #
 #                     Enables                      #
 #                                                  #
 ####################################################
+
+###  Map  ###
+map:
 
 ###  Hassio  ###
 hassio:
@@ -203,8 +220,8 @@ ios:
 ###  Recorder  ###
 recorder:
   # purge_interval: 7
-  # purge_keep_days: 31
-  # db_url: !secret mysql    #mysql://dbuser:password@localhost/dbname
+  purge_keep_days: 31
+  # db_url: !secret mysql
 
 ###  Sun  ###
 sun:
