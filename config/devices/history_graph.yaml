@@ -4,8 +4,20 @@ graph_temp:
     - sensor.garage_5_0
     - sensor.gemiddelde_temp_boven
     - sensor.gemiddelde_temp_beneden
+    - sensor.gemiddelde_temp_binnen
   hours_to_show: 12
   refresh: 300
+
+graph_temp_lowpass:
+  name: Temperatuurverloop lowpass
+  entities:
+    - sensor.buitentemeratuur_lowpass
+    - sensor.boventemeratuur_lowpass
+    - sensor.benedentemeratuur_lowpass
+    - sensor.binnentemeratuur_lowpass
+  hours_to_show: 12
+  refresh: 300
+
 graph_solar:
   name: Zonne energie
   entities:

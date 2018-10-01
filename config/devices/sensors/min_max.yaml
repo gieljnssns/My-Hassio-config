@@ -4,6 +4,7 @@
     entity_ids:
       - sensor.keuken_6_1
       - sensor.temp_living
+      - sensor.living_7_1
 
   - platform: min_max
     name: Gemiddelde temp Boven
@@ -13,3 +14,66 @@
       - sensor.fien_3_1
       - sensor.noor_4_1
       - sensor.slaapkamer_2_1
+
+  - platform: min_max
+    name: Gemiddelde temp Binnen
+    type: mean
+    entity_ids:
+      - sensor.gemiddelde_temp_boven
+      - sensor.gemiddelde_temp_beneden
+
+  - platform: min_max
+    name: "gPhone BT thuis"
+    type: max
+    round_digits: 0
+    entity_ids:
+      - sensor.gphone_boven
+      - sensor.gphone_keuken
+      - sensor.gphone_living
+      - sensor.gphone_waskot
+
+  - platform: min_max
+    name: "mPhone BT thuis"
+    type: max
+    round_digits: 0
+    entity_ids:
+      - sensor.mphone_boven
+      - sensor.mphone_keuken
+      - sensor.mphone_living
+      - sensor.mphone_waskot
+
+  - platform: min_max
+    name: "nPad BT thuis"
+    type: mean
+    round_digits: 0
+    entity_ids:
+      - sensor.npad_boven
+      - sensor.npad_keuken
+      - sensor.npad_living
+
+  - platform: min_max
+    name: "fPad BT thuis"
+    type: mean
+    round_digits: 0
+    entity_ids:
+      - sensor.fpad_boven
+      - sensor.fpad_keuken
+      - sensor.fpad_living
+
+  - platform: min_max
+    name: "Forerunner BT thuis"
+    type: mean
+    round_digits: 0
+    entity_ids:
+      - sensor.forerunner_boven
+      - sensor.forerunner_keuken
+      - sensor.forerunner_living
+
+  # - platform: min_max
+  #   name: "VivoSmart BT thuis"
+  #   type: mean
+  #   round_digits: 0
+  #   entity_ids:
+  #     - sensor.vivosmart_boven
+  #     - sensor.vivosmart_keuken
+  #     - sensor.vivosmart_living

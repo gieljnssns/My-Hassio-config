@@ -1,13 +1,39 @@
   - platform: template
     sensors:
+      martine_vertrekt_naart_werk:
+        friendly_name: Martine moet vertrekken
+        value_template: "{{ (as_timestamp(states.calendar.monnikenheide_google.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) |  float > 600)
+              and (as_timestamp(states.calendar.monnikenheide_google.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 4200) }}"
+
+      giel_vertrekt_naart_werk:
+        friendly_name: Giel moet vertrekken
+        value_template: "{{ (as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) |  float > 1800)
+              and (as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 4200) }}"
+
+      afkoeling_gewenst:
+        friendly_name: Afkoeling
+        value_template: "{{ is_state('sensor.binnen_vs_buiten', 'Afkoeling') }}"
+        icon_template: >-
+            {% if is_state('sensor.binnen_vs_buiten', 'Afkoeling') %}
+                 mdi:fan
+            {% else %}
+                 mdi:fan-off
+            {% endif %}
+
       binnen_warm:
-        value_template: "{{ states.sensor.temp_living | float > 25 }}"
+        device_class: heat
+        friendly_name: Binnen heet
+        value_template: "{{ states('sensor.binnen_lowpass') | float > 26 }}"
 
       buiten_warm:
-        value_template: "{{ states('sensor.garage_5_0') | float > 25 }}"
+        device_class: heat
+        friendly_name: Buiten heet
+        value_template: "{{ states('sensor.buiten_lowpass') | float > 25 }}"
 
       buiten_fris_genoeg:
-        value_template: "{{ states('sensor.garage_5_0') | float < 24 }}"
+        device_class: cold
+        friendly_name: Buiten aangenaam
+        value_template: "{{ states('sensor.buiten_lowpass') | float < 25 }}"
 
       v_vroege:
         # value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(now()) | float < 21610}}"
@@ -63,35 +89,45 @@
       schooldag:
         value_template: "{{ is_state('calendar.schoolvakanties', 'off') }}"
 
-      volk_in_den_hof:
+      volk_in_den_hof_homekit:
         device_class: motion
-        value_template: "{{ is_state('binary_sensor.den_hof_outdoor_human', 'on')
-                or is_state('input_boolean.volk_in_den_hof', 'on') }}"
+        value_template: "{{ is_state('input_boolean.volk_in_den_hof_homekit', 'on')
+                or is_state('binary_sensor.presence_licht_aan', 'on') }}"
 
       dier_in_den_hof:
         device_class: motion
-        value_template: "{{ is_state('binary_sensor.den_hof_outdoor_annimal', 'on')
-                or is_state('input_boolean.dier_in_den_hof', 'on') }}"
+        value_template: "{{ is_state('binary_sensor.den_hof_outdoor_animal', 'on')
+                or is_state('input_boolean.dier_in_den_hof', 'on')
+                or is_state('binary_sensor.nummer_79__den_hof_outdoor_animal', 'on') }}"
 
       auto_in_den_hof:
         device_class: motion
         value_template: "{{ is_state('binary_sensor.den_hof_outdoor_vehicle', 'on')
-                or is_state('input_boolean.auto_in_den_hof', 'on') }}"
+                or is_state('input_boolean.auto_in_den_hof', 'on')
+                or is_state('binary_sensor.nummer_79__den_hof_outdoor_vehicle', 'on') }}"
 
       presence_licht_aan:
         device_class: light
         value_template: "{{ is_state('input_boolean.presence_licht_aan', 'on') }}"
 
       verluchting_afkoeling:
+        device_class: cold
         value_template: "{{ is_state('input_boolean.verluchting_afkoeling', 'on') }}"
 
   - platform: iss
 
   - platform: netatmo
+    home: Nummer 79
+    cameras:
+      - Den Hof
     presence_sensors:
       - Outdoor human
       - Outdoor animal
       - Outdoor vehicle
+    welcome_sensors:
+      - Someone known
+      - Someone unknown
+      - Motion
 
   # - platform: device_tracker_sensor
   #   entities:

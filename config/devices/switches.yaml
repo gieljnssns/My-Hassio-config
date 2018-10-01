@@ -1,22 +1,65 @@
-  - platform: rpi_gpio
-    ports:
-      4: Reserve
-      17: Reserve 2
-      27: Verwarming Badkamer
-      22: Verluchting
-      10: Verwarming Slaapkamer
-      9: Verwarming Noor
-      11: Verwarming Wc
-      5: Verwarming Fien
+  # - platform: rpi_gpio
+  #   ports:
+  #     4: Reserve
+  #     17: Reserve 2
+  #     27: Verwarming Badkamer
+  #     22: Verluchting
+  #     10: Verwarming Slaapkamer
+  #     9: Verwarming Noor
+  #     11: Verwarming Wc
+  #     5: Verwarming Fien
 
-  # - platform: template
-  #   switches:
-  #     - opladers:
-  #         friendly_name: 'Opladers'
-  #         value_template: '{{ states.input_select.opladers_aan.state }}'
-  #         turn_on:
-  #           service: script.turn_on
-  #           entity_id: script.opladers_aan
-  #         turn_off:
-  #           service: script.turn_on
-  #           entity_id: script.opladers_uit
+  - platform: mqtt
+    name: "Verluchting"
+    icon: mdi:fan
+    state_topic: "home/output/verluchting/set"
+    command_topic: "home/output/verluchting/set"
+    payload_on: "ON"
+    payload_off: "OFF"
+
+  - platform: mqtt
+    name: "Badkamer"
+    icon: mdi:radiator
+    state_topic: "home/output/badkamer/set"
+    command_topic: "home/output/badkamer/set"
+    payload_on: "ON"
+    payload_off: "OFF"
+
+  - platform: mqtt
+    name: "Reserve_mqtt"
+    state_topic: "home/output/reserve/set"
+    command_topic: "home/output/reserve/set"
+    payload_on: "ON"
+    payload_off: "OFF"
+
+  - platform: mqtt
+    name: "Slaapkamer"
+    icon: mdi:radiator
+    state_topic: "home/output/slaapkamer/set"
+    command_topic: "home/output/slaapkamer/set"
+    payload_on: "ON"
+    payload_off: "OFF"
+
+  - platform: mqtt
+    name: "Noor"
+    icon: mdi:radiator
+    state_topic: "home/output/noor/set"
+    command_topic: "home/output/noor/set"
+    payload_on: "ON"
+    payload_off: "OFF"
+
+  - platform: mqtt
+    name: "Fien"
+    icon: mdi:radiator
+    state_topic: "home/output/fien/set"
+    command_topic: "home/output/fien/set"
+    payload_on: "ON"
+    payload_off: "OFF"
+
+  - platform: mqtt
+    name: "Wc"
+    icon: mdi:radiator
+    state_topic: "home/output/wc/set"
+    command_topic: "home/output/wc/set"
+    payload_on: "ON"
+    payload_off: "OFF"
