@@ -17,7 +17,7 @@ from homeassistant.util import Throttle
 
 REQUIREMENTS = [
     'https://github.com/gieljnssns/netatmo-api-python/archive/'
-    'dev-thermostat.zip#lnetatmo==0.9.2.1.1']
+    'camera-home.zip#lnetatmo==0.9.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ NETATMO_AUTH = None
 DEFAULT_DISCOVERY = True
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
-MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=10)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -111,7 +111,8 @@ class CameraData(object):
     def update(self):
         """Call the Netatmo API to update the data."""
         import lnetatmo
-        self.camera_data = lnetatmo.CameraData(self.auth, size=100)
+        self.camera_data = lnetatmo.CameraData(
+            self.auth, size=100, home=self.home)
 
     @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
     def update_event(self):

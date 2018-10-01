@@ -26,7 +26,7 @@ SENSOR_TYPES = {
     'active_cosfi':
         ['Power Factor', 'mdi:gauge', 'local', '%', 'active_cosfi'],
     'alwayson_today':
-        ['Always On Today', 'mdi:gauge', 'remote', 'kWh', 'alwaysOn'],
+        ['Always On Today', 'mdi:gauge', 'remote', 'W', 'alwaysOn'],
     'solar_today':
         ['Solar Today', 'mdi:white-balance-sunny', 'remote', 'kWh', 'solar'],
     'power_today':
@@ -113,27 +113,27 @@ class SmappeeSensor(Entity):
         """Get the latest data from Smappee and update the state."""
         self._smappee.update()
 
-        if self._sensor in ['alwayson_today', 'solar_today', 'power_today']:
-            data = self._smappee.consumption[self._location_id]
-            if data:
-                consumption = data.get('consumptions')[-1]
-                _LOGGER.debug("%s %s", self._sensor, consumption)
-                value = consumption.get(self._smappe_name)
-                self._state = round(value / 1000, 2)
-        # if self._sensor in ['solar_today', 'power_today']:
+        # if self._sensor in ['alwayson_today', 'solar_today', 'power_today']:
         #     data = self._smappee.consumption[self._location_id]
         #     if data:
         #         consumption = data.get('consumptions')[-1]
         #         _LOGGER.debug("%s %s", self._sensor, consumption)
         #         value = consumption.get(self._smappe_name)
         #         self._state = round(value / 1000, 2)
-        # elif self._sensor == 'alwayson_today':
-        #     data = self._smappee.get_consumption(
-        #         self._location_id, aggregation=1, delta=30)
-        #     _LOGGER.debug("%s %s", self._sensor, data)
-        #     if data:
-        #         consumption = data.get('consumptions')[-1]
-        #         self._state = consumption.get(self._smappe_name)
+        if self._sensor in ['solar_today', 'power_today']:
+            data = self._smappee.consumption[self._location_id]
+            if data:
+                consumption = data.get('consumptions')[-1]
+                _LOGGER.debug("%s %s", self._sensor, consumption)
+                value = consumption.get(self._smappe_name)
+                self._state = round(value / 1000, 2)
+        elif self._sensor == 'alwayson_today':
+            data = self._smappee.get_consumption(
+                self._location_id, aggregation=1, delta=30)
+            _LOGGER.debug("%s %s", self._sensor, data)
+            if data:
+                consumption = data.get('consumptions')[-1]
+                self._state = consumption.get(self._smappe_name)
         elif self._sensor == 'active_cosfi':
             cosfi = self._smappee.active_cosfi()
             _LOGGER.debug("%s %s", self._sensor, cosfi)
