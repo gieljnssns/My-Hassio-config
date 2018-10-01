@@ -1,0 +1,12 @@
+  alias: gPhone bluetooth
+  trigger:
+    - platform: state
+      entity_id: sensor.gphone_bt_thuis
+  action:
+    service_template: >
+      {% if states.sensor.gphone_bt_thuis.state | float > 50 %}
+         input_boolean.turn_on
+      {% else %}
+         input_boolean.turn_off
+      {% endif %}
+    entity_id: input_boolean.gphone_bluetooth

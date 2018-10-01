@@ -17,7 +17,14 @@
        entity_id: input_boolean.martinethuis
        state: 'off'
   action:
-    service: alarm_control_panel.alarm_arm_away
-    entity_id: alarm_control_panel.ha_alarm
-    data:
-      code: !secret alarm_code
+    - service: alarm_control_panel.alarm_arm_away
+      entity_id: alarm_control_panel.ha_alarm
+      data:
+        code: !secret alarm_code
+    - service: media_player.sonos_snapshot
+      entity_id: media_player.keuken
+    - delay: 00:00:05
+    - service: media_player.media_pause
+      entity_id: media_player.keuken
+    - service: media_player.media_pause
+      entity_id: media_player.badkamer

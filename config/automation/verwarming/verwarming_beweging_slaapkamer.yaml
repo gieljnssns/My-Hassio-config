@@ -1,18 +1,18 @@
   alias: Verwarming bij beweging slaapkamer
   trigger:
     - platform: state
-      entity_id: binary_sensor.slaapkamer_2_3
+      entity_id: binary_sensor.beweging_slaapkamer
       to: 'on'
     - platform: state
-      entity_id: binary_sensor.slaapkamer_2_3
+      entity_id: binary_sensor.beweging_slaapkamer
       to: 'off'
   action:
     service: climate.set_temperature
     data_template:
       entity_id: climate.slaapkamer
       temperature: >
-        {% if is_state('binary_sensor.slaapkamer_2_3', 'on') %}
+        {% if is_state('binary_sensor.beweging_slaapkamer', 'on') %}
           {{states('input_select.setpunt_slaapkamer')}}
-        {% elif is_state('binary_sensor.slaapkamer_2_3', 'off') %}
+        {% elif is_state('binary_sensor.beweging_slaapkamer', 'off') %}
           10
         {% endif %}

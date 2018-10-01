@@ -1,18 +1,18 @@
   alias: Verwarming bij beweging Noor
   trigger:
     - platform: state
-      entity_id: binary_sensor.noor_4_3
+      entity_id: binary_sensor.beweging_noor
       to: 'on'
     - platform: state
-      entity_id: binary_sensor.noor_4_3
+      entity_id: binary_sensor.beweging_noor
       to: 'off'
   action:
     service: climate.set_temperature
     data_template:
       entity_id: climate.noor
       temperature: >
-        {% if is_state('binary_sensor.noor_4_3', 'on') %}
+        {% if is_state('binary_sensor.beweging_noor', 'on') %}
           {{states('input_select.setpunt_noor')}}
-        {% elif is_state('binary_sensor.noor_4_3', 'off') %}
+        {% elif is_state('binary_sensor.beweging_noor', 'off') %}
           10
         {% endif %}

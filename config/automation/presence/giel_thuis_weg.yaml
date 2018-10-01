@@ -1,12 +1,25 @@
   alias: Giel thuis weg
   trigger:
-    platform: state
-    entity_id: input_boolean.gieloma, input_boolean.gielwerk, input_boolean.gielbompa, input_boolean.gielmoemoe_vava
-    to: 'on'
-  condition:
-    condition: state
-    entity_id: input_boolean.gielthuis
-    state: 'on'
+    - platform: state
+      entity_id: input_boolean.gieloma, input_boolean.gielwerk, input_boolean.gielbompa, input_boolean.gielmoemoe_vava
+      to: 'on'
+    - platform: state
+      entity_id: input_boolean.gielthuis
+      to: 'off'
+    - platform: state
+      entity_id: input_boolean.gielhomekit
+      to: 'off'
+    - platform: state
+      entity_id: input_boolean.gphone_bluetooth
+      to: 'off'
+  # condition:
+  #   condition: state
+  #   entity_id: input_boolean.gielthuis
+  #   state: 'on'
   action:
-    service: input_boolean.turn_off
-    entity_id: input_boolean.gielthuis
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.gielthuis
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.giel_komt_thuis
+    - service: script.turn_off
+      entity_id: script.set_arrive_sensor_giel
