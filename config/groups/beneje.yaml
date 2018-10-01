@@ -4,75 +4,60 @@ beneje:
   view: yes
   entities:
     - sensor.gemiddelde_temp_beneden
+    - sensor.beneden_lowpass
     - group.keuken
     - group.living
-    - group.garage
-    - group.den_hof
+    - group.spots_tv
     - group.wc
 
 
 keuken:
   name: Keuken
   entities:
+    - camera.keuken
     - binary_sensor.beweging_keuken
+    - binary_sensor.keuken_beweging
     - binary_sensor.keuken_6_3
     - sensor.keuken_6_1
+    - sensor.keuken_temperatuur
+    - sensor.keuken_gevoelstemperatuur
     - sensor.keuken_6_2
+    - sensor.keuken_luchtvochtigheid
     - sensor.keuken_6_0
+    - sensor.keuken_light_level
+    - switch.reserve5
+    - light.keuken_led
 
 living:
   name: Living
   control: hidden
   entities:
+    - camera.living
+    - camera.living2
     - binary_sensor.beweging_living
     - binary_sensor.living_7_3
     - sensor.temp_living
     - sensor.living_7_1
     - sensor.living_7_2
     - sensor.living_7_0
-    # - input_select.scene_selection
-    # - light.spotjes_living
-    # - group.spots_tv
     - light.spots_tv
     - light.achterste_spots
     - switch.opladers
     - switch.kerstverlichting
     - switch.tv
 
-spots_Tv:
+spots_tv:
   name: Spots Tv
   icon: mdi:lightbulb-on-outline
+  control: hidden
   entities:
-    - light.Links_Achter
-    - light.Links_Voor
-    - light.Rechts_Achter
-    - light.Rechts_Midden
-    - light.Rechts_Voor
+    - light.links_achter
+    - light.links_voor
+    - light.rechts_achter
+    - light.rechts_midden
+    - light.rechts_voor
 
 wc:
   name: Wc
   entities:
-    - switch.verwarming_wc
-
-garage:
-  name: Garage
-  entities:
-    - binary_sensor.garage_5_3
-    - sensor.garage_5_1
-
-den_hof:
-  name: Den hof
-  control: hidden
-  entities:
-    - binary_sensor.den_hof_outdoor_animal
-    # - binary_sensor.dier_in_den_hof
-    - binary_sensor.den_hof_outdoor_vehicle
-    - binary_sensor.beweging_hof
-    - binary_sensor.den_hof_outdoor_human
-    - binary_sensor.volk_in_den_hof
-    - light.alle_tuinverlichting
-    # - group.terras
-    - light.terras
-    # - group.den_hof
-    - light.den_hof
-    - binary_sensor.presence_licht_aan
+    - switch.wc
