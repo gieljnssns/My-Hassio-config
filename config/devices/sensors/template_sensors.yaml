@@ -1,8 +1,6 @@
   - platform: template
     sensors:
       verluchting:
-        # entity_id:
-        #   - switch.verluchting
         value_template: >-
               {%- if is_state("switch.verluchting", "off") %}
                   Uit
@@ -12,52 +10,42 @@
                   ??
               {%- endif %}
       badkamer:
-        # entity_id:
-        #   - switch.verwarming_badkamer
         value_template: >-
-              {%- if is_state("switch.verwarming_badkamer", "off") %}
+              {%- if is_state("switch.badkamer", "off") %}
                   Uit
-              {% elif is_state("switch.verwarming_badkamer", "on") %}
+              {% elif is_state("switch.badkamer", "on") %}
                   Aan
               {% else %}
                   failed
               {%- endif %}
       noor:
-        # entity_id:
-        #   - switch.verwarming_noor
         value_template: >-
-              {%- if is_state("switch.verwarming_noor", "off") %}
+              {%- if is_state("switch.noor", "off") %}
                   Uit
-              {% elif is_state("switch.verwarming_noor", "on") %}
+              {% elif is_state("switch.noor", "on") %}
                   Aan
               {% else %}
                   failed
               {%- endif %}
       fien:
-        # entity_id:
-        #   - switch.verwarming_fien
         value_template: >-
-              {%- if is_state("switch.verwarming_fien", "off") %}
+              {%- if is_state("switch.fien", "off") %}
                   Uit
-              {% elif is_state("switch.verwarming_fien", "on") %}
+              {% elif is_state("switch.fien", "on") %}
                   Aan
               {% else %}
                   failed
               {%- endif %}
       slaapkamer:
-        # entity_id:
-        #   - switch.verwarming_slaapkamer
         value_template: >-
-              {%- if is_state("switch.verwarming_slaapkamer", "off") %}
+              {%- if is_state("switch.slaapkamer", "off") %}
                   Uit
-              {% elif is_state("switch.verwarming_slaapkamer", "on") %}
+              {% elif is_state("switch.slaapkamer", "on") %}
                   Aan
               {% else %}
                   failed
               {%- endif %}
       opladers:
-        # entity_id:
-        #   - switch.opladers
         value_template: >-
               {%- if is_state("switch.opladers", "off") %}
                   Uit
@@ -67,19 +55,15 @@
                   failed
               {%- endif %}
       wc:
-        # entity_id:
-        #   - switch.verwarming_wc
         value_template: >-
-              {%- if is_state("switch.verwarming_wc", "off") %}
+              {%- if is_state("switch.wc", "off") %}
                   Uit
-              {% elif is_state("switch.verwarming_wc", "on") %}
+              {% elif is_state("switch.wc", "on") %}
                   Aan
               {% else %}
                   failed
               {%- endif %}
       bureau:
-        # entity_id:
-        #   - switch.verwarming_bureau
         value_template: >-
               {%- if is_state("switch.verwarming_bureau", "off") %}
                   Uit
@@ -90,22 +74,65 @@
               {%- endif %}
 
       temp_living:
-        # entity_id:
-        #   - climate.living
         value_template: "{{ states.climate.living.attributes.current_temperature }}"
         unit_of_measurement: '°C'
 
       next_rising:
-        # entity_id:
-        #   - binary_sensor.iss
         value_template: "{{ states.binary_sensor.iss.attributes.next_rise }}"
 
       people_in_space:
-        # entity_id:
-        #   - binary_sensor.iss
         value_template: "{{ states.binary_sensor.iss.attributes.number_of_people_in_space }}"
 
       verwarming_beneden:
-        # entity_id:
-        #   - climate.living
         value_template: "{{states.climate.living.attributes.operation_mode}}"
+
+      binnen_vs_buiten:
+        value_template: >-
+              {% if (states('sensor.gemiddelde_temp_binnen')) > (states('sensor.garage_5_0')) and states('sensor.gemiddelde_temp_binnen') | float > 27 %}
+                 Afkoeling
+              {% else %}
+                 Geen afkoeling
+              {%endif %}
+      windsnelheid:
+        friendly_name: Windsnelheid
+        icon_template: mdi:weather-windy
+        unit_of_measurement: 'km/u'
+        value_template: >-
+          {{ (states.sensor.dark_sky_wind_speed.state | float * 3.6) | round(2) }}
+      windrichting:
+        friendly_name: Windrichting
+        icon_template: mdi:compass
+        value_template: >-
+          {% if 349.1 <= states('sensor.dark_sky_wind_bearing')|float <= 11.5 %}
+             N
+          {% elif 11.6 <= states('sensor.dark_sky_wind_bearing')|float <= 34 %}
+             NNO
+          {% elif 34.1 <= states('sensor.dark_sky_wind_bearing')|float <= 56.5 %}
+             NO
+          {% elif 56.6 <= states('sensor.dark_sky_wind_bearing')|float <= 79 %}
+             ONO
+          {% elif 79.1 <= states('sensor.dark_sky_wind_bearing')|float <= 101.5 %}
+             O
+          {% elif 101.6 <= states('sensor.dark_sky_wind_bearing')|float <= 124 %}
+             OZO
+          {% elif 124.1 <= states('sensor.dark_sky_wind_bearing')|float <= 146.5 %}
+             ZO
+          {% elif 146.6 <= states('sensor.dark_sky_wind_bearing')|float <= 169 %}
+             ZZO
+          {% elif 169.1 <= states('sensor.dark_sky_wind_bearing')|float <= 191.5 %}
+             Z
+          {% elif 191.6 <= states('sensor.dark_sky_wind_bearing')|float <= 214 %}
+             ZZW
+          {% elif 214.1 <= states('sensor.dark_sky_wind_bearing')|float <= 236.5 %}
+             ZW
+          {% elif 236.6 <= states('sensor.dark_sky_wind_bearing')|float <= 259 %}
+             WZW
+          {% elif 259.1 <= states('sensor.dark_sky_wind_bearing')|float <= 281.5 %}
+             W
+          {% elif 281.6 <= states('sensor.dark_sky_wind_bearing')|float <= 304 %}
+             WNW
+          {% elif 304.1 <= states('sensor.dark_sky_wind_bearing')|float <= 326.5 %}
+             NW
+          {% elif 326.6 <= states('sensor.dark_sky_wind_bearing')|float <= 349 %}
+             NNW
+          {% endif %}
