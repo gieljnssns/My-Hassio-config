@@ -1,0 +1,16 @@
+  alias: Licht uit avond
+  trigger:
+    platform: state
+    entity_id: alarm_control_panel.ha_alarm
+    to: armed_night
+  action:
+    - service: light.turn_on
+      entity_id: light.slaapkamer
+    - delay:
+        minutes: 3
+    - service: homeassistant.turn_off
+      entity_id: light.alle_tuinverlichting
+    - delay:
+        minutes: 1
+    - service: light.turn_off
+      entity_id: light.spots_tv

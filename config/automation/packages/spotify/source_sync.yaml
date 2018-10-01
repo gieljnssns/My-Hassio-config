@@ -1,0 +1,11 @@
+  alias: 'Spotify Source (Sync)'
+  trigger:
+    - platform: homeassistant
+      event: start
+    - platform: state
+      entity_id: sensor.spotify_source
+  action:
+    service: input_select.select_option
+    entity_id: input_select.spotify_source
+    data_template:
+      option: '{{  states.sensor.spotify_source.state  }}'

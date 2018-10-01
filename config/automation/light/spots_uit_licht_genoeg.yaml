@@ -1,9 +1,8 @@
-alias: Spots uit licht buiten
-trigger:
-  platform: sun
-  event: sunrise
-  offset: '01:00:00'
-action:
-  service: light.turn_off
-  entity_id: group.spots_tv
-  
+  alias: Spots uit licht buiten
+  trigger:
+    platform: state
+    entity_id: sensor.dark_outside
+    to: 'false'
+  action:
+    service: light.turn_off
+    entity_id: light.spots_tv

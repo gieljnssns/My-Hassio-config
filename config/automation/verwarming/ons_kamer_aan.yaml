@@ -1,14 +1,14 @@
-# - {"event": "Slaapkamer_aan"}
+  # - {"event": "Slaapkamer_aan"}
 
-alias: 'Verwarming Slaapkamer Aan'
+  alias: 'Verwarming Slaapkamer Aan'
 
-trigger:
-  - platform: time
-    at: '06:00'
-condition:
-  - condition: state
-    entity_id: input_boolean.op_verlof
-    state: 'off'
-action:
-  - service: automation.turn_on
-    entity_id: automation.verwarming_bij_beweging_slaapkamer
+  trigger:
+    - platform: time
+      at: '06:00'
+  condition:
+    - condition: state
+      entity_id: input_boolean.op_verlof
+      state: 'off'
+  action:
+    - service: automation.turn_on
+      entity_id: automation.verwarming_bij_beweging_slaapkamer

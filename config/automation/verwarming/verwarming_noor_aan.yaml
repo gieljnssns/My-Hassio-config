@@ -1,14 +1,14 @@
-# - {"event": "Noor_aan"}
+  # - {"event": "Noor_aan"}
 
-alias: 'Verwarming Noor Aan'
+  alias: 'Verwarming Noor Aan'
 
-trigger:
-  - platform: time
-    at: '06:00'
-condition:
-  - condition: state
-    entity_id: input_boolean.op_verlof
-    state: 'off'
-action:
-  - service: automation.turn_on
-    entity_id: automation.verwarming_bij_beweging_noor
+  trigger:
+    - platform: time
+      at: '06:00'
+  condition:
+    - condition: state
+      entity_id: input_boolean.op_verlof
+      state: 'off'
+  action:
+    - service: automation.turn_on
+      entity_id: automation.verwarming_bij_beweging_noor

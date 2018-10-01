@@ -1,0 +1,11 @@
+  alias: "Alarm aan/uit"
+  trigger:
+    platform: state
+    entity_id: alarm_control_panel.ha_alarm
+  condition:
+    condition: template
+    value_template: "{{ states.alarm_control_panel.ha_alarm.state != 'pending' }}"
+  action:
+    - service: notify.ios
+      data:
+        message: "Ons alarm is nu {{ states.alarm_control_panel.ha_alarm.state }}"

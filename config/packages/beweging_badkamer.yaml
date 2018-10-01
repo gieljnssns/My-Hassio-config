@@ -1,0 +1,15 @@
+input_boolean:
+  beweging_badkamer:
+
+timer:
+  timer_beweging_badkamer:
+    duration: '00:02:00'
+
+binary_sensor:
+  - platform: template
+    sensors:
+      beweging_badkamer:
+        device_class: occupancy
+        friendly_name: "Beweging badkamer"
+        value_template: >-
+          {{ is_state('input_boolean.beweging_badkamer', 'on') }}

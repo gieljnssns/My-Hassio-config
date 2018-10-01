@@ -1,0 +1,89 @@
+Hassio VM ware maken
+
+Ubuntu server 16.04.3
+  vaste schijf grootte
+  2GB Ram
+  2 CPU's
+  netwerk => bridge
+  gedeelde map maken
+  ubuntu installeren
+    open ssh installeren
+
+
+
+ ```sudo apt-get update```
+ ```sudo apt-get upgrade```
+ ###################
+ Select Devices, CD/DVD Devices, VBoxGuestAdditions.iso.
+ ```sudo mount /dev/cdrom /media/cdrom```
+ ```  sudo apt-get install build-essential linux-headers-`uname –r`  ```
+ ```cd /media/cdrom```
+ ```ls```
+ ```sudo /media/cdrom/VBoxLinuxAdditions.run```
+ ```hostname -I```
+ ```sudo shutdown```
+
+start VM headless
+ssh into VM
+For the final part of this process we need to mount our shared folder. But firstly we need to create a directory within the guest that we can mount the shared folder to. I recommend placing it in the /mnt directory, but you can place it anywhere and give it any name.
+
+sudo mkdir /mnt/host-downloads
+
+
+
+Now we just need to mount the shared folder to our newly created directory using the following command.
+
+sudo mount –t vboxsf {host shared folder name} {guest mount directory }
+
+So in my example I would do the following, please remember that Linux is case sensitive.
+
+sudo mount –t vboxsf Downloads /mnt/host-downloads
+
+
+
+Then I should be able to
+
+cd /mnt/host-downloads
+ls -sh
+
+
+
+Now you can easy copy over Internet downloads onto your guest operating system.
+
+#######################
+
+Docker CE
+ ```sudo apt-get install \
+      apt-transport-https \
+      ca-certificates \
+      curl \
+      software-properties-common```
+ ```curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -```
+ ```sudo apt-key fingerprint 0EBFCD88```
+ ```sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"```
+ ```sudo apt-get update```
+ ```sudo apt-get install docker-ce```
+ ```apt-cache madison docker-ce```
+
+Portainer
+  ```sudo docker run -d -p 9000:9000 --restart always -v /var/run/docker.sock:/var/run/docker.sock -v /opt/portainer:/data portainer/portainer```
+
+  Voilà, you can now access Portainer by pointing your web browser at http://DOCKER_HOST:9000
+
+  Ensure you replace DOCKER_HOST with the address of the Docker host where Portainer is running.
+
+  Note 1: The -v /var/run/docker.sock:/var/run/docker.sock option is available on Linux environments only.
+
+  Note 2: The -v /opt/portainer:/data option will persist Portainer data in /opt/portainer on the host where Portainer is running. You can specify another location on your filesystem.
+
+  Note 3: If your host is using SELinux, you’ll need to pass the --privileged flag to the Docker run command:
+  ```docker run -d --privileged -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v /opt/portainer:/data portainer/portainer```
+  You’ll then be prompted to specify a new password for the admin account. After specifying your password, you’ll be able to connect to the Portainer UI.
+
+HomeAssistant
+  ```sudo apt-get install jq socat avahi-daemon```
+  ```sudo -i```
+  ```curl -sL https://raw.githubusercontent.com/home-assistant/hassio-build/master/install/hassio_install | bash -s```

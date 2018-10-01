@@ -1,14 +1,14 @@
-# - {"event": "Badkamer_aan"}
+  # - {"event": "Badkamer_aan"}
 
-alias: 'Verwarming Badkamer Aan'
+  alias: 'Verwarming Badkamer Aan'
 
-trigger:
-  - platform: time
-    at: '06:00'
-condition:
-  - condition: state
-    entity_id: input_boolean.op_verlof
-    state: 'off'
-action:
-  - service: automation.turn_on
-    entity_id: automation.verwarming_bij_beweging_badkamer
+  trigger:
+    - platform: time
+      at: '06:00'
+  condition:
+    - condition: state
+      entity_id: input_boolean.op_verlof
+      state: 'off'
+  action:
+    - service: automation.turn_on
+      entity_id: automation.verwarming_bij_beweging_badkamer

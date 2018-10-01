@@ -1,0 +1,10 @@
+  alias: 'Licht buiten_lowpass'
+  initial_state: 'on'
+  trigger:
+    platform: numeric_state
+    entity_id: sensor.zonne_energie_gefilterd_lowpass
+    above: 100
+  action:
+    - service: input_boolean.turn_off
+      entity_id:
+        - input_boolean.donker_buiten_lowpass

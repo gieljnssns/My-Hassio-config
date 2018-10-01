@@ -1,0 +1,101 @@
+input_number:
+  spotify_volume:
+    name: Volume
+    icon: mdi:volume-high
+    initial: 20
+    min: 0
+    max: 100
+    step: 1
+
+
+input_boolean:
+  spotify_shuffle:
+    name: Shuffle
+    icon: mdi:shuffle-variant
+
+
+input_select:
+  spotify_playlist:
+    name: 'Playlist:'
+    options:
+      - Stevige shit
+      - Gitannekesfoor
+      - Extreme metal workout
+      - Voodoo Rhytm Records
+      - Best of Napalm Records
+    icon: mdi:spotify
+
+  spotify_source:
+    name: 'Source:'
+    options:
+      - Keuken
+      - Badkamer
+      - iMac 5k
+      - gPhone
+    initial: Keuken
+    icon: mdi:speaker-wireless
+
+
+script:
+  spotify_music:
+    alias: Speel geselecteerde spotify playlist
+    sequence:
+      - service: media_player.volume_set
+        data_template:
+          entity_id: media_player.spotify
+          volume_level: ‘{{ states.input_number.spotify_volume.state }}’
+      -  service: media_player.select_source
+         data_template:
+           entity_id: media_player.spotify
+           source: >
+            {% if is_state("input_select.spotify_source", "Keuken") %} Keuken
+            {% elif is_state("input_select.spotify_source", "Badkamer") %} Badkamer
+            {% elif is_state("input_select.spotify_source", "iMac 5k") %} iMac 5k
+            {% elif is_state("input_select.spotify_source", "gPhone") %} gPhone
+            {% endif %}
+      -  service: media_player.play_media
+         data_template:
+           entity_id: media_player.spotify
+           media_content_type: playlist
+           media_content_id: >
+            {% if is_state("input_select.spotify_playlist", "Stevige shit") %} spotify:user:gieljnssns:playlist:3imNoDAZojhiXbibNNUG47
+            {% elif is_state("input_select.spotify_playlist", "Gitannekesfoor") %} spotify:user:gitannekesfoor:playlist:78wo2AUuLGTkDKD3aHbtBF
+            {% elif is_state("input_select.spotify_playlist", "Extreme metal workout") %} spotify:user:spotify:playlist:37i9dQZF1DWY3PJWG3ogmJ
+            {% elif is_state("input_select.spotify_playlist", "Voodoo Rhytm Records") %} spotify:user:voodoorhythmrecords:playlist:71jdlT49sPCIpatWhd7hAo
+            {% elif is_state("input_select.spotify_playlist", "Best of Napalm Records") %} spotify:user:napalm-records:playlist:3q5aD0WMPKTkf9GCHkdbOW
+            {% endif %}
+
+
+homeassistant:
+  customize:
+    script.spotify_music:
+      friendly_name: 'Afspelen'
+      icon: mdi:play
+
+
+group:
+  music_spotify:
+    name: Spotify
+    entities:
+      - input_select.spotify_playlist
+      - input_select.spotify_source
+      - script.spotify_music
+      - input_number.spotify_volume
+      - input_boolean.spotify_shuffle
+
+sensor:
+  - platform: template
+    sensors:
+      spotify_volume:
+        friendly_name: "Spotify Volume"
+        value_template: "{{ states.media_player.spotify.attributes.volume_level }}"
+  - platform: template
+    sensors:
+      spotify_shuffle:
+        friendly_name: "Spotify Shuffle"
+        value_template: "{{ states.media_player.spotify.attributes.shuffle }}"
+  - platform: template
+    sensors:
+      spotify_source:
+        friendly_name: "Spotify Source"
+        value_template: "{{ states.media_player.spotify.attributes.source }}"

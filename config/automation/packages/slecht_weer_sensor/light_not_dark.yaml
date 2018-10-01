@@ -1,0 +1,10 @@
+  alias: 'Light notification - dark'
+  initial_state: 'on'
+  trigger:
+    platform: state
+    entity_id: sensor.dark_outside
+    to: 'true'
+  action:
+    - service: notify.ios_gphone
+      data:
+        message: 'Het is nu donker, ik zou nu de lichten kunnen aan doen.'

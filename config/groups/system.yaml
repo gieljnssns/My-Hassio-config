@@ -4,9 +4,10 @@ system:
   icon: mdi:raspberrypi
   entities:
     - group.systeem
-    - script.ha_restart
+    - group.pihole
+    - group.dietpi
+    - group.diethass
     - group.automations
-    - group.smappee
     - group.test
     - configurator.plex_media_server
     - configurator.philips_hue
@@ -16,35 +17,74 @@ system:
 test:
   name: Test
   entities:
-    - binary_sensor.living_7_3
-    - sensor.living_7_0
-    - sensor.living_7_1
-    - sensor.living_7_2
-smappee:
-  name: Smappee
+    - switch.relay_8_11_1
+    - switch.relay_8_11_2
+    - switch.relay_8_11_3
+    - switch.relay_8_11_4
+    - switch.relay_8_11_5
+    - switch.relay_8_11_6
+    - switch.relay_8_11_7
+    - switch.relay_8_11_8
+
+systeem:
+  name: Systeem
+  entities:
+    - sensor.disk_use
+    - sensor.processor_use
+    - sensor.load_1m
+    - sensor.load_15m
+    - sensor.memory_free
+    - sensor.memory_use
+    - sensor.swap_use
+    - sensor.since_last_boot
+    - sensor.network_in
+    - sensor.network_out
+    - sensor.gieljnssnsha
+    - script.restart_hassio
+
+pihole:
+  name: PiHole
   control: hidden
   entities:
-    - sensor.smappee_thuis_always_on
-    - sensor.smappee_thuis_current
-    - sensor.smappee_thuis_current_today
-    - sensor.smappee_thuis_solar
-    - sensor.smappee_thuis_solar_today
-    - switch.reserve3
-    - switch.reserve4
-    - switch.reserve5
-systeem:
-  entities:
-    - sensor.cpu_used
-    - sensor.ram_available
-    - sensor.ram_used
-    - sensor.since_last_boot
-    - sensor.gieljnssnsha
     - sensor.pihole_dns_queries_today
     - sensor.pihole_ads_blocked_today
     - sensor.pihole_ads_percentage_blocked_today
     - sensor.pihole_dns_unique_clients
     - sensor.pihole_dns_unique_domains
     - sensor.pihole_domains_blocked
+
+diethass:
+  name: DietHass
+  entities:
+    - sensor.diethass_uptime
+    - sensor.diethass_system_load
+    - sensor.diethass_cpu_user
+    - sensor.diethass_cpu_system
+    - sensor.diethass_ram_free
+    - sensor.diethass_ram_used
+    - sensor.diethass_disk_free
+    - sensor.diethass_ipv4_in
+    - sensor.diethass_ipv4_out
+    - sensor.diethass_processes_running
+    - sensor.diethass_processes_blocked
+    - sensor.diethass_active_connections
+
+dietpi:
+  name: DietPi
+  entities:
+    - sensor.dietpi_uptime
+    - sensor.dietpi_system_load
+    - sensor.dietpi_cpu_user
+    - sensor.dietpi_cpu_system
+    - sensor.dietpi_ram_free
+    - sensor.dietpi_ram_used
+    - sensor.dietpi_disk_free
+    - sensor.dietpi_ipv4_in
+    - sensor.dietpi_ipv4_out
+    - sensor.dietpi_processes_running
+    - sensor.dietpi_processes_blocked
+    - sensor.dietpi_active_connections
+
 automations:
   name: Automatisaties
   control: hidden

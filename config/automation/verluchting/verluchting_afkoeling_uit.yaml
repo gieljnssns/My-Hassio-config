@@ -1,18 +1,18 @@
-# Zet de verluchting uit als bool verluchting_afkoeling aan is en
-# de temperatuur binnen onder de 24,5 graden zakt.
+  # Zet de verluchting uit als bool verluchting_afkoeling aan is en
+  # de temperatuur binnen onder de 24,5 graden zakt.
 
-alias: 'Verluchting Afkoeling  Uit'
-trigger:
-  - platform: template
-    value_template: "{{ states('sensor.temp_living') | float < 25 }}"
-  - platform: template
-    value_template: "{{ states('sensor.temp_living')  <  states('sensor.garage_5_0') }}"
-condition:
-    condition: state
-    entity_id: input_boolean.verluchting_afkoeling
-    state: 'on'
-action:
-  - service: switch.turn_off
-    entity_id: switch.verluchting
-  - service: input_boolean.turn_off
-    entity_id: input_boolean.verluchting_afkoeling
+  alias: 'Verluchting Afkoeling  Uit'
+  trigger:
+    - platform: template
+      value_template: "{{ states('sensor.temp_living') | float < 25 }}"
+    - platform: template
+      value_template: "{{ states('sensor.temp_living')  <  states('sensor.garage_5_0') }}"
+  condition:
+      condition: state
+      entity_id: input_boolean.verluchting_afkoeling
+      state: 'on'
+  action:
+    - service: switch.turn_off
+      entity_id: switch.verluchting
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.verluchting_afkoeling

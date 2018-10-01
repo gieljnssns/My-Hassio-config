@@ -1,20 +1,20 @@
-alias: Spots tv disco bij vertrek (iedereen)
-trigger:
-  platform: state
-  entity_id: alarm_control_panel.ha_alarm
-  to: armed_away
-condition:
-  condition: state
-  entity_id: group.spots_tv
-  state: 'on'
-action:
-  - service: light.turn_on
-    entity_id: group.spots_tv
-    data:
-      effect: random
-      brightness: 250
-  - delay: 0:01
-  - service: light.turn_on
-    entity_id: group.spots_tv
-    data:
-      effect: colorloop
+  alias: Spots tv disco bij vertrek (iedereen)
+  trigger:
+    platform: state
+    entity_id: alarm_control_panel.ha_alarm
+    to: armed_away
+  condition:
+    condition: state
+    entity_id: light.spots_tv
+    state: 'on'
+  action:
+    - service: light.turn_on
+      entity_id: light.spots_tv
+      data:
+        effect: random
+        brightness: 250
+    - delay: 0:01
+    - service: light.turn_on
+      entity_id: light.spots_tv
+      data:
+        effect: colorloop

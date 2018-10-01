@@ -1,23 +1,23 @@
-# {"event": "Opladers_aan"}
+  # {"event": "Opladers_aan"}
 
-alias: 'Opladers Aan tijd'
-trigger:
-  - platform: time
-    at: '09:00'
-condition:
-  - condition: time
-    weekday:
-      - mon
-      - tue
-      - wed
-      - thu
-      - fri
-      - sat
-      - sun
-  - condition: state
-    entity_id: input_boolean.op_verlof
-    state: 'off'
-action:
-  - service: switch.turn_on
-    entity_id:
-      - switch.opladers
+  alias: 'Opladers Aan tijd'
+  trigger:
+    - platform: time
+      at: '09:00'
+  condition:
+    - condition: time
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+        - sat
+        - sun
+    - condition: state
+      entity_id: input_boolean.op_verlof
+      state: 'off'
+  action:
+    - service: switch.turn_on
+      entity_id:
+        - switch.opladers

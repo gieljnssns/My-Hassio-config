@@ -1,318 +1,318 @@
-#######   Strava statistieken   #######
+  #######   Strava statistieken   #######
 
-- platform: rest
-  name: strava_mbiggest_ride
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.biggest_ride_distance / 1000) | round(1) }}"
-  unit_of_measurement: km
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mbiggest_elevation
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.biggest_climb_elevation_gain ) | round(1) }}"
-  unit_of_measurement: meter
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mrecent_ride_distance
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.recent_ride_totals.distance / 1000 ) | round(1) }}"
-  unit_of_measurement: km
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mrecent_ride_elevation
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.recent_ride_totals.elevation_gain ) | round(1) }}"
-  unit_of_measurement: meter
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mrecent_run_distance
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.recent_run_totals.distance / 1000 ) | round(1) }}"
-  unit_of_measurement: km
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mrecent_run_elevation
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.recent_run_totals.elevation_gain ) | round(1) }}"
-  unit_of_measurement: meter
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mytd_ride_distance
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.ytd_ride_totals.distance / 1000 ) | round(1) }}"
-  unit_of_measurement: km
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mytd_ride_elevation
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.ytd_ride_totals.elevation_gain ) | round(1) }}"
-  unit_of_measurement: meter
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mytd_run_distance
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.ytd_run_totals.distance / 1000 ) | round(1) }}"
-  unit_of_measurement: km
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mytd_run_elevation
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.ytd_run_totals.elevation_gain ) | round(1) }}"
-  unit_of_measurement: meter
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mall_ride_distance
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.all_ride_totals.distance / 1000 ) | round(1) }}"
-  unit_of_measurement: km
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mall_ride_elevation
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.all_ride_totals.elevation_gain ) | round(1) }}"
-  unit_of_measurement: meter
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mall_run_distance
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.all_run_totals.distance / 1000 ) | round(1) }}"
-  unit_of_measurement: km
-  scan_interval: 750
-
-- platform: rest
-  name: strava_mall_run_elevation
-  resource: !secret strava_mresource_stats
-  method: GET
-  value_template: "{{ (value_json.all_run_totals.elevation_gain ) | round(1) }}"
-  unit_of_measurement: meter
-  scan_interval: 750
-
-
-#######   Strava laatste rit   #######
-
-- platform: rest
-  name: strava_m0_date
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[0].start_date_local }}"
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_type
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[0].type }}"
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_name
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[0].name }}"
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_afstand
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ (value_json[0].distance / 1000) | round(1) }}"
-  unit_of_measurement: km
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_tijd
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ (value_json[0].moving_time / 3600) | round(2) }}"
-  unit_of_measurement: uur
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_hoogte
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[0].total_elevation_gain }}"
-  unit_of_measurement: meter
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_gem_snelh
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ (value_json[0].average_speed | multiply(3.6)) | round(2) }}"
-  unit_of_measurement: km/u
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_max_snelh
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ (value_json[0].max_speed | multiply(3.6)) | round(2) }}"
-  unit_of_measurement: km/u
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_gem_cadans
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[0].average_cadence }}"
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_gem_temp
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[0].average_temp }}"
-  unit_of_measurement: ºC
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_gem_verm
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[0].average_watts }}"
-  unit_of_measurement: W
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_gem_hartsl
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ (value_json[0].average_heartrate) | round(1) }}"
-  unit_of_measurement: bpm
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_max_hartsl
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ (value_json[0].max_heartrate) | round(1) }}"
-  unit_of_measurement: bpm
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_pr
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[0].pr_count }}"
-  scan_interval: 750
-- platform: rest
-  name: strava_m0_kudos
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[0].kudos_count }}"
-  scan_interval: 750
-
-#######   Strava voorlaatste rit   #######
-
-- platform: rest
-  name: strava_m1_date
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[1].start_date_local }}"
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_type
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[1].type }}"
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_name
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[1].name }}"
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_afstand
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ (value_json[1].distance / 1000) | round(1) }}"
-  unit_of_measurement: km
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_tijd
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ (value_json[1].moving_time / 3600) | round(2) }}"
-  unit_of_measurement: uur
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_hoogte
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[1].total_elevation_gain }}"
-  unit_of_measurement: meter
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_gem_snelh
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ (value_json[1].average_speed | multiply(3.6)) | round(2) }}"
-  unit_of_measurement: km/u
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_max_snelh
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ (value_json[1].max_speed | multiply(3.6)) | round(2) }}"
-  unit_of_measurement: km/u
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_gem_cadans
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[1].average_cadence }}"
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_gem_temp
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[1].average_temp }}"
-  unit_of_measurement: ºC
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_gem_verm
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[1].average_watts }}"
-  unit_of_measurement: W
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_gem_hartsl
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ (value_json[1].average_heartrate) | round(1) }}"
-  unit_of_measurement: bpm
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_max_hartsl
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ (value_json[1].max_heartrate) | round(1) }}"
-  unit_of_measurement: bpm
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_pr
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[1].pr_count }}"
-  scan_interval: 750
-- platform: rest
-  name: strava_m1_kudos
-  resource: !secret strava_mresource
-  method: GET
-  value_template: "{{ value_json[1].kudos_count }}"
-  scan_interval: 750
+  # - platform: rest
+  #   name: strava_mbiggest_ride
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.biggest_ride_distance / 1000) | round(1) }}"
+  #   unit_of_measurement: km
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mbiggest_elevation
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.biggest_climb_elevation_gain ) | round(1) }}"
+  #   unit_of_measurement: meter
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mrecent_ride_distance
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.recent_ride_totals.distance / 1000 ) | round(1) }}"
+  #   unit_of_measurement: km
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mrecent_ride_elevation
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.recent_ride_totals.elevation_gain ) | round(1) }}"
+  #   unit_of_measurement: meter
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mrecent_run_distance
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.recent_run_totals.distance / 1000 ) | round(1) }}"
+  #   unit_of_measurement: km
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mrecent_run_elevation
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.recent_run_totals.elevation_gain ) | round(1) }}"
+  #   unit_of_measurement: meter
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mytd_ride_distance
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.ytd_ride_totals.distance / 1000 ) | round(1) }}"
+  #   unit_of_measurement: km
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mytd_ride_elevation
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.ytd_ride_totals.elevation_gain ) | round(1) }}"
+  #   unit_of_measurement: meter
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mytd_run_distance
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.ytd_run_totals.distance / 1000 ) | round(1) }}"
+  #   unit_of_measurement: km
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mytd_run_elevation
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.ytd_run_totals.elevation_gain ) | round(1) }}"
+  #   unit_of_measurement: meter
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mall_ride_distance
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.all_ride_totals.distance / 1000 ) | round(1) }}"
+  #   unit_of_measurement: km
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mall_ride_elevation
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.all_ride_totals.elevation_gain ) | round(1) }}"
+  #   unit_of_measurement: meter
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mall_run_distance
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.all_run_totals.distance / 1000 ) | round(1) }}"
+  #   unit_of_measurement: km
+  #   scan_interval: 750
+  #
+  # - platform: rest
+  #   name: strava_mall_run_elevation
+  #   resource: !secret strava_mresource_stats
+  #   method: GET
+  #   value_template: "{{ (value_json.all_run_totals.elevation_gain ) | round(1) }}"
+  #   unit_of_measurement: meter
+  #   scan_interval: 750
+  #
+  #
+  # #######   Strava laatste rit   #######
+  #
+  # - platform: rest
+  #   name: strava_m0_date
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[0].start_date_local }}"
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_type
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[0].type }}"
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_name
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[0].name }}"
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_afstand
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ (value_json[0].distance / 1000) | round(1) }}"
+  #   unit_of_measurement: km
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_tijd
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ (value_json[0].moving_time / 3600) | round(2) }}"
+  #   unit_of_measurement: uur
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_hoogte
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[0].total_elevation_gain }}"
+  #   unit_of_measurement: meter
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_gem_snelh
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ (value_json[0].average_speed | multiply(3.6)) | round(2) }}"
+  #   unit_of_measurement: km/u
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_max_snelh
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ (value_json[0].max_speed | multiply(3.6)) | round(2) }}"
+  #   unit_of_measurement: km/u
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_gem_cadans
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[0].average_cadence }}"
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_gem_temp
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[0].average_temp }}"
+  #   unit_of_measurement: ºC
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_gem_verm
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[0].average_watts }}"
+  #   unit_of_measurement: W
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_gem_hartsl
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ (value_json[0].average_heartrate) | round(1) }}"
+  #   unit_of_measurement: bpm
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_max_hartsl
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ (value_json[0].max_heartrate) | round(1) }}"
+  #   unit_of_measurement: bpm
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_pr
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[0].pr_count }}"
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m0_kudos
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[0].kudos_count }}"
+  #   scan_interval: 750
+  #
+  # #######   Strava voorlaatste rit   #######
+  #
+  # - platform: rest
+  #   name: strava_m1_date
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[1].start_date_local }}"
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_type
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[1].type }}"
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_name
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[1].name }}"
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_afstand
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ (value_json[1].distance / 1000) | round(1) }}"
+  #   unit_of_measurement: km
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_tijd
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ (value_json[1].moving_time / 3600) | round(2) }}"
+  #   unit_of_measurement: uur
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_hoogte
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[1].total_elevation_gain }}"
+  #   unit_of_measurement: meter
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_gem_snelh
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ (value_json[1].average_speed | multiply(3.6)) | round(2) }}"
+  #   unit_of_measurement: km/u
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_max_snelh
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ (value_json[1].max_speed | multiply(3.6)) | round(2) }}"
+  #   unit_of_measurement: km/u
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_gem_cadans
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[1].average_cadence }}"
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_gem_temp
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[1].average_temp }}"
+  #   unit_of_measurement: ºC
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_gem_verm
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[1].average_watts }}"
+  #   unit_of_measurement: W
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_gem_hartsl
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ (value_json[1].average_heartrate) | round(1) }}"
+  #   unit_of_measurement: bpm
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_max_hartsl
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ (value_json[1].max_heartrate) | round(1) }}"
+  #   unit_of_measurement: bpm
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_pr
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[1].pr_count }}"
+  #   scan_interval: 750
+  # - platform: rest
+  #   name: strava_m1_kudos
+  #   resource: !secret strava_mresource
+  #   method: GET
+  #   value_template: "{{ value_json[1].kudos_count }}"
+  #   scan_interval: 750

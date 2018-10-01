@@ -1,15 +1,15 @@
-alias: Licht Slaapkamer
-trigger:
-  - platform: state
-    entity_id: light.slaapkamer
-    to: 'on'
-condition:
-  - condition: state
-    entity_id: script.vertraagd_uit
-    state: 'off'
-action:
-  - service: light.turn_on
-    entity_id: light.slaapkamer
-    data:
-      effect: random
-      brightness: 240
+  alias: Licht Slaapkamer
+  trigger:
+    - platform: state
+      entity_id: light.slaapkamer
+      to: 'on'
+  condition:
+    - condition: state
+      entity_id: script.vertraagd_uit
+      state: 'off'
+  action:
+    - service: light.turn_on
+      entity_id: light.slaapkamer
+      data:
+        effect: random
+        brightness: 240

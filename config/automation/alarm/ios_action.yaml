@@ -1,37 +1,37 @@
-alias: IOS - All In one camera
-trigger:
-  platform: event
-  event_type: ios.notification_action_fired
-condition:
-  condition: template
-  value_template: "{{(trigger.event.data.actionName.split('_')[0] == 'ALLINONE')}}"
-action:
-  - service_template: >-
-      {% set domain = (trigger.event.data['action_data']['entity_id'].split('.')[0]) %}
-      {% set function = (trigger.event.data.actionName.split('_')[1]) %}
-      {% set entity_id = (trigger.event.data['action_data']['entity_id']) %}
-      {% if (function == 'TRUE') -%}
-        {% if (domain == 'cover') -%}
-          cover.open_cover
-        {% elif (domain in ['light', 'switch', 'script', 'automation', 'input_boolean', 'group']) -%}
-          homeassistant.turn_on
-        {% elif (domain == 'lock') -%}
-          lock.lock
+  alias: IOS - All In one camera
+  trigger:
+    platform: event
+    event_type: ios.notification_action_fired
+  condition:
+    condition: template
+    value_template: "{{(trigger.event.data.actionName.split('_')[0] == 'ALLINONE')}}"
+  action:
+    - service_template: >-
+        {% set domain = (trigger.event.data['action_data']['entity_id'].split('.')[0]) %}
+        {% set function = (trigger.event.data.actionName.split('_')[1]) %}
+        {% set entity_id = (trigger.event.data['action_data']['entity_id']) %}
+        {% if (function == 'TRUE') -%}
+          {% if (domain == 'cover') -%}
+            cover.open_cover
+          {% elif (domain in ['light', 'switch', 'script', 'automation', 'input_boolean', 'group']) -%}
+            homeassistant.turn_on
+          {% elif (domain == 'lock') -%}
+            lock.lock
+          {% else -%}
+          Invalid Domain:{{domain}} Function: {{function}} or entity:{{entity_id}}
+          {% endif -%}
+        {% elif (function == 'FALSE') -%}
+          {% if (domain == 'cover') -%}
+            cover.close_cover
+          {% elif (domain in ['light', 'switch', 'script', 'automation', 'input_boolean', 'group']) -%}
+            homeassistant.turn_off
+          {% elif (domain == 'lock') -%}
+            lock.unlock
+          {% else -%}
+          Invalid Domain:{{domain}} Function: {{function}} or entity:{{entity_id}}
+          {% endif -%}
         {% else -%}
         Invalid Domain:{{domain}} Function: {{function}} or entity:{{entity_id}}
         {% endif -%}
-      {% elif (function == 'FALSE') -%}
-        {% if (domain == 'cover') -%}
-          cover.close_cover
-        {% elif (domain in ['light', 'switch', 'script', 'automation', 'input_boolean', 'group']) -%}
-          homeassistant.turn_off
-        {% elif (domain == 'lock') -%}
-          lock.unlock
-        {% else -%}
-        Invalid Domain:{{domain}} Function: {{function}} or entity:{{entity_id}}
-        {% endif -%}
-      {% else -%}
-      Invalid Domain:{{domain}} Function: {{function}} or entity:{{entity_id}}
-      {% endif -%}
-    data_template:
-       entity_id: "{{trigger.event.data['action_data']['entity_id']}}"
+      data_template:
+         entity_id: "{{trigger.event.data['action_data']['entity_id']}}"
