@@ -1,0 +1,14 @@
+  alias: '`Thuiskomst aan/af'
+  trigger:
+    - platform: time
+      at: '23:00'
+    - platform: time
+      at: '09:00'
+  action:
+    - service_template: >
+        {% if now().hour == 23 %}
+          automation.turn_off
+        {% else %}
+          automation.turn_on
+        {% endif %}
+      entity_id: automation.welkom_allemaal_sonos_paused, automation.welkom_giel_sonos_paused, automation.welkom_giel_sonos_playing, automation.welkom_martine_sonos_paused, automation.welkom_martine_sonos_playing

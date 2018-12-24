@@ -1,26 +1,44 @@
   sonos_pauze_spreek:
     sequence:
+      - wait_template: "{{ states.script.begroeting_paused.state == 'off' }}"
+        timeout: '00:01:00'
+        continue_on_timeout: 'false'
       - service: media_player.volume_set
         data_template:
           entity_id: "{{ sonos_entity }}"
           volume_level: "{{ volume }}"
       - service: tts.voicerss_say
-      #- service: tts.google_say
+      # - service: tts.google_say
         data_template:
           entity_id: "{{ sonos_entity }}"
           message: "{{ message }}"
       - delay: "{{ delay }}"
+      - service: media_player.sonos_restore
+        data_template:
+          entity_id: "{{ sonos_entity }}"
+      - delay: '00:00:05'
       - condition: and
         conditions:
           - condition: state
             entity_id: media_player.philips_tv
             state: 'off'
           - condition: state
-            entity_id: calendar.nacht
+            entity_id: media_player.philips_tv_wifi
             state: 'off'
-      - service: media_player.sonos_restore
-        data_template:
-          entity_id: "{{ sonos_entity }}"
+          - condition: state
+            entity_id: media_player.vsx921
+            state: 'off'
+          - condition: state
+            entity_id: binary_sensor.v_w_nacht
+            state: 'off'
+          - condition: state
+            entity_id: binary_sensor.v_nacht
+            state: 'off'
+          - condition: template
+            value_template: "{{states('alarm_control_panel.ha_alarm')  != 'armed_night' }}"
+          - condition: template
+            value_template: "{{ state_attr('media_player.keuken', 'media_artist') != 'nl-nl' }}"
       - service: media_player.media_play
         data_template:
           entity_id: "{{ sonos_entity }}"
+

@@ -1,6 +1,9 @@
   alias: RAFC_lichten_aan
   trigger:
-    - entity_id: calendar.rafc
+    # - entity_id: calendar.rafc
+    #   platform: state
+    #   to: 'on'
+    - entity_id: calendar.rafc_rafc
       platform: state
       to: 'on'
   condition: []
@@ -11,12 +14,12 @@
         brightness: 255
         entity_id: light.spots_tv
     - service: script.rafc2_1
-      data_template:
-        delay_template: >
-           {{ [
-           1,
-           2,
-           3,
-           4,
-           5
-           ] | random }}
+      # data_template:
+      #   delay_template: >
+      #      {{ [
+      #      1,
+      #      2,
+      #      3,
+      #      4,
+      #      5
+      #      ] | random }}

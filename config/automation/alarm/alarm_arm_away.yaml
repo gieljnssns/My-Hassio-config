@@ -21,10 +21,18 @@
       entity_id: alarm_control_panel.ha_alarm
       data:
         code: !secret alarm_code
+    - service: media_player.media_pause
+      entity_id: media_player.badkamer
+    - condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ state_attr('media_player.keuken', 'media_artist') != 'nl-nl' }}"
+        - condition: state
+          entity_id: media_player.keuken
+          state: 'playing'
     - service: media_player.sonos_snapshot
       entity_id: media_player.keuken
     - delay: 00:00:05
     - service: media_player.media_pause
       entity_id: media_player.keuken
-    - service: media_player.media_pause
-      entity_id: media_player.badkamer
+    

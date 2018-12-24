@@ -1,12 +1,173 @@
 # gPhone
 - platform: mqtt
-  state_topic: 'monitor/Keuken/D0:2B:20:E7:BA:25'
+  state_topic: 'monitor/Keuken/6C:E8:5C:C6:A8:10'
   value_template: '{{ value_json.confidence }}'
   unit_of_measurement: '%'
   name: 'gPhone keuken'
-  # availability_topic: "monitor/Keuken/status"
-  # payload_available: "online"
-  # payload_not_available: "offline"
+  availability_topic: "monitor/Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes:
+    - id
+    - name
+    - rssi
+    - version
+    - manufacturer
+    - type
+    - timestamp
+    - retained
+    - confidence
+
+- platform: mqtt
+  state_topic: 'monitor/Living/6C:E8:5C:C6:A8:10'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'gPhone living'
+  availability_topic: "monitor/Living/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes:
+    - id
+    - name
+    - rssi
+    - version
+    - manufacturer
+    - type
+    - timestamp
+    - retained
+    - confidence
+
+- platform: mqtt
+  state_topic: 'monitor/Garage/6C:E8:5C:C6:A8:10'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'gPhone garage'
+  availability_topic: "monitor/Garage/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes:
+    - id
+    - name
+    - rssi
+    - version
+    - manufacturer
+    - type
+    - timestamp
+    - retained
+    - confidence
+
+# - platform: mqtt
+#   state_topic: 'monitor/Waskot/D0:2B:20:E7:BA:25'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'gPhone waskot'
+
+# Forerunner
+# - platform: mqtt
+#   state_topic: 'monitor/Keuken/FD:BE:FE:17:E4:83'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'Forerunner keuken'
+#   availability_topic: "monitor/Keuken/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   json_attributes:
+#     - id
+#     - name
+#     - rssi
+#     - version
+#     - manufacturer
+#     - type
+#     - timestamp
+#     - retained
+#     - confidence
+
+# - platform: mqtt
+#   state_topic: 'monitor/Living/FD:BE:FE:17:E4:83'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'Forerunner living'
+#   availability_topic: "monitor/Living/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   json_attributes:
+#     - id
+#     - name
+#     - rssi
+#     - version
+#     - manufacturer
+#     - type
+#     - timestamp
+#     - retained
+#     - confidence
+
+
+- platform: mqtt
+  state_topic: 'monitor/Garage/FD:BE:FE:17:E4:83'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'Forerunner garage'
+  availability_topic: "monitor/Garage/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes:
+    - id
+    - name
+    - rssi
+    - version
+    - manufacturer
+    - type
+    - timestamp
+    - retained
+    - confidence
+
+# fPad
+# - platform: mqtt
+#   state_topic: 'monitor/Keuken/5C:AD:CF:EB:03:D6'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'fPad keuken'
+
+# - platform: mqtt
+#   state_topic: 'monitor/Living/5C:AD:CF:EB:03:D6'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'fPad living'
+
+# - platform: mqtt
+#   state_topic: 'monitor/Boven/5C:AD:CF:EB:03:D6'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'fPad boven'
+
+# nPad
+# - platform: mqtt
+#   state_topic: 'monitor/Keuken/F8:62:14:83:84:F1'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'nPad keuken'
+
+# - platform: mqtt
+#   state_topic: 'monitor/Living/F8:62:14:83:84:F1'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'nPad living'
+
+# - platform: mqtt
+#   state_topic: 'monitor/Boven/F8:62:14:83:84:F1'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'nPad boven'
+
+# mPhone
+- platform: mqtt
+  state_topic: 'monitor/Keuken/D0:2B:20:E7:BA:25'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'mPhone keuken'
+  availability_topic: "monitor/Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
   json_attributes:
     - id
     - name
@@ -22,118 +183,10 @@
   state_topic: 'monitor/Living/D0:2B:20:E7:BA:25'
   value_template: '{{ value_json.confidence }}'
   unit_of_measurement: '%'
-  name: 'gPhone living'
-  # availability_topic: "monitor/Keuken/status"
-  # payload_available: "online"
-  # payload_not_available: "offline"
-  json_attributes:
-    - id
-    - name
-    - rssi
-    - version
-    - manufacturer
-    - type
-    - timestamp
-    - retained
-    - confidence
-
-# - platform: mqtt
-#   state_topic: 'monitor/Boven/D0:2B:20:E7:BA:25'
-#   value_template: '{{ value_json.confidence }}'
-#   unit_of_measurement: '%'
-#   name: 'gPhone boven'
-#
-# - platform: mqtt
-#   state_topic: 'monitor/Waskot/D0:2B:20:E7:BA:25'
-#   value_template: '{{ value_json.confidence }}'
-#   unit_of_measurement: '%'
-#   name: 'gPhone waskot'
-
-# Forerunner
-# - platform: mqtt
-#   state_topic: 'monitor/Keuken/83:e4:17:fe:be:fd'
-#   value_template: '{{ value_json.confidence }}'
-#   unit_of_measurement: '%'
-#   name: 'Forerunner keuken'
-#
-# - platform: mqtt
-#   state_topic: 'monitor/Living/83:e4:17:fe:be:fd'
-#   value_template: '{{ value_json.confidence }}'
-#   unit_of_measurement: '%'
-#   name: 'Forerunner living'
-#
-# - platform: mqtt
-#   state_topic: 'monitor/Boven/83:e4:17:fe:be:fd'
-#   value_template: '{{ value_json.confidence }}'
-#   unit_of_measurement: '%'
-#   name: 'Forerunner boven'
-
-# fPad
-- platform: mqtt
-  state_topic: 'monitor/Keuken/5C:AD:CF:EB:03:D6'
-  value_template: '{{ value_json.confidence }}'
-  unit_of_measurement: '%'
-  name: 'fPad keuken'
-
-- platform: mqtt
-  state_topic: 'monitor/Living/5C:AD:CF:EB:03:D6'
-  value_template: '{{ value_json.confidence }}'
-  unit_of_measurement: '%'
-  name: 'fPad living'
-
-# - platform: mqtt
-#   state_topic: 'monitor/Boven/5C:AD:CF:EB:03:D6'
-#   value_template: '{{ value_json.confidence }}'
-#   unit_of_measurement: '%'
-#   name: 'fPad boven'
-
-# nPad
-- platform: mqtt
-  state_topic: 'monitor/Keuken/F8:62:14:83:84:F1'
-  value_template: '{{ value_json.confidence }}'
-  unit_of_measurement: '%'
-  name: 'nPad keuken'
-
-- platform: mqtt
-  state_topic: 'monitor/Living/F8:62:14:83:84:F1'
-  value_template: '{{ value_json.confidence }}'
-  unit_of_measurement: '%'
-  name: 'nPad living'
-
-# - platform: mqtt
-#   state_topic: 'monitor/Boven/F8:62:14:83:84:F1'
-#   value_template: '{{ value_json.confidence }}'
-#   unit_of_measurement: '%'
-#   name: 'nPad boven'
-
-# mPhone
-- platform: mqtt
-  state_topic: 'monitor/Keuken/6C:8D:C1:B7:42:A3'
-  value_template: '{{ value_json.confidence }}'
-  unit_of_measurement: '%'
-  name: 'mPhone keuken'
-  # availability_topic: "monitor/Living/status"
-  # payload_available: "online"
-  # payload_not_available: "offline"
-  json_attributes:
-    - id
-    - name
-    - rssi
-    - version
-    - manufacturer
-    - type
-    - timestamp
-    - retained
-    - confidence
-
-- platform: mqtt
-  state_topic: 'monitor/Living/6C:8D:C1:B7:42:A3'
-  value_template: '{{ value_json.confidence }}'
-  unit_of_measurement: '%'
   name: 'mPhone living'
-  # availability_topic: "monitor/Living/status"
-  # payload_available: "online"
-  # payload_not_available: "offline"
+  availability_topic: "monitor/Living/status"
+  payload_available: "online"
+  payload_not_available: "offline"
   json_attributes:
     - id
     - name
@@ -145,12 +198,25 @@
     - retained
     - confidence
 
-# - platform: mqtt
-#   state_topic: 'monitor/Boven/6C:8D:C1:B7:42:A3'
-#   value_template: '{{ value_json.confidence }}'
-#   unit_of_measurement: '%'
-#   name: 'mPhone boven'
-#
+- platform: mqtt
+  state_topic: 'monitor/Garage/D0:2B:20:E7:BA:25'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'mPhone garage'
+  availability_topic: "monitor/Garage/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes:
+    - id
+    - name
+    - rssi
+    - version
+    - manufacturer
+    - type
+    - timestamp
+    - retained
+    - confidence
+    
 # - platform: mqtt
 #   state_topic: 'monitor/Waskot/6C:8D:C1:B7:42:A3'
 #   value_template: '{{ value_json.confidence }}'
@@ -159,27 +225,402 @@
 
 # VivoSmarti
 # - platform: mqtt
-#   state_topic: 'monitor/Keuken/83:e4:17:fe:be:fd'
+#   state_topic: 'monitor/Keuken/C8:3B:BB:14:93:03'
 #   value_template: '{{ value_json.confidence }}'
 #   unit_of_measurement: '%'
 #   name: 'VivoSmart keuken'
-#
+#   availability_topic: "monitor/Keuken/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   json_attributes:
+#     - id
+#     - name
+#     - rssi
+#     - version
+#     - manufacturer
+#     - type
+#     - timestamp
+#     - retained
+#     - confidence
+
 # - platform: mqtt
-#   state_topic: 'monitor/Living/83:e4:17:fe:be:fd'
+#   state_topic: 'monitor/Living/C8:3B:BB:14:93:03'
 #   value_template: '{{ value_json.confidence }}'
 #   unit_of_measurement: '%'
 #   name: 'VivoSmart living'
-#
-# - platform: mqtt
-#   state_topic: 'monitor/Boven/83:e4:17:fe:be:fd'
-#   value_template: '{{ value_json.confidence }}'
-#   unit_of_measurement: '%'
-#   name: 'VivoSmart boven'
+#   availability_topic: "monitor/Living/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   json_attributes:
+#     - id
+#     - name
+#     - rssi
+#     - version
+#     - manufacturer
+#     - type
+#     - timestamp
+#     - retained
+#     - confidence
 
 # - platform: mqtt
-#   state_topic: 'monitor/Keuken/status'
-#   name: 'Keuken Bluetooth Status'
-#
+#   state_topic: 'monitor/Garage/C8:3B:BB:14:93:03'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'VivoSmart garage'
+#   availability_topic: "monitor/Garage/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   json_attributes:
+#     - id
+#     - name
+#     - rssi
+#     - version
+#     - manufacturer
+#     - type
+#     - timestamp
+#     - retained
+#     - confidence
+
+# vivofit Noor
 # - platform: mqtt
-#   state_topic: 'monitor/Living/status'
-#   name: 'Living Bluetooth Status'
+#   state_topic: 'monitor/Keuken/E4:31:74:88:A7:48'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'Vivofit Noor keuken'
+#   availability_topic: "monitor/Keuken/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   json_attributes:
+#     - id
+#     - name
+#     - rssi
+#     - version
+#     - manufacturer
+#     - type
+#     - timestamp
+#     - retained
+#     - confidence
+
+# - platform: mqtt
+#   state_topic: 'monitor/Living/E4:31:74:88:A7:48'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'Vivofit Noor living'
+#   availability_topic: "monitor/Living/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   json_attributes:
+#     - id
+#     - name
+#     - rssi
+#     - version
+#     - manufacturer
+#     - type
+#     - timestamp
+#     - retained
+#     - confidence
+
+# - platform: mqtt
+#   state_topic: 'monitor/Garage/E4:31:74:88:A7:48'
+#   value_template: '{{ value_json.confidence }}'
+#   unit_of_measurement: '%'
+#   name: 'Vivofit Noor garage'
+#   availability_topic: "monitor/Garage/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   json_attributes:
+#     - id
+#     - name
+#     - rssi
+#     - version
+#     - manufacturer
+#     - type
+#     - timestamp
+#     - retained
+#     - confidence
+
+- platform: mqtt
+  state_topic: 'monitor/scan/arrive'
+  value_template: '{{ value_json.identity }}'
+  # expire_after: 60
+  name: Aankomst
+
+- platform: mqtt
+  state_topic: 'monitor/scan/depart'
+  value_template: '{{ value_json.identity }}'
+  # expire_after: 60
+  name: Vertrek
+
+- platform: mqtt
+  state_topic: 'monitor/heartbeat/Garage'
+  value_template: '{{ value_json.identity }}'
+  expire_after: 60
+  icon: mdi:heart-pulse
+  name: Heartbeat Garage
+
+- platform: mqtt
+  state_topic: 'monitor/heartbeat/Living'
+  value_template: '{{ value_json.identity }}'
+  expire_after: 60
+  icon: mdi:heart-pulse
+  name: Heartbeat Living
+
+- platform: mqtt
+  state_topic: 'monitor/heartbeat/Keuken'
+  value_template: '{{ value_json.identity }}'
+  expire_after: 60
+  icon: mdi:heart-pulse
+  name: Heartbeat Keuken
+
+- platform: mqtt
+  name: Netatmo webhook trigger
+  state_topic: 'netatmo/update'
+  expire_after: 20
+  value_template: '{{ value_json.push_type  }}'
+
+- platform: mqtt
+  name: Netatmo webhook
+  state_topic: 'netatmo/update'
+  value_template: '{{ value_json.snapshot_id  }}'
+  json_attributes:
+    - message
+    - snapshot_id
+    - push_type
+    - event_type
+    - event_id
+    - user_id
+    - subevent_id
+    - snapshot_key
+    - snapshot_url
+    - vignette_id
+    - vignette_key
+    - vignette_url
+    - camera_id
+    - device_id
+    - home_id
+    - home_name
+
+
+# Bompa
+- platform: mqtt
+  state_topic: 'monitor/Keuken/BC:4C:C4:64:22:52'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'Bompa keuken'
+  availability_topic: "monitor/Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes:
+    - id
+    - name
+    - rssi
+    - version
+    - manufacturer
+    - type
+    - timestamp
+    - retained
+    - confidence
+
+- platform: mqtt
+  state_topic: 'monitor/Living/BC:4C:C4:64:22:52'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'Bompa living'
+  availability_topic: "monitor/Living/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes:
+    - id
+    - name
+    - rssi
+    - version
+    - manufacturer
+    - type
+    - timestamp
+    - retained
+    - confidence
+
+- platform: mqtt
+  state_topic: 'monitor/Garage/BC:4C:C4:64:22:52'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'Bompa garage'
+  availability_topic: "monitor/Garage/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes:
+    - id
+    - name
+    - rssi
+    - version
+    - manufacturer
+    - type
+    - timestamp
+    - retained
+    - confidence
+
+# Oma
+- platform: mqtt
+  state_topic: 'monitor/Keuken/BC:4C:C4:47:2B:7C'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'Oma keuken'
+  availability_topic: "monitor/Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes:
+    - id
+    - name
+    - rssi
+    - version
+    - manufacturer
+    - type
+    - timestamp
+    - retained
+    - confidence
+
+- platform: mqtt
+  state_topic: 'monitor/Living/BC:4C:C4:47:2B:7C'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'Oma living'
+  availability_topic: "monitor/Living/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes:
+    - id
+    - name
+    - rssi
+    - version
+    - manufacturer
+    - type
+    - timestamp
+    - retained
+    - confidence
+
+- platform: mqtt
+  state_topic: 'monitor/Garage/BC:4C:C4:47:2B:7C'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'Oma garage'
+  availability_topic: "monitor/Garage/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes:
+    - id
+    - name
+    - rssi
+    - version
+    - manufacturer
+    - type
+    - timestamp
+    - retained
+    - confidence
+
+
+###  Smappee  ###
+- platform: mqtt
+  state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/realtime'
+  value_template: "{{ value_json['voltages'][0]['voltage'] }}"
+  unit_of_measurement: 'V'
+  icon: mdi:gauge
+  name: 'Spanning'
+
+- platform: mqtt
+  state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/realtime'
+  value_template: '{{ value_json.totalPower }}'
+  unit_of_measurement: 'W'
+  icon: mdi:power-plug
+  name: 'Huidig verbruik'
+
+- platform: mqtt
+  state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/realtime'
+  value_template: "{{ value_json['channelPowers'][0]['power'] }}"
+  unit_of_measurement: 'W'
+  icon: mdi:power-plug
+  name: 'Huidig verbruik L1'
+
+- platform: mqtt
+  state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/realtime'
+  value_template: "{{ value_json['channelPowers'][1]['power'] }}"
+  unit_of_measurement: 'W'
+  icon: mdi:power-plug
+  name: 'Huidig verbruik L2'
+
+- platform: mqtt
+  state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/realtime'
+  value_template: "{{ value_json['channelPowers'][2]['power'] }}"
+  unit_of_measurement: 'W'
+  icon: mdi:power-plug
+  name: 'Huidig verbruik L3'
+
+- platform: mqtt
+  state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/realtime'
+#   value_template: "{{ value_json['channelPowers'][3]['power']  +  value_json['channelPowers'][4]['power']  +  value_json['channelPowers'][5]['power'] }}"
+  value_template: >
+          {% if (value_json['channelPowers'][3]['power']  +  value_json['channelPowers'][4]['power']  +  value_json['channelPowers'][5]['power'])  < 0 %}
+            0
+          {% else %}
+            {{ value_json['channelPowers'][3]['power']  +  value_json['channelPowers'][4]['power']  +  value_json['channelPowers'][5]['power'] }}
+          {% endif %}
+  unit_of_measurement: 'W'
+  icon: mdi:white-balance-sunny
+  name: 'Huidige opbrengst'
+
+- platform: mqtt
+  state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/realtime'
+#   value_template: "{{ value_json['channelPowers'][3]['power'] }}"
+  value_template: >
+          {% if value_json['channelPowers'][3]['power']  < 0 %}
+            0
+          {% else %}
+            {{ value_json['channelPowers'][3]['power'] }}
+          {% endif %}
+  unit_of_measurement: 'W'
+  icon: mdi:white-balance-sunny
+  name: 'Huidige opbrengst L1'
+
+- platform: mqtt
+  state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/realtime'
+#   value_template: "{{ value_json['channelPowers'][4]['power'] }}"
+  value_template: >
+          {% if value_json['channelPowers'][4]['power']  < 0 %}
+            0
+          {% else %}
+            {{ value_json['channelPowers'][4]['power'] }}
+          {% endif %}
+  unit_of_measurement: 'W'
+  icon: mdi:white-balance-sunny
+  name: 'Huidige opbrengst L2'
+
+- platform: mqtt
+  state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/realtime'
+#   value_template: "{{ value_json['channelPowers'][5]['power'] }}"
+  value_template: >
+          {% if value_json['channelPowers'][5]['power']  < 0 %}
+            0
+          {% else %}
+            {{ value_json['channelPowers'][5]['power'] }}
+          {% endif %}
+  unit_of_measurement: 'W'
+  icon: mdi:white-balance-sunny
+  name: 'Huidige opbrengst L3'
+
+- platform: mqtt
+  state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/aggregated'
+  value_template: "{{ (value_json['intervalDatas'][0]['alwaysOn']) / 1000 }}"
+  unit_of_measurement: 'Wh'
+  icon: mdi:gauge
+  name: 'Sluimerverbruik'
+
+- platform: mqtt
+  state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/aggregated'
+  value_template: "{{ (value_json['intervalDatas'][0]['channelIntervalDatas'][0]['averagePowerfactor'] +
+        value_json['intervalDatas'][0]['channelIntervalDatas'][1]['averagePowerfactor'] +
+        value_json['intervalDatas'][0]['channelIntervalDatas'][2]['averagePowerfactor'] +
+        value_json['intervalDatas'][0]['channelIntervalDatas'][3]['averagePowerfactor'] +
+        value_json['intervalDatas'][0]['channelIntervalDatas'][4]['averagePowerfactor'] +
+        value_json['intervalDatas'][0]['channelIntervalDatas'][5]['averagePowerfactor']) / 6 | round(2)}}"
+  unit_of_measurement: '%'
+  icon: mdi:gauge
+  name: 'Cosinus φ'

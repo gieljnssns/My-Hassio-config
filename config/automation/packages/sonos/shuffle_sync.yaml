@@ -1,0 +1,67 @@
+  # alias: 'Sonos Shuffle (Sync)'
+  # trigger:
+  #   - platform: homeassistant
+  #     event: start
+  #   - platform: state
+  #     entity_id: 
+  #       - sensor.badkamer_shuffle
+  #       - sensor.keuken_shuffle
+  #       - input_boolean.badkamer_shuffle
+  #       - input_boolean.keuken_shuffle
+  #   # - platform: state
+  #   #   entity_id: sensor.keuken_shuffle
+  #   # - platform: state
+  #   #   entity_id: input_boolean.badkamer_shuffle
+  #   # - platform: state
+  #   #   entity_id: input_boolean.keuken_shuffle
+  # action:
+  #   # - delay:
+  #   #     seconds: 5
+  #   - service_template: >
+  #       {% if trigger.entity_id == 'sensor.badkamer_shuffle' and is_state('sensor.badkamer_shuffle', 'False') %}
+  #         input_boolean.turn_off
+  #       {% elif trigger.entity_id == 'sensor.badkamer_shuffle' and is_state('sensor.badkamer_shuffle', 'True') %}
+  #         input_boolean.turn_on
+  #       {% elif trigger.entity_id == 'sensor.keuken_shuffle' and is_state('sensor.keuken_shuffle', 'False') %}
+  #         input_boolean.turn_off
+  #       {% elif trigger.entity_id == 'sensor.keuken_shuffle' and is_state('sensor.keuken_shuffle', 'True') %}
+  #         input_boolean.turn_on
+  #       {% elif trigger.entity_id == 'input_boolean.badkamer_shuffle' %}
+  #         media_player.shuffle_set
+  #       {% elif trigger.entity_id == 'input_boolean.keuken_shuffle' %}
+  #         media_player.shuffle_set
+  #       {% endif %}
+  #       # {% if trigger.entity_id == sensor.badkamer_shuffle and states.sensor.badkamer_shuffle.state == 'False' %}
+  #       #   input_boolean.turn_off
+  #       # {% elif trigger.entity_id == sensor.badkamer_shuffle and states.sensor.badkamer_shuffle.state == 'True' %}
+  #       #   input_boolean.turn_on
+  #       # {% elif trigger.entity_id == sensor.keuken_shuffle and states.sensor.keuken_shuffle.state == 'False' %}
+  #       #   input_boolean.turn_off
+  #       # {% elif trigger.entity_id == sensor.keuken_shuffle and states.sensor.keuken_shuffle.state == 'True' %}
+  #       #   input_boolean.turn_on
+  #       # {% elif trigger.entity_id == input_boolean.badkamer_shuffle or trigger.entity_id == input_boolean.keuken_shuffle %}
+  #       #   media_player.shuffle_set
+  #       # {% endif %}
+  #     data_template:
+  #       entity_id: >
+  #         {% if trigger.entity_id == 'input_boolean.badkamer_shuffle' %}
+  #           media_player.badkamer
+  #         {% elif trigger.entity_id == 'input_boolean.keuken_shuffle' %}
+  #           media_player.keuken
+  #         {% elif trigger.entity_id == 'sensor.badkamer_shuffle' %}
+  #           input_boolean.badkamer_shuffle
+  #         {% elif trigger.entity_id == 'sensor.keuken_shuffle' %}
+  #           input_boolean.keuken_shuffle
+  #         {% endif %}
+  #       shuffle: >
+  #         {% if trigger.entity_id == 'input_boolean.badkamer_shuffle' and is_state('input_boolean.badkamer_shuffle', 'off') %}
+  #           false
+  #         {% elif trigger.entity_id == 'input_boolean.badkamer_shuffle' and is_state('input_boolean.badkamer_shuffle', 'on') %}
+  #           true
+  #         {% elif trigger.entity_id == 'input_boolean.keuken_shuffle' and is_state('input_boolean.keuken_shuffle', 'off') %}
+  #           false
+  #         {% elif trigger.entity_id == 'input_boolean.keuken_shuffle' and is_state('input_boolean.keuken_shuffle', 'on') %}
+  #           true
+  #         {% endif %}
+            
+          

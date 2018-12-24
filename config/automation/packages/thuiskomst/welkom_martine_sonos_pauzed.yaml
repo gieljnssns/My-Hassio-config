@@ -14,22 +14,17 @@
         entity_id: input_boolean.giel_komt_thuis
         state: 'off'
   action:
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id: script.begroeting_paused
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id: script.begroeting_playing
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id: script.sonos_pauze_spreek
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id: script.sonos_playing_spreek
-    - service: script.reload
-      entity_id: script.begroeting_paused
-    - service: script.reload
-      entity_id: script.begroeting_playing
-    - service: script.reload
-      entity_id: script.sonos_pauze_spreek
-    - service: script.reload
-      entity_id: script.sonos_playing_spreek
+    - service: media_player.sonos_snapshot
+      data:
+        entity_id: media_player.keuken
     - delay: '00:00:02'
     - service: script.begroeting_paused
       data_template:
@@ -39,5 +34,10 @@
            "Hallo " + person + ", welkom thuis.",
            "Hallo " + person,
            "Welkom thuis " + person + ", zware dag gehad?",
-           "Blij dat je thuis bent " + person
+           "Blij dat je thuis bent " + person ,
+           "Hokus Pokus pats, ik wou da " + person + " thuis was",
+           "De rechterhand van de almachtige is aanwezig.",
+           "Spiegeltje, spiegeltje aan de wand, hier is de mooiste van het land.",
+           "Sims salla bime, hier is " + person ,
+           "Die da Disneyland, hier is " + person + " en dat is plezant."
            ] | random }}

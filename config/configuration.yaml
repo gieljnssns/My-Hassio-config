@@ -23,10 +23,13 @@ homeassistant:
 ###   HTTP  ###
 http:
   api_password: !secret http_password
-  ssl_certificate: !secret ssl_certificate
-  ssl_key: !secret ssl_key
+  # ssl_certificate: !secret ssl_certificate
+  # ssl_key: !secret ssl_key
   base_url: !secret base_url
   ip_ban_enabled: True
+  trusted_networks:
+    - 127.0.0.1
+    - 192.168.0.0/24
   login_attempts_threshold: 5
 
 ####################################################
@@ -46,12 +49,15 @@ climate: !include devices/climate.yaml
 input_select: !include devices/input_select.yaml
 # input_number: !include devices/input_numbers.yaml
 input_boolean: !include devices/input_boolean.yaml
+# input_datetime: !include devices/input_datetime.yaml
 camera: !include devices/cameras.yaml
 alarm_control_panel: !include devices/alarm.yaml
 weather: !include devices/weather.yaml
+shell_command: !include devices/shell_commands.yaml
 # weblink: !include devices/weblink.yaml
 history_graph: !include devices/history_graph.yaml
 calendar: !include devices/calendar.yaml
+timer: !include devices/timer.yaml
 
 ###  Groups  ###
 group: !include_dir_merge_named groups/
@@ -128,28 +134,22 @@ mysensors:
       persistence_file: !secret mysensors_persistence_file
   version: '2.2'
 
+###  Tahoma  ###
+# tahoma:
+#   username: !secret tahoma_username
+#   password: !secret tahoma_password
+
+###  Somfy  ###
+somfy:
+  client_id: !secret somfy_id
+  client_secret: !secret somfy_secret
 
 ###  MQTT  ###
 mqtt:
-  broker: core-mosquitto
+  # broker: core-mosquitto
+  broker: a0d7b954-mqtt
   username: !secret mqtt_username
   password: !secret mqtt_password
-
-###  Philips Hue  ###
-# hue:
-#   bridges:
-#     - host: 192.168.0.26
-#       filename: deconz.conf
-#       # allow_unreachable: true
-#       allow_hue_groups: false
-#     - host: 192.168.0.36
-#       filename: phue.conf
-#       # allow_unreachable: true
-#       allow_hue_groups: false
-
-# ###  ZoneMinder  ###
-# zoneminder:
-#   host: 192.168.0.35
 
 ###  If This Then That ###
 ifttt:
@@ -163,14 +163,14 @@ ifttt:
 #     credentials: !secret apple_tv_credentials
 
 ###  Google Kalender  ###
-google:
-  client_id: !secret google_client_id
-  client_secret: !secret google_client_secret
+# google:
+#   client_id: !secret google_client_id
+#   client_secret: !secret google_client_secret
 
 # Text to speech
 tts:
-  - platform: google
-    language: 'nl'
+  # - platform: google
+  #   language: 'nl'
   - platform: voicerss
     api_key: !secret voicerss_api
     language: 'nl-nl'
@@ -188,6 +188,15 @@ map:
 ###  Hassio  ###
 hassio:
 
+###  FFmpeg  ###
+ffmpeg:
+
+###  Custom updater  ###
+custom_updater:
+  card_urls:
+    - https://raw.githubusercontent.com/rdehuyss/homeassistant-lovelace-google-calendar-card/master/custom_updater.json
+    - https://raw.githubusercontent.com/kalkih/mini-media-player/master/tracker.json
+
 ### Discover some devices automatically  ###
 discovery:
   ignore:
@@ -201,26 +210,26 @@ config:
 ios:
   push:
     categories:
-      - name: camera
-        identifier: 'camera'
+      - name: Alarm
+        identifier: 'alarm'
         actions:
           - identifier: 'ALLINONE_TRUE'
-            title: 'On/True/Open/Lock'
+            title: 'Zet maar in gang'
             activationMode: 'foreground'
             authenticationRequired: no
             destructive: yes
             # behavior: 'default'
-          - identifier: 'ALLINONE_FALSE'
-            title: 'Off/False/Close/Unlock'
-            activationMode: 'foreground'
-            authenticationRequired: no
-            # destructive: yes
-            # behavior: 'default'
+          # - identifier: 'ALLINONE_FALSE'
+          #   title: 'Toch maar niet'
+          #   activationMode: 'foreground'
+          #   authenticationRequired: no
+          #   # destructive: yes
+          #   # behavior: 'default'
 
 ###  Recorder  ###
-recorder:
+recorder: !include recorder.yaml
   # purge_interval: 7
-  purge_keep_days: 31
+  # purge_keep_days: 31
   # db_url: !secret mysql
 
 ###  Sun  ###

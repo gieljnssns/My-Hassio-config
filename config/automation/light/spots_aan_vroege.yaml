@@ -8,11 +8,11 @@
     conditions:
       - condition: time
         after: '04:00:00'
+      # - condition: state
+      #   entity_id: calendar.vroege
+      #   state: 'off'
       - condition: state
-        entity_id: binary_sensor.v_vroege
-        state: 'on'
-      - condition: state
-        entity_id: calendar.vroege
+        entity_id: calendar.mondelez_de_vroege
         state: 'off'
       - condition: state
         entity_id: sensor.dark_outside
@@ -20,6 +20,14 @@
       - condition: state
         entity_id: input_boolean.gielthuis
         state: 'on'
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.v_w_dag
+            state: 'on'
+          - condition: state
+            entity_id: binary_sensor.v_vroege
+            state: 'on'
   action:
     - service: light.turn_on
       entity_id: light.spots_tv

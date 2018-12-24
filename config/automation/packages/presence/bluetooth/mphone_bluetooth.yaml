@@ -1,0 +1,17 @@
+  alias: mPhone bluetooth
+  trigger:
+    - platform: state
+      entity_id: sensor.mphone_bt_thuis
+  action:
+    - service_template: >
+        {% if states.sensor.mphone_bt_thuis.state | float > 43 %}
+           input_boolean.turn_on
+        {% else %}
+           input_boolean.turn_off
+        {% endif %}
+      entity_id: input_boolean.mphone_bluetooth
+    # - condition: template
+    #   value_template: "{{ states.sensor.mphone_bt_thuis.state | float < 43 }}"
+    # - service: script.mqtt_arrive_script
+    #   data_template:
+    #     identity: '{"identity":"mPhone BT off {{now().strftime("%H:%M")}}"}'

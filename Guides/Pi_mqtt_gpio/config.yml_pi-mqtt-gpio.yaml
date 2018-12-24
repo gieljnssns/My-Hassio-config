@@ -1,0 +1,61 @@
+mqtt:
+  host: 192.168.0.xx
+  port: 1883
+  user: "hass"
+  password: "xxxxxxxxxxx"
+  topic_prefix: home/
+
+gpio_modules:
+  - name: raspberrypi
+    module: raspberrypi
+
+digital_outputs:
+  - name: verluchting
+    module: raspberrypi
+    pin: 22
+    on_payload: "ON"
+    off_payload: "OFF"
+    initial: low  # This optional value controls the initial state of the pin before receipt of any messages from MQTT. Valid o$
+    retain: yes # This option value controls if the message is retained. Default is no.
+  - name: reserve
+    module: raspberrypi
+    pin: 4
+    on_payload: "ON"
+    off_payload: "OFF"
+    initial: low  # This optional value controls the initial state of the pin before receipt of any messages from MQTT. Valid o$
+    retain: yes # This option value controls if the message is retained. Default is no.
+  - name: badkamer
+    module: raspberrypi
+    pin: 27
+    on_payload: "ON"
+    off_payload: "OFF"
+    initial: low  # This optional value controls the initial state of the pin before receipt of any messages from MQTT. Valid o$
+    retain: yes # This option value controls if the message is retained. Default is no.
+  - name: slaapkamer
+    module: raspberrypi
+    pin: 10
+    on_payload: "ON"
+    off_payload: "OFF"
+    initial: low  # This optional value controls the initial state of the pin before receipt of any messages from MQTT. Valid o$
+    retain: yes # This option value controls if the message is retained. Default is no.
+  - name: noor
+    module: raspberrypi
+    pin: 9
+    on_payload: "ON"
+    off_payload: "OFF"
+    initial: low  # This optional value controls the initial state of the pin before receipt of any messages from MQTT. Valid o$
+    retain: yes # This option value controls if the message is retained. Default is no.
+  - name: fien
+    module: raspberrypi
+    pin: 5
+    on_payload: "ON"
+    off_payload: "OFF"
+    initial: low  # This optional value controls the initial state of the pin before receipt of any messages from MQTT. Valid o$
+    retain: yes # This option value controls if the message is retained. Default is no
+  - name: wc
+    module: raspberrypi
+    pin: 11
+    on_payload: "ON"
+    off_payload: "OFF"
+    initial: low  # This optional value controls the initial state of the pin before receipt of any messages from MQTT. Valid o$
+    retain: yes # This option value controls if the message is retained. Default is no

@@ -1,9 +1,13 @@
   alias: 'Donker buiten lowpass'
   initial_state: 'on'
   trigger:
-    platform: numeric_state
-    entity_id: sensor.zonne_energie_gefilterd_lowpass
-    below: 75
+    - platform: numeric_state
+      entity_id: sensor.zonne_energie_gefilterd_lowpass
+      below: 75
+    - platform: numeric_state
+      entity_id: sun.sun
+      value_template: "{{ state.attributes.elevation }}"
+      below: 0.0
   action:
     - service: input_boolean.turn_on
       entity_id:

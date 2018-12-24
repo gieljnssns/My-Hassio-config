@@ -1,0 +1,32 @@
+  alias: Scan for arrive and depart
+  trigger:
+    - platform: homeassistant
+      event: start
+    - platform: state
+      entity_id: binary_sensor.netatmo_webhook_trigger
+      to: 'on'
+    - platform: state
+      entity_id: binary_sensor.den_hof_outdoor_human
+      to: 'on'
+    - platform: state
+      entity_id: binary_sensor.nummer_79__den_hof_outdoor_human
+      to: 'on'
+    - platform: state
+      entity_id: binary_sensor.volk_in_den_hof_homekit
+      to: 'on'
+    - platform: state
+      entity_id: binary_sensor.voordeur_open
+    - platform: state
+      entity_id: binary_sensor.achterdeur_open
+  action:
+    - service: script.turn_off
+      entity_id: script.mqtt_arrive_script
+    - service: script.turn_off
+      entity_id: script.mqtt_depart_script
+    - service: script.mqtt_arrive_script
+      data_template:
+        identity: '{"identity":"Trigger {{now().strftime("%H:%M")}}"}'
+    - wait_template: "{{ is_state('script.mqtt_arrive_script', 'off') }}"
+    - service: script.mqtt_depart_script
+      data_template:
+        identity: '{"identity":"Trigger {{now().strftime("%H:%M")}}"}'

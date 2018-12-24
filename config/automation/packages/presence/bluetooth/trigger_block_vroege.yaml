@@ -1,0 +1,27 @@
+  alias: 'Trigger block vroege'
+
+  trigger:
+    - platform: state
+      entity_id: input_boolean.gielthuis
+      from: 'on'
+      to: 'off'
+  condition:
+    condition: and
+    conditions:
+      - condition: time
+        after: '04:00:00'
+        before: '05:30:00'
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.v_w_dag
+            state: 'on'
+          - condition: state
+            entity_id: binary_sensor.v_vroege
+            state: 'on'
+  action:
+    - service: input_boolean.turn_on
+      entity_id: input_boolean.bluetooth_trigger_blok
+    - wait_template: "{{ is_state('binary_sensor.achterdeur_open', 'on') }}"
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.bluetooth_trigger_blok

@@ -1,12 +1,17 @@
   begroeting_paused:
     sequence:
-      - wait_template: "{{ states.binary_sensor.beweging_hof.state == 'on' }}"
+      - wait_template: "{{ states.binary_sensor.achterdeur_open.state == 'on' }}"
         timeout: '00:03:00'
+        continue_on_timeout: 'false'
       - wait_template: "{{ states.binary_sensor.keuken_6_3.state == 'on' }}"
         timeout: '00:03:00'
+        continue_on_timeout: 'false'
       - service: script.sonos_pauze_spreek
         data_template:
           sonos_entity: media_player.keuken
           volume: 0.55
           message: "{{ speech_message }}"
           delay: '00:00:08'
+      # - service: media_player.sonos_snapshot
+      #   data:
+      #     entity_id: media_player.keuken

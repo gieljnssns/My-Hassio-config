@@ -1,0 +1,12 @@
+  alias: Bompa bluetooth
+  trigger:
+    - platform: state
+      entity_id: sensor.bompa_bt_aanwezig
+  action:
+    - service_template: >
+        {% if states.sensor.bompa_bt_aanwezig.state | float > 43 %}
+           input_boolean.turn_on
+        {% else %}
+           input_boolean.turn_off
+        {% endif %}
+      entity_id: input_boolean.bompa_bt_aanwezig

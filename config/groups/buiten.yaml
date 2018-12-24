@@ -9,12 +9,16 @@ buiten:
     - group.den_hof_light
     - group.den_hof_beweging
     - group.garage
+    - group.covers
 
 
 den_hof_beweging:
   name: Beweging in den hof
   control: hidden
   entities:
+    - sensor.netatmo_webhook
+    - sensor.netatmo_type
+    - binary_sensor.netatmo_webhook_trigger
     - binary_sensor.den_hof_outdoor_animal
     - binary_sensor.nummer_79__den_hof_outdoor_animal
     # - binary_sensor.dier_in_den_hof
@@ -40,3 +44,14 @@ garage:
   name: Garage
   entities:
     - binary_sensor.garage_5_3
+
+covers:
+  name: Zonnewering
+  control: hidden
+  entities:
+    - cover.keuken_1
+    - cover.keuken_2
+    - cover.living
+    - cover.slaapkamer
+    - cover.slaapkamer_noor
+    - cover.zonnetent

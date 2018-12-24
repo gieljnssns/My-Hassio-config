@@ -1,0 +1,59 @@
+Format Video Capture:
+	Width/Height      : 1024/768
+	Pixel Format      : 'JPEG'
+	Field             : None
+	Bytes per Line    : 0
+	Size Image        : 786432
+	Colorspace        : JPEG
+	Transfer Function : Default
+	YCbCr/HSV Encoding: Default
+	Quantization      : Default
+	Flags             :
+
+gpu mem 256
+sudo modprobe bcm2835-v4l2      # camera toevoegen aan /Video
+
+DEES WORDT HET
+https://medium.com/home-wireless/headless-streaming-video-with-the-raspberry-pi-zero-w-and-raspberry-pi-camera-38bef1968e1
+https://www.linux-projects.org/uv4l/installation/
+
+
+
+
+
+
+### Motion
+https://pimylifeup.com/raspberry-pi-webcam-server/
+https://motion-project.github.io/motion_config.html#mmalcam_name
+
+### V4L2
+https://zoneminder.blogspot.com/p/rasbpeery-pi-zero-camera.html
+http://carlos-journal.blogspot.com/2017/05/setting-up-rtsp-server-in-raspberry-pi.html
+sudo nano /etc/modules     ->    bcm2835-v4l2
+-- Installing: /lib/systemd/system/v4l2rtspserver.service
+-- Installing: /home/pi/v4l2rtspserver/armv6l/bin/v4l2rtspserver
+
+##########
+# systemd configuration for v4l2rtspserver
+# /etc/systemd/system/v4l2rtspserver.service
+
+[Unit]
+Description=v4l2rtspserver rtsp streaming server
+After=network.target
+
+[Service]
+#ExecStartPre=/usr/bin/v4l2-ctl --set-ctrl vertical_flip=1
+ExecStartPre=/usr/bin/v4l2-ctl --set-ctrl h264_i_frame_period=5
+ExecStart=/home/pi/v4l2rtspserver/armv6l/bin/v4l2rtspserver -F 5 -W 1920 -H 1080
+#ExecReload=/bin/kill -HUP $MAINPID
+Type=simple
+User=root
+Group=video
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+#################################################
+### zoneminder
+https://wiki.zoneminder.com/Debian_9_64-bit_with_Zoneminder_1.30.4_the_Easy_Way

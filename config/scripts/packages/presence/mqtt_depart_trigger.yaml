@@ -1,0 +1,12 @@
+  mqtt_depart_trigger:
+    sequence:
+      - condition: state
+        entity_id: input_boolean.bluetooth_trigger_blok
+        state: 'off'
+      - service: mqtt.publish
+        data_template:
+          topic: monitor/scan/depart
+          payload: '{{ identity }}'
+          # payload: '{"identity":"HA"}'
+      - service: script.mqtt_trigger_blok
+

@@ -1,0 +1,15 @@
+  alias: Departure start
+  trigger:
+    - platform: mqtt
+      topic: monitor/scan/departure/start
+  action:
+   - service: input_boolean.turn_on
+     data_template:
+        entity_id: >
+          {% if trigger.payload_json.identity == 'Garage' %}
+             input_boolean.garage_depart
+          {% elif trigger.payload_json.identity == 'Keuken' %}
+             input_boolean.keuken_depart
+          {% elif trigger.payload_json.identity == 'Living' %}
+             input_boolean.living_depart
+          {% endif %}

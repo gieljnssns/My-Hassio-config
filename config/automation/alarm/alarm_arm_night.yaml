@@ -40,7 +40,18 @@
             entity_id: input_boolean.martinethuis
             state: 'on'
   action:
-    service: alarm_control_panel.alarm_arm_night
-    entity_id: alarm_control_panel.ha_alarm
-    data:
-      code: !secret alarm_code
+    - service: light.turn_on
+      entity_id: light.slaapkamer
+    - service: alarm_control_panel.alarm_arm_night
+      entity_id: alarm_control_panel.ha_alarm
+      data:
+        code: !secret alarm_code
+    - service: homeassistant.turn_off
+      entity_id: script.mqtt_arrive_script, script.mqtt_depart_script
+    - service: script.mqtt_arrive_script
+      data_template:
+        identity: '{"identity":"Alarm night {{now().strftime("%H:%M")}}"}'
+
+
+    
+    

@@ -14,22 +14,22 @@
         entity_id: input_boolean.martine_komt_thuis
         state: 'off'
   action:
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id: script.begroeting_paused
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id: script.begroeting_playing
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id: script.sonos_pauze_spreek
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id: script.sonos_playing_spreek
-    - service: script.reload
-      entity_id: script.begroeting_paused
-    - service: script.reload
-      entity_id: script.begroeting_playing
-    - service: script.reload
-      entity_id: script.sonos_pauze_spreek
-    - service: script.reload
-      entity_id: script.sonos_playing_spreek
+    # - service: script.reload
+    #   entity_id: script.begroeting_paused
+    # - service: script.reload
+    #   entity_id: script.begroeting_playing
+    # - service: script.reload
+    #   entity_id: script.sonos_pauze_spreek
+    # - service: script.reload
+    #   entity_id: script.sonos_playing_spreek
     - delay: '00:00:02'
     - service: script.begroeting_playing
       data_template:
@@ -37,7 +37,10 @@
            {% set person = 'Giel' %}
            {{ [
            "Hallo " + person + ", welkom thuis.",
-           "Hallo " + person,
            "Welkom thuis " + person + ", zware dag gehad?",
-           "Blij dat je thuis bent " + person
+           "Blij dat je thuis bent " + person ,
+           "De grote baas is thuis!",
+           "Iedereen knielen voor de almachtige heerser",
+           "Wees welkom " + person + ", toch niet te veel gedronken?",
+           "Daar is ie weer! Ik zal de muziek wel terug opzetten."
            ] | random }}

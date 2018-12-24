@@ -17,24 +17,18 @@
   #       entity_id: input_boolean.martine_komt_thuis
   #       state: 'on'
   action:
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id: script.begroeting_paused
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id: script.begroeting_playing
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id: script.sonos_pauze_spreek
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id: script.sonos_playing_spreek
-    - service: script.reload
-      entity_id: script.begroeting_paused
-    - service: script.reload
-      entity_id: script.begroeting_playing
-    - service: script.reload
-      entity_id: script.sonos_pauze_spreek
-    - service: script.reload
-      entity_id: script.sonos_playing_spreek
+    - service: media_player.sonos_snapshot
+      data:
+        entity_id: media_player.keuken
     - delay: '00:00:02'
-    # - delay: 00:00:10
     - service: script.begroeting_paused
       data_template:
           speech_message: >
@@ -42,5 +36,6 @@
              "Hallo allemaal, welkom thuis.",
              "Hallo allemaal, blij dat jullie veilig thuis geraakt zijn.",
              "De koning en zijn koningin zijn terug thuis.",
-             "Blij dat jullie thuis zijn. "
+             "Blij dat jullie thuis zijn. ",
+             "De koning en zijn rechterhand zijn terug."
              ] | random }}

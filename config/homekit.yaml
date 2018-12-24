@@ -2,57 +2,77 @@ filter:
   include_entities:
     - input_boolean.presence_licht_aan
     - input_boolean.volk_in_den_hof_homekit
-  # include_domains:
-  #   - alarm_control_panel
-  #   - light
-  #   - binary_sensor
-  #   - climate
-  #   - switch
-  #   - input_boolean
-  # exclude_domains:
-  #   - device_tracker
-  # exclude_entities:
-  #   - binary_sensor.badkamer_1_3
-  #   - binary_sensor.binnen_warm
-  #   - binary_sensor.buiten_fris_genoeg
-  #   - binary_sensor.buiten_warm
-  #   - binary_sensor.auto_in_den_hof
-  #   - binary_sensor.dier_in_den_hof
-  #   - binary_sensor.fien_3_3
-  #   - binary_sensor.garage_5_3
-  #   - binary_sensor.iss
-  #   - binary_sensor.keuken_6_3
-  #   - binary_sensor.living_7_3
-  #   - binary_sensor.noor_4_3
-  #   - binary_sensor.presence_licht_aan
-  #   - binary_sensor.schooldag
-  #   - binary_sensor.slaapkamer_2_3
-  #   - binary_sensor.v_late
-  #   - binary_sensor.v_monnikenheide
-  #   - binary_sensor.v_nacht
-  #   - binary_sensor.v_vroege
-  #   - binary_sensor.v_w_dag
-  #   - binary_sensor.v_w_nacht
-  #   - binary_sensor.v_werken
-  #   - binary_sensor.verluchting_afkoeling
-  #   - binary_sensor.volk_in_den_hof
-  #   - input_boolean.alarm_test
-  #   - input_boolean.beweging_badkamer
-  #   - input_boolean.beweging_fien
-  #   - input_boolean.beweging_hof
-  #   - input_boolean.beweging_keuken
-  #   - input_boolean.beweging_living
-  #   - input_boolean.beweging_noor
-  #   - input_boolean.beweging_slaapkamer
-  #   - input_boolean.donker_buiten_lowpass
-  #   - input_boolean.op_verlof
-  #   - input_boolean.spotify_shuffle
-  #   - input_boolean.sunset_offset
-  #   - input_boolean.verluchting_afkoeling
-  # include_entities:
-  #   - sensor.badkamer_1_1
-  #   - sensor.fien_3_1
-  #   - sensor.garage_5_0
-  #   - sensor.keuken_6_1
-  #   - sensor.living_7_1
-  #   - sensor.slaapkamer_2_1
+    - input_boolean.koogeek_achterdeur
+    - input_boolean.koogeek_voordeur
+    - light.alle_tuinverlichting
+    - light.den_hof
+    - light.slaapkamer
+    - light.spots_tv
+    - light.terras
+    - media_player.badkamer
+    - media_player.keuken
+    - switch.badkamer
+    - switch.fien
+    - switch.kerstverlichting
+    - switch.noor
+    - switch.reserve5
+    - switch.slaapkamer
+    - switch.verluchting
+    - switch.verluchting
+    - sensor.badkamer_1_1
+    - sensor.fien_3_1
+    - sensor.garage_5_0
+    - sensor.keuken_6_1
+    - sensor.living_7_1
+    - sensor.slaapkamer_2_1
+    - sensor.noor_4_1
+entity_config:
+  light.spots_tv:
+    name: Verlichting living
+  media_player.badkamer:
+    name: Sonos badkamer
+    feature_list:
+      - feature: play_pause
+      - feature: play_stop
+      - feature: toggle_mute
+  media_player.keuken:
+    name: Sonos keuken
+    feature_list:
+      - feature: play_pause
+      - feature: play_stop
+      - feature: toggle_mute
+  switch.badkamer:
+    name: Verwarming badkamer
+    type: switch 
+  switch.fien:
+    name: Verwarming slaapkamer Fien
+    type: switch 
+  switch.kerstverlichting:
+    name: Kerstverlichting
+    type: outlet
+  switch.noor:
+    name: Verwarming slaapkamer Noor
+    type: switch 
+  switch.reserve5:
+    name: Koffiezet
+    type: outlet
+  switch.slaapkamer:
+    name: Verwarming slaapkamer
+    type: switch 
+  switch.verluchting:
+    name: Verluchting
+    type: switch 
+  sensor.badkamer_1_1:
+    name: Temperatuur badkamer
+  sensor.fien_3_1:
+    name: Temperatuur slaapkamer Fien
+  sensor.garage_5_0:
+    name: Buitentemperatuur
+  sensor.keuken_6_1:
+    name: Temperatuur keuken
+  sensor.living_7_1:
+    name: Temperatuur living
+  sensor.slaapkamer_2_1:
+    name: Temperatuur slaapkamer
+  sensor.noor_4_1:
+    name: Temperatuur slaapkamer Noor

@@ -1,47 +1,53 @@
 
-light:
-  - platform: mqtt_json
-    name: "Keuken Led"
-    state_topic: "giel/keuken"
-    command_topic: "giel/keuken/set"
-    brightness: true
-    flash: true
-    rgb: true
-    optimistic: false
-    qos: 0
+# light:
+#   - platform: mqtt_json
+#     name: "Keuken Led"
+#     state_topic: "giel/keuken"
+#     command_topic: "giel/keuken/set"
+#     brightness: true
+#     flash: true
+#     rgb: true
+#     optimistic: false
+#     qos: 0
 
 
 sensor:
   - platform: mqtt
-    state_topic: "giel/keuken"
+    state_topic: "keuken_test/sensor/keuken_luchtvochtigheid/state"
     name: "Keuken_Luchtvochtigheid"
+    availability_topic: "keuken_test/status"
+    icon: mdi:water-percent
     unit_of_measurement: "%"
-    value_template: '{{ value_json.humidity | round(1) }}'
+    value_template: '{{ value_json | round(1) }}'
 
   - platform: mqtt
-    state_topic: "giel/keuken"
+    state_topic: "keuken_test/sensor/keuken_light_level/state"
     name: "Keuken_Light Level"
+    availability_topic: "keuken_test/status"
+    icon: mdi:flash
     ##This sensor is not calibrated to actual LUX. Rather, this a map of the input voltage ranging from 0 - 1023.
     unit_of_measurement: "LUX"
-    value_template: '{{ value_json.ldr }}'
+    value_template: '{{ value_json }}'
 
   - platform: mqtt
-    state_topic: "giel/keuken"
+    state_topic: "keuken_test/sensor/keuken_temperatuur/state"
+    availability_topic: "keuken_test/status"
     name: "Keuken_Temperatuur"
     unit_of_measurement: "°C"
-    value_template: '{{ value_json.temperature | round(1) }}'
+    value_template: '{{ value_json | round(1) }}'
 
-  - platform: mqtt
-    state_topic: "giel/keuken"
-    name: "Keuken_Gevoelstemperatuur"
-    unit_of_measurement: "°C"
-    value_template: '{{ value_json.heatIndex | round(1) }}'
+  # - platform: mqtt
+  #   state_topic: "giel/keuken"
+  #   name: "Keuken_Gevoelstemperatuur"
+  #   unit_of_measurement: "°C"
+  #   value_template: '{{ value_json.heatIndex | round(1) }}'
 
 binary_sensor:
   - platform: mqtt
-    state_topic: "giel/keuken"
+    state_topic: "keuken_test/binary_sensor/keuken_beweging/state"
     name: "Keuken_Beweging"
-    value_template: '{{ value_json.motion }}'
-    payload_on: "motion detected"
-    payload_off: "standby"
+    # availability_topic: "keuken_test/status"
+    value_template: '{{ value }}'
+    payload_on: "ON"
+    payload_off: "OFF"
     device_class: motion

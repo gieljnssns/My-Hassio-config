@@ -1,0 +1,32 @@
+  alias: Licht hof aan
+  trigger:
+    - platform: state
+      entity_id: input_boolean.presence_licht_aan
+      to: 'on'
+    - platform: state
+      entity_id: input_boolean.gielthuis
+      to: 'on'
+    - platform: state
+      entity_id: input_boolean.martinethuis
+      to: 'on'
+    - platform: state
+      entity_id: input_boolean.noorthuis
+      to: 'on'
+    - platform: state
+      entity_id: input_boolean.fienthuis
+      to: 'on'
+    - platform: state
+      entity_id: binary_sensor.achterdeur_open
+      to: 'on'
+    - platform: state
+      entity_id: binary_sensor.beweging_hof
+      to: 'on'
+  condition:
+    - condition: state
+      entity_id: sensor.dark_outside
+      state: 'true'
+  action:
+    - service: timer.start
+      entity_id: timer.verlichting_hof
+    - service: light.turn_on
+      entity_id: light.alle_tuinverlichting

@@ -1,0 +1,19 @@
+  alias: Spots wit bij thuiskomst
+  trigger:
+    platform: state
+    entity_id: alarm_control_panel.ha_alarm
+    to: 'disarmed'
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: light.spots_tv
+        state: 'on'
+      - condition: state
+        entity_id: sensor.dark_outside
+        state: 'true'
+  action:
+    - service: light.turn_on
+      entity_id: light.spots_tv
+      data:
+        profile: reading

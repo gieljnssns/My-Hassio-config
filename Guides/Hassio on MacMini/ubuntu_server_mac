@@ -1,0 +1,47 @@
+# Ubuntu installeren
+https://tutorials.ubuntu.com/tutorial/tutorial-create-a-usb-stick-on-macos#0
+
+# Timezone
+sudo dpkg-reconfigure tzdata
+
+sudo apt-get update
+sudo apt-get upgrade
+sudo add-apt-repository universe
+sudo apt-get update
+sudo apt-get install jq apparmor-utils apt-transport-https avahi-daemon ca-certificates curl dbus network-manager socat software-properties-common
+
+# Docker
+sudo apt update
+sudo apt install apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+sudo apt update
+apt-cache policy docker-ce
+sudo apt install docker-ce
+sudo systemctl status docker
+
+# Portainer
+sudo docker volume create portainer_data
+sudo docker run -d -p 9000:9000 --name portainer --restart always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
+
+# Hassio
+sudo su root
+curl -sL https://raw.githubusercontent.com/home-assistant/hassio-build/master/install/hassio_install | bash -s
+
+# Samba
+https://tutorials.ubuntu.com/tutorial/install-and-configure-samba#0
+sudo nano /etc/samba/smb.conf
+
+[Hassio]
+    comment = Samba for Hassio
+    path = /usr/share/hassio
+    read only = no
+    browsable = yes
+    create mask = 0775
+    directory mask = 0775
+
+sudo chmod -R 775 /usr/share/hassio
+sudo service smbd restart
+
+# change dns
+sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf

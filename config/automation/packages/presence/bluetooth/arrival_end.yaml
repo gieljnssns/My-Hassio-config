@@ -1,0 +1,15 @@
+  alias: Arrival end
+  trigger:
+    - platform: mqtt
+      topic: monitor/scan/arrival/end
+  action:
+   - service: input_boolean.turn_off
+     data_template:
+        entity_id: >
+          {% if trigger.payload_json.identity == 'Garage' %}
+             input_boolean.garage_arrive
+          {% elif trigger.payload_json.identity == 'Keuken' %}
+             input_boolean.keuken_arrive
+          {% elif trigger.payload_json.identity == 'Living' %}
+             input_boolean.living_arrive
+          {% endif %}

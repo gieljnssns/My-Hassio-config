@@ -1,11 +1,14 @@
   alias: RAFC_lichten_uit
   trigger:
-    - entity_id: calendar.rafc
+    # - entity_id: calendar.rafc
+    #   platform: state
+    #   to: 'off'
+    - entity_id: calendar.rafc_rafc
       platform: state
       to: 'off'
   condition: []
   action:
-    - service: script.turn_off
+    - service: homeassistant.turn_off
       entity_id:
         - script.rafc2_1
         - script.rafc2_2

@@ -2,14 +2,22 @@
     sensors:
       martine_vertrekt_naart_werk:
         friendly_name: Martine moet vertrekken
-        value_template: "{{ (as_timestamp(states.calendar.monnikenheide_google.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) |  float > 600)
-              and (as_timestamp(states.calendar.monnikenheide_google.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 4200) }}"
+        value_template: >
+          {% if states.calendar.monnikenheide_monnikenheide.attributes.start_time is defined %}
+            {{ (as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) |  float > 300) and (as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 3600) }}
+          {% else %}
+            False
+          {% endif %}    
 
       giel_vertrekt_naart_werk:
         friendly_name: Giel moet vertrekken
-        value_template: "{{ (as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) |  float > 1800)
-              and (as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 4200) }}"
-
+        value_template: >
+          {% if states.calendar.mondelez_de_vroege.attributes.start_time is defined %}
+            {{ (as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) |  float > 1800) and (as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 4200) }}
+          {% else %}
+            False
+          {% endif %}  
+      
       afkoeling_gewenst:
         friendly_name: Afkoeling
         value_template: "{{ is_state('sensor.binnen_vs_buiten', 'Afkoeling') }}"
@@ -36,24 +44,45 @@
         value_template: "{{ states('sensor.buiten_lowpass') | float < 25 }}"
 
       v_vroege:
-        # value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(now()) | float < 21610}}"
-        value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 21610}}"
+        value_template: >
+          {% if states.calendar.mondelez_de_vroege.attributes.start_time is defined %}
+            {{as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 21610}}
+          {% else %}
+            False
+          {% endif %}
 
       v_late:
-        # value_template: "{{as_timestamp(states.calendar.late.attributes.start_time) - as_timestamp(now()) | float < 50410}}"
-        value_template: "{{as_timestamp(states.calendar.late.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 50410}}"
+        value_template: >
+          {% if states.calendar.mondelez_de_late.attributes.start_time is defined %}
+            {{as_timestamp(states.calendar.mondelez_de_late.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 50410}}
+          {% else %}
+            False
+          {% endif %}
 
       v_nacht:
-        # value_template: "{{as_timestamp(states.calendar.nacht.attributes.start_time) - as_timestamp(now()) | float < 79210}}"
-        value_template: "{{as_timestamp(states.calendar.nacht.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 79210}}"
+        value_template: >
+          {% if states.calendar.mondelez_de_nacht.attributes.start_time is defined %}
+            {{as_timestamp(states.calendar.mondelez_de_nacht.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 79210}}
+          {% else %}
+            False
+          {% endif %}
 
       v_w_nacht:
-        # value_template: "{{as_timestamp(states.calendar.w_nacht.attributes.start_time) - as_timestamp(now()) | float < 64810}}"
-        value_template: "{{as_timestamp(states.calendar.w_nacht.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 64810}}"
+        value_template: >
+          {% if states.calendar.mondelez_weekend_nacht.attributes.start_time is defined %}
+            {{as_timestamp(states.calendar.mondelez_weekend_nacht.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 64810}}
+          {% else %}
+            False
+          {% endif %}
 
       v_w_dag:
-        value_template: "{{as_timestamp(states.calendar.w_dag.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 21610}}"
-
+        value_template: >
+          {% if states.calendar.mondelez_weekend_dag.attributes.start_time is defined %}
+            {{as_timestamp(states.calendar.mondelez_weekend_dag.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 21610}}
+          {% else %}
+            False
+          {% endif %}      
+      
       # m_vroege:
       #   value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(now()) | float < 108000}}"
       #
@@ -69,25 +98,35 @@
       # m_w_dag:
       #   value_template: "{{as_timestamp(states.calendar.w_dag.attributes.start_time) - as_timestamp(now()) | float < 108000}}"
       #
+      # v_monnikenheide:
+      #   value_template: "{{as_timestamp(states.calendar.monnikenheide_google.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 28810}}"
+      
       v_monnikenheide:
-        # value_template: "{{as_timestamp(states.calendar.monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 28810}}"
-        value_template: "{{as_timestamp(states.calendar.monnikenheide_google.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 28810}}"
-
+        value_template: >
+          {% if states.calendar.monnikenheide_monnikenheide.attributes.start_time is defined %}
+            {{as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 28810}}
+          {% else %}
+            False
+          {% endif %}
+      
       # m_monnikenheide:
       #   value_template: "{{as_timestamp(states.calendar.monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 113040}}"
 
       v_werken:
         value_template: "{{ is_state('binary_sensor.v_late', 'on')
-               or is_state('calendar.monnikenheide_google', 'on')
-               or is_state('calendar.vroege', 'on')
-               or is_state('calendar.late', 'on')
-               or is_state('calendar.w_dag', 'on')
+               or is_state('calendar.monnikenheide_monnikenheide', 'on')
+               or is_state('calendar.mondelez_de_vroege', 'on')
+               or is_state('calendar.mondelez_de_late', 'on')
+               or is_state('calendar.mondelez_weekend_dag', 'on')
                or is_state('binary_sensor.v_monnikenheide', 'on')
                or is_state('binary_sensor.v_vroege', 'on')
                or is_state('binary_sensor.v_w_dag', 'on') }}"
 
       schooldag:
-        value_template: "{{ is_state('calendar.schoolvakanties', 'off') }}"
+        value_template: "{{ is_state('calendar.schoolvakanties_schoolvakanties', 'off') 
+               and is_state('calendar.feestdagen_feestdagen', 'off')
+               and now().weekday() != 6
+               and now().weekday() != 5}}"
 
       volk_in_den_hof_homekit:
         device_class: motion
@@ -109,6 +148,85 @@
       presence_licht_aan:
         device_class: light
         value_template: "{{ is_state('input_boolean.presence_licht_aan', 'on') }}"
+      
+      netatmo_webhook_trigger:
+        device_class: motion
+        friendly_name: Netatmo webhook trigger
+        value_template: "{{ is_state('sensor.netatmo_webhook_trigger', 'NOC-human') }}"
+      
+      heartbeat_living:
+        friendly_name: Heartbeat Living
+        entity_id: sensor.heartbeat_living
+        icon_template: mdi:heart-pulse
+        value_template: "{{ is_state('sensor.heartbeat_living', 'Living') }}"
+      
+      heartbeat_keuken:
+        friendly_name: Heartbeat Keuken
+        entity_id: sensor.heartbeat_keuken
+        icon_template: mdi:heart-pulse
+        value_template: "{{ is_state('sensor.heartbeat_keuken', 'Keuken') }}"
+      
+      heartbeat_garage:
+        friendly_name: Heartbeat Garage
+        entity_id: sensor.heartbeat_garage
+        icon_template: mdi:heart-pulse
+        value_template: "{{ is_state('sensor.heartbeat_garage', 'Garage') }}"
+      
+      living_arrive:
+        friendly_name: Living aankomst scan
+        entity_id: input_boolean.living_arrive
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.living_arrive', 'on') }}"
+      living_depart:
+        friendly_name: Living vertrek scan
+        entity_id: input_boolean.living_depart
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.living_depart', 'on') }}"
+      keuken_arrive:
+        friendly_name: Keuken aankomst scan
+        entity_id: input_boolean.keuken_arrive
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.keuken_arrive', 'on') }}"
+      keuken_depart:
+        friendly_name: Keuken vertrek scan
+        entity_id: input_boolean.keuken_depart
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.keuken_depart', 'on') }}"
+      garage_arrive:
+        friendly_name: Garage aankomst scan
+        entity_id: input_boolean.garage_arrive
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.garage_arrive', 'on') }}"
+      garage_depart:
+        friendly_name: Garage vertrek scan
+        entity_id: input_boolean.garage_depart
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.garage_depart', 'on') }}"
+      bluetooth_scan:
+       friendly_name: Bluetooth scan
+       icon_template: mdi:bluetooth-audio
+       value_template: "{{ is_state('binary_sensor.living_arrive', 'on')
+                or is_state('binary_sensor.living_depart', 'on')
+                or is_state('binary_sensor.keuken_depart', 'on')
+                or is_state('binary_sensor.keuken_arrive', 'on')
+                or is_state('binary_sensor.garage_arrive', 'on')
+                or is_state('binary_sensor.garage_depart', 'on') }}"
+      
+      mphone_bt_thuis_34:
+        value_template: "{{ state_attr('sensor.mphone_bt_thuis', 'mean') | float < 34 }}"
+
+      gphone_bt_thuis_34:
+        value_template: "{{ state_attr('sensor.gphone_bt_thuis', 'mean') | float < 34 }}"
+
+      achterdeur_open:
+        friendly_name: Achterdeur
+        device_class: door
+        value_template: "{{ is_state('input_boolean.koogeek_achterdeur', 'on') }}"
+      
+      voordeur_open:
+        friendly_name: Voordeur
+        device_class: door
+        value_template: "{{ is_state('input_boolean.koogeek_voordeur', 'on') }}"
 
       verluchting_afkoeling:
         device_class: cold
@@ -128,11 +246,42 @@
       - Someone known
       - Someone unknown
       - Motion
+  
+  # - platform: mqtt
+  #   state_topic: "keuken_test/binary_sensor/keuken_beweging/state"
+  #   name: "Keuken_Beweging"
+  #   availability_topic: "keuken_test/status"
+  #   value_template: '{{ value_json }}'
+  #   payload_on: "ON"
+  #   payload_off: "OFF"
+  #   device_class: motion
 
-  # - platform: device_tracker_sensor
-  #   entities:
-  #     - device_tracker.garage_mint
-  #     - device_tracker.noorpad
-  #     - device_tracker.fienpad
-  #     - device_tracker.macbook
-  #     - device_tracker.mphone
+  - platform: trend
+    sensors:
+      temp_badkamer_rising:
+        entity_id: sensor.badkamer_1_1
+        friendly_name: Trend temperatuur badkamer
+        sample_duration: 4000
+        min_gradient: 0.0005
+        device_class: problem
+
+      temp_slaapkamer_rising:
+        entity_id: sensor.slaapkamer_2_1
+        friendly_name: Trend temperatuur slaapkamer
+        sample_duration: 4000
+        min_gradient: 0.0005
+        device_class: problem
+
+      temp_fien_rising:
+        entity_id: sensor.fien_3_1
+        friendly_name: Trend temperatuur Fien
+        sample_duration: 4000
+        min_gradient: 0.0005
+        device_class: problem
+
+      temp_noor_rising:
+        entity_id: sensor.noor_4_1
+        friendly_name: Trend temperatuur Noor
+        sample_duration: 4000
+        min_gradient: 0.0005
+        device_class: problem

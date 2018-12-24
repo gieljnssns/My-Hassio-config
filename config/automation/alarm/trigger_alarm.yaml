@@ -1,0 +1,37 @@
+  alias: 'Trigger alarm while armed away'
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.beweging_hof
+      to: 'on'
+    # - platform: state
+    #   entity_id: sensor.pir2
+    #   to: 'active'
+    # - platform: state
+    #   entity_id: sensor.door
+    #   to: 'open'
+    # - platform: state
+    #   entity_id: sensor.window
+    #   to: 'open'
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.martine_vertrekt_naart_werk
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.giel_vertrekt_naart_werk
+        state: 'off'
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: alarm_control_panel.ha_alarm
+            state: 'armed_away'
+          - condition: state
+            entity_id: alarm_control_panel.ha_alarm
+            state: 'armed_home'
+          - condition: state
+            entity_id: alarm_control_panel.ha_alarm
+            state: 'armed_night'
+  action:
+    service: alarm_control_panel.alarm_trigger
+    entity_id: alarm_control_panel.ha_alarm

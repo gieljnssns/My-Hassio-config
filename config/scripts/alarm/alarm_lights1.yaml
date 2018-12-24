@@ -1,0 +1,50 @@
+  alarm_lights1:
+    sequence:
+      - service: light.turn_on
+        data:
+          entity_id: 
+            - light.spots_tv
+          rgb_color: [255, 255, 255]
+          brightness: 255
+      - service: light.turn_on
+        data:
+          entity_id: 
+            - light.alle_tuinverlichting
+          brightness: 255
+      - delay: '00:00:02'
+      - service: light.turn_on
+        data:
+          entity_id:
+            - light.spots_tv
+          rgb_color: [206, 21, 55]
+          brightness: 255
+      - service: light.turn_off
+        data:
+          entity_id: 
+            - light.alle_tuinverlichting
+      - delay: '00:00:02'
+      - service: light.turn_on
+        data:
+          entity_id: 
+            - light.spots_tv
+          rgb_color: [255, 255, 255]
+          brightness: 255
+      - service: light.turn_on
+        data:
+          entity_id: 
+            - light.alle_tuinverlichting
+          brightness: 255
+      - delay: '00:00:02'
+      - service: light.turn_on
+        data:
+          entity_id:
+            - light.spots_tv
+          rgb_color: [206, 21, 55]
+          brightness: 255
+      - service: light.turn_off
+        data:
+          entity_id: 
+            - light.alle_tuinverlichting
+      - delay: '00:00:02'
+      - service: script.turn_on
+        entity_id: script.alarm_lights2
