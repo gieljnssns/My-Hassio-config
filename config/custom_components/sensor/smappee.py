@@ -123,10 +123,13 @@ class SmappeeSensor(Entity):
         if self._sensor in ['solar_today', 'power_today']:
             data = self._smappee.consumption[self._location_id]
             if data:
-                consumption = data.get('consumptions')[-1]
-                _LOGGER.debug("%s %s", self._sensor, consumption)
-                value = consumption.get(self._smappe_name)
-                self._state = round(value / 1000, 2)
+                try:
+                    consumption = data.get('consumptions')[-1]
+                    _LOGGER.debug("%s %s", self._sensor, consumption)
+                    value = consumption.get(self._smappe_name)
+                    self._state = round(value / 1000, 2)
+                except IndexError:
+                    self._state = 0
         elif self._sensor == 'alwayson_today':
             data = self._smappee.get_consumption(
                 self._location_id, aggregation=1, delta=30)
