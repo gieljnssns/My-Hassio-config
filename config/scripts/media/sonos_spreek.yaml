@@ -1,0 +1,71 @@
+  sonos_spreek:
+    sequence:
+      - service: media_player.sonos_snapshot
+        data_template:
+          entity_id: >
+            {% if is_state('input_select.welke_sonos', 'Keuken') %}
+              media_player.keuken
+            {% elif is_state('input_select.welke_sonos', 'Badkamer') %}
+              media_player.badkamer
+            {% else %}
+              False
+            {% endif %}
+      - delay: '00:00:04'
+      - service: media_player.media_pause
+        data_template:
+          entity_id: >
+            {% if is_state('input_select.welke_sonos', 'Keuken') %}
+              media_player.keuken
+            {% elif is_state('input_select.welke_sonos', 'Badkamer') %}
+              media_player.badkamer
+            {% else %}
+              False
+            {% endif %}
+      - delay: '00:00:01'
+      - service: media_player.volume_set
+        data_template:
+          entity_id: >
+            {% if is_state('input_select.welke_sonos', 'Keuken') %}
+              media_player.keuken
+            {% elif is_state('input_select.welke_sonos', 'Badkamer') %}
+              media_player.badkamer
+            {% else %}
+              False
+            {% endif %}
+          volume_level: >
+            {% if is_state('input_select.sonos_volume', 'Maximum') %}
+              1
+            {% elif is_state('input_select.sonos_volume', 'Luid') %}
+              0.9
+            {% elif is_state('input_select.sonos_volume', 'Medium') %}
+              0.8
+            {% elif is_state('input_select.sonos_volume', 'Stil') %}
+              0.7
+            {% elif is_state('input_select.sonos_volume', 'Minimum') %}
+              0.6
+            {% else %}
+              False
+            {% endif %}
+      - service: tts.voicerss_say
+      # - service: tts.google_say
+        data_template:
+          entity_id: >
+            {% if is_state('input_select.welke_sonos', 'Keuken') %}
+              media_player.keuken
+            {% elif is_state('input_select.welke_sonos', 'Badkamer') %}
+              media_player.badkamer
+            {% else %}
+              False
+            {% endif %}
+          message: "{{ states('input_text.sonos_spraak') }}"
+      - delay: '00:00:10'
+      - service: media_player.sonos_restore
+        data_template:
+          entity_id: >
+            {% if is_state('input_select.welke_sonos', 'Keuken') %}
+              media_player.keuken
+            {% elif is_state('input_select.welke_sonos', 'Badkamer') %}
+              media_player.badkamer
+            {% else %}
+              False
+            {% endif %}

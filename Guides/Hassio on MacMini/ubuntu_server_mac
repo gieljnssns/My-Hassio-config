@@ -35,10 +35,12 @@ sudo nano /etc/samba/smb.conf
 [Hassio]
     comment = Samba for Hassio
     path = /usr/share/hassio
+    writeable = yes
     read only = no
     browsable = yes
     create mask = 0775
     directory mask = 0775
+    valid users = <USER>
 
 sudo chmod -R 775 /usr/share/hassio
 sudo service smbd restart
