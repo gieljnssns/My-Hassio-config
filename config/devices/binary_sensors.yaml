@@ -4,7 +4,7 @@
         friendly_name: Martine moet vertrekken
         value_template: >
           {% if states.calendar.monnikenheide_monnikenheide.attributes.start_time is defined %}
-            {{ (as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) |  float > 300) and (as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 3600) }}
+            {{ (as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.datetime.state, '%Y-%m-%d, %H:%M')) |  float > 300) and (as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 3600) }}
           {% else %}
             False
           {% endif %}    
@@ -13,7 +13,7 @@
         friendly_name: Giel moet vertrekken
         value_template: >
           {% if states.calendar.mondelez_de_vroege.attributes.start_time is defined %}
-            {{ (as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) |  float > 1800) and (as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 4200) }}
+            {{ (as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) |  float > 1800) and (as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 4200) }}
           {% else %}
             False
           {% endif %}  
@@ -46,7 +46,7 @@
       v_vroege:
         value_template: >
           {% if states.calendar.mondelez_de_vroege.attributes.start_time is defined %}
-            {{as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 21610}}
+            {{as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 21610}}
           {% else %}
             False
           {% endif %}
@@ -54,7 +54,7 @@
       v_late:
         value_template: >
           {% if states.calendar.mondelez_de_late.attributes.start_time is defined %}
-            {{as_timestamp(states.calendar.mondelez_de_late.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 50410}}
+            {{as_timestamp(states.calendar.mondelez_de_late.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 50410}}
           {% else %}
             False
           {% endif %}
@@ -62,7 +62,7 @@
       v_nacht:
         value_template: >
           {% if states.calendar.mondelez_de_nacht.attributes.start_time is defined %}
-            {{as_timestamp(states.calendar.mondelez_de_nacht.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 79210}}
+            {{as_timestamp(states.calendar.mondelez_de_nacht.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 79210}}
           {% else %}
             False
           {% endif %}
@@ -70,7 +70,7 @@
       v_w_nacht:
         value_template: >
           {% if states.calendar.mondelez_weekend_nacht.attributes.start_time is defined %}
-            {{as_timestamp(states.calendar.mondelez_weekend_nacht.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 64810}}
+            {{as_timestamp(states.calendar.mondelez_weekend_nacht.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 64810}}
           {% else %}
             False
           {% endif %}
@@ -78,7 +78,7 @@
       v_w_dag:
         value_template: >
           {% if states.calendar.mondelez_weekend_dag.attributes.start_time is defined %}
-            {{as_timestamp(states.calendar.mondelez_weekend_dag.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 21610}}
+            {{as_timestamp(states.calendar.mondelez_weekend_dag.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 21610}}
           {% else %}
             False
           {% endif %}      
@@ -99,12 +99,12 @@
       #   value_template: "{{as_timestamp(states.calendar.w_dag.attributes.start_time) - as_timestamp(now()) | float < 108000}}"
       #
       # v_monnikenheide:
-      #   value_template: "{{as_timestamp(states.calendar.monnikenheide_google.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 28810}}"
+      #   value_template: "{{as_timestamp(states.calendar.monnikenheide_google.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 28810}}"
       
       v_monnikenheide:
         value_template: >
           {% if states.calendar.monnikenheide_monnikenheide.attributes.start_time is defined %}
-            {{as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date__time.state, '%Y-%m-%d, %H:%M')) | float < 28810}}
+            {{as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 28810}}
           {% else %}
             False
           {% endif %}
@@ -137,13 +137,13 @@
         device_class: motion
         value_template: "{{ is_state('binary_sensor.den_hof_outdoor_animal', 'on')
                 or is_state('input_boolean.dier_in_den_hof', 'on')
-                or is_state('binary_sensor.nummer_79__den_hof_outdoor_animal', 'on') }}"
+                or is_state('binary_sensor.nummer_79_den_hof_outdoor_animal', 'on') }}"
 
       auto_in_den_hof:
         device_class: motion
         value_template: "{{ is_state('binary_sensor.den_hof_outdoor_vehicle', 'on')
                 or is_state('input_boolean.auto_in_den_hof', 'on')
-                or is_state('binary_sensor.nummer_79__den_hof_outdoor_vehicle', 'on') }}"
+                or is_state('binary_sensor.nummer_79_den_hof_outdoor_vehicle', 'on') }}"
 
       presence_licht_aan:
         device_class: light
