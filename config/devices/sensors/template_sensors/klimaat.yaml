@@ -1,0 +1,71 @@
+  - platform: template
+    sensors:
+      temp_living:
+        value_template: "{{ states.climate.living.attributes.current_temperature }}"
+        unit_of_measurement: '°C'
+
+      verwarming_beneden:
+        value_template: "{{states.climate.living.attributes.operation_mode}}"
+
+      binnen_vs_buiten:
+        value_template: >-
+              {% if (states('sensor.gemiddelde_temp_binnen')) > (states('sensor.garage_5_0')) and states('sensor.gemiddelde_temp_binnen') | float > 27 %}
+                 Afkoeling
+              {% else %}
+                 Geen afkoeling
+              {% endif %}
+
+      badkamer_aan_af:
+        unit_of_measurement: 'pt'
+        value_template: >-
+              {%- if is_state("switch.badkamer", "off") %}
+                  0
+              {% elif is_state("switch.badkamer", "on") %}
+                  0.1
+              {% else %}
+                  0
+              {%- endif %}
+    
+      noor_aan_af:
+        unit_of_measurement: 'pt'
+        value_template: >-
+              {%- if is_state("switch.noor", "off") %}
+                  0
+              {% elif is_state("switch.noor", "on") %}
+                  0.1
+              {% else %}
+                  0
+              {%- endif %}
+    
+      fien_aan_af:
+        unit_of_measurement: 'pt'
+        value_template: >-
+              {%- if is_state("switch.fien", "off") %}
+                  0
+              {% elif is_state("switch.fien", "on") %}
+                  0.1
+              {% else %}
+                  0
+              {%- endif %}
+    
+      slaapkamer_aan_af:
+        unit_of_measurement: 'pt'
+        value_template: >-
+              {%- if is_state("switch.slaapkamer", "off") %}
+                  0
+              {% elif is_state("switch.slaapkamer", "on") %}
+                  0.1
+              {% else %}
+                  0
+              {%- endif %}
+      
+      living_aan_af:
+        unit_of_measurement: 'pt'
+        value_template: >-
+              {%- if is_state("climate.living", "idle") %}
+                  0
+              {% elif is_state("climate.living", "heat") %}
+                  0.1
+              {% else %}
+                  0
+              {%- endif %}

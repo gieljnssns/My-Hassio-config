@@ -1,0 +1,30 @@
+  - platform: template
+    sensors:
+      afkoeling_gewenst:
+        friendly_name: Afkoeling
+        value_template: "{{ is_state('sensor.binnen_vs_buiten', 'Afkoeling') }}"
+        icon_template: >-
+            {% if is_state('sensor.binnen_vs_buiten', 'Afkoeling') %}
+                 mdi:fan
+            {% else %}
+                 mdi:fan-off
+            {% endif %}
+
+      binnen_warm:
+        device_class: heat
+        friendly_name: Binnen heet
+        value_template: "{{ states('sensor.binnen_lowpass') | float > 26 }}"
+
+      buiten_warm:
+        device_class: heat
+        friendly_name: Buiten heet
+        value_template: "{{ states('sensor.buiten_lowpass') | float > 25 }}"
+
+      buiten_fris_genoeg:
+        device_class: cold
+        friendly_name: Buiten aangenaam
+        value_template: "{{ states('sensor.buiten_lowpass') | float < 25 }}"
+      
+      verluchting_afkoeling:
+        device_class: cold
+        value_template: "{{ is_state('input_boolean.verluchting_afkoeling', 'on') }}"

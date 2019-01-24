@@ -4,7 +4,7 @@
         friendly_name: Martine moet vertrekken
         value_template: >
           {% if states.calendar.monnikenheide_monnikenheide.attributes.start_time is defined %}
-            {{ (as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.datetime.state, '%Y-%m-%d, %H:%M')) |  float > 300) and (as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 3600) }}
+            {{ (as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) |  float > 300) and (as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 3600) }}
           {% else %}
             False
           {% endif %}    
@@ -177,31 +177,37 @@
         entity_id: input_boolean.living_arrive
         icon_template: mdi:cellphone-wireless
         value_template: "{{ is_state('input_boolean.living_arrive', 'on') }}"
+
       living_depart:
         friendly_name: Living vertrek scan
         entity_id: input_boolean.living_depart
         icon_template: mdi:cellphone-wireless
         value_template: "{{ is_state('input_boolean.living_depart', 'on') }}"
+
       keuken_arrive:
         friendly_name: Keuken aankomst scan
         entity_id: input_boolean.keuken_arrive
         icon_template: mdi:cellphone-wireless
         value_template: "{{ is_state('input_boolean.keuken_arrive', 'on') }}"
+
       keuken_depart:
         friendly_name: Keuken vertrek scan
         entity_id: input_boolean.keuken_depart
         icon_template: mdi:cellphone-wireless
         value_template: "{{ is_state('input_boolean.keuken_depart', 'on') }}"
+
       garage_arrive:
         friendly_name: Garage aankomst scan
         entity_id: input_boolean.garage_arrive
         icon_template: mdi:cellphone-wireless
         value_template: "{{ is_state('input_boolean.garage_arrive', 'on') }}"
+
       garage_depart:
         friendly_name: Garage vertrek scan
         entity_id: input_boolean.garage_depart
         icon_template: mdi:cellphone-wireless
         value_template: "{{ is_state('input_boolean.garage_depart', 'on') }}"
+        
       bluetooth_scan:
        friendly_name: Bluetooth scan
        icon_template: mdi:bluetooth-audio

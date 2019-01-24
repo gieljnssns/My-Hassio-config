@@ -1,0 +1,32 @@
+  - platform: template
+    sensors:
+      netatmo_type:
+        friendly_name: Netatmo webhook
+        value_template: >-
+              {%- if is_state_attr("sensor.netatmo_webhook", "push_type", "NOC-animal") %}
+                  Dier
+              {%- elif is_state_attr("sensor.netatmo_webhook", "push_type", "NOC-human") %}
+                  Persoon
+              {%- elif is_state_attr("sensor.netatmo_webhook", "push_type", "NOC-movement") %}
+                  Beweging
+              {%- elif is_state_attr("sensor.netatmo_webhook", "push_type", "NOC-vehicle") %}
+                  Voertuig
+              {%- elif is_state_attr("sensor.netatmo_webhook", "push_type", "topology_changed") %}
+                  Info
+              {%- elif is_state_attr("sensor.netatmo_webhook", "push_type", "NOC-light_mode") %}
+                  Licht
+              {% endif %}
+        icon_template: >-
+              {%- if is_state_attr("sensor.netatmo_webhook", "push_type", "NOC-animal") %}
+                  mdi:dog-side
+              {%- elif is_state_attr("sensor.netatmo_webhook", "push_type", "NOC-human") %}
+                  mdi:human
+              {%- elif is_state_attr("sensor.netatmo_webhook", "push_type", "NOC-movement") %}
+                  mdi:weather-windy
+              {%- elif is_state_attr("sensor.netatmo_webhook", "push_type", "NOC-vehicle") %}
+                  mdi:car-hatchback
+              {%- elif is_state_attr("sensor.netatmo_webhook", "push_type", "topology_changed") %}
+                  mdi:information-variant
+              {%- elif is_state_attr("sensor.netatmo_webhook", "push_type", "NOC-light_mode") %}
+                  mdi:lightbulb-on
+              {% endif %}

@@ -1,0 +1,46 @@
+  - platform: template
+    sensors:
+      windsnelheid:
+        friendly_name: Windsnelheid
+        icon_template: mdi:weather-windy
+        unit_of_measurement: 'km/u'
+        value_template: >-
+          {{ (states.sensor.dark_sky_wind_speed.state | float * 3.6) | round(2) }}
+    
+      windrichting:
+        friendly_name: Windrichting
+        icon_template: mdi:compass
+        value_template: >-
+          {% if 349.1 <= states('sensor.dark_sky_wind_bearing')|float <= 11.5 %}
+             N
+          {% elif 11.6 <= states('sensor.dark_sky_wind_bearing')|float <= 34 %}
+             NNO
+          {% elif 34.1 <= states('sensor.dark_sky_wind_bearing')|float <= 56.5 %}
+             NO
+          {% elif 56.6 <= states('sensor.dark_sky_wind_bearing')|float <= 79 %}
+             ONO
+          {% elif 79.1 <= states('sensor.dark_sky_wind_bearing')|float <= 101.5 %}
+             O
+          {% elif 101.6 <= states('sensor.dark_sky_wind_bearing')|float <= 124 %}
+             OZO
+          {% elif 124.1 <= states('sensor.dark_sky_wind_bearing')|float <= 146.5 %}
+             ZO
+          {% elif 146.6 <= states('sensor.dark_sky_wind_bearing')|float <= 169 %}
+             ZZO
+          {% elif 169.1 <= states('sensor.dark_sky_wind_bearing')|float <= 191.5 %}
+             Z
+          {% elif 191.6 <= states('sensor.dark_sky_wind_bearing')|float <= 214 %}
+             ZZW
+          {% elif 214.1 <= states('sensor.dark_sky_wind_bearing')|float <= 236.5 %}
+             ZW
+          {% elif 236.6 <= states('sensor.dark_sky_wind_bearing')|float <= 259 %}
+             WZW
+          {% elif 259.1 <= states('sensor.dark_sky_wind_bearing')|float <= 281.5 %}
+             W
+          {% elif 281.6 <= states('sensor.dark_sky_wind_bearing')|float <= 304 %}
+             WNW
+          {% elif 304.1 <= states('sensor.dark_sky_wind_bearing')|float <= 326.5 %}
+             NW
+          {% elif 326.6 <= states('sensor.dark_sky_wind_bearing')|float <= 349 %}
+             NNW
+          {% endif %}

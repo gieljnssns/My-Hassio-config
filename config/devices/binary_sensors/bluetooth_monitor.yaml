@@ -1,0 +1,71 @@
+  - platform: template
+    sensors:
+      heartbeat_living:
+        friendly_name: Heartbeat Living
+        entity_id: sensor.heartbeat_living
+        icon_template: mdi:heart-pulse
+        value_template: "{{ is_state('sensor.heartbeat_living', 'Living') }}"
+      
+      heartbeat_keuken:
+        friendly_name: Heartbeat Keuken
+        entity_id: sensor.heartbeat_keuken
+        icon_template: mdi:heart-pulse
+        value_template: "{{ is_state('sensor.heartbeat_keuken', 'Keuken') }}"
+      
+      heartbeat_garage:
+        friendly_name: Heartbeat Garage
+        entity_id: sensor.heartbeat_garage
+        icon_template: mdi:heart-pulse
+        value_template: "{{ is_state('sensor.heartbeat_garage', 'Garage') }}"
+      
+      living_arrive:
+        friendly_name: Living aankomst scan
+        entity_id: input_boolean.living_arrive
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.living_arrive', 'on') }}"
+
+      living_depart:
+        friendly_name: Living vertrek scan
+        entity_id: input_boolean.living_depart
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.living_depart', 'on') }}"
+
+      keuken_arrive:
+        friendly_name: Keuken aankomst scan
+        entity_id: input_boolean.keuken_arrive
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.keuken_arrive', 'on') }}"
+
+      keuken_depart:
+        friendly_name: Keuken vertrek scan
+        entity_id: input_boolean.keuken_depart
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.keuken_depart', 'on') }}"
+
+      garage_arrive:
+        friendly_name: Garage aankomst scan
+        entity_id: input_boolean.garage_arrive
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.garage_arrive', 'on') }}"
+
+      garage_depart:
+        friendly_name: Garage vertrek scan
+        entity_id: input_boolean.garage_depart
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.garage_depart', 'on') }}"
+        
+      bluetooth_scan:
+       friendly_name: Bluetooth scan
+       icon_template: mdi:bluetooth-audio
+       value_template: "{{ is_state('binary_sensor.living_arrive', 'on')
+                or is_state('binary_sensor.living_depart', 'on')
+                or is_state('binary_sensor.keuken_depart', 'on')
+                or is_state('binary_sensor.keuken_arrive', 'on')
+                or is_state('binary_sensor.garage_arrive', 'on')
+                or is_state('binary_sensor.garage_depart', 'on') }}"
+      
+      mphone_bt_thuis_34:
+        value_template: "{{ state_attr('sensor.mphone_bt_thuis', 'mean') | float < 34 }}"
+
+      gphone_bt_thuis_34:
+        value_template: "{{ state_attr('sensor.gphone_bt_thuis', 'mean') | float < 34 }}"

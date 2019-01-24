@@ -1,0 +1,40 @@
+  - platform: netatmo
+    home: Nummer 79
+    cameras:
+      - Den Hof
+    presence_sensors:
+      - Outdoor human
+      - Outdoor animal
+      - Outdoor vehicle
+    welcome_sensors:
+      - Someone known
+      - Someone unknown
+      - Motion
+
+  - platform: template
+    sensors:
+      volk_in_den_hof_homekit:
+        device_class: motion
+        value_template: "{{ is_state('input_boolean.volk_in_den_hof_homekit', 'on')
+                or is_state('binary_sensor.presence_licht_aan', 'on') }}"
+
+      dier_in_den_hof:
+        device_class: motion
+        value_template: "{{ is_state('binary_sensor.den_hof_outdoor_animal', 'on')
+                or is_state('input_boolean.dier_in_den_hof', 'on')
+                or is_state('binary_sensor.nummer_79_den_hof_outdoor_animal', 'on') }}"
+
+      auto_in_den_hof:
+        device_class: motion
+        value_template: "{{ is_state('binary_sensor.den_hof_outdoor_vehicle', 'on')
+                or is_state('input_boolean.auto_in_den_hof', 'on')
+                or is_state('binary_sensor.nummer_79_den_hof_outdoor_vehicle', 'on') }}"
+
+      presence_licht_aan:
+        device_class: light
+        value_template: "{{ is_state('input_boolean.presence_licht_aan', 'on') }}"
+      
+      netatmo_webhook_trigger:
+        device_class: motion
+        friendly_name: Netatmo webhook trigger
+        value_template: "{{ is_state('sensor.netatmo_webhook_trigger', 'NOC-human') }}"

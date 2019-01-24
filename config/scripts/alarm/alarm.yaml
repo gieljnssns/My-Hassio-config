@@ -1,0 +1,17 @@
+  alarm:
+    sequence:
+      - service: notify.ios
+        data_template:
+          message: 'Bezoek! -- Alarm opzetten?'
+          data:
+            attachment:
+              url: "{{ state_attr('sensor.netatmo_webhook', 'snapshot_url') }}"
+              content-type: jpeg
+              hide-thumbnail: false
+            push:
+              badge: 0
+              category: 'alarm'
+              sound: 'Siren_Noise.wav'
+            # entity_id: camera.den_hof
+            action_data:
+              entity_id: input_boolean.alarm

@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
     'https://github.com/gieljnssns/KostalPikoPy/archive/'
-    'master.zip#pikopy==0.9.0']
+    'master.zip#pikopy==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
