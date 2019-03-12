@@ -1,0 +1,51 @@
+  # - platform: nmap_tracker
+  #   hosts: 192.168.0.1-255
+  #   exclude:
+  #     - 192.168.0.1   # Airport Extreme
+  #     - 192.168.0.2   # Netgear switch
+  #     - 192.168.0.3   # Time capsule
+  #     - 192.168.0.4   #
+  #     - 192.168.0.5   # Nas Lan1
+  #     - 192.168.0.6   # Nas Lan2
+  #     - 192.168.0.20  # Kostal Piko
+  #     - 192.168.0.21  # Garage Capsule
+  #     - 192.168.0.22  # Smappee
+  #     - 192.168.0.25  # Netatmo Thermostat
+  #     - 192.168.0.26  # Hue beneje
+  #     - 192.168.0.30  # Solar Edge
+  #     - 192.168.0.31  #
+  #     - 192.168.0.33  # Canon printer
+  #     - 192.168.0.34  # Airport Express
+  #     - 192.168.0.35  # HomePi
+  #     - 192.168.0.36  # Hue boven
+  #     - 192.168.0.37  # Netatmo Presence
+  #     - 192.168.0.40  # Mysensors gateway
+  #     - 192.168.0.54  # DietHass
+  #   home_interval: 10
+  #   track_new_devices: True
+  #   # consider_home: 400
+  #   interval_seconds: 60
+
+  - platform: icloud3
+    username: !secret icloud_username
+    password: !secret icloud3_pw
+    account_name: icloud
+    include_device_type: iphone
+    exclude_device:
+      - Reserve
+    unit_of_measurement: km
+    waze_region: EU
+  
+#########################################################
+#
+#   DEVICE TRACKERS TO BE USED AS BADGE ENTITIES
+#   USING MQTT TRANSACTIONS
+#
+#########################################################
+   
+#     This is triggered by the automation_old>home_away>set_home_away
+  - platform: mqtt
+    devices:
+      giel: 'location/giel'
+      martine: 'location/martine'
+    retain: true

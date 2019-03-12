@@ -1,0 +1,50 @@
+  #########################################################
+  #
+  #   BADGE TEMPLATE SENSORS
+  #
+  #########################################################
+  - platform: template
+    sensors:
+      #--- giel/martine location badge --------------------
+      giel_badge:
+        value_template: >-
+          {% if states("device_tracker.gphone") %}
+            {% if states("device_tracker.gphone") != "not_home" %}
+              {{ states("device_tracker.gphone") | title }}
+            {% elif state_attr("device_tracker.gphone","distance") %}
+              {{ state_attr("device_tracker.gphone","distance") }} km
+            {% else %}
+              Waiting
+            {% endif %} 
+          {% endif %}            
+        # entity_picture_template: /local/giel.png
+
+      martine_badge:
+        value_template: >-
+          {% if states("device_tracker.mphone") %}
+            {% if states("device_tracker.mphone") != "not_home" %}
+              {{ states("device_tracker.mphone") | title }}
+            {% elif state_attr("device_tracker.mphone","distance") %}
+              {{ state_attr("device_tracker.mphone","distance") }} km
+            {% else %}
+              Waiting
+            {% endif %}
+          {% endif %}  
+        # entity_picture_template: /local/martine.png
+                
+  #---- Day of Week Templates --------------------
+  - platform: template
+    sensors:
+      day_of_week:
+        value_template: >
+          {{ now().strftime("%a") }}
+        entity_id:
+          - sensor.day_of_week
+  
+  - platform: template
+    sensors:
+      day_date:
+        value_template: >
+          {{ now().strftime("%A, %b %d, %Y") }}
+        entity_id:
+          - sensor.day_date

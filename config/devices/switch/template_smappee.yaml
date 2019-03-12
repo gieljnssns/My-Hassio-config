@@ -1,0 +1,156 @@
+  - platform: template
+    switches:
+      smappee_kerstverlichting:
+        value_template: "{{ is_state('switch.smappee_mqtt_kerstverlichting', 'on') }}"
+        icon_template: mdi:pine-tree
+        friendly_name: Kerstverlichting
+        turn_on:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/9/setstate'
+              payload_template: >
+                  { 
+                   "value" : "ON", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+        turn_off:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/9/setstate'
+              payload_template: >
+                  { 
+                   "value" : "OFF", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+      smappee_verwarming_bureau:
+        value_template: "{{ is_state('switch.smappee_mqtt_verwarming_bureau', 'on') }}"
+        icon_template: mdi:radiator
+        friendly_name: Verwarming Bureau
+        turn_on:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/8/setstate'
+              payload_template: >
+                  { 
+                   "value" : "ON", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+        turn_off:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/8/setstate'
+              payload_template: >
+                  { 
+                   "value" : "OFF", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+      smappee_tv:
+        value_template: "{{ is_state('switch.smappee_mqtt_tv', 'on') }}"
+        icon_template: mdi:television
+        friendly_name: Tv
+        turn_on:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/7/setstate'
+              payload_template: >
+                  { 
+                   "value" : "ON", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+        turn_off:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/7/setstate'
+              payload_template: >
+                  { 
+                   "value" : "OFF", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+      smappee_opladers:
+        value_template: "{{ is_state('switch.smappee_mqtt_opladers', 'on') }}"
+        icon_template: mdi:power-socket-eu
+        friendly_name: Opdaders
+        turn_on:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/2/setstate'
+              payload_template: >
+                  { 
+                   "value" : "ON", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+        turn_off:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/2/setstate'
+              payload_template: >
+                  { 
+                   "value" : "OFF", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+      smappee_koffiezet:
+        value_template: "{{ is_state('switch.smappee_mqtt_koffiezet', 'on') }}"
+        icon_template: mdi:coffee
+        friendly_name: Koffiezet
+        turn_on:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/4/setstate'
+              payload_template: >
+                  { 
+                   "value" : "ON", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+        turn_off:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/4/setstate'
+              payload_template: >
+                  { 
+                   "value" : "OFF", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+      smappee_reserve_4:
+        value_template: "{{ is_state('switch.smappee_mqtt_reserve_4', 'on') }}"
+        icon_template: mdi:power-socket-eu
+        friendly_name: Reserve 4
+        turn_on:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/3/setstate'
+              payload_template: >
+                  { 
+                   "value" : "ON", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+        turn_off:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/3/setstate'
+              payload_template: >
+                  { 
+                   "value" : "OFF", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+      smappee_reserve_3:
+        value_template: "{{ is_state('switch.smappee_mqtt_reserve_3', 'on') }}"
+        icon_template: mdi:car-battery
+        friendly_name: Oplader electrische fiets
+        turn_on:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/1/setstate'
+              payload_template: >
+                  { 
+                   "value" : "ON", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }
+        turn_off:
+          - service: mqtt.publish
+            data_template:
+              topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/plug/1/setstate'
+              payload_template: >
+                  { 
+                   "value" : "OFF", 
+                   "since" : {{ (as_timestamp(now()) * 1000) | round(0)}}
+                  }

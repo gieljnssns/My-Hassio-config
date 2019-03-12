@@ -1,0 +1,95 @@
+  #########################################################
+  #
+  #   ATTRIBUTE DISPLAY TEMPLATE SENSORS
+  #
+  #########################################################
+
+  #---- iPhone Device Tracker Attribute Templates ----- giel ---------------
+  - platform: template
+    sensors:
+      gphone_distance:
+        value_template: '{{float(state_attr("device_tracker.gphone","distance"))}}'
+        unit_of_measurement: 'km'
+      gphone_calc_distance:
+        value_template: '{{float(state_attr("device_tracker.gphone","calc_distance"))}}'
+        unit_of_measurement: 'km'
+      gphone_waze_distance:
+        value_template: '{{float(state_attr("device_tracker.gphone","waze_distance"))}}'
+        unit_of_measurement: 'km'
+      gphone_travel_time:
+        value_template: '{{state_attr("device_tracker.gphone","travel_time")}}'
+
+      gphone_battery:
+        value_template: '{{state_attr("device_tracker.gphone","battery")}}'
+        unit_of_measurement: '%'
+      gphone_dir_of_travel:
+        value_template: '{{state_attr("device_tracker.gphone","dir_of_travel") | replace("_"," ") | title}}'
+      gphone_gps_accuracy:
+        value_template: '{{state_attr("device_tracker.gphone","gps_accuracy")}}'
+      gphone_poll_count:
+        value_template: '{{state_attr("device_tracker.gphone","poll_count")}}'
+      gphone_info:
+        value_template: '{{state_attr("device_tracker.gphone","info")}}'
+        
+      gphone_interval:
+        value_template: '{{state_attr("device_tracker.gphone","interval")}}'
+      gphone_last_located:
+        value_template: '{{state_attr("device_tracker.gphone","last_located")}}'
+      gphone_last_update:
+        value_template: '{{state_attr("device_tracker.gphone","last_update")}}'
+      gphone_next_update:
+        value_template: '{{state_attr("device_tracker.gphone","next_update")}}' 
+
+
+  #---- iPhone Device Tracker Attribute Templates ----- martine ------------
+  - platform: template
+    sensors:
+      mphone_distance:
+        value_template: '{{float(state_attr("device_tracker.mphone","distance"))}}'
+        unit_of_measurement: 'km'
+      mphone_calc_distance:
+        value_template: '{{float(state_attr("device_tracker.mphone","calc_distance"))}}'
+        unit_of_measurement: 'km'
+      mphone_waze_distance:
+        value_template: '{{float(state_attr("device_tracker.mphone","waze_distance"))}}'
+        unit_of_measurement: 'km'
+      mphone_travel_time:
+        value_template: '{{float(state_attr("device_tracker.mphone","travel_time"))}}'
+
+      mphone_battery:
+        value_template: '{{float(state_attr("device_tracker.mphone","battery"))}}'
+        unit_of_measurement: '%'
+      mphone_dir_of_travel:
+        value_template: '{{state_attr("device_tracker.mphone","dir_of_travel") | replace("_"," ") | title}}'
+      mphone_gps_accuracy:
+        value_template: '{{state_attr("device_tracker.mphone","gps_accuracy")}}'
+      mphone_poll_count:
+        value_template: '{{state_attr("device_tracker.mphone","poll_count")}}'
+      mphone_info:
+        value_template: '{{state_attr("device_tracker.mphone","info")}}'
+  
+      mphone_interval:
+        value_template: '{{float(state_attr("device_tracker.mphone","interval"))}}'
+      mphone_last_located:
+        value_template: '{{state_attr("device_tracker.mphone","last_located")}}'
+      mphone_last_update:
+        value_template: '{{state_attr("device_tracker.mphone","last_update")}}'
+      mphone_next_update:
+        value_template: '{{state_attr("device_tracker.mphone","next_update")}}'
+
+  #---- iPhone Device Tracker Attribute Templates ----- Formatted -----------
+  - platform: template
+    sensors:
+      gphone_formatted:
+        value_template: '{{states("device_tracker.gphone") | title}}'
+      giel_smartthings_formatted:
+        value_template: '{{states("sensor.giel_smartthings")| title}}'
+
+      mphone_formatted:
+        value_template: '{{states("device_tracker.mphone") | title}}'
+      martine_smartthings_formatted:
+        value_template: '{{states("sensor.martine_smartthings") | title}}'
+
+      someone_home_flag_formatted:
+        value_template: '{{states.sensor.someone_home_flag.state | title}}'
+        
