@@ -1,0 +1,43 @@
+################################################################
+#
+#   giel Arrives/ 'Home' actions:
+#       - Set/reset flags
+#       - Open Garage Door
+#--------------------------------------------------------------
+  alias: giel Arrives Home
+  id: giel_arrives_home
+  trigger:
+    - platform: state
+      entity_id: device_tracker.gphone
+      to: 'home'
+
+    - platform: numeric_state
+      entity_id: device_tracker.gphone
+      value_template: '{{float(state.attributes.distance)}}'
+      below: .6
+      
+  condition: 
+    # If first triggered by distance, make sure not again when state changes 
+    - condition: state
+      entity_id: device_tracker.gphone
+      state: 'not_home'
+      
+  action:
+    - service: script.icloud_command_gphone_zone_home
+    
+    - service: notify.ios_gphone
+      data_template:
+        title: 'Location Change'
+        message: 'giel Arrives Home, Zone={{states.device_tracker.gphone.state}}, 
+            Distance={{states.device_tracker.gphone.attributes.distance}}'
+
+    - service: mqtt.publish
+      data_template:
+        topic: 'location/giel' 
+        payload: 'home'
+
+    # Turn off 'Away' flags
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.giel_driving_flag
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.giel_far_away_flag

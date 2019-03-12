@@ -1,0 +1,13 @@
+  alias: 'beveiliging verwarming wc'
+
+  trigger:
+    - platform: time_pattern
+      minutes: '/5'
+      seconds: 00
+  condition: 
+    - condition: state
+      entity_id: 'switch.wc'
+      state: 'off'
+  action:
+    - service: switch.turn_off
+      entity_id: switch.wc

@@ -1,0 +1,11 @@
+  alias: Set Giel iPhone Interval
+  id: set_gphone_interval
+  trigger:
+    - platform: state
+      entity_id: input_select.icloud_set_interval
+  action:
+    - service: device_tracker.icloud_set_interval
+      data_template:
+        account_name: icloud
+        device_name: gphone
+        interval: "{{ states.input_select.icloud_set_interval.state }}"

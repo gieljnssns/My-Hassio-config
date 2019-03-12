@@ -1,0 +1,24 @@
+  alias: Count unavailable
+  trigger:
+    - platform: state
+      entity_id: sensor.mphone_garage
+      to: 'unavailable'
+    - platform: state
+      entity_id: sensor.mphone_keuken
+      to: 'unavailable'
+    - platform: state
+      entity_id: sensor.mphone_living
+      to: 'unavailable'
+  action:
+    - service: counter.increment
+      data_template:
+        entity_id: >
+          {% if trigger.entity_id == 'sensor.mphone_garage' %}
+             counter.garage
+          {% elif trigger.entity_id == 'sensor.mphone_keuken' %}
+             counter.keuken
+          {% elif trigger.entity_id == 'sensor.mphone_living' %}
+             counter.living
+          {% endif %}
+    
+    

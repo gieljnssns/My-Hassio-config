@@ -1,0 +1,30 @@
+#--------------------------------------------------------------
+#   Turn on giel's Driving Flag
+#--------------------------------------------------------------
+  alias: giel Driving Flag Turn On
+  id: giel_driving_flag_turn_on
+  trigger:
+    - platform: numeric_state
+      entity_id: device_tracker.gphone
+      value_template: '{{float(state.attributes.distance)}}'
+      above: 2
+      
+    - platform: numeric_state
+      entity_id: device_tracker.gphone
+      value_template: '{{float(state.attributes.distance)}}'
+      above: 6
+
+  condition:
+    - condition: state
+      entity_id: input_boolean.giel_driving_flag
+      state: 'off'
+      
+  action:
+    - service: input_boolean.turn_on
+      entity_id: input_boolean.giel_driving_flag
+      
+    - service: notify.ios_gphone
+      data_template:
+        title: 'Set Driving Flag - giel'
+        message: 'Zone={{states.device_tracker.gphone.state}}, 
+                  Distance={{states.device_tracker.gphone.attributes.distance}}'

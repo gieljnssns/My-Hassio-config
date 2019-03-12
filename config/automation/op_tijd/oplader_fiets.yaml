@@ -1,0 +1,33 @@
+  alias: 'Oplader electrische fiets'
+  trigger:
+    - platform: time
+      at: '16:00:00'
+    - platform: state
+      entity_id: alarm_control_panel.ha_alarm
+      to: 'armed_night'
+      for:
+        minutes: 15
+  condition:
+    condition: and
+    conditions:
+      - condition: time
+        weekday:
+          - mon
+          - tue
+          - wed
+          - thu
+          - fri
+          - sat
+          - sun
+      - condition: state
+        entity_id: input_boolean.op_verlof
+        state: 'off'
+  action:
+    - service_template: >
+        {% if trigger.entity_id == 'alarm_control_panel.ha_alarm' %}
+          switch.turn_off
+        {% else %}
+          switch.turn_on
+        {% endif %}
+      entity_id: switch.smappee_reserve_3
+        

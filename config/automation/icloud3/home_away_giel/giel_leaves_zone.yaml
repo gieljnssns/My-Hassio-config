@@ -1,0 +1,26 @@
+#--------------------------------------------------------------
+#   giel leaves a zone
+#--------------------------------------------------------------
+  alias: giel Leaves Zone
+  id: giel_leaves_zone
+  trigger:
+    - platform: state
+      entity_id: device_tracker.gphone
+      to: 'not_home'
+      
+  condition: 
+    - condition: template
+      value_template: '{{trigger.from_state.state != "not_home"}}'
+      
+  action:
+    - service: script.giel_leaves_home
+    - service: script.icloud_command_gphone_zone_not_home
+    - service: mqtt.publish
+      data_template:
+        topic: 'location/giel' 
+        payload: '{{trigger.to_state.state}}'
+    
+    - service: notify.ios_gphone
+      data_template:
+        title: 'Location Change'
+        message: 'giel Leaves Zone, {{trigger.from_state.state}}-->{{trigger.to_state.state}}'

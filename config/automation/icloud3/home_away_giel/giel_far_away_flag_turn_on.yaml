@@ -1,0 +1,22 @@
+#--------------------------------------------------------------
+#   Turn on/off giel's Far Away Flag
+#--------------------------------------------------------------
+  alias: giel Far Away Flag Turn On
+  id: giel_far_away_flag_turn_on
+  trigger:
+    - platform: numeric_state
+      entity_id: device_tracker.gphone
+      value_template: '{{float(state.attributes.distance)}}'
+      above: 10
+      
+  condition:
+    - condition: state
+      entity_id: input_boolean.giel_far_away_flag
+      state: 'off'
+    
+  action:
+    - service: input_boolean.turn_on
+      entity_id: input_boolean.giel_driving_flag
+
+    - service: input_boolean.turn_on
+      entity_id: input_boolean.giel_far_away_flag

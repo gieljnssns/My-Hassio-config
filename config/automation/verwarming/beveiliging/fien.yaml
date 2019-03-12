@@ -1,0 +1,13 @@
+  alias: 'beveiliging verwarming fien'
+
+  trigger:
+    - platform: time_pattern
+      minutes: '/5'
+      seconds: 00
+  condition: 
+    - condition: state
+      entity_id: 'switch.fien'
+      state: 'off'
+  action:
+    - service: switch.turn_off
+      entity_id: switch.fien

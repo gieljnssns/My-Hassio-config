@@ -15,3 +15,12 @@
     # - service: script.mqtt_arrive_script
     #   data_template:
     #     identity: '{"identity":"mPhone BT off {{now().strftime("%H:%M")}}"}'
+    - service: mqtt.publish
+      data_template:
+        topic: 'device_tracker/mphone_bt' 
+        payload: >-
+          {% if states.sensor.mphone_bt_thuis.state | float > 43 %}
+             home
+          {% else %}
+             not_home
+          {% endif %}

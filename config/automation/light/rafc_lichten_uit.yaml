@@ -6,16 +6,25 @@
     - entity_id: calendar.rafc_rafc
       platform: state
       to: 'off'
-  condition: []
   action:
     - service: homeassistant.turn_off
       entity_id:
         - script.rafc2_1
         - script.rafc2_2
+    - service_template: >-
+        {% if is_state('sensor.dark_outside', 'true') %}
+           light.turn_on
+        {% elif is_state('sensor.dark_outside', 'false') %}
+           light.turn_off
+        {% endif %}
+      entity_id: light.spots_tv
     - condition: and
       conditions:
-        - condition: state
-          entity_id: sensor.dark_outside
-          state: 'false'
-    - service: light.turn_off
+        - condition: template
+          value_template: "{{ is_state('sensor.dark_outside', 'true') }} "
+    - service: light.turn_on
       entity_id: light.spots_tv
+      data:
+        profile: reading
+
+

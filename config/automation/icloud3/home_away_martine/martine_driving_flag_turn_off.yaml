@@ -1,0 +1,20 @@
+#--------------------------------------------------------------
+#   Turn off martine's Driving Flag if Home for 15 minutes and still on
+#--------------------------------------------------------------
+  alias: martine Driving Flag Turn Off
+  id: martine_driving_flag_turn_off
+  trigger:
+    - platform: state
+      entity_id: device_tracker.mphone
+      to: 'home'
+      for:
+        minutes: 15
+    
+  condition:
+    - condition: state
+      entity_id: input_boolean.martine_driving_flag
+      state: 'on'
+      
+  action:
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.martine_driving_flag

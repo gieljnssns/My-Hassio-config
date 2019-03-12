@@ -1,0 +1,16 @@
+  alias: martine Far Away Flag Turn Off
+  id: martine_far_away_flag_turn_off
+  trigger:
+    - platform: numeric_state
+      entity_id: device_tracker.mphone
+      value_template: '{{float(state.attributes.distance)}}'
+      below: 10
+    
+  condition:
+    - condition: state
+      entity_id: input_boolean.martine_far_away_flag
+      state: 'on'
+      
+  action:
+    service: input_boolean.turn_off
+    entity_id: input_boolean.martine_far_away_flag

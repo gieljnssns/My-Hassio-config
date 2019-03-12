@@ -1,0 +1,11 @@
+  alias: "Alarm aan"
+  trigger:
+    platform: state
+    entity_id: input_boolean.alarm
+    to: 'on'
+  action:
+    - service: script.turn_on
+      entity_id: 
+        - script.alarm_lights1
+        - script.alarm_sound
+
