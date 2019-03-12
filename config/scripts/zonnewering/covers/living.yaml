@@ -1,0 +1,17 @@
+  living_sluiten:
+    sequence:
+      - service: cover.close_cover
+        entity_id: cover.living
+      - delay:
+          seconds: 20
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.living_closed
+      
+  living_openen:
+    sequence:
+      - service: cover.open_cover
+        entity_id: cover.living
+      - delay:
+          seconds: 20
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.living_closed

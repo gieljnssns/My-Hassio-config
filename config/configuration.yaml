@@ -19,17 +19,25 @@ homeassistant:
   time_zone: Europe/Brussels
   customize: !include_dir_merge_named customized
   packages: !include_dir_named packages/
+  auth_providers:
+   - type: homeassistant
+   - type: legacy_api_password
 
 ###   HTTP  ###
 http:
-  api_password: !secret http_password
   # ssl_certificate: !secret ssl_certificate
   # ssl_key: !secret ssl_key
-  base_url: !secret base_url
+  api_password: !secret http_password
+  # base_url: !secret base_url
   ip_ban_enabled: True
-  trusted_networks:
+  # trusted_networks:
+  #     - 94.226.52.71
+  #   - 127.0.0.1
+  #   - 192.168.0.0/24
+  use_x_forwarded_for: true
+  trusted_proxies:
     - 127.0.0.1
-    - 192.168.0.0/24
+    - ::1
   login_attempts_threshold: 5
 
 ####################################################
@@ -39,30 +47,27 @@ http:
 ####################################################
 
 ###  Devices  ###
-device_tracker: !include devices/device_trackers.yaml
-media_player: !include devices/media_players.yaml
-switch: !include devices/switches.yaml
-sensor: !include_dir_merge_list devices/sensors
-light: !include devices/light.yaml
-# binary_sensor: !include devices/binary_sensors.yaml
+alarm_control_panel: !include_dir_merge_list devices/alarm
 binary_sensor: !include_dir_merge_list devices/binary_sensors
-climate: !include devices/climate.yaml
-input_select: !include devices/input_select.yaml
-input_text: !include devices/input_text.yaml
-# input_number: !include devices/input_numbers.yaml
-input_boolean: !include devices/input_boolean.yaml
-# input_datetime: !include devices/input_datetime.yaml
-camera: !include devices/cameras.yaml
-alarm_control_panel: !include devices/alarm.yaml
-weather: !include devices/weather.yaml
-shell_command: !include devices/shell_commands.yaml
-# weblink: !include devices/weblink.yaml
-history_graph: !include devices/history_graph.yaml
-calendar: !include devices/calendar.yaml
-timer: !include devices/timer.yaml
+calendar: !include_dir_merge_list devices/calendar
+camera: !include_dir_merge_list devices/camera
+climate: !include_dir_merge_list devices/climate
+counter: !include_dir_merge_named devices/counter
+cover: !include_dir_merge_list devices/cover
+device_tracker: !include_dir_merge_list devices/device_tracker
+input_boolean: !include_dir_merge_named devices/input_boolean
+input_select: !include_dir_merge_named devices/input_select
+input_text: !include_dir_merge_named devices/input_text
+light: !include_dir_merge_list devices/light
+media_player: !include_dir_merge_list devices/media_player
+sensor: !include_dir_merge_list devices/sensors
+switch: !include_dir_merge_list devices/switch
+timer: !include_dir_merge_named devices/timer
+utility_meter: !include_dir_merge_named devices/utility_meter
+weather: !include_dir_merge_list devices/weather
 
 ###  Groups  ###
-group: !include_dir_merge_named groups/
+# group: !include_dir_merge_named groups/
 
 ###  Scenes  ###
 scene: !include scenes.yaml
@@ -79,22 +84,12 @@ notify: !include notify.yaml
 
 ###  Panels  ###
 panel_iframe: !include panels/iframe.yaml
-# panel_custom: !include panels/panel_custom.yaml
 
 ###  Logbook  ###
 logbook: !include logbook.yaml
 
 ###  History  ###
 history: !include history.yaml
-
-# influxdb:
-#   host: !secret influxdb_host
-#   port: 8086
-#   database: !secret influxdb_db
-#   username: !secret influxdb_user
-#   password: !secret http_password
-#   max_retries: 3
-#   default_measurement: state
 
 ###  Frontend  ###
 frontend:
@@ -122,12 +117,12 @@ netatmo:
 
 ###  Smappee  ###
 smappee:
-    host: !secret smappee_host
+    # host: !secret smappee_host
     client_id: !secret smappee_client_id
     client_secret: !secret smappee_client_secret
     username: !secret smappee_username
     password: !secret smappee_password
-    host_password: !secret smappee_host_password
+    # host_password: !secret smappee_host_password
 
 ###  MySensors  ###
 mysensors:
@@ -137,21 +132,14 @@ mysensors:
   version: '2.2'
 
 ###  Tahoma  ###
-# tahoma:
-#   username: !secret tahoma_username
-#   password: !secret tahoma_password
+tahoma:
+  username: !secret tahoma_username
+  password: !secret tahoma_password
 
 ###  Somfy  ###
 somfy:
   client_id: !secret somfy_id
   client_secret: !secret somfy_secret
-
-###  MQTT  ###
-mqtt:
-  # broker: core-mosquitto
-  broker: a0d7b954-mqtt
-  username: !secret mqtt_username
-  password: !secret mqtt_password
 
 ###  If This Then That ###
 ifttt:
@@ -193,11 +181,14 @@ hassio:
 ###  FFmpeg  ###
 ffmpeg:
 
+###  System Health  ###
+system_health:
+
 ###  Custom updater  ###
-custom_updater:
-  card_urls:
-    - https://raw.githubusercontent.com/rdehuyss/homeassistant-lovelace-google-calendar-card/master/custom_updater.json
-    - https://raw.githubusercontent.com/kalkih/mini-media-player/master/tracker.json
+# custom_updater:
+#   card_urls:
+#     - https://raw.githubusercontent.com/rdehuyss/homeassistant-lovelace-google-calendar-card/master/custom_updater.json
+#     - https://raw.githubusercontent.com/kalkih/mini-media-player/master/tracker.json
 
 ### Discover some devices automatically  ###
 discovery:
@@ -230,9 +221,6 @@ ios:
 
 ###  Recorder  ###
 recorder: !include recorder.yaml
-  # purge_interval: 7
-  # purge_keep_days: 31
-  # db_url: !secret mysql
 
 ###  Sun  ###
 sun:
@@ -254,22 +242,96 @@ updater:
 ####################################################
 
 zone:
-  name: Home
-  latitude: !secret latitude
-  longitude: !secret longitude
-  radius: 10
-  icon: mdi:castle
+  - name: Home
+    latitude: !secret latitude
+    longitude: !secret longitude
+    radius: 20
+    passive: true
+    # track_ios: false
 
-zone 2:
-  name: Werk Giel
-  latitude: !secret latitude_werk_giel
-  longitude: !secret longitude_werk_giel
-  radius: 270
-  icon: mdi:worker
+  # - name: Thuis
+  #   latitude: !secret latitude
+  #   longitude: !secret longitude
+  #   radius: 20
+  #   icon: mdi:home-assistant
+  #   # track_ios: false
 
-zone 3:
-  name: Werk Martine
-  latitude: !secret latitude_werk_martine
-  longitude: !secret longitude_werk_martine
-  radius: 100
-  icon: mdi:worker
+
+  - name: Werk Giel
+    latitude: !secret latitude_werk_giel
+    longitude: !secret longitude_werk_giel
+    radius: 320
+    icon: mdi:cookie
+    # track_ios: false
+
+
+  - name: Werk Martine
+    latitude: !secret latitude_werk_martine
+    longitude: !secret longitude_werk_martine
+    radius: 150
+    icon: mdi:worker
+    # track_ios: false
+
+
+  - name: Oma
+    latitude: !secret latitude_oma
+    longitude: !secret longitude_oma
+    radius: 50
+    icon: mdi:human-female
+    # track_ios: false
+
+  
+  - name: Moemoe Vava
+    latitude: !secret latitude_moemoe
+    longitude: !secret longitude_moemoe
+    radius: 10
+    icon: mdi:human-male-female
+    # track_ios: false
+
+  
+  - name: Bompa
+    latitude: !secret latitude_bompa
+    longitude: !secret longitude_bompa
+    radius: 10
+    icon: mdi:human-male
+    # track_ios: false
+
+  
+  - name: Het veld
+    latitude: !secret latitude_het_veld
+    longitude: !secret longitude_het_veld
+    radius: 100
+    icon: mdi:volleyball
+    # track_ios: false
+
+  
+  - name: Cafeeke
+    latitude: !secret latitude_cafeeke
+    longitude: !secret longitude_cafeeke
+    radius: 10
+    icon: mdi:glass-mug
+    # track_ios: false
+
+  
+  - name: De Klok
+    latitude: !secret latitude_de_klok
+    longitude: !secret longitude_de_klok
+    radius: 10
+    icon: mdi:glass-mug
+    # track_ios: false
+
+  
+  - name: Jos
+    latitude: !secret latitude_jos
+    longitude: !secret longitude_jos
+    radius: 10
+    icon: mdi:glass-mug
+    # track_ios: false
+
+  
+  - name: Cooldown
+    latitude: !secret latitude_cooldown
+    longitude: !secret longitude_cooldown
+    radius: 10
+    icon: mdi:glass-mug
+    # track_ios: false

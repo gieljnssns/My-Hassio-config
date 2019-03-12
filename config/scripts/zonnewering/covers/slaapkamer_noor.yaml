@@ -1,0 +1,17 @@
+  slaapkamer_noor_sluiten:
+    sequence:
+      - service: cover.close_cover
+        entity_id: cover.slaapkamer_noor
+      - delay:
+          seconds: 20
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.slaapkamer_noor_closed
+      
+  slaapkamer_noor_openen:
+    sequence:
+      - service: cover.open_cover
+        entity_id: cover.slaapkamer_noor
+      - delay:
+          seconds: 20
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.slaapkamer_noor_closed

@@ -1,305 +1,585 @@
+/**
+ * 
+ */
+
+
 class CalendarCard extends HTMLElement {
+
+
+
+    /**
+     * called by hass - creates card, sets up any conmfig settings, and generates card
+     * @param  {[type]} hass [description]
+     * @return {[type]}      [description]
+     */
     set hass(hass) {
+
+        // if we don't have the card yet then create it
         if (!this.content) {
             const card = document.createElement('ha-card');
-            card.header = this.config.name;
+            card.header = this.config.title;
             this.content = document.createElement('div');
-            this.content.style.padding = '0 16px 16px';
+            this.content.className = 'calendar-card';
             card.appendChild(this.content);
             this.appendChild(card);
-            moment.locale(hass.language);
         }
 
+        // save an instance of hass for later
         this._hass = hass;
+        this.wait();
+    }
 
+    wait() {
+        if (typeof (moment) == "undefined") {
+            setTimeout(() => this.wait(), 250);
+            return;
+        }
+
+        moment.locale(this._hass.language);
+
+        // save css rules
+        this.cssRules = `
+      <style>
+        .calendar-card {
+          display: flex;
+          padding: 0 16px 4px;
+          flex-direction: column;
+        }
+        .day-wrapper {
+          border-bottom: 1px solid;
+        }
+        .day-wrapper:last-child {
+          border-bottom: none;
+        }
+        .day-wrapper .calendar-day {
+          display: flex;
+          flex-direction: row;
+          width: 100%;
+        }
+        .day-wrapper .date {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: top;
+          flex: 0 0 40px;
+          padding-top: 10px;
+        }
+        .day-wrapper .events {
+          flex: 1 1 auto;
+        }
+        .day-wrapper .summary {
+		  font-size: ${this.config.textSizeSummary}%;
+		  cursor: pointer;
+        }
+        .day-wrapper .event-wrapper {
+          margin-left: 10px;
+          padding-top: 10px;
+        }
+        .day-wrapper .event-wrapper:last-child {
+          padding-bottom: 10px;
+        }
+        .day-wrapper .event {
+          flex: 0 1 auto;
+          display: flex;
+          flex-direction: column;
+        }
+        .day-wrapper .info {
+          display: flex;
+          width: 100%;
+          justify-content: space-between;
+          flex-direction: row;
+        }
+        .day-wrapper .time {
+          color: var(--primary-color);
+		  font-size: ${this.config.textSizeTime}%;
+        }
+        .day-wrapper hr.now {
+            border-style: solid;
+            border-color: var(--primary-color);
+            border-width: 1px 0 0 0;
+            margin-top: -8px;
+            margin-left: 5px;
+			width: 100%;
+        }
+        .day-wrapper ha-icon {
+		  height: 16px;
+          width: 16px;
+          color: ${this.config.mapIconColor};
+        }
+        .day-wrapper ha-icon.now {
+            height: 12px;
+            width: 12px;
+			color: var(--paper-item-icon-color, #44739e);
+        } 
+        .day-wrapper ha-icon.current {
+            height: 12px;
+            width: 12px;
+			color: rgb(223, 76, 30);
+        }       		
+      </style>
+    `;
+
+        // update card with calendars
         this
             .getAllEvents(this.config.entities)
             .then(events => this.updateHtmlIfNecessary(events))
             .catch(error => console.log('error', error));
     }
 
+    /**
+     * [getAllEvents description]
+     * @param  {[type]} entities [description]
+     * @return {[type]}          [description]
+     */
     async getAllEvents(entities) {
-        if (!this.lastUpdate || moment().diff(this.lastUpdate, 'minutes') > 15) {
-            const start = moment().startOf('day').format("YYYY-MM-DDTHH:mm:ss");
-            const end = moment().startOf('day').add(this.config.numberOfDays, 'days').format("YYYY-MM-DDTHH:mm:ss");
 
-            let urls = entities.map(entity => `calendars/${entity}?start=${start}Z&end=${end}Z`);
-            let allResults = await this.getAllUrls(urls)
-            let events = [].concat
-                .apply([], allResults)
-                .map(x => this.toEvent(x));
-
-            if (this.config.showProgressBar) {
-                if (events.length > 0 && moment().format('DD') === moment(events[0].startDateTime).format('DD')) {
-                    let now = { startDateTime: moment().format(), type: 'now' }
-                    events.push(now);
-                }
-            }
-
-            events.sort((a, b) => new Date(a.startDateTime) - new Date(b.startDateTime));
-
-            let isSomethingChanged = this.isSomethingChanged(events);
-            this.events = events;
-            this.lastUpdate = moment();
-            return { events: events, isSomethingChanged: isSomethingChanged };
-        } else {
+        // don't update if it's only been 15 min
+        if (this.lastUpdate && moment().diff(this.lastUpdate, 'minutes') <= 15) {
             return this.events;
         }
+
+        // create url params
+        const dateFormat = "YYYY-MM-DDTHH:mm:ss";
+        const today = moment().startOf('day');
+        const start = today.format(dateFormat);
+        const end = today.add(this.config.numberOfDays, 'days').format(dateFormat);
+
+        // generate urls for calendars and get each calendar data
+        const urls = entities.map(entity => `calendars/${entity.entity}?start=${start}Z&end=${end}Z`);
+        let allResults = await this.getAllUrls(urls);
+
+        // creating CalendarEvents and passing color settings for different calendars
+        let events = [].concat.apply([], (allResults.map((result, i) => {
+            return result.map(r => {
+                return (new CalendarEvent(r, this.config.entities[i].color === undefined ? 'var(--primary-text-color)' : this.config.entities[i].color)
+                )
+            });
+        })))
+
+        // show progress bar if turned on
+        if (this.config.showProgressBar && events.length > 0 && moment().format('DD') === moment(events[0].startDateTime).format('DD')) {
+            //checks if any event is running, if no, show the default progress bar
+            let noEventRunning = true;
+            events.forEach(function (element, i) {
+                if (!element.isFullDayEvent && moment() >= moment(element.startDateTime) && moment() <= moment(element.endDateTime))
+                    noEventRunning = false;
+            });
+            //show standard progress bar
+            if (noEventRunning || !this.config.showCurrentProgress) {
+                let now = { startDateTime: moment().format(), type: 'now' }
+                events.push(now);
+            }
+        }
+
+        // sort events by date starting with soonest
+        events.sort((a, b) => new Date(a.startDateTime) - new Date(b.startDateTime));
+
+        // see if anything changed since last time, save events, and update last time we updated
+        const isSomethingChanged = this.isSomethingChanged(events);
+        this.events = events;
+        this.lastUpdate = moment();
+        return { events, isSomethingChanged };
+
     }
 
+    /**
+     * given a list of urls get the data from them
+     * @param  {Array<string>} urls
+     * @return {Array<any>}
+     */
     async getAllUrls(urls) {
         try {
-            var data = await Promise.all(
-                urls.map(
-                    url => this._hass.callApi('get', url)));
-            return (data);
+            return await Promise.all(urls.map(url => this._hass.callApi('get', url)));
         } catch (error) {
-            throw (error);
+            throw error;
         }
     }
 
+    /**
+     * updates the entire card if we need to
+     * @param  {[type]} eventList [description]
+     * @return {[type]}           [description]
+     */
     updateHtmlIfNecessary(eventList) {
-        if (eventList.isSomethingChanged) {
-            this.content.innerHTML = `
-        <style>
-          .day-wrapper {
-            border-bottom: 1px solid;
-            margin-bottom: 10px;
-          }
-          .day-wrapper:last-child {
-            border-bottom: none;
-          }
-          .day {
-            display: flex;
-            flex-direction: row;
-            width: 100%;
-          }
-          .date {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: top;
-            flex: 0 1 40px;
-          }
-          .events {
-            flex: 1 1 auto;
-          }
-          .event-wrapper {
-            padding: 5px;
-            margin-left: 10px;
-          }
-          .event {
-            flex: 0 1 auto;
-            display: flex;
-            flex-direction: column;
-          }
-          .info {
-            display: flex;
-            width: 100%;
-            justify-content: space-between;
-            flex-direction: row;
-          }
-          .congrats {
-            cursor: pointer;
-          }
-          .time {
-            font-size: smaller;
-            color: var(--primary-color);
-          }
-          .now {
-            color: var(--paper-item-icon-color, #44739e);
-          }
-          hr.now {
-            border-style: solid;
-            border-color: var(--primary-color);
-            border-width: 1px 0 0 0;
-            margin-top: -9px;
-            margin-left: 5px;
-          }
-          ha-icon {
-            color: var(--paper-item-icon-color, #44739e);
-          }
-          ha-icon.now {
-            height: 16px;
-            width: 16px;
-          }
-        </style>
-      `;
+        if (!eventList.isSomethingChanged) return;
 
-            let events = eventList.events;
-            let groupedEventsPerDay = this.groupBy(events, event => moment(event.startDateTime).format('YYYY-MM-DD'));
+        // save CSS rules then group events by day
+        this.content.innerHTML = this.cssRules;
+        const events = eventList.events;
+        const groupedEventsPerDay = this.groupBy(events, event => moment(event.startDateTime).format('YYYY-MM-DD'));
 
-            groupedEventsPerDay.forEach((events, day) => {
-                let eventStateCardContentElement = document.createElement('div');
-                eventStateCardContentElement.classList.add('day-wrapper');
-                eventStateCardContentElement.innerHTML = this.getDayHtml(day, events);
-                this.content.append(eventStateCardContentElement);
-            });
-        }
+        // for each group event create a UI 'day'
+        groupedEventsPerDay.forEach((events, day) => {
+            const eventStateCardContentElement = document.createElement('div');
+            eventStateCardContentElement.classList.add('day-wrapper');
+            eventStateCardContentElement.innerHTML = this.getDayHtml(day, events);
+            this.content.append(eventStateCardContentElement);
+        });
     }
 
+    /**
+     * check if event is today
+     * @param {*} event 
+     * @return {Boolean} 
+     */
+    isEventToday(event) {
+        return moment(event.startDateTime).isSame(moment(), 'day') ? true : false;
+    }
+
+    /**
+     * check if event is tomorrow
+     * @param {*} event 
+     * @return {Boolean} 
+     */
+    isEventTomorrow(event) {
+        return moment(event.startDateTime).isSame(moment().add(1, 'day'), 'day') ? true : false;
+    }
+
+    /**
+     * generates the HTML for a single day
+     * @param  {[type]} day    [description]
+     * @param  {[type]} events [description]
+     * @return {[type]}        [description]
+     */
     getDayHtml(day, events) {
-        let clazz = moment().format('DD') === moment(day).format('DD') ? 'date now' : 'date';
+        const className = moment().format('DD') === moment(day).format('DD') ? 'date now' : 'date';
+        let momentDay = moment(day);
+
         return `
-      <div class="day">
-        <div class="${clazz}">
-          <div>${moment(day).format('DD')}</div>
-          <div>${moment(day).format('ddd')}</div>
-        </div>
-        <div class="events">${events.map(event => this.getEventHtml(event)).join('')}</div>
-      </div>`;
+        <div class="calendar-day">
+          <div class="${className}">
+			${this.config.showMonth ? `<div>${momentDay.format('MMM')}</div>` : ''}
+            <div>${momentDay.format('DD')}</div>
+            <div>${momentDay.format('ddd')}</div>
+          </div>
+          <div class="events">
+            ${events.map(event => this.getEventHtml(event)).join('')}
+          </div>
+        </div>`;
     }
 
+    /**
+     * generate HTML for a single event
+     * @param  {[type]} event [description]
+     * @return {[type]}       [description]
+     */
     getEventHtml(event) {
+        //show standard progress bar
         if (event.type) {
             return `<ha-icon icon="mdi:circle" class="now"></ha-icon><hr class="now" />`;
         }
-        //${event.summary.indexOf('birthday') > 0 ? `<div class="congrats"><i class="fas fa-gift"></i>&nbsp;Send congrats</div>` : ''}
+
+        // show current progress bar if event is running
+        let progress = ''
+        let start = moment(event.startDateTime);
+        let end = moment(event.endDateTime);
+        let now = moment();
+        if (this.config.showCurrentProgress && this.config.showProgressBar && moment().format('DD') === moment(event.startDateTime).format('DD') && !event.isFullDayEvent) {
+            if (now >= start && now <= end) {
+                let eventDuration = end.diff(start, 'minutes');
+                let eventProgress = now.diff(start, 'minutes');
+                let eventPercentProgress = Math.floor((eventProgress * 100) / eventDuration);
+                progress = `<ha-icon icon="mdi:circle" class="current" 	style="margin-left:${eventPercentProgress}%;"></ha-icon><hr class="now" />`;
+            }
+        }
+
+        // setting text color, if todayColor or tomorrowColor is set in config
+        let todayClass;
+        if (this.isEventToday(event) && this.config.todayColor != '')
+            todayClass = `<div class="time" style="color: ${this.config.todayColor}">`
+        else if (this.isEventTomorrow(event) && this.config.tomorrowColor != '')
+            todayClass = `<div class="time" style="color: ${this.config.tomorrowColor}">`
+        else
+            todayClass = `<div class="time">`
+
         return `
-      <div class="event-wrapper">
-        <div class="event">
-          <div class="info">
-            <div class="summary">${event.title}</div>
-            ${event.location ? `<div class="location"><ha-icon icon="mdi:map-marker"></ha-icon>&nbsp;
-            ${event.locationAddress ? `<a href="https://www.google.com/maps/place/${event.locationAddress}" target="_blank">${event.location}</a></div>` : `${event.location}</div>`}` : ''}
+          <div class="event-wrapper">
+            <div class="event" >
+              <div class="info">
+                <div class="summary" ${this.getLinkHtml(event)}>
+                  ${this.getTitleHtml(event)} 
+                </div>
+                ${this.getLocationHtml(event)} 
+              </div>
+              ${todayClass}${this.getTodayHtml(event)}${this.getTimeHtml(event)}</div>
+            </div>
           </div>
-          <div class="time">${event.isFullDayEvent ? 'All day' : (moment(event.startDateTime).format('HH:mm') + `-` + moment(event.endDateTime).format('HH:mm'))}</div>
-        </div>
-      </div>`;
+			${progress}`;
     }
 
+    /**
+     * gets the ebent title with a colored marker if user wants
+     * @return {[type]} [description]
+     */
+    getTitleHtml(event) {
+        let showDot = this.config.showDot ? `&#9679;&nbsp;` : ``
+        return this.config.showColors ? `<span style="color: ${event.color || ''};">${showDot}${event.title}</span>` : `${event.title}`;
+    }
+
+    /**
+     * generates HTML for opening an event
+     * @param {*} event 
+     */
+    getLinkHtml(event) {
+        return event.htmlLink ? `onClick="(function(){window.open('${event.htmlLink}');return false;})();return false;"` : '';
+    }
+
+    /**
+     * generates HTML for showing an event times
+     * @param {*} event 
+     */
+    getTimeHtml(event) {
+        if (event.isFullDayEvent) return this.config.textAllDay
+
+        const start = moment(event.startDateTime).format(this.config.timeFormat);
+        const end = moment(event.endDateTime).format(this.config.timeFormat);
+        return `${start} - ${end}`;
+    }
+
+    /**
+     * generates HTML for showing if event is today or tomorrow
+     * @param {*} event 
+     */
+    getTodayHtml(event) {
+        if (this.config.showTodayText) {
+            if (this.isEventToday(event)) return `${this.config.textToday}&nbsp`;
+            else if (this.isEventTomorrow(event)) return `${this.config.textTomorrow}&nbsp`;
+            else return ''
+        } else return ''
+
+    }
+
+    /**
+     * generate the html for showing an event location
+     * @param {*} event 
+     */
+    getLocationHtml(event) {
+        let locationHtml = ``;
+
+        if (event.location) {
+            locationHtml += `
+        <div class="location">
+          <ha-icon icon="mdi:map-marker"></ha-icon>&nbsp;`
+        }
+
+        if (event.location && event.locationAddress) {
+            let linkStyle = ''
+            this.config.linkColor != '' ? linkStyle = ` color: ${this.config.linkColor} ` : ''
+            locationHtml += `
+          <a href="https://maps.google.com/?q=${event.locationAddress}" target="_blank" style="${linkStyle}; font-size: ${this.config.textSizeLocation}%"> 
+            ${event.location}
+          </a>
+        </div>`;
+
+        } else if (event.location) {
+            locationHtml += `</div>`
+        }
+
+        return locationHtml;
+    }
+
+    /**
+     * merge the user configuration with default configuration
+     * @param {[type]} config [description]
+     */
     setConfig(config) {
         if (!config.entities) {
             throw new Error('You need to define at least one calendar entity via entities');
         }
+
         this.config = {
-            name: 'Calendar',
+            title: 'Calendar',
             showProgressBar: true,
             numberOfDays: 7,
+            showColors: false,
+            timeFormat: 'HH:mm',
+            textAllDay: 'All day',
+            textToday: '',
+            textTomorrow: '',
+            showTodayText: true,
+            showDot: true,
+            showCurrentProgress: false,
+            textSizeSummary: '100',
+            textSizeTime: '90',
+            textSizeLocation: '90',
+            linkColor: '',
+            mapIconColor: 'var(--paper-item-icon-color, #44739e)',
+            showMonth: false,
             ...config
         };
+
+        if (typeof this.config.entities === 'string')
+            this.config.entities = [{ entity: config.entities }];
+        this.config.entities.forEach((entity, i) => {
+            if (typeof entity === 'string')
+                this.config.entities[i] = { entity: entity };
+        });
+
     }
 
-    // The height of your card. Home Assistant uses this to automatically
-    // distribute all cards over the available columns.
+    /**
+     * get the size of the card
+     * @return {[type]} [description]
+     */
     getCardSize() {
         return 3;
     }
 
-    toEvent(anEvent) {
-        if (anEvent.htmlLink) {
-            return new GoogleCalendarEvent(anEvent);
-        }
-        return new CalDavCalendarEvent(anEvent);
-    }
-
+    /**
+     * did any event change since the last time we checked?
+     * @param  {[type]}  events [description]
+     * @return {Boolean}        [description]
+     */
     isSomethingChanged(events) {
         let isSomethingChanged = JSON.stringify(events) !== JSON.stringify(this.events);
         return isSomethingChanged;
     }
 
+    /**
+     * ddep clone a js object
+     * @param  {[type]} obj [description]
+     * @return {[type]}     [description]
+     */
     deepClone(obj) {
         return JSON.parse(JSON.stringify(obj));
     }
 
+    /**
+     * group evbents by a givenkey
+     * @param  {[type]} list      [description]
+     * @param  {[type]} keyGetter [description]
+     * @return {[type]}           [description]
+     */
     groupBy(list, keyGetter) {
         const map = new Map();
-        list.forEach((item) => {
+
+        list.forEach(item => {
             const key = keyGetter(item);
             const collection = map.get(key);
+
             if (!collection) {
                 map.set(key, [item]);
             } else {
                 collection.push(item);
             }
         });
+
         return map;
     }
 }
 
-class GoogleCalendarEvent {
-    constructor(googleCalendarEvent) {
-        this.googleCalendarEvent = googleCalendarEvent;
+/**
+ * Creaates an generalized Calendar Event to use when creating the calendar card
+ * There can be Google Events and CalDav Events. This class normalizes those
+ */
+class CalendarEvent {
+
+    /**
+     * [constructor description]
+     * @param  {[type]} calendarEvent [description]
+     * @return {[type]} [description]
+     */
+    constructor(calendarEvent, color) {
+        this.calendarEvent = calendarEvent;
+        this.color = color;
     }
 
+    /**
+     * get the start time for an event
+     * @return {[type]} [description]
+     */
     get startDateTime() {
-        if (this.googleCalendarEvent.start.date) {
-            let dateTime = moment(this.googleCalendarEvent.start.date);
+        if (this.calendarEvent.start.date) {
+            let dateTime = moment(this.calendarEvent.start.date);
             return dateTime.toISOString();
         }
-        return this.googleCalendarEvent.start.dateTime;
+
+        return this.calendarEvent.start && this.calendarEvent.start.dateTime || this.calendarEvent.start || '';
     }
 
+    /**
+     * get the end time for an event
+     * @return {[type]} [description]
+     */
     get endDateTime() {
-        return this.googleCalendarEvent.end.dateTime;
+        return this.calendarEvent.end && this.calendarEvent.end.dateTime || this.calendarEvent.end || '';
     }
 
+    /**
+     * get the URL for an event
+     * @return {[type]} [description]
+     */
+    get htmlLink() {
+        return this.calendarEvent.htmlLink;
+    }
+
+
+    /**
+     * get the title for an event
+     * @return {[type]} [description]
+     */
     get title() {
-        return this.googleCalendarEvent.summary;
+        return this.calendarEvent.summary || this.calendarEvent.title;
     }
 
+    /**
+     * get the description for an event
+     * @return {[type]} [description]
+     */
     get description() {
-        return this.googleCalendarEvent.description;
+        return this.calendarEvent.description;
     }
 
+    /**
+     * parse location for an event
+     * @return {[type]} [description]
+     */
     get location() {
-        if (this.googleCalendarEvent.location) {
-            return this.googleCalendarEvent.location.split(',')[0]
+        if (this.calendarEvent.location) {
+            return this.calendarEvent.location.split(',')[0]
         }
+
         return undefined;
     }
 
+    /**
+     * get location address for an event
+     * @return {[type]} [description]
+     */
     get locationAddress() {
-        if (this.googleCalendarEvent.location) {
-            let address = this.googleCalendarEvent.location.substring(this.googleCalendarEvent.location.indexOf(',') + 1);
+        if (this.calendarEvent.location) {
+            //let address = this.calendarEvent.location.substring(this.calendarEvent.location.indexOf(',') + 1); 
+            let address = this.calendarEvent.location;
             return address.split(' ').join('+');
         }
         return undefined;
     }
 
+    /**
+     * is the event a full day event?
+     * @return {Boolean} [description]
+     */
     get isFullDayEvent() {
-        return this.googleCalendarEvent.start.date;
-    }
-}
-
-class CalDavCalendarEvent {
-    constructor(calDavCalendarEvent) {
-        this.calDavCalendarEvent = calDavCalendarEvent;
-    }
-
-    get startDateTime() {
-        return this.calDavCalendarEvent.start;
-    }
-
-    get endDateTime() {
-        return this.calDavCalendarEvent.end;
-    }
-
-    get title() {
-        return this.calDavCalendarEvent.title;
-    }
-
-    get description() {
-        return this.calDavCalendarEvent.description;
-    }
-
-    get location() {
-        if (this.calDavCalendarEvent.location) {
-            return this.calDavCalendarEvent.location;
+        if (this.calendarEvent.start && this.calendarEvent.start.date) {
+            return this.calendarEvent.start.date;
         }
-        return undefined;
-    }
 
-    get locationAddress() {
-        return undefined;
-    }
-
-    get isFullDayEvent() {
         let start = moment(this.startDateTime);
         let end = moment(this.endDateTime);
         let diffInHours = end.diff(start, 'hours');
         return diffInHours >= 24;
     }
+
+    get color() {
+        return this._color;
+    }
+    set color(color) {
+        this._color = color;
+    }
+
 }
 
+/**
+ * add card definition to hass
+ */
 customElements.define('calendar-card', CalendarCard);

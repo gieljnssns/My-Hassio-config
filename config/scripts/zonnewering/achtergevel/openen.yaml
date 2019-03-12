@@ -1,0 +1,16 @@
+  achtergevel_openen:
+    sequence:
+      - service: cover.open_cover
+        entity_id: cover.keuken_1_temp
+      - delay:
+          seconds: 10
+      - service: cover.open_cover
+        entity_id: cover.keuken_2_temp
+      - delay:
+          seconds: 10
+      - service: cover.open_cover
+        entity_id: cover.slaapkamer_temp
+      - delay:
+          seconds: 10
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.achtergevel_closed

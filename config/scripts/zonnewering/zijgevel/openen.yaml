@@ -1,0 +1,16 @@
+  zijgevel_openen:
+    sequence:
+      - service: cover.open_cover
+        entity_id: cover.living_temp
+      - delay:
+          seconds: 10
+      - service: cover.open_cover
+        entity_id: cover.slaapkamer_noor_temp
+      - delay:
+          seconds: 10
+      # - service: cover.open_cover
+      #   entity_id: cover.zonnetent_temp
+      # - delay:
+      #     seconds: 10
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.zijgevel_closed

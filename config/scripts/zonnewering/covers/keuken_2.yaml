@@ -1,0 +1,17 @@
+  keuken_2_sluiten:
+    sequence:
+      - service: cover.close_cover
+        entity_id: cover.keuken_2
+      - delay:
+          seconds: 20
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.keuken_2_closed
+      
+  keuken_2_openen:
+    sequence:
+      - service: cover.open_cover
+        entity_id: cover.keuken_2
+      - delay:
+          seconds: 20
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.keuken_2_closed

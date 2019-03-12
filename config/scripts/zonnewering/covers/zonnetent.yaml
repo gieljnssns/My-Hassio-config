@@ -1,0 +1,28 @@
+  zonnetent_sluiten:
+    sequence:
+      - service: cover.close_cover
+        entity_id: cover.zonnetent
+      - delay:
+          seconds: 30
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.zonnetent_closed
+      
+  zonnetent_openen:
+    sequence:
+      - service: cover.open_cover
+        entity_id: cover.zonnetent
+      - delay:
+          seconds: 30
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.zonnetent_closed
+
+  zonnetent_my:
+    sequence:
+      - service: cover.close_cover
+        entity_id: cover.zonnetent
+      - delay:
+          seconds: 20
+      - service: cover.stop_cover
+        entity_id: cover.zonnetent
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.zonnetent_my
