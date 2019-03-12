@@ -28,7 +28,7 @@ http:
   # ssl_certificate: !secret ssl_certificate
   # ssl_key: !secret ssl_key
   api_password: !secret http_password
-  # base_url: !secret base_url
+  base_url: !secret base_url
   ip_ban_enabled: True
   # trusted_networks:
   #     - 94.226.52.71
@@ -185,8 +185,15 @@ ffmpeg:
 system_health:
 
 ###  Custom updater  ###
-# custom_updater:
-#   card_urls:
+custom_updater:
+  track:
+    - components
+    - cards
+    - python_scripts
+  card_urls:
+      - https://raw.githubusercontent.com/sgttrs/lovelace-weather-card-chart/master/custom-updater.json
+      - https://raw.githubusercontent.com/gurbyz/custom-cards-lovelace/master/custom_updater.json
+      - https://raw.githubusercontent.com/kalkih/mini-media-player/master/tracker.json
 #     - https://raw.githubusercontent.com/rdehuyss/homeassistant-lovelace-google-calendar-card/master/custom_updater.json
 #     - https://raw.githubusercontent.com/kalkih/mini-media-player/master/tracker.json
 
