@@ -1,33 +1,8 @@
   alias: "Alarm Beweging in den hof"
   trigger:
-    # - platform: state
-    #   entity_id: binary_sensor.beweging_hof
-    #   to: 'on'
-    #   for:
-    #     seconds: 10
     - platform: state
       entity_id: alarm_control_panel.ha_alarm
       to: 'triggered'
-  # condition:
-  #   condition: and
-  #   conditions:
-  #     - condition: state
-  #       entity_id: binary_sensor.martine_vertrekt_naart_werk
-  #       state: 'off'
-  #     - condition: state
-  #       entity_id: binary_sensor.giel_vertrekt_naart_werk
-  #       state: 'off'
-  #     - condition: or
-  #       conditions:
-  #         - condition: state
-  #           entity_id: alarm_control_panel.ha_alarm
-  #           state: 'armed_away'
-  #         - condition: state
-  #           entity_id: alarm_control_panel.ha_alarm
-  #           state: 'armed_home'
-  #         - condition: state
-  #           entity_id: alarm_control_panel.ha_alarm
-  #           state: 'armed_night'
   action:
     - service: script.turn_on
       data_template:
@@ -37,21 +12,4 @@
           {% else %}
             script.alarm
           {% endif %}
-        
-        
-    # - service: notify.ios
-    #   data_template:
-    #     message: 'Bezoek! -- Alarm opzetten?'
-    #     data:
-    #       attachment:
-    #         url: "{{ state_attr('sensor.netatmo_webhook', 'snapshot_url') }}"
-    #         content-type: jpeg
-    #         hide-thumbnail: false
-    #       push:
-    #         badge: 0
-    #         category: 'alarm'
-    #         sound: 'Siren_Noise.wav'
-    #       # entity_id: camera.den_hof
-    #       action_data:
-    #         entity_id: input_boolean.alarm
 
