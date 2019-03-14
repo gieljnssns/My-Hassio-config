@@ -8,8 +8,8 @@
     condition: and
     conditions:
       - condition: state
-        entity_id: media_player.keuken
-        state: paused
+        entity_id: binary_sensor.keuken_not_playing
+        state: 'on'     # {{ states('media_player.keuken') != 'playing' }}
       - condition: state
         entity_id: input_boolean.giel_komt_thuis
         state: 'off'
