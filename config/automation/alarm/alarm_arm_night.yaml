@@ -25,12 +25,12 @@
       - condition: time
         after: '20:15:00'
         before: '04:00:00'
-      - condition: state
-        entity_id: media_player.philips_tv
-        state: 'off'
-      - condition: state
-        entity_id: media_player.philips_tv_wifi
-        state: 'off'
+      - condition: template
+        value_template: "{{ states('media_player.vsx_921') != 'on' }}"
+      - condition: template
+        value_template: "{{ states('media_player.philips_tv_wifi') != 'on' }}"
+      - condition: template
+        value_template: "{{ states('media_player.philips_tv') != 'on' }}"
       - condition: or
         conditions:
           - condition: state
