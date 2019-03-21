@@ -1,11 +1,12 @@
   - platform: template
     sensors:
       temp_living:
-        value_template: "{{ states.climate.living.attributes.current_temperature }}"
+        value_template: "{{ states.climate.netatmo_living.attributes.current_temperature }}"
         unit_of_measurement: '°C'
 
       verwarming_beneden:
-        value_template: "{{states.climate.living.attributes.operation_mode}}"
+        # value_template: "{{states.climate.netatmo_living.attributes.operation_mode}}"
+        value_template: "{{states.climate.netatmo_living.attributes.boiler_status}}"
 
       binnen_vs_buiten:
         value_template: >-
@@ -62,9 +63,9 @@
     #   living_aan_af:
     #     unit_of_measurement: 'pt'
     #     value_template: >-
-    #           {%- if is_state("climate.living", "idle") %}
+    #           {%- if is_state("climate.netatmo_living", "idle") %}
     #               0
-    #           {% elif is_state("climate.living", "heat") %}
+    #           {% elif is_state("climate.netatmo_living", "heat") %}
     #               0.1
     #           {% else %}
     #               0
