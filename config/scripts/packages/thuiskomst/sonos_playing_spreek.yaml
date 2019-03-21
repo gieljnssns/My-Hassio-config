@@ -1,5 +1,9 @@
   sonos_playing_spreek:
     sequence:
+      - condition: and
+        conditions:
+          - condition: template
+            value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_playing_spreek', 'last_triggered')) | float > 10 }}"
       - service: media_player.sonos_snapshot
         data_template:
           entity_id: "{{ sonos_entity }}"

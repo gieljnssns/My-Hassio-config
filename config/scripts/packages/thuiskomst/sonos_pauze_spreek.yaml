@@ -1,5 +1,9 @@
   sonos_pauze_spreek:
     sequence:
+      - condition: and
+        conditions:
+          - condition: template
+            value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_pauze_spreek', 'last_triggered')) | float > 10 }}"
       - wait_template: "{{ states.script.begroeting_paused.state == 'off' }}"
         timeout: '00:01:00'
         continue_on_timeout: 'false'

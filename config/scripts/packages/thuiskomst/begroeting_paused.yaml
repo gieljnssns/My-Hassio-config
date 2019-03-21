@@ -1,5 +1,9 @@
   begroeting_paused:
     sequence:
+      - condition: and
+        conditions:
+          - condition: template
+            value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.begroeting_paused', 'last_triggered')) | float > 10 }}"
       - wait_template: "{{ states.binary_sensor.beweging_hof.state == 'on' }}"
         timeout: '00:03:00'
         continue_on_timeout: 'false'
