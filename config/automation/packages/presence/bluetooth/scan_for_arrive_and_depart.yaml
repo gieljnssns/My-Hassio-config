@@ -18,6 +18,11 @@
       entity_id: binary_sensor.voordeur_open
     - platform: state
       entity_id: binary_sensor.achterdeur_open
+  condition:
+    condition: and
+    conditions:
+      - condition: template
+        value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('automation.scan_for_arrive_and_depart', 'last_triggered')) | float > 45 }}"
   action:
     - service: script.turn_off
       entity_id: script.mqtt_arrive_script
