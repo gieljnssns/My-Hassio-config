@@ -1,0 +1,20 @@
+  alias: Beweging slaapkamer
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.slaapkamer_2_3
+      to: 'on'
+    - platform: state
+      entity_id: binary_sensor.slaapkamer_2_3
+      to: 'off'
+      for:
+        minutes: 4
+  action:
+    - service_template: >
+        {%- if trigger.to_state.state == 'on' -%}
+          input_boolean.turn_on
+        {%- elif trigger.to_state.state == 'off' -%}
+          input_boolean.turn_off
+        {%- else -%}
+          script.dummy
+        {%- endif -%}
+      entity_id:  input_boolean.beweging_slaapkamer
