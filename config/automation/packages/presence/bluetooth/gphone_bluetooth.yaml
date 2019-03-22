@@ -10,15 +10,11 @@
            input_boolean.turn_off
         {% endif %}
       entity_id: input_boolean.gphone_bluetooth
-    # - condition: template
-    #   value_template: "{{ states.sensor.gphone_bt_thuis.state | float < 43 }}"
-    # - service: script.mqtt_arrive_script
-    #   data_template:
-    #     identity: '{"identity":"gPhone BT off {{now().strftime("%H:%M")}}"}'
-    - service: mqtt.publish
+    - service: device_tracker.see
       data_template:
-        topic: 'device_tracker/gphone_bt' 
-        payload: >-
+        dev_id: giel_bt_monitor
+        source_type: bluetooth
+        location_name: >-
           {% if states.sensor.gphone_bt_thuis.state | float > 43 %}
              home
           {% else %}
