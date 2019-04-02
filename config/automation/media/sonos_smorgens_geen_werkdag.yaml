@@ -11,8 +11,8 @@
         after: '08:30:00'
         before: '12:00:00'
       - condition: state
-        entity_id: media_player.keuken
-        state: paused
+        entity_id: binary_sensor.keuken_not_playing
+        state: 'on'     # {{ states('media_player.keuken') != 'playing' }}
         for:
           hours: 5
       - condition: state
