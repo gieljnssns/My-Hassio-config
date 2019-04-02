@@ -25,20 +25,33 @@
         value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('automation.scan_for_arrive_and_depart', 'last_triggered')) | float > 45 }}"
   action:
     - service_template: >
-        {% if is_state('script.mqtt_arrive_depart_script', 'on') %}
+        {% if is_state('script.mqtt_arrive_script', 'on') %}
            script.turn_off
         {% else %}
            script.turn_on
         {% endif %}
       data_template:
         entity_id: >
-          {% if is_state('script.mqtt_arrive_depart_script', 'on') %}
-             script.mqtt_arrive_depart_script
+          {% if is_state('script.mqtt_arrive_script', 'on') %}
+             script.mqtt_arrive_script
           {% else %}
              script.dummy
           {% endif %}
     - wait_template: "{{ is_state('script.dummy', 'off') }}"
-    - service: script.mqtt_arrive_depart_script
+    - service_template: >
+        {% if is_state('script.mqtt_depart_script', 'on') %}
+           script.turn_off
+        {% else %}
+           script.turn_on
+        {% endif %}
+      data_template:
+        entity_id: >
+          {% if is_state('script.mqtt_depart_script', 'on') %}
+             script.mqtt_depart_script
+          {% else %}
+             script.dummy
+          {% endif %}
+    - service: script.mqtt_arrive_script
       data_template:
         identity: >
           {% if trigger.platform == 'state' %}  
@@ -46,3 +59,19 @@
           {% else %}
              {"identity":"HA-start {{now().strftime("%H:%M")}}"}
           {% endif %}
+    - wait_template: "{{ is_state('script.mqtt_arrive_script', 'off') }}"
+    - service: script.mqtt_depart_script
+      data_template:
+        identity: >
+          {% if trigger.platform == 'state' %}  
+             {"identity":"{{trigger.entity_id.split(".")[1]}} {{now().strftime("%H:%M")}}"}
+          {% else %}
+             {"identity":"HA-start {{now().strftime("%H:%M")}}"}
+          {% endif %}
+    # - service: script.mqtt_arrive_script
+    #   data_template:
+    #     identity: '{"identity":"Trigger {{now().strftime("%H:%M")}}"}'
+    # - wait_template: "{{ is_state('script.mqtt_arrive_script', 'off') }}"
+    # - service: script.mqtt_depart_script
+    #   data_template:
+    #     identity: '{"identity":"Trigger {{now().strftime("%H:%M")}}"}'

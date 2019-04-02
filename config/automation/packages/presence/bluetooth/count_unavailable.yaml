@@ -9,6 +9,9 @@
     - platform: state
       entity_id: sensor.mphone_living
       to: 'unavailable'
+    - platform: state
+      entity_id: sensor.mphone_tvpi
+      to: 'unavailable'
   action:
     - service: counter.increment
       data_template:
@@ -19,6 +22,8 @@
              counter.keuken
           {% elif trigger.entity_id == 'sensor.mphone_living' %}
              counter.living
+          {% elif trigger.entity_id == 'sensor.mphone_tvpi' %}
+             counter.tvpi
           {% endif %}
     
     

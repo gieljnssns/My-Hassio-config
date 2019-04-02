@@ -53,6 +53,18 @@
         entity_id: input_boolean.garage_depart
         icon_template: mdi:cellphone-wireless
         value_template: "{{ is_state('input_boolean.garage_depart', 'on') }}"
+      
+      tvpi_arrive:
+        friendly_name: tvPi aankomst scan
+        entity_id: input_boolean.tvpi_arrive
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.tvpi_arrive', 'on') }}"
+
+      tvpi_depart:
+        friendly_name: tvPi vertrek scan
+        entity_id: input_boolean.tvpi_depart
+        icon_template: mdi:cellphone-wireless
+        value_template: "{{ is_state('input_boolean.tvpi_depart', 'on') }}"
         
       bluetooth_scan:
        friendly_name: Bluetooth scan
@@ -62,4 +74,6 @@
                 or is_state('binary_sensor.keuken_depart', 'on')
                 or is_state('binary_sensor.keuken_arrive', 'on')
                 or is_state('binary_sensor.garage_arrive', 'on')
-                or is_state('binary_sensor.garage_depart', 'on') }}"
+                or is_state('binary_sensor.garage_depart', 'on')
+                or is_state('binary_sensor.tvpi_arrive', 'on')
+                or is_state('binary_sensor.tvpi_depart', 'on') }}"

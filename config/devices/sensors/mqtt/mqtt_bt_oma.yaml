@@ -28,3 +28,13 @@
   payload_available: "online"
   payload_not_available: "offline"
   json_attributes_topic: 'monitor/Garage/oma'
+
+- platform: mqtt
+  state_topic: 'monitor/tvPi/oma'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'Oma tvPi'
+  availability_topic: "monitor/tvPi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes_topic: 'monitor/tvPi/oma'
