@@ -2,8 +2,10 @@
   hide_entity: false
   trigger:
     platform: state
-    entity_id: sensor.martine_komt_thuis
-    to: 'arriving'
+    entity_id: binary_sensor.keuken_6_3
+    to: 'on'
+    for:
+      seconds: 3
   condition:
     condition: and
     conditions:
@@ -13,31 +15,30 @@
       - condition: state
         entity_id: input_boolean.giel_komt_thuis
         state: 'off'
+      - condition: state
+        entity_id: input_boolean.martine_komt_thuis
+        state: 'on'
+      - condition: template
+        value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_pauze_spreek', 'last_triggered')) | float > 200 }}"
+      - condition: template
+        value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_playing_spreek', 'last_triggered')) | float > 200 }}"
   action:
-    - service: homeassistant.turn_off
-      entity_id: script.begroeting_paused
-    - service: homeassistant.turn_off
-      entity_id: script.begroeting_playing
-    - service: homeassistant.turn_off
-      entity_id: script.sonos_pauze_spreek
-    - service: homeassistant.turn_off
-      entity_id: script.sonos_playing_spreek
-    - service: media_player.sonos_snapshot
-      data:
-        entity_id: media_player.keuken
-    - delay: '00:00:02'
-    - service: script.begroeting_paused
+    - service: script.sonos_pauze_spreek
       data_template:
+        sonos_entity: media_player.keuken
+        volume: 0.55
+        delay: '00:00:08'
         speech_message: >
            {% set person = 'Martine' %}
            {{ [
            "Hallo " + person + ", welkom thuis.",
-           "Hallo " + person,
            "Welkom thuis " + person + ", zware dag gehad?",
            "Blij dat je thuis bent " + person ,
            "Hokus Pokus pats, ik wou da " + person + " thuis was",
            "De rechterhand van de almachtige is aanwezig.",
            "Spiegeltje, spiegeltje aan de wand, hier is de mooiste van het land.",
            "Sims salla bime, hier is " + person ,
-           "Die da Disneyland, hier is " + person + " en dat is plezant."
+           "Die da Disneyland, hier is " + person + " en dat is plezant.",
+           "Sorry, voor de rommel in huis,. Neem de stofzuiger en voel je thuis!",
+           "Discussieren met een vrouw is als het lezen van Software License Agreement., . Je negeert alles en op het einde klik je op OK."
            ] | random }}

@@ -1,41 +1,36 @@
   alias: Welkom allemaal, sonos paused
   hide_entity: false
   trigger:
-    - platform: state
-      entity_id: sensor.g_m_komen_thuis
-      to: 'arriving'
-  # condition:
-  #   condition: and
-  #   conditions:
-  #     - condition: state
-  #       entity_id: media_player.keuken
-  #       state: paused
-  #     - condition: state
-  #       entity_id: input_boolean.giel_komt_thuis
-  #       state: 'on'
-  #     - condition: state
-  #       entity_id: input_boolean.martine_komt_thuis
-  #       state: 'on'
+    platform: state
+    entity_id: binary_sensor.keuken_6_3
+    to: 'on'
+    for:
+      seconds: 3
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: input_boolean.martine_komt_thuis
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.giel_komt_thuis
+        state: 'on'
+      - condition: template
+        value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_pauze_spreek', 'last_triggered')) | float > 200 }}"
+      - condition: template
+        value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_playing_spreek', 'last_triggered')) | float > 200 }}"
   action:
-    - service: homeassistant.turn_off
-      entity_id: script.begroeting_paused
-    - service: homeassistant.turn_off
-      entity_id: script.begroeting_playing
-    - service: homeassistant.turn_off
-      entity_id: script.sonos_pauze_spreek
-    - service: homeassistant.turn_off
-      entity_id: script.sonos_playing_spreek
-    - service: media_player.sonos_snapshot
-      data:
-        entity_id: media_player.keuken
-    - delay: '00:00:02'
-    - service: script.begroeting_paused
+    - service: script.sonos_pauze_spreek
       data_template:
-          speech_message: >
-             {{ [
-             "Hallo allemaal, welkom thuis.",
-             "Hallo allemaal, blij dat jullie veilig thuis geraakt zijn.",
-             "De koning en zijn koningin zijn terug thuis.",
-             "Blij dat jullie thuis zijn. ",
-             "De koning en zijn rechterhand zijn terug."
-             ] | random }}
+        sonos_entity: media_player.keuken
+        volume: 0.55
+        delay: '00:00:08'
+        speech_message: >
+            {{ [
+            "Hallo allemaal, welkom thuis.",
+            "Hallo allemaal, blij dat jullie veilig thuis geraakt zijn.",
+            "De koning en zijn koningin zijn terug thuis.",
+            "Blij dat jullie thuis zijn. ",
+            "De koning en zijn rechterhand zijn terug.",
+            "Als er niets gebeurt, moet er eerst iets gebeuren, voordat er iets gebeurt,. Dus moet je eerst iets laten gebeuren,. En dat is logisch."
+            ] | random }}
