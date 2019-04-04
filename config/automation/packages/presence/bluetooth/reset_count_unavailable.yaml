@@ -1,0 +1,43 @@
+  alias: Reset unavailable counter
+  trigger:
+    - platform: state
+      entity_id: input_select.reset_counter
+      to: 'Garage'
+    - platform: state
+      entity_id: input_select.reset_counter
+      to: 'Keuken'
+    - platform: state
+      entity_id: input_select.reset_counter
+      to: 'Living'
+    - platform: state
+      entity_id: input_select.reset_counter
+      to: 'tvPi'
+    - platform: state
+      entity_id: input_select.reset_counter
+      to: 'Sonos Keuken'
+    - platform: state
+      entity_id: input_select.reset_counter
+      to: 'Sonos Badkamer'
+  action:
+    - service: counter.reset
+      data_template:
+        entity_id: >
+          {% if states("input_select.reset_counter") == 'Garage' %}
+             counter.garage
+          {% elif states("input_select.reset_counter") == 'Keuken' %}
+             counter.keuken
+          {% elif states("input_select.reset_counter") == 'Living' %}
+             counter.living
+          {% elif states("input_select.reset_counter") == 'tvPi' %}
+             counter.tvpi
+          {% elif states("input_select.reset_counter") == 'Sonos Keuken' %}
+             counter.sonos_keuken
+          {% elif states("input_select.reset_counter") == 'Sonos Badkamer' %}
+             counter.sonos_badkamer
+          {% endif %}
+    - delay: '00:00:05'
+    - service: input_select.select_option
+      data:
+        entity_id: input_select.reset_counter
+        option: Kies
+    
