@@ -1,0 +1,20 @@
+  alias: Mark person as just left
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.giel_bayesian
+      from: 'on'
+      to: 'off'
+    - platform: state
+      entity_id: binary_sensor.martine_bayesian
+      from: 'on'
+      to: 'off'
+  action:
+    - service: input_select.select_option
+      data_template:
+        entity_id: >
+          {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+            input_select.giel_status_dropdown
+          {% else %}
+            input_select.martine_status_dropdown
+          {% endif %}
+        option: Just Left

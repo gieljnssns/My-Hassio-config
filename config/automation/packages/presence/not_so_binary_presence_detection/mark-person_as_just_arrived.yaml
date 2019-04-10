@@ -1,0 +1,33 @@
+  alias: Mark person as just arrived
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.giel_bayesian
+      from: 'off'
+      to: 'on'
+    - platform: state
+      entity_id: binary_sensor.martine_bayesian
+      from: 'off'
+      to: 'on'
+  action:
+    - service: input_select.select_option
+      data_template:
+        entity_id: >
+          {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+            input_select.giel_status_dropdown
+          {% else %}
+            input_select.martine_status_dropdown
+          {% endif %}
+        option: >
+          {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+            {% if states.input_select.giel_status_dropdown.state == 'Just Left' %}
+              Home
+            {% else %}
+              Just Arrived
+            {% endif %}
+          {% else %}
+            {% if states.input_select.martine_status_dropdown.state == 'Just Left' %}
+              Home
+            {% else %}
+              Just Arrived
+            {% endif %}
+          {% endif %}

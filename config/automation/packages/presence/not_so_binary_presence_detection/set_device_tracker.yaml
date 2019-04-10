@@ -1,0 +1,22 @@
+  alias: Set device tracker
+  trigger:
+    - platform: state
+      entity_id: sensor.giel_status
+    - platform: state
+      entity_id: sensor.martine_status
+  action:
+    - service: device_tracker.see
+      data_template:
+        dev_id: >-
+          {% if trigger.entity_id == 'sensor.giel_status' %}
+              giel_not_so_binary
+          {% else %}
+              martine_not_so_binary
+          {% endif %}
+        location_name: >-
+          {% if trigger.entity_id == 'sensor.giel_status' %}
+              {{states('sensor.giel_status')}}
+          {% else %}
+              {{states('sensor.martine_status')}}
+          {% endif %}
+      

@@ -1,0 +1,187 @@
+# homeassistant:
+#   customize:
+
+
+input_select:
+  giel_status_dropdown:
+    name: Giel
+    options:
+      - Home
+      - Just Arrived
+      - Just Left
+      - Away
+      - Extended Away
+  
+  martine_status_dropdown:
+    name: Martine
+    options:
+      - Home
+      - Just Arrived
+      - Just Left
+      - Away
+      - Extended Away
+
+sensor:
+  - platform: template
+    sensors:
+      giel_status:
+        value_template: '{{ states.input_select.giel_status_dropdown.state }}'
+        friendly_name: 'Giel'
+      martine_status:
+        value_template: '{{ states.input_select.martine_status_dropdown.state }}'
+        friendly_name: 'Martine'
+
+# automation:
+#   - alias: Set device tracker
+#     trigger:
+#       - platform: state
+#         entity_id: sensor.giel_status
+#       - platform: state
+#         entity_id: sensor.martine_state
+#     action:
+#       - service: device_tracker.see
+#         data_template:
+#           dev_id: >-
+#             {% if trigger.entity_id == 'sensor.giel_status' %}
+#                giel_not_so_binary
+#             {% else %}
+#                martine_not_so_binary
+#             {% endif %}
+#           location_name: >-
+#             {% if trigger.entity_id == 'sensor.giel_status' %}
+#                {{states('sensor.giel_status')}}
+#             {% else %}
+#                {{states('sensor.martine_status')}}
+#             {% endif %}
+      
+#   - alias: Mark person as just arrived
+#     trigger:
+#       - platform: state
+#         entity_id: binary_sensor.giel_bayesian
+#         from: 'off'
+#         to: 'on'
+#       - platform: state
+#         entity_id: binary_sensor.martine_bayesian
+#         from: 'off'
+#         to: 'on'
+#     action:
+#       - service: input_select.select_option
+#         data_template:
+#           entity_id: >
+#             {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+#               input_select.giel_status_dropdown
+#             {% else %}
+#               input_select.martine_status_dropdown
+#             {% endif %}
+#           option: >
+#             {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+#               {% if states.input_select.giel_status_dropdown.state == 'Just Left' %}
+#                 Home
+#               {% else %}
+#                 Just Arrived
+#               {% endif %}
+#             {% else %}
+#               {% if states.input_select.martine_status_dropdown.state == 'Just Left' %}
+#                 Home
+#               {% else %}
+#                 Just Arrived
+#               {% endif %}
+#             {% endif %}
+
+#   - alias: Mark person as home
+#     trigger:
+#       - platform: state
+#         entity_id: input_select.giel_status_dropdown
+#         to: 'Just Arrived'
+#         for:
+#           minutes: 10
+#       - platform: state
+#         entity_id: input_select.martine_status_dropdown
+#         to: 'Just Arrived'
+#         for:
+#           minutes: 10
+#       - platform: state
+#         entity_id: input_select.giel_status_dropdown
+#         from: 'Just Left'
+#         to: 'Just Arrived'
+#       - platform: state
+#         entity_id: input_select.martine_status_dropdown
+#         from: 'Just Left'
+#         to: 'Just Arrived'
+#     action:
+#       - service: input_select.select_option
+#         data_template:
+#           entity_id: >
+#             {% if trigger.entity_id == 'input_select.giel_status_dropdown' %}
+#               input_select.giel_status_dropdown
+#             {% else %}
+#               input_select.martine_status_dropdown
+#             {% endif %}
+#           option: Home
+
+#   - alias: Mark person as just left
+#     trigger:
+#       - platform: state
+#         entity_id: binary_sensor.giel_bayesian
+#         from: 'on'
+#         to: 'off'
+#       - platform: state
+#         entity_id: binary_sensor.martine_bayesian
+#         from: 'on'
+#         to: 'off'
+#     action:
+#       - service: input_select.select_option
+#         data_template:
+#           entity_id: >
+#             {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+#               input_select.giel_status_dropdown
+#             {% else %}
+#               input_select.martine_status_dropdown
+#             {% endif %}
+#           option: Just Left
+  
+#   - alias: Mark person as away
+#     trigger:
+#       - platform: state
+#         entity_id: input_select.giel_status_dropdown
+#         to: 'Just Left'
+#         for:
+#           minutes: 10
+#       - platform: state
+#         entity_id: input_select.martine_status_dropdown
+#         to: 'Just Left'
+#         for:
+#           minutes: 10
+#     action:
+#       - service: input_select.select_option
+#         data_template:
+#           entity_id: >
+#             {% if trigger.entity_id == 'input_select.giel_status_dropdown' %}
+#               input_select.giel_status_dropdown
+#             {% else %}
+#               input_select.martine_status_dropdown
+#             {% endif %}
+#           option: Away
+  
+#   - alias: Mark person as extended away
+#     trigger:
+#       - platform: state
+#         entity_id: input_select.giel_status_dropdown
+#         to: 'Away'
+#         for:
+#           hours: 24
+#       - platform: state
+#         entity_id: input_select.martine_status_dropdown
+#         to: 'Away'
+#         for:
+#           hours: 24
+#     action:
+#       - service: input_select.select_option
+#         data_template:
+#           entity_id: >
+#             {% if trigger.entity_id == 'input_select.giel_status_dropdown' %}
+#               input_select.giel_status_dropdown
+#             {% else %}
+#               input_select.martine_status_dropdown
+#             {% endif %}
+#           option: Extended Away

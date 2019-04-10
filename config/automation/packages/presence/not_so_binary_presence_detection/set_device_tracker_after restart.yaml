@@ -1,0 +1,16 @@
+  alias: Set device tracker
+  trigger:
+    - platform: homeassistant
+      event: start
+  action:
+    - service: device_tracker.see
+      data_template:
+        dev_id: giel_not_so_binary
+        location_name: >-
+          {{states('sensor.giel_status')}}
+    - service: device_tracker.see
+      data_template:
+        dev_id: martine_not_so_binary
+        location_name: >-
+          {{states('sensor.martine_status')}}
+          

@@ -1,0 +1,68 @@
+  alias: Restart monitor
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.living_arrive
+      to: 'on'
+      for:
+        minutes: 2
+    - platform: state
+      entity_id: binary_sensor.living_depart
+      to: 'on'
+      for:
+        minutes: 2
+    - platform: state
+      entity_id: binary_sensor.keuken_arrive
+      to: 'on'
+      for:
+        minutes: 2
+    - platform: state
+      entity_id: binary_sensor.keuken_depart
+      to: 'on'
+      for:
+        minutes: 2
+    - platform: state
+      entity_id: binary_sensor.garage_arrive
+      to: 'on'
+      for:
+        minutes: 2
+    - platform: state
+      entity_id: binary_sensor.garage_depart
+      to: 'on'
+      for:
+        minutes: 2
+    - platform: state
+      entity_id: binary_sensor.tvpi_arrive
+      to: 'on'
+      for:
+        minutes: 2
+    - platform: state
+      entity_id: binary_sensor.tvpi_depart
+      to: 'on'
+      for:
+        minutes: 2
+  condition:
+    - condition: template
+      value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('automation.restart_monitor', 'last_triggered')) | float > 600 }}"
+  action:
+    - service: script.monitor_restart
+    - delay: '00:01:30'
+    - service: input_boolean.turn_off
+      data_template: 
+        entity_id: >-
+          {% if trigger.entity_id == 'binary_sensor.living_arrive' %}
+            input_boolean.living_arrive
+          {% elif trigger.entity_id == 'binary_sensor.living_depart' %}
+            input_boolean.living_depart
+          {% elif trigger.entity_id == 'binary_sensor.keuken_arrive' %}
+            input_boolean.keuken_arrive
+          {% elif trigger.entity_id == 'binary_sensor.keuken_depart' %}
+            input_boolean.keuken_depart
+          {% elif trigger.entity_id == 'binary_sensor.garage_arrive' %}
+            input_boolean.garage_arrive
+          {% elif trigger.entity_id == 'binary_sensor.garage_depart' %}
+            input_boolean.garage_depart
+          {% elif trigger.entity_id == 'binary_sensor.tvpi_arrive' %}
+            input_boolean.tvpi_arrive
+          {% elif trigger.entity_id == 'binary_sensor.tvpi_depart' %}
+            input_boolean.tvpi_depart
+          {% endif %}

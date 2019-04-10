@@ -14,10 +14,10 @@
       to: 'off'
       for:
         seconds: 30
-  # condition:
-  #   condition: state
-  #   entity_id: input_boolean.gielthuis
-  #   state: 'on'
+  condition:
+    condition: state
+    entity_id: input_boolean.gielthuis
+    state: 'on'
   action:
     - service: input_boolean.turn_off
       entity_id: input_boolean.gielthuis
@@ -25,6 +25,7 @@
       entity_id: input_boolean.giel_komt_thuis
     - service: homeassistant.turn_off
       entity_id: script.set_arrive_sensor_giel
+    - service: script.request_gphone_update
     # - service: mqtt.publish
     #   data_template:
     #     topic: 'location/giel' 
