@@ -89,7 +89,7 @@ history: !include history.yaml
 
 ###  Frontend  ###
 frontend:
-  themes: !include themes.yaml
+  themes: !include_dir_merge_named themes/
 
 ###  Logger  ###
 logger: !include logger.yaml
@@ -109,6 +109,7 @@ netatmo:
   secret_key: !secret netatmo_secret_key
   username: !secret netatmo_username
   password: !secret netatmo_password
+  webhooks: true
 
 ###  Smappee  ###
 smappee:
@@ -179,6 +180,9 @@ hassio:
 ###  FFmpeg  ###
 ffmpeg:
 
+###  Person  ###
+person:
+
 ###  System Health  ###
 system_health:
 
@@ -224,6 +228,9 @@ ios:
           #   # destructive: yes
           #   # behavior: 'default'
 
+###  Mobile app  ###
+# mobile_app:
+
 ###  Recorder  ###
 recorder: !include recorder.yaml
 
@@ -250,7 +257,7 @@ zone:
   - name: Home
     latitude: !secret latitude
     longitude: !secret longitude
-    radius: 35
+    radius: 20
     # track_ios: false
 
   # - name: Thuis
