@@ -1,0 +1,20 @@
+  alias: Netatmo component Webhook
+  initial_state: 'on'
+  trigger:
+    - platform: event
+      event_type: netatmo_movement
+    - platform: event
+      event_type: netatmo_human
+    - platform: event
+      event_type: netatmo_animal
+    - platform: event
+      event_type: netatmo_animal
+    - platform: event
+      event_type: netatmo_other
+  action:
+    - service: mqtt.publish
+      data_template:
+        topic: 'netatmo/update2'
+        retain: true
+        payload_template: >
+           {{ trigger.event.data| tojson }}
