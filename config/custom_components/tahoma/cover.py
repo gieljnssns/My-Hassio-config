@@ -1,19 +1,15 @@
-"""
-Support for Tahoma cover - shutters etc.
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.tahoma/
-"""
+"""Support for Tahoma cover - shutters etc."""
 from datetime import timedelta
 import logging
 
+from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from homeassistant.util.dt import utcnow
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION
-from custom_components.tahoma import (
-    DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
-# from homeassistant.components.tahoma import (
+# from custom_components.tahoma import (
 #     DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
 
-DEPENDENCIES = ['tahoma']
+from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
+
+# DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +37,9 @@ class TahomaCover(TahomaDevice, CoverDevice):
         """Initialize the device."""
         super().__init__(tahoma_device, controller)
 
-        self._closure = None
+        self._closure = 0
         # 100 equals open
-        self._position = None
+        self._position = 100
         self._closed = False
         self._rssi_level = None
         self._icon = None
@@ -208,7 +204,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
                  'rts:VenetianBlindRTSComponent',
                  'rts:DualCurtainRTSComponent',
                  'rts:ExteriorVenetianBlindRTSComponent',
-                 'rts: HorizontalAwningRTSComponent',
+                 'rts:HorizontalAwningRTSComponent',
                  'rts:BlindRTSComponent'):
             self.apply_action('my')
         elif self.tahoma_device.type in \

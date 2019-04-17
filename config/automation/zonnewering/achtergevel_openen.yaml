@@ -1,0 +1,47 @@
+  alias: Achtergevel openen #Sunscreen up/inklappen
+  initial_state: 'on' #on reboot HA or reloading of automations, automation is ON
+  trigger:
+
+    # Sun based triggers
+  # - platform: sun
+  #   event: sunset
+  #   offset: -02:30:00 #2,5 hours before sunset, sunscreen is going up again (might want to change depending on location)
+  - platform: numeric_state
+    entity_id: sensor.sun_azimut
+    above: 220
+    
+    # Weather based triggers
+  - platform: numeric_state
+    entity_id: sensor.windsnelheid
+    above: 20 #If wind force becomes to high, sunscreen needs to go up
+  - platform: numeric_state
+    entity_id: sensor.dark_sky_precip_intensity
+    above: 0.15 # Rain at the moment
+  # - platform: numeric_state
+  #   entity_id: sensor.br_precipitation_forecast_total
+  #   above: 0.2 # Rain predicted in next 60 minutes
+  - platform: numeric_state
+    entity_id: sensor.dark_sky_uv_index
+    below: 2
+    for:
+     minutes: 5 # Sunlight below X for Y minutes
+  # - platform: numeric_state
+  #   entity_id: sensor.br_temperature
+  #   below: 18 #If outdoor temperature is below x for y minutes then sunscreen can go up again.
+  #   for:
+  #     minutes: 10
+
+  condition:
+    condition: and
+    conditions:
+      # - condition: template
+      #   value_template: '{{as_timestamp(states.automation.achtergevel_openen.attributes.last_triggered) | int <= as_timestamp(states.automation.achtergevel_sluiten.attributes.last_triggered) | int }}' # this automation can only be triggered if timestamp of last_triggered time is OLDER than the timestamp of last_triggered time of the "screen down" automation. This condition prevents that the automation is triggered again if sunscreen is already up. Better would be to have a real sensor checking if sunscreen is up or down but currently I don't have a sensor in place. The | int is used to catch the fact that on start up both triggers report 'none' and hence this condition would never become true. The int makes it such that value = 0 for both and hence trigger can be executed.
+      - condition: state
+        entity_id: input_boolean.achtergevel_closed
+        state: 'on'
+
+  action:
+    - service: script.achtergevel_openen 
+    - service: notify.ios_gphone
+      data:
+       message: "Het zonnescherm achtergevel geopend"

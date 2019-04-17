@@ -1,8 +1,4 @@
-"""
-Support for Tahoma devices.
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tahoma/
-"""
+"""Support for Tahoma devices."""
 from collections import defaultdict
 import logging
 import voluptuous as vol
@@ -12,8 +8,6 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['tahoma-api==0.0.14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,28 +29,31 @@ TAHOMA_COMPONENTS = [
 ]
 
 TAHOMA_TYPES = {
-    'rts:RollerShutterRTSComponent': 'cover',
-    'rts:CurtainRTSComponent': 'cover',
+    'io:ExteriorVenetianBlindIOComponent': 'cover',
+    'io:HorizontalAwningIOComponent': 'cover',
+    'io:LightIOSystemSensor': 'sensor',
+    'io:OnOffIOComponent': 'switch',
+    'io:OnOffLightIOComponent': 'switch',
+    'io:RollerShutterGenericIOComponent': 'cover',
+    'io:RollerShutterUnoIOComponent': 'cover',
+    'io:RollerShutterVeluxIOComponent': 'cover',
+    'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
+    'io:SomfyContactIOSystemSensor': 'sensor',
+    'io:VerticalExteriorAwningIOComponent': 'cover',
+    'io:WindowOpenerVeluxIOComponent': 'cover',
+    'io:GarageOpenerIOComponent': 'cover',
+    'rtds:RTDSContactSensor': 'sensor',
+    'rtds:RTDSMotionSensor': 'sensor',
+    'rtds:RTDSSmokeSensor': 'smoke',
     'rts:BlindRTSComponent': 'cover',
-    'rts:VenetianBlindRTSComponent': 'cover',
+    'rts:CurtainRTSComponent': 'cover',
     'rts:DualCurtainRTSComponent': 'cover',
     'rts:ExteriorVenetianBlindRTSComponent': 'cover',
+    'rts:GarageDoor4TRTSComponent': 'switch',
+    'rts:RollerShutterRTSComponent': 'cover',
     # 'rts:ExteriorBlindRTSComponent': 'cover',
     'rts:HorizontalAwningRTSComponent': 'cover',
-    'io:ExteriorVenetianBlindIOComponent': 'cover',
-    'io:RollerShutterUnoIOComponent': 'cover',
-    'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
-    'io:RollerShutterVeluxIOComponent': 'cover',
-    'io:RollerShutterGenericIOComponent': 'cover',
-    'io:WindowOpenerVeluxIOComponent': 'cover',
-    'io:LightIOSystemSensor': 'sensor',
-    'rts:GarageDoor4TRTSComponent': 'switch',
-    'io:VerticalExteriorAwningIOComponent': 'cover',
-    'io:HorizontalAwningIOComponent': 'cover',
-    'io:OnOffLightIOComponent': 'switch',
-    'rtds:RTDSSmokeSensor': 'smoke',
-    'rtds:RTDSContactSensor': 'sensor',
-    'rtds:RTDSMotionSensor': 'sensor'
+    'rts:VenetianBlindRTSComponent': 'cover'
 }
 
 
@@ -137,3 +134,4 @@ class TahomaDevice(Entity):
         action = Action(self.tahoma_device.url)
         action.add_command(cmd_name, *args)
         self.controller.apply_actions('HomeAssistant', [action])
+        
