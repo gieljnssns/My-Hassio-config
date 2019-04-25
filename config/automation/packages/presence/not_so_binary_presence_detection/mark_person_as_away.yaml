@@ -1,15 +1,16 @@
   alias: Mark person as away
+  initial_state: 'on' 
   trigger:
     - platform: state
       entity_id: input_select.giel_status_dropdown
-      to: 'Just Left'
+      to: 'Juist Weg'
       for:
-        minutes: 10
+        minutes: 5
     - platform: state
       entity_id: input_select.martine_status_dropdown
-      to: 'Just Left'
+      to: 'Juist Weg'
       for:
-        minutes: 10
+        minutes: 5
   action:
     - service: input_select.select_option
       data_template:
@@ -19,4 +20,4 @@
           {% else %}
             input_select.martine_status_dropdown
           {% endif %}
-        option: Away
+        option: Afwezig

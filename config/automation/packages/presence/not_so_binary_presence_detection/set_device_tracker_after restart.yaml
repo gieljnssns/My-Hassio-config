@@ -1,8 +1,11 @@
   alias: Set device tracker
+  initial_state: 'on' 
   trigger:
     - platform: homeassistant
       event: start
   action:
+    - delay:
+        seconds: 15
     - service: device_tracker.see
       data_template:
         dev_id: giel_not_so_binary

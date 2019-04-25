@@ -4,21 +4,26 @@
     name: 'Giel bayesian'
     device_class: presence
     observations:
-      - entity_id: 'device_tracker.c9fa5852ffc44c4e873ed4b5d0deb749'
+      - entity_id: 'device_tracker.6c_e8_5c_d2_29_2f'
         prob_given_true: 0.9
         prob_given_false: 0.4
         platform: 'state'
         to_state: 'home'
-      - entity_id: 'device_tracker.gphone_beta'
+      - entity_id: 'device_tracker.c9fa5852ffc44c4e873ed4b5d0deb749'
         prob_given_true: 0.6
         prob_given_false: 0.4
         platform: 'state'
         to_state: 'home'
-      - entity_id: 'device_tracker.giel_bt_monitor'
+      - entity_id: input_boolean.gphone_bluetooth
         prob_given_true: 0.9
         prob_given_false: 0.3
         platform: 'state'
-        to_state: 'home'
+        to_state: 'on'
+      # - entity_id: 'device_tracker.giel_bt_monitor'
+      #   prob_given_true: 0.9
+      #   prob_given_false: 0.3
+      #   platform: 'state'
+      #   to_state: 'home'
 
   - platform: bayesian
     prior: 0.5
@@ -36,8 +41,13 @@
         prob_given_false: 0.4
         platform: 'state'
         to_state: 'home'
-      - entity_id: 'device_tracker.martine_bt_monitor'
+      - entity_id: input_boolean.mphone_bluetooth
         prob_given_true: 0.9
         prob_given_false: 0.3
         platform: 'state'
-        to_state: 'home'
+        to_state: 'on'
+      # - entity_id: 'device_tracker.martine_bt_monitor'
+      #   prob_given_true: 0.9
+      #   prob_given_false: 0.3
+      #   platform: 'state'
+      #   to_state: 'home'
