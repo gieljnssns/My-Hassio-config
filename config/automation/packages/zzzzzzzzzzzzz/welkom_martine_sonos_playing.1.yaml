@@ -1,8 +1,9 @@
-  alias: Welkom giel, sonos playing
+  alias: Welkom Martine, sonos playing
+  initial_state: 'on' 
   hide_entity: false
   trigger:
     platform: state
-    entity_id: sensor.giel_komt_thuis
+    entity_id: sensor.martine_komt_thuis
     to: 'arriving'
     for:
       seconds: 10
@@ -13,7 +14,7 @@
         entity_id: media_player.keuken
         state: playing
       - condition: state
-        entity_id: input_boolean.martine_komt_thuis
+        entity_id: input_boolean.giel_komt_thuis
         state: 'off'
   action:
     - service_template: >
@@ -79,25 +80,19 @@
     #   entity_id: script.sonos_pauze_spreek
     # - service: homeassistant.turn_off
     #   entity_id: script.sonos_playing_spreek
-    # - service: script.reload
-    #   entity_id: script.begroeting_paused
-    # - service: script.reload
-    #   entity_id: script.begroeting_playing
-    # - service: script.reload
-    #   entity_id: script.sonos_pauze_spreek
-    # - service: script.reload
-    #   entity_id: script.sonos_playing_spreek
     - delay: '00:00:02'
     - service: script.begroeting_playing
       data_template:
         speech_message: >
-           {% set person = 'Giel' %}
+           {% set person = 'Martine' %}
            {{ [
            "Hallo " + person + ", welkom thuis.",
+           "Hallo " + person,
            "Welkom thuis " + person + ", zware dag gehad?",
            "Blij dat je thuis bent " + person ,
-           "De grote baas is thuis!",
-           "Iedereen knielen voor de almachtige heerser",
-           "Wees welkom " + person + ", toch niet te veel gedronken?",
-           "Daar is ie weer! Ik zal de muziek wel terug opzetten."
+           "Hokus Pokus pats, ik wou da " + person + " thuis was",
+           "De rechterhand van de almachtige is aanwezig.",
+           "Spiegeltje, spiegeltje aan de wand, hier is de mooiste van het land.",
+           "Sims salla bime, hier is " + person ,
+           "Die da Disneyland, hier is " + person + " en dat is plezant."
            ] | random }}

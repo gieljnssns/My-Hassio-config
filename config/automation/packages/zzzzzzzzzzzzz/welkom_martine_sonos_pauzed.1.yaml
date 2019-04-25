@@ -1,4 +1,5 @@
-  alias: Welkom Martine, sonos playing
+  alias: Welkom Martine, sonos paused
+  initial_state: 'on' 
   hide_entity: false
   trigger:
     platform: state
@@ -10,8 +11,8 @@
     condition: and
     conditions:
       - condition: state
-        entity_id: media_player.keuken
-        state: playing
+        entity_id: binary_sensor.keuken_not_playing
+        state: 'on'     # {{ states('media_player.keuken') != 'playing' }}
       - condition: state
         entity_id: input_boolean.giel_komt_thuis
         state: 'off'
@@ -79,8 +80,11 @@
     #   entity_id: script.sonos_pauze_spreek
     # - service: homeassistant.turn_off
     #   entity_id: script.sonos_playing_spreek
-    - delay: '00:00:02'
-    - service: script.begroeting_playing
+    # - service: media_player.sonos_snapshot
+    #   data:
+    #     entity_id: media_player.keuken
+    # - delay: '00:00:02'
+    - service: script.begroeting_paused
       data_template:
         speech_message: >
            {% set person = 'Martine' %}

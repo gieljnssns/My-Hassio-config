@@ -1,23 +1,21 @@
-  alias: Welkom allemaal, sonos paused
+  alias: Welkom Giel, sonos paused
+  initial_state: 'on' 
   hide_entity: false
   trigger:
-    - platform: state
-      entity_id: sensor.g_m_komen_thuis
-      to: 'arriving'
-      for:
-        seconds: 10
-  # condition:
-  #   condition: and
-  #   conditions:
-  #     - condition: state
-  #       entity_id: media_player.keuken
-  #       state: paused
-  #     - condition: state
-  #       entity_id: input_boolean.giel_komt_thuis
-  #       state: 'on'
-  #     - condition: state
-  #       entity_id: input_boolean.martine_komt_thuis
-  #       state: 'on'
+    platform: state
+    entity_id: sensor.giel_komt_thuis
+    to: 'arriving'
+    for:
+      seconds: 10
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.keuken_not_playing
+        state: 'on'     # {{ states('media_player.keuken') != 'playing' }}
+      - condition: state
+        entity_id: input_boolean.martine_komt_thuis
+        state: 'off'
   action:
     - service_template: >
         {% if is_state('script.begroeting_paused', 'on') %}
@@ -88,11 +86,13 @@
     # - delay: '00:00:02'
     - service: script.begroeting_paused
       data_template:
-          speech_message: >
-             {{ [
-             "Hallo allemaal, welkom thuis.",
-             "Hallo allemaal, blij dat jullie veilig thuis geraakt zijn.",
-             "De koning en zijn koningin zijn terug thuis.",
-             "Blij dat jullie thuis zijn. ",
-             "De koning en zijn rechterhand zijn terug."
-             ] | random }}
+        speech_message: >
+           {% set person = 'Giel' %}
+           {{ [
+           "Hallo " + person + ", welkom thuis.",
+           "Welkom thuis " + person + ", zware dag gehad?",
+           "Blij dat je thuis bent " + person ,
+           "De grote baas is thuis!",
+           "Iedereen knielen voor de almachtige heerser",
+           "Wees welkom " + person + ", toch niet te veel gedronken?"
+           ] | random }}
