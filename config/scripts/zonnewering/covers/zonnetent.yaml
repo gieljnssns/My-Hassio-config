@@ -18,11 +18,13 @@
 
   zonnetent_my:
     sequence:
-      - service: cover.close_cover
+      # - service: cover.close_cover
+      #   entity_id: cover.zonnetent
+      # - delay:
+      #     seconds: 20
+      - service: cover.stop_cover
         entity_id: cover.zonnetent
       - delay:
           seconds: 20
-      - service: cover.stop_cover
-        entity_id: cover.zonnetent
       - service: input_boolean.turn_on
         entity_id: input_boolean.zonnetent_my

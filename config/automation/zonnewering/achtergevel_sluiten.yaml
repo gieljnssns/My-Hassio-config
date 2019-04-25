@@ -11,32 +11,29 @@
       # Sun based conditions
       - condition: numeric_state
         entity_id: sensor.sun_azimut
-        above: 80  # Sun should be above the horizon, not below.
+        above: 80  
         below: 200
       - condition: numeric_state
         entity_id: sun.sun
         value_template: '{{ state.attributes.elevation }}'
-        above: 15  # Sun should be above the horizon, not below.
-      - condition: sun
-        after: sunrise
-        after_offset: 02:00:00 # Sunrise for at least 2 hours
-      - condition: sun
-        before: sunset
-        before_offset: -02:30:00 # Some time before sunset, there's no point in rolling out anymore
+        above: 15  
+      - condition: numeric_state
+        entity_id: sensor.huidige_opbrengst
+        above: 2500
 
       # Weather based conditions
       - condition: numeric_state
         entity_id: sensor.windsnelheid
-        below: 20 # Wind strenght - I still have to tune this value
+        below: 40 # Wind strenght - I still have to tune this value
+      - condition: numeric_state
+        entity_id:  sensor.dark_sky_daytime_high_temperature_0d
+        above: 23
       - condition: numeric_state
         entity_id: sensor.dark_sky_precip_intensity
         below: 0.1 # Almost no rain at the moment
-      # - condition: numeric_state
-      #   entity_id: sensor.br_precipitation_forecast_total
-      #   below: 0.1 # Almost no rain in the next 60 minutes is predicted
       - condition: numeric_state
         entity_id: sensor.dark_sky_uv_index
-        above: 3 # This indicates direct sunlight on my location (as in: not cloudy)
+        above: 2 # This indicates direct sunlight on my location (as in: not cloudy)
 
       # Temperature based conditions
       - condition: numeric_state
@@ -46,7 +43,7 @@
         entity_id: sensor.gemiddelde_temp_beneden
         above: 22 # only if indoor temperature is above x then allowed to roll out
 
-        # Time based conditions
+      # Time based conditions
       - condition: template
         value_template: '{{ now().month > 3 }}' # Starting April
       - condition: template

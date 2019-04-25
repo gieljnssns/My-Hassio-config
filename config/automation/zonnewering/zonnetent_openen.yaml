@@ -24,7 +24,7 @@
       # Weather based conditions
       - condition: numeric_state
         entity_id: sensor.windsnelheid
-        below: 40 # Wind strenght - I still have to tune this value
+        below: 20 # Wind strenght - I still have to tune this value
       - condition: numeric_state
         entity_id:  sensor.dark_sky_daytime_high_temperature_0d
         above: 23
@@ -51,12 +51,13 @@
       - condition: template
         value_template:  ' {{ as_timestamp(now()) - as_timestamp(states.automation.zijgevel_sluiten.attributes.last_triggered) | int > 1800}}' # prevents that automation is triggered multiple times in a short amount of time. Checks last time automation is triggered, if more then 1800 seconds (30min), condition becomes TRUE
       - condition: state
-        entity_id: input_boolean.zijgevel_closed
+        entity_id: input_boolean.zonnetent_my
         state: 'off'
       # - condition: template
       #   value_template: '{{as_timestamp(states.automation.zijgevel_sluiten.attributes.last_triggered) | int <= as_timestamp(states.automation.zijgevel_openen.attributes.last_triggered) | int }}' # this automation can only be triggered if timestamp of last_triggered time is OLDER than the timestamp of last_triggered time of the "screen up" automation. This condition prevents that the automation is triggered again if sunscreen is already down. Better would be to have a real sensor checking if sunscreen is up or down but currently I don't have a sensor in place. The | int is used to catch the fact that on start up both triggers report 'none' and hence this condition would never become true. The int makes it such that value = 0 for both and hence trigger can be executed.
   action:
-    - service: script.zijgevel_sluiten
+    - service: cover.stop_cover ## MY position
+      entity_id: cover.zonnetent
     - service: notify.ios_gphone
       data:
-       message: "Het zonnescherm zijgevel gesloten"
+       message: "De zonnetent is uitgeschoven"
