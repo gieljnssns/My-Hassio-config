@@ -14,9 +14,9 @@ from homeassistant.helpers.entity import Entity
 # from homeassistant.helpers.restore_state import async_get_last_state
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = [
-    'https://github.com/gieljnssns/KostalPikoPy/archive/'
-    'master.zip#pikopy==1.1.0']
+# REQUIREMENTS = [
+#     'https://github.com/gieljnssns/KostalPikoPy/archive/'
+#     'master.zip#pikopy==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
