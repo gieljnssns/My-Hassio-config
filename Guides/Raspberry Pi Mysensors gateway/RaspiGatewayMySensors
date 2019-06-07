@@ -12,14 +12,13 @@ cd MySensors
 ./configure --help
 
 ### Ethernet ###
-./configure --my-transport=nrf24 --my-rf24-irq-pin=15 --my-gateway=ethernet --my-port=5003
+./configure --my-transport=rf24 --my-rf24-irq-pin=15 --my-gateway=ethernet --my-port=5003
 
 ### MQTT ###
 ./configure --my-gateway=mqtt --my-controller-ip-address=127.0.0.1 --my-mqtt-publish-topic-prefix=mysensors-out --my-mqtt-subscribe-topic-prefix=mysensors-in --my-mqtt-client-id=mygateway1 --my-mqtt-user=hass --my-mqtt-password=stamnummer1 --my-transport=nrf24 --my-rf24-irq-pin=15 --my-rf24-ce-pin=22 --my-rf24-cs-pin=24
 
 make
-sudo ./bin/mysgw -h
-sudo ./bin/mysgw -d
+sudo ./bin/mysgw
 sudo make install
 sudo systemctl enable mysgw.service
 sudo nano /etc/systemd/system/mysgw.service
@@ -31,10 +30,6 @@ sudo systemctl daemon-reload
 sudo systemctl restart mysgw.service
 
 
-
-
-Pi-Hole Install
-curl -sSL https://install.pi-hole.net | bash
 
 
 
