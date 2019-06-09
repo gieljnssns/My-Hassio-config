@@ -30,8 +30,8 @@ http:
   use_x_forwarded_for: true
   trusted_proxies:
     - 127.0.0.1
-    - 192.168.0.54
-    - 192.168.0.0/24
+    - 192.168.79.54
+    - 192.168.79.0/24
     - 172.30.33.0/24
     - ::1
   login_attempts_threshold: 5
@@ -145,9 +145,43 @@ somfy:
   client_id: !secret somfy_id
   client_secret: !secret somfy_secret
 
+###  Sonos  ###
+sonos:
+  media_player:
+    hosts:
+      - !secret sonos_keuken
+      - !secret sonos_badkamer
+
 ###  If This Then That ###
 ifttt:
   key: !secret ifttt_key
+
+###  EdgeOS  ###
+edgeos:
+  #Hostname / IP
+  host: !secret edge_os_host
+  #Supports SSL (true/false) - should be true
+  ssl: true
+  #Username of EdgeOS
+  username: !secret edge_os_username
+  #Password of EdgeOS
+  password: !secret edge_os_password
+  #Path to the certificate (full-chain)
+  # cert_file: !secret ssl_certificate
+  #List of interfaces
+  monitored_interfaces:
+    - eth9
+    - switch0
+    - eth1
+  #List of network devices to monitor
+  # monitored_devices:
+  #   - PC1
+  #   - PC2
+  #Optional - Allowed values:
+  #  '' - represents bytes
+  #  'K' - represents Kilobytes
+  #  'M' - represents Megabytes
+  # unit: 'M'
 
 ###  Apple Tv  ###
 # apple_tv:
@@ -165,10 +199,10 @@ ifttt:
 tts:
   - platform: google_translate
     language: 'nl'
-  # - platform: voicerss
-  #   api_key: !secret voicerss_api
-  #   language: 'nl-nl'
-  #   format: '44khz_16bit_stereo'
+  - platform: voicerss
+    api_key: !secret voicerss_api
+    language: 'nl-nl'
+    format: '44khz_16bit_stereo'
   # - platform: responsivevoice
   #   language: 'Dutch'
     # gender: 'Female'
@@ -200,6 +234,8 @@ custom_updater:
     - components
     - cards
     - python_scripts
+  component_urls:
+      - https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/edgeos.json
   card_urls:
       - https://raw.githubusercontent.com/sgttrs/lovelace-weather-card-chart/master/custom-updater.json
       - https://raw.githubusercontent.com/gurbyz/custom-cards-lovelace/master/custom_updater.json
@@ -208,10 +244,10 @@ custom_updater:
 #     - https://raw.githubusercontent.com/kalkih/mini-media-player/master/tracker.json
 
 ### Discover some devices automatically  ###
-discovery:
-  ignore:
-    - apple_tv
-    - plex_mediaserver
+# discovery:
+#   ignore:
+#     - apple_tv
+#     - plex_mediaserver
 
 ###  Config  ###
 config:
@@ -237,7 +273,10 @@ ios:
           #   # behavior: 'default'
 
 ###  Mobile app  ###
-# mobile_app:
+mobile_app:
+
+###  Zeroconf/Avahi/Bonjour  ###
+# zeroconf:
 
 ###  Recorder  ###
 recorder: !include recorder.yaml
@@ -313,14 +352,6 @@ zone:
     longitude: !secret longitude_bompa
     radius: 10
     icon: mdi:human-male
-    # track_ios: false
-
-  
-  - name: Het veld
-    latitude: !secret latitude_het_veld
-    longitude: !secret longitude_het_veld
-    radius: 100
-    icon: mdi:volleyball
     # track_ios: false
 
   
