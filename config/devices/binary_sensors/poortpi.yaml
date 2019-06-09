@@ -1,0 +1,17 @@
+- platform: mqtt
+  name: "Beweging fotocel"
+  state_topic: "PoortjePi/input/fotocel"
+  payload_on: 1
+  payload_off: 0
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: motion
+
+- platform: template
+  sensors:
+    fotocel_poort_error:
+      friendly_name: Foutcel in fout
+      entity_id: input_boolean.fotocel_poort_error
+      icon_template: mdi:alert-circle-outline
+      value_template: "{{ is_state('input_boolean.fotocel_poort_error', 'on') }}"

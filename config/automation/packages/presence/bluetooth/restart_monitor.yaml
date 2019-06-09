@@ -41,6 +41,16 @@
       to: 'on'
       for:
         minutes: 2
+    - platform: state
+      entity_id: binary_sensor.poortpi_arrive
+      to: 'on'
+      for:
+        minutes: 2
+    - platform: state
+      entity_id: binary_sensor.poortpi_depart
+      to: 'on'
+      for:
+        minutes: 2
   condition:
     - condition: template
       value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('automation.restart_monitor', 'last_triggered')) | float > 600 }}"
@@ -66,4 +76,8 @@
             input_boolean.tvpi_arrive
           {% elif trigger.entity_id == 'binary_sensor.tvpi_depart' %}
             input_boolean.tvpi_depart
+          {% elif trigger.entity_id == 'binary_sensor.poortpi_arrive' %}
+            input_boolean.poortpi_arrive
+          {% elif trigger.entity_id == 'binary_sensor.poortpi_depart' %}
+            input_boolean.poortpi_depart
           {% endif %}

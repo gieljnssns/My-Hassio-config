@@ -39,6 +39,16 @@
   payload_not_available: "offline"
   json_attributes_topic: 'monitor/tvPi/gphone'
 
+- platform: mqtt
+  state_topic: 'monitor/Pi-Poortje/gphone'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'gPhone PoortPi'
+  availability_topic: "monitor/Pi-Poortje/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes_topic: 'monitor/Pi-Poortje/gphone'
+
 
 # Forerunner
 # - platform: mqtt

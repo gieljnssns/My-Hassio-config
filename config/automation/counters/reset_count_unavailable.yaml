@@ -15,10 +15,19 @@
       to: 'tvPi'
     - platform: state
       entity_id: input_select.reset_counter
+      to: 'PoortPi'
+    - platform: state
+      entity_id: input_select.reset_counter
       to: 'Sonos Keuken'
     - platform: state
       entity_id: input_select.reset_counter
       to: 'Sonos Badkamer'
+    - platform: state
+      entity_id: input_select.reset_counter
+      to: 'Esp Keuken'
+    - platform: state
+      entity_id: input_select.reset_counter
+      to: 'Esp Living'
   action:
     - service: counter.reset
       data_template:
@@ -31,10 +40,16 @@
              counter.living
           {% elif states("input_select.reset_counter") == 'tvPi' %}
              counter.tvpi
+          {% elif states("input_select.reset_counter") == 'PoortPi' %}
+             counter.poortpi
           {% elif states("input_select.reset_counter") == 'Sonos Keuken' %}
              counter.sonos_keuken
           {% elif states("input_select.reset_counter") == 'Sonos Badkamer' %}
              counter.sonos_badkamer
+          {% elif states("input_select.reset_counter") == 'Esp Keuken' %}
+             counter.esp_keuken
+          {% elif states("input_select.reset_counter") == 'Esp Living' %}
+             counter.esp_living
           {% endif %}
     - delay: '00:00:05'
     - service: input_select.select_option

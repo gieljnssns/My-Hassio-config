@@ -14,10 +14,19 @@
       entity_id: sensor.mphone_tvpi
       to: 'unavailable'
     - platform: state
+      entity_id: sensor.mphone_poortpi
+      to: 'unavailable'
+    - platform: state
       entity_id: media_player.keuken
       to: 'unavailable'
     - platform: state
       entity_id: media_player.badkamer
+      to: 'unavailable'
+    - platform: state
+      entity_id: binary_sensor.living_beweging
+      to: 'unavailable'
+    - platform: state
+      entity_id: binary_sensor.keuken_beweging_2
       to: 'unavailable'
   action:
     - service: counter.increment
@@ -31,10 +40,16 @@
              counter.living
           {% elif trigger.entity_id == 'sensor.mphone_tvpi' %}
              counter.tvpi
+          {% elif trigger.entity_id == 'sensor.mphone_poortpi' %}
+             counter.poortpi
           {% elif trigger.entity_id == 'media_player.keuken' %}
              counter.sonos_keuken
           {% elif trigger.entity_id == 'media_player.badkamer' %}
              counter.sonos_badkamer
+          {% elif trigger.entity_id == 'binary_sensor.living_beweging' %}
+             counter.esp_living
+          {% elif trigger.entity_id == 'binary_sensor.keuken_beweging_2' %}
+             counter.esp_keuken
           {% endif %}
     
     

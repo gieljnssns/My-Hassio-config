@@ -1,0 +1,25 @@
+- platform: mqtt
+  state_topic: 'PoortjePi/input/temperatuur'
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '°C'
+  name: 'Temperatuur poort'
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'PoortjePi/input/luchtvochtigheid'
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '%'
+  name: 'Luchtvochtigheid poort'
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'PoortjePi/input/fotocel'
+  value_template: '{{ value_json }}'
+  name: 'Beweging poort'
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
