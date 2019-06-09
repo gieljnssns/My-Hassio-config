@@ -1,0 +1,16 @@
+  - platform: template
+    sensors:
+      entity_id_for_bt_scanning:
+        value_template: >
+          {{ ((is_state('binary_sensor.netatmo_webhook_trigger', 'on') 
+               or is_state('binary_sensor.den_hof_outdoor_human', 'on')
+               or is_state('binary_sensor.volk_in_den_hof_homekit', 'on')
+               or is_state('binary_sensor.voordeur_open', 'on')
+               or is_state('binary_sensor.giel_bayesian_on_bluetooth_off', 'on')
+               or is_state('binary_sensor.martine_bayesian_on_bluetooth_off', 'on')
+               or is_state('binary_sensor.giel_bayesian_off_bluetooth_on', 'on')
+               or is_state('binary_sensor.martine_bayesian_off_bluetooth_on', 'on'))
+               and is_state('input_boolean.fotocel_poort_error', 'on'))
+                 or (is_state('binary_sensor.beweging_fotocel', 'on')
+                     and is_state('input_boolean.fotocel_poort_error', 'off'))
+              }}
