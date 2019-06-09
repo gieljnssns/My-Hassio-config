@@ -1,6 +1,6 @@
   sonos_pauze_spreek:
     sequence:
-      - service: media_player.sonos_snapshot
+      - service: sonos.snapshot
         data_template:
           entity_id: "{{ sonos_entity }}"
       - delay: '00:00:03'
@@ -17,7 +17,7 @@
       - delay: '00:00:02'
       - wait_template: "{{ states('binary_sensor.keuken_not_playing') == 'on' }}"
       - delay: '00:00:01'
-      - service: media_player.sonos_restore
+      - service: sonos.restore
         data_template:
           entity_id: "{{ sonos_entity }}"
       - delay: '00:00:03'
