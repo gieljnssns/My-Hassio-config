@@ -15,11 +15,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.event import async_track_time_interval
 
-VERSION = '4.2.17'
+VERSION = '5.1.0'
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyupdate==1.3.6']
+REQUIREMENTS = ['pyupdate==1.4.0']
 
 CONF_TRACK = 'track'
 CONF_HIDE_SENSOR = 'hide_sensor'
@@ -118,7 +118,7 @@ async def async_setup(hass, config):
         if 'components' in conf_track:
             await components_controller.update_all()
         if 'python_scripts' in conf_track:
-            python_scripts_controller.update_all()
+            await python_scripts_controller.update_all()
 
     async def install_service(call):
         """Install single component/card."""
@@ -312,9 +312,7 @@ class CustomCardsView(HomeAssistantView):
                 path=path)
             _LOGGER.debug(msg)
             resp = web.FileResponse(file)
-            resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
-            resp.headers["Pragma"] = "no-cache"
-            resp.headers["Expires"] = "0"
+            resp.headers["Cache-Control"] = "max-age=0, must-revalidate"
             return resp
         else:
             _LOGGER.error("Tried to serve up '%s' but it does not exist", file)
