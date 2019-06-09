@@ -1,6 +1,6 @@
   sonos_spreek:
     sequence:
-      - service: media_player.sonos_snapshot
+      - service: sonos.snapshot
         data_template:
           entity_id: >
             {% if is_state('input_select.welke_sonos', 'Keuken') %}
@@ -68,7 +68,7 @@
           {% else %}
               False
           {% endif %}
-      - service: media_player.sonos_restore
+      - service: sonos.restore
         data_template:
           entity_id: >
             {% if is_state('input_select.welke_sonos', 'Keuken') %}
