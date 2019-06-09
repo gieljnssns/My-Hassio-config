@@ -17,9 +17,14 @@
         entity_id: sun.sun
         value_template: '{{ state.attributes.elevation }}'
         above: 15  
-      - condition: numeric_state
-        entity_id: sensor.huidige_opbrengst
-        above: 2500
+      - condition: or
+        conditions:
+          - condition: numeric_state
+            entity_id: sensor.huidige_opbrengst
+            above: 2500
+          - condition: numeric_state
+            entity_id: sensor.opbrengst_solaredge_kostal
+            above: 2500
 
       # Weather based conditions
       - condition: numeric_state
@@ -57,6 +62,6 @@
       #   value_template: '{{as_timestamp(states.automation.achtergevel_sluiten.attributes.last_triggered) | int <= as_timestamp(states.automation.achtergevel_openen.attributes.last_triggered) | int }}' # this automation can only be triggered if timestamp of last_triggered time is OLDER than the timestamp of last_triggered time of the "screen up" automation. This condition prevents that the automation is triggered again if sunscreen is already down. Better would be to have a real sensor checking if sunscreen is up or down but currently I don't have a sensor in place. The | int is used to catch the fact that on start up both triggers report 'none' and hence this condition would never become true. The int makes it such that value = 0 for both and hence trigger can be executed.
   action:
     - service: script.achtergevel_sluiten
-    - service: notify.ios_gphone
+    - service: notify.mobile_app_gphone
       data:
        message: "Het zonnescherm achtergevel gesloten"

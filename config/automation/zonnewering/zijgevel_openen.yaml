@@ -16,7 +16,7 @@
     above: 0.25 # Rain at the moment
   - platform: numeric_state
     entity_id: sensor.dark_sky_uv_index
-    below: 2
+    below: 1
     for:
      minutes: 5 # Sunlight below X for Y minutes
 
@@ -31,6 +31,6 @@
 
   action:
     - service: script.zijgevel_openen 
-    - service: notify.ios_gphone
+    - service: notify.mobile_app_gphone
       data_template:
        message: "Het zonnescherm zijgevel geopend, reden {{trigger.entity_id}} "

@@ -8,7 +8,7 @@
   #   offset: -02:30:00 #2,5 hours before sunset, sunscreen is going up again (might want to change depending on location)
   - platform: numeric_state
     entity_id: sensor.sun_azimut
-    above: 230
+    above: 245
     
     # Weather based triggers
   - platform: numeric_state
@@ -22,7 +22,7 @@
   #   above: 0.2 # Rain predicted in next 60 minutes
   - platform: numeric_state
     entity_id: sensor.dark_sky_uv_index
-    below: 2
+    below: 1
     for:
      minutes: 5 # Sunlight below X for Y minutes
   # - platform: numeric_state
@@ -42,6 +42,6 @@
 
   action:
     - service: script.achtergevel_openen 
-    - service: notify.ios_gphone
+    - service: notify.mobile_app_gphone
       data_template:
        message: "Het zonnescherm achtergevel geopend, reden {{trigger.entity_id}} "

@@ -1,4 +1,4 @@
-  alias: Zijgevel openen #Sunscreen up/inklappen
+  alias: Zonnetent inschuiven #Sunscreen up/inklappen
   initial_state: 'on' #on reboot HA or reloading of automations, automation is ON
   trigger:
 
@@ -16,7 +16,7 @@
     above: 0.25 # Rain at the moment
   - platform: numeric_state
     entity_id: sensor.dark_sky_uv_index
-    below: 2
+    below: 1
     for:
      minutes: 5 # Sunlight below X for Y minutes
 
@@ -30,8 +30,7 @@
         state: 'on'
 
   action:
-    - service: cover.open_cover
-      entity_id: cover.zonnetent_temp
-    - service: notify.ios_gphone
+    - service: script.zonnetent_openen
+    - service: notify.mobile_app_gphone
       data_template:
        message: "De zonnetent is ingeschoven, reden {{trigger.entity_id}} "
