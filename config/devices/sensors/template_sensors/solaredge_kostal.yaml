@@ -1,0 +1,6 @@
+  - platform: template
+    sensors:
+      opbrengst_solaredge_kostal:
+        friendly_name: Opbrengst Kostal+Solaredge
+        unit_of_measurement: 'W'
+        value_template: "{{ states('sensor.solaredge_current_power') |int + states('sensor.kostal_piko_current_power') |int }}"
