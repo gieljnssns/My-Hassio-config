@@ -14,7 +14,15 @@
           volume_level: "{{ volume }}"
       - delay: '00:00:01'
       # - service: tts.voicerss_say
-      - service: tts.google_translate_say
+      # - service: tts.google_translate_say
+      - service_template: >
+          {% if is_state('input_select.tts', 'VoiceRSS') %}
+            tts.voicerss_say
+          {% elif is_state('input_select.tts', 'Google') %}
+            tts.google_translate_say
+          {% else %}
+              False
+          {% endif %}
         data_template:
           entity_id: "{{ sonos_entity }}"
           message: "{{ speech_message }}"
