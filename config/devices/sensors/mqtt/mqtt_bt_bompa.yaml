@@ -10,6 +10,16 @@
   json_attributes_topic: 'monitor/Keuken/bompa'
 
 - platform: mqtt
+  state_topic: 'monitor/Badkamer/bompa'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'Bompa badkamer'
+  availability_topic: "monitor/Badkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes_topic: 'monitor/Badkamer/bompa'
+
+- platform: mqtt
   state_topic: 'monitor/Living/bompa'
   value_template: '{{ value_json.confidence }}'
   unit_of_measurement: '%'

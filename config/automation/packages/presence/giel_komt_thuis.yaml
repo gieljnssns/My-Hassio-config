@@ -1,9 +1,6 @@
   alias: Giel komt thuis
   initial_state: 'on' 
   trigger:
-    # - platform: state
-    #   entity_id: device_tracker.gphone
-    #   to: 'home'
     - platform: state
       entity_id: input_boolean.gielhomekit
       to: 'on'
@@ -18,21 +15,4 @@
     - service: input_boolean.turn_on
       entity_id:
         - input_boolean.gielthuis
-    - service: script.request_gphone_update
-    # - condition: and
-    #   conditions:
-    #     - condition: template
-    #       value_template: "{{ trigger.entity_id == 'device_tracker.gphone' }}"
-    # - service: script.mqtt_arrive_script
-    #   data_template:
-    #       identity: '{"identity":"gPhone"}'
-    # - service_template: >
-    #     {% if trigger.entity_id == 'device_tracker.gphone' %}
-    #       script.mqtt_arrive_script
-    #     {% endif %}
-    #   data_template:
-    #       identity: '{"identity":"gPhone"}'
-    # - service: mqtt.publish
-    #   data_template:
-    #     topic: 'location/giel' 
-    #     payload: 'home'
+    # - service: script.request_gphone_update

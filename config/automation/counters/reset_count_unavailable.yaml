@@ -9,6 +9,9 @@
       to: 'Keuken'
     - platform: state
       entity_id: input_select.reset_counter
+      to: 'Badkamer'
+    - platform: state
+      entity_id: input_select.reset_counter
       to: 'Living'
     - platform: state
       entity_id: input_select.reset_counter
@@ -36,6 +39,8 @@
              counter.garage
           {% elif states("input_select.reset_counter") == 'Keuken' %}
              counter.keuken
+          {% elif states("input_select.reset_counter") == 'Badkamer' %}
+             counter.badkamer
           {% elif states("input_select.reset_counter") == 'Living' %}
              counter.living
           {% elif states("input_select.reset_counter") == 'tvPi' %}

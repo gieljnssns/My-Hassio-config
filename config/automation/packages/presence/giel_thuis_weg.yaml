@@ -13,8 +13,8 @@
     - platform: state
       entity_id: input_boolean.gphone_bluetooth
       to: 'off'
-      for:
-        seconds: 30
+      # for:
+      #   seconds: 30
   condition:
     condition: state
     entity_id: input_boolean.gielthuis
@@ -22,12 +22,8 @@
   action:
     - service: input_boolean.turn_off
       entity_id: input_boolean.gielthuis
-    - service: input_boolean.turn_off
-      entity_id: input_boolean.giel_komt_thuis
-    - service: homeassistant.turn_off
-      entity_id: script.set_arrive_sensor_giel
-    - service: script.request_gphone_update
-    # - service: mqtt.publish
-    #   data_template:
-    #     topic: 'location/giel' 
-    #     payload: 'not_home'
+    # - service: input_boolean.turn_off
+    #   entity_id: input_boolean.giel_komt_thuis
+    # - service: homeassistant.turn_off
+    #   entity_id: script.set_arrive_sensor_giel
+    # - service: script.request_gphone_update

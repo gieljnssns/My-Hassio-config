@@ -1,0 +1,41 @@
+  giel_bt_not_home:
+    sequence:
+      - delay:
+          seconds: 30
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.gphone_bluetooth
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.giel_komt_thuis
+      - service: homeassistant.turn_off
+        entity_id: script.set_arrive_sensor_giel
+      - service: script.request_gphone_update
+      - service: mqtt.publish
+        data_template:
+          topic: 'monitor/Badkamer/gphone'
+          retain: true
+          payload_template: "{\"confidence\":\"0\", \"type\":\"retained from away\"}"
+      - service: mqtt.publish
+        data_template:
+          topic: 'monitor/Living/gphone'
+          retain: true
+          payload_template: "{\"confidence\":\"0\", \"type\":\"retained from away\"}"
+      - service: mqtt.publish
+        data_template:
+          topic: 'monitor/Garage/gphone'
+          retain: true
+          payload_template: "{\"confidence\":\"0\", \"type\":\"retained from away\"}"
+      - service: mqtt.publish
+        data_template:
+          topic: 'monitor/tvPi/gphone'
+          retain: true
+          payload_template: "{\"confidence\":\"0\", \"type\":\"retained from away\"}"
+      - service: mqtt.publish
+        data_template:
+          topic: 'monitor/Pi-Poortje/gphone'
+          retain: true
+          payload_template: "{\"confidence\":\"0\", \"type\":\"retained from away\"}"
+      - service: mqtt.publish
+        data_template:
+          topic: 'monitor/Keuken/gphone'
+          retain: true
+          payload_template: "{\"confidence\":\"0\", \"type\":\"retained from away\"}"

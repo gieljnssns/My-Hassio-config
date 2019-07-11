@@ -13,8 +13,8 @@
     - platform: state
       entity_id: input_boolean.mphone_bluetooth
       to: 'off'
-      for:
-        seconds: 30
+      # for:
+      #   seconds: 30
   condition:
     condition: and
     conditions:
@@ -27,12 +27,8 @@
   action:
     - service: input_boolean.turn_off
       entity_id: input_boolean.martinethuis
-    - service: input_boolean.turn_off
-      entity_id: input_boolean.martine_komt_thuis
-    - service: homeassistant.turn_off
-      entity_id: script.set_arrive_sensor_martine
-    - service: script.request_mphone_update
-    # - service: mqtt.publish
-    #   data_template:
-    #     topic: 'location/martine' 
-    #     payload: 'not_home'
+    # - service: input_boolean.turn_off
+    #   entity_id: input_boolean.martine_komt_thuis
+    # - service: homeassistant.turn_off
+    #   entity_id: script.set_arrive_sensor_martine
+    # - service: script.request_mphone_update

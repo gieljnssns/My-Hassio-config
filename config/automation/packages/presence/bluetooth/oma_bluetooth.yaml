@@ -6,8 +6,8 @@
   action:
     - service_template: >
         {% if states.sensor.oma_bt_aanwezig.state | float > 43 %}
-           input_boolean.turn_on
+           script.oma_bt_aanwezig
         {% else %}
-           input_boolean.turn_off
+           script.oma_bt_niet_aanwezig
         {% endif %}
-      entity_id: input_boolean.oma_bt_aanwezig
+      # entity_id: input_boolean.oma_bt_aanwezig

@@ -1,9 +1,6 @@
   alias: Martine komt thuis
   initial_state: 'on' 
   trigger:
-    # - platform: state
-    #   entity_id: device_tracker.mphone
-    #   to: 'home'
     - platform: state
       entity_id: input_boolean.martinehomekit
       to: 'on'
@@ -18,21 +15,4 @@
     - service: input_boolean.turn_on
       entity_id:
         - input_boolean.martinethuis
-    - service: script.request_mphone_update
-    # - condition: and
-    #   conditions:
-    #     - condition: template
-    #       value_template: "{{ trigger.entity_id == 'device_tracker.mphone' }}"
-    # - service: script.mqtt_arrive_script
-    #   data_template:
-    #       identity: '{"identity":"mPhone"}'
-    # - service_template: >
-    #     {% if trigger.entity_id == 'device_tracker.mphone' %}
-    #       script.mqtt_arrive_script
-    #     {% endif %}
-    #   data_template:
-    #       identity: '{"identity":"mPhone"}'
-    # - service: mqtt.publish
-    #   data_template:
-    #     topic: 'location/martine' 
-    #     payload: 'home'
+    # - service: script.request_mphone_update

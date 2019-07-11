@@ -1,0 +1,41 @@
+  martine_bt_not_home:
+    sequence:
+      - delay:
+          seconds: 30
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.mphone_bluetooth
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.martine_komt_thuis
+      - service: homeassistant.turn_off
+        entity_id: script.set_arrive_sensor_martine
+      - service: script.request_mphone_update
+      - service: mqtt.publish
+        data_template:
+          topic: 'monitor/Badkamer/mphone'
+          retain: true
+          payload_template: "{\"confidence\":\"0\", \"type\":\"retained from away\"}"
+      - service: mqtt.publish
+        data_template:
+          topic: 'monitor/Living/mphone'
+          retain: true
+          payload_template: "{\"confidence\":\"0\", \"type\":\"retained from away\"}"
+      - service: mqtt.publish
+        data_template:
+          topic: 'monitor/Garage/mphone'
+          retain: true
+          payload_template: "{\"confidence\":\"0\", \"type\":\"retained from away\"}"
+      - service: mqtt.publish
+        data_template:
+          topic: 'monitor/tvPi/mphone'
+          retain: true
+          payload_template: "{\"confidence\":\"0\", \"type\":\"retained from away\"}"
+      - service: mqtt.publish
+        data_template:
+          topic: 'monitor/Pi-Poortje/mphone'
+          retain: true
+          payload_template: "{\"confidence\":\"0\", \"type\":\"retained from away\"}"
+      - service: mqtt.publish
+        data_template:
+          topic: 'monitor/Keuken/mphone'
+          retain: true
+          payload_template: "{\"confidence\":\"0\", \"type\":\"retained from away\"}"

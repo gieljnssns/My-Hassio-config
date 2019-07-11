@@ -3,21 +3,17 @@
   trigger:
     - platform: state
       entity_id: sensor.gphone_bt_thuis
+  condition:
+    condition: and
+    conditions:
+      - condition: numeric_state
+        entity_id: sensor.uptime_in_uren
+        above: 0.06
   action:
     - service_template: >
-        {% if states.sensor.gphone_bt_thuis.state | float > 43 %}
-           input_boolean.turn_on
+        {% if states.sensor.gphone_bt_thuis.state | float < 43 %}
+           script.giel_bt_not_home
         {% else %}
-           input_boolean.turn_off
+           script.giel_bt_home
         {% endif %}
-      entity_id: input_boolean.gphone_bluetooth
-    - service: device_tracker.see
-      data_template:
-        dev_id: giel_bt_monitor
-        source_type: bluetooth
-        location_name: >-
-          {% if states.sensor.gphone_bt_thuis.state | float > 43 %}
-             home
-          {% else %}
-             not_home
-          {% endif %}
+      # entity_id: input_boolean.gphone_bluetooth
