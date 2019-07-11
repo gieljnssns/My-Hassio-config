@@ -9,6 +9,11 @@
             {% else %}
                  mdi:fan-off
             {% endif %}
+      
+      buiten_frisser_dan_binnen:
+        friendly_name: Buiten frisser
+        device_class: cold
+        value_template: "{{ (states('sensor.gemiddelde_temp_binnen') | float - states('sensor.buitentemperatuur_gefilterd') | float) | float > 0.5 }}"
 
       binnen_warm:
         device_class: heat

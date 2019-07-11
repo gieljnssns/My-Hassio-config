@@ -2,7 +2,7 @@
   initial_state: 'on' #on reboot HA or reloading of automations, automation is ON
   trigger:
     - platform: time_pattern
-      minutes: '/5'
+      minutes: '/4'
       seconds: 00
   condition:
     condition: and # all conditions need to be TRUE before action is executed.
@@ -11,7 +11,7 @@
       # Sun based conditions
       - condition: numeric_state
         entity_id: sensor.sun_azimut
-        above: 120 # 
+        above: 115 # 
         below: 270
       - condition: numeric_state
         entity_id: sun.sun
@@ -21,32 +21,32 @@
         conditions:
           - condition: numeric_state
             entity_id: sensor.huidige_opbrengst
-            above: 2500
+            above: 1200
           - condition: numeric_state
             entity_id: sensor.opbrengst_solaredge_kostal
-            above: 2500
+            above: 1200
 
       # Weather based conditions
       - condition: numeric_state
         entity_id: sensor.windsnelheid
         below: 20 # Wind strenght - I still have to tune this value
       - condition: numeric_state
-        entity_id:  sensor.dark_sky_daytime_high_temperature_0d
-        above: 23
+        entity_id: sensor.ba_precipitation_forecast_average
+        below: 0.20 # Rain the next 15 min
       - condition: numeric_state
-        entity_id: sensor.dark_sky_precip_intensity
-        below: 0.1 # Almost no rain at the moment
-      - condition: numeric_state
-        entity_id: sensor.dark_sky_uv_index
-        above: 2 # This indicates direct sunlight on my location (as in: not cloudy)
+        entity_id: sensor.dark_sky_uv_index_0d
+        above: 3 # This indicates direct sunlight on my location (as in: not cloudy)
 
       # Temperature based conditions
       - condition: numeric_state
-        entity_id: sensor.garage_5_0
+        entity_id: sensor.buitentemperatuur_gefilterd
         above: 20 # only if outdoor temperature is above x then allowed to roll out
       - condition: numeric_state
         entity_id: sensor.gemiddelde_temp_beneden
         above: 22 # only if indoor temperature is above x then allowed to roll out
+      - condition: numeric_state
+        entity_id:  sensor.dark_sky_daytime_high_temperature_0d
+        above: 23
 
       # Time based conditions
       - condition: template
@@ -54,16 +54,22 @@
       - condition: template
         value_template: '{{ now().month < 10 }}' # Ending October
       - condition: template
-        value_template:  ' {{ as_timestamp(now()) - as_timestamp(states.automation.zonnetent_uitschuiven.attributes.last_triggered) | int > 1800}}' # prevents that automation is triggered multiple times in a short amount of time. Checks last time automation is triggered, if more then 1800 seconds (30min), condition becomes TRUE
+        value_template: >
+          {{  is_state('input_boolean.zonnetent_my', 'off')  }}
+  
+      # No others screens are closing
       - condition: state
-        entity_id: input_boolean.zonnetent_my
-        state: 'off'
-      # - condition: template
-      #   value_template: '{{as_timestamp(states.automation.zijgevel_sluiten.attributes.last_triggered) | int <= as_timestamp(states.automation.zijgevel_openen.attributes.last_triggered) | int }}' # this automation can only be triggered if timestamp of last_triggered time is OLDER than the timestamp of last_triggered time of the "screen up" automation. This condition prevents that the automation is triggered again if sunscreen is already down. Better would be to have a real sensor checking if sunscreen is up or down but currently I don't have a sensor in place. The | int is used to catch the fact that on start up both triggers report 'none' and hence this condition would never become true. The int makes it such that value = 0 for both and hence trigger can be executed.
+        entity_id: script.zijgevel_sluiten
+        state: "off"
+      - condition: state
+        entity_id: script.achtergevel_sluiten
+        state: "off"
+
   action:
-    # - service: cover.stop_cover ## MY position
-    #   entity_id: cover.zonnetent
     - service: script.zonnetent_my ## MY position
     - service: notify.mobile_app_gphone
       data:
        message: "De zonnetent is uitgeschoven"
+    - delay:
+        minutes: 3
+    - service: script.zonnetent_my ## MY position

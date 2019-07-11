@@ -1,7 +1,7 @@
 """Support for Buienalarm weather service."""
 # import asyncio
-from datetime import datetime, timedelta
-import time
+# from datetime import datetime, timedelta
+# import time
 import logging
 
 # import async_timeout
@@ -11,11 +11,11 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
     CONF_NAME, TEMP_CELSIUS)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+# from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 # from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.util import dt as dt_util
+# from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
