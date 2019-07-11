@@ -31,9 +31,19 @@ http:
   trusted_proxies:
     - 127.0.0.1
     - 192.168.79.54
+    # - 192.168.79.1 #
+    # - 192.168.69.1 #
     - 192.168.79.0/24
+    # - 192.168.69.0/24 #
     - 172.30.33.0/24
     - ::1
+    # - 172.17.0.0/16 #
+    # - 172.30.32.0/23 #
+    # - 172.17.0.1 #
+    # - 172.30.32.1 #
+    # - 172.30.33.1 #
+    # - 172.30.32.0 #
+    # - 172.17.0.3 #
   login_attempts_threshold: 5
 
 ####################################################
@@ -152,27 +162,42 @@ sonos:
       - !secret sonos_keuken
       - !secret sonos_badkamer
 
+###  Hue  ###
+hue:
+  bridges:
+    - host: 192.168.79.26
+      filename: phue_beneden.conf
+      allow_hue_groups: false
+      allow_unreachable: false
+    - host: 192.168.79.36
+      filename: phue_boven.conf
+      allow_hue_groups: false
+      allow_unreachable: false
+
 ###  If This Then That ###
 ifttt:
   key: !secret ifttt_key
 
+###  Shelly  ###
+shelly:
+
 ###  EdgeOS  ###
-edgeos:
-  #Hostname / IP
-  host: !secret edge_os_host
-  #Supports SSL (true/false) - should be true
-  ssl: true
-  #Username of EdgeOS
-  username: !secret edge_os_username
-  #Password of EdgeOS
-  password: !secret edge_os_password
-  #Path to the certificate (full-chain)
-  # cert_file: !secret ssl_certificate
-  #List of interfaces
-  monitored_interfaces:
-    - eth9
-    - switch0
-    - eth1
+# edgeos:
+#   #Hostname / IP
+#   host: !secret edge_os_host
+#   #Supports SSL (true/false) - should be true
+#   ssl: true
+#   #Username of EdgeOS
+#   username: !secret edge_os_username
+#   #Password of EdgeOS
+#   password: !secret edge_os_password
+#   #Path to the certificate (full-chain)
+#   # cert_file: !secret ssl_certificate
+#   #List of interfaces
+#   monitored_interfaces:
+#     - eth9
+#     - switch0
+#     - eth1
   #List of network devices to monitor
   # monitored_devices:
   #   - PC1

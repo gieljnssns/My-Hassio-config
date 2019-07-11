@@ -3,11 +3,14 @@
   trigger:
     - platform: time
       at: '16:00:00'
-    - platform: state
-      entity_id: alarm_control_panel.ha_alarm
-      to: 'armed_night'
-      for:
-        minutes: 15
+    # - platform: state
+    #   entity_id: alarm_control_panel.ha_alarm
+    #   to: 'armed_night'
+    #   for:
+    #     minutes: 15
+    - platform: numeric_state
+      entity_id: sensor.shelly_shplg_s_7ae478_watt
+      below: 5
   condition:
     condition: and
     conditions:
@@ -25,10 +28,10 @@
         state: 'off'
   action:
     - service_template: >
-        {% if trigger.entity_id == 'alarm_control_panel.ha_alarm' %}
+        {% if trigger.entity_id == 'sensor.shelly_shplg_s_7ae478_watt' %}
           switch.turn_off
         {% else %}
           switch.turn_on
         {% endif %}
-      entity_id: switch.smappee_reserve_3
+      entity_id: switch.shelly_shplg_s_7ae478
         
