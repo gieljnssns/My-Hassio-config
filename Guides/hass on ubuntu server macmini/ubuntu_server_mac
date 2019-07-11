@@ -1,0 +1,183 @@
+# Ubuntu installeren
+https://tutorials.ubuntu.com/tutorial/tutorial-create-a-usb-stick-on-macos#0
+
+# Timezone
+sudo dpkg-reconfigure tzdata
+
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install python3 python3-venv python3-pip libffi-dev libssl-dev
+
+#  Update python
+#sudo apt update
+#sudo apt install software-properties-common
+#apt list --upgradable
+#sudo apt upgrade
+#sudo add-apt-repository ppa:deadsnakes/ppa
+#sudo apt install python3.7
+#sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1
+#sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 2
+#sudo update-alternatives --config python3
+
+#python3 --version
+
+#  HA
+https://www.google.com/search?source=hp&ei=5TIGXfnJDc_fwQLlwIWYCA&q=install+home+assistant+ubuntu+server+18.04&oq=home-assistant+ubuntu+server&gs_l=psy-ab.3.3.0i22i30l4.7846.17587..20603...0.0..0.64.1471.30......0....1..gws-wiz.....0..0i131j0.KPq8Jvlr10k#kpvalbx=1
+sudo apt-get install python3-pip python3-venv
+sudo apt-get install build-essential libssl-dev libffi-dev python3-dev
+#sudo apt-get install python3.7-venv
+sudo useradd -rm homeassistant
+cd /srv
+sudo mkdir homeassistant
+sudo chown homeassistant:homeassistant homeassistant
+sudo -u homeassistant -H -s
+cd /srv/homeassistant
+python3 -m venv .
+source bin/activate
+python3 -m pip install wheel
+pip3 install homeassistant
+
+su giel
+
+#  HA autostart
+whereis hass
+    hass: /srv/homeassistant/bin/hass
+sudo nano -w /etc/systemd/system/home-assistant@homeassistant.service
+    [Unit]
+    Description=Home Assistant
+    After=network-online.target
+
+    [Service]
+    Type=simple
+    User=%i
+    ExecStart=/srv/homeassistant/bin/hass -c "/home/%i/.homeassistant"
+    Restart=on-failure
+    RestartSec=5s
+
+    [Install]
+    WantedBy=multi-user.target
+
+sudo systemctl --system daemon-reload
+sudo systemctl enable home-assistant@homeassistant
+sudo systemctl start home-assistant@homeassistant
+sudo systemctl status home-assistant@homeassistant
+
+    https://www.home-assistant.io/docs/autostart/systemd/
+
+#########################################################  Upgrade Home-Assistant  #########################################
+sudo -u homeassistant -H -s
+source /srv/homeassistant/bin/activate
+pip3 install --upgrade homeassistant
+#############################################################################################################################
+
+#########################################################  Upgrade Python  ##################################################
+sudo systemctl stop home-assistant@homeassistant.service
+sudo apt-get install build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev
+cd /tmp
+wget https://www.python.org/ftp/python/3.7.3/Python-3.7.3.tgz
+tar xzvf Python-3.7.3.tgz
+cd Python-3.7.3/
+./configure --enable-loadable-sqlite-extensions
+make -j 4
+sudo make install
+python3 -V
+cd /home/homeassistant/
+sudo -u homeassistant -H -s
+source /srv/homeassistant/bin/activate
+pip3 freeze —local > requirements.txt
+deactivate
+su giel
+sudo mv /srv/homeassistant /srv/oldhomeassistant
+cd /srv
+sudo mkdir homeassistant
+sudo chown homeassistant:homeassistant homeassistant
+sudo -u homeassistant -H -s
+cd /srv/homeassistant
+python3.7 -m venv .
+source /srv/homeassistant/bin/activate
+cd /home/homeassistant
+python3 -m pip install wheel
+pip3 install -r requirements.txt
+# if anypackage is giving you any problem just comment them out in requirements.txt and try again and install them afterwards.
+# nano requirements.txt
+deactivate
+su giel
+sudo systemctl start home-assistant@homeassistant.service
+#############################################################################################################################
+
+
+
+#AFTER UPGRADING PYTHON
+
+#If you’ve upgraded Python (for example, you were running 3.7.1 and now you’ve installed 3.7.3) then you’ll need to build a new virtual environment. Simply rename your existing virtual environment directory:
+
+#$ mv homeassistant homeassistant.old
+#Then follow the Install(https://www.home-assistant.io/docs/installation/virtualenv/#install) steps again, being sure to use the newly installed version of Python.
+
+
+# Samba
+https://linuxize.com/post/how-to-install-and-configure-samba-on-ubuntu-18-04/
+
+# samba user
+sudo smbpasswd -a giel
+sudo smbpasswd -e giel
+
+[Hass]
+    comment = Samba for Hass
+    path = /home/giel/.homeassistant
+    writeable = yes
+    read only = no
+    browsable = yes
+    force create mode = 0660
+    force directory mode = 2770
+    create mask = 0775
+    directory mask = 0775
+    valid users = <USER>
+
+[Python3 venv]
+    comment = Samba Python3
+    path = /home/giel/homeassistant/lib/python3.7
+    writeable = yes
+    read only = no
+    browsable = yes
+    force create mode = 0660
+    force directory mode = 2770
+    create mask = 0775
+    directory mask = 0775
+    valid users = <USER>
+
+
+sudo service smbd restart
+
+
+## Duckdns
+https://www.duckdns.org/install.jsp?tab=linux-cron&domain=
+
+## Caddy ##
+CADDY_TELEMETRY=on curl https://getcaddy.com | bash -s personal hook.service
+
+mkdir Caddy
+cd Caddy
+echo xxxxxxxxxxxx.duckdns.org > Caddyfile
+sudo nano Caddyfile
+
+xxxxxxxxxxxx.duckdns.org {
+    header / {
+    Strict-Transport-Security "max-age=31536000; includeSubdomains"
+    X-XSS-Protection "1; mode=block"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "SAMEORIGIN"
+    Referrer-Policy "same-origin"
+}
+    proxy / localhost:8123 {
+        websocket
+        transparent
+    }
+}
+
+sudo caddy -service install -agree -email xxxxxxxx@xxx.com -conf /home/giel/Caddy/Caddyfile
+
+
+
+# change dns
+# sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf

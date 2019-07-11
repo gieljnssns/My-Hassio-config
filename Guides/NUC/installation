@@ -1,0 +1,49 @@
+
+https://dew-itwebservices.com.au/installing-and-running-hassio-in-docker-on-an-intel-nuc/
+
+
+sudo nano /etc/apt/sources.list
+deb http://deb.debian.org/debian/ stable main contrib non-free
+deb http://deb.debian.org/debian/ stable-updates main contrib non-free
+deb http://deb.debian.org/debian-security stable/updates main
+deb http://ftp.debian.org/debian buster-backports main
+
+sudo apt update
+sudo apt upgrade
+
+sudo apt install firmware-misc-nonfree
+sudo apt install firmware-iwlwifi
+
+https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi
+https://github.com/wkennington/linux-firmware/blob/master/i915/kbl_dmc_ver1_04.bin
+sudo dmesg
+
+
+# mount usb
+lsblk
+sudo blkid
+sudo  mkdir /media/usb
+sudo mount /dev/sda1 /media/usb
+cd /media/usb
+ls
+# copy driver to /lib/firmware
+sudo cp iwlwifi-9000-pu-b0-jf-b0-38.ucode /lib/firmware
+# copy driver to /lib/firmware/i915
+sudo cp kbl_dmc_ver1_04.bin /lib/firmware/i915
+# unmount usb
+sudo umount /media/usb
+
+
+
+
+
+
+
+## unifi 
+https://help.ubnt.com/hc/en-us/articles/360012282453-UniFi-How-to-Install-Upgrade-the-UniFi-Network-Controller-Software#3
+
+
+
+
+## plex
+https://www.linuxbabe.com/ubuntu/install-plex-media-server-ubuntu-18-04
