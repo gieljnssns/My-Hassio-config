@@ -1,0 +1,48 @@
+  alias: node unavailable
+  initial_state: 'on' 
+  trigger:
+    - platform: state
+      entity_id: sensor.mphone_garage
+      to: 'unavailable'
+      for:
+        seconds: 120
+    - platform: state
+      entity_id: sensor.mphone_badkamer
+      to: 'unavailable'
+      for:
+        seconds: 120
+    - platform: state
+      entity_id: sensor.mphone_keuken
+      to: 'unavailable'
+      for:
+        seconds: 120
+    - platform: state
+      entity_id: sensor.mphone_living
+      to: 'unavailable'
+      for:
+        seconds: 120
+    - platform: state
+      entity_id: sensor.mphone_tvpi
+      to: 'unavailable'
+      for:
+        seconds: 120
+    - platform: state
+      entity_id: sensor.mphone_poortpi
+      to: 'unavailable'
+      for:
+        seconds: 120
+  action:
+    - service_template: >
+        {% if trigger.entity_id == 'sensor.mphone_garage' %}
+            script.garage_retain_0
+        {% elif trigger.entity_id == 'sensor.mphone_keuken' %}
+            script.keuken_retain_0
+        {% elif trigger.entity_id == 'sensor.mphone_badkamer' %}
+            script.badkamer_retain_0
+        {% elif trigger.entity_id == 'sensor.mphone_living' %}
+            script.living_retain_0
+        {% elif trigger.entity_id == 'sensor.mphone_tvpi' %}
+            script.tvpi_retain_0
+        {% elif trigger.entity_id == 'sensor.mphone_poortpi' %}
+            script.poortpi_retain_0
+        {% endif %}

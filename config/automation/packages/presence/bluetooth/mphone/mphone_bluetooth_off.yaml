@@ -1,0 +1,18 @@
+  alias: mPhone bluetooth off
+  initial_state: 'on' 
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.mphone_bt_thuis
+      below: 43
+      for:
+        seconds: 5
+  condition:
+    condition: and
+    conditions:
+      - condition: numeric_state
+        entity_id: sensor.uptime_in_uren
+        above: 0.06
+  action:
+    - service: script.martine_bt_not_home
+
+

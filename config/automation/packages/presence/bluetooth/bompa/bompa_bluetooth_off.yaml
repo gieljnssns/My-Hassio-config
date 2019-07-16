@@ -1,0 +1,10 @@
+  alias: Bompa bluetooth off
+  initial_state: 'on' 
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.bompa_bt_aanwezig
+      below: 43
+      for:
+        seconds: 5
+  action:
+    - service: script.bompa_bt_niet_aanwezig
