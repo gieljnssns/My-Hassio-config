@@ -17,6 +17,49 @@
         entity_id: input_boolean.zonnetent_closed
       - service: input_boolean.turn_off
         entity_id: input_boolean.zonnetent_my
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: 'input_boolean.zonnetent_closed'
+            state: 'on'
+          - condition: state
+            entity_id: 'input_boolean.zonnetent_my'
+            state: 'on'
+      - service: cover.open_cover
+        entity_id: cover.zonnetent
+      - delay:
+          seconds: 30
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.zonnetent_closed
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.zonnetent_my
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: 'input_boolean.zonnetent_closed'
+            state: 'on'
+          - condition: state
+            entity_id: 'input_boolean.zonnetent_my'
+            state: 'on'
+      - service: cover.open_cover
+        entity_id: cover.zonnetent
+      - delay:
+          seconds: 30
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.zonnetent_closed
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.zonnetent_my
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: 'input_boolean.zonnetent_closed'
+            state: 'on'
+          - condition: state
+            entity_id: 'input_boolean.zonnetent_my'
+            state: 'on'
+      - service: notify.mobile_app_gphone
+        data_template:
+          message: "Der is iets mis me die Somfy van de zonnetent. Fix het maar!! "
 
   zonnetent_my:
     sequence:

@@ -205,7 +205,8 @@ class TahomaCover(TahomaDevice, CoverDevice):
                  'rts:DualCurtainRTSComponent',
                  'rts:ExteriorVenetianBlindRTSComponent',
                  'rts:HorizontalAwningRTSComponent',
-                 'rts:BlindRTSComponent'):
+                 'rts:BlindRTSComponent',
+                 'rts:ExteriorBlindRTSComponent'):
             self.apply_action('my')
         elif self.tahoma_device.type in \
                 ('io:HorizontalAwningIOComponent',
