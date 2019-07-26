@@ -30,7 +30,20 @@
       entity_id: sensor.dark_outside
       state: 'true'
   action:
-    - service: timer.start
-      entity_id: timer.verlichting_hof
     - service: light.turn_on
       entity_id: light.alle_tuinverlichting
+    - service_template: >
+        {% if states("timer.verlichting_hof") == 'idle' %}
+          timer.start
+        {% else %}
+          timer.cancel
+        {% endif %}
+      entity_id: timer.verlichting_hof
+    - delay:
+        seconds: 5
+    - condition: state
+      entity_id: timer.verlichting_hof
+      state: 'idle'
+    - service: timer.start
+      entity_id: timer.verlichting_hof
+    
