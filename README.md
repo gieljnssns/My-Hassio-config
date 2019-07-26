@@ -1,6 +1,6 @@
 ### My-Hassio
 
-![Alt text](https://github.com/gieljnssns/My-Hassio-config/blob/master/screenshots/11-11-2017/animated.gif?raw=true "Optional Title")
+![Alt text](https://github.com/gieljnssns/My-Hassio-config/blob/master/screenshots/26-07-2019/animated.gif?raw=true "Optional Title")
 
 Example [Home Assistant](https://home-assistant.io) Configs
 
