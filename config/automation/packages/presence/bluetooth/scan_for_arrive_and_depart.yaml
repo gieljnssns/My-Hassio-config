@@ -56,9 +56,10 @@
     - wait_template: "{{ is_state('script.dummy', 'off') }}"
     - service: script.mqtt_arrive_depart_script
       data_template:
+      #  {"identity":"{{trigger.entity_id.split(".")[1]}} {{now().strftime("%H:%M")}}"}
         identity: >
           {% if trigger.platform == 'state' %}  
-             {"identity":"{{trigger.entity_id.split(".")[1]}} {{now().strftime("%H:%M")}}"}
+             {"identity":"{{states("sensor.entity_id_for_bt_scanning")}} {{now().strftime("%H:%M")}}"}
           {% else %}
              {"identity":"HA-start {{now().strftime("%H:%M")}}"}
-          {% endif %}
+          {% endif %} 
