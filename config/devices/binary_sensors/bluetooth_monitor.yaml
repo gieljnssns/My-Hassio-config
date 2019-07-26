@@ -1,5 +1,28 @@
   - platform: template
     sensors:
+      monitor_badkamer_down:
+        friendly_name: "Monitor unavailable"
+        device_class: problem
+        value_template: >-
+          {{ states("sensor.oma_badkamer") == 'unavailable'}}
+      
+      monitor_garage_down:
+        friendly_name: "Monitor unavailable"
+        device_class: problem
+        value_template: >-
+          {{ states("sensor.oma_garage") == 'unavailable'}}
+      
+      monitor_tv_down:
+        friendly_name: "Monitor unavailable"
+        device_class: problem
+        value_template: >-
+          {{ states("sensor.oma_tvpi") == 'unavailable'}}
+      
+      monitor_poortje_down:
+        friendly_name: "Monitor unavailable"
+        device_class: problem
+        value_template: >-
+          {{ states("sensor.oma_poortpi") == 'unavailable'}}
       # heartbeat_living:
       #   friendly_name: Heartbeat Living
       #   entity_id: sensor.heartbeat_living

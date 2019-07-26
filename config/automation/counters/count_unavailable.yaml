@@ -56,6 +56,17 @@
           {% elif trigger.entity_id == 'binary_sensor.keuken_beweging_2' %}
              counter.esp_keuken
           {% endif %}
+    - condition: template
+      value_template: >-
+        {{  (states("binary_sensor.monitor_badkamer_down") 
+              or states("binary_sensor.monitor_tv_down") 
+              or states("binary_sensor.monitor_garage_down") 
+              or states("binary_sensor.monitor_poortje_down")) 
+              == 'on' }}
+    - service: script.mqtt_arrive_trigger
+      data_template:
+        identity: >-
+          {"identity":"Unavailable {{now().strftime("%H:%M")}}"}
 
     
     

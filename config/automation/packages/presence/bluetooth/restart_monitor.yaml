@@ -5,68 +5,68 @@
       entity_id: binary_sensor.living_arrive
       to: 'on'
       for:
-        minutes: 2
+        minutes: 20
     - platform: state
       entity_id: binary_sensor.living_depart
       to: 'on'
       for:
-        minutes: 2
+        minutes: 20
     - platform: state
       entity_id: binary_sensor.badkamer_arrive
       to: 'on'
       for:
-        minutes: 2
+        minutes: 20
     - platform: state
       entity_id: binary_sensor.badkamer_depart
       to: 'on'
       for:
-        minutes: 2
+        minutes: 20
     - platform: state
       entity_id: binary_sensor.keuken_arrive
       to: 'on'
       for:
-        minutes: 2
+        minutes: 20
     - platform: state
       entity_id: binary_sensor.keuken_depart
       to: 'on'
       for:
-        minutes: 2
+        minutes: 20
     - platform: state
       entity_id: binary_sensor.garage_arrive
       to: 'on'
       for:
-        minutes: 2
+        minutes: 20
     - platform: state
       entity_id: binary_sensor.garage_depart
       to: 'on'
       for:
-        minutes: 2
+        minutes: 20
     - platform: state
       entity_id: binary_sensor.tvpi_arrive
       to: 'on'
       for:
-        minutes: 2
+        minutes: 20
     - platform: state
       entity_id: binary_sensor.tvpi_depart
       to: 'on'
       for:
-        minutes: 2
+        minutes: 20
     - platform: state
       entity_id: binary_sensor.poortpi_arrive
       to: 'on'
       for:
-        minutes: 2
+        minutes: 20
     - platform: state
       entity_id: binary_sensor.poortpi_depart
       to: 'on'
       for:
-        minutes: 2
+        minutes: 20
   condition:
     - condition: template
       value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('automation.restart_monitor', 'last_triggered')) | float > 600 }}"
   action:
-    - service: script.monitor_restart
-    - delay: '00:01:30'
+    # - service: script.monitor_restart
+    # - delay: '00:01:30'
     - service: input_boolean.turn_off
       data_template: 
         entity_id: >-
