@@ -1,0 +1,27 @@
+- platform: mqtt
+  state_topic: 'Badkamer/input/temperatuur'
+  device_class: temperature
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '°C'
+  name: 'Temperatuur badkamer'
+  availability_topic: "Badkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Badkamer/input/luchtvochtigheid'
+  device_class: humidity
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '%'
+  name: 'Luchtvochtigheid badkamer'
+  availability_topic: "Badkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Badkamer/input/pir'
+  value_template: '{{ value_json }}'
+  name: 'Beweging badkamer'
+  availability_topic: "Badkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"

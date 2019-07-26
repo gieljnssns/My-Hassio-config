@@ -1,0 +1,22 @@
+- platform: mqtt
+  name: "Beweging badkamer NR"
+  state_topic: "Badkamer/input/pir"
+  payload_on: 1
+  payload_off: 0
+  availability_topic: "Badkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: motion
+
+- platform: template
+  sensors:
+    monitor_down:
+      friendly_name: "Monitor unavailable"
+      device_class: problem
+      value_template: >-
+        {{ states("sensor.oma_badkamer") == 'unavailable'}}
+    nodered_down:
+      friendly_name: "NodeRed unavailable"
+      device_class: problem
+      value_template: >-
+        {{ states("binary_sensor.beweging_badkamer_2") == 'unavailable'}}
