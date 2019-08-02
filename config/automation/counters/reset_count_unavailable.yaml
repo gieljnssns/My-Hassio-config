@@ -18,6 +18,9 @@
       to: 'tvPi'
     - platform: state
       entity_id: input_select.reset_counter
+      to: 'SleepPi'
+    - platform: state
+      entity_id: input_select.reset_counter
       to: 'PoortPi'
     - platform: state
       entity_id: input_select.reset_counter
@@ -45,6 +48,8 @@
              counter.living
           {% elif states("input_select.reset_counter") == 'tvPi' %}
              counter.tvpi
+          {% elif states("input_select.reset_counter") == 'SleepPi' %}
+             counter.slaapkamer
           {% elif states("input_select.reset_counter") == 'PoortPi' %}
              counter.poortpi
           {% elif states("input_select.reset_counter") == 'Sonos Keuken' %}
@@ -56,7 +61,7 @@
           {% elif states("input_select.reset_counter") == 'Esp Living' %}
              counter.esp_living
           {% endif %}
-    - delay: '00:00:05'
+    - delay: '00:00:03'
     - service: input_select.select_option
       data:
         entity_id: input_select.reset_counter

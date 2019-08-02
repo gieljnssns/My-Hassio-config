@@ -9,6 +9,14 @@
       to: 'off'
       for:
         minutes: 4
+    - platform: state
+      entity_id: binary_sensor.beweging_badkamer_pir
+      to: 'on'
+    - platform: state
+      entity_id: binary_sensor.beweging_slaapkamer_pir
+      to: 'off'
+      for:
+        minutes: 4
   action:
     - service_template: >
         {%- if trigger.to_state.state == 'on' -%}

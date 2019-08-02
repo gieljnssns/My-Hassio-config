@@ -17,6 +17,9 @@
       entity_id: sensor.mphone_tvpi
       to: 'unavailable'
     - platform: state
+      entity_id: sensor.mphone_slaapkamer
+      to: 'unavailable'
+    - platform: state
       entity_id: sensor.mphone_poortpi
       to: 'unavailable'
     - platform: state
@@ -45,6 +48,8 @@
              counter.living
           {% elif trigger.entity_id == 'sensor.mphone_tvpi' %}
              counter.tvpi
+          {% elif trigger.entity_id == 'sensor.mphone_slaapkamer' %}
+             counter.slaapkamer
           {% elif trigger.entity_id == 'sensor.mphone_poortpi' %}
              counter.poortpi
           {% elif trigger.entity_id == 'media_player.keuken' %}
@@ -56,17 +61,7 @@
           {% elif trigger.entity_id == 'binary_sensor.keuken_beweging_2' %}
              counter.esp_keuken
           {% endif %}
-    - condition: template
-      value_template: >-
-        {{  (states("binary_sensor.monitor_badkamer_down") 
-              or states("binary_sensor.monitor_tv_down") 
-              or states("binary_sensor.monitor_garage_down") 
-              or states("binary_sensor.monitor_poortje_down")) 
-              == 'on' }}
-    - service: script.mqtt_arrive_trigger
-      data_template:
-        identity: >-
-          {"identity":"Unavailable {{now().strftime("%H:%M")}}"}
+    
 
     
     

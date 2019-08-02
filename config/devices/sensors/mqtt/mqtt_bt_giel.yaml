@@ -20,6 +20,16 @@
   json_attributes_topic: 'monitor/Badkamer/gphone'
 
 - platform: mqtt
+  state_topic: 'monitor/Slaapkamer/gphone'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'gPhone slaapkamer'
+  availability_topic: "monitor/Slaapkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  json_attributes_topic: 'monitor/Slaapkamer/gphone'
+
+- platform: mqtt
   state_topic: 'monitor/Living/gphone'
   value_template: '{{ value_json.confidence }}'
   unit_of_measurement: '%'

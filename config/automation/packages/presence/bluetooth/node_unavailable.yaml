@@ -31,6 +31,11 @@
       to: 'unavailable'
       for:
         seconds: 120
+    - platform: state
+      entity_id: sensor.mphone_slaapkamerkamer
+      to: 'unavailable'
+      for:
+        seconds: 120
   action:
     - service_template: >
         {% if trigger.entity_id == 'sensor.mphone_garage' %}
@@ -39,6 +44,8 @@
             script.keuken_retain_0
         {% elif trigger.entity_id == 'sensor.mphone_badkamer' %}
             script.badkamer_retain_0
+        {% elif trigger.entity_id == 'sensor.mphone_slaapkamer' %}
+            script.slaapkamer_retain_0
         {% elif trigger.entity_id == 'sensor.mphone_living' %}
             script.living_retain_0
         {% elif trigger.entity_id == 'sensor.mphone_tvpi' %}
@@ -46,3 +53,16 @@
         {% elif trigger.entity_id == 'sensor.mphone_poortpi' %}
             script.poortpi_retain_0
         {% endif %}
+    - condition: template
+      value_template: >-
+        {{  (states("binary_sensor.monitor_slaapkamer_down") 
+              or states("binary_sensor.monitor_tv_down") 
+              or states("binary_sensor.monitor_garage_down") 
+              or states("binary_sensor.monitor_poortje_down")) 
+              == 'on' }}
+    - delay:
+        seconds: 30
+    - service: script.mqtt_arrive_trigger
+      data_template:
+        identity: >-
+          {"identity":"Node Unavailable {{now().strftime("%H:%M")}}"}

@@ -1,27 +1,27 @@
 - platform: mqtt
-  name: "Beweging badkamer pir klein"
-  state_topic: "Badkamer/input/pir_klein"
+  name: "Beweging slaapkamer pir klein"
+  state_topic: "Slaapkamer/input/pir_klein"
   payload_on: 1
   payload_off: 0
-  availability_topic: "Badkamer/status"
+  availability_topic: "Slaapkamer/status"
   payload_available: "online"
   payload_not_available: "offline"
   device_class: motion
 
 - platform: mqtt
-  name: "Beweging badkamer pir groot"
-  state_topic: "Badkamer/input/pir_groot"
+  name: "Beweging slaapkamer pir groot"
+  state_topic: "Slaapkamer/input/pir_groot"
   payload_on: 1
   payload_off: 0
-  availability_topic: "Badkamer/status"
+  availability_topic: "Slaapkamer/status"
   payload_available: "online"
   payload_not_available: "offline"
   device_class: motion
 
 - platform: template
   sensors:
-    nodered_badkamer_down:
+    nodered_slaapkamer_down:
       friendly_name: "NodeRed unavailable"
       device_class: problem
       value_template: >-
-        {{ states("binary_sensor.beweging_badkamer_nr") == 'unavailable'}}
+        {{ states("binary_sensor.beweging_slaapkamer_pir_klein") == 'unavailable'}}
