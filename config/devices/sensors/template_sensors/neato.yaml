@@ -1,0 +1,31 @@
+  - platform: template
+    sensors:
+      stoffy_status:
+        value_template: "{{ state_attr('vacuum.stoffy', 'status') }}"
+        friendly_name: Stoffy Status
+
+      stoffy_battery:
+        value_template: "{{ state_attr('vacuum.stoffy', 'battery_level') }}"
+        friendly_name: Stoffy batterij
+        unit_of_measurement: "%"
+        icon_template: "{{ state_attr('vacuum.stoffy', 'battery_icon') }}"
+        # icon_template: >-
+        #   {% set battery_level = state_attr('vacuum.stoffy', 'battery_level')|int('unknown') %}
+        #   {% set battery_round = (battery_level|int / 10)|int * 10 %}
+        #   {% if battery_level == 'unknown' %}
+        #     mdi:battery-unknown
+        #   {% else %}
+        #     {% if battery_round >= 100 %}
+        #       mdi:battery
+        #     {% elif battery_round > 0 %}
+        #       mdi:battery-{{ battery_round }}
+        #     {% else %}
+        #       mdi:battery-alert
+        #     {% endif %}
+        #   {% endif %}
+      
+      stoffy_clean_area:
+        value_template: "{{ state_attr('vacuum.stoffy', 'clean_area') }}"
+        friendly_name: Stoffy aantal m²
+        unit_of_measurement: "m²"
+        icon_template: mdi:resize

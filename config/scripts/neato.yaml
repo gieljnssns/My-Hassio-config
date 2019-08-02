@@ -1,0 +1,71 @@
+  stoffy_clean:
+    sequence:
+      - service: vacuum.neato_custom_cleaning
+        data_template:
+          entity_id: vacuum.stoffy
+          mode: >
+            {% if is_state('input_select.neato_navigation', 'Grondige reiniging') %}
+              2
+            {% elif is_state('input_select.neato_mode', 'Eco') %}
+              1
+            {% else %}
+              2
+            {% endif %}
+          navigation: >
+            {% if is_state('input_select.neato_navigation', 'Voorzichtig') %}
+              2
+            {% elif is_state('input_select.neato_navigation', 'Grondige reiniging') %}
+              3
+            {% else %}
+              1
+            {% endif %}
+          zone: >
+            {% if is_state('input_select.neato_zone', 'Zithoek') %}
+              Zithoek
+            {% elif is_state('input_select.neato_zone', 'Danszaal') %}
+              Danszaal
+            {% elif is_state('input_select.neato_zone', 'Gang') %}
+              Gang
+            {% elif is_state('input_select.neato_zone', 'Waskot') %}
+              Waskot
+            {% elif is_state('input_select.neato_zone', 'Keuken') %}
+              Keuken
+            {% elif is_state('input_select.neato_zone', 'Inkom') %}
+              Inkom
+            {% elif is_state('input_select.neato_zone', 'Wc') %}
+              Wc
+            {% elif is_state('input_select.neato_zone', 'Gang boven') %}
+              Gang boven
+            {% elif is_state('input_select.neato_zone', 'Slaapkamer Noor') %}
+              Slaapkamer Noor
+            {% elif is_state('input_select.neato_zone', 'Slaapkamer Fien') %}
+              Slaapkamer Fien
+            {% elif is_state('input_select.neato_zone', 'Slaapkamer') %}
+              Slaapkamer
+            {% elif is_state('input_select.neato_zone', 'Badkamer') %}
+              Badkamer
+            {% else %}
+              None
+            {% endif %}
+
+  stoffy_pause:
+    sequence:
+      - service: vacuum.pause
+        entity_id: vacuum.stoffy
+  
+  stoffy_locate:
+    sequence:
+      - service: vacuum.locate
+        entity_id: vacuum.stoffy
+  
+  stoffy_start:
+    sequence:
+      - service: vacuum.start
+        entity_id: vacuum.stoffy
+  
+  stoffy_return_to_base:
+    sequence:
+      - service: vacuum.return_to_base
+        entity_id: vacuum.stoffy
+  
+
