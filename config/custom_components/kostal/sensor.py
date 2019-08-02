@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Piko inverter."""
-    from pikopy.piko import Piko
+    from kostalpyko.kostalpyko import Piko
 
     piko = Piko(config[CONF_HOST],
                 config[CONF_USERNAME],
