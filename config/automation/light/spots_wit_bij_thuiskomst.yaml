@@ -2,16 +2,16 @@
   initial_state: 'on' 
   trigger:
     - platform: state
-      entity_id: sensor.giel_komt_thuis
-      to: arriving
-    - platform: state
-      entity_id: sensor.martine_komt_thuis
-      to: arriving
+      entity_id: alarm_control_panel.ha_alarm
+      to: 'disarmed'
+    # - platform: state
+    #   entity_id: sensor.martine_komt_thuis
+    #   to: arriving
   condition:
     condition: and
     conditions:
-      - condition: template
-        value_template: "{{ states('alarm_control_panel.ha_alarm') != 'disarmed' }}"
+      # - condition: template
+      #   value_template: "{{ states('alarm_control_panel.ha_alarm') != 'disarmed' }}"
       - condition: state
         entity_id: light.spots_tv
         state: 'on'
@@ -19,16 +19,12 @@
         entity_id: sensor.dark_outside
         state: 'true'
   action:
-    - service: light.turn_on
-      entity_id: light.spots_tv
+    - service: homeassistant.turn_on
       data:
-        profile: reading
-    - service: light.turn_on
-      entity_id: light.spots_tv
+        entity_id: light.spots_tv
+        effect: none
+    - service: homeassistant.turn_on
       data:
+        entity_id: light.spots_tv
         profile: reading
-    - service: light.turn_on
-      entity_id: light.spots_tv
-      data:
-        profile: reading
- 
+   

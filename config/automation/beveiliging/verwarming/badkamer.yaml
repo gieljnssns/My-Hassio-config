@@ -9,5 +9,10 @@
       entity_id: 'switch.badkamer'
       state: 'off'
   action:
-    - service: switch.turn_off
-      entity_id: switch.badkamer
+    # - service: switch.turn_off
+    #   entity_id: switch.badkamer
+    - service: mqtt.publish
+      data:
+        topic: "verwarmingPi/output/badkamer/set"
+        retain: true
+        payload: "OFF"

@@ -1,12 +1,37 @@
   alias: "Alarm state"
   initial_state: 'on' 
   trigger:
-    platform: state
-    entity_id: alarm_control_panel.ha_alarm
-  condition:
-    condition: template
-    value_template: "{{ states.alarm_control_panel.ha_alarm.state != 'pending' }}"
+    - platform: state
+      entity_id: alarm_control_panel.ha_alarm
+      from: "pending"
+      to: "armed_away"
+    - platform: state
+      entity_id: alarm_control_panel.ha_alarm
+      to: "disarmed"
+    - platform: state
+      entity_id: alarm_control_panel.ha_alarm
+      to: "armed_night"
+    - platform: state
+      entity_id: alarm_control_panel.ha_alarm
+      to: "armed_home"
+  # condition:
+  #   condition: template
+  #   value_template: "{{ states.alarm_control_panel.ha_alarm.state != 'pending' }}"
   action:
     - service: notify.ios
-      data:
-        message: "Ons alarm is nu {{ states.alarm_control_panel.ha_alarm.state }}"
+      # data:
+      #   message: "Ons alarm is nu {{ states.alarm_control_panel.ha_alarm.state }}"
+      data_template:
+        title: "Bericht van Home-Assistant."
+        message: >
+          {%- if is_state("alarm_control_panel.ha_alarm", "armed_away") -%}
+            Niemand thuis, beveiliging ingeschakeld.
+          {%- elif is_state("alarm_control_panel.ha_alarm", "disarmed") -%}
+            Beveiliging uitgeschakeld.
+          {%- elif is_state("alarm_control_panel.ha_alarm", "armed_night") -%}
+            Slaapwel, beveiliging ingeschakeld.
+          {%- elif is_state("alarm_control_panel.ha_alarm", "armed_home") -%}
+            Beveiliging ingeschakeld terwijl er iemand thuis is.
+          {%- endif %}
+        # data:
+        #   subtitle: "De status van ons alarm is gewijzigd."

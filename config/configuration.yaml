@@ -22,6 +22,9 @@ homeassistant:
   auth_providers:
    - type: homeassistant
   #  - type: legacy_api_password
+  whitelist_external_dirs:
+    - '/share'
+    # - /usr/share/hassio/homeassistant/tmp
 
 ###   HTTP  ###
 http:
@@ -67,6 +70,7 @@ input_text: !include_dir_merge_named devices/input_text
 light: !include_dir_merge_list devices/light
 media_player: !include_dir_merge_list devices/media_player
 sensor: !include_dir_merge_list devices/sensors
+shell_command: !include devices/shell_commands.yaml
 switch: !include_dir_merge_list devices/switch
 timer: !include_dir_merge_named devices/timer
 utility_meter: !include_dir_merge_named devices/utility_meter
@@ -89,7 +93,7 @@ automation: !include automations.yaml
 notify: !include notify.yaml
 
 ###  Panels  ###
-panel_iframe: !include panels/iframe.yaml
+# panel_iframe: !include panels/iframe.yaml
 
 ###  Logbook  ###
 logbook: !include logbook.yaml
@@ -113,6 +117,12 @@ homekit: !include homekit.yaml
 #                                                  #
 ####################################################
 
+###  Mqtt  ###
+mqtt:
+  broker: 127.0.0.1
+  discovery: true
+  discovery_prefix: homeassistant
+
 ###  Netatmo  ###
 netatmo:
   api_key: !secret netatmo_api_key
@@ -121,12 +131,18 @@ netatmo:
   password: !secret netatmo_password
   webhooks: true
 
-# netatmo_webhook_only:
-#   api_key: !secret netatmo2_api_key
-#   secret_key: !secret netatmo2_secret_key
-#   username: !secret netatmo2_username
-#   password: !secret netatmo2_password
-#   discovery: false
+###  Unifi  ###
+unifi:
+  controllers:
+    - host: !secret unifi_host
+      site: !secret unifi_site
+      ssid_filter:
+        - !secret unifi_ssid_1
+        - !secret unifi_ssid_2
+      block_client:
+        - !secret mac_npad
+        - !secret mac_fpad
+      detection_time: 60
 
 ###  Smappee  ###
 smappee:
@@ -138,11 +154,11 @@ smappee:
     # host_password: !secret smappee_host_password
 
 ###  MySensors  ###
-mysensors:
-  gateways:
-    - device: !secret mysensors_device
-      persistence_file: !secret mysensors_persistence_file
-  version: '2.2'
+# mysensors:
+#   gateways:
+#     - device: !secret mysensors_device
+#       persistence_file: !secret mysensors_persistence_file
+#   version: '2.2'
 
 ###  Tahoma  ###
 tahoma:
@@ -231,6 +247,9 @@ person:
 ###  System Health  ###
 system_health:
 
+###    ###
+ssdp:
+
 ###  HACS  ###
 hacs:
   token: !secret hacs_token
@@ -239,7 +258,7 @@ hacs:
 discovery:
   ignore:
     - apple_tv
-#     - plex_mediaserver
+    - plex_mediaserver
 
 ###  Config  ###
 config:
@@ -268,7 +287,7 @@ ios:
 mobile_app:
 
 ###  Zeroconf/Avahi/Bonjour  ###
-# zeroconf:
+zeroconf:
 
 ###  Recorder  ###
 recorder: !include recorder.yaml

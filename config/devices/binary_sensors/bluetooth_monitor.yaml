@@ -23,6 +23,21 @@
         device_class: problem
         value_template: >-
           {{ states("sensor.oma_poortpi") == 'unavailable'}}
+      
+      monitor_down:
+        friendly_name: "Monitor unavailable"
+        device_class: problem
+        icon_template: mdi:bluetooth-off
+        value_template: >-
+          {{  states("binary_sensor.monitor_poortje_down") == 'on' or 
+              states("binary_sensor.monitor_tv_down") == 'on' or
+              states("binary_sensor.monitor_garage_down") == 'on' or
+              states("binary_sensor.monitor_slaapkamer_down") == 'on'  }}
+      
+      monitor_scanning:
+        friendly_name: "Monitor scanning"
+        value_template: >-
+          {{ states("script.mqtt_arrive_depart_script") == 'on'}}
       # heartbeat_living:
       #   friendly_name: Heartbeat Living
       #   entity_id: sensor.heartbeat_living
@@ -41,88 +56,88 @@
       #   icon_template: mdi:heart-pulse
       #   value_template: "{{ is_state('sensor.heartbeat_garage', 'online') }}"
       
-      badkamer_arrive:
-        friendly_name: Badkamer aankomst scan
-        entity_id: input_boolean.badkamer_arrive
-        icon_template: mdi:cellphone-wireless
-        value_template: "{{ is_state('input_boolean.badkamer_arrive', 'on') }}"
+      # badkamer_arrive:
+      #   friendly_name: Badkamer aankomst scan
+      #   entity_id: input_boolean.badkamer_arrive
+      #   icon_template: mdi:cellphone-wireless
+      #   value_template: "{{ is_state('input_boolean.badkamer_arrive', 'on') }}"
 
-      badkamer_depart:
-        friendly_name: Badkamer vertrek scan
-        entity_id: input_boolean.badkamer_depart
-        icon_template: mdi:cellphone-wireless
-        value_template: "{{ is_state('input_boolean.badkamer_depart', 'on') }}"
+      # badkamer_depart:
+      #   friendly_name: Badkamer vertrek scan
+      #   entity_id: input_boolean.badkamer_depart
+      #   icon_template: mdi:cellphone-wireless
+      #   value_template: "{{ is_state('input_boolean.badkamer_depart', 'on') }}"
 
-      living_arrive:
-        friendly_name: Living aankomst scan
-        entity_id: input_boolean.living_arrive
-        icon_template: mdi:cellphone-wireless
-        value_template: "{{ is_state('input_boolean.living_arrive', 'on') }}"
+      # living_arrive:
+      #   friendly_name: Living aankomst scan
+      #   entity_id: input_boolean.living_arrive
+      #   icon_template: mdi:cellphone-wireless
+      #   value_template: "{{ is_state('input_boolean.living_arrive', 'on') }}"
 
-      living_depart:
-        friendly_name: Living vertrek scan
-        entity_id: input_boolean.living_depart
-        icon_template: mdi:cellphone-wireless
-        value_template: "{{ is_state('input_boolean.living_depart', 'on') }}"
+      # living_depart:
+      #   friendly_name: Living vertrek scan
+      #   entity_id: input_boolean.living_depart
+      #   icon_template: mdi:cellphone-wireless
+      #   value_template: "{{ is_state('input_boolean.living_depart', 'on') }}"
 
-      keuken_arrive:
-        friendly_name: Keuken aankomst scan
-        entity_id: input_boolean.keuken_arrive
-        icon_template: mdi:cellphone-wireless
-        value_template: "{{ is_state('input_boolean.keuken_arrive', 'on') }}"
+      # keuken_arrive:
+      #   friendly_name: Keuken aankomst scan
+      #   entity_id: input_boolean.keuken_arrive
+      #   icon_template: mdi:cellphone-wireless
+      #   value_template: "{{ is_state('input_boolean.keuken_arrive', 'on') }}"
 
-      keuken_depart:
-        friendly_name: Keuken vertrek scan
-        entity_id: input_boolean.keuken_depart
-        icon_template: mdi:cellphone-wireless
-        value_template: "{{ is_state('input_boolean.keuken_depart', 'on') }}"
+      # keuken_depart:
+      #   friendly_name: Keuken vertrek scan
+      #   entity_id: input_boolean.keuken_depart
+      #   icon_template: mdi:cellphone-wireless
+      #   value_template: "{{ is_state('input_boolean.keuken_depart', 'on') }}"
 
-      garage_arrive:
-        friendly_name: Garage aankomst scan
-        entity_id: input_boolean.garage_arrive
-        icon_template: mdi:cellphone-wireless
-        value_template: "{{ is_state('input_boolean.garage_arrive', 'on') }}"
+      # garage_arrive:
+      #   friendly_name: Garage aankomst scan
+      #   entity_id: input_boolean.garage_arrive
+      #   icon_template: mdi:cellphone-wireless
+      #   value_template: "{{ is_state('input_boolean.garage_arrive', 'on') }}"
 
-      garage_depart:
-        friendly_name: Garage vertrek scan
-        entity_id: input_boolean.garage_depart
-        icon_template: mdi:cellphone-wireless
-        value_template: "{{ is_state('input_boolean.garage_depart', 'on') }}"
+      # garage_depart:
+      #   friendly_name: Garage vertrek scan
+      #   entity_id: input_boolean.garage_depart
+      #   icon_template: mdi:cellphone-wireless
+      #   value_template: "{{ is_state('input_boolean.garage_depart', 'on') }}"
       
-      tvpi_arrive:
-        friendly_name: tvPi aankomst scan
-        entity_id: input_boolean.tvpi_arrive
-        icon_template: mdi:cellphone-wireless
-        value_template: "{{ is_state('input_boolean.tvpi_arrive', 'on') }}"
+      # tvpi_arrive:
+      #   friendly_name: tvPi aankomst scan
+      #   entity_id: input_boolean.tvpi_arrive
+      #   icon_template: mdi:cellphone-wireless
+      #   value_template: "{{ is_state('input_boolean.tvpi_arrive', 'on') }}"
 
-      tvpi_depart:
-        friendly_name: tvPi vertrek scan
-        entity_id: input_boolean.tvpi_depart
-        icon_template: mdi:cellphone-wireless
-        value_template: "{{ is_state('input_boolean.tvpi_depart', 'on') }}"
+      # tvpi_depart:
+      #   friendly_name: tvPi vertrek scan
+      #   entity_id: input_boolean.tvpi_depart
+      #   icon_template: mdi:cellphone-wireless
+      #   value_template: "{{ is_state('input_boolean.tvpi_depart', 'on') }}"
       
-      poortpi_arrive:
-        friendly_name: PoortPi aankomst scan
-        entity_id: input_boolean.poortpi_arrive
-        icon_template: mdi:cellphone-wireless
-        value_template: "{{ is_state('input_boolean.poortpi_arrive', 'on') }}"
+      # poortpi_arrive:
+      #   friendly_name: PoortPi aankomst scan
+      #   entity_id: input_boolean.poortpi_arrive
+      #   icon_template: mdi:cellphone-wireless
+      #   value_template: "{{ is_state('input_boolean.poortpi_arrive', 'on') }}"
 
-      poortpi_depart:
-        friendly_name: PoortPi vertrek scan
-        entity_id: input_boolean.poortpi_depart
-        icon_template: mdi:cellphone-wireless
-        value_template: "{{ is_state('input_boolean.poortpi_depart', 'on') }}"
+      # poortpi_depart:
+      #   friendly_name: PoortPi vertrek scan
+      #   entity_id: input_boolean.poortpi_depart
+      #   icon_template: mdi:cellphone-wireless
+      #   value_template: "{{ is_state('input_boolean.poortpi_depart', 'on') }}"
         
-      bluetooth_scan:
-       friendly_name: Bluetooth scan
-       icon_template: mdi:bluetooth-audio
-       value_template: "{{ is_state('binary_sensor.living_arrive', 'on')
-                or is_state('binary_sensor.living_depart', 'on')
-                or is_state('binary_sensor.keuken_depart', 'on')
-                or is_state('binary_sensor.keuken_arrive', 'on')
-                or is_state('binary_sensor.garage_arrive', 'on')
-                or is_state('binary_sensor.garage_depart', 'on')
-                or is_state('binary_sensor.tvpi_arrive', 'on')
-                or is_state('binary_sensor.tvpi_depart', 'on')
-                or is_state('binary_sensor.poortpi_arrive', 'on')
-                or is_state('binary_sensor.poortpi_depart', 'on') }}"
+      # bluetooth_scan:
+      #  friendly_name: Bluetooth scan
+      #  icon_template: mdi:bluetooth-audio
+      #  value_template: "{{ is_state('binary_sensor.living_arrive', 'on')
+      #           or is_state('binary_sensor.living_depart', 'on')
+      #           or is_state('binary_sensor.keuken_depart', 'on')
+      #           or is_state('binary_sensor.keuken_arrive', 'on')
+      #           or is_state('binary_sensor.garage_arrive', 'on')
+      #           or is_state('binary_sensor.garage_depart', 'on')
+      #           or is_state('binary_sensor.tvpi_arrive', 'on')
+      #           or is_state('binary_sensor.tvpi_depart', 'on')
+      #           or is_state('binary_sensor.poortpi_arrive', 'on')
+      #           or is_state('binary_sensor.poortpi_depart', 'on') }}"
