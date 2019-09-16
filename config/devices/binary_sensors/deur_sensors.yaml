@@ -3,9 +3,19 @@
       achterdeur_open:
         friendly_name: Achterdeur
         device_class: door
-        value_template: "{{ is_state('input_boolean.koogeek_achterdeur', 'on') }}"
+        value_template: "{{ is_state('input_boolean.achterdeur_open', 'on') }}"
       
       voordeur_open:
         friendly_name: Voordeur
+        device_class: door
+        value_template: "{{ is_state('input_boolean.voordeur_open', 'on') }}"
+      
+      achterdeur_homekit:
+        friendly_name: Achterdeur homekit
+        device_class: door
+        value_template: "{{ is_state('input_boolean.koogeek_achterdeur', 'on') }}"
+      
+      voordeur_homekit:
+        friendly_name: Voordeur homekit
         device_class: door
         value_template: "{{ is_state('input_boolean.koogeek_voordeur', 'on') }}"
