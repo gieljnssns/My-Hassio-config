@@ -1,0 +1,98 @@
+[
+    {
+        "id": "9e5a9985.856b48",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "65c54c44.33b3f4",
+        "type": "rpi-ds18b20",
+        "z": "9e5a9985.856b48",
+        "topic": "",
+        "array": false,
+        "name": "",
+        "x": 499,
+        "y": 399,
+        "wires": [
+            [
+                "971beaa1.7a4108",
+                "94b309f3.ad6b48"
+            ]
+        ]
+    },
+    {
+        "id": "971beaa1.7a4108",
+        "type": "debug",
+        "z": "9e5a9985.856b48",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "x": 855,
+        "y": 403,
+        "wires": []
+    },
+    {
+        "id": "b884174.6cbcae8",
+        "type": "inject",
+        "z": "9e5a9985.856b48",
+        "name": "Elke minuut",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "60",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 214,
+        "y": 282,
+        "wires": [
+            [
+                "65c54c44.33b3f4"
+            ]
+        ]
+    },
+    {
+        "id": "94b309f3.ad6b48",
+        "type": "mqtt out",
+        "z": "9e5a9985.856b48",
+        "name": "MQTT DHT temperatuur",
+        "topic": "Garage/input/temperatuur",
+        "qos": "",
+        "retain": "",
+        "broker": "669a7128.2b8b",
+        "x": 866,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "669a7128.2b8b",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "Garage/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "Garage/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "Garage/status",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "offline"
+    }
+]

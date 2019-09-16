@@ -1,0 +1,236 @@
+[
+    {
+        "id": "6cbdb119.a99068",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "b6180c92.0ddb2",
+        "type": "rpi-gpio in",
+        "z": "6cbdb119.a99068",
+        "name": "Pin 15 pir klein",
+        "pin": "15",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 230,
+        "y": 220,
+        "wires": [
+            [
+                "b40e0279.6d0ae"
+            ]
+        ]
+    },
+    {
+        "id": "b40e0279.6d0ae",
+        "type": "mqtt out",
+        "z": "6cbdb119.a99068",
+        "name": "MQTT pir klein",
+        "topic": "Slaapkamer/input/pir_klein",
+        "qos": "",
+        "retain": "",
+        "broker": "69188e50.9172f8",
+        "x": 670,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "63dc8778.00e618",
+        "type": "inject",
+        "z": "6cbdb119.a99068",
+        "name": "Elke minuut",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "60",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 110.5,
+        "y": 475,
+        "wires": [
+            [
+                "475a6f1e.5bc478"
+            ]
+        ]
+    },
+    {
+        "id": "8b749777.ed00d",
+        "type": "mqtt out",
+        "z": "6cbdb119.a99068",
+        "name": "MQTT DHT temperatuur",
+        "topic": "Slaapkamer/input/temperatuur",
+        "qos": "",
+        "retain": "",
+        "broker": "69188e50.9172f8",
+        "x": 762.5,
+        "y": 473,
+        "wires": []
+    },
+    {
+        "id": "22d38c22.9b149c",
+        "type": "debug",
+        "z": "6cbdb119.a99068",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 477.5,
+        "y": 406,
+        "wires": []
+    },
+    {
+        "id": "d254d226.18da98",
+        "type": "function",
+        "z": "6cbdb119.a99068",
+        "name": "temperatuur",
+        "func": "msg.payload = msg.payload\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 485.5,
+        "y": 472,
+        "wires": [
+            [
+                "dff343d3.0609",
+                "8b749777.ed00d"
+            ]
+        ]
+    },
+    {
+        "id": "1ebdfcac.6f9f13",
+        "type": "function",
+        "z": "6cbdb119.a99068",
+        "name": "luchtvochtigheid",
+        "func": "msg.payload = msg.humidity\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 487.5,
+        "y": 599,
+        "wires": [
+            [
+                "90ceb614.3a5d08",
+                "a684fa65.09b9d8"
+            ]
+        ]
+    },
+    {
+        "id": "dff343d3.0609",
+        "type": "debug",
+        "z": "6cbdb119.a99068",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 721.5,
+        "y": 541,
+        "wires": []
+    },
+    {
+        "id": "90ceb614.3a5d08",
+        "type": "debug",
+        "z": "6cbdb119.a99068",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 719.5,
+        "y": 672,
+        "wires": []
+    },
+    {
+        "id": "a684fa65.09b9d8",
+        "type": "mqtt out",
+        "z": "6cbdb119.a99068",
+        "name": "MQTT DHT luchtvochtigheid",
+        "topic": "Slaapkamer/input/luchtvochtigheid",
+        "qos": "",
+        "retain": "",
+        "broker": "69188e50.9172f8",
+        "x": 769.5,
+        "y": 598,
+        "wires": []
+    },
+    {
+        "id": "475a6f1e.5bc478",
+        "type": "rpi-dht22",
+        "z": "6cbdb119.a99068",
+        "name": "DHT22",
+        "topic": "rpi-dht22",
+        "dht": 22,
+        "pintype": "2",
+        "pin": "7",
+        "x": 284.5,
+        "y": 475,
+        "wires": [
+            [
+                "22d38c22.9b149c",
+                "d254d226.18da98",
+                "1ebdfcac.6f9f13"
+            ]
+        ]
+    },
+    {
+        "id": "f776e178.8b7218",
+        "type": "rpi-gpio in",
+        "z": "6cbdb119.a99068",
+        "name": "Pin 13 pir groot",
+        "pin": "13",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 224,
+        "y": 86,
+        "wires": [
+            [
+                "bbf1cf36.b5cbc8"
+            ]
+        ]
+    },
+    {
+        "id": "bbf1cf36.b5cbc8",
+        "type": "mqtt out",
+        "z": "6cbdb119.a99068",
+        "name": "MQTT pir groot",
+        "topic": "Slaapkamer/input/pir_groot",
+        "qos": "",
+        "retain": "",
+        "broker": "69188e50.9172f8",
+        "x": 674,
+        "y": 66,
+        "wires": []
+    },
+    {
+        "id": "69188e50.9172f8",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "Slaapkamer/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "Slaapkamer/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "Slaapkamer/status",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "offline"
+    }
+]

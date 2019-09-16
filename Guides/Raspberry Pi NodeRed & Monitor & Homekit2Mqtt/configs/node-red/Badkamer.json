@@ -1,0 +1,236 @@
+[
+    {
+        "id": "bcba8eab.38f3c",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "c639df4d.44293",
+        "type": "rpi-gpio in",
+        "z": "bcba8eab.38f3c",
+        "name": "Pin 15 pir klein",
+        "pin": "15",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 130,
+        "y": 200,
+        "wires": [
+            [
+                "1b49a626.5b0eea"
+            ]
+        ]
+    },
+    {
+        "id": "1187ac75.aa0194",
+        "type": "rpi-dht22",
+        "z": "bcba8eab.38f3c",
+        "name": "DHT22",
+        "topic": "rpi-dht22",
+        "dht": 22,
+        "pintype": "2",
+        "pin": "7",
+        "x": 260,
+        "y": 580,
+        "wires": [
+            [
+                "42e05665.de1288",
+                "57349295.3b560c",
+                "a9fd68ac.f1c5e8"
+            ]
+        ]
+    },
+    {
+        "id": "57349295.3b560c",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "temperatuur",
+        "func": "msg.payload = msg.payload\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 490,
+        "y": 580,
+        "wires": [
+            [
+                "28bd464e.f5ce2a",
+                "2a9e325.ac614ce"
+            ]
+        ]
+    },
+    {
+        "id": "a9fd68ac.f1c5e8",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "luchtvochtigheid",
+        "func": "msg.payload = msg.humidity\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 500,
+        "y": 700,
+        "wires": [
+            [
+                "a9086d2a.f4261",
+                "b5b6db8.cde1428"
+            ]
+        ]
+    },
+    {
+        "id": "42e05665.de1288",
+        "type": "debug",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 470,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "2a9e325.ac614ce",
+        "type": "debug",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 770,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "b5b6db8.cde1428",
+        "type": "debug",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 770,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "1b49a626.5b0eea",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "Mqtt Pir klein",
+        "topic": "Badkamer/input/pir_klein",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 750,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "28bd464e.f5ce2a",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "MQTT DHT temperatuur",
+        "topic": "Badkamer/input/temperatuur",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 810,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "a9086d2a.f4261",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "MQTT DHT luchtvochtigheid",
+        "topic": "Badkamer/input/luchtvochtigheid",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 820,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "6aeb11d7.52097",
+        "type": "inject",
+        "z": "bcba8eab.38f3c",
+        "name": "Elke minuut",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "60",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 90,
+        "y": 580,
+        "wires": [
+            [
+                "1187ac75.aa0194"
+            ]
+        ]
+    },
+    {
+        "id": "e07389e6.4077c",
+        "type": "rpi-gpio in",
+        "z": "bcba8eab.38f3c",
+        "name": "Pin 13 pir groot",
+        "pin": "13",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 150,
+        "y": 80,
+        "wires": [
+            [
+                "f7ebdd06.6b00c"
+            ]
+        ]
+    },
+    {
+        "id": "f7ebdd06.6b00c",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "MQTT pir groot",
+        "topic": "Badkamer/input/pir_groot",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 630,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "ac24ccdd.432f",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "Badkamer/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "Badkamer/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "Badkamer/status",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "offline"
+    }
+]

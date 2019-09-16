@@ -1,0 +1,236 @@
+[
+    {
+        "id": "1e8b2004.88344",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "83f275e9.ee6018",
+        "type": "rpi-gpio in",
+        "z": "1e8b2004.88344",
+        "name": "Pin 15 pir klein",
+        "pin": "15",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 130,
+        "y": 200,
+        "wires": [
+            [
+                "898779b3.53ea38"
+            ]
+        ]
+    },
+    {
+        "id": "b8b73229.514f2",
+        "type": "rpi-dht22",
+        "z": "1e8b2004.88344",
+        "name": "DHT22",
+        "topic": "rpi-dht22",
+        "dht": 22,
+        "pintype": "2",
+        "pin": "7",
+        "x": 260,
+        "y": 580,
+        "wires": [
+            [
+                "57b4b97a.f222f8",
+                "9228c553.491568",
+                "78b8e2a4.d5487c"
+            ]
+        ]
+    },
+    {
+        "id": "9228c553.491568",
+        "type": "function",
+        "z": "1e8b2004.88344",
+        "name": "temperatuur",
+        "func": "msg.payload = msg.payload\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 490,
+        "y": 580,
+        "wires": [
+            [
+                "55452b5d.6b9fd4",
+                "90caa37f.fd13c"
+            ]
+        ]
+    },
+    {
+        "id": "78b8e2a4.d5487c",
+        "type": "function",
+        "z": "1e8b2004.88344",
+        "name": "luchtvochtigheid",
+        "func": "msg.payload = msg.humidity\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 500,
+        "y": 700,
+        "wires": [
+            [
+                "42e6b53d.062c8c",
+                "92e30eab.a80b5"
+            ]
+        ]
+    },
+    {
+        "id": "57b4b97a.f222f8",
+        "type": "debug",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 470,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "90caa37f.fd13c",
+        "type": "debug",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 770,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "92e30eab.a80b5",
+        "type": "debug",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 770,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "898779b3.53ea38",
+        "type": "mqtt out",
+        "z": "1e8b2004.88344",
+        "name": "Mqtt Pir klein",
+        "topic": "Noor/input/pir_klein",
+        "qos": "",
+        "retain": "",
+        "broker": "2fc012d4.51081e",
+        "x": 750,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "55452b5d.6b9fd4",
+        "type": "mqtt out",
+        "z": "1e8b2004.88344",
+        "name": "MQTT DHT temperatuur",
+        "topic": "Noor/input/temperatuur",
+        "qos": "",
+        "retain": "",
+        "broker": "2fc012d4.51081e",
+        "x": 810,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "42e6b53d.062c8c",
+        "type": "mqtt out",
+        "z": "1e8b2004.88344",
+        "name": "MQTT DHT luchtvochtigheid",
+        "topic": "Noor/input/luchtvochtigheid",
+        "qos": "",
+        "retain": "",
+        "broker": "2fc012d4.51081e",
+        "x": 820,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "38a4d05e.d5e72",
+        "type": "inject",
+        "z": "1e8b2004.88344",
+        "name": "Elke minuut",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "60",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 90,
+        "y": 580,
+        "wires": [
+            [
+                "b8b73229.514f2"
+            ]
+        ]
+    },
+    {
+        "id": "dda55d4f.f064a",
+        "type": "rpi-gpio in",
+        "z": "1e8b2004.88344",
+        "name": "Pin 13 pir groot",
+        "pin": "13",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 150,
+        "y": 80,
+        "wires": [
+            [
+                "56aafd67.ff5a84"
+            ]
+        ]
+    },
+    {
+        "id": "56aafd67.ff5a84",
+        "type": "mqtt out",
+        "z": "1e8b2004.88344",
+        "name": "MQTT pir groot",
+        "topic": "Noor/input/pir_groot",
+        "qos": "",
+        "retain": "",
+        "broker": "2fc012d4.51081e",
+        "x": 630,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "2fc012d4.51081e",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "Noor/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "Noor/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "Noor/status",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "offline"
+    }
+]

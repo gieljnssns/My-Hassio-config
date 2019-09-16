@@ -1,0 +1,236 @@
+[
+    {
+        "id": "bef173e7.190d2",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "d965972.4fbb768",
+        "type": "rpi-gpio in",
+        "z": "bef173e7.190d2",
+        "name": "Pin 15 pir klein",
+        "pin": "15",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 247,
+        "y": 321,
+        "wires": [
+            [
+                "2087cc65.902164"
+            ]
+        ]
+    },
+    {
+        "id": "2087cc65.902164",
+        "type": "mqtt out",
+        "z": "bef173e7.190d2",
+        "name": "MQTT pir klein",
+        "topic": "Keuken/input/pir_klein",
+        "qos": "",
+        "retain": "",
+        "broker": "1f49c8e2.474727",
+        "x": 687,
+        "y": 341,
+        "wires": []
+    },
+    {
+        "id": "b9496328.f8781",
+        "type": "inject",
+        "z": "bef173e7.190d2",
+        "name": "Elke minuut",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "60",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 127.5,
+        "y": 576,
+        "wires": [
+            [
+                "1d6ac382.d3ae8c"
+            ]
+        ]
+    },
+    {
+        "id": "df459a8d.37ac78",
+        "type": "mqtt out",
+        "z": "bef173e7.190d2",
+        "name": "MQTT DHT temperatuur",
+        "topic": "Keuken/input/temperatuur",
+        "qos": "",
+        "retain": "",
+        "broker": "1f49c8e2.474727",
+        "x": 779.5,
+        "y": 574,
+        "wires": []
+    },
+    {
+        "id": "dc73c575.21abf8",
+        "type": "debug",
+        "z": "bef173e7.190d2",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 494.5,
+        "y": 507,
+        "wires": []
+    },
+    {
+        "id": "b19e4565.9e9818",
+        "type": "function",
+        "z": "bef173e7.190d2",
+        "name": "temperatuur",
+        "func": "msg.payload = msg.payload\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 502.5,
+        "y": 573,
+        "wires": [
+            [
+                "45cc4940.d080f8",
+                "df459a8d.37ac78"
+            ]
+        ]
+    },
+    {
+        "id": "54595874.158418",
+        "type": "function",
+        "z": "bef173e7.190d2",
+        "name": "luchtvochtigheid",
+        "func": "msg.payload = msg.humidity\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 504.5,
+        "y": 700,
+        "wires": [
+            [
+                "6da022f8.fcd5fc",
+                "b0320331.0cc74"
+            ]
+        ]
+    },
+    {
+        "id": "45cc4940.d080f8",
+        "type": "debug",
+        "z": "bef173e7.190d2",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 738.5,
+        "y": 642,
+        "wires": []
+    },
+    {
+        "id": "6da022f8.fcd5fc",
+        "type": "debug",
+        "z": "bef173e7.190d2",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 736.5,
+        "y": 773,
+        "wires": []
+    },
+    {
+        "id": "b0320331.0cc74",
+        "type": "mqtt out",
+        "z": "bef173e7.190d2",
+        "name": "MQTT DHT luchtvochtigheid",
+        "topic": "Keuken/input/luchtvochtigheid",
+        "qos": "",
+        "retain": "",
+        "broker": "1f49c8e2.474727",
+        "x": 786.5,
+        "y": 699,
+        "wires": []
+    },
+    {
+        "id": "1d6ac382.d3ae8c",
+        "type": "rpi-dht22",
+        "z": "bef173e7.190d2",
+        "name": "DHT22",
+        "topic": "rpi-dht22",
+        "dht": 22,
+        "pintype": "2",
+        "pin": "7",
+        "x": 301.5,
+        "y": 576,
+        "wires": [
+            [
+                "dc73c575.21abf8",
+                "b19e4565.9e9818",
+                "54595874.158418"
+            ]
+        ]
+    },
+    {
+        "id": "d72ff8f5.17add8",
+        "type": "rpi-gpio in",
+        "z": "bef173e7.190d2",
+        "name": "Pin 13 pir groot",
+        "pin": "13",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 241,
+        "y": 187,
+        "wires": [
+            [
+                "1a085ba1.800324"
+            ]
+        ]
+    },
+    {
+        "id": "1a085ba1.800324",
+        "type": "mqtt out",
+        "z": "bef173e7.190d2",
+        "name": "MQTT pir groot",
+        "topic": "Keuken/input/pir_groot",
+        "qos": "",
+        "retain": "",
+        "broker": "1f49c8e2.474727",
+        "x": 691,
+        "y": 167,
+        "wires": []
+    },
+    {
+        "id": "1f49c8e2.474727",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "Keuken/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "Keuken/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "Keuken/status",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "offline"
+    }
+]

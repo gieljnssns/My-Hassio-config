@@ -1,0 +1,206 @@
+[
+    {
+        "id": "c93d472b.6b295",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "e10dc069.28f248",
+        "type": "rpi-gpio in",
+        "z": "c93d472b.6b295",
+        "name": "Pin 15 Fotocel",
+        "pin": "15",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 220,
+        "y": 220,
+        "wires": [
+            [
+                "3b17eafe.a9da1e"
+            ]
+        ]
+    },
+    {
+        "id": "3b17eafe.a9da1e",
+        "type": "mqtt out",
+        "z": "c93d472b.6b295",
+        "name": "MQTT Fotocel",
+        "topic": "PoortjePi/input/fotocel",
+        "qos": "",
+        "retain": "",
+        "broker": "13acf7da.abce9",
+        "x": 670,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "801fc547.211",
+        "type": "rpi-dht22",
+        "z": "c93d472b.6b295",
+        "name": "DHT22",
+        "topic": "rpi-dht22",
+        "dht": 22,
+        "pintype": "2",
+        "pin": "7",
+        "x": 284.5,
+        "y": 475,
+        "wires": [
+            [
+                "d0d99a2f.b05698",
+                "d0d7bccd.58bed",
+                "4869063d.d5645"
+            ]
+        ]
+    },
+    {
+        "id": "cbc1f4c6.8bf1e",
+        "type": "inject",
+        "z": "c93d472b.6b295",
+        "name": "Elke minuut",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "60",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 110.5,
+        "y": 475,
+        "wires": [
+            [
+                "801fc547.211"
+            ]
+        ]
+    },
+    {
+        "id": "573d09b3.4c1dd",
+        "type": "mqtt out",
+        "z": "c93d472b.6b295",
+        "name": "MQTT DHT temperatuur",
+        "topic": "PoortjePi/input/temperatuur",
+        "qos": "",
+        "retain": "",
+        "broker": "13acf7da.abce9",
+        "x": 762.5,
+        "y": 473,
+        "wires": []
+    },
+    {
+        "id": "d0d99a2f.b05698",
+        "type": "debug",
+        "z": "c93d472b.6b295",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 477.5,
+        "y": 406,
+        "wires": []
+    },
+    {
+        "id": "d0d7bccd.58bed",
+        "type": "function",
+        "z": "c93d472b.6b295",
+        "name": "temperatuur",
+        "func": "msg.payload = msg.payload\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 485.5,
+        "y": 472,
+        "wires": [
+            [
+                "890581b9.be92b8",
+                "573d09b3.4c1dd"
+            ]
+        ]
+    },
+    {
+        "id": "4869063d.d5645",
+        "type": "function",
+        "z": "c93d472b.6b295",
+        "name": "luchtvochtigheid",
+        "func": "msg.payload = msg.humidity\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 487.5,
+        "y": 599,
+        "wires": [
+            [
+                "52ce7664.3288a8",
+                "cbc3b393.34bbc"
+            ]
+        ]
+    },
+    {
+        "id": "890581b9.be92b8",
+        "type": "debug",
+        "z": "c93d472b.6b295",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 721.5,
+        "y": 541,
+        "wires": []
+    },
+    {
+        "id": "52ce7664.3288a8",
+        "type": "debug",
+        "z": "c93d472b.6b295",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 719.5,
+        "y": 672,
+        "wires": []
+    },
+    {
+        "id": "cbc3b393.34bbc",
+        "type": "mqtt out",
+        "z": "c93d472b.6b295",
+        "name": "MQTT DHT luchtvochtigheid",
+        "topic": "PoortjePi/input/luchtvochtigheid",
+        "qos": "",
+        "retain": "",
+        "broker": "13acf7da.abce9",
+        "x": 769.5,
+        "y": 598,
+        "wires": []
+    },
+    {
+        "id": "13acf7da.abce9",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "PoortjePi/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "PoortjePi/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "PoortjePi/status",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "offline"
+    }
+]
