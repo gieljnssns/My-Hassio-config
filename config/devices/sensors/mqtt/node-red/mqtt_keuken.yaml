@@ -1,0 +1,35 @@
+- platform: mqtt
+  state_topic: 'Keuken/input/temperatuur'
+  device_class: temperature
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '°C'
+  name: 'Temperatuur Keuken'
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Keuken/input/luchtvochtigheid'
+  device_class: humidity
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '%'
+  name: 'Luchtvochtigheid Keuken'
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Keuken/input/pir_groot'
+  value_template: '{{ value_json }}'
+  name: 'Beweging Keuken groot'
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: 'Keuken/input/pir_klein'
+  value_template: '{{ value_json }}'
+  name: 'Beweging Keuken klein'
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"

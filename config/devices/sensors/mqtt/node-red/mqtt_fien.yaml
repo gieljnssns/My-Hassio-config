@@ -1,0 +1,35 @@
+- platform: mqtt
+  state_topic: 'Fien/input/temperatuur'
+  device_class: temperature
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '°C'
+  name: 'Temperatuur Fien'
+  availability_topic: "Fien/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Fien/input/luchtvochtigheid'
+  device_class: humidity
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '%'
+  name: 'Luchtvochtigheid Fien'
+  availability_topic: "Fien/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Fien/input/pir_groot'
+  value_template: '{{ value_json }}'
+  name: 'Beweging Fien groot'
+  availability_topic: "Fien/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: 'Fien/input/pir_klein'
+  value_template: '{{ value_json }}'
+  name: 'Beweging Fien klein'
+  availability_topic: "Fien/status"
+  payload_available: "online"
+  payload_not_available: "offline"

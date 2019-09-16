@@ -1,0 +1,40 @@
+- platform: mqtt
+  name: "Beweging Living Zero"
+  state_topic: "Living/zero/input/pir"
+  payload_on: 1
+  payload_off: 0
+  availability_topic: "Living/zero/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: motion
+
+- platform: mqtt
+  name: "Beweging Living Pi3"
+  state_topic: "Living/pi3/input/pir"
+  payload_on: 1
+  payload_off: 0
+  availability_topic: "Living/pi3/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: motion
+
+- platform: template
+  sensors:
+    nodered_living_zero_down:
+      friendly_name: "NodeRed unavailable"
+      device_class: problem
+      value_template: >-
+        {{ states("binary_sensor.beweging_living_zero") == 'unavailable'}}
+    
+    nodered_living_pi3_down:
+      friendly_name: "NodeRed unavailable"
+      device_class: problem
+      value_template: >-
+        {{ states("binary_sensor.beweging_living_pi3") == 'unavailable'}}
+        
+    pir_living:
+      friendly_name: "Pir living"
+      device_class: motion
+      value_template: >
+          {{ is_state('binary_sensor.beweging_living_pi3', 'on') 
+             or is_state('binary_sensor.beweging_living_zero', 'on') }}

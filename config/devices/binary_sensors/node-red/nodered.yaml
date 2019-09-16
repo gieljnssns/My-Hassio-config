@@ -1,0 +1,17 @@
+- platform: template
+  sensors:
+    nodered_down:
+      friendly_name: "NodeRed unavailable"
+      icon_template: mdi:nodejs
+      device_class: problem
+      value_template: >-
+        {{  states("binary_sensor.nodered_garage_down") == 'on' or 
+            states("binary_sensor.nodered_keuken_down") == 'on' or
+            states("binary_sensor.nodered_badkamer_down") == 'on' or
+            states("binary_sensor.nodered_fien_down") == 'on' or
+            states("binary_sensor.nodered_noor_down") == 'on' or
+            states("binary_sensor.nodered_poort_down") == 'on' or
+            states("binary_sensor.nodered_slaapkamer_down") == 'on' or
+            states("binary_sensor.nodered_verwarming_down") == 'on' or
+            states("binary_sensor.nodered_living_pi3_down") == 'on' or
+            states("binary_sensor.nodered_living_zero_down") == 'on' }}

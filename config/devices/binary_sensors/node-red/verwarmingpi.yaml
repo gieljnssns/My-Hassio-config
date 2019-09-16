@@ -1,0 +1,7 @@
+- platform: template
+  sensors:
+    nodered_verwarming_down:
+      friendly_name: "NodeRed unavailable"
+      device_class: problem
+      value_template: >-
+        {{ states("switch.reserve_mqtt") == 'unavailable'}}

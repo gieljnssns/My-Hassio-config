@@ -2,25 +2,39 @@
     name: Gemiddelde temp buiten
     type: mean
     entity_ids:
-      - sensor.garage_5_0
+      - sensor.buitentemperatuur
       - sensor.temperatuur_poort
+  
+  - platform: min_max
+    name: Temperatuur Living
+    type: mean
+    entity_ids:
+      - sensor.temperatuur_living_zero
+      - sensor.temperatuur_living_pi3
+      - sensor.temp_living
+  
+  - platform: min_max
+    name: Luchtvochtigheid Living
+    type: mean
+    entity_ids:
+      - sensor.luchtvochtigheid_living_zero
+      - sensor.luchtvochtigheid_living_pi3
 
   - platform: min_max
     name: Gemiddelde temp Beneden
     type: mean
     entity_ids:
-      - sensor.keuken_6_1
-      - sensor.temp_living
-      - sensor.living_7_1
+      - sensor.temperatuur_keuken
+      - sensor.temperatuur_living
 
   - platform: min_max
     name: Gemiddelde temp Boven
     type: mean
     entity_ids:
-      - sensor.badkamer_1_1
-      - sensor.fien_3_1
-      - sensor.noor_4_1
-      - sensor.slaapkamer_2_1
+      - sensor.temperatuur_badkamer
+      - sensor.temperatuur_fien
+      - sensor.temperatuur_noor
+      - sensor.temperatuur_slaapkamer
 
   - platform: min_max
     name: Gemiddelde temp Binnen

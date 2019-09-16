@@ -1,0 +1,57 @@
+########   Pi3  #######
+- platform: mqtt
+  state_topic: 'Living/pi3/input/temperatuur'
+  device_class: temperature
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '°C'
+  name: 'Temperatuur Living Pi3'
+  availability_topic: "Living/pi3/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Living/pi3/input/luchtvochtigheid'
+  device_class: humidity
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '%'
+  name: 'Luchtvochtigheid Living Pi3'
+  availability_topic: "Living/pi3/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Living/pi3/input/pir'
+  value_template: '{{ value_json }}'
+  name: 'Beweging Living Pi3'
+  availability_topic: "Living/pi3/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+########   Zero  #######
+- platform: mqtt
+  state_topic: 'Living/zero/input/temperatuur'
+  device_class: temperature
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '°C'
+  name: 'Temperatuur Living Zero'
+  availability_topic: "Living/zero/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Living/zero/input/luchtvochtigheid'
+  device_class: humidity
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '%'
+  name: 'Luchtvochtigheid Living Zero'
+  availability_topic: "Living/zero/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Living/zero/input/pir'
+  value_template: '{{ value_json }}'
+  name: 'Beweging Living Zero'
+  availability_topic: "Living/zero/status"
+  payload_available: "online"
+  payload_not_available: "offline"

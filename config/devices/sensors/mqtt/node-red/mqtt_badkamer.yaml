@@ -19,9 +19,17 @@
   payload_not_available: "offline"
   
 - platform: mqtt
-  state_topic: 'Badkamer/input/pir'
+  state_topic: 'Badkamer/input/pir_groot'
   value_template: '{{ value_json }}'
-  name: 'Beweging badkamer'
+  name: 'Beweging Badkamer groot'
+  availability_topic: "Badkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: 'Badkamer/input/pir_klein'
+  value_template: '{{ value_json }}'
+  name: 'Beweging Badkamer klein'
   availability_topic: "Badkamer/status"
   payload_available: "online"
   payload_not_available: "offline"

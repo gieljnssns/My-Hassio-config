@@ -1,0 +1,34 @@
+- platform: mqtt
+  name: "Beweging Keuken pir klein"
+  state_topic: "Keuken/input/pir_klein"
+  payload_on: 1
+  payload_off: 0
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: motion
+
+- platform: mqtt
+  name: "Beweging Keuken pir groot"
+  state_topic: "Keuken/input/pir_groot"
+  payload_on: 1
+  payload_off: 0
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: motion
+
+- platform: template
+  sensors:
+    nodered_keuken_down:
+      friendly_name: "NodeRed unavailable"
+      device_class: problem
+      value_template: >-
+        {{ states("binary_sensor.beweging_keuken_pir_klein") == 'unavailable'}}
+        
+    pir_keuken:
+      friendly_name: "Pir keuken"
+      device_class: motion
+      value_template: >
+          {{ is_state('binary_sensor.beweging_keuken_pir_groot', 'on') 
+             or is_state('binary_sensor.beweging_keuken_pir_klein', 'on') }}
