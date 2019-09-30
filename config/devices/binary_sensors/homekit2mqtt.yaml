@@ -27,3 +27,11 @@
   payload_available: 2
   payload_not_available: 0
   device_class: light
+
+- platform: template
+  sensors:
+    homekit2mqtt_down:
+      friendly_name: "Homekit2Mqtt unavailable"
+      device_class: problem
+      value_template: >-
+        {{ states("binary_sensor.voordeur_homekit2mqtt") == 'unavailable'}}
