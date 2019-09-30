@@ -1,7 +1,10 @@
   giel_bt_not_home:
     sequence:
-      # - delay:
-      #     seconds: 30
+      - delay:
+          seconds: 45
+      - condition: numeric_state
+        entity_id: sensor.gphone_bt_thuis
+        below: 40
       - service: input_boolean.turn_off
         entity_id: input_boolean.gphone_bluetooth
       - service: input_boolean.turn_off
