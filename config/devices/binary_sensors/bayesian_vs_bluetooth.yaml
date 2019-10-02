@@ -10,7 +10,7 @@
       martine_bayesian_on_bluetooth_off:
         value_template: >
           {{ is_state('binary_sensor.martine_bayesian', 'on') 
-             and is_state('input_boolean.mphone_bluetooth', 'off') }}
+             and states('sensor.mphone_bt_thuis') | float < 43 }}
         delay_on:
          seconds: 120
 
@@ -26,7 +26,7 @@
       martine_bayesian_off_bluetooth_on:
         value_template: >
           {{ is_state('binary_sensor.martine_bayesian', 'off') 
-             and is_state('input_boolean.mphone_bluetooth', 'on') }}
+             and states('sensor.mphone_bt_thuis') | float > 43 }}
         delay_on:
          seconds: 120
 

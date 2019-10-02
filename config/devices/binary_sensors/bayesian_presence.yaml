@@ -37,27 +37,37 @@
 
   - platform: bayesian
     prior: 0.5
-    probability_threshold: 0.76
+    probability_threshold: 0.9
     name: 'Martine bayesian'
     device_class: presence
     observations:
+      # Ping
       - entity_id: 'device_tracker.mphone_ping'
         prob_given_true: 0.9
-        prob_given_false: 0.4
+        prob_given_false: 0.1
         platform: 'state'
         to_state: 'home'
+      # IOS app
       - entity_id: 'device_tracker.mphone_2'
         prob_given_true: 0.6
         prob_given_false: 0.4
         platform: 'state'
         to_state: 'home'
-      - entity_id: input_boolean.mphone_bluetooth
+      # Bt Monitor
+      - entity_id: sensor.mphone_bt_thuis
         prob_given_true: 0.9
         prob_given_false: 0.3
+        platform: 'numeric_state'
+        above: 43
+      # iPhone Detect
+      - entity_id: 'device_tracker.mphone_detect'
+        prob_given_true: 0.9
+        prob_given_false: 0.1
         platform: 'state'
-        to_state: 'on'
-      # - entity_id: 'device_tracker.martine_bt_monitor'
-      #   prob_given_true: 0.9
-      #   prob_given_false: 0.3
-      #   platform: 'state'
-      #   to_state: 'home'
+        to_state: 'home'
+      # Unifi
+      - entity_id: 'device_tracker.mphone'
+        prob_given_true: 0.9
+        prob_given_false: 0.4
+        platform: 'state'
+        to_state: 'home'

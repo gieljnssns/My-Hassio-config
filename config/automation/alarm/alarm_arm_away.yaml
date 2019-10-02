@@ -7,21 +7,38 @@
     - platform: state
       entity_id: device_tracker.giel_not_so_binary
       to: 'Afwezig'
+    - platform: state
+      entity_id: device_tracker.martine_not_so_binary
+      to: 'Juist Weg'
+    - platform: state
+      entity_id: device_tracker.martine_not_so_binary
+      to: 'Afwezig'
     # - platform: state
     #   entity_id: input_boolean.gielthuis
     #   to: 'off'
-    - platform: state
-      entity_id: input_boolean.martinethuis
-      to: 'off'
+    # - platform: state
+    #   entity_id: input_boolean.martinethuis
+    #   to: 'off'
   condition:
     condition: and
     conditions:
     #  - condition: state
     #    entity_id: input_boolean.gielthuis
     #    state: 'off'
-      - condition: state
-        entity_id: input_boolean.martinethuis
-        state: 'off'
+      # - condition: state
+      #   entity_id: input_boolean.martinethuis
+      #   state: 'off'
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: device_tracker.martine_not_so_binary
+            state: 'Juist Weg'
+          - condition: state
+            entity_id: device_tracker.martine_not_so_binary
+            state: 'Afwezig'
+          - condition: state
+            entity_id: device_tracker.martine_not_so_binary
+            state: 'Langdurig Afwezig'
       - condition: or
         conditions:
           - condition: state
