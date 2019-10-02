@@ -1,14 +1,17 @@
   alias: 'Alarm disarm'
   initial_state: 'on' 
   trigger:
-    - platform: state
-      entity_id: input_boolean.martinethuis
-      to: 'on'
+    # - platform: state
+    #   entity_id: input_boolean.martinethuis
+    #   to: 'on'
     # - platform: state
     #   entity_id: input_boolean.gielthuis
     #   to: 'on'
     - platform: state
       entity_id: device_tracker.giel_not_so_binary
+      to: 'Juist Aangekomen'
+    - platform: state
+      entity_id: device_tracker.martine_not_so_binary
       to: 'Juist Aangekomen'
     - platform: state
       entity_id: media_player.keuken

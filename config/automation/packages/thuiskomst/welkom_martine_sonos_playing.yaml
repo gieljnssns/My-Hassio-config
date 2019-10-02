@@ -19,8 +19,11 @@
       #   entity_id: input_boolean.giel_komt_thuis
       #   state: 'off'
       - condition: state
-        entity_id: input_boolean.martine_komt_thuis
-        state: 'on'
+        entity_id: device_tracker.martine_not_so_binary
+        state: 'Juist Aangekomen'
+      # - condition: state
+      #   entity_id: input_boolean.martine_komt_thuis
+      #   state: 'on'
       - condition: template
         value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_pauze_spreek', 'last_triggered')) | float > 200 }}"
       - condition: template
