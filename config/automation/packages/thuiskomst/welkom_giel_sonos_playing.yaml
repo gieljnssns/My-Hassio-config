@@ -16,9 +16,12 @@
       - condition: state
         entity_id: input_boolean.martine_komt_thuis
         state: 'off'
+      # - condition: state
+      #   entity_id: input_boolean.giel_komt_thuis
+      #   state: 'on'
       - condition: state
-        entity_id: input_boolean.giel_komt_thuis
-        state: 'on'
+        entity_id: device_tracker.giel_not_so_binary
+        state: 'Juist Aangekomen'
       - condition: template
         value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_pauze_spreek', 'last_triggered')) | float > 200 }}"
       - condition: template
@@ -36,7 +39,6 @@
             "Welkom thuis " + person + ", zware dag gehad?",
             "Blij dat je thuis bent " + person ,
             "De grote baas is thuis!",
-            "Iedereen knielen voor de almachtige heerser",
             "Wees welkom " + person + ", toch niet te veel gedronken?",
             "Daar is ie weer! Ik zal de muziek wel terug opzetten.",
             "Zoals het klokje thuis tikt,. tikt het ook in de kroeg.",

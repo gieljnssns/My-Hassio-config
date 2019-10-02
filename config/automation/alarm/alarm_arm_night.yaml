@@ -33,12 +33,20 @@
         value_template: "{{ states('media_player.philips_tv') != 'on' }}"
       - condition: or
         conditions:
-          - condition: state
-            entity_id: input_boolean.gielthuis
-            state: 'on'
+          # - condition: state
+          #   entity_id: input_boolean.gielthuis
+          #   state: 'on'
           - condition: state
             entity_id: input_boolean.martinethuis
             state: 'on'
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: device_tracker.giel_not_so_binary
+                state: 'Thuis'
+              - condition: state
+                entity_id: device_tracker.giel_not_so_binary
+                state: 'Juist Aangekomen'
   action:
     - service: light.turn_on
       entity_id: light.slaapkamer
