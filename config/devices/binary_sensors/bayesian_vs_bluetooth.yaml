@@ -3,7 +3,7 @@
       giel_bayesian_on_bluetooth_off:
         value_template: >
           {{ is_state('binary_sensor.giel_bayesian', 'on') 
-             and is_state('input_boolean.gphone_bluetooth', 'off') }}
+             and states('sensor.gphone_bt_thuis') | float < 43 }}
         delay_on:
          seconds: 120
 
@@ -18,7 +18,7 @@
       giel_bayesian_off_bluetooth_on:
         value_template: >
           {{ is_state('binary_sensor.giel_bayesian', 'off') 
-             and is_state('input_boolean.gphone_bluetooth', 'on') }}
+             and states('sensor.gphone_bt_thuis') | float > 43 }}
         delay_on:
          seconds: 120
 

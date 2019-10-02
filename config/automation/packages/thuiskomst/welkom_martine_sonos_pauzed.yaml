@@ -13,9 +13,11 @@
       - condition: state
         entity_id: binary_sensor.keuken_not_playing
         state: 'on'     # {{ states('media_player.keuken') != 'playing' }}
-      - condition: state
-        entity_id: input_boolean.giel_komt_thuis
-        state: 'off'
+      # - condition: state
+      #   entity_id: input_boolean.giel_komt_thuis
+      #   state: 'off'
+      - condition: template
+        value_template: "{{ states('device_tracker.giel_not_so_binary') != 'Juist Aangekomen' }}"
       - condition: state
         entity_id: input_boolean.martine_komt_thuis
         state: 'on'
