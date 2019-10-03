@@ -2,20 +2,32 @@
   initial_state: 'on' 
   hide_entity: false
   trigger:
-    platform: state
-    entity_id: binary_sensor.pir_keuken
-    to: 'on'
-    for:
-      seconds: 3
+    - platform: template
+      value_template: >
+        {% if is_state('binary_sensor.achterdeur_open_last_5_min', 'on') and is_state('binary_sensor.pir_keuken', 'on') %}
+          true
+        {% endif %}
+    - platform: template
+      value_template: >
+        {% if is_state('binary_sensor.voordeur_open_last_5_min', 'on') and is_state('binary_sensor.pir_keuken', 'on') %}
+          true
+        {% endif %}
+    # platform: state
+    # entity_id: binary_sensor.pir_keuken
+    # to: 'on'
+    # for:
+    #   seconds: 3
   condition:
     condition: and
     conditions:
-      # - condition: state
-      #   entity_id: input_boolean.martine_komt_thuis
-      #   state: 'on'
-      # - condition: state
-      #   entity_id: input_boolean.giel_komt_thuis
-      #   state: 'on'
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.achterdeur_open_last_5_min
+            state: 'on'
+          - condition: state
+            entity_id: binary_sensor.voordeur_open_last_5_min
+            state: 'on'
       - condition: state
         entity_id: device_tracker.martine_not_so_binary
         state: 'Juist Aangekomen'
@@ -23,9 +35,9 @@
         entity_id: device_tracker.giel_not_so_binary
         state: 'Juist Aangekomen'
       - condition: template
-        value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_pauze_spreek', 'last_triggered')) | float > 200 }}"
+        value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_pauze_spreek', 'last_triggered')) | float > 310 }}"
       - condition: template
-        value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_playing_spreek', 'last_triggered')) | float > 200 }}"
+        value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_playing_spreek', 'last_triggered')) | float > 310 }}"
   action:
     - service: script.sonos_pauze_spreek
       data_template:
