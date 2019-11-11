@@ -4,14 +4,20 @@
   trigger:
     - platform: template
       value_template: >
-        {% if is_state('binary_sensor.achterdeur_open_last_5_min', 'on') and is_state('binary_sensor.pir_keuken', 'on') %}
-          true
-        {% endif %}
+        {{ is_state('binary_sensor.achterdeur_open_last_5_min', 'on') and is_state('binary_sensor.beweging_keuken_pir_klein', 'on') }}
     - platform: template
       value_template: >
-        {% if is_state('binary_sensor.voordeur_open_last_5_min', 'on') and is_state('binary_sensor.pir_keuken', 'on') %}
-          true
-        {% endif %}
+        {{ is_state('binary_sensor.voordeur_open_last_5_min', 'on') and is_state('binary_sensor.beweging_keuken_pir_klein', 'on') }}
+    # - platform: template
+    #   value_template: >
+    #     {% if is_state('binary_sensor.achterdeur_open_last_5_min', 'on') and is_state('binary_sensor.beweging_keuken_pir_klein', 'on') %}
+    #       true
+    #     {% endif %}
+    # - platform: template
+    #   value_template: >
+    #     {% if is_state('binary_sensor.voordeur_open_last_5_min', 'on') and is_state('binary_sensor.beweging_keuken_pir_klein', 'on') %}
+    #       true
+    #     {% endif %}
     # platform: state
     # entity_id: binary_sensor.pir_keuken
     # to: 'on'
