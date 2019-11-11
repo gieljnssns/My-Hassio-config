@@ -1,0 +1,40 @@
+  - platform: template
+    switches:
+      night_sound:
+        friendly_name: "Nacht Modus"
+        value_template: "{{ state_attr('media_player.living_2', 'night_sound') }}"
+        turn_on:
+          service: sonos.set_option
+          data:
+            entity_id: media_player.living_2
+            night_sound: true
+        turn_off:
+          service: sonos.set_option
+          data:
+            entity_id: media_player.living_2
+            night_sound: false
+        icon_template: >-
+          {% if is_state_attr('media_player.living_2', 'night_sound', true) %}
+            mdi:weather-night
+          {% else %}
+            mdi:weather-sunny
+          {% endif %}
+      speech_enhance:
+        friendly_name: "Spraak verbetering"
+        value_template: "{{ state_attr('media_player.living_2', 'speech_enhance') }}"
+        turn_on:
+          service: sonos.set_option
+          data:
+            entity_id: media_player.living_2
+            speech_enhance: true
+        turn_off:
+          service: sonos.set_option
+          data:
+            entity_id: media_player.living_2
+            speech_enhance: false
+        icon_template: >-
+          {% if is_state_attr('media_player.living_2', 'speech_enhance', true) %}
+            mdi:message-bulleted
+          {% else %}
+            mdi:message-bulleted-off
+          {% endif %}

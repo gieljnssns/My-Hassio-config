@@ -6,29 +6,25 @@
       from: 'on'
       to: 'off'
     - platform: state
-      entity_id: media_player.vsx_921
-      from: 'on'
-      to: 'off'
+      entity_id: device_tracker.philips_tv_ping
+      from: 'home'
+      to: 'not_home'
+    - platform: state
+      entity_id: media_player.living_2
+      from: 'playing'
+      to: 'paused'
     - platform: state
       entity_id: light.slaapkamer
       to: 'off'
     - platform: state
       entity_id: light.slaapkamer
       to: 'unavailable'
-    - platform: state
-      entity_id: media_player.philips_tv_wifi
-      from: 'on'
-      to: 'off'
   condition:
     condition: and
     conditions:
       - condition: time
         after: '20:15:00'
         before: '04:00:00'
-      - condition: template
-        value_template: "{{ states('media_player.vsx_921') != 'on' }}"
-      - condition: template
-        value_template: "{{ states('media_player.philips_tv_wifi') != 'on' }}"
       - condition: template
         value_template: "{{ states('media_player.philips_tv') != 'on' }}"
       - condition: or
