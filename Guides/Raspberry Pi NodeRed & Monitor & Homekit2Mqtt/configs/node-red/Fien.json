@@ -2,7 +2,7 @@
     {
         "id": "f5b5640e.1deba8",
         "type": "tab",
-        "label": "Flow 1",
+        "label": "Fien",
         "disabled": false,
         "info": ""
     },
@@ -31,8 +31,8 @@
         "func": "msg.payload = msg.payload\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 490,
-        "y": 580,
+        "x": 510,
+        "y": 403,
         "wires": [
             [
                 "6461d640.eea118",
@@ -48,8 +48,8 @@
         "func": "msg.payload = msg.humidity\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 500,
-        "y": 700,
+        "x": 520,
+        "y": 523,
         "wires": [
             [
                 "2b1c7ea0.505022",
@@ -62,14 +62,14 @@
         "type": "debug",
         "z": "f5b5640e.1deba8",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "true",
         "targetType": "full",
-        "x": 470,
-        "y": 520,
+        "x": 490,
+        "y": 343,
         "wires": []
     },
     {
@@ -77,13 +77,13 @@
         "type": "debug",
         "z": "f5b5640e.1deba8",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 770,
-        "y": 640,
+        "x": 790,
+        "y": 463,
         "wires": []
     },
     {
@@ -91,13 +91,13 @@
         "type": "debug",
         "z": "f5b5640e.1deba8",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 770,
-        "y": 760,
+        "x": 790,
+        "y": 583,
         "wires": []
     },
     {
@@ -122,8 +122,8 @@
         "qos": "",
         "retain": "",
         "broker": "929b9fbd.25384",
-        "x": 810,
-        "y": 580,
+        "x": 830,
+        "y": 403,
         "wires": []
     },
     {
@@ -135,8 +135,8 @@
         "qos": "",
         "retain": "",
         "broker": "929b9fbd.25384",
-        "x": 820,
-        "y": 700,
+        "x": 840,
+        "y": 523,
         "wires": []
     },
     {
@@ -151,8 +151,8 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "x": 90,
-        "y": 580,
+        "x": 110,
+        "y": 403,
         "wires": [
             [
                 "39daf757.61c8e8"
@@ -198,13 +198,511 @@
         "dht": 22,
         "pintype": "2",
         "pin": "7",
-        "x": 260,
-        "y": 580,
+        "x": 280,
+        "y": 403,
         "wires": [
             [
                 "8e31431d.e5d47",
                 "dac123c6.53af2",
                 "da4a6272.c9445"
+            ]
+        ]
+    },
+    {
+        "id": "2e04be6a.c24212",
+        "type": "inject",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "10",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "x": 137,
+        "y": 711.25,
+        "wires": [
+            [
+                "4f9d6beb.013904",
+                "c10fb661.6ed6c8",
+                "d3c6c394.9a2b7",
+                "75d0c3be.9d714c"
+            ]
+        ]
+    },
+    {
+        "id": "4f9d6beb.013904",
+        "type": "vcgencmd",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "command": "get_throttled",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 382.5,
+        "y": 1067,
+        "wires": [
+            [
+                "a00f4f42.76b1e",
+                "43c2f68b.103708"
+            ]
+        ]
+    },
+    {
+        "id": "cdb01758.8633e8",
+        "type": "cpu",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "msgCore": false,
+        "msgOverall": true,
+        "msgArray": false,
+        "msgTemp": false,
+        "x": 375.5,
+        "y": 777,
+        "wires": [
+            [
+                "5e2703b8.b6554c",
+                "28eaba47.567136"
+            ]
+        ]
+    },
+    {
+        "id": "5e2703b8.b6554c",
+        "type": "debug",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 766.5,
+        "y": 824,
+        "wires": []
+    },
+    {
+        "id": "afbf3e78.a1074",
+        "type": "debug",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 772.5,
+        "y": 1139,
+        "wires": []
+    },
+    {
+        "id": "c10fb661.6ed6c8",
+        "type": "vcgencmd",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "command": "measure_temp",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 387.5,
+        "y": 670,
+        "wires": [
+            [
+                "9d3645e7.70bed8",
+                "98661690.96b3a8"
+            ]
+        ]
+    },
+    {
+        "id": "9d3645e7.70bed8",
+        "type": "debug",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 771.5,
+        "y": 722,
+        "wires": []
+    },
+    {
+        "id": "84c673b2.7a95a",
+        "type": "Uptime",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "x": 366.5,
+        "y": 1343,
+        "wires": [
+            [
+                "1c02858f.3633da"
+            ]
+        ]
+    },
+    {
+        "id": "d3c6c394.9a2b7",
+        "type": "Memory",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "x": 371.5,
+        "y": 924,
+        "wires": [
+            [
+                "c81f0fba.1942e"
+            ]
+        ]
+    },
+    {
+        "id": "8ed30c0.d2691f8",
+        "type": "inject",
+        "z": "f5b5640e.1deba8",
+        "name": "update",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "3600",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "x": 184.5,
+        "y": 1343,
+        "wires": [
+            [
+                "84c673b2.7a95a"
+            ]
+        ]
+    },
+    {
+        "id": "1c02858f.3633da",
+        "type": "function",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "func": "function timeConversion(millisec) {\n\n    var seconds = (millisec / 1000).toFixed(1);\n\n    var minutes = (millisec / (1000 * 60)).toFixed(1);\n\n    var hours = (millisec / (1000 * 60 * 60)).toFixed(1);\n\n    var days = (millisec / (1000 * 60 * 60 * 24)).toFixed(1);\n\n    if (seconds < 60) {\n        return seconds + \" Sec\";\n    } else if (minutes < 60) {\n        return minutes + \" Min\";\n    } else if (hours < 24) {\n        return hours + \" Hrs\";\n    } else {\n        return days + \" Days\"\n    }\n}\n\nmsg.payload = timeConversion(msg.payload.uptime * 1000);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 526.5,
+        "y": 1343,
+        "wires": [
+            [
+                "a7e068e8.533168",
+                "e5989a69.795258"
+            ]
+        ]
+    },
+    {
+        "id": "c81f0fba.1942e",
+        "type": "function",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "func": "msg.payload = msg.payload.memusage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 544.5,
+        "y": 924,
+        "wires": [
+            [
+                "a6e44792.8f49e8",
+                "95b8e44a.d268b8"
+            ]
+        ]
+    },
+    {
+        "id": "a7e068e8.533168",
+        "type": "debug",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 741.5,
+        "y": 1404,
+        "wires": []
+    },
+    {
+        "id": "a6e44792.8f49e8",
+        "type": "debug",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 777.5,
+        "y": 998,
+        "wires": []
+    },
+    {
+        "id": "a00f4f42.76b1e",
+        "type": "function",
+        "z": "f5b5640e.1deba8",
+        "name": "Undervoltage",
+        "func": "msg.payload = msg.payload.underVoltage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 586.5,
+        "y": 1070,
+        "wires": [
+            [
+                "afbf3e78.a1074",
+                "23cbc13e.0fb7ae"
+            ]
+        ]
+    },
+    {
+        "id": "43c2f68b.103708",
+        "type": "function",
+        "z": "f5b5640e.1deba8",
+        "name": "Throttle",
+        "func": "msg.payload = msg.payload.throttled;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 574.5,
+        "y": 1197,
+        "wires": [
+            [
+                "93b304e1.69e6a8",
+                "f2fc4689.2b7548"
+            ]
+        ]
+    },
+    {
+        "id": "93b304e1.69e6a8",
+        "type": "debug",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 755.5,
+        "y": 1268,
+        "wires": []
+    },
+    {
+        "id": "98661690.96b3a8",
+        "type": "mqtt out",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "topic": "Fien/system/temp",
+        "qos": "",
+        "retain": "",
+        "broker": "929b9fbd.25384",
+        "x": 791.5,
+        "y": 668,
+        "wires": []
+    },
+    {
+        "id": "28eaba47.567136",
+        "type": "mqtt out",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "topic": "Fien/system/cpu",
+        "qos": "",
+        "retain": "",
+        "broker": "929b9fbd.25384",
+        "x": 783.5,
+        "y": 782,
+        "wires": []
+    },
+    {
+        "id": "95b8e44a.d268b8",
+        "type": "mqtt out",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "topic": "Fien/system/mem",
+        "qos": "",
+        "retain": "",
+        "broker": "929b9fbd.25384",
+        "x": 795.5,
+        "y": 924,
+        "wires": []
+    },
+    {
+        "id": "23cbc13e.0fb7ae",
+        "type": "mqtt out",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "topic": "Fien/system/undervoltage",
+        "qos": "",
+        "retain": "",
+        "broker": "929b9fbd.25384",
+        "x": 829.5,
+        "y": 1067,
+        "wires": []
+    },
+    {
+        "id": "f2fc4689.2b7548",
+        "type": "mqtt out",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "topic": "Fien/system/throttle",
+        "qos": "",
+        "retain": "",
+        "broker": "929b9fbd.25384",
+        "x": 796.5,
+        "y": 1202,
+        "wires": []
+    },
+    {
+        "id": "e5989a69.795258",
+        "type": "mqtt out",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "topic": "Fien/system/uptime",
+        "qos": "",
+        "retain": "",
+        "broker": "929b9fbd.25384",
+        "x": 788.5,
+        "y": 1346,
+        "wires": []
+    },
+    {
+        "id": "b76f5340.5f99",
+        "type": "inject",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "5",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 120.5,
+        "y": 870,
+        "wires": [
+            [
+                "cdb01758.8633e8"
+            ]
+        ]
+    },
+    {
+        "id": "1db6649f.65535b",
+        "type": "debug",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 737,
+        "y": 1571.25,
+        "wires": []
+    },
+    {
+        "id": "75d0c3be.9d714c",
+        "type": "exec",
+        "z": "f5b5640e.1deba8",
+        "command": "cat /proc/net/wireless | grep wlan0: | awk '{print int($4)}'",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "Wifi signal",
+        "x": 377,
+        "y": 1511.25,
+        "wires": [
+            [
+                "1db6649f.65535b",
+                "f433ad38.b648b"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "f433ad38.b648b",
+        "type": "mqtt out",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "topic": "Fien/system/wifi",
+        "qos": "",
+        "retain": "",
+        "broker": "929b9fbd.25384",
+        "x": 757,
+        "y": 1511.25,
+        "wires": []
+    },
+    {
+        "id": "ad88d659.2a6748",
+        "type": "exec",
+        "z": "f5b5640e.1deba8",
+        "command": "sudo reboot",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Reboot",
+        "x": 507,
+        "y": 1631.25,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "339b2ed5.0d5752",
+        "type": "exec",
+        "z": "f5b5640e.1deba8",
+        "command": "sudo shutdown -h now",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Shutdown",
+        "x": 517,
+        "y": 1711.25,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "2ac3f16a.75c9ce",
+        "type": "mqtt in",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "topic": "Fien/system/reboot",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "929b9fbd.25384",
+        "x": 207,
+        "y": 1631.25,
+        "wires": [
+            [
+                "ad88d659.2a6748"
+            ]
+        ]
+    },
+    {
+        "id": "3400945b.7c8dec",
+        "type": "mqtt in",
+        "z": "f5b5640e.1deba8",
+        "name": "",
+        "topic": "Fien/system/shutdown",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "929b9fbd.25384",
+        "x": 217,
+        "y": 1711.25,
+        "wires": [
+            [
+                "339b2ed5.0d5752"
             ]
         ]
     },

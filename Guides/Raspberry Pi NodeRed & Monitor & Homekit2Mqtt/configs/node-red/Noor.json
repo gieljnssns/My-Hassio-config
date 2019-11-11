@@ -2,7 +2,7 @@
     {
         "id": "1e8b2004.88344",
         "type": "tab",
-        "label": "Flow 1",
+        "label": "Noor",
         "disabled": false,
         "info": ""
     },
@@ -32,8 +32,8 @@
         "dht": 22,
         "pintype": "2",
         "pin": "7",
-        "x": 260,
-        "y": 580,
+        "x": 296,
+        "y": 346,
         "wires": [
             [
                 "57b4b97a.f222f8",
@@ -50,8 +50,8 @@
         "func": "msg.payload = msg.payload\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 490,
-        "y": 580,
+        "x": 526,
+        "y": 346,
         "wires": [
             [
                 "55452b5d.6b9fd4",
@@ -67,8 +67,8 @@
         "func": "msg.payload = msg.humidity\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 500,
-        "y": 700,
+        "x": 536,
+        "y": 466,
         "wires": [
             [
                 "42e6b53d.062c8c",
@@ -81,14 +81,14 @@
         "type": "debug",
         "z": "1e8b2004.88344",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "true",
         "targetType": "full",
-        "x": 470,
-        "y": 520,
+        "x": 506,
+        "y": 286,
         "wires": []
     },
     {
@@ -96,13 +96,13 @@
         "type": "debug",
         "z": "1e8b2004.88344",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 770,
-        "y": 640,
+        "x": 806,
+        "y": 406,
         "wires": []
     },
     {
@@ -110,13 +110,13 @@
         "type": "debug",
         "z": "1e8b2004.88344",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 770,
-        "y": 760,
+        "x": 806,
+        "y": 526,
         "wires": []
     },
     {
@@ -141,8 +141,8 @@
         "qos": "",
         "retain": "",
         "broker": "2fc012d4.51081e",
-        "x": 810,
-        "y": 580,
+        "x": 846,
+        "y": 346,
         "wires": []
     },
     {
@@ -154,8 +154,8 @@
         "qos": "",
         "retain": "",
         "broker": "2fc012d4.51081e",
-        "x": 820,
-        "y": 700,
+        "x": 856,
+        "y": 466,
         "wires": []
     },
     {
@@ -170,8 +170,8 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "x": 90,
-        "y": 580,
+        "x": 126,
+        "y": 346,
         "wires": [
             [
                 "b8b73229.514f2"
@@ -207,6 +207,504 @@
         "x": 630,
         "y": 100,
         "wires": []
+    },
+    {
+        "id": "1a3503a6.a7c2dc",
+        "type": "inject",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "10",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "x": 166,
+        "y": 651,
+        "wires": [
+            [
+                "12446f6e.be8b11",
+                "99c31d14.ba30f",
+                "fb91bff3.cf906",
+                "f8b4ce7b.f28ea"
+            ]
+        ]
+    },
+    {
+        "id": "12446f6e.be8b11",
+        "type": "vcgencmd",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "command": "get_throttled",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 411.5,
+        "y": 1006.75,
+        "wires": [
+            [
+                "2289bbe3.e4e0d4",
+                "3c784d1e.c645a2"
+            ]
+        ]
+    },
+    {
+        "id": "1a1bc425.bb3ddc",
+        "type": "cpu",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "msgCore": false,
+        "msgOverall": true,
+        "msgArray": false,
+        "msgTemp": false,
+        "x": 404.5,
+        "y": 716.75,
+        "wires": [
+            [
+                "7bce84e7.a6887c",
+                "82d67537.523ac8"
+            ]
+        ]
+    },
+    {
+        "id": "7bce84e7.a6887c",
+        "type": "debug",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 795.5,
+        "y": 763.75,
+        "wires": []
+    },
+    {
+        "id": "68246a14.7a0fd4",
+        "type": "debug",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 801.5,
+        "y": 1078.75,
+        "wires": []
+    },
+    {
+        "id": "99c31d14.ba30f",
+        "type": "vcgencmd",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "command": "measure_temp",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 416.5,
+        "y": 609.75,
+        "wires": [
+            [
+                "948778cb.2c66b8",
+                "969c484b.f32fa8"
+            ]
+        ]
+    },
+    {
+        "id": "948778cb.2c66b8",
+        "type": "debug",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 800.5,
+        "y": 661.75,
+        "wires": []
+    },
+    {
+        "id": "96f35737.d77578",
+        "type": "Uptime",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "x": 395.5,
+        "y": 1282.75,
+        "wires": [
+            [
+                "14f61b06.e96db5"
+            ]
+        ]
+    },
+    {
+        "id": "fb91bff3.cf906",
+        "type": "Memory",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "x": 400.5,
+        "y": 863.75,
+        "wires": [
+            [
+                "a0766e7.c93739"
+            ]
+        ]
+    },
+    {
+        "id": "6d98de02.8667b",
+        "type": "inject",
+        "z": "1e8b2004.88344",
+        "name": "update",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "3600",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "x": 213.5,
+        "y": 1282.75,
+        "wires": [
+            [
+                "96f35737.d77578"
+            ]
+        ]
+    },
+    {
+        "id": "14f61b06.e96db5",
+        "type": "function",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "func": "function timeConversion(millisec) {\n\n    var seconds = (millisec / 1000).toFixed(1);\n\n    var minutes = (millisec / (1000 * 60)).toFixed(1);\n\n    var hours = (millisec / (1000 * 60 * 60)).toFixed(1);\n\n    var days = (millisec / (1000 * 60 * 60 * 24)).toFixed(1);\n\n    if (seconds < 60) {\n        return seconds + \" Sec\";\n    } else if (minutes < 60) {\n        return minutes + \" Min\";\n    } else if (hours < 24) {\n        return hours + \" Hrs\";\n    } else {\n        return days + \" Days\"\n    }\n}\n\nmsg.payload = timeConversion(msg.payload.uptime * 1000);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 555.5,
+        "y": 1282.75,
+        "wires": [
+            [
+                "42fa96b8.d4cda8",
+                "6f45fa44.238054"
+            ]
+        ]
+    },
+    {
+        "id": "a0766e7.c93739",
+        "type": "function",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "func": "msg.payload = msg.payload.memusage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 573.5,
+        "y": 863.75,
+        "wires": [
+            [
+                "91f0f1b2.885a1",
+                "4b490abe.bb3274"
+            ]
+        ]
+    },
+    {
+        "id": "42fa96b8.d4cda8",
+        "type": "debug",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 770.5,
+        "y": 1343.75,
+        "wires": []
+    },
+    {
+        "id": "91f0f1b2.885a1",
+        "type": "debug",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 806.5,
+        "y": 937.75,
+        "wires": []
+    },
+    {
+        "id": "2289bbe3.e4e0d4",
+        "type": "function",
+        "z": "1e8b2004.88344",
+        "name": "Undervoltage",
+        "func": "msg.payload = msg.payload.underVoltage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 615.5,
+        "y": 1009.75,
+        "wires": [
+            [
+                "68246a14.7a0fd4",
+                "c8c0da02.f6c1c8"
+            ]
+        ]
+    },
+    {
+        "id": "3c784d1e.c645a2",
+        "type": "function",
+        "z": "1e8b2004.88344",
+        "name": "Throttle",
+        "func": "msg.payload = msg.payload.throttled;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 603.5,
+        "y": 1136.75,
+        "wires": [
+            [
+                "8f20b924.136098",
+                "864c640c.059e18"
+            ]
+        ]
+    },
+    {
+        "id": "8f20b924.136098",
+        "type": "debug",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 784.5,
+        "y": 1207.75,
+        "wires": []
+    },
+    {
+        "id": "969c484b.f32fa8",
+        "type": "mqtt out",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "topic": "Noor/system/temp",
+        "qos": "",
+        "retain": "",
+        "broker": "2fc012d4.51081e",
+        "x": 820.5,
+        "y": 607.75,
+        "wires": []
+    },
+    {
+        "id": "82d67537.523ac8",
+        "type": "mqtt out",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "topic": "Noor/system/cpu",
+        "qos": "",
+        "retain": "",
+        "broker": "2fc012d4.51081e",
+        "x": 812.5,
+        "y": 721.75,
+        "wires": []
+    },
+    {
+        "id": "4b490abe.bb3274",
+        "type": "mqtt out",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "topic": "Noor/system/mem",
+        "qos": "",
+        "retain": "",
+        "broker": "2fc012d4.51081e",
+        "x": 824.5,
+        "y": 863.75,
+        "wires": []
+    },
+    {
+        "id": "c8c0da02.f6c1c8",
+        "type": "mqtt out",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "topic": "Noor/system/undervoltage",
+        "qos": "",
+        "retain": "",
+        "broker": "2fc012d4.51081e",
+        "x": 868.5,
+        "y": 1006.75,
+        "wires": []
+    },
+    {
+        "id": "864c640c.059e18",
+        "type": "mqtt out",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "topic": "Noor/system/throttle",
+        "qos": "",
+        "retain": "",
+        "broker": "2fc012d4.51081e",
+        "x": 825.5,
+        "y": 1141.75,
+        "wires": []
+    },
+    {
+        "id": "6f45fa44.238054",
+        "type": "mqtt out",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "topic": "Noor/system/uptime",
+        "qos": "",
+        "retain": "",
+        "broker": "2fc012d4.51081e",
+        "x": 817.5,
+        "y": 1285.75,
+        "wires": []
+    },
+    {
+        "id": "f750b63c.bb6918",
+        "type": "inject",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "5",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 149.5,
+        "y": 809.75,
+        "wires": [
+            [
+                "1a1bc425.bb3ddc"
+            ]
+        ]
+    },
+    {
+        "id": "3211bb54.d76474",
+        "type": "debug",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 766,
+        "y": 1511,
+        "wires": []
+    },
+    {
+        "id": "f8b4ce7b.f28ea",
+        "type": "exec",
+        "z": "1e8b2004.88344",
+        "command": "cat /proc/net/wireless | grep wlan0: | awk '{print int($4)}'",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "Wifi signal",
+        "x": 406,
+        "y": 1451,
+        "wires": [
+            [
+                "3211bb54.d76474",
+                "35d3c3ff.b7d3ac"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "35d3c3ff.b7d3ac",
+        "type": "mqtt out",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "topic": "Noor/system/wifi",
+        "qos": "",
+        "retain": "",
+        "broker": "2fc012d4.51081e",
+        "x": 796,
+        "y": 1451,
+        "wires": []
+    },
+    {
+        "id": "16ffafb8.1a896",
+        "type": "exec",
+        "z": "1e8b2004.88344",
+        "command": "sudo reboot",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Reboot",
+        "x": 536,
+        "y": 1571,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "e67aa98a.c72df8",
+        "type": "exec",
+        "z": "1e8b2004.88344",
+        "command": "sudo shutdown -h now",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Shutdown",
+        "x": 546,
+        "y": 1651,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "f2c72a04.91e158",
+        "type": "mqtt in",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "topic": "Noor/system/reboot",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "2fc012d4.51081e",
+        "x": 236,
+        "y": 1571,
+        "wires": [
+            [
+                "16ffafb8.1a896"
+            ]
+        ]
+    },
+    {
+        "id": "c03897a9.4a03e8",
+        "type": "mqtt in",
+        "z": "1e8b2004.88344",
+        "name": "",
+        "topic": "Noor/system/shutdown",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "2fc012d4.51081e",
+        "x": 246,
+        "y": 1651,
+        "wires": [
+            [
+                "e67aa98a.c72df8"
+            ]
+        ]
     },
     {
         "id": "2fc012d4.51081e",

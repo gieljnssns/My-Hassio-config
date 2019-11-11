@@ -2,7 +2,7 @@
     {
         "id": "b20905ac.d661c8",
         "type": "tab",
-        "label": "Flow 1",
+        "label": "Living/zero",
         "disabled": false,
         "info": ""
     },
@@ -18,8 +18,8 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "x": 100.5,
-        "y": 575,
+        "x": 125.5,
+        "y": 238,
         "wires": [
             [
                 "58c3bef8.49fc8"
@@ -35,8 +35,8 @@
         "qos": "",
         "retain": "",
         "broker": "59d9a5b6.99aa2c",
-        "x": 752.5,
-        "y": 573,
+        "x": 777.5,
+        "y": 236,
         "wires": []
     },
     {
@@ -50,8 +50,8 @@
         "tostatus": false,
         "complete": "true",
         "targetType": "full",
-        "x": 467.5,
-        "y": 506,
+        "x": 492.5,
+        "y": 169,
         "wires": []
     },
     {
@@ -62,8 +62,8 @@
         "func": "msg.payload = msg.payload\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 475.5,
-        "y": 572,
+        "x": 500.5,
+        "y": 235,
         "wires": [
             [
                 "8e8735a1.50c798",
@@ -79,8 +79,8 @@
         "func": "msg.payload = msg.humidity\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 477.5,
-        "y": 699,
+        "x": 502.5,
+        "y": 362,
         "wires": [
             [
                 "886f20e.72cf1e",
@@ -98,8 +98,8 @@
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 711.5,
-        "y": 641,
+        "x": 736.5,
+        "y": 304,
         "wires": []
     },
     {
@@ -112,8 +112,8 @@
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 709.5,
-        "y": 772,
+        "x": 734.5,
+        "y": 435,
         "wires": []
     },
     {
@@ -125,8 +125,8 @@
         "qos": "",
         "retain": "",
         "broker": "59d9a5b6.99aa2c",
-        "x": 759.5,
-        "y": 698,
+        "x": 784.5,
+        "y": 361,
         "wires": []
     },
     {
@@ -138,8 +138,8 @@
         "intype": "tri",
         "debounce": "25",
         "read": false,
-        "x": 214,
-        "y": 186,
+        "x": 213,
+        "y": 104,
         "wires": [
             [
                 "24fd505f.1ef8d"
@@ -155,8 +155,8 @@
         "qos": "",
         "retain": "",
         "broker": "59d9a5b6.99aa2c",
-        "x": 664,
-        "y": 166,
+        "x": 663,
+        "y": 84,
         "wires": []
     },
     {
@@ -168,13 +168,511 @@
         "dht": 22,
         "pintype": "2",
         "pin": "7",
-        "x": 274.5,
-        "y": 575,
+        "x": 299.5,
+        "y": 238,
         "wires": [
             [
                 "92ccb096.d0a49",
                 "de54d603.511078",
                 "80bc6b98.c79a78"
+            ]
+        ]
+    },
+    {
+        "id": "8eac4fd6.46517",
+        "type": "inject",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "10",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "x": 129,
+        "y": 559.25,
+        "wires": [
+            [
+                "ce448c68.9b0c8",
+                "61dde37.92bab1c",
+                "d5064b52.cc9cb8",
+                "5e990519.99df6c"
+            ]
+        ]
+    },
+    {
+        "id": "ce448c68.9b0c8",
+        "type": "vcgencmd",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "command": "get_throttled",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 374.5,
+        "y": 915,
+        "wires": [
+            [
+                "a9e549e4.242a38",
+                "68c6b0ec.b3db9"
+            ]
+        ]
+    },
+    {
+        "id": "6099a8e.bce9458",
+        "type": "cpu",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "msgCore": false,
+        "msgOverall": true,
+        "msgArray": false,
+        "msgTemp": false,
+        "x": 367.5,
+        "y": 625,
+        "wires": [
+            [
+                "af3520cf.416ef",
+                "521c1c1e.7ee484"
+            ]
+        ]
+    },
+    {
+        "id": "af3520cf.416ef",
+        "type": "debug",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 758.5,
+        "y": 672,
+        "wires": []
+    },
+    {
+        "id": "b2649c36.fe80e",
+        "type": "debug",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 764.5,
+        "y": 987,
+        "wires": []
+    },
+    {
+        "id": "61dde37.92bab1c",
+        "type": "vcgencmd",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "command": "measure_temp",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 379.5,
+        "y": 518,
+        "wires": [
+            [
+                "a8bbb239.dc985",
+                "a5d9ca68.bebaa8"
+            ]
+        ]
+    },
+    {
+        "id": "a8bbb239.dc985",
+        "type": "debug",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 763.5,
+        "y": 570,
+        "wires": []
+    },
+    {
+        "id": "d4ed16f4.c16de8",
+        "type": "Uptime",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "x": 358.5,
+        "y": 1191,
+        "wires": [
+            [
+                "b2313374.cc6a2"
+            ]
+        ]
+    },
+    {
+        "id": "d5064b52.cc9cb8",
+        "type": "Memory",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "x": 363.5,
+        "y": 772,
+        "wires": [
+            [
+                "eb42ed09.0c6df"
+            ]
+        ]
+    },
+    {
+        "id": "dd0831b9.e9d18",
+        "type": "inject",
+        "z": "b20905ac.d661c8",
+        "name": "update",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "3600",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "x": 176.5,
+        "y": 1191,
+        "wires": [
+            [
+                "d4ed16f4.c16de8"
+            ]
+        ]
+    },
+    {
+        "id": "b2313374.cc6a2",
+        "type": "function",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "func": "function timeConversion(millisec) {\n\n    var seconds = (millisec / 1000).toFixed(1);\n\n    var minutes = (millisec / (1000 * 60)).toFixed(1);\n\n    var hours = (millisec / (1000 * 60 * 60)).toFixed(1);\n\n    var days = (millisec / (1000 * 60 * 60 * 24)).toFixed(1);\n\n    if (seconds < 60) {\n        return seconds + \" Sec\";\n    } else if (minutes < 60) {\n        return minutes + \" Min\";\n    } else if (hours < 24) {\n        return hours + \" Hrs\";\n    } else {\n        return days + \" Days\"\n    }\n}\n\nmsg.payload = timeConversion(msg.payload.uptime * 1000);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 518.5,
+        "y": 1191,
+        "wires": [
+            [
+                "ef2fc56c.c93f58",
+                "ea3f22db.adecf"
+            ]
+        ]
+    },
+    {
+        "id": "eb42ed09.0c6df",
+        "type": "function",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "func": "msg.payload = msg.payload.memusage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 536.5,
+        "y": 772,
+        "wires": [
+            [
+                "b72da766.c9ec68",
+                "bfdf8490.747298"
+            ]
+        ]
+    },
+    {
+        "id": "ef2fc56c.c93f58",
+        "type": "debug",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 733.5,
+        "y": 1252,
+        "wires": []
+    },
+    {
+        "id": "b72da766.c9ec68",
+        "type": "debug",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 769.5,
+        "y": 846,
+        "wires": []
+    },
+    {
+        "id": "a9e549e4.242a38",
+        "type": "function",
+        "z": "b20905ac.d661c8",
+        "name": "Undervoltage",
+        "func": "msg.payload = msg.payload.underVoltage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 578.5,
+        "y": 918,
+        "wires": [
+            [
+                "b2649c36.fe80e",
+                "5b20276e.6c7228"
+            ]
+        ]
+    },
+    {
+        "id": "68c6b0ec.b3db9",
+        "type": "function",
+        "z": "b20905ac.d661c8",
+        "name": "Throttle",
+        "func": "msg.payload = msg.payload.throttled;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 566.5,
+        "y": 1045,
+        "wires": [
+            [
+                "f92d7870.249668",
+                "dcd35070.7c307"
+            ]
+        ]
+    },
+    {
+        "id": "f92d7870.249668",
+        "type": "debug",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 747.5,
+        "y": 1116,
+        "wires": []
+    },
+    {
+        "id": "a5d9ca68.bebaa8",
+        "type": "mqtt out",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "topic": "Living/zero/system/temp",
+        "qos": "",
+        "retain": "",
+        "broker": "59d9a5b6.99aa2c",
+        "x": 803.5,
+        "y": 516,
+        "wires": []
+    },
+    {
+        "id": "521c1c1e.7ee484",
+        "type": "mqtt out",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "topic": "Living/zero/system/cpu",
+        "qos": "",
+        "retain": "",
+        "broker": "59d9a5b6.99aa2c",
+        "x": 795.5,
+        "y": 630,
+        "wires": []
+    },
+    {
+        "id": "bfdf8490.747298",
+        "type": "mqtt out",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "topic": "Living/zero/system/mem",
+        "qos": "",
+        "retain": "",
+        "broker": "59d9a5b6.99aa2c",
+        "x": 807.5,
+        "y": 772,
+        "wires": []
+    },
+    {
+        "id": "5b20276e.6c7228",
+        "type": "mqtt out",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "topic": "Living/zero/system/undervoltage",
+        "qos": "",
+        "retain": "",
+        "broker": "59d9a5b6.99aa2c",
+        "x": 851.5,
+        "y": 915,
+        "wires": []
+    },
+    {
+        "id": "dcd35070.7c307",
+        "type": "mqtt out",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "topic": "Living/zero/system/throttle",
+        "qos": "",
+        "retain": "",
+        "broker": "59d9a5b6.99aa2c",
+        "x": 808.5,
+        "y": 1050,
+        "wires": []
+    },
+    {
+        "id": "ea3f22db.adecf",
+        "type": "mqtt out",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "topic": "Living/zero/system/uptime",
+        "qos": "",
+        "retain": "",
+        "broker": "59d9a5b6.99aa2c",
+        "x": 800.5,
+        "y": 1194,
+        "wires": []
+    },
+    {
+        "id": "f1bb638e.bc597",
+        "type": "inject",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "5",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 112.5,
+        "y": 718,
+        "wires": [
+            [
+                "6099a8e.bce9458"
+            ]
+        ]
+    },
+    {
+        "id": "bdc5d942.f06ea8",
+        "type": "debug",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 729,
+        "y": 1419.25,
+        "wires": []
+    },
+    {
+        "id": "5e990519.99df6c",
+        "type": "exec",
+        "z": "b20905ac.d661c8",
+        "command": "cat /proc/net/wireless | grep wlan0: | awk '{print int($4)}'",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "Wifi signal",
+        "x": 369,
+        "y": 1359.25,
+        "wires": [
+            [
+                "bdc5d942.f06ea8",
+                "a3093d3.ce4bcc"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "a3093d3.ce4bcc",
+        "type": "mqtt out",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "topic": "Living/zero/system/wifi",
+        "qos": "",
+        "retain": "",
+        "broker": "59d9a5b6.99aa2c",
+        "x": 769,
+        "y": 1359.25,
+        "wires": []
+    },
+    {
+        "id": "ac390bf1.7535c8",
+        "type": "exec",
+        "z": "b20905ac.d661c8",
+        "command": "sudo reboot",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Reboot",
+        "x": 499,
+        "y": 1479.25,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "b35ea02a.fb77a",
+        "type": "exec",
+        "z": "b20905ac.d661c8",
+        "command": "sudo shutdown -h now",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Shutdown",
+        "x": 509,
+        "y": 1559.25,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "8b39bd29.30f91",
+        "type": "mqtt in",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "topic": "Living/zero/system/reboot",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "59d9a5b6.99aa2c",
+        "x": 219,
+        "y": 1479.25,
+        "wires": [
+            [
+                "ac390bf1.7535c8"
+            ]
+        ]
+    },
+    {
+        "id": "2d87802c.937af",
+        "type": "mqtt in",
+        "z": "b20905ac.d661c8",
+        "name": "",
+        "topic": "Living/zero/system/shutdown",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "59d9a5b6.99aa2c",
+        "x": 229,
+        "y": 1559.25,
+        "wires": [
+            [
+                "b35ea02a.fb77a"
             ]
         ]
     },

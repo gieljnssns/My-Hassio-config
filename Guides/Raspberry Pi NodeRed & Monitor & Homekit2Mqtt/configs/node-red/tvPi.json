@@ -1,0 +1,482 @@
+[
+    {
+        "id": "7a1b4a7e.b6f3f4",
+        "type": "tab",
+        "label": "tvPi",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "4fb1889c.006cc8",
+        "type": "inject",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "10",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "x": 210,
+        "y": 180,
+        "wires": [
+            [
+                "a2bf0bef.cf3958",
+                "52f5663c.846e88",
+                "89d36614.1f8148"
+            ]
+        ]
+    },
+    {
+        "id": "a2bf0bef.cf3958",
+        "type": "vcgencmd",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "command": "get_throttled",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 455.5,
+        "y": 535.75,
+        "wires": [
+            [
+                "32cd0446.8bd74c",
+                "9a7813e2.49921"
+            ]
+        ]
+    },
+    {
+        "id": "4eba9148.1a0ea",
+        "type": "cpu",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "msgCore": false,
+        "msgOverall": true,
+        "msgArray": false,
+        "msgTemp": false,
+        "x": 448.5,
+        "y": 245.75,
+        "wires": [
+            [
+                "d950886a.d17918",
+                "2de7ce7e.7064b2"
+            ]
+        ]
+    },
+    {
+        "id": "d950886a.d17918",
+        "type": "debug",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 839.5,
+        "y": 292.75,
+        "wires": []
+    },
+    {
+        "id": "964e7803.b20758",
+        "type": "debug",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 845.5,
+        "y": 607.75,
+        "wires": []
+    },
+    {
+        "id": "52f5663c.846e88",
+        "type": "vcgencmd",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "command": "measure_temp",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 460.5,
+        "y": 138.75,
+        "wires": [
+            [
+                "26df97c5.a2f7c8",
+                "fa6c0112.a72ba"
+            ]
+        ]
+    },
+    {
+        "id": "26df97c5.a2f7c8",
+        "type": "debug",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 844.5,
+        "y": 190.75,
+        "wires": []
+    },
+    {
+        "id": "a6d81ba6.3ec868",
+        "type": "Uptime",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "x": 439.5,
+        "y": 811.75,
+        "wires": [
+            [
+                "b55ab689.9346e8"
+            ]
+        ]
+    },
+    {
+        "id": "89d36614.1f8148",
+        "type": "Memory",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "x": 444.5,
+        "y": 392.75,
+        "wires": [
+            [
+                "f0e4507b.360d4"
+            ]
+        ]
+    },
+    {
+        "id": "782df8ae.d4f778",
+        "type": "inject",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "update",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "3600",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "x": 257.5,
+        "y": 811.75,
+        "wires": [
+            [
+                "a6d81ba6.3ec868"
+            ]
+        ]
+    },
+    {
+        "id": "b55ab689.9346e8",
+        "type": "function",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "func": "function timeConversion(millisec) {\n\n    var seconds = (millisec / 1000).toFixed(1);\n\n    var minutes = (millisec / (1000 * 60)).toFixed(1);\n\n    var hours = (millisec / (1000 * 60 * 60)).toFixed(1);\n\n    var days = (millisec / (1000 * 60 * 60 * 24)).toFixed(1);\n\n    if (seconds < 60) {\n        return seconds + \" Sec\";\n    } else if (minutes < 60) {\n        return minutes + \" Min\";\n    } else if (hours < 24) {\n        return hours + \" Hrs\";\n    } else {\n        return days + \" Days\"\n    }\n}\n\nmsg.payload = timeConversion(msg.payload.uptime * 1000);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 599.5,
+        "y": 811.75,
+        "wires": [
+            [
+                "4855798a.457a18",
+                "39565cf.bad0aa4"
+            ]
+        ]
+    },
+    {
+        "id": "f0e4507b.360d4",
+        "type": "function",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "func": "msg.payload = msg.payload.memusage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 617.5,
+        "y": 392.75,
+        "wires": [
+            [
+                "584727fe.f74f18",
+                "9b47d899.fdb098"
+            ]
+        ]
+    },
+    {
+        "id": "4855798a.457a18",
+        "type": "debug",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 814.5,
+        "y": 872.75,
+        "wires": []
+    },
+    {
+        "id": "584727fe.f74f18",
+        "type": "debug",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 850.5,
+        "y": 466.75,
+        "wires": []
+    },
+    {
+        "id": "32cd0446.8bd74c",
+        "type": "function",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "Undervoltage",
+        "func": "msg.payload = msg.payload.underVoltage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 659.5,
+        "y": 538.75,
+        "wires": [
+            [
+                "964e7803.b20758",
+                "976fc844.079bd8"
+            ]
+        ]
+    },
+    {
+        "id": "9a7813e2.49921",
+        "type": "function",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "Throttle",
+        "func": "msg.payload = msg.payload.throttled;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 647.5,
+        "y": 665.75,
+        "wires": [
+            [
+                "e944e083.fa01d",
+                "73a5ecff.a84e34"
+            ]
+        ]
+    },
+    {
+        "id": "e944e083.fa01d",
+        "type": "debug",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 828.5,
+        "y": 736.75,
+        "wires": []
+    },
+    {
+        "id": "fa6c0112.a72ba",
+        "type": "mqtt out",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "topic": "tvPi/system/temp",
+        "qos": "",
+        "retain": "",
+        "broker": "1ab655d4.c3b1fa",
+        "x": 864.5,
+        "y": 136.75,
+        "wires": []
+    },
+    {
+        "id": "2de7ce7e.7064b2",
+        "type": "mqtt out",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "topic": "tvPi/system/cpu",
+        "qos": "",
+        "retain": "",
+        "broker": "1ab655d4.c3b1fa",
+        "x": 846.5,
+        "y": 250.75,
+        "wires": []
+    },
+    {
+        "id": "9b47d899.fdb098",
+        "type": "mqtt out",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "topic": "tvPi/system/mem",
+        "qos": "",
+        "retain": "",
+        "broker": "1ab655d4.c3b1fa",
+        "x": 868.5,
+        "y": 392.75,
+        "wires": []
+    },
+    {
+        "id": "976fc844.079bd8",
+        "type": "mqtt out",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "topic": "tvPi/system/undervoltage",
+        "qos": "",
+        "retain": "",
+        "broker": "1ab655d4.c3b1fa",
+        "x": 902.5,
+        "y": 535.75,
+        "wires": []
+    },
+    {
+        "id": "73a5ecff.a84e34",
+        "type": "mqtt out",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "topic": "tvPi/system/throttle",
+        "qos": "",
+        "retain": "",
+        "broker": "1ab655d4.c3b1fa",
+        "x": 859.5,
+        "y": 670.75,
+        "wires": []
+    },
+    {
+        "id": "39565cf.bad0aa4",
+        "type": "mqtt out",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "topic": "tvPi/system/uptime",
+        "qos": "",
+        "retain": "",
+        "broker": "1ab655d4.c3b1fa",
+        "x": 851.5,
+        "y": 814.75,
+        "wires": []
+    },
+    {
+        "id": "14c69eca.d79921",
+        "type": "inject",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "5",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 193.5,
+        "y": 338.75,
+        "wires": [
+            [
+                "4eba9148.1a0ea"
+            ]
+        ]
+    },
+    {
+        "id": "a8ffd57f.af4bc8",
+        "type": "exec",
+        "z": "7a1b4a7e.b6f3f4",
+        "command": "sudo reboot",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Reboot",
+        "x": 550.5,
+        "y": 939.75,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "31f3c51c.63ad6a",
+        "type": "exec",
+        "z": "7a1b4a7e.b6f3f4",
+        "command": "sudo shutdown -h now",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Shutdown",
+        "x": 560.5,
+        "y": 1019.75,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "cbbcaaa5.962fe8",
+        "type": "mqtt in",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "topic": "tvPi/system/reboot",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "1ab655d4.c3b1fa",
+        "x": 250.5,
+        "y": 939.75,
+        "wires": [
+            [
+                "a8ffd57f.af4bc8"
+            ]
+        ]
+    },
+    {
+        "id": "1fa34bcc.b90f74",
+        "type": "mqtt in",
+        "z": "7a1b4a7e.b6f3f4",
+        "name": "",
+        "topic": "tvPi/system/shutdown",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "1ab655d4.c3b1fa",
+        "x": 260.5,
+        "y": 1019.75,
+        "wires": [
+            [
+                "31f3c51c.63ad6a"
+            ]
+        ]
+    },
+    {
+        "id": "1ab655d4.c3b1fa",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "tvPi/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "tvPi/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "tvPi/status",
+        "willQos": "0",
+        "willRetain": "true",
+        "willPayload": "offline"
+    }
+]

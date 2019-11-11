@@ -1,64 +1,64 @@
 [
     {
-        "id": "c93d472b.6b295",
+        "id": "73f2aa21.994e64",
         "type": "tab",
-        "label": "Flow 1",
+        "label": "Poort",
         "disabled": false,
         "info": ""
     },
     {
-        "id": "e10dc069.28f248",
+        "id": "ba06d54d.5460a8",
         "type": "rpi-gpio in",
-        "z": "c93d472b.6b295",
+        "z": "73f2aa21.994e64",
         "name": "Pin 15 Fotocel",
         "pin": "15",
         "intype": "tri",
         "debounce": "25",
         "read": false,
-        "x": 220,
-        "y": 220,
+        "x": 270,
+        "y": 60,
         "wires": [
             [
-                "3b17eafe.a9da1e"
+                "f5da7c78.66f5"
             ]
         ]
     },
     {
-        "id": "3b17eafe.a9da1e",
+        "id": "f5da7c78.66f5",
         "type": "mqtt out",
-        "z": "c93d472b.6b295",
+        "z": "73f2aa21.994e64",
         "name": "MQTT Fotocel",
         "topic": "PoortjePi/input/fotocel",
         "qos": "",
         "retain": "",
         "broker": "13acf7da.abce9",
-        "x": 670,
-        "y": 240,
+        "x": 720,
+        "y": 80,
         "wires": []
     },
     {
-        "id": "801fc547.211",
+        "id": "349facf7.51a474",
         "type": "rpi-dht22",
-        "z": "c93d472b.6b295",
+        "z": "73f2aa21.994e64",
         "name": "DHT22",
         "topic": "rpi-dht22",
         "dht": 22,
         "pintype": "2",
         "pin": "7",
-        "x": 284.5,
-        "y": 475,
+        "x": 300,
+        "y": 220,
         "wires": [
             [
-                "d0d99a2f.b05698",
-                "d0d7bccd.58bed",
-                "4869063d.d5645"
+                "87f74a47.ad7788",
+                "8cdd58fb.0ebd88",
+                "7c6404ef.1fc3bc"
             ]
         ]
     },
     {
-        "id": "cbc1f4c6.8bf1e",
+        "id": "d20a0826.cd65f8",
         "type": "inject",
-        "z": "c93d472b.6b295",
+        "z": "73f2aa21.994e64",
         "name": "Elke minuut",
         "topic": "",
         "payload": "",
@@ -67,31 +67,31 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "x": 110.5,
-        "y": 475,
+        "x": 126,
+        "y": 220,
         "wires": [
             [
-                "801fc547.211"
+                "349facf7.51a474"
             ]
         ]
     },
     {
-        "id": "573d09b3.4c1dd",
+        "id": "7667a722.6e7968",
         "type": "mqtt out",
-        "z": "c93d472b.6b295",
+        "z": "73f2aa21.994e64",
         "name": "MQTT DHT temperatuur",
         "topic": "PoortjePi/input/temperatuur",
         "qos": "",
         "retain": "",
         "broker": "13acf7da.abce9",
-        "x": 762.5,
-        "y": 473,
+        "x": 778,
+        "y": 218,
         "wires": []
     },
     {
-        "id": "d0d99a2f.b05698",
+        "id": "87f74a47.ad7788",
         "type": "debug",
-        "z": "c93d472b.6b295",
+        "z": "73f2aa21.994e64",
         "name": "",
         "active": false,
         "tosidebar": true,
@@ -99,84 +99,582 @@
         "tostatus": false,
         "complete": "true",
         "targetType": "full",
-        "x": 477.5,
-        "y": 406,
+        "x": 493,
+        "y": 151,
         "wires": []
     },
     {
-        "id": "d0d7bccd.58bed",
+        "id": "8cdd58fb.0ebd88",
         "type": "function",
-        "z": "c93d472b.6b295",
+        "z": "73f2aa21.994e64",
         "name": "temperatuur",
         "func": "msg.payload = msg.payload\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 485.5,
-        "y": 472,
+        "x": 501,
+        "y": 217,
         "wires": [
             [
-                "890581b9.be92b8",
-                "573d09b3.4c1dd"
+                "2c7defba.5d19e",
+                "7667a722.6e7968"
             ]
         ]
     },
     {
-        "id": "4869063d.d5645",
+        "id": "7c6404ef.1fc3bc",
         "type": "function",
-        "z": "c93d472b.6b295",
+        "z": "73f2aa21.994e64",
         "name": "luchtvochtigheid",
         "func": "msg.payload = msg.humidity\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 487.5,
-        "y": 599,
+        "x": 503,
+        "y": 344,
         "wires": [
             [
-                "52ce7664.3288a8",
-                "cbc3b393.34bbc"
+                "1b1d3296.eec64d",
+                "626f3caa.bd8524"
             ]
         ]
     },
     {
-        "id": "890581b9.be92b8",
+        "id": "2c7defba.5d19e",
         "type": "debug",
-        "z": "c93d472b.6b295",
+        "z": "73f2aa21.994e64",
         "name": "",
         "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 721.5,
-        "y": 541,
+        "x": 737,
+        "y": 286,
         "wires": []
     },
     {
-        "id": "52ce7664.3288a8",
+        "id": "1b1d3296.eec64d",
         "type": "debug",
-        "z": "c93d472b.6b295",
+        "z": "73f2aa21.994e64",
         "name": "",
         "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 719.5,
-        "y": 672,
+        "x": 735,
+        "y": 417,
         "wires": []
     },
     {
-        "id": "cbc3b393.34bbc",
+        "id": "626f3caa.bd8524",
         "type": "mqtt out",
-        "z": "c93d472b.6b295",
+        "z": "73f2aa21.994e64",
         "name": "MQTT DHT luchtvochtigheid",
         "topic": "PoortjePi/input/luchtvochtigheid",
         "qos": "",
         "retain": "",
         "broker": "13acf7da.abce9",
-        "x": 769.5,
-        "y": 598,
+        "x": 785,
+        "y": 343,
         "wires": []
+    },
+    {
+        "id": "b567f998.762e08",
+        "type": "inject",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "10",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "x": 110,
+        "y": 520,
+        "wires": [
+            [
+                "ff0f0650.104288",
+                "ca3581ec.66a4a",
+                "1ac590dc.a7669f",
+                "a7cf4c40.42771"
+            ]
+        ]
+    },
+    {
+        "id": "ff0f0650.104288",
+        "type": "vcgencmd",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "command": "get_throttled",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 355.5,
+        "y": 875.75,
+        "wires": [
+            [
+                "50347213.f3047c",
+                "aace1cf4.1d024"
+            ]
+        ]
+    },
+    {
+        "id": "d8a4a925.c04318",
+        "type": "cpu",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "msgCore": false,
+        "msgOverall": true,
+        "msgArray": false,
+        "msgTemp": false,
+        "x": 348.5,
+        "y": 585.75,
+        "wires": [
+            [
+                "a44b1708.1d0c08",
+                "c58d3005.33f83"
+            ]
+        ]
+    },
+    {
+        "id": "a44b1708.1d0c08",
+        "type": "debug",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 739.5,
+        "y": 632.75,
+        "wires": []
+    },
+    {
+        "id": "9866e5c9.7a6478",
+        "type": "debug",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 745.5,
+        "y": 947.75,
+        "wires": []
+    },
+    {
+        "id": "ca3581ec.66a4a",
+        "type": "vcgencmd",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "command": "measure_temp",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 360.5,
+        "y": 478.75,
+        "wires": [
+            [
+                "4163fa27.200a34",
+                "e83bd8da.976238"
+            ]
+        ]
+    },
+    {
+        "id": "4163fa27.200a34",
+        "type": "debug",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 744.5,
+        "y": 530.75,
+        "wires": []
+    },
+    {
+        "id": "3647477a.ecaac8",
+        "type": "Uptime",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "x": 339.5,
+        "y": 1151.75,
+        "wires": [
+            [
+                "c33f1888.c99e38"
+            ]
+        ]
+    },
+    {
+        "id": "1ac590dc.a7669f",
+        "type": "Memory",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "x": 344.5,
+        "y": 732.75,
+        "wires": [
+            [
+                "f2761d59.f8a96"
+            ]
+        ]
+    },
+    {
+        "id": "9dbca562.df0c58",
+        "type": "inject",
+        "z": "73f2aa21.994e64",
+        "name": "update",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "3600",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "x": 157.5,
+        "y": 1151.75,
+        "wires": [
+            [
+                "3647477a.ecaac8"
+            ]
+        ]
+    },
+    {
+        "id": "c33f1888.c99e38",
+        "type": "function",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "func": "function timeConversion(millisec) {\n\n    var seconds = (millisec / 1000).toFixed(1);\n\n    var minutes = (millisec / (1000 * 60)).toFixed(1);\n\n    var hours = (millisec / (1000 * 60 * 60)).toFixed(1);\n\n    var days = (millisec / (1000 * 60 * 60 * 24)).toFixed(1);\n\n    if (seconds < 60) {\n        return seconds + \" Sec\";\n    } else if (minutes < 60) {\n        return minutes + \" Min\";\n    } else if (hours < 24) {\n        return hours + \" Hrs\";\n    } else {\n        return days + \" Days\"\n    }\n}\n\nmsg.payload = timeConversion(msg.payload.uptime * 1000);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 499.5,
+        "y": 1151.75,
+        "wires": [
+            [
+                "da8c2dd7.afd5",
+                "bfbe25ab.514f48"
+            ]
+        ]
+    },
+    {
+        "id": "f2761d59.f8a96",
+        "type": "function",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "func": "msg.payload = msg.payload.memusage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 517.5,
+        "y": 732.75,
+        "wires": [
+            [
+                "8319ef58.447d3",
+                "7ae598af.2be798"
+            ]
+        ]
+    },
+    {
+        "id": "da8c2dd7.afd5",
+        "type": "debug",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 714.5,
+        "y": 1212.75,
+        "wires": []
+    },
+    {
+        "id": "8319ef58.447d3",
+        "type": "debug",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 750.5,
+        "y": 806.75,
+        "wires": []
+    },
+    {
+        "id": "50347213.f3047c",
+        "type": "function",
+        "z": "73f2aa21.994e64",
+        "name": "Undervoltage",
+        "func": "msg.payload = msg.payload.underVoltage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 559.5,
+        "y": 878.75,
+        "wires": [
+            [
+                "9866e5c9.7a6478",
+                "b06f601e.5ebed"
+            ]
+        ]
+    },
+    {
+        "id": "aace1cf4.1d024",
+        "type": "function",
+        "z": "73f2aa21.994e64",
+        "name": "Throttle",
+        "func": "msg.payload = msg.payload.throttled;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 547.5,
+        "y": 1005.75,
+        "wires": [
+            [
+                "2fca49ab.30e9e6",
+                "da59f621.cc7df8"
+            ]
+        ]
+    },
+    {
+        "id": "2fca49ab.30e9e6",
+        "type": "debug",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 728.5,
+        "y": 1076.75,
+        "wires": []
+    },
+    {
+        "id": "e83bd8da.976238",
+        "type": "mqtt out",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "topic": "PoortjePi/system/temp",
+        "qos": "",
+        "retain": "",
+        "broker": "13acf7da.abce9",
+        "x": 774.5,
+        "y": 476.75,
+        "wires": []
+    },
+    {
+        "id": "c58d3005.33f83",
+        "type": "mqtt out",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "topic": "PoortjePi/system/cpu",
+        "qos": "",
+        "retain": "",
+        "broker": "13acf7da.abce9",
+        "x": 766.5,
+        "y": 590.75,
+        "wires": []
+    },
+    {
+        "id": "7ae598af.2be798",
+        "type": "mqtt out",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "topic": "PoortjePi/system/mem",
+        "qos": "",
+        "retain": "",
+        "broker": "13acf7da.abce9",
+        "x": 778.5,
+        "y": 732.75,
+        "wires": []
+    },
+    {
+        "id": "b06f601e.5ebed",
+        "type": "mqtt out",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "topic": "PoortjePi/system/undervoltage",
+        "qos": "",
+        "retain": "",
+        "broker": "13acf7da.abce9",
+        "x": 822.5,
+        "y": 875.75,
+        "wires": []
+    },
+    {
+        "id": "da59f621.cc7df8",
+        "type": "mqtt out",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "topic": "PoortjePi/system/throttle",
+        "qos": "",
+        "retain": "",
+        "broker": "13acf7da.abce9",
+        "x": 779.5,
+        "y": 1010.75,
+        "wires": []
+    },
+    {
+        "id": "bfbe25ab.514f48",
+        "type": "mqtt out",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "topic": "PoortjePi/system/uptime",
+        "qos": "",
+        "retain": "",
+        "broker": "13acf7da.abce9",
+        "x": 771.5,
+        "y": 1154.75,
+        "wires": []
+    },
+    {
+        "id": "e18f1d08.f0699",
+        "type": "inject",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "5",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 93.5,
+        "y": 678.75,
+        "wires": [
+            [
+                "d8a4a925.c04318"
+            ]
+        ]
+    },
+    {
+        "id": "59b52e0f.aebde",
+        "type": "debug",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 710,
+        "y": 1380,
+        "wires": []
+    },
+    {
+        "id": "a7cf4c40.42771",
+        "type": "exec",
+        "z": "73f2aa21.994e64",
+        "command": "cat /proc/net/wireless | grep wlan0: | awk '{print int($4)}'",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "Wifi signal",
+        "x": 350,
+        "y": 1320,
+        "wires": [
+            [
+                "59b52e0f.aebde",
+                "73c1671c.033308"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "73c1671c.033308",
+        "type": "mqtt out",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "topic": "PoortjePi/system/wifi",
+        "qos": "",
+        "retain": "",
+        "broker": "13acf7da.abce9",
+        "x": 750,
+        "y": 1320,
+        "wires": []
+    },
+    {
+        "id": "5591fb03.e9e274",
+        "type": "exec",
+        "z": "73f2aa21.994e64",
+        "command": "sudo reboot",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Reboot",
+        "x": 480,
+        "y": 1440,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "a816b91c.e455b8",
+        "type": "exec",
+        "z": "73f2aa21.994e64",
+        "command": "sudo shutdown -h now",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Shutdown",
+        "x": 490,
+        "y": 1520,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "d0889a5a.4ec4b8",
+        "type": "mqtt in",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "topic": "PoortjePi/system/reboot",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "13acf7da.abce9",
+        "x": 200,
+        "y": 1440,
+        "wires": [
+            [
+                "5591fb03.e9e274"
+            ]
+        ]
+    },
+    {
+        "id": "bedb538c.cbbe1",
+        "type": "mqtt in",
+        "z": "73f2aa21.994e64",
+        "name": "",
+        "topic": "PoortjePi/system/shutdown",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "13acf7da.abce9",
+        "x": 210,
+        "y": 1520,
+        "wires": [
+            [
+                "a816b91c.e455b8"
+            ]
+        ]
     },
     {
         "id": "13acf7da.abce9",
