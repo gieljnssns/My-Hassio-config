@@ -1,0 +1,39 @@
+  alias: 'Oplader electrische fiets aan/uit'
+  initial_state: 'on' 
+  trigger:
+    - platform: time
+      at: '16:00:00'
+    - platform: state
+      entity_id: alarm_control_panel.ha_alarm
+      to: 'armed_night'
+      for:
+        minutes: 15
+    - platform: numeric_state
+      entity_id: sensor.shelly_shplg_s_7ae478_consumption
+      above: 1
+      below: 10
+      for:
+        minutes: 60
+  condition:
+    condition: and
+    conditions:
+      - condition: time
+        weekday:
+          - mon
+          - tue
+          - wed
+          - thu
+          - fri
+          - sat
+          - sun
+      - condition: state
+        entity_id: input_boolean.op_verlof
+        state: 'off'
+  action:
+    - service_template: >
+        {% if now().hour == 16 %}
+          switch.turn_on
+        {% else %}
+          switch.turn_off
+        {% endif %}
+      entity_id: switch.shelly_shplg_s_7ae478

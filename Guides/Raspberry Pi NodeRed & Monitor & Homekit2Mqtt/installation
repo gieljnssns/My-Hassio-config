@@ -1,6 +1,23 @@
 Node Red
 https://nodered.org/docs/getting-started/raspberrypi
 
+
+bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
+
+node-red system stats
+http://estadieu.com/2017/01/16/dashboard-raspberrypi-node-red/
+https://flows.nodered.org/flow/25af5334a79d6c02d6413968a8bff572
+memory calculation
+https://stackoverflow.com/questions/10585978/linux-command-for-percentage-of-memory-that-is-free
+Memory % in use                     free -m | grep Mem | awk '{print ($3+$6)/$2 * 100.0}'   
+Memory % in use   rounded           free -m | grep Mem | awk '{printf "%.2f\n", ($3+$6)/$2 * 100.0}'       
+Memory % free                       free -m | grep Mem | awk '{print $4/$2 * 100.0}'
+Memory % free     rounded           free -m | grep Mem | awk '{printf "%.2f\n", $4/$2 * 100.0}'
+
+wifi signal                         cat /proc/net/wireless | grep wlan0: | awk '{print int($4)}'
+
+
+
 wiring
 https://blog.squix.org/2016/05/esp8266-peripherals-mini-pir-motion-sensor.html
 https://www.mysensors.org/build/motion

@@ -33,3 +33,39 @@
   availability_topic: "Slaapkamer/status"
   payload_available: "online"
   payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: 'Slaapkamer/system/temp'
+  device_class: temperature
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '°C'
+  name: 'Temperatuur cpu Slaapkamer'
+  availability_topic: "Slaapkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Slaapkamer/system/cpu'
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '%'
+  name: 'Cpu % Slaapkamer'
+  availability_topic: "Slaapkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Slaapkamer/system/mem'
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '%'
+  name: 'Ram % Slaapkamer'
+  availability_topic: "Slaapkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: 'Slaapkamer/system/uptime'
+  # value_template: '{{ value_json }}'
+  name: 'Uptime Slaapkamer'
+  availability_topic: "Slaapkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"

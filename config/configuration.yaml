@@ -34,19 +34,9 @@ http:
   trusted_proxies:
     - 127.0.0.1
     - 192.168.79.54
-    # - 192.168.79.1 #
-    # - 192.168.69.1 #
     - 192.168.79.0/24
-    # - 192.168.69.0/24 #
     - 172.30.33.0/24
     - ::1
-    # - 172.17.0.0/16 #
-    # - 172.30.32.0/23 #
-    # - 172.17.0.1 #
-    # - 172.30.32.1 #
-    # - 172.30.33.1 #
-    # - 172.30.32.0 #
-    # - 172.17.0.3 #
   login_attempts_threshold: 5
 
 ####################################################
@@ -64,6 +54,7 @@ climate: !include_dir_merge_list devices/climate
 counter: !include_dir_merge_named devices/counter
 cover: !include_dir_merge_list devices/cover
 device_tracker: !include_dir_merge_list devices/device_tracker
+# image_processing: !include_dir_merge_list devices/image_processing
 input_boolean: !include_dir_merge_named devices/input_boolean
 input_datetime: !include_dir_merge_named devices/input_datetime
 input_select: !include_dir_merge_named devices/input_select
@@ -162,10 +153,10 @@ smappee:
 #   version: '2.2'
 
 ###  Tahoma  ###
-tahoma:
-  username: !secret tahoma_username
-  password: !secret tahoma_password
-  exclude: [RTDSRemoteControllerComponent, PodV2Component, TSKAlarmComponent]
+# tahoma:
+#   username: !secret tahoma_username
+#   password: !secret tahoma_password
+#   exclude: [RTDSRemoteControllerComponent, PodV2Component, TSKAlarmComponent]
   # exclude: [ExteriorBlindRTSComponent, RTDSRemoteControllerComponent, PodV2Component, TSKAlarmComponent]
 
 ###  Somfy  ###
@@ -225,7 +216,7 @@ tts:
     language: 'nl-nl'
     format: '44khz_16bit_stereo'
   # - platform: responsivevoice
-  #   language: 'Dutch'
+    # language: 'Dutch'
     # gender: 'Female'
 
 ####################################################
@@ -255,6 +246,7 @@ ssdp:
 ###  HACS  ###
 hacs:
   token: !secret hacs_token
+  theme: true
 
 ### Discover some devices automatically  ###
 discovery:

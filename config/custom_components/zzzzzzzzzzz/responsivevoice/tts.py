@@ -1,73 +1,88 @@
-"""Support for the ResponsiveVoice service."""
-# import asyncio
+"""Support for ResponsiveVoice speech service."""
 import logging
-from http.client import HTTPException
-# import re
 
-# import aiohttp
-# from aiohttp.hdrs import REFERER, USER_AGENT
-# import async_timeout
+from responsive_voice import ResponsiveVoice
 import voluptuous as vol
-# import yarl
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
-# from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-
-# REQUIREMENTS = ['ResponsiveVoice', 'mpg123']
-REQUIREMENTS = ['ResponsiveVoice']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_GENDER = 'gender'
-CONF_RATE = 'rate'
-CONF_PITCH = 'pitch'
-CONF_VOLUME = 'volume'
+# SUPPORTED_LANGUAGES = ["en-GB", "en-AU", "en-US", "en-ZA", "en-IE", "he-IL", "th-TH",
+#     "pt-BR", "pt-PT", "sk-SK", "fr-CA", "ro-RO", "no-NO", "fi-FI", "pl-PL", "de-DE", 
+#     "nl-NL", "id-ID", "tr-TR", "it-IT", "fr-FR", "ru-RU", "es-MX", "es-ES", "zh-HK", 
+#     "zh-TW", "zh-CN", "sv-SE", "hu-HU", "nl-BE", "ar-SA", "ko-KR", "cs-CZ", "da-DK", 
+#     "hi-IN", "el-GR", "ja-JP"]
 
-SUPPORT_LANGUAGES = [
-    'UK English', 'US English', 'Arabic', 'Armenian', 'Australian',
-    'Brazilian Portuguese', 'Chinese', 'Chinese (Hong Kong)',
-    'Chinese Taiwan ', 'Czech', 'Danish', 'Deutsch', 'Dutch', 'Finnish',
-    'French', 'Greek', 'Hindi', 'Hungarian', 'Indonesian', 'Italian',
-    'Japanese', 'Korean', 'Latin', 'Norwegian', 'Polish', 'Portuguese',
-    'Romanian', 'Russian', 'Slovak', 'Spanish', 'Spanish Latin American',
-    'Swedish', 'Tamil', 'Thai', 'Turkish', 'Vietnamese', 'Afrikaans',
-    'Albanian', 'Bosnian', 'Catalan', 'Croatian', 'Esperanto', 'Icelandic',
-    'Latvian', 'Macedonian', 'Moldavian', 'Montenegrin', 'Serbian',
-    'Serbo-Croatian', 'Swahili', 'Welsh'
-]
+SUPPORTED_LANGUAGES = ["ENGLISH_GB","ENGLISH_AU", "ENGLISH_US", "ENGLISH_ZA",
+    "ENGLISH_IE", "HEBREW", "THAI", "PORTUGESE_BR", "PORTUGESE_PT", "SLOVAK",
+    "FRENCH_CA", "ROMANIAN", "NORWEGIAN", "FINNISH", "POLISH", "GERMAN",
+    "DUTCH", "INDONESIAN", "TURKISH", "ITALIAN", "FRENCH", "RUSSIAN",
+    "SPANISH_MX", "SPANISH_ES", "CHINESE_HK", "CHINESE_TW", "CHINESE_CN",
+    "SWEDISH", "HUNGARIAN", "DUTCH_BE", "ARABIC_SA", "KOREAN", "CZECH",
+    "DANISH", "HINDI", "GREEK", "JAPANESE"]
 
-SUPPORT_GENDER = [
-    'Female', 'Male'
-]
+DEFAULT_LANG = "ENGLISH_US"
 
-DEFAULT_LANG = 'Fallback UK'
-DEFAULT_GENDER = 'Female'
-DEFAULT_RATE = 0.5
-DEFAULT_PITCH = 0.5
-DEFAULT_VOLUME = 1
+CONF_SPEED = "speed"
+CONF_PITCH = "pitch"
+CONF_VOLUME = "volume"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-    vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): vol.In(SUPPORT_GENDER),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
+        vol.Optional(CONF_SPEED, default=0.5): vol.All(
+            vol.Coerce(float), vol.Range(min=0, max=1)
+        ),
+        vol.Optional(CONF_PITCH, default=0.5): vol.All(
+            vol.Coerce(float), vol.Range(min=0, max=1)
+        ),
+        vol.Optional(CONF_VOLUME, default=1): vol.All(
+            vol.Coerce(float), vol.Range(min=0, max=1)
+        ),
+    }
+)
+
+# Keys are options in the config file, and Values are options
+# required by Baidu TTS API.
+_OPTIONS = {
+    CONF_PITCH: "pit",
+    CONF_SPEED: "spd",
+    CONF_VOLUME: "vol",
+}
+SUPPORTED_OPTIONS = [CONF_PITCH, CONF_SPEED, CONF_VOLUME]
 
 
-# async def async_get_engine(hass, config):
-def get_engine(hass, config):
-    """Set up ResponsiveVoice component."""
-    return ResponsiveVoiceProvider(hass, config)
+def get_engine(hass, config, discovery_info=None):
+    """Set up ResponsiveVoice TTS component."""
+    return ResponsiveVoiceTTSProvider(hass, config)
 
 
-class ResponsiveVoiceProvider(Provider):
-    """The ResponsiveVoice API provider."""
+class ResponsiveVoiceTTSProvider(Provider):
+    """ResponsiveVoice TTS speech api provider."""
 
     def __init__(self, hass, conf):
         """Init ResponsiveVoice TTS service."""
         self.hass = hass
         self._lang = conf.get(CONF_LANG)
-        self._gender = conf.get(CONF_GENDER)
-        self.name = 'ResponsiveVoice'
+        self._codec = "mp3"
+        self.name = "ResponsiveVoiceTTS"
+        self._speed = float(conf.get(CONF_SPEED))
+        self._pitch = float(conf.get(CONF_PITCH))
+        self._volume = float(conf.get(CONF_VOLUME))
+
+        # self._speech_conf_data = {
+        #     _OPTIONS[CONF_PITCH]: conf.get(CONF_PITCH),
+        #     _OPTIONS[CONF_SPEED]: conf.get(CONF_SPEED),
+        #     _OPTIONS[CONF_VOLUME]: conf.get(CONF_VOLUME),
+        # }
+
+        # self._form_data = {
+        #     "hl": conf[CONF_LANG],
+        #     "c": (conf[CONF_CODEC]).upper(),
+        #     "f": conf[CONF_FORMAT],
+        # }
 
     @property
     def default_language(self):
@@ -76,42 +91,60 @@ class ResponsiveVoiceProvider(Provider):
 
     @property
     def supported_languages(self):
-        """Return list of supported languages."""
-        return SUPPORT_LANGUAGES
+        """Return a list of supported languages."""
+        return SUPPORTED_LANGUAGES
 
-    # async def async_get_tts_audio(self, message, language, options=None):
+    # @property
+    # def default_options(self):
+    #     """Return a dict including default options."""
+    #     return {
+    #         CONF_PITCH: self._speech_conf_data[_OPTIONS[CONF_PITCH]],
+    #         CONF_SPEED: self._speech_conf_data[_OPTIONS[CONF_SPEED]],
+    #         CONF_VOLUME: self._speech_conf_data[_OPTIONS[CONF_VOLUME]],
+    #     }
+
+    @property
+    def supported_options(self):
+        """Return a list of supported options."""
+        return SUPPORTED_OPTIONS
+
     def get_tts_audio(self, message, language, options=None):
-        """Load TTS from ResponsiveVoice."""
-        if language is None:
-            language = self._lang
-        from responsive_voice import ResponsiveVoice
+        """Load TTS from ResponsiveVoiceTTS."""
 
-        # websession = async_get_clientsession(self.hass)
-        try:
-            engine = ResponsiveVoice()
-            _LOGGER.error(message)
-            data = engine.say(
-                    sentence=message, gender=self._gender, lang=self._lang
-                    )
+        engine = ResponsiveVoice()
+        # from responsive_voice.voices import Ellen
 
-        except HTTPException as ex:
-            _LOGGER.error("Timeout for ResponsiveVoice speech")
+        # ellen = Ellen()
+
+        # result = ellen.say(message)
+        print("message", message, "language", language, "pitch", self._pitch,
+              "rate", self._speed, "vol", self._volume)
+
+        result = engine.say(message, language, pitch=self._pitch,
+                            rate=self._speed, vol=self._volume)
+        
+        # result = engine.get_mp3(message, language, pitch=self._pitch,
+        #                         rate=self._speed, vol=self._volume)
+
+        # if options is None:
+        #     result = engine.say(message, lang=language, pitch=self._pitch,
+        #                         rate=self._speed, vol=self._volume)
+        # else:
+        #     speech_data = self._speech_conf_data.copy()
+        #     for key, value in options.items():
+        #         speech_data[_OPTIONS[key]] = value
+
+        #     result = engine.say(message, language, 1, speech_data)
+        
+        print(result)
+
+        if isinstance(result, dict):
+            _LOGGER.error(
+                "ResponsiveVoice TTS error-- err_no:%d; err_msg:%s; err_detail:%s",
+                result["err_no"],
+                result["err_msg"],
+                result["err_detail"],
+            )
             return None, None
-        # try:
-        #     with async_timeout.timeout(10, loop=self.hass.loop):
-        #         engine = ResponsiveVoice()
-        #         _LOGGER.error(message)
-        #         data = engine.say(
-        #             sentence=message, gender="self._gender", lang="self._lang"
-        #             )
 
-        #         if request.status != 200:
-        #             _LOGGER.error("Error %d on load URL %s",
-        #                           request.status, request.url)
-        #             return None, None
-        #         data += await request.read()
-
-        # except (asyncio.TimeoutError, aiohttp.ClientError):
-        #     _LOGGER.error("Timeout for ResponsiveVoice speech")
-        #     return None, None
-        return ('mp3', data)
+        return self._codec, result

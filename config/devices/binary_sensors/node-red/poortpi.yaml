@@ -8,6 +8,26 @@
   payload_not_available: "offline"
   device_class: motion
 
+- platform: mqtt
+  name: "PoortPi throttle"
+  state_topic: "PoortjePi/system/throttle"
+  payload_off: "false"
+  payload_on: "true"
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: problem
+
+- platform: mqtt
+  name: "PoortPi undervoltage"
+  state_topic: "PoortjePi/system/undervoltage"
+  payload_off: "false"
+  payload_on: "true"
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: problem
+
 - platform: template
   sensors:
     fotocel_poort_error:

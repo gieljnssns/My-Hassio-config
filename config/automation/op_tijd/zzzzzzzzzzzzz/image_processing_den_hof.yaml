@@ -1,0 +1,12 @@
+  alias: 'image_processing den hof'
+  initial_state: 'on' 
+  trigger:
+    - platform: time_pattern
+      seconds: '/10'
+  condition: 
+    - condition: state
+      entity_id: 'binary_sensor.monitor_scanning'
+      state: 'on'
+  action:
+    - service: image_processing.scan
+      entity_id: image_processing.deepstack_den_hof

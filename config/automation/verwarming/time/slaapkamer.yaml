@@ -1,0 +1,23 @@
+  # - {"event": "Slaapkamer_uit"}
+
+  alias: 'Verwarming Slaapkamer Aan/Uit'
+  initial_state: 'on' 
+  trigger:
+    - platform: time
+      at: '06:00'
+    - platform: time
+      at: '00:30'
+  action:
+    - service_template: >
+        {% if now().hour == 6 %}
+          automation.turn_on
+        {% else %}
+          automation.turn_off
+        {% endif %}
+      entity_id: automation.verwarming_bij_beweging_slaapkamer
+    - condition: template
+      value_template: "{{now().hour != 6}}"
+    - service: climate.set_temperature
+      entity_id: climate.slaapkamer
+      data:
+        temperature: 10

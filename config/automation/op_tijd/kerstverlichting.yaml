@@ -1,8 +1,10 @@
-  alias: 'Oplader electrische fiets aan'
+  alias: 'Kerstverlichting Aan/Uit'
   initial_state: 'on' 
   trigger:
     - platform: time
-      at: '16:00:00'
+      at: '06:00:00'
+    - platform: time
+      at: '23:00:00'
   condition:
     condition: and
     conditions:
@@ -19,5 +21,10 @@
         entity_id: input_boolean.op_verlof
         state: 'off'
   action:
-    - service: switch.turn_on
-      entity_id: switch.shelly_shplg_s_7ae478
+    - service_template: >
+        {% if now().hour == 23 %}
+          switch.turn_off
+        {% else %}
+          switch.turn_on
+        {% endif %}
+      entity_id: switch.kerstverlichting

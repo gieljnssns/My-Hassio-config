@@ -20,6 +20,33 @@ input_select:
       - Juist Weg
       - Afwezig
       - Langdurig Afwezig
+  
+  noor_status_dropdown:
+    name: Noor
+    options:
+      - Thuis
+      - Juist Aangekomen
+      - Juist Weg
+      - Afwezig
+      - Langdurig Afwezig
+  
+  fien_status_dropdown:
+    name: Fien
+    options:
+      - Thuis
+      - Juist Aangekomen
+      - Juist Weg
+      - Afwezig
+      - Langdurig Afwezig
+  
+  iphone4_status_dropdown:
+    name: iPhone Noor/Fien
+    options:
+      - Thuis
+      - Juist Aangekomen
+      - Juist Weg
+      - Afwezig
+      - Langdurig Afwezig
 
 sensor:
   - platform: template
@@ -30,3 +57,12 @@ sensor:
       martine_status:
         value_template: '{{ states.input_select.martine_status_dropdown.state }}'
         friendly_name: 'Martine'
+      noor_status:
+        value_template: '{{ states.input_select.noor_status_dropdown.state }}'
+        friendly_name: 'Noor'
+      fien_status:
+        value_template: '{{ states.input_select.fien_status_dropdown.state }}'
+        friendly_name: 'Fien'
+      iphone4_status:
+        value_template: '{{ states.input_select.iphone4_status_dropdown.state }}'
+        friendly_name: 'iPhone Noor/Fien'

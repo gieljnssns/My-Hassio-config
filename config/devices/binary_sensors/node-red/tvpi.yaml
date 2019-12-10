@@ -1,0 +1,27 @@
+- platform: mqtt
+  name: "tvPi throttle"
+  state_topic: "tvPi/system/throttle"
+  payload_off: "false"
+  payload_on: "true"
+  availability_topic: "tvPi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: problem
+
+- platform: mqtt
+  name: "tvPi undervoltage"
+  state_topic: "tvPi/system/undervoltage"
+  payload_off: "false"
+  payload_on: "true"
+  availability_topic: "tvPi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: problem
+
+- platform: template
+  sensors:
+    nodered_tvpi_down:
+      friendly_name: "NodeRed unavailable"
+      device_class: problem
+      value_template: >-
+        {{ states("sensor.temperatuur_cpu_tvpi") == 'unavailable'}}

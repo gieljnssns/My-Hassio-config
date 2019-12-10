@@ -18,6 +18,26 @@
   payload_not_available: "offline"
   device_class: motion
 
+- platform: mqtt
+  name: "Slaapkamer throttle"
+  state_topic: "Slaapkamer/system/throttle"
+  payload_off: "false"
+  payload_on: "true"
+  availability_topic: "Slaapkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: problem
+
+- platform: mqtt
+  name: "Slaapkamer undervoltage"
+  state_topic: "Slaapkamer/system/undervoltage"
+  payload_off: "false"
+  payload_on: "true"
+  availability_topic: "Slaapkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: problem
+
 - platform: template
   sensors:
     nodered_slaapkamer_down:

@@ -31,41 +31,9 @@
       - delay: '00:00:03'
       - service_template: >-
           {% if state_attr('media_player.keuken', 'media_artist') == 'nl-nl' or state_attr('media_player.keuken', 'media_artist') == 'nl' %}
-            script.sonos_pauze_spreek_1_1
+            script.sonos_pauze_spreek_nl
           {% else %}
-            script.sonos_pauze_spreek_1_2
+            script.sonos_pauze_spreek_non_nl
           {% endif %}
         data_template:
           entity_id: "{{ sonos_entity }}"
-      # - condition: and
-      #   conditions:
-      #     - condition: state
-      #       entity_id: media_player.philips_tv
-      #       state: 'off'
-      #     - condition: state
-      #       entity_id: media_player.philips_tv_wifi
-      #       state: 'off'
-      #     - condition: template
-      #       value_template: "{{states('alarm_control_panel.ha_alarm')  != 'armed_night' }}"
-      #     - condition: template
-      #       value_template: "{{ state_attr('media_player.keuken', 'media_artist') != 'nl-nl' }}"
-      #     - condition: template
-      #       value_template: "{{ state_attr('media_player.keuken', 'media_artist') != 'nl' }}"
-      #     - condition: or
-      #       conditions:
-      #         - condition: time
-      #           after: '15:55:00'
-      #         - condition: and
-      #           conditions:
-      #             - condition: state
-      #               entity_id: binary_sensor.v_w_nacht
-      #               state: 'off'
-      #             - condition: state
-      #               entity_id: binary_sensor.v_nacht
-      #               state: 'off'
-      # - delay: '00:00:01'
-      # - service: media_player.media_play
-      #   data_template:
-      #     entity_id: "{{ sonos_entity }}"
-
-

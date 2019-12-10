@@ -33,3 +33,49 @@
   availability_topic: "Noor/status"
   payload_available: "online"
   payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: 'Noor/system/temp'
+  device_class: temperature
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '°C'
+  name: 'Temperatuur cpu Noor'
+  availability_topic: "Noor/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Noor/system/cpu'
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '%'
+  name: 'Cpu % Noor'
+  availability_topic: "Noor/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'Noor/system/mem'
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '%'
+  name: 'Ram % Noor'
+  availability_topic: "Noor/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: 'Noor/system/uptime'
+  # value_template: '{{ value_json }}'
+  name: 'Uptime Noor'
+  availability_topic: "Noor/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: 'Noor/system/wifi'
+  device_class: signal_strength
+  value_template: '{{ value_json }}'
+  unit_of_measurement: 'dBm'
+  name: 'Wifi Noor'
+  availability_topic: "Noor/status"
+  payload_available: "online"
+  payload_not_available: "offline"

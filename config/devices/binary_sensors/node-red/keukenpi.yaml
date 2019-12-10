@@ -18,6 +18,36 @@
   payload_not_available: "offline"
   device_class: motion
 
+- platform: mqtt
+  name: "Beweging Keuken Camera"
+  state_topic: "Keuken/motion"
+  payload_on: "TRUE"
+  payload_off: "FALSE"
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: motion
+
+- platform: mqtt
+  name: "Keuken throttle"
+  state_topic: "Keuken/system/throttle"
+  payload_off: "false"
+  payload_on: "true"
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: problem
+
+- platform: mqtt
+  name: "Keuken undervoltage"
+  state_topic: "Keuken/system/undervoltage"
+  payload_off: "false"
+  payload_on: "true"
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: problem
+
 - platform: template
   sensors:
     nodered_keuken_down:

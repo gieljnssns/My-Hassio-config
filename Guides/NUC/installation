@@ -50,9 +50,13 @@ apt-cache policy docker-ce
 sudo apt install docker-ce
 sudo systemctl status docker
 
-# Portainer
+## Portainer
 sudo docker volume create portainer_data
 sudo docker run -d -p 9000:9000 --name portainer --restart always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
+# Update portainer
+sudo docker stop portainer
+sudo docker pull portainer/portainer
+sudo docker start portainer
 
 # Hassio
 sudo su root
@@ -61,6 +65,10 @@ curl -sL https://raw.githubusercontent.com/home-assistant/hassio-build/master/in
 # Samba
 https://tutorials.ubuntu.com/tutorial/install-and-configure-samba#0
 sudo nano /etc/samba/smb.conf
+
+
+[Global]
+    ntlm auth=yes                    #### Is needed for Sonos to connect to smb(v1)
 
 [Hassio]
     comment = Samba for Hassio
@@ -75,7 +83,8 @@ sudo nano /etc/samba/smb.conf
 sudo chmod -R 775 /usr/share/hassio
 sudo service smbd restart
 
-
+## Netatalk
+https://pimylifeup.com/raspberry-pi-afp/
 
 
 ## unifi 

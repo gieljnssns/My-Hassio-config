@@ -18,6 +18,26 @@
   payload_not_available: "offline"
   device_class: motion
 
+- platform: mqtt
+  name: "Noor throttle"
+  state_topic: "Noor/system/throttle"
+  payload_off: "false"
+  payload_on: "true"
+  availability_topic: "Noor/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: problem
+
+- platform: mqtt
+  name: "Noor undervoltage"
+  state_topic: "Noor/system/undervoltage"
+  payload_off: "false"
+  payload_on: "true"
+  availability_topic: "Noor/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: problem
+
 - platform: template
   sensors:
     nodered_noor_down:

@@ -13,3 +13,17 @@
         minutes: 1
     - service: light.turn_off
       entity_id: light.spots_tv
+    - service_template: >
+        {% if now().hour > 22 %}
+          script.vertraagd_uit_noor_15_min
+        {% else %}
+          script.vertraagd_uit_noor_30_min
+        {% endif %}
+    - service_template: >
+        {% if now().hour > 22 %}
+          script.vertraagd_uit_fien_15_min
+        {% else %}
+          script.vertraagd_uit_fien_30_min
+        {% endif %}
+    # - service: script.vertraagd_uit_noor
+    # - service: script.vertraagd_uit_fien

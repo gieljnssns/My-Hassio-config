@@ -1,0 +1,37 @@
+- platform: mqtt
+  state_topic: 'verwarmingPi/system/temp'
+  device_class: temperature
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '°C'
+  name: 'Temperatuur cpu verwarmingPi'
+  availability_topic: "verwarmingPi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'verwarmingPi/system/cpu'
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '%'
+  name: 'Cpu % verwarmingPi'
+  availability_topic: "verwarmingPi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  
+- platform: mqtt
+  state_topic: 'verwarmingPi/system/mem'
+  value_template: '{{ value_json }}'
+  unit_of_measurement: '%'
+  name: 'Ram % verwarmingPi'
+  availability_topic: "verwarmingPi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: 'verwarmingPi/system/uptime'
+  # value_template: '{{ value_json }}'
+  name: 'Uptime verwarmingPi'
+  availability_topic: "verwarmingPi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+  

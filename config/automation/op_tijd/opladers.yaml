@@ -1,10 +1,12 @@
   # {"event": "Opladers_aan"}
 
-  alias: 'Opladers Aan tijd'
+  alias: 'Opladers Aan/Uit'
   initial_state: 'on' 
   trigger:
     - platform: time
       at: '09:00'
+    - platform: time
+      at: '22:00'
   condition:
     - condition: time
       weekday:
@@ -19,6 +21,10 @@
       entity_id: input_boolean.op_verlof
       state: 'off'
   action:
-    - service: switch.turn_on
-      entity_id:
-        - switch.opladers
+    - service_template: >
+        {% if now().hour == 22 %}
+          switch.turn_off
+        {% else %}
+          switch.turn_on
+        {% endif %}
+      entity_id: switch.opladers
