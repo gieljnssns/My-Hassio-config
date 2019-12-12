@@ -60,6 +60,7 @@ from . import (
     SERVICE_CLEAR_TIMER,
     SERVICE_JOIN,
     SERVICE_PLAY_QUEUE,
+    SERVICE_REMOVE_FROM_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SET_OPTION,
     SERVICE_SET_TIMER,
@@ -209,6 +210,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     call = entity.set_option
                 elif service == SERVICE_PLAY_QUEUE:
                     call = entity.play_queue
+                elif service == SERVICE_REMOVE_FROM_QUEUE:
+                    call = entity.remove_from_queue
 
                 hass.async_add_executor_job(call, data)
 
@@ -1193,6 +1196,11 @@ class SonosEntity(MediaPlayerDevice):
     def play_queue(self, data):
         """Start playing the queue."""
         self.soco.play_from_queue(data[ATTR_QUEUE_POSITION])
+    
+    @soco_error()
+    def remove_from_queue(self, data):
+        """Remove item from the queue."""
+        self.soco.remove_from_queue(data[ATTR_QUEUE_POSITION])
 
     @property
     def device_state_attributes(self):

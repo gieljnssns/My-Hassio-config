@@ -42,6 +42,7 @@ SERVICE_CLEAR_TIMER = "clear_sleep_timer"
 SERVICE_UPDATE_ALARM = "update_alarm"
 SERVICE_SET_OPTION = "set_option"
 SERVICE_PLAY_QUEUE = "play_queue"
+SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
 
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_ALARM_ID = "alarm_id"
@@ -109,6 +110,13 @@ SONOS_PLAY_QUEUE_SCHEMA = vol.Schema(
     }
 )
 
+SONOS_REMOVE_FROM_QUEUE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Optional(ATTR_QUEUE_POSITION, default=0): cv.positive_int,
+    }
+)
+
 DATA_SERVICE_EVENT = "sonos_service_idle"
 
 
@@ -166,6 +174,10 @@ async def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_PLAY_QUEUE, service_handle, schema=SONOS_PLAY_QUEUE_SCHEMA
+    )
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_REMOVE_FROM_QUEUE, service_handle, schema=SONOS_REMOVE_FROM_QUEUE_SCHEMA
     )
 
     return True
