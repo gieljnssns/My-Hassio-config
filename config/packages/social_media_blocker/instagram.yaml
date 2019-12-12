@@ -1,0 +1,32 @@
+input_boolean:
+  allowinstagram:
+    name: Instagram
+    icon: mdi:instagram
+
+
+automation:
+  - id: enable_instagram
+    alias: Enable Instagram
+    hide_entity: true
+    initial_state: 'on'
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowinstagram
+      to: 'on'
+    action:
+    - service: adguard.disable_url
+      data:
+        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-instagram.txt
+
+  - id: disable_instagram
+    alias: Disable Instagram
+    hide_entity: true
+    initial_state: 'on'
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowinstagram
+      to: 'off'
+    action:
+    - service: adguard.enable_url
+      data:
+        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-instagram.txt

@@ -1,0 +1,32 @@
+input_boolean:
+  allowfacebook:
+    name: Facebook
+    icon: mdi:facebook-box
+
+
+automation:
+  - id: enable_facebook
+    alias: Enable Facebook
+    hide_entity: true
+    initial_state: 'on'
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowfacebook
+      to: 'on'
+    action:
+    - service: adguard.disable_url
+      data:
+        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-facebook.txt
+
+  - id: disable_facebook
+    alias: Disable Facebook
+    hide_entity: true
+    initial_state: 'on'
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowfacebook
+      to: 'off'
+    action:
+    - service: adguard.enable_url
+      data:
+        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-facebook.txt

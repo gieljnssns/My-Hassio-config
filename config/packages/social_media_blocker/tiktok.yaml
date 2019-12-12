@@ -1,0 +1,32 @@
+input_boolean:
+  allowtiktok:
+    name: tiktok
+    icon: mdi:music-box
+
+
+automation:
+  - id: enable_tiktok
+    alias: Enable tiktok
+    hide_entity: true
+    initial_state: 'on'
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowtiktok
+      to: 'on'
+    action:
+    - service: adguard.disable_url
+      data:
+        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-tiktok.txt
+
+  - id: disable_tiktok
+    alias: Disable tiktok
+    hide_entity: true
+    initial_state: 'on'
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowtiktok
+      to: 'off'
+    action:
+    - service: adguard.enable_url
+      data:
+        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-tiktok.txt

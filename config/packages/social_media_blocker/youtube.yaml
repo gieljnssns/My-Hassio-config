@@ -1,0 +1,32 @@
+input_boolean:
+  allowyoutube:
+    name: Youtube
+    icon: mdi:youtube
+
+
+automation:
+  - id: enable_youtube
+    alias: Enable Youtube
+    hide_entity: true
+    initial_state: 'on'
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowyoutube
+      to: 'on'
+    action:
+    - service: adguard.disable_url
+      data:
+        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-youtube.txt
+
+  - id: disable_youtube
+    alias: Disable Youtube
+    hide_entity: true
+    initial_state: 'on'
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowyoutube
+      to: 'off'
+    action:
+    - service: adguard.enable_url
+      data:
+        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-youtube.txt

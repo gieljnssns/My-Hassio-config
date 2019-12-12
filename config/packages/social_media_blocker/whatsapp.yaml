@@ -1,0 +1,32 @@
+input_boolean:
+  allowwhatsapp:
+    name: Whatsapp
+    icon: mdi:whatsapp
+
+
+automation:
+  - id: enable_whatsapp
+    alias: Enable Whatsapp
+    hide_entity: true
+    initial_state: 'on'
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowwhatsapp
+      to: 'on'
+    action:
+    - service: adguard.disable_url
+      data:
+        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-whatsapp.txt
+
+  - id: disable_whatsapp
+    alias: Disable Whatsapp
+    hide_entity: true
+    initial_state: 'on'
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowwhatsapp
+      to: 'off'
+    action:
+    - service: adguard.enable_url
+      data:
+        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-whatsapp.txt
