@@ -3,6 +3,21 @@ input_boolean:
     name: Facebook
     icon: mdi:facebook-box
 
+switch:
+  - platform: template
+    switches:
+      allowfacebook:
+        value_template: "{{ is_state('input_boolean.allowfacebook', 'on') }}"
+        icon_template: mdi:facebook-box
+        friendly_name: Facebook
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.allowfacebook
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.allowfacebook
 
 automation:
   - id: enable_facebook

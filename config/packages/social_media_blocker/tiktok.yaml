@@ -1,7 +1,23 @@
 input_boolean:
   allowtiktok:
-    name: tiktok
+    name: TikTok
     icon: mdi:music-box
+
+switch:
+  - platform: template
+    switches:
+      allowtiktok:
+        value_template: "{{ is_state('input_boolean.allowtiktok', 'on') }}"
+        icon_template: mdi:music-box
+        friendly_name: TikTok
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.allowtiktok
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.allowtiktok
 
 
 automation:

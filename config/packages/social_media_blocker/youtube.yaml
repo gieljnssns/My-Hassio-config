@@ -3,6 +3,21 @@ input_boolean:
     name: Youtube
     icon: mdi:youtube
 
+switch:
+  - platform: template
+    switches:
+      allowyoutube:
+        value_template: "{{ is_state('input_boolean.allowyoutube', 'on') }}"
+        icon_template: mdi:youtube
+        friendly_name: Youtube
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.allowyoutube
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.allowyoutube
 
 automation:
   - id: enable_youtube

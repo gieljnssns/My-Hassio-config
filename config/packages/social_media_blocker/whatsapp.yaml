@@ -3,6 +3,21 @@ input_boolean:
     name: Whatsapp
     icon: mdi:whatsapp
 
+switch:
+  - platform: template
+    switches:
+      allowwhatsapp:
+        value_template: "{{ is_state('input_boolean.allowwhatsapp', 'on') }}"
+        icon_template: mdi:whatsapp
+        friendly_name: Whatsapp
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.allowwhatsapp
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.allowwhatsapp
 
 automation:
   - id: enable_whatsapp
