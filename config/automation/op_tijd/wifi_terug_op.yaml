@@ -2,9 +2,9 @@
   initial_state: 'on' 
   trigger:
     - platform: template
-      value_template: "{{ state_attr('input_datetime.wifi_noor','timestamp') | timestamp_custom('%Y-%m-%d') == now().strftime('%Y-%m-%d') }}"
+      value_template: "{{ state_attr('input_datetime.wifi_noor','timestamp') | timestamp_custom('%Y-%m-%d') == states('sensor.date') }}"
     - platform: template
-      value_template: "{{ state_attr('input_datetime.wifi_fien','timestamp') | timestamp_custom('%Y-%m-%d') == now().strftime('%Y-%m-%d') }}"
+      value_template: "{{ state_attr('input_datetime.wifi_fien','timestamp') | timestamp_custom('%Y-%m-%d') == states('sensor.date') }}"
   condition:
     condition: or
     conditions:
