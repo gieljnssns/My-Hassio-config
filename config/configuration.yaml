@@ -194,7 +194,13 @@ ifttt:
   key: !secret ifttt_key
 
 ###  Shelly  ###
-shelly:
+shelly: !include devices/hubs/shelly.yaml
+  # discovery: true
+  # igmp_fix: true
+  # scan_interval: 10
+  # sensors:
+  #   - power
+  #   - switch
 
 ###  Apple Tv  ###
 # apple_tv:
@@ -246,7 +252,6 @@ ssdp:
 ###  HACS  ###
 hacs:
   token: !secret hacs_token
-  theme: true
 
 ### Discover some devices automatically  ###
 discovery:

@@ -1,0 +1,18 @@
+  alias: Gang beneden
+  initial_state: 'on' 
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.gang_beneden_gedrukt
+  condition:
+    - condition: template
+      value_template: "{{ (as_timestamp(now()) - as_timestamp(states.light.gang_beneden.last_changed)) > 10 }}"
+
+  action:
+    - service_template: >
+        {% if is_state('light.gang_beneden', 'on') %}
+          light.turn_off
+        {% else %}
+          light.turn_on
+        {% endif %}
+      data:
+          entity_id: light.gang_beneden

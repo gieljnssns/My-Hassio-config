@@ -1,0 +1,19 @@
+  alias: Spots danszaal
+  initial_state: 'on' 
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.spotjes_danszaal_gedrukt
+
+  condition:
+    - condition: template
+      value_template: "{{ (as_timestamp(now()) - as_timestamp(states.light.spots_danszaal.last_changed)) > 10 }}"
+
+  action:
+    - service_template: >
+        {% if is_state('light.spots_danszaal', 'on') %}
+          light.turn_off
+        {% else %}
+          light.turn_on
+        {% endif %}
+      data:
+          entity_id: light.spots_danszaal
