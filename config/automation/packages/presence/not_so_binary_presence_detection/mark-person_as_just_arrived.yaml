@@ -21,6 +21,9 @@
       entity_id: binary_sensor.iphone_4_bayesian
       from: 'off'
       to: 'on'
+  condition: 
+      - condition: template
+        value_template: "{{ float(states('sensor.uptime_in_uren')) > 0.03 }}"
   action:
     - service: input_select.select_option
       data_template:
