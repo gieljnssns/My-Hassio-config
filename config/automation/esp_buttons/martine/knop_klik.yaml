@@ -1,0 +1,18 @@
+  alias: Knop Martine klik
+  initial_state: 'on' 
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.knop_martine_klik
+      to: 'on'
+  action:
+    - service: light.toggle
+      entity_id: light.slaapkamer
+    - condition: state
+      entity_id: light.slaapkamer
+      state:  'on'
+    - service: light.turn_on
+      data:
+        brightness: 255
+        rgb_color: [255, 236, 182]
+        entity_id: light.slaapkamer
+        

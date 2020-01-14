@@ -1,16 +1,12 @@
-  alias: Licht Slaapkamer
+  alias: Knop Giel 5 klik
   initial_state: 'on' 
   trigger:
     - platform: state
-      entity_id: light.slaapkamer
+      entity_id: binary_sensor.knop_giel_5_klik
       to: 'on'
-  condition:
-    - condition: state
-      entity_id: script.vertraagd_uit
-      state: 'off'
   action:
     - service: light.turn_on
       entity_id: light.slaapkamer
       data:
         effect: random
-        brightness: 240
+        brightness: 255

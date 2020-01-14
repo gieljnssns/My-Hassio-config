@@ -1,0 +1,14 @@
+  alias: Knop Noor 2 klik
+  initial_state: 'on' 
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.knop_noor_2_klik
+      to: 'on'
+  action:
+    service_template: >
+      {% if now().hour < 12  %}
+        script.vertraagd_aan_noor_5_min
+      {% else %}
+        script.vertraagd_uit_noor_30_min
+      {% endif %}
+    
