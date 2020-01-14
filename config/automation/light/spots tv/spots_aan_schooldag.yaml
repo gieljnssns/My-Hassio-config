@@ -1,4 +1,4 @@
-  alias: Spots aan monnikenheide
+  alias: Spots aan vroege
   initial_state: 'on' 
   trigger:
     platform: state
@@ -8,16 +8,17 @@
     condition: and
     conditions:
       - condition: time
-        after: '06:25:00'
+        after: '07:30:00'
+        before: '11:00:00'
       - condition: state
-        entity_id: binary_sensor.v_monnikenheide
-        state: 'on'
-      - condition: state
-        entity_id: calendar.monnikenheide_monnikenheide
+        entity_id: binary_sensor.v_werken
         state: 'off'
       - condition: state
         entity_id: sensor.dark_outside
         state: 'true'
+      - condition: state
+        entity_id: binary_sensor.schooldag
+        state: 'on'
   action:
     - service: light.turn_on
       entity_id: light.spots_tv
