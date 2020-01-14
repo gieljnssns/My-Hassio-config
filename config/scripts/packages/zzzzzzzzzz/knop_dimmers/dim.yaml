@@ -1,0 +1,15 @@
+  dim:
+    sequence:
+      - condition: template
+        value_template: >
+          {{ is_state(('input_boolean.' ~ where ~ '_dimmer'), 'on') }}
+      - service: light.turn_on
+        data_template:
+          entity_id: "{{ 'light.' ~ where }}"
+          brightness: "{{ states.light[where].attributes.brightness - 10 }}"
+      - service: script.turn_off
+        entity_id: script.dim
+      - service: script.dim
+        data_template:
+          where: >
+            {{ where }}

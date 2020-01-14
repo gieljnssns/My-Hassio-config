@@ -1,0 +1,51 @@
+  alias: Dim off
+  initial_state: 'on'
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.knop_fien_lange_klik
+      from: 'on'
+      to: 'off'
+    - platform: state
+      entity_id: binary_sensor.knop_noor_lange_klik
+      from: 'on'
+      to: 'off'
+    - platform: state
+      entity_id: binary_sensor.knop_giel_lange_klik
+      from: 'on'
+      to: 'off'
+    - platform: state
+      entity_id: binary_sensor.knop_martine_lange_klik
+      from: 'on'
+      to: 'off'
+  condition:
+    condition: and
+    conditions:
+      - condition: template
+        value_template: >
+          {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
+            {{ is_state('input_boolean.slaapkamer_dimmer', 'off') }}
+          {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
+            {{ is_state('input_boolean.slaapkamer_dimmer', 'off') }}
+          {% else %}
+            {{ is_state((trigger.entity_id|replace('binary_sensor.knop_', 'input_boolean.')|replace('_lange_klik', '_dimmer')), 'off') }}
+          {% endif %}
+      - condition: template
+        value_template: >
+          {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
+            {{ is_state('light.slaapkamer', 'on') }}
+          {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
+            {{ is_state('light.slaapkamer', 'on') }}
+          {% else %}
+            {{ is_state((trigger.entity_id|replace('binary_sensor.knop_', 'light.')|replace('_lange_klik', '')), 'on') }}
+          {% endif %}
+  action:
+    - service: input_boolean.turn_on
+      data_template:
+        entity_id: >
+          {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
+            input_boolean.slaapkamer_dimmer
+          {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
+            input_boolean.slaapkamer_dimmer
+          {% else %}
+            {{ trigger.entity_id|replace('binary_sensor.knop_', 'input_boolean.')|replace('_lange_klik', '_dimmer') }}
+          {% endif %}

@@ -1,0 +1,56 @@
+  alias: Knop Noor licht aan
+  initial_state: 'on' 
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.knop_noor
+      to: 'off'
+    - platform: state
+      entity_id: binary_sensor.knop_noor_2_sec
+      to: 'on'
+  # condition:
+  #   - condition: state
+  #     entity_id: script.vertraagd_uit
+  #     state: 'off'
+  action:
+    - service_template: >
+        {% if is_state('binary_sensor.knop_noor_2_sec', 'on') %}
+          light.turn_off
+        {% else %}
+          light.turn_on
+        {% endif %}
+       
+      entity_id: light.led_knop_noor
+      data_template:
+        # rgb_color:
+        #   - 220
+        #   - 59
+        #   - 220
+        transition: 10
+    - delay:
+        seconds: 2
+    - condition: state
+      entity_id: light.led_knop_noor
+      state: 'on'
+    
+    - service: light.turn_on
+      entity_id: light.led_knop_noor
+      data:
+        rgb_color:
+          - 220
+          - 59
+          - 220
+      
+    # - service_template: >
+    #     {% if trigger.entity_id == binary_sensor.knop_noor_2_sec %}
+    #       light.turn_off
+    #     {% else %}
+    #       light.turn_on
+    #     {% endif %}
+    # - service: light.turn_on
+    #   entity_id: light.led_knop_noor
+    #   data:
+    #     rgb_color:
+    #       - 220
+    #       - 59
+    #       - 220
+    #     transition: 10
