@@ -1,0 +1,44 @@
+  alias: 'Uit na beweging'
+  initial_state: 'on' 
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.beweging_badkamer
+      to: 'off'
+    - platform: state
+      entity_id: binary_sensor.beweging_keuken
+      to: 'off'
+    - platform: state
+      entity_id: binary_sensor.beweging_living
+      to: 'off'
+    - platform: state
+      entity_id: binary_sensor.beweging_slaapkamer
+      to: 'off'
+      for:
+        minutes: 10
+    - platform: state
+      entity_id: binary_sensor.beweging_noor
+      to: 'off'
+      for:
+        minutes: 10
+    - platform: state
+      entity_id: binary_sensor.beweging_fien
+      to: 'off'
+      for:
+        minutes: 10
+  action:
+    - service: light.turn_off
+      data_template:
+        entity_id: >
+          {% if trigger.entity_id == 'binary_sensor.beweging_badkamer' %}
+            light.badkamer_hoog, light.badkamer_pombak
+          {% elif trigger.entity_id == 'binary_sensor.beweging_keuken' %}
+            light.spots_keuken, light.luster_keuken, light.inkom
+          {% elif trigger.entity_id == 'binary_sensor.beweging_living' %}
+            light.spots_danszaal, light.luster_danszaal, light.luster_zithoek
+          {% elif trigger.entity_id == 'binary_sensor.beweging_noor' %}
+            light.noor
+          {% elif trigger.entity_id == 'binary_sensor.beweging_fien' %}
+            light.fien
+          {% else %}
+            light.slaapkamer_hoog, light.slaapkamer
+          {% endif %}
