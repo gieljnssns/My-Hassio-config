@@ -20,8 +20,22 @@ homeassistant:
   customize: !include_dir_merge_named customized
   packages: !include_dir_named packages/
   auth_providers:
-   - type: homeassistant
-  #  - type: legacy_api_password
+    - type: homeassistant
+    - type: trusted_networks
+      trusted_networks:
+        - 127.0.0.1
+        - 192.168.79.1
+        - 192.168.0.0/16
+        - ::1
+        - fd00::/8
+        - 192.168.79.0/24
+      trusted_users:
+        192.168.79.0/24:
+          - !secret user_id_giel
+          - !secret user_id_martine
+          - !secret user_id_noor
+          - !secret user_id_fien
+      allow_bypass_login: true
   whitelist_external_dirs:
     - '/share'
     # - /usr/share/hassio/homeassistant/tmp
@@ -33,9 +47,9 @@ http:
   use_x_forwarded_for: true
   trusted_proxies:
     - 127.0.0.1
-    - 192.168.79.54
-    - 192.168.79.0/24
-    - 172.30.33.0/24
+    # - 192.168.79.54
+    # - 192.168.79.0/24
+    # - 172.30.33.0/24
     - ::1
   login_attempts_threshold: 5
 
@@ -134,6 +148,8 @@ unifi:
       block_client:
         - !secret mac_npad
         - !secret mac_fpad
+        - !secret mac_nphone
+        - !secret mac_fphone
       detection_time: 60
 
 ###  Smappee  ###

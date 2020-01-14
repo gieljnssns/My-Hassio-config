@@ -2,7 +2,7 @@
   initial_state: 'on' 
   trigger:
     platform: state
-    entity_id: binary_sensor.pir_keuken
+    entity_id: binary_sensor.beweging_keuken_camera
     from: 'off'
     to: 'on'
   condition:
@@ -54,5 +54,17 @@
     - service: media_player.select_source
       data_template:
         entity_id: media_player.keuken
-        source: 'Willy'
+        # source: 'Willy'
         # source: 'Arrow Classic Rock'
+        source: >
+          {{ [
+            'Willy',
+            'Arrow Classic Rock',
+            'Fuzz FM',
+            'Radio Caprice Stoner Metal',
+            'Het betere genre',
+            'Undiscovered Rock Radio',
+            'Fuzz FM',
+            'Radio Caprice Stoner Metal',
+            'Het betere genre'
+          ] | random }}
