@@ -47,9 +47,6 @@ from . import (
     ATTR_MASTER,
     ATTR_NIGHT_SOUND,
     ATTR_QUEUE_POSITION,
-    ATTR_CURRENT_QUEUE_POSITION,
-    ATTR_QUEUE,
-    ATTR_QUEUE_LENGTH,
     ATTR_SLEEP_TIME,
     ATTR_SPEECH_ENHANCE,
     ATTR_TIME,
@@ -64,6 +61,7 @@ from . import (
     SERVICE_JOIN,
     SERVICE_PLAY_QUEUE,
     SERVICE_REMOVE_FROM_QUEUE,
+    SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SET_OPTION,
     SERVICE_SET_TIMER,
@@ -96,7 +94,6 @@ DATA_SONOS = "sonos_media_player"
 
 SOURCE_LINEIN = "Line-in"
 SOURCE_TV = "TV"
-SOURCE_RADIO = "Radio"
 
 ATTR_SONOS_GROUP = "sonos_group"
 
@@ -216,6 +213,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     call = entity.play_queue
                 elif service == SERVICE_REMOVE_FROM_QUEUE:
                     call = entity.remove_from_queue
+                elif service == SERVICE_GET_QUEUE:
+                    call = entity.get_queue
 
                 hass.async_add_executor_job(call, data)
 
@@ -330,9 +329,6 @@ class SonosEntity(MediaPlayerDevice):
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
-        self._current_queue_position = None
-        self._queue = []
-        self._queue_length = None
         self._night_sound = None
         self._speech_enhance = None
         self._source_name = None
@@ -467,13 +463,7 @@ class SonosEntity(MediaPlayerDevice):
             except SoCoException as ex:
                 # Skip unknown types
                 _LOGGER.error("Unhandled favorite '%s': %s", fav.title, ex)
-    
-    def _set_queue(self):
-        """Set available queue."""
-        self._queue = []
-        for item in self.soco.get_queue():
-            self._queue.append(item.title)
-                    
+
     def _radio_artwork(self, url):
         """Return the private URL with artwork for a radio stream."""
         if url not in ("", "NOT_IMPLEMENTED", None):
@@ -493,7 +483,6 @@ class SonosEntity(MediaPlayerDevice):
             self._shuffle = self.soco.shuffle
             self.update_volume()
             self._set_favorites()
-            self._set_queue()
 
             player = self.soco
 
@@ -573,9 +562,6 @@ class SonosEntity(MediaPlayerDevice):
         self._media_artist = source
         self._media_album_name = None
         self._media_title = None
-        self._current_queue_position = 0
-        self._queue = []
-        self._queue_length = 0
 
         self._source_name = source
 
@@ -591,8 +577,6 @@ class SonosEntity(MediaPlayerDevice):
         self._media_artist = track_info.get("artist")
         self._media_album_name = None
         self._media_title = track_info.get("title")
-        self._current_queue_position = 0
-        self._queue_length = len(self._queue)
 
         if self._media_artist and self._media_title:
             # artist and album name are in the data, concatenate
@@ -640,9 +624,6 @@ class SonosEntity(MediaPlayerDevice):
         for fav in self._favorites:
             if fav.reference.get_uri() == media_info["CurrentURI"]:
                 self._source_name = fav.title
-                break
-            else:
-                self._source_name = SOURCE_RADIO
 
     def update_media_music(self, update_media_position, track_info):
         """Update state when playing music tracks."""
@@ -681,10 +662,6 @@ class SonosEntity(MediaPlayerDevice):
         self._media_artist = track_info.get("artist")
         self._media_album_name = track_info.get("album")
         self._media_title = track_info.get("title")
-        self._current_queue_position = track_info.get("playlist_position")
-        
-        if self._queue is not []:
-            self._queue_length = len(self._queue)
 
         self._source_name = None
 
@@ -784,7 +761,6 @@ class SonosEntity(MediaPlayerDevice):
     def update_content(self, event=None):
         """Update information about available content."""
         self._set_favorites()
-        self._set_queue()
         self.schedule_update_ha_state()
 
     @property
@@ -851,12 +827,6 @@ class SonosEntity(MediaPlayerDevice):
     def media_title(self):
         """Title of current playing media."""
         return self._media_title
-    
-    @property
-    @soco_coordinator
-    def current_queue_position(self):
-        """Current queue position."""
-        return self._current_queue_position
 
     @property
     @soco_coordinator
@@ -923,14 +893,11 @@ class SonosEntity(MediaPlayerDevice):
         sources = [fav.title for fav in self._favorites]
 
         model = self._model.upper()
-        print(model)
         if "PLAY:5" in model or "CONNECT" in model:
             sources += [SOURCE_LINEIN]
         elif "PLAYBAR" in model:
             sources += [SOURCE_LINEIN, SOURCE_TV]
         elif "BEAM" in model:
-            sources += [SOURCE_TV]
-        elif "PLAYBASE" in model:
             sources += [SOURCE_TV]
 
         return sources
@@ -1238,6 +1205,12 @@ class SonosEntity(MediaPlayerDevice):
         """Remove item from the queue."""
         self.soco.remove_from_queue(data[ATTR_QUEUE_POSITION])
 
+    @soco_error()
+    def get_queue(self, data):
+        """Get the queue."""
+        queue = self.soco.get_queue()
+        _LOGGER.error(queue)
+
     @property
     def device_state_attributes(self):
         """Return entity specific state attributes."""
@@ -1248,18 +1221,5 @@ class SonosEntity(MediaPlayerDevice):
 
         if self._speech_enhance is not None:
             attributes[ATTR_SPEECH_ENHANCE] = self._speech_enhance
-        
-        if self._current_queue_position is not None:
-            if int(self._current_queue_position) > 0:
-                attributes[ATTR_CURRENT_QUEUE_POSITION] = self._current_queue_position
-        
-        if self._queue is not None:
-            if self._queue_length is not None:
-                if int(self._queue_length) > 0:
-                    attributes[ATTR_QUEUE] = self._queue
-        
-        if self._queue_length is not None:
-            if int(self._queue_length) is not 0:
-                attributes[ATTR_QUEUE_LENGTH] = self._queue_length
 
         return attributes

@@ -43,6 +43,7 @@ SERVICE_UPDATE_ALARM = "update_alarm"
 SERVICE_SET_OPTION = "set_option"
 SERVICE_PLAY_QUEUE = "play_queue"
 SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
+SERVICE_GET_QUEUE = "get_queue"
 
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_ALARM_ID = "alarm_id"
@@ -54,9 +55,6 @@ ATTR_WITH_GROUP = "with_group"
 ATTR_NIGHT_SOUND = "night_sound"
 ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
-ATTR_CURRENT_QUEUE_POSITION = "current_queue_position"
-ATTR_QUEUE = "queue"
-ATTR_QUEUE_LENGTH = "queue_length"
 
 SONOS_JOIN_SCHEMA = vol.Schema(
     {
@@ -120,6 +118,11 @@ SONOS_REMOVE_FROM_QUEUE_SCHEMA = vol.Schema(
     }
 )
 
+SONOS_GET_QUEUE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+    }
+)
 
 DATA_SERVICE_EVENT = "sonos_service_idle"
 
@@ -182,6 +185,10 @@ async def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_REMOVE_FROM_QUEUE, service_handle, schema=SONOS_REMOVE_FROM_QUEUE_SCHEMA
+    )
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_GET_QUEUE, service_handle, schema=SONOS_GET_QUEUE_SCHEMA
     )
 
     return True
