@@ -1,5 +1,5 @@
 input_boolean:
-  slaapkamer_dimmer:
+  spot_slaapkamer_dimmer:
     name: Slaapkamer dimmer
     initial: off
   noor_dimmer:
@@ -64,18 +64,18 @@ automation:
         - condition: template
           value_template: >
             {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
-              {{ is_state('input_boolean.slaapkamer_dimmer', 'off') }}
+              {{ is_state('input_boolean.spot_slaapkamer_dimmer', 'off') }}
             {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
-              {{ is_state('input_boolean.slaapkamer_dimmer', 'off') }}
+              {{ is_state('input_boolean.spot_slaapkamer_dimmer', 'off') }}
             {% else %}
               {{ is_state((trigger.entity_id|replace('binary_sensor.knop_', 'input_boolean.')|replace('_lange_klik', '_dimmer')), 'off') }}
             {% endif %}
         - condition: template
           value_template: >
             {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
-              {{ is_state('light.slaapkamer', 'on') }}
+              {{ is_state('light.spot_slaapkamer', 'on') }}
             {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
-              {{ is_state('light.slaapkamer', 'on') }}
+              {{ is_state('light.spot_slaapkamer', 'on') }}
             {% else %}
               {{ is_state((trigger.entity_id|replace('binary_sensor.knop_', 'light.')|replace('_lange_klik', '')), 'on') }}
             {% endif %}
@@ -84,9 +84,9 @@ automation:
         data_template:
             where: >
               {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
-                slaapkamer
+                spot_slaapkamer
               {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
-                slaapkamer
+                spot_slaapkamer
               {% else %}
                 {{ trigger.entity_id|replace('binary_sensor.knop_', '')|replace('_lange_klik', '') }}
               {% endif %}
@@ -116,18 +116,18 @@ automation:
         - condition: template
           value_template: >
             {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
-              {{ is_state('input_boolean.slaapkamer_dimmer', 'off') }}
+              {{ is_state('input_boolean.spot_slaapkamer_dimmer', 'off') }}
             {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
-              {{ is_state('input_boolean.slaapkamer_dimmer', 'off') }}
+              {{ is_state('input_boolean.spot_slaapkamer_dimmer', 'off') }}
             {% else %}
               {{ is_state((trigger.entity_id|replace('binary_sensor.knop_', 'input_boolean.')|replace('_lange_klik', '_dimmer')), 'off') }}
             {% endif %}
         - condition: template
           value_template: >
             {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
-              {{ is_state('light.slaapkamer', 'on') }}
+              {{ is_state('light.spot_slaapkamer', 'on') }}
             {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
-              {{ is_state('light.slaapkamer', 'on') }}
+              {{ is_state('light.spot_slaapkamer', 'on') }}
             {% else %}
               {{ is_state((trigger.entity_id|replace('binary_sensor.knop_', 'light.')|replace('_lange_klik', '')), 'on') }}
             {% endif %}
@@ -136,9 +136,9 @@ automation:
         data_template:
           entity_id: >
             {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
-              input_boolean.slaapkamer_dimmer
+              input_boolean.spot_slaapkamer_dimmer
             {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
-              input_boolean.slaapkamer_dimmer
+              input_boolean.spot_slaapkamer_dimmer
             {% else %}
               {{ trigger.entity_id|replace('binary_sensor.knop_', 'input_boolean.')|replace('_lange_klik', '_dimmer') }}
             {% endif %}
@@ -164,18 +164,18 @@ automation:
         - condition: template
           value_template: >
             {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
-              {{ is_state('input_boolean.slaapkamer_dimmer', 'on') }}
+              {{ is_state('input_boolean.spot_slaapkamer_dimmer', 'on') }}
             {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
-              {{ is_state('input_boolean.slaapkamer_dimmer', 'on') }}
+              {{ is_state('input_boolean.spot_slaapkamer_dimmer', 'on') }}
             {% else %}
               {{ is_state((trigger.entity_id|replace('binary_sensor.knop_', 'input_boolean.')|replace('_lange_klik', '_dimmer')), 'on') }}
             {% endif %}
         - condition: template
           value_template: >
             {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
-              {{ is_state('light.slaapkamer', 'on') }}
+              {{ is_state('light.spot_slaapkamer', 'on') }}
             {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
-              {{ is_state('light.slaapkamer', 'on') }}
+              {{ is_state('light.spot_slaapkamer', 'on') }}
             {% else %}
               {{ is_state((trigger.entity_id|replace('binary_sensor.knop_', 'light.')|replace('_lange_klik', '')), 'on') }}
             {% endif %}
@@ -185,9 +185,9 @@ automation:
             "title": "fien"
             where: >
               {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
-                slaapkamer
+                spot_slaapkamer
               {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
-                slaapkamer
+                spot_slaapkamer
               {% else %}
                 {{ trigger.entity_id|replace('binary_sensor.knop_', '')|replace('_lange_klik', '') }}
               {% endif %}
@@ -217,18 +217,18 @@ automation:
         - condition: template
           value_template: >
             {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
-              {{ is_state('input_boolean.slaapkamer_dimmer', 'on') }}
+              {{ is_state('input_boolean.spot_slaapkamer_dimmer', 'on') }}
             {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
-              {{ is_state('input_boolean.slaapkamer_dimmer', 'on') }}
+              {{ is_state('input_boolean.spot_slaapkamer_dimmer', 'on') }}
             {% else %}
               {{ is_state((trigger.entity_id|replace('binary_sensor.knop_', 'input_boolean.')|replace('_lange_klik', '_dimmer')), 'on') }}
             {% endif %}
         - condition: template
           value_template: >
             {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
-              {{ is_state('light.slaapkamer', 'on') }}
+              {{ is_state('light.spot_slaapkamer', 'on') }}
             {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
-              {{ is_state('light.slaapkamer', 'on') }}
+              {{ is_state('light.spot_slaapkamer', 'on') }}
             {% else %}
               {{ is_state((trigger.entity_id|replace('binary_sensor.knop_', 'light.')|replace('_lange_klik', '')), 'on') }}
             {% endif %}
@@ -237,9 +237,9 @@ automation:
         data_template:
           entity_id: >
             {% if trigger.entity_id == 'binary_sensor.knop_giel_lange_klik' %}
-              input_boolean.slaapkamer_dimmer
+              input_boolean.spot_slaapkamer_dimmer
             {% elif trigger.entity_id == 'binary_sensor.knop_martine_lange_klik' %}
-              input_boolean.slaapkamer_dimmer
+              input_boolean.spot_slaapkamer_dimmer
             {% else %}
               {{ trigger.entity_id|replace('binary_sensor.knop_', 'input_boolean.')|replace('_lange_klik', '_dimmer') }}
             {% endif %}
