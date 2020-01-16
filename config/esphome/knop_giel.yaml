@@ -1,0 +1,279 @@
+esphome:
+  name: knop_giel
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: "XXXXXXXXXXX"
+  password: "XXXXXXXXXXX"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Knop Giel Fallback Hotspot"
+    password: "XXXXXXXXXXX"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: "XXXXXXXXXXX"
+
+ota:
+  password: "XXXXXXXXXXX"
+
+output:
+  - platform: esp8266_pwm
+    pin: D0
+    id: redgpio
+
+light:
+  - platform: monochromatic
+    name: "Led knop Giel"
+    id: licht
+    output: redgpio
+    effects:
+      - strobe:
+      - flicker:
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: D5
+    id: "knop_giel"
+    on_multi_click:
+    - timing:
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at least 0.5s
+      then:
+        - binary_sensor.template.publish:
+            id: giel_5_klik
+            state: ON
+        - if:
+            condition:
+              light.is_on: licht
+            then:
+              - delay: 1s
+              - light.turn_on:
+                  id: licht
+                  effect: strobe
+              - delay: 5s
+              - light.turn_off:
+                  id: licht
+              - light.turn_on:
+                  id: licht
+            else:
+              - delay: 1s
+              - light.turn_on:
+                  id: licht
+                  effect: strobe
+              - delay: 5s
+              - light.turn_off:
+                  id: licht
+        - delay: 2s
+        - binary_sensor.template.publish:
+            id: giel_5_klik
+            state: OFF
+    - timing:
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at least 0.5s
+      then:
+        - binary_sensor.template.publish:
+            id: giel_4_klik
+            state: ON
+        - if:
+            condition:
+              light.is_on: licht
+            then:
+              - delay: 1s
+              - light.turn_on:
+                  id: licht
+                  effect: strobe
+              - delay: 4s
+              - light.turn_off:
+                  id: licht
+              - light.turn_on:
+                  id: licht
+            else:
+              - delay: 1s
+              - light.turn_on:
+                  id: licht
+                  effect: strobe
+              - delay: 4s
+              - light.turn_off:
+                  id: licht
+        - delay: 2s
+        - binary_sensor.template.publish:
+            id: giel_4_klik
+            state: OFF
+    - timing:
+        - ON for at most 1s
+        - OFF for at most 1s
+        - ON for at most 1s
+        - OFF for at most 1s
+        - ON for at most 1s
+        - OFF for at least 0.5s
+      then:
+          - binary_sensor.template.publish:
+              id: giel_3_klik
+              state: ON
+          - if:
+              condition:
+                light.is_on: licht
+              then:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 3s
+                - light.turn_off:
+                    id: licht
+                - light.turn_on:
+                    id: licht
+              else:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 3s
+                - light.turn_off:
+                    id: licht
+          - delay: 2s
+          - binary_sensor.template.publish:
+              id: giel_3_klik
+              state: OFF
+    - timing:
+        - ON for at most 1s
+        - OFF for at most 1s
+        - ON for at most 1s
+        - OFF for at least 0.5s
+      then:
+          - binary_sensor.template.publish:
+              id: giel_2_klik
+              state: ON
+          - if:
+              condition:
+                light.is_on: licht
+              then:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 2s
+                - light.turn_off:
+                    id: licht
+                - light.turn_on:
+                    id: licht
+              else:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 2s
+                - light.turn_off:
+                    id: licht
+          - delay: 2s
+          - binary_sensor.template.publish:
+              id: giel_2_klik
+              state: OFF
+    - timing:
+        - ON for at most 1s
+        - OFF for at least 0.5s
+      then:
+          - binary_sensor.template.publish:
+              id: giel_klik
+              state: ON
+          - if:
+              condition:
+                light.is_on: licht
+              then:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 1s
+                - light.turn_off:
+                    id: licht
+                - light.turn_on:
+                    id: licht
+              else:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 1s
+                - light.turn_off:
+                    id: licht
+          - delay: 2s
+          - binary_sensor.template.publish:
+              id: giel_klik
+              state: OFF
+    - timing:
+      - ON for at least 1.2s
+      then:
+        - binary_sensor.template.publish:
+            id: giel_long_klik
+            state: ON
+        - if:
+              condition:
+                light.is_on: licht
+              then:
+                - light.turn_on:
+                    id: licht
+                    effect: flicker
+                - delay: 1s
+                - light.turn_off:
+                    id: licht
+                - light.turn_on:
+                    id: licht
+              else:
+                - light.turn_on:
+                    id: licht
+                    effect: flicker
+                - delay: 1s
+                - light.turn_off:
+                    id: licht
+    on_release:
+          - binary_sensor.template.publish:
+              id: giel_long_klik
+              state: OFF
+  
+  - platform: template
+    id: giel_klik
+    name: "Knop Giel klik"
+  
+  - platform: template
+    id: giel_long_klik
+    name: "Knop Giel lange klik"
+  
+  - platform: template
+    id: giel_2_klik
+    name: "Knop Giel 2 klik"
+    
+  - platform: template
+    id: giel_3_klik
+    name: "Knop Giel 3 klik"
+  
+  - platform: template
+    id: giel_4_klik
+    name: "Knop Giel 4 klik"
+  
+  - platform: template
+    id: giel_5_klik
+    name: "Knop Giel 5 klik"

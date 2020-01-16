@@ -1,0 +1,343 @@
+esphome:
+  name: knop_fien
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: "XXXXXXXXXXX"
+  password: "XXXXXXXXXXX"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Knop Fien Fallback Hotspot"
+    password: "XXXXXXXXXXX"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: "XXXXXXXXXXX"
+
+ota:
+  password: "XXXXXXXXXXX"
+
+output:
+  - platform: esp8266_pwm
+    pin: D1
+    id: led_knop
+
+light:
+  - platform: monochromatic
+    name: "Led knop Fien"
+    id: licht
+    output: led_knop
+    effects:
+      - strobe:
+      - flicker:
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: D5
+    id: "knop_fien"
+    on_multi_click:
+    - timing:
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at least 0.5s
+      then:
+        - binary_sensor.template.publish:
+            id: fien_4_klik
+            state: ON
+        - if:
+            condition:
+              light.is_on: licht
+            then:
+              - delay: 1s
+              - light.turn_on:
+                  id: licht
+                  effect: strobe
+              - delay: 4s
+              - light.turn_off:
+                  id: licht
+              - light.turn_on:
+                  id: licht
+            else:
+              - delay: 1s
+              - light.turn_on:
+                  id: licht
+                  effect: strobe
+              - delay: 4s
+              - light.turn_off:
+                  id: licht
+        - delay: 2s
+        - binary_sensor.template.publish:
+            id: fien_4_klik
+            state: OFF
+    - timing:
+        - ON for at most 1s
+        - OFF for at most 1s
+        - ON for at most 1s
+        - OFF for at most 1s
+        - ON for at most 1s
+        - OFF for at least 0.5s
+      then:
+          - binary_sensor.template.publish:
+              id: fien_3_klik
+              state: ON
+          - if:
+              condition:
+                light.is_on: licht
+              then:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 3s
+                - light.turn_off:
+                    id: licht
+                - light.turn_on:
+                    id: licht
+              else:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 3s
+                - light.turn_off:
+                    id: licht
+          - delay: 2s
+          - binary_sensor.template.publish:
+              id: fien_3_klik
+              state: OFF
+    - timing:
+        - ON for at most 1s
+        - OFF for at most 1s
+        - ON for at most 1s
+        - OFF for at least 0.5s
+      then:
+          - binary_sensor.template.publish:
+              id: fien_2_klik
+              state: ON
+          - if:
+              condition:
+                light.is_on: licht
+              then:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 2s
+                - light.turn_off:
+                    id: licht
+                - light.turn_on:
+                    id: licht
+              else:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 2s
+                - light.turn_off:
+                    id: licht
+          - delay: 2s
+          - binary_sensor.template.publish:
+              id: fien_2_klik
+              state: OFF
+    - timing:
+        - ON for at most 1s
+        - OFF for at least 0.5s
+      then:
+          - binary_sensor.template.publish:
+              id: fien_klik
+              state: ON
+          - if:
+              condition:
+                light.is_on: licht
+              then:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 1s
+                - light.turn_off:
+                    id: licht
+                - light.turn_on:
+                    id: licht
+              else:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 1s
+                - light.turn_off:
+                    id: licht
+          - delay: 2s
+          - binary_sensor.template.publish:
+              id: fien_klik
+              state: OFF
+    - timing:
+      - ON for at least 1.2s
+      then:
+        - binary_sensor.template.publish:
+            id: fien_long_klik
+            state: ON
+        - if:
+              condition:
+                light.is_on: licht
+              then:
+                - light.turn_on:
+                    id: licht
+                    effect: flicker
+                - delay: 1s
+                - light.turn_off:
+                    id: licht
+                - light.turn_on:
+                    id: licht
+              else:
+                - light.turn_on:
+                    id: licht
+                    effect: flicker
+                - delay: 1s
+                - light.turn_off:
+                    id: licht
+    on_release:
+          - binary_sensor.template.publish:
+              id: fien_long_klik
+              state: OFF
+  
+  - platform: template
+    id: fien_klik
+    name: "Knop Fien klik"
+  
+  - platform: template
+    id: fien_long_klik
+    name: "Knop Fien lange klik"
+  
+  - platform: template
+    id: fien_2_klik
+    name: "Knop Fien 2 klik"
+    
+  - platform: template
+    id: fien_3_klik
+    name: "Knop Fien 3 klik"
+  
+  - platform: template
+    id: fien_4_klik
+    name: "Knop Fien 4 klik"
+
+  # - platform: gpio
+  #   pin:
+  #     number: D5
+  #     # inverted: True
+  #   id: "knop_fien"
+  #   on_click:
+  #     - min_length: 10ms
+  #       max_length: 1280ms
+  #       then:
+  #         - binary_sensor.template.publish:
+  #             id: fien
+  #             state: ON
+  #         - if:
+  #             condition:
+  #               light.is_on: licht
+  #             then:
+  #               - light.turn_on:
+  #                   id: licht
+  #                   effect: strobe
+  #               - delay: 1s
+  #               - light.turn_off:
+  #                   id: licht
+  #               - light.turn_on:
+  #                   id: licht
+  #             else:
+  #               - light.turn_on:
+  #                   id: licht
+  #                   effect: strobe
+  #               - delay: 1s
+  #               - light.turn_off:
+  #                   id: licht
+  #     - min_length: 1300ms
+  #       max_length: 2500ms
+  #       then:
+  #         - binary_sensor.template.publish:
+  #             id: fien_2_sec
+  #             state: ON
+  #         - if:
+  #             condition:
+  #               light.is_on: licht
+  #             then:
+  #               - light.turn_on:
+  #                   id: licht
+  #                   effect: strobe
+  #               - delay: 2s
+  #               - light.turn_off:
+  #                   id: licht
+  #               - light.turn_on:
+  #                   id: licht
+  #             else:
+  #               - light.turn_on:
+  #                   id: licht
+  #                   effect: strobe
+  #               - delay: 2s
+  #               - light.turn_off:
+  #                   id: licht
+  #     - min_length: 2520ms
+  #       max_length: 5500ms
+  #       then:
+  #         - binary_sensor.template.publish:
+  #             id: fien_4_sec
+  #             state: ON
+  #         - if:
+  #             condition:
+  #               light.is_on: licht
+  #             then:
+  #               - light.turn_on:
+  #                   id: licht
+  #                   effect: strobe
+  #               - delay: 4s
+  #               - light.turn_off:
+  #                   id: licht
+  #               - light.turn_on:
+  #                   id: licht
+  #             else:
+  #               - light.turn_on:
+  #                   id: licht
+  #                   effect: strobe
+  #               - delay: 4s
+  #               - light.turn_off:
+  #                   id: licht
+
+  #   on_release:
+  #     then:
+  #       - delay: 2s
+  #       - binary_sensor.template.publish:
+  #             id: fien
+  #             state: OFF
+  #       - binary_sensor.template.publish:
+  #             id: fien_2_sec
+  #             state: OFF
+  #       - binary_sensor.template.publish:
+  #             id: fien_4_sec
+  #             state: OFF
+
+  # - platform: template
+  #   id: fien
+  #   name: "Knop Fien"
+
+  # - platform: template
+  #   id: fien_2_sec
+  #   name: "Knop Fien 2 sec"
+
+  # - platform: template
+  #   id: fien_4_sec
+  #   name: "Knop Fien 4 sec"
+  

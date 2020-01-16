@@ -1,0 +1,62 @@
+esphome:
+  name: leds_drukknoppen
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: "XXXXXXXXXXX"
+  password: "XXXXXXXXXXX"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Leds Drukknoppen"
+    password: "XXXXXXXXXXX"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: "XXXXXXXXXXX"
+
+ota:
+  password: "XXXXXXXXXXX"
+
+# output:
+#   - platform: gpio
+#     pin: D1
+#     id: gpio_d1
+  
+#   - platform: gpio
+#     pin: D2
+#     id: gpio_d1
+
+switch:
+  - platform: gpio
+    pin:
+      number: D0
+      # inverted: yes
+    name: "Led wc"
+    id: wc
+  - platform: gpio
+    pin:
+      number: D1
+      # inverted: yes
+    name: "Led waskot"
+    id: waskot
+  
+  - platform: gpio
+    pin:
+      number: D2
+      # inverted: yes
+    name: "Led badkamer"
+    id: badkamer
+  
+  - platform: gpio
+    pin:
+      number: D3
+      # inverted: yes
+    name: "Reserve"
+    id: reserve
