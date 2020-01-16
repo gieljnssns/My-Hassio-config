@@ -38,20 +38,67 @@ homeassistant:
       allow_bypass_login: true
   whitelist_external_dirs:
     - '/share'
-    # - /usr/share/hassio/homeassistant/tmp
 
-###   HTTP  ###
-http:
-  base_url: !secret base_url
-  ip_ban_enabled: True
-  use_x_forwarded_for: true
-  trusted_proxies:
-    - 127.0.0.1
-    # - 192.168.79.54
-    # - 192.168.79.0/24
-    # - 172.30.33.0/24
-    - ::1
-  login_attempts_threshold: 5
+
+####################################################
+#                                                  #
+#                     Enables                      #
+#                                                  #
+####################################################
+
+###  Browser  ###
+browser:
+
+###  Config  ###
+config:
+
+###  Allows you to issue voice commands from the frontend  ###
+# conversation:
+
+###  Discovery  ###
+discovery:
+  ignore:
+    - apple_tv
+    - plex_mediaserver
+
+###  FFmpeg  ###
+ffmpeg:
+
+###  HACS  ###
+hacs:
+  token: !secret hacs_token
+
+###  Hassio  ###
+hassio:
+
+###  Map  ###
+map:
+
+###  Mobile app  ###
+mobile_app:
+
+###  Person  ###
+person:
+
+###  Ssdp  ###
+ssdp:
+
+###  Sun  ###
+sun:
+
+###  System Health  ###
+system_health:
+
+###  Checks for available updates  ###
+updater:
+  include_used_components: true
+
+###  Wake on Lan  ###
+wake_on_lan:
+
+###  Zeroconf/Avahi/Bonjour  ###
+zeroconf:
+
 
 ####################################################
 #                                                  #
@@ -59,7 +106,60 @@ http:
 #                                                  #
 ####################################################
 
-###  Devices  ###
+### Automation ###
+automation old: !include_dir_list automation
+automation: !include automations.yaml
+
+###  Groups  ###
+# group: !include_dir_merge_named groups/
+
+###  History  ###
+history: !include history.yaml
+
+###  Homekit  ###
+homekit: !include homekit.yaml
+
+###   HTTP  ###
+http: !include http.yaml
+
+###  IOS  ###
+ios: !include ios.yaml
+
+###  Logbook  ###
+logbook: !include logbook.yaml
+
+###  Logger  ###
+logger: !include logger.yaml
+
+###  Notification  ###
+notify: !include notify.yaml
+
+###  Recorder  ###
+recorder: !include recorder.yaml
+
+###  Scenes  ###
+scene: !include scenes.yaml
+
+### Scripts ###
+script: !include_dir_merge_named scripts
+
+###  Frontend  ###
+frontend:
+  themes: !include_dir_merge_named themes/
+
+###  Zones  ###
+zone: !include zones.yaml
+
+###  Panels  ###
+# panel_iframe: !include panels/iframe.yaml
+
+
+####################################################
+#                                                  #
+#                     Devices                     #
+#                                                  #
+####################################################
+
 alarm_control_panel: !include_dir_merge_list devices/alarm
 binary_sensor: !include_dir_merge_list devices/binary_sensors
 calendar: !include_dir_merge_list devices/calendar
@@ -82,40 +182,6 @@ timer: !include_dir_merge_named devices/timer
 utility_meter: !include_dir_merge_named devices/utility_meter
 weather: !include_dir_merge_list devices/weather
 
-###  Groups  ###
-# group: !include_dir_merge_named groups/
-
-###  Scenes  ###
-scene: !include scenes.yaml
-
-### Scripts ###
-script: !include_dir_merge_named scripts
-
-### Automation ###
-automation old: !include_dir_list automation
-automation: !include automations.yaml
-
-### Notification ###
-notify: !include notify.yaml
-
-###  Panels  ###
-# panel_iframe: !include panels/iframe.yaml
-
-###  Logbook  ###
-logbook: !include logbook.yaml
-
-###  History  ###
-history: !include history.yaml
-
-###  Frontend  ###
-frontend:
-  themes: !include_dir_merge_named themes/
-
-###  Logger  ###
-logger: !include logger.yaml
-
-###  Homekit  ###
-homekit: !include homekit.yaml
 
 ####################################################
 #                                                  #
@@ -123,294 +189,35 @@ homekit: !include homekit.yaml
 #                                                  #
 ####################################################
 
-###  Mqtt  ###
-mqtt:
-  broker: 127.0.0.1
-  discovery: true
-  discovery_prefix: homeassistant
+###  Apple Tv  ###
+# apple_tv: !include devices/hubs/appletv.yaml
 
-###  Netatmo  ###
-netatmo:
-  api_key: !secret netatmo_api_key
-  secret_key: !secret netatmo_secret_key
-  username: !secret netatmo_username
-  password: !secret netatmo_password
-  webhooks: true
-
-###  Unifi  ###
-unifi:
-  controllers:
-    - host: !secret unifi_host
-      site: !secret unifi_site
-      ssid_filter:
-        - !secret unifi_ssid_1
-        - !secret unifi_ssid_2
-      block_client:
-        - !secret mac_npad
-        - !secret mac_fpad
-        - !secret mac_nphone
-        - !secret mac_fphone
-      detection_time: 60
-
-###  Smappee  ###
-smappee:
-    # host: !secret smappee_host
-    client_id: !secret smappee_client_id
-    client_secret: !secret smappee_client_secret
-    username: !secret smappee_username
-    password: !secret smappee_password
-    # host_password: !secret smappee_host_password
-
-###  MySensors  ###
-# mysensors:
-#   gateways:
-#     - device: !secret mysensors_device
-#       persistence_file: !secret mysensors_persistence_file
-#   version: '2.2'
-
-###  Tahoma  ###
-tahoma:
-  username: !secret tahoma_username
-  password: !secret tahoma_password
-  exclude: [RTDSRemoteControllerComponent, PodV2Component, TSKAlarmComponent]
-  # exclude: [ExteriorBlindRTSComponent, RTDSRemoteControllerComponent, PodV2Component, TSKAlarmComponent]
-
-###  Somfy  ###
-somfy:
-  client_id: !secret somfy_id
-  client_secret: !secret somfy_secret
-
-###  Sonos  ###
-sonos:
-  media_player:
-    hosts:
-      - !secret sonos_keuken
-      - !secret sonos_badkamer
-      - !secret sonos_living
-
-###  Neato  ###
-neato:
-  username: !secret neato_username
-  password: !secret neato_password
+###  Google Kalender  ###
+# google: !include devices/hubs/google_calendar.yaml
 
 ###  Hue  ###
-# hue:
-#   bridges:
-#     - host: 192.168.79.26
-#       filename: phue_beneden.conf
-#       allow_hue_groups: false
-#       allow_unreachable: false
-#     - host: 192.168.79.36
-#       filename: phue_boven.conf
-#       allow_hue_groups: false
-#       allow_unreachable: false
+hue: !include devices/hubs/hue.yaml
 
-###  If This Then That ###
-ifttt:
-  key: !secret ifttt_key
+###  Neato  ###
+neato: !include devices/hubs/neato.yaml
+
+###  Netatmo  ###
+netatmo: !include devices/hubs/netatmo.yaml
 
 ###  Shelly  ###
 shelly: !include devices/hubs/shelly.yaml
-  # discovery: true
-  # igmp_fix: true
-  # scan_interval: 10
-  # sensors:
-  #   - power
-  #   - switch
 
-###  Apple Tv  ###
-# apple_tv:
-#   - host: !secret apple_tv_host
-#     login_id: !secret apple_tv_login_id
-#     credentials: !secret apple_tv_credentials
+###  Smappee  ###
+smappee: !include devices/hubs/smappee.yaml
 
-###  Google Kalender  ###
-# google:
-#   client_id: !secret google_client_id
-#   client_secret: !secret google_client_secret
+###  Sonos  ###
+sonos: !include devices/hubs/sonos.yaml
 
-# Text to speech
-tts:
-  - platform: google_translate
-    language: 'nl'
-  - platform: voicerss
-    api_key: !secret voicerss_api
-    language: 'nl-nl'
-    format: '44khz_16bit_stereo'
-  # - platform: responsivevoice
-    # language: 'Dutch'
-    # gender: 'Female'
+###  Tahoma  ###
+tahoma: !include devices/hubs/tahoma.yaml
 
-####################################################
-#                                                  #
-#                     Enables                      #
-#                                                  #
-####################################################
+###  Text to speech  ###
+tts: !include devices/hubs/tts.yaml
 
-###  Map  ###
-map:
-
-###  Hassio  ###
-hassio:
-
-###  FFmpeg  ###
-ffmpeg:
-
-###  Person  ###
-person:
-
-###  System Health  ###
-system_health:
-
-###    ###
-ssdp:
-
-###  HACS  ###
-hacs:
-  token: !secret hacs_token
-
-### Discover some devices automatically  ###
-discovery:
-  ignore:
-    - apple_tv
-    - plex_mediaserver
-
-###  Config  ###
-config:
-
-###  IOS  ###
-ios:
-  push:
-    categories:
-      - name: Alarm
-        identifier: 'alarm'
-        actions:
-          - identifier: 'ALLINONE_TRUE'
-            title: 'Zet maar in gang'
-            activationMode: 'foreground'
-            authenticationRequired: no
-            destructive: yes
-            # behavior: 'default'
-          # - identifier: 'ALLINONE_FALSE'
-          #   title: 'Toch maar niet'
-          #   activationMode: 'foreground'
-          #   authenticationRequired: no
-          #   # destructive: yes
-          #   # behavior: 'default'
-
-###  Mobile app  ###
-mobile_app:
-
-###  Zeroconf/Avahi/Bonjour  ###
-zeroconf:
-
-###  Recorder  ###
-recorder: !include recorder.yaml
-
-###  Sun  ###
-sun:
-
-###  Browser  ###
-browser:
-
-###  Allows you to issue voice commands from the frontend  ###
-#conversation:
-
-###  Checks for available updates  ###
-updater:
-  include_used_components: true
-
-###  Wake on Lan  ###
-wake_on_lan:
-
-####################################################
-#                                                  #
-#                     Zones                        #
-#                                                  #
-####################################################
-
-zone:
-  - name: Home
-    latitude: !secret latitude
-    longitude: !secret longitude
-    radius: 30
-    # track_ios: false
-
-  # - name: Thuis
-  #   latitude: !secret latitude
-  #   longitude: !secret longitude
-  #   radius: 20
-  #   icon: mdi:home-assistant
-  #   # track_ios: false
-
-
-  - name: Werk Giel
-    latitude: !secret latitude_werk_giel
-    longitude: !secret longitude_werk_giel
-    radius: 320
-    icon: mdi:cookie
-    # track_ios: false
-
-
-  - name: Werk Martine
-    latitude: !secret latitude_werk_martine
-    longitude: !secret longitude_werk_martine
-    radius: 150
-    icon: mdi:worker
-    # track_ios: false
-
-
-  - name: Oma
-    latitude: !secret latitude_oma
-    longitude: !secret longitude_oma
-    radius: 50
-    icon: mdi:human-female
-    # track_ios: false
-
-  
-  - name: Moemoe Vava
-    latitude: !secret latitude_moemoe
-    longitude: !secret longitude_moemoe
-    radius: 10
-    icon: mdi:human-male-female
-    # track_ios: false
-
-  
-  - name: Bompa
-    latitude: !secret latitude_bompa
-    longitude: !secret longitude_bompa
-    radius: 10
-    icon: mdi:human-male
-    # track_ios: false
-
-  
-  - name: Cafeeke
-    latitude: !secret latitude_cafeeke
-    longitude: !secret longitude_cafeeke
-    radius: 10
-    icon: mdi:glass-mug
-    # track_ios: false
-
-  
-  - name: De Klok
-    latitude: !secret latitude_de_klok
-    longitude: !secret longitude_de_klok
-    radius: 10
-    icon: mdi:glass-mug
-    # track_ios: false
-
-  
-  - name: Jos
-    latitude: !secret latitude_jos
-    longitude: !secret longitude_jos
-    radius: 10
-    icon: mdi:glass-mug
-    # track_ios: false
-
-  
-  - name: Cooldown
-    latitude: !secret latitude_cooldown
-    longitude: !secret longitude_cooldown
-    radius: 10
-    icon: mdi:glass-mug
-    # track_ios: false
+###  Unifi  ###
+unifi: !include devices/hubs/unifi.yaml
