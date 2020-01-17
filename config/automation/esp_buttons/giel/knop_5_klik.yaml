@@ -7,6 +7,9 @@
   action:
     - service: light.turn_on
       entity_id: light.spot_slaapkamer
-      data:
-        effect: random
+      data_template:
+        rgb_color:
+          - "{{ range(254)|random }}"
+          - "{{ range(254)|random }}"
+          - "{{ range(254)|random }}"
         brightness: 255

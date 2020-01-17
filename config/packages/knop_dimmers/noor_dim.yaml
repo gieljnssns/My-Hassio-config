@@ -1,0 +1,113 @@
+input_boolean:
+  noor_dimmer:
+    name: Noor dimmer
+    # initial: off
+
+script:
+  dim_noor:
+    sequence:
+      - condition: template
+        value_template: >
+          {{ is_state(('input_boolean.noor_dimmer'), 'on') }}
+      - condition: template
+        value_template: "{{  states.light.noor.attributes.brightness > 6 }}"
+      - service: light.turn_on
+        data_template:
+          entity_id: light.noor
+          brightness: "{{ states.light.noor.attributes.brightness - 5 }}"
+      - service: script.turn_off
+        entity_id: script.dim_noor
+      - service: script.dim_noor
+
+  brighten_noor:
+    sequence:
+      - condition: template
+        value_template: >
+          {{ is_state(('input_boolean.noor_dimmer'), 'off') }}
+      - condition: template
+        value_template: "{{  states.light.noor.attributes.brightness < 251 }}"
+      - service: light.turn_on
+        data_template:
+          entity_id: light.noor
+          brightness: "{{ states.light.noor.attributes.brightness + 5 }}"
+      - service: script.turn_off
+        entity_id: script.brighten_noor
+      - service: script.brighten_noor
+
+automation:     
+  - alias: Brighten noor
+    initial_state: 'on'
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.knop_noor_lange_klik
+        to: 'on'
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: >
+            {{ is_state('input_boolean.noor_dimmer', 'off') }}
+        - condition: template
+          value_template: >
+            {{ is_state('light.noor', 'on') }}
+    action:
+      - service: script.brighten_noor
+          
+  - alias: Brighten off noor
+    initial_state: 'on'
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.knop_noor_lange_klik
+        from: 'on'
+        to: 'off'
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: >
+            {{ is_state('input_boolean.noor_dimmer', 'off') }}
+        - condition: template
+          value_template: >
+            {{ is_state('light.noor', 'on') }}
+    action:
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.noor_dimmer
+        
+  - alias: Dim noor
+    initial_state: 'on'
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.knop_noor_lange_klik
+        to: 'on'
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: >
+            {{ is_state('input_boolean.noor_dimmer', 'on') }}
+        - condition: template
+          value_template: >
+            {{ is_state('light.noor', 'on') }}
+    action:
+      - service: script.dim_noor
+        
+  - alias: Dim off noor
+    initial_state: 'on'
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.knop_noor_lange_klik
+        from: 'on'
+        to: 'off'
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: >
+            {{ is_state('input_boolean.noor_dimmer', 'on') }}
+        - condition: template
+          value_template: >
+            {{ is_state('light.noor', 'on') }}
+    action:
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.noor_dimmer
+        
