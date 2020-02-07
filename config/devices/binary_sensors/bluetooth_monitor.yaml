@@ -34,10 +34,15 @@
               states("binary_sensor.monitor_garage_down") == 'on' or
               states("binary_sensor.monitor_slaapkamer_down") == 'on'  }}
       
-      monitor_scanning:
-        friendly_name: "Monitor scanning"
+      monitor_arrive_depart_scanning:
+        friendly_name: "Monitor arrive/depart scanning"
         value_template: >-
           {{ states("script.mqtt_arrive_depart_script") == 'on'}}
+      
+      monitor_arrive_scanning:
+        friendly_name: "Monitor arrive scanning"
+        value_template: >-
+          {{ states("script.mqtt_arrive_script") == 'on'}}
       # heartbeat_living:
       #   friendly_name: Heartbeat Living
       #   entity_id: sensor.heartbeat_living

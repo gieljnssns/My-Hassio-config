@@ -34,18 +34,25 @@
   icon: mdi:power-plug
   name: 'Huidig verbruik L3'
 
-- platform: mqtt
-  state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/realtime'
-#   value_template: "{{ value_json['channelPowers'][3]['power']  +  value_json['channelPowers'][4]['power']  +  value_json['channelPowers'][5]['power'] }}"
-  value_template: >
-          {% if (value_json['channelPowers'][3]['power']  +  value_json['channelPowers'][4]['power']  +  value_json['channelPowers'][5]['power'])  < 0 %}
-            0
-          {% else %}
-            {{ value_json['channelPowers'][3]['power']  +  value_json['channelPowers'][4]['power']  +  value_json['channelPowers'][5]['power'] }}
-          {% endif %}
-  unit_of_measurement: 'W'
-  icon: mdi:white-balance-sunny
-  name: 'Huidige opbrengst'
+- platform: template
+  sensors:
+    huidige_opbrengst:
+      # state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/realtime'
+      # value_template: "{{ value_json['channelPowers'][3]['power']  +  value_json['channelPowers'][4]['power']  +  value_json['channelPowers'][5]['power'] }}"
+      value_template: >
+        {% if (states('sensor.huidige_opbrengst_l1')  +  states('sensor.huidige_opbrengst_l2')  +  states('sensor.huidige_opbrengst_l3'))|int  < 0 %}
+          0
+        {% else %}
+          {{ (states('sensor.huidige_opbrengst_l1'))|int  +  (states('sensor.huidige_opbrengst_l2'))|int  +  (states('sensor.huidige_opbrengst_l3'))|int }}  
+        {% endif %}
+      unit_of_measurement: 'W'
+      icon_template: mdi:white-balance-sunny
+      friendly_name: 'Huidige opbrengst'
+      # {% if (value_json['channelPowers'][3]['power']  +  value_json['channelPowers'][4]['power']  +  value_json['channelPowers'][5]['power'])  < 0 %}
+      #   0
+      # {% else %}
+      #   {{ value_json['channelPowers'][3]['power']  +  value_json['channelPowers'][4]['power']  +  value_json['channelPowers'][5]['power'] }}
+      # {% endif %}
 
 - platform: mqtt
   state_topic: 'servicelocation/576a42cf-d672-11e7-ac58-022d286959f5/realtime'

@@ -21,3 +21,31 @@
         entity_id: media_player.living_2
         data:
           source: 'TV'
+
+  playstation_on:
+    sequence:
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.philips_tv
+          volume_level: 0.15
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.living_2
+          volume_level: 0.25
+      - wait_template: "{{ is_state_attr('media_player.philips_tv', 'volume_level', 0) }}"
+      
+          
+  playstation_off:
+    sequence:
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.philips_tv
+          volume_level: 0.0
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.living_2
+          volume_level: 0.15
+      - service: media_player.select_source
+        data:
+          entity_id: media_player.living_2
+          source: TV

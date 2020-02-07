@@ -1,0 +1,10 @@
+  - platform: template
+    switches:
+      playstation:
+        friendly_name: "Playstation spelen met muziek"
+        value_template: "{{ is_state('script.playstation_on', 'on') }}"
+        turn_on:
+          service: script.playstation_on
+        turn_off:
+          service: script.playstation_off
+        icon_template: mdi:playstation

@@ -9,7 +9,7 @@
     condition: and
     conditions:
       - condition: time
-        after: '07:20:00'
+        after: '08:00:00'
         before: '12:00:00'
       - condition: state
         entity_id: binary_sensor.keuken_not_playing
@@ -18,6 +18,9 @@
           hours: 5
       - condition: or
         conditions:
+          - condition: state
+            entity_id: binary_sensor.schooldag
+            state:  'on'
           - condition: template
             value_template: >
               {% if states.calendar.monnikenheide_monnikenheide.attributes.start_time is defined %}

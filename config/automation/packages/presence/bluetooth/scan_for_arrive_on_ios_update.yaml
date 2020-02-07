@@ -1,0 +1,45 @@
+  alias: Scan for arrive on ios update
+  initial_state: 'on' 
+  trigger:
+    - platform: state
+      entity_id: device_tracker.gphone_2
+      to: 'home'
+    - platform: state
+      entity_id: device_tracker.mphone_2
+      to: 'home'
+    - platform: state
+      entity_id: device_tracker.nphone
+      to: 'home'
+    - platform: state
+      entity_id: device_tracker.fphone
+      to: 'home'
+  condition:
+    condition: and
+    conditions:
+      - condition: template
+        value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('automation.scan_for_arrive_on_ios_update', 'last_triggered')) | float > 45 }}"
+  action:
+    - service_template: >
+        {% if is_state('script.mqtt_arrive_script', 'on') %}
+           script.turn_off
+        {% else %}
+           script.turn_on
+        {% endif %}
+      data_template:
+        entity_id: >
+          {% if is_state('script.mqtt_arrive_script', 'on') %}
+             script.mqtt_arrive_script
+          {% else %}
+             script.dummy
+          {% endif %}
+    - wait_template: "{{ is_state('script.dummy', 'off') }}"
+    - service: script.mqtt_arrive_script
+      data_template:
+        identity: >
+          {"identity":"{{trigger.entity_id.split(".")[1]}} {{now().strftime("%H:%M")}}"}
+        # identity: >
+        #   {% if trigger.platform == 'state' %}  
+        #      {"identity":"{{states("sensor.entity_id_for_bt_scanning")}} {{now().strftime("%H:%M")}}"}
+        #   {% else %}
+        #      {"identity":"HA-start {{now().strftime("%H:%M")}}"}
+        #   {% endif %} 
