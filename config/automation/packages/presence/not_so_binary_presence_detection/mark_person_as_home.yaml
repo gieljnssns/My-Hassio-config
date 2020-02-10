@@ -21,11 +21,6 @@
       to: 'Juist Aangekomen'
       for:
         minutes: 5
-    - platform: state
-      entity_id: input_select.iphone4_status_dropdown
-      to: 'Juist Aangekomen'
-      for:
-        minutes: 5
   action:
     - service: input_select.select_option
       data_template:
@@ -36,9 +31,7 @@
             input_select.martine_status_dropdown
           {% elif trigger.entity_id == 'input_select.noor_status_dropdown' %}
             input_select.noor_status_dropdown
-          {% elif trigger.entity_id == 'input_select.fien_status_dropdown' %}
-            input_select.fien_status_dropdown
           {% else %}
-            input_select.iphone4_status_dropdown
+            input_select.fien_status_dropdown
           {% endif %}
         option: Thuis

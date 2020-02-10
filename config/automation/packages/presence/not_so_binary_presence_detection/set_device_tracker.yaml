@@ -9,8 +9,6 @@
       entity_id: sensor.noor_status
     - platform: state
       entity_id: sensor.fien_status
-    - platform: state
-      entity_id: sensor.iphone4_status
   action:
     - service: device_tracker.see
       data_template:
@@ -21,10 +19,8 @@
               martine_not_so_binary
           {% elif trigger.entity_id == 'sensor.noor_status' %}
               noor_not_so_binary
-          {% elif trigger.entity_id == 'sensor.fien_status' %}
-              fien_not_so_binary
           {% else %}
-              iphone4_not_so_binary
+              fien_not_so_binary
           {% endif %}
         location_name: >-
           {% if trigger.entity_id == 'sensor.giel_status' %}
@@ -33,10 +29,8 @@
               {{states('sensor.martine_status')}}
           {% elif trigger.entity_id == 'sensor.noor_status' %}
               {{states('sensor.noor_status')}}
-          {% elif trigger.entity_id == 'sensor.fien_status' %}
-              {{states('sensor.fien_status')}}
           {% else %}
-              {{states('sensor.iphone4_status')}}
+              {{states('sensor.fien_status')}}
           {% endif %}
         source_type: router
       

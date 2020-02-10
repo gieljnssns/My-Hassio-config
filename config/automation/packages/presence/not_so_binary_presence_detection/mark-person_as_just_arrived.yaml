@@ -17,10 +17,6 @@
       entity_id: binary_sensor.fien_bayesian
       from: 'off'
       to: 'on'
-    - platform: state
-      entity_id: binary_sensor.iphone_4_bayesian
-      from: 'off'
-      to: 'on'
   condition: 
       - condition: template
         value_template: "{{ float(states('sensor.uptime_in_uren')) > 0.03 }}"
@@ -34,9 +30,7 @@
             input_select.martine_status_dropdown
           {% elif trigger.entity_id == 'binary_sensor.noor_bayesian' %}
             input_select.noor_status_dropdown
-          {% elif trigger.entity_id == 'binary_sensor.fien_bayesian' %}
-            input_select.fien_status_dropdown
           {% else %}
-            input_select.iphone4_status_dropdown
+            input_select.fien_status_dropdown
           {% endif %}
         option: Juist Aangekomen
