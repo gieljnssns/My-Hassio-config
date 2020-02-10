@@ -1,0 +1,36 @@
+  # Sonos/playstation met muziek uit als tv op springt
+  alias: 'sonos/ps muziek uit tv'
+  initial_state: 'on' 
+  trigger:
+    - platform: state
+      entity_id: media_player.philips_tv
+      from: 'off'
+      to: 'on'
+    # - platform: state
+    #   entity_id: binary_sensor.philips_tv_online
+    #   from: 'off'
+    #   to: 'on'
+  # condition:
+  #   condition: and
+  #   conditions:
+  #     - condition: time
+  #       after: '12:15:00'
+  #       before: '23:00:00'
+  #     - condition: state
+  #       entity_id: media_player.keuken
+  #       state: playing
+  action:
+    - service: media_player.volume_set
+      data:
+        entity_id: media_player.philips_tv
+        volume_level: 0.0
+    - condition: and
+      conditions:
+        - condition: time
+          after: '11:30:00'
+          before: '23:00:00'
+        - condition: state
+          entity_id: media_player.keuken
+          state: playing
+    - service: media_player.media_pause
+      entity_id: media_player.keuken
