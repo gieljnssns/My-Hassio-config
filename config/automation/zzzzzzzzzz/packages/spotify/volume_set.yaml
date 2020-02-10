@@ -1,9 +1,0 @@
-  alias: 'Spotify Volume (Set)'
-  trigger:
-    platform: state
-    entity_id: input_number.spotify_volume
-  action:
-    service: media_player.volume_set
-    data_template:
-      entity_id: media_player.spotify
-      volume_level: '{{  states.input_number.spotify_volume.state | int / 100  }}'
