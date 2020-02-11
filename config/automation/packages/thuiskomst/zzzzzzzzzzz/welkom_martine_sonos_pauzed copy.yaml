@@ -1,4 +1,4 @@
-  alias: Welkom Martine, sonos playing
+  alias: Welkom Martine, sonos paused
   initial_state: 'on' 
   trigger:
     - platform: template
@@ -21,8 +21,8 @@
             entity_id: binary_sensor.voordeur_open_last_5_min
             state: 'on'
       - condition: state
-        entity_id: media_player.keuken
-        state: playing
+        entity_id: binary_sensor.keuken_not_playing
+        state: 'on'     # {{ states('media_player.keuken') != 'playing' }}
       - condition: template
         value_template: "{{ states('device_tracker.giel_not_so_binary') != 'Juist Aangekomen' }}"
       - condition: state
@@ -33,7 +33,7 @@
       - condition: template
         value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_playing_spreek', 'last_triggered')) | float > 310 }}"
   action:
-    - service: script.sonos_playing_spreek
+    - service: script.sonos_pauze_spreek
       data_template:
         sonos_entity: media_player.keuken
         volume: 0.65
@@ -42,15 +42,13 @@
             {% set person = 'Martine' %}
             {{ [
             "Hallo " + person + ", welkom thuis.",
-            "Hallo " + person,
             "Welkom thuis " + person + ", zware dag gehad?",
             "Blij dat je thuis bent " + person ,
             "Hokus Pokus pats, ik wou da " + person + " thuis was",
             "De rechterhand van de almachtige is aanwezig.",
             "Spiegeltje, spiegeltje aan de wand, hier is de mooiste van het land.",
             "Sims salla bime, hier is " + person ,
-            "Die da Disneyland, hier is " + person + " en dat is plezent.",
-            "Kostelijke kip in the house",
+            "Die da Disneyland, hier is " + person + " en dat is plezant.",
             "Sorry, voor de rommel in huis,. Neem de stofzuiger en voel je thuis!",
             "Al schud de jongen nog zo kloek., de laatste druppel valt in de broek.",
             "Calorieën zijn toch die beestjes die 's nachts je kleding kleiner maken?",
@@ -63,57 +61,3 @@
             "Het is hier niet ik... Het is hier niet jij... Het is hier wij.",
             "De bloemen scheiden het gras in de tuin... Pipi is geel een kaka is bruin"
             ] | random }}
-
-
-
-
-{% set people = [ 
-        states.device_tracker.martine_not_so_binary,
-        states.device_tracker.giel_not_so_binary,
-        states.device_tracker.noor_not_so_binary,
-        states.device_tracker.fien_not_so_binary ] %}
-{% set arrived = [] %}
-{%- for person in people -%}
-  {% if person.state == 'Juist Aangekomen' %} 
-    {{ arrived|join(', ') }}
-    {{ arrived.append(person) }} 
-  {% endif %}
-{%- endfor -%}
-# did anyone arrive?
-{{ arrived }}
-{{ arrived[0] }} 
-{{ arrived[1] }}
-
- 
-       
-{% if is_state("sensor.people_arrive_count", "2") %}
-  {% if is_state("device_tracker.martine_not_so_binary", "Juist Aangekomen") %}
-    {% set person1 = 'Martine' %}
-  {% endif %}
-{% elif is_state("sensor.people_arrive_count", "3") %}           
-{% else %}
-  {% set person1 = 'Martine' %}
-  {% set person2 = 'Giel' %}
-  {% set person3 = 'Noor' %}
-  {% set person4 = 'Fien' %}
-{% endif %}
-
-
-{% if arrived | length == 2 %}
-  {% set person1 = arrived[0].split('.')[-1].split('_')[0] %}
-  {% set person2 = arrived[1].split('.')[-1].split('_')[0] %}
-{% elif arrived | length == 3 %}
-  {% set person1 = arrived[0].split('.')[-1].split('_')[0] %}
-  {% set person2 = arrived[1].split('.')[-1].split('_')[0] %}
-  {% set person3 = arrived[2].split('.')[-1].split('_')[0] %}
-{% else %}
-  {% set person1 = arrived[0].split('.')[-1].split('_')[0] %}
-  {% set person2 = arrived[1].split('.')[-1].split('_')[0] %}
-  {% set person3 = arrived[2].split('.')[-1].split('_')[0] %}
-  {% set person4 = arrived[3].split('.')[-1].split('_')[0] %}
-{% endif %}
-
-{%- for x in people if x.state == 'Juist Aangekomen' -%} 
-  {{ arrived|join(', ') }}
-  {{ arrived.append(x) }} 
-{%- endfor -%}
