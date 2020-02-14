@@ -25,10 +25,19 @@
     above: 0.30  # Rain
 
   condition:
-    condition: and
+    condition: or
     conditions:
       - condition: state
         entity_id: input_boolean.achtergevel_closed
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.keuken_1_closed
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.keuken_2_closed
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.slaapkamer_closed
         state: 'on'
 
   action:

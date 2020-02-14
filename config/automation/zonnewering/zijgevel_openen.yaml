@@ -25,10 +25,16 @@
     above: 0.30  # Rain
 
   condition:
-    condition: and
+    condition: or
     conditions:
       - condition: state
         entity_id: input_boolean.zijgevel_closed
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.living_closed
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.slaapkamer_noor_closed
         state: 'on'
 
   action:

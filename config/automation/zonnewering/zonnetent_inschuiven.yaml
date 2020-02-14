@@ -25,10 +25,13 @@
     above: 0.25 # Rain
 
   condition:
-    condition: and
+    condition: or
     conditions:
       - condition: state
         entity_id: input_boolean.zonnetent_my
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.zonnetent_closed
         state: 'on'
 
   action:
