@@ -1,0 +1,48 @@
+  alias: Wijziging setpunt tijdens verwarmen
+  initial_state: 'on' 
+  trigger:
+    - platform: state
+      entity_id: input_select.setpunt_badkamer
+    - platform: state
+      entity_id: input_select.setpunt_fien
+    - platform: state
+      entity_id: input_select.setpunt_noor
+    - platform: state
+      entity_id: input_select.setpunt_slaapkamer
+  condition:
+    condition: and
+    conditions:
+      - condition: template
+        value_template: >
+          {% if trigger.entity_id == 'input_select.setpunt_badkamer' %}
+            {{ is_state("climate.badkamer", "heat") }}
+          {% elif trigger.entity_id == 'input_select.setpunt_fien' %}
+            {{ is_state("climate.fien", "heat") }}
+          {% elif trigger.entity_id == 'input_select.setpunt_noor' %}
+            {{ is_state("climate.noor", "heat") }}
+          {% else %}
+            {{ is_state("climate.slaapkamer", "heat") }}
+          {% endif %}
+  action:
+    service: climate.set_temperature
+    data_template:
+      entity_id: >
+        {% if trigger.entity_id == 'input_select.setpunt_badkamer' %}
+          climate.badkamer
+        {% elif trigger.entity_id == 'input_select.setpunt_fien' %}
+          climate.fien
+        {% elif trigger.entity_id == 'input_select.setpunt_noor' %}
+          climate.noor
+        {% else %}
+          climate.slaapkamer
+        {% endif %}
+      temperature: >
+        {% if trigger.entity_id == 'input_select.setpunt_badkamer' %}
+          {{ states('input_select.setpunt_badkamer') }}
+        {% elif trigger.entity_id == 'input_select.setpunt_fien' %}
+          {{ states('input_select.setpunt_fien') }}
+        {% elif trigger.entity_id == 'input_select.setpunt_noor' %}
+          {{ states('input_select.setpunt_noor') }}
+        {% else %}
+          {{ states('input_select.setpunt_slaapkamer') }}
+        {% endif %}
