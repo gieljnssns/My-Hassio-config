@@ -1,0 +1,27 @@
+  alias: "Op verlof uit?"
+  initial_state: 'on' 
+  trigger:
+    - platform: state
+      entity_id: device_tracker.giel_not_so_binary
+      from: 'Langdurig Afwezig'
+      to: 'Juist Aangekomen'
+    - platform: state
+      entity_id: device_tracker.martine_not_so_binary
+      from: 'Langdurig Afwezig'
+      to: 'Juist Aangekomen'
+  condition:
+    condition: and
+    conditions:
+      - condition: template
+        value_template: "{{ is_state('input_boolean.op_verlof', 'on') }}"
+  action:
+    - service: notify.ios
+      data_template:
+        message: "Zijn jullie terug thuis van vakantie? Zet dan Vakantie-modus uit."
+        data:
+          push:
+            badge: 0
+            category: 'verlof'
+          action_data:
+            entity_id: input_boolean.op_verlof
+
