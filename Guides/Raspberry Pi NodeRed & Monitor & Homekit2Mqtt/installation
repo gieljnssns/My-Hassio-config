@@ -42,6 +42,18 @@ monitor
 https://github.com/andrewjfreyer/monitor
 sudo apt-get install bluez-hcidump git bc pi-bluetooth
 
+## Netdata
+https://www.netdata.cloud
+
+$ sudo /etc/netdata/edit-config charts.d.conf
+Copying '/usr/lib/netdata/conf.d/charts.d.conf' to '/etc/netdata/charts.d.conf' ...
+Editing '/etc/netdata/charts.d.conf' ...
+
+$ bash <(curl -Ss https://my-netdata.io/kickstart.sh)  --stable-channel --disable-telemetry
+
+uninstall netdata
+$ sudo find / -name netdata-uninstaller.sh
+$ sudo /usr/libexec/netdata/netdata-uninstaller.sh --force --yes
 
 sudo systemctl stop monitor
 sudo bash monitor.sh -tad -x -a -u
@@ -72,5 +84,3 @@ PREF_PASS_FILTER_MANUFACTURER_ARRIVE=".*"
 PREF_FAIL_FILTER_ADV_FLAGS_ARRIVE="NONE"
 PREF_FAIL_FILTER_MANUFACTURER_ARRIVE="NONE"
 
-#PREF_MQTT_REPORT_SCAN_MESSAGES=false
-#PREF_INTERSCAN_DELAY=10
