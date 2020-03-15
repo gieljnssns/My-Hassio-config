@@ -33,3 +33,29 @@
       verluchting_afkoeling:
         device_class: cold
         value_template: "{{ is_state('input_boolean.verluchting_afkoeling', 'on') }}"
+      
+      bathroom_humidity_rising_template:
+        friendly_name: "Badkamer luchtvochtigheid Rising"
+        icon_template: mdi:water-percent
+        value_template: >-
+          {{ states.sensor.badkamer_luchtvochtigheid_stats.attributes.change | float >= 5 | float }}
+    
+      bathroom_humidity_falling_template:
+        friendly_name: "Badkamer luchtvochtigheid falling"
+        icon_template: mdi:water-percent
+        value_template: >-
+          {{ states.sensor.badkamer_luchtvochtigheid_stats.attributes.change | float <= -5 | float }}
+
+      keuken_humidity_rising_template:
+        friendly_name: "Keuken luchtvochtigheid Rising"
+        icon_template: mdi:water-percent
+        value_template: >-
+          {{ states.sensor.keuken_luchtvochtigheid_stats.attributes.change | float >= 5 | float }}
+    
+      keuken_humidity_falling_template:
+        friendly_name: "Keuken luchtvochtigheid falling"
+        icon_template: mdi:water-percent
+        value_template: >-
+          {{ states.sensor.keuken_luchtvochtigheid_stats.attributes.change | float <= -5 | float }}
+      
+      

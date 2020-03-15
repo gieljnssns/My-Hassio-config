@@ -1,12 +1,18 @@
   alias: Verluchting te vochtig
   initial_state: 'on' 
   trigger:
-    - platform: numeric_state
-      entity_id: sensor.luchtvochtigheid_keuken
-      above: 92
-    - platform: numeric_state
-      entity_id: sensor.luchtvochtigheid_badkamer
-      above: 92
+    # - platform: numeric_state
+    #   entity_id: sensor.luchtvochtigheid_keuken
+    #   above: 92
+    # - platform: numeric_state
+    #   entity_id: sensor.luchtvochtigheid_badkamer
+    #   above: 92
+    - platform: state
+      entity_id: binary_sensor.bathroom_humidity_rising_template
+      to: 'on'
+    - platform: state
+      entity_id: binary_sensor.keuken_humidity_rising_template
+      to: 'on'
   condition:
     condition: and
     conditions:

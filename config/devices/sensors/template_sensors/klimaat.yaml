@@ -17,57 +17,28 @@
                  Geen afkoeling
               {% endif %}
 
-    #   badkamer_aan_af:
-    #     unit_of_measurement: 'pt'
-    #     value_template: >-
-    #           {%- if is_state("switch.badkamer", "off") %}
-    #               0
-    #           {% elif is_state("switch.badkamer", "on") %}
-    #               0.1
-    #           {% else %}
-    #               0
-    #           {%- endif %}
-    
-    #   noor_aan_af:
-    #     unit_of_measurement: 'pt'
-    #     value_template: >-
-    #           {%- if is_state("switch.noor", "off") %}
-    #               0
-    #           {% elif is_state("switch.noor", "on") %}
-    #               0.1
-    #           {% else %}
-    #               0
-    #           {%- endif %}
-    
-    #   fien_aan_af:
-    #     unit_of_measurement: 'pt'
-    #     value_template: >-
-    #           {%- if is_state("switch.fien", "off") %}
-    #               0
-    #           {% elif is_state("switch.fien", "on") %}
-    #               0.1
-    #           {% else %}
-    #               0
-    #           {%- endif %}
-    
-    #   slaapkamer_aan_af:
-    #     unit_of_measurement: 'pt'
-    #     value_template: >-
-    #           {%- if is_state("switch.slaapkamer", "off") %}
-    #               0
-    #           {% elif is_state("switch.slaapkamer", "on") %}
-    #               0.1
-    #           {% else %}
-    #               0
-    #           {%- endif %}
+      bathroom_humidity_change_template:
+        friendly_name: "Badkamer luchtvochtigheid verandering"
+        icon_template: mdi:water-percent
+        value_template: >-
+          {{ states.sensor.badkamer_luchtvochtigheid_stats.attributes.change | float }}
       
-    #   living_aan_af:
-    #     unit_of_measurement: 'pt'
-    #     value_template: >-
-    #           {%- if is_state("climate.netatmo_living", "idle") %}
-    #               0
-    #           {% elif is_state("climate.netatmo_living", "heat") %}
-    #               0.1
-    #           {% else %}
-    #               0
-    #           {%- endif %}
+      bathroom_humidity_change_template_percent:
+        friendly_name: "Badkamer luchtvochtigheid verandering"
+        icon_template: mdi:water-percent
+        unit_of_measurement: '%'
+        value_template: >-
+          {{ states.sensor.badkamer_luchtvochtigheid_stats.attributes.change | float }}
+
+      keuken_humidity_change_template:
+        friendly_name: "Keuken luchtvochtigheid verandering"
+        icon_template: mdi:water-percent
+        value_template: >-
+          {{ states.sensor.keuken_luchtvochtigheid_stats.attributes.change | float }}
+      
+      keuken_humidity_change_template_percent:
+        friendly_name: "Keuken luchtvochtigheid verandering"
+        icon_template: mdi:water-percent
+        unit_of_measurement: '%'
+        value_template: >-
+          {{ states.sensor.keuken_luchtvochtigheid_stats.attributes.change | float }}

@@ -19,38 +19,10 @@
       - condition: state
         entity_id: script.verluchting_2_uur
         state: 'off'
-    # - condition: or
-    #   conditions:
-    #     - condition: state
-    #       entity_id: binary_sensor.buiten_fris_genoeg
-    #       state: 'off'
-    #     - condition: and
-    #       conditions:
-    #         - condition: state
-    #           entity_id: binary_sensor.binnen_warm
-    #           state: 'off'
-    #         - condition: state
-    #           entity_id: input_boolean.verluchting_afkoeling
-    #           state: 'on'
   action:
     - service: switch.turn_off
       entity_id: switch.verluchting
+    - service: switch.turn_off
+      entity_id: switch.shelly_shplg_s_7ade98
     - service: input_boolean.turn_off
       entity_id: input_boolean.verluchting_afkoeling
-
-
-  # alias: 'Verluchting Afkoeling Uit'
-  # trigger:
-  #   - platform: template
-  #     value_template: "{{ states('sensor.temp_living') | float < 25 }}"
-  #   - platform: template
-  #     value_template: "{{ states('sensor.temp_living')  <  states('sensor.buitentemperatuur_gefilterd') }}"
-  # condition:
-  #     condition: state
-  #     entity_id: input_boolean.verluchting_afkoeling
-  #     state: 'on'
-  # action:
-  #   - service: switch.turn_off
-  #     entity_id: switch.verluchting
-  #   - service: input_boolean.turn_off
-  #     entity_id: input_boolean.verluchting_afkoeling

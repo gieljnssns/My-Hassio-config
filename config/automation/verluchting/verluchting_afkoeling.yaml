@@ -4,25 +4,15 @@
     - platform: time_pattern
       minutes: '/5'
       seconds: 00
-
   condition:
     - condition: state
       entity_id: binary_sensor.afkoeling_gewenst
       state: 'on'
-    # - condition: and
-    #   conditions:
-    #     - condition: state
-    #       entity_id: binary_sensor.binnen_warm
-    #       state: 'on'
-    #     - condition: state
-    #       entity_id: binary_sensor.buiten_fris_genoeg
-    #       state: 'on'
-    #     - condition: state
-    #       entity_id: input_boolean.op_verlof
-    #       state: 'off'
   action:
     - service: switch.turn_on
       entity_id: switch.verluchting
+    - service: switch.turn_on
+      entity_id: switch.shelly_shplg_s_7ade98
     - service: input_boolean.turn_on
       entity_id: input_boolean.verluchting_afkoeling
     - service: homeassistant.turn_off
@@ -30,20 +20,3 @@
     - service: homeassistant.turn_off
       entity_id: script.verluchting_2_uur
 
-
-  # trigger:
-  #   - platform: template
-  #     value_template: "{{ states('sensor.temp_living') > states('ssensor.buitentemperatuur_gefilterd') }}"
-  # condition:
-  #   - condition: and
-  #     conditions:
-  #       - condition: template
-  #         value_template: "{{ states.sensor.temp_living | float > 25 }}"
-  #       - condition: state
-  #         entity_id: input_boolean.op_verlof
-  #         state: 'off'
-  # action:
-  #   - service: switch.turn_on
-  #     entity_id: switch.verluchting
-  #   - service: input_boolean.turn_on
-  #     entity_id: input_boolean.verluchting_afkoeling
