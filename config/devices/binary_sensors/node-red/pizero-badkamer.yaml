@@ -38,6 +38,17 @@
   payload_not_available: "offline"
   device_class: problem
 
+- platform: mqtt
+  name: "Badkamer online"
+  state_topic: "Badkamer/status"
+  payload_off: "offline"
+  payload_on: "online"
+  availability_topic: "Badkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: connectivity
+  off_delay: 75
+
 - platform: template
   sensors:
     nodered_badkamer_down:

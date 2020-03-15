@@ -28,6 +28,17 @@
   payload_not_available: "offline"
   device_class: problem
 
+- platform: mqtt
+  name: "PoortPi online"
+  state_topic: "PoortjePi/status"
+  payload_off: "offline"
+  payload_on: "online"
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+  device_class: connectivity
+  off_delay: 75
+
 - platform: template
   sensors:
     fotocel_poort_error:
