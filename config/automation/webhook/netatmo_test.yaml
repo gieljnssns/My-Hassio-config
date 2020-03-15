@@ -1,0 +1,15 @@
+  alias: Netatmo Webhook
+  initial_state: 'on'
+  trigger:
+    platform: webhook
+    webhook_id: !secret netatmo_wh_ex_component
+  action:
+    - service: mqtt.publish
+      data_template:
+        topic: 'netatmo/update3'
+        retain: true
+        payload_template: >
+           {{ trigger.json | tojson }}
+          # {{ trigger.json | tojson }}
+          #  {{ trigger.json | replace(\"'\", \""\") }}
+          #  {{ trigger.json | regex_replace('^[\'"]?(.*)[\'"]?$','"\\1"') }}
