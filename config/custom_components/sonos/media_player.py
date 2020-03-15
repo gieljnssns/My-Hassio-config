@@ -740,7 +740,7 @@ class SonosEntity(MediaPlayerDevice):
         if self._queue is not []:
             self._queue_length = len(self._queue)
 
-        self._source_name = None
+        # self._source_name = None
 
     def update_volume(self, event=None):
         """Update information about currently volume settings."""
@@ -795,6 +795,7 @@ class SonosEntity(MediaPlayerDevice):
 
             return await self.hass.async_add_executor_job(_get_soco_group)
 
+        @callback
         def _async_regroup(group):
             """Rebuild internal group layout."""
             sonos_group = []
@@ -969,6 +970,7 @@ class SonosEntity(MediaPlayerDevice):
                     self.soco.clear_queue()
                     self.soco.add_to_queue(src.reference)
                     self.soco.play_from_queue(0)
+                    self._source_name = source
 
     @property
     @soco_coordinator
