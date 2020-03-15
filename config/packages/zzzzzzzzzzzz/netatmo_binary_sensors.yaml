@@ -1,0 +1,103 @@
+# input_boolean:
+#   den_hof_outdoor_animal:
+#     initial: off
+#   den_hof_outdoor_human:
+#     initial: off
+#   den_hof_outdoor_motion:
+#     initial: off
+#   den_hof_outdoor_vehicle:
+#     initial: off
+
+binary_sensor:
+#   - platform: template
+#     sensors:
+#       den_hof_outdoor_animal:
+#         device_class: motion
+#         friendly_name: "Beest in den hof"
+#         value_template: >-
+#           {{ is_state('input_boolean.den_hof_outdoor_animal', 'on') }}
+#       den_hof_outdoor_human:
+#         device_class: motion
+#         friendly_name: "Volk in den hof"
+#         value_template: >-
+#           {{ is_state('input_boolean.den_hof_outdoor_human', 'on') }}
+#       den_hof_outdoor_motion:
+#         device_class: motion
+#         friendly_name: "Beweging in den hof"
+#         value_template: >-
+#           {{ is_state('input_boolean.den_hof_outdoor_motion', 'on') }}
+#       den_hof_outdoor_vehicle:
+#         device_class: motion
+#         friendly_name: "Voertuig in den hof"
+#         value_template: >-
+#           {{ is_state('input_boolean.den_hof_outdoor_vehicle', 'on') }}
+
+  - platform: mqtt
+    name: "netatmo_component_human"
+    state_topic: "netatmo_component/update"
+    device_class: motion
+    off_delay: 90
+    value_template: >
+      {% if value_json.type == 'human' %}
+        ON
+      {% else %}
+        OFF
+      {% endif %}
+    json_attributes_template: "{{ value_json.data | tojson }}"
+    json_attributes_topic: "netatmo_component/update"
+  
+  - platform: mqtt
+    name: "netatmo_component_animal"
+    state_topic: "netatmo_component/update"
+    device_class: motion
+    off_delay: 90
+    value_template: >
+      {% if value_json.type == 'animal' %}
+        ON
+      {% else %}
+        OFF
+      {% endif %}
+    json_attributes_template: "{{ value_json.data | tojson }}"
+    json_attributes_topic: "netatmo_component/update"
+
+  - platform: mqtt
+    name: "netatmo_component_vehicle"
+    state_topic: "netatmo_component/update"
+    device_class: motion
+    off_delay: 90
+    value_template: >
+      {% if value_json.type == 'vehicle' %}
+        ON
+      {% else %}
+        OFF
+      {% endif %}
+    json_attributes_template: "{{ value_json.data | tojson }}"
+    json_attributes_topic: "netatmo_component/update"
+  
+  - platform: mqtt
+    name: "netatmo_component_movement"
+    state_topic: "netatmo_component/update"
+    device_class: motion
+    off_delay: 90
+    value_template: >
+      {% if value_json.type == 'movement' %}
+        ON
+      {% else %}
+        OFF
+      {% endif %}
+    json_attributes_template: "{{ value_json.data | tojson }}"
+    json_attributes_topic: "netatmo_component/update"
+
+automation:     
+  - alias: Netatmo binary sensors
+    initial_state: 'on'
+    trigger:
+      - platform: event
+        event_type: netatmo_event
+    action:
+      - service: mqtt.publish
+        data_template:
+          topic: 'netatmo_component/update'
+          retain: true
+          payload_template: >
+            {{ trigger.event.data| tojson }}
