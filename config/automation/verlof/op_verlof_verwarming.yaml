@@ -1,0 +1,30 @@
+  alias: 'Op verlof - verwarming'
+  initial_state: 'on' 
+  trigger:
+    - platform: state
+      entity_id: input_boolean.op_verlof
+  action:
+    - service: climate.set_preset_mode
+      entity_id: climate.netatmo_living
+      data_template: 
+        preset_mode: >
+          {% if trigger.to_state.state == 'on' %}
+            away
+          {% else %}
+            Schedule
+          {% endif %}
+        
+    - service: climate.set_hvac_mode
+      entity_id: 
+        - climate.fien
+        - climate.badkamer
+        - climate.noor
+        - climate.slaapkamer
+      data_template: 
+        hvac_mode: >
+          {% if trigger.to_state.state == 'on' %}
+            off
+          {% else %}
+            heat
+          {% endif %}
+        
