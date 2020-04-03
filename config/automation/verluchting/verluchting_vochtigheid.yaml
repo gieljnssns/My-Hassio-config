@@ -1,18 +1,20 @@
   alias: Verluchting te vochtig
   initial_state: 'on' 
   trigger:
-    # - platform: numeric_state
-    #   entity_id: sensor.luchtvochtigheid_keuken
-    #   above: 92
+    - platform: numeric_state
+      entity_id: sensor.luchtvochtigheid_keuken
+      above: 80
+      for:
+        seconds: 60
     # - platform: numeric_state
     #   entity_id: sensor.luchtvochtigheid_badkamer
     #   above: 92
     - platform: state
       entity_id: binary_sensor.bathroom_humidity_rising_template
       to: 'on'
-    - platform: state
-      entity_id: binary_sensor.keuken_humidity_rising_template
-      to: 'on'
+    # - platform: state
+    #   entity_id: binary_sensor.keuken_humidity_rising_template
+    #   to: 'on'
   condition:
     condition: and
     conditions:
@@ -23,5 +25,11 @@
         entity_id: sensor.luchtvochtigheid_keuken
         below:  101
   action:
-    service: script.turn_on
-    entity_id: script.verluchting_1_uur
+    - service: script.turn_off
+      entity_id: script.verluchting_1_uur
+    - service: script.turn_off
+      entity_id: script.verluchting_2_uur
+    - delay:
+        seconds: 5
+    - service: script.turn_on
+      entity_id: script.verluchting_1_uur

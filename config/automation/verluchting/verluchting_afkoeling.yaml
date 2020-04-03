@@ -9,14 +9,14 @@
       entity_id: binary_sensor.afkoeling_gewenst
       state: 'on'
   action:
+    - service: script.turn_off
+      entity_id: script.verluchting_1_uur
+    - service: scriptf.turn_off
+      entity_id: script.verluchting_2_uur
     - service: switch.turn_on
       entity_id: switch.verluchting
     - service: switch.turn_on
       entity_id: switch.shelly_shplg_s_7ade98
     - service: input_boolean.turn_on
       entity_id: input_boolean.verluchting_afkoeling
-    - service: homeassistant.turn_off
-      entity_id: script.verluchting_1_uur
-    - service: homeassistant.turn_off
-      entity_id: script.verluchting_2_uur
-
+    
