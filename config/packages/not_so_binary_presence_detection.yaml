@@ -36,6 +36,16 @@ input_select:
       - Afwezig
       - Langdurig Afwezig
 
+binary_sensor:
+  - platform: template
+    sensors:
+      noor_juist_aangekomen:
+        value_template: >
+          {{ is_state("device_tracker.noor_not_so_binary", 'Juist Aangekomen') and states("sensor.count_nphone_detection_last_hour") | int < 3 }}
+      fien_juist_aangekomen:
+        value_template: >
+          {{ is_state("device_tracker.fien_not_so_binary", 'Juist Aangekomen') and states("sensor.count_fphone_detection_last_hour") | int < 3 }}
+
 sensor:
   - platform: template
     sensors:
@@ -55,8 +65,10 @@ sensor:
         entity_id: 
           - device_tracker.martine_not_so_binary
           - device_tracker.giel_not_so_binary
-          - device_tracker.noor_not_so_binary
-          - device_tracker.fien_not_so_binary
+          - binary_sensor.noor_juist_aangekomen
+          - binary_sensor.fien_juist_aangekomen
+          # - device_tracker.noor_not_so_binary
+          # - device_tracker.fien_not_so_binary
         value_template: >-
           {% set count = 0 %}
           {% if is_state("device_tracker.martine_not_so_binary", "Juist Aangekomen") %}
@@ -65,10 +77,10 @@ sensor:
           {% if is_state("device_tracker.giel_not_so_binary", "Juist Aangekomen") %}
             {% set count = count + 1 %}
           {% endif %}
-          {% if is_state("device_tracker.noor_not_so_binary", "Juist Aangekomen") %}
+          {% if is_state("binary_sensor.noor_juist_aangekomen", "on") %}
             {% set count = count + 1 %}
           {% endif %}
-          {% if is_state("device_tracker.fien_not_so_binary", "Juist Aangekomen") %}
+          {% if is_state("binary_sensor.fien_juist_aangekomen", "on") %}
             {% set count = count + 1 %}
           {% endif %}
           {{count}}
