@@ -26,6 +26,8 @@
         after: '20:15:00'
         before: '04:00:00'
       - condition: template
+        value_template: "{{ states('alarm_control_panel.ha_alarm') != 'pending' }}"
+      - condition: template
         value_template: "{{ states('alarm_control_panel.ha_alarm') != 'armed_night' }}"
       - condition: template
         value_template: "{{ states('media_player.philips_tv') != 'on' }}"
@@ -59,6 +61,8 @@
         brightness: 255
         rgb_color: [255, 236, 182]
         entity_id: light.spot_slaapkamer
+    - delay:
+        seconds: 5
     - service: alarm_control_panel.alarm_arm_night
       entity_id: alarm_control_panel.ha_alarm
       data:
