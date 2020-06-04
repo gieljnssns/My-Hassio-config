@@ -234,7 +234,7 @@ class NetAtmoSensor(Entity):
                     self._state = "Medium"
                 elif data['battery_vp'] >= 4360:
                     self._state = "Low"
-                elif data['battery_vp'] < 4360:
+                else:
                     self._state = "Very Low"
             elif (self.type == 'battery_vp' and
                   self._module_type == MODULE_TYPE_RAIN):
@@ -246,7 +246,7 @@ class NetAtmoSensor(Entity):
                     self._state = "Medium"
                 elif data['battery_vp'] >= 4000:
                     self._state = "Low"
-                elif data['battery_vp'] < 4000:
+                else:
                     self._state = "Very Low"
             elif (self.type == 'battery_vp' and
                   self._module_type == MODULE_TYPE_INDOOR):
@@ -258,7 +258,7 @@ class NetAtmoSensor(Entity):
                     self._state = "Medium"
                 elif data['battery_vp'] >= 4560:
                     self._state = "Low"
-                elif data['battery_vp'] < 4560:
+                else:
                     self._state = "Very Low"
             elif (self.type == 'battery_vp' and
                   self._module_type == MODULE_TYPE_OUTDOOR):
@@ -270,7 +270,7 @@ class NetAtmoSensor(Entity):
                     self._state = "Medium"
                 elif data['battery_vp'] >= 4000:
                     self._state = "Low"
-                elif data['battery_vp'] < 4000:
+                else:
                     self._state = "Very Low"
             elif self.type == 'min_temp':
                 self._state = data['min_temp']

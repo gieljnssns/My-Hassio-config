@@ -231,5 +231,4 @@ class NeatoHub:
 
     def download_map(self, url):
         """Download a new map image."""
-        map_image_data = self.my_neato.get_map_image(url)
-        return map_image_data
+        return self.my_neato.get_map_image(url)

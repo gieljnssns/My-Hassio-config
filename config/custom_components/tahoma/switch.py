@@ -16,9 +16,11 @@ ATTR_RSSI_LEVEL = 'rssi_level'
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tahoma switches."""
     controller = hass.data[TAHOMA_DOMAIN]['controller']
-    devices = []
-    for switch in hass.data[TAHOMA_DOMAIN]['devices']['switch']:
-        devices.append(TahomaSwitch(switch, controller))
+    devices = [
+        TahomaSwitch(switch, controller)
+        for switch in hass.data[TAHOMA_DOMAIN]['devices']['switch']
+    ]
+
     add_entities(devices, True)
 
 

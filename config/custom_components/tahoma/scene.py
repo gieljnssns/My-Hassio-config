@@ -13,9 +13,11 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tahoma scenes."""
     controller = hass.data[TAHOMA_DOMAIN]['controller']
-    scenes = []
-    for scene in hass.data[TAHOMA_DOMAIN]['scenes']:
-        scenes.append(TahomaScene(scene, controller))
+    scenes = [
+        TahomaScene(scene, controller)
+        for scene in hass.data[TAHOMA_DOMAIN]['scenes']
+    ]
+
     add_entities(scenes, True)
 
 

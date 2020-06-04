@@ -160,12 +160,12 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        complete = []
-        for source in self._sources.values():
-            complete.append(PREFIX_SOURCE + PREFIX_SEPARATOR + source)
         # for channel in self._channels.values():
         #     complete.append(PREFIX_CHANNEL + PREFIX_SEPARATOR + channel)
-        return complete
+        return [
+            PREFIX_SOURCE + PREFIX_SEPARATOR + source
+            for source in self._sources.values()
+        ]
 
     def select_source(self, source):
         """Set the input source."""
@@ -249,7 +249,7 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Return content type of playing media."""
-        if self._tv.source_id == "tv" or self._tv.source_id == "11":
+        if self._tv.source_id in ["tv", "11"]:
             return MEDIA_TYPE_CHANNEL
         if self._tv.source_id is None and self._tv.channels:
             return MEDIA_TYPE_CHANNEL

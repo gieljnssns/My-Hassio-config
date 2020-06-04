@@ -44,10 +44,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         data = CameraData(hass, netatmo.NETATMO_WEBHOOK_ONLY_AUTH, home)
         for camera_name in data.get_camera_names():
             camera_type = data.get_camera_type(camera=camera_name, home=home)
-            if CONF_CAMERAS in config:
-                if config[CONF_CAMERAS] != [] and \
-                   camera_name not in config[CONF_CAMERAS]:
-                    continue
+            if (
+                CONF_CAMERAS in config
+                and config[CONF_CAMERAS] != []
+                and camera_name not in config[CONF_CAMERAS]
+            ):
+                continue
             add_entities([NetatmoCamera(data, camera_name, home,
                                         camera_type, verify_ssl, quality)])
         data.get_persons()
@@ -66,10 +68,7 @@ class NetatmoCamera(Camera):
         self._camera_name = camera_name
         self._verify_ssl = verify_ssl
         self._quality = quality
-        if home:
-            self._name = home + ' / ' + camera_name
-        else:
-            self._name = camera_name
+        self._name = home + ' / ' + camera_name if home else camera_name
         self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
             camera=camera_name
             )

@@ -97,9 +97,7 @@ class EdgeOSScanner(DeviceScanner):
     def get_device_name(self, device):
         try:
             """Return the name of the given device or None if we don't know."""
-            device_name = self._edgeos.get_device_name(device)
-
-            return device_name
+            return self._edgeos.get_device_name(device)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -118,9 +116,7 @@ class EdgeOSScanner(DeviceScanner):
             CONF_HOST: device
         }
 
-        attributes = {**device_data, **additional_data}
-
-        return attributes
+        return {**device_data, **additional_data}
 
     def is_initialized(self):
         return self._is_initialized

@@ -22,13 +22,13 @@ class HacsErrorView(HacsViewBase):
         """Initilize."""
         self.url = self.url_path["error"]
 
-    async def get(self, request):  # pylint: disable=unused-argument
+    async def get(self, request):    # pylint: disable=unused-argument
         """Serve error."""
         try:
             # Get last error
             ex_type, ex_value, ex_traceback = sys.exc_info()
             trace_back = traceback.extract_tb(ex_traceback)
-            stack_trace = list()
+            stack_trace = []
 
             for trace in trace_back:
                 stack_trace.append(

@@ -198,14 +198,12 @@ class EdgeOS:
             _LOGGER.error(f'Failed to handle WS message, Error: {ex}, Line: {line_number}')
 
     def get_ws_handlers(self):
-        ws_handlers = {
+        return {
             EXPORT_KEY: self.handle_export,
             INTERFACES_KEY: self.handle_interfaces,
             SYSTEM_STATS_KEY: self.handle_system_stats,
             DISCOVER_KEY: self.handle_discover
         }
-
-        return ws_handlers
 
     @asyncio.coroutine
     def load_devices_data(self):
@@ -291,16 +289,17 @@ class EdgeOS:
         for item in interface_data:
             data = interface_data.get(item)
 
-            if ADDRESS_LIST == item:
+            if (
+                ADDRESS_LIST != item
+                and INTERFACES_STATS != item
+                and item in INTERFACES_MAIN_MAP
+                or ADDRESS_LIST == item
+            ):
                 result[item] = data
 
             elif INTERFACES_STATS == item:
                 for stats_item in INTERFACES_STATS_MAP:
                     result[stats_item] = data.get(stats_item)
-
-            else:
-                if item in INTERFACES_MAIN_MAP:
-                    result[item] = data
 
         return result
 
@@ -417,69 +416,48 @@ class EdgeOS:
         self._edgeos_data[DISCOVER_KEY] = discover_state
 
     def get_discover_data(self):
-        result = self._edgeos_data.get(DISCOVER_KEY, {})
-
-        return result
+        return self._edgeos_data.get(DISCOVER_KEY, {})
 
     def set_unknown_devices(self, unknown_devices):
         self._edgeos_data[UNKNOWN_DEVICES_KEY] = unknown_devices
 
     def get_unknown_devices(self):
-        result = self._edgeos_data.get(UNKNOWN_DEVICES_KEY, {})
-
-        return result
+        return self._edgeos_data.get(UNKNOWN_DEVICES_KEY, {})
 
     def set_system_state(self, system_state):
         self._edgeos_data[SYSTEM_STATS_KEY] = system_state
 
     def get_system_state(self):
-        result = self._edgeos_data.get(SYSTEM_STATS_KEY, {})
-
-        return result
+        return self._edgeos_data.get(SYSTEM_STATS_KEY, {})
 
     def set_interfaces(self, interfaces):
         self._edgeos_data[INTERFACES_KEY] = interfaces
 
     def get_interfaces(self):
-        result = self._edgeos_data.get(INTERFACES_KEY, {})
-
-        return result
+        return self._edgeos_data.get(INTERFACES_KEY, {})
 
     def set_devices(self, devices):
         self._edgeos_data[STATIC_DEVICES_KEY] = devices
 
     def get_devices(self):
-        result = self._edgeos_data.get(STATIC_DEVICES_KEY, {})
-
-        return result
+        return self._edgeos_data.get(STATIC_DEVICES_KEY, {})
 
     def get_device(self, hostname):
         devices = self.get_devices()
-        device = devices.get(hostname, {})
-
-        return device
+        return devices.get(hostname, {})
 
     @staticmethod
     def get_device_name(hostname):
-        name = f'{DEFAULT_NAME} {hostname}'
-
-        return name
+        return f'{DEFAULT_NAME} {hostname}'
 
     def get_device_mac(self, hostname):
         device = self.get_device(hostname)
 
-        mac = device.get(MAC)
-
-        return mac
+        return device.get(MAC)
 
     def is_device_online(self, hostname):
         device = self.get_device(hostname)
 
         connected = device.get(CONNECTED, FALSE_STR)
 
-        if connected == TRUE_STR:
-            is_online = True
-        else:
-            is_online = False
-
-        return is_online
+        return True if connected == TRUE_STR else False

@@ -245,13 +245,12 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {
+        return {
             "power": self.port.poe_power,
             "switch": self.client.sw_mac,
             "port": self.client.sw_port,
             "poe_mode": self.poe_mode,
         }
-        return attributes
 
     @property
     def device(self):

@@ -54,10 +54,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         data = ThermostatData(netatmo.NETATMO_AUTH, device)
         for module_name in data.get_module_names():
-            if CONF_THERMOSTAT in config:
-                if config[CONF_THERMOSTAT] != [] and \
-                   module_name not in config[CONF_THERMOSTAT]:
-                    continue
+            if (
+                CONF_THERMOSTAT in config
+                and config[CONF_THERMOSTAT] != []
+                and module_name not in config[CONF_THERMOSTAT]
+            ):
+                continue
             add_devices([NetatmoThermostat(data, module_name, device)], True)
     except lnetatmo.NoDevice:
         return None
@@ -99,7 +101,6 @@ class NetatmoThermostat(ClimateDevice):
     def unique_id(self):
         """Return the unique ID for this sensor."""
         return self._unique_id
-        print(self._unique_id)
 
     @property
     def state(self):

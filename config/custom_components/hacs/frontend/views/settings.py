@@ -34,9 +34,8 @@ class HacsSettingsView(HacsViewBase):
 
             # Get the message sendt to us:
             message = request.rel_url.query.get("message")
-            if message is None:
-                if VERSION == "DEV":
-                    message = "You are running a DEV version of HACS, this is not intended for regular use."
+            if message is None and VERSION == "DEV":
+                message = "You are running a DEV version of HACS, this is not intended for regular use."
 
             if message != None:
                 custom_message = """

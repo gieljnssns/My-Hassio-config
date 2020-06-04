@@ -36,8 +36,6 @@ class HacsRepositoryIntegration(HacsRepositoryBase):
 
     async def set_repository_content(self):
         """Set repository content attributes."""
-        contentfiles = []
-
         if self.content_path is None:
             first = await self.repository.get_contents("custom_components", self.ref)
 
@@ -50,8 +48,7 @@ class HacsRepositoryIntegration(HacsRepositoryBase):
         if not isinstance(self.content_objects, list):
             raise HacsRequirement("Repository structure does not meet the requirements")
 
-        for filename in self.content_objects:
-            contentfiles.append(filename.name)
+        contentfiles = [filename.name for filename in self.content_objects]
 
         if contentfiles:
             self.content_files = contentfiles

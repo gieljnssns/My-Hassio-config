@@ -90,8 +90,7 @@ def update_probability(prior, prob_true, prob_false):
     """Update probability using Bayes' rule."""
     numerator = prob_true * prior
     denominator = numerator + prob_false * (1 - prior)
-    probability = numerator / denominator
-    return probability
+    return numerator / denominator
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

@@ -142,14 +142,10 @@ class UniFiController:
 
     def update_wireless_clients(self):
         """Update set of known to be wireless clients."""
-        new_wireless_clients = set()
-
-        for client_id in self.api.clients:
-            if (
+        new_wireless_clients = {client_id for client_id in self.api.clients if (
                 client_id not in self.wireless_clients
                 and not self.api.clients[client_id].is_wired
-            ):
-                new_wireless_clients.add(client_id)
+            )}
 
         if new_wireless_clients:
             self.wireless_clients |= new_wireless_clients
@@ -194,7 +190,7 @@ class UniFiController:
                 LOGGER.error("Unable to reach controller %s", self.host)
                 self.available = False
 
-        if not failed and not self.available:
+        if not (failed or self.available):
             LOGGER.info("Reconnected to controller %s", self.host)
             self.available = True
 

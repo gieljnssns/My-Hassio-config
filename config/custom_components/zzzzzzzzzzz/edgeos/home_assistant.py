@@ -113,11 +113,7 @@ class EdgeOSHomeAssistant:
 
                             device_attributes[name] = (int(value) * BITS_IN_BYTE) / self._unit_size
 
-                if str(main_entity_details).lower() == TRUE_STR:
-                    state = STATE_ON
-                else:
-                    state = STATE_OFF
-
+                state = STATE_ON if str(main_entity_details).lower() == TRUE_STR else STATE_OFF
                 current_entity = self._hass.states.get(entity_id)
 
                 device_attributes[EVENT_TIME_CHANGED] = datetime.now().strftime(DEFAULT_DATE_FORMAT)
@@ -142,7 +138,7 @@ class EdgeOSHomeAssistant:
 
             attributes = {}
 
-            if devices_count > 0:
+            if state > 0:
                 attributes[STATE_UNKNOWN] = unknown_devices
 
             self._hass.states.async_set(entity_id, state, attributes)
@@ -176,17 +172,13 @@ class EdgeOSHomeAssistant:
 
     @staticmethod
     def get_device_attributes(key):
-        result = DEVICE_SERVICES_STATS_MAP.get(key, {})
-
-        return result
+        return DEVICE_SERVICES_STATS_MAP.get(key, {})
 
     @staticmethod
     def get_interface_attributes(key):
         all_attributes = {**INTERFACES_MAIN_MAP, **INTERFACES_STATS_MAP}
 
-        result = all_attributes.get(key, {})
-
-        return result
+        return all_attributes.get(key, {})
 
     @staticmethod
     def log_exception(ex, message):

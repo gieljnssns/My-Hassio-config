@@ -109,8 +109,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def service_to_entities(call):
         """Return the known devices that a service call mentions."""
         entity_ids = extract_entity_ids(hass, call)
-        entities = [entity for entity in dev if entity.entity_id in entity_ids]
-        return entities
+        return [entity for entity in dev if entity.entity_id in entity_ids]
 
     hass.services.register(
         DOMAIN,
@@ -170,10 +169,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             if self._state["details"]["isCharging"]:
                 self._clean_state = STATE_DOCKED
                 self._status_state = "Charging"
-            elif (
-                self._state["details"]["isDocked"]
-                and not self._state["details"]["isCharging"]
-            ):
+            elif self._state["details"]["isDocked"]:
                 self._clean_state = STATE_DOCKED
                 self._status_state = "Docked"
             else:
@@ -223,14 +219,16 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             "run_charge_at_end"
         ]
 
-        if self._robot_has_map:
-            if self._state["availableServices"]["maps"] != "basic-1":
-                if self._robot_maps[self._robot_serial]:
-                    allmaps = self._robot_maps[self._robot_serial]
-                    for maps in allmaps:
-                        self._robot_boundaries = self.robot.get_map_boundaries(
-                            maps["id"]
-                        ).json()
+        if (
+            self._robot_has_map
+            and self._state["availableServices"]["maps"] != "basic-1"
+            and self._robot_maps[self._robot_serial]
+        ):
+            allmaps = self._robot_maps[self._robot_serial]
+            for maps in allmaps:
+                self._robot_boundaries = self.robot.get_map_boundaries(
+                    maps["id"]
+                ).json()
 
     @property
     def name(self):

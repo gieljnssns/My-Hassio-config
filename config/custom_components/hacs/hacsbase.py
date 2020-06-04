@@ -271,17 +271,21 @@ class HacsBase:
     @property
     def repositories_list_name(self):
         """Return a sorted(by name) list of repository objects."""
-        repositories = []
-        for repository in self.store.repositories:
-            repositories.append(self.store.repositories[repository])
+        repositories = [
+            self.store.repositories[repository]
+            for repository in self.store.repositories
+        ]
+
         return sorted(repositories, key=lambda x: x.name.lower())
 
     @property
     def repositories_list_repo(self):
         """Return a sorted(by repository_name) list of repository objects."""
-        repositories = []
-        for repository in self.store.repositories:
-            repositories.append(self.store.repositories[repository])
+        repositories = [
+            self.store.repositories[repository]
+            for repository in self.store.repositories
+        ]
+
         return sorted(repositories, key=lambda x: x.repository_name)
 
     async def is_known_repository(self, repository_full_name):

@@ -95,11 +95,13 @@ class HacsRepositoryPlugin(HacsRepositoryBase):
             # Try fetching data from Release
             try:
                 files = []
-                if self.last_release_object is not None:
-                    if self.last_release_object.assets is not None:
-                        for item in self.last_release_object.assets:
-                            if item.name.endswith(".js"):
-                                files.append(item.name)
+                if (
+                    self.last_release_object is not None
+                    and self.last_release_object.assets is not None
+                ):
+                    for item in self.last_release_object.assets:
+                        if item.name.endswith(".js"):
+                            files.append(item.name)
 
                 # Handler for plugin requirement 3
                 find_file_name1 = "{}.js".format(self.name)
@@ -133,7 +135,7 @@ class HacsRepositoryPlugin(HacsRepositoryBase):
             except AIOGitHubException:
                 pass
 
-        if not self.content_files or not self.content_objects:
+        if not (self.content_files and self.content_objects):
             raise HacsRequirement("No acceptable js files found")
 
     async def get_package_content(self):

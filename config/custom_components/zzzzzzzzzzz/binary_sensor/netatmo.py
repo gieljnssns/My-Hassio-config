@@ -87,19 +87,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for camera_name in data.get_camera_names():
         camera_type = data.get_camera_type(camera=camera_name, home=home)
         if camera_type == 'NACamera':
-            if CONF_CAMERAS in config:
-                if config[CONF_CAMERAS] != [] and \
-                   camera_name not in config[CONF_CAMERAS]:
-                    continue
+            if (
+                CONF_CAMERAS in config
+                and config[CONF_CAMERAS] != []
+                and camera_name not in config[CONF_CAMERAS]
+            ):
+                continue
             for variable in welcome_sensors:
                 add_devices([NetatmoBinarySensor(
                     data, camera_name, module_name, home, timeout,
                     camera_type, variable)], True)
         if camera_type == 'NOC':
-            if CONF_CAMERAS in config:
-                if config[CONF_CAMERAS] != [] and \
-                   camera_name not in config[CONF_CAMERAS]:
-                    continue
+            if (
+                CONF_CAMERAS in config
+                and config[CONF_CAMERAS] != []
+                and camera_name not in config[CONF_CAMERAS]
+            ):
+                continue
             for variable in presence_sensors:
                 add_devices([NetatmoBinarySensor(
                     data, camera_name, module_name, home, timeout,
@@ -124,10 +128,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
         self._module_name = module_name
         self._home = home
         self._timeout = timeout
-        if home:
-            self._name = '{} / {}'.format(home, camera_name)
-        else:
-            self._name = camera_name
+        self._name = '{} / {}'.format(home, camera_name) if home else camera_name
         if module_name:
             self._name += ' / ' + module_name
         self._sensor_name = sensor

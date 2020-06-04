@@ -494,9 +494,9 @@ class Icloud(DeviceScanner):
             return
 
         log_msg = ("Authentication for {} as {} successful").format(
-                        self.username, self.accountname) 
+                        self.username, self.accountname)
         self._LOGGER_info_msg(log_msg)
- 
+
         try:
             self.authenticated_time       = \
                             dt_util.now().strftime(self.date_time_format)
@@ -508,18 +508,18 @@ class Icloud(DeviceScanner):
             log_msg = ("Waze Settings: Region={}, Realtime={}, "
                           "MaxDistance={}, MinDistance={}").format(
                           self.waze_region, self.waze_realtime,
-                          self.waze_max_distance, self.waze_min_distance) 
+                          self.waze_max_distance, self.waze_min_distance)
             self._LOGGER_info_msg(log_msg)
 
             log_msg = ("Filters: include_device_types={},"
                          " include_devices={}, exclude_device_types={},"
                          " exclude_devices={}").format(
                          self.include_device_types, self.include_devices,
-                         self.exclude_device_types, self.exclude_devices) 
+                         self.exclude_device_types, self.exclude_devices)
             self._LOGGER_info_msg(log_msg)
 
             log_msg = ("Initializing Device Tracking for user {}",
-                            self.username) 
+                            self.username)
             self._LOGGER_info_msg(log_msg)
 
             self.tracked_devicenames_all = ''
@@ -567,7 +567,7 @@ class Icloud(DeviceScanner):
                 self.tracked_devicenames_all = '{}{}/{}, '.\
                             format(self.tracked_devicenames_all, self.accountname, 
                             devicename)
-                       
+
                 self.tracked_devices[devicename] = device
                 self.device_type[devicename]     = device_type
 
@@ -617,32 +617,32 @@ class Icloud(DeviceScanner):
 
                 #create dynamic zone used by ios app when stationary
                 self._update_dynamic_stationary_zone(devicename, 0, 180)
-                
+
                 #Initialize the new attributes
                 kwargs                         = {}
-                attrs                          = {}
-                attrs[ATTR_AUTHENTICATED]      = ''
-                attrs[ATTR_LAST_UPDATE_TIME]   = '00:00:00'
-                attrs[ATTR_NEXT_UPDATE_TIME]   = '00:00:00'
-                attrs[ATTR_LAST_LOCATED]       = '00:00:00'
-                attrs[ATTR_DISTANCE]           = 0
-                attrs[ATTR_WAZE_TIME]          = ''
-                attrs[ATTR_CALC_DISTANCE]      = 0
-                attrs[ATTR_WAZE_DISTANCE]      = 0
-                attrs[ATTR_POLL_COUNT]         = 0
-                attrs[ATTR_DIR_OF_TRAVEL]      = ''
-                attrs[ATTR_INFO]               = ''
+                attrs = {
+                    ATTR_AUTHENTICATED: '',
+                    ATTR_LAST_UPDATE_TIME: '00:00:00',
+                    ATTR_NEXT_UPDATE_TIME: '00:00:00',
+                    ATTR_LAST_LOCATED: '00:00:00',
+                    ATTR_DISTANCE: 0,
+                    ATTR_WAZE_TIME: '',
+                    ATTR_CALC_DISTANCE: 0,
+                    ATTR_WAZE_DISTANCE: 0,
+                    ATTR_POLL_COUNT: 0,
+                    ATTR_DIR_OF_TRAVEL: '',
+                    ATTR_INFO: '',
+                    ATTR_TRACKED_DEVICES: self.tracked_devicenames_all[:-2],
+                    CONF_TRAVEL_TIME_FACTOR: self.travel_time_factor,
+                    CONF_WAZE_MIN_DISTANCE: self._km_to_mi(self.waze_min_distance),
+                }
 
-                attrs[ATTR_TRACKED_DEVICES]    = self.tracked_devicenames_all[:-2]
-                attrs[CONF_TRAVEL_TIME_FACTOR] = self.travel_time_factor
-                attrs[CONF_WAZE_MIN_DISTANCE]  = \
-                        self._km_to_mi(self.waze_min_distance)
                 attrs[CONF_WAZE_MAX_DISTANCE]  = \
                         self._km_to_mi(self.waze_max_distance)
 
                 self._update_device_attributes(devicename, kwargs, attrs)
 
-            log_msg = ("Tracking Devices {}").format(self.tracked_devicenames_all[:-2]) 
+            log_msg = ("Tracking Devices {}").format(self.tracked_devicenames_all[:-2])
             self._LOGGER_info_msg(log_msg)
 
         except PyiCloudNoDevicesException:

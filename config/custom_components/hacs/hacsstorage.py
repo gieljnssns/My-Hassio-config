@@ -78,11 +78,11 @@ class HacsStorage(HacsBase):
 
         for repository_type in repository_types:
             for repository in repository_types[repository_type]:
-                if repository.archived:
-                    continue
-                elif repository.full_name in self.blacklist:
-                    continue
-                elif repository.id in self.repositories:
+                if (
+                    repository.archived
+                    or repository.full_name in self.blacklist
+                    or repository.id in self.repositories
+                ):
                     continue
                 else:
                     _LOGGER.info("Loading %s", repository.full_name)

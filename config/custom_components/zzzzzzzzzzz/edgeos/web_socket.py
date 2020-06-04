@@ -52,9 +52,7 @@ class EdgeOSWebSocket:
 
     @property
     def last_update(self):
-        result = self._last_update
-
-        return result
+        return self._last_update
 
     def parse_message(self, message):
         parsed = False
