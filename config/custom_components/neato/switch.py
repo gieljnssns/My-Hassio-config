@@ -90,9 +90,7 @@ class NeatoConnectedSwitch(ToggleEntity):
     def is_on(self):
         """Return true if switch is on."""
         if self.type == SWITCH_TYPE_SCHEDULE:
-            if self._schedule_state == STATE_ON:
-                return True
-            return False
+            return self._schedule_state == STATE_ON
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""

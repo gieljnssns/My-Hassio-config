@@ -19,9 +19,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tahoma controller devices."""
     _LOGGER.debug("Setup Tahoma Binary sensor platform")
     controller = hass.data[TAHOMA_DOMAIN]['controller']
-    devices = []
-    for device in hass.data[TAHOMA_DOMAIN]['devices']['smoke']:
-        devices.append(TahomaBinarySensor(device, controller))
+    devices = [
+        TahomaBinarySensor(device, controller)
+        for device in hass.data[TAHOMA_DOMAIN]['devices']['smoke']
+    ]
+
     add_entities(devices, True)
 
 

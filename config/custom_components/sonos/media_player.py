@@ -314,9 +314,7 @@ def soco_error(errorcodes=None):
             try:
                 return funct(*args, **kwargs)
             except SoCoUPnPException as err:
-                if errorcodes and err.error_code in errorcodes:
-                    pass
-                else:
+                if not errorcodes or err.error_code not in errorcodes:
                     _LOGGER.error("Error on %s with %s", funct.__name__, err)
             except SoCoException as err:
                 _LOGGER.error("Error on %s with %s", funct.__name__, err)
@@ -983,11 +981,8 @@ class SonosEntity(MediaPlayerDevice):
             sources += [SOURCE_LINEIN]
         elif "PLAYBAR" in model:
             sources += [SOURCE_LINEIN, SOURCE_TV]
-        elif "BEAM" in model:
+        elif "BEAM" in model or "PLAYBASE" in model:
             sources += [SOURCE_TV]
-        elif "PLAYBASE" in model:
-            sources += [SOURCE_TV]
-
         return sources
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
@@ -1120,10 +1115,7 @@ class SonosEntity(MediaPlayerDevice):
         """Snapshot the state of a player."""
         self._soco_snapshot = pysonos.snapshot.Snapshot(self.soco)
         self._soco_snapshot.snapshot()
-        if with_group:
-            self._snapshot_group = self._sonos_group.copy()
-        else:
-            self._snapshot_group = None
+        self._snapshot_group = self._sonos_group.copy() if with_group else None
 
     @staticmethod
     async def snapshot_multi(hass, entities, with_group):
@@ -1302,18 +1294,21 @@ class SonosEntity(MediaPlayerDevice):
 
         if self._speech_enhance is not None:
             attributes[ATTR_SPEECH_ENHANCE] = self._speech_enhance
-        
-        if self._current_queue_position is not None:
-            if int(self._current_queue_position) > 0:
-                attributes[ATTR_CURRENT_QUEUE_POSITION] = self._current_queue_position
-        
-        if self._queue is not None:
-            if self._queue_length is not None:
-                if int(self._queue_length) > 0:
-                    attributes[ATTR_QUEUE] = self._queue
-        
-        if self._queue_length is not None:
-            if int(self._queue_length) is not 0:
-                attributes[ATTR_QUEUE_LENGTH] = self._queue_length
+
+        if (
+            self._current_queue_position is not None
+            and int(self._current_queue_position) > 0
+        ):
+            attributes[ATTR_CURRENT_QUEUE_POSITION] = self._current_queue_position
+
+        if (
+            self._queue is not None
+            and self._queue_length is not None
+            and int(self._queue_length) > 0
+        ):
+            attributes[ATTR_QUEUE] = self._queue
+
+        if self._queue_length is not None and int(self._queue_length) is not 0:
+            attributes[ATTR_QUEUE_LENGTH] = self._queue_length
 
         return attributes

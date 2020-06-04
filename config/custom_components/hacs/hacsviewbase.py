@@ -66,11 +66,7 @@ class HacsViewBase(HomeAssistantView, HacsBase):
     @property
     def progress_bar(self):
         """Load progress bar."""
-        if self.store.task_running:
-            display = "block"
-        else:
-            display = "none"
-
+        display = "block" if self.store.task_running else "none"
         return """
         <div style="display: {}"><p>Background task running, refresh the page in a little while.</p></div>
         <div class="progress hacs-bar-background" id="progressbar" style="display: {}">

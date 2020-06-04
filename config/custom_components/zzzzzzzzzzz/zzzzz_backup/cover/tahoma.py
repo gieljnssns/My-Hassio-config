@@ -26,9 +26,11 @@ ATTR_LOCK_ORIG = 'lock_originator'
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tahoma covers."""
     controller = hass.data[TAHOMA_DOMAIN]['controller']
-    devices = []
-    for device in hass.data[TAHOMA_DOMAIN]['devices']['cover']:
-        devices.append(TahomaCover(device, controller))
+    devices = [
+        TahomaCover(device, controller)
+        for device in hass.data[TAHOMA_DOMAIN]['devices']['cover']
+    ]
+
     add_entities(devices, True)
 
 

@@ -49,9 +49,7 @@ class EdgeOSWebAPI:
 
     @property
     def last_update(self):
-        result = self._last_update
-
-        return result
+        return self._last_update
 
     @asyncio.coroutine
     def heartbeat(self, max_age=HEARTBEAT_MAX_AGE):
@@ -141,6 +139,4 @@ class EdgeOSWebAPI:
         return result
 
     def get_edgeos_api_endpoint(self, controller):
-        url = EDGEOS_API_URL.format(self._edgeos_url, controller)
-
-        return url
+        return EDGEOS_API_URL.format(self._edgeos_url, controller)

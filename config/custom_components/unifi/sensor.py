@@ -99,9 +99,7 @@ class UniFiBandwidthSensor(Entity):
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        if self.controller.option_allow_bandwidth_sensors:
-            return True
-        return False
+        return bool(self.controller.option_allow_bandwidth_sensors)
 
     async def async_added_to_hass(self):
         """Client entity created."""

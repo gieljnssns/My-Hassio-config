@@ -19,9 +19,11 @@ ATTR_RSSI_LEVEL = 'rssi_level'
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tahoma controller devices."""
     controller = hass.data[TAHOMA_DOMAIN]['controller']
-    devices = []
-    for device in hass.data[TAHOMA_DOMAIN]['devices']['sensor']:
-        devices.append(TahomaSensor(device, controller))
+    devices = [
+        TahomaSensor(device, controller)
+        for device in hass.data[TAHOMA_DOMAIN]['devices']['sensor']
+    ]
+
     add_entities(devices, True)
 
 
@@ -63,16 +65,16 @@ class TahomaSensor(TahomaDevice, Entity):
                 'core:LuminanceState']
             self._available = bool(self.tahoma_device.active_states.get(
                 'core:StatusState') == 'available')
-        if self.tahoma_device.type == 'io:SomfyContactIOSystemSensor':
+        elif self.tahoma_device.type == 'io:SomfyContactIOSystemSensor':
             self.current_value = self.tahoma_device.active_states[
                 'core:ContactState']
             self._available = bool(self.tahoma_device.active_states.get(
                 'core:StatusState') == 'available')
-        if self.tahoma_device.type == 'rtds:RTDSContactSensor':
+        elif self.tahoma_device.type == 'rtds:RTDSContactSensor':
             self.current_value = self.tahoma_device.active_states[
                 'core:ContactState']
             self._available = True
-        if self.tahoma_device.type == 'rtds:RTDSMotionSensor':
+        elif self.tahoma_device.type == 'rtds:RTDSMotionSensor':
             self.current_value = self.tahoma_device.active_states[
                 'core:OccupancyState']
             self._available = True

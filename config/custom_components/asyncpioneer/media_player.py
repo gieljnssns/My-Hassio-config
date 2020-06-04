@@ -652,10 +652,12 @@ class PioneerDevice(MediaPlayerDevice):
     def source_list(self):
         """List of available input sources."""
         if len(self._disabled_source_list) and len(self._source_name_to_number):
-            enabled_sources = {}
-            for name, number in self._source_name_to_number.items():
-                if name not in self._disabled_source_list:
-                    enabled_sources[name] = number
+            enabled_sources = {
+                name: number
+                for name, number in self._source_name_to_number.items()
+                if name not in self._disabled_source_list
+            }
+
             return list(enabled_sources.keys())
 
         return list(self._source_name_to_number.keys())
@@ -711,9 +713,11 @@ class PioneerDevice(MediaPlayerDevice):
             command = "00IP"
         elif self._selected_source_id == SOURCE_ID_BT_AUDIO:
             command = "10BT"
-        elif self._selected_source_id == SOURCE_ID_MEDIA_SERVER \
-          or self._selected_source_id == SOURCE_ID_INTERNET \
-          or self._selected_source_id == SOURCE_ID_FAVORITES:
+        elif self._selected_source_id in [
+            SOURCE_ID_MEDIA_SERVER,
+            SOURCE_ID_INTERNET,
+            SOURCE_ID_FAVORITES,
+        ]:
             command = "10NW"
 
         if command>"":
@@ -731,9 +735,11 @@ class PioneerDevice(MediaPlayerDevice):
             command = "01IP"
         elif self._selected_source_id == SOURCE_ID_BT_AUDIO:
             command = "11BT"
-        elif self._selected_source_id == SOURCE_ID_MEDIA_SERVER \
-          or self._selected_source_id == SOURCE_ID_INTERNET \
-          or self._selected_source_id == SOURCE_ID_FAVORITES:
+        elif self._selected_source_id in [
+            SOURCE_ID_MEDIA_SERVER,
+            SOURCE_ID_INTERNET,
+            SOURCE_ID_FAVORITES,
+        ]:
             command = "11NW"
 
         if command>"":
@@ -754,9 +760,11 @@ class PioneerDevice(MediaPlayerDevice):
             command = "03IP"
         elif self._selected_source_id == SOURCE_ID_BT_AUDIO:
             command = "13BT"
-        elif self._selected_source_id == SOURCE_ID_MEDIA_SERVER \
-          or self._selected_source_id == SOURCE_ID_INTERNET \
-          or self._selected_source_id == SOURCE_ID_FAVORITES:
+        elif self._selected_source_id in [
+            SOURCE_ID_MEDIA_SERVER,
+            SOURCE_ID_INTERNET,
+            SOURCE_ID_FAVORITES,
+        ]:
             command = "12NW"
 
         if command>"":
@@ -779,9 +787,11 @@ class PioneerDevice(MediaPlayerDevice):
             command = "04IP"
         elif self._selected_source_id == SOURCE_ID_BT_AUDIO:
             command = "14BT"
-        elif self._selected_source_id == SOURCE_ID_MEDIA_SERVER \
-          or self._selected_source_id == SOURCE_ID_INTERNET \
-          or self._selected_source_id == SOURCE_ID_FAVORITES:
+        elif self._selected_source_id in [
+            SOURCE_ID_MEDIA_SERVER,
+            SOURCE_ID_INTERNET,
+            SOURCE_ID_FAVORITES,
+        ]:
             command = "13NW"
 
         if command>"":
@@ -840,8 +850,10 @@ class PioneerDevice(MediaPlayerDevice):
 
     def select_radio_station(self, station):
         """Set radio tuner to the frequency of a named station in config."""
-        if not len(self._radio_stations) \
-            or not station in self._radio_stations.keys():
+        if (
+            not len(self._radio_stations)
+            or station not in self._radio_stations.keys()
+        ):
             _LOGGER.error("Unknown radio station '%s'", station)
         else:
             num = self._radio_stations.get(station)
@@ -869,9 +881,7 @@ class PioneerDevice(MediaPlayerDevice):
         if self.state == STATE_OFF:
             return None
 
-        state_attr = {
+        return {
             attr: getattr(self, attr) for attr
             in ATTR_TO_PROPERTY if getattr(self, attr) is not None
         }
-
-        return state_attr

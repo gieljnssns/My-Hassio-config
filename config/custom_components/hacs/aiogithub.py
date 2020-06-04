@@ -121,9 +121,8 @@ class AIOGitHub(object):
             if self._ratelimit_remaining == "0":
                 raise AIOGitHubRatelimit("GitHub Ratelimit error")
 
-            if isinstance(response, dict):
-                if response.get("message"):
-                    raise AIOGitHubException(response["message"])
+            if isinstance(response, dict) and response.get("message"):
+                raise AIOGitHubException(response["message"])
 
         return response
 
@@ -231,18 +230,16 @@ class AIOGithubRepository(AIOGitHub):
             if self._ratelimit_remaining == "0":
                 raise AIOGitHubRatelimit("GitHub Ratelimit error")
 
-            if not isinstance(response, list):
-                if response.get("message"):
-                    return False
+            if not isinstance(response, list) and response.get("message"):
+                return False
 
             contents = []
 
             for content in response:
                 if len(contents) == 5:
                     break
-                if not prerelease:
-                    if content.get("prerelease", False):
-                        continue
+                if not prerelease and content.get("prerelease", False):
+                    continue
                 contents.append(AIOGithubRepositoryRelease(content))
 
         return contents
@@ -338,7 +335,7 @@ class AIOGithubRepositoryRelease(AIOGitHub):
 
     @property
     def assets(self):
-        assetlist = []
-        for item in self.attributes.get("assets"):
-            assetlist.append(AIOGithubRepositoryContent(item))
-        return assetlist
+        return [
+            AIOGithubRepositoryContent(item)
+            for item in self.attributes.get("assets")
+        ]

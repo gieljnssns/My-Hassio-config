@@ -89,51 +89,52 @@ class HacsDataStore:
 
     def restore_values(self):
         """Restore stored values."""
-        if os.path.exists(self.store_path):
-            store = self.read()
-            if store:
-                self.frontend_mode = store.get("hacs", {}).get("view", "Grid")
-                self.schema = store.get("hacs", {}).get("schema")
-                self.endpoints = store.get("hacs", {}).get("endpoints", {})
-                repositories = {}
-                for repository in store.get("repositories", {}):
-                    repo_id = repository
-                    repository = store["repositories"][repo_id]
+        if not os.path.exists(self.store_path):
+            return
+        store = self.read()
+        if store:
+            self.frontend_mode = store.get("hacs", {}).get("view", "Grid")
+            self.schema = store.get("hacs", {}).get("schema")
+            self.endpoints = store.get("hacs", {}).get("endpoints", {})
+            repositories = {}
+            for repository in store.get("repositories", {}):
+                repo_id = repository
+                repository = store["repositories"][repo_id]
 
-                    self.logger.info(repository["repository_name"], "restore")
+                self.logger.info(repository["repository_name"], "restore")
 
-                    if repository["repository_type"] == "appdaemon":
-                        repositories[repo_id] = HacsRepositoryAppDaemon(repository["repository_name"])
+                if repository["repository_type"] == "appdaemon":
+                    repositories[repo_id] = HacsRepositoryAppDaemon(repository["repository_name"])
 
-                    elif repository["repository_type"] == "integration":
-                        repositories[repo_id] = HacsRepositoryIntegration(repository["repository_name"])
+                elif repository["repository_type"] == "integration":
+                    repositories[repo_id] = HacsRepositoryIntegration(repository["repository_name"])
 
-                    elif repository["repository_type"] == "plugin":
-                        repositories[repo_id] = HacsRepositoryPlugin(repository["repository_name"])
+                elif repository["repository_type"] == "plugin":
+                    repositories[repo_id] = HacsRepositoryPlugin(repository["repository_name"])
 
-                    elif repository["repository_type"] == "python_script":
-                        repositories[repo_id] = HacsRepositoryPythonScripts(repository["repository_name"])
+                elif repository["repository_type"] == "python_script":
+                    repositories[repo_id] = HacsRepositoryPythonScripts(repository["repository_name"])
 
-                    elif repository["repository_type"] == "theme":
-                        repositories[repo_id] = HacsRepositoryThemes(repository["repository_name"])
+                elif repository["repository_type"] == "theme":
+                    repositories[repo_id] = HacsRepositoryThemes(repository["repository_name"])
 
-                    else:
-                        continue
+                else:
+                    continue
 
-                    repositories[repo_id].description = repository.get("description", "")
-                    repositories[repo_id].installed = repository["installed"]
-                    repositories[repo_id].last_commit = repository.get("last_commit", "")
-                    repositories[repo_id].name = repository["name"]
-                    repositories[repo_id].new = repository.get("new", True)
-                    repositories[repo_id].repository_id = repo_id
-                    repositories[repo_id].topics = repository.get("topics", [])
-                    repositories[repo_id].track = repository.get("track", True)
-                    repositories[repo_id].show_beta = repository.get("show_beta", False)
-                    repositories[repo_id].version_installed = repository.get("version_installed")
-                    repositories[repo_id].last_release_tag = repository.get("last_release_tag")
-                    repositories[repo_id].installed_commit = repository.get("installed_commit")
-                    repositories[repo_id].selected_tag = repository.get("selected_tag")
-                    if repo_id == "172733314":
-                        repositories[repo_id].version_installed = VERSION
+                repositories[repo_id].description = repository.get("description", "")
+                repositories[repo_id].installed = repository["installed"]
+                repositories[repo_id].last_commit = repository.get("last_commit", "")
+                repositories[repo_id].name = repository["name"]
+                repositories[repo_id].new = repository.get("new", True)
+                repositories[repo_id].repository_id = repo_id
+                repositories[repo_id].topics = repository.get("topics", [])
+                repositories[repo_id].track = repository.get("track", True)
+                repositories[repo_id].show_beta = repository.get("show_beta", False)
+                repositories[repo_id].version_installed = repository.get("version_installed")
+                repositories[repo_id].last_release_tag = repository.get("last_release_tag")
+                repositories[repo_id].installed_commit = repository.get("installed_commit")
+                repositories[repo_id].selected_tag = repository.get("selected_tag")
+                if repo_id == "172733314":
+                    repositories[repo_id].version_installed = VERSION
 
-                self.repositories = repositories
+            self.repositories = repositories

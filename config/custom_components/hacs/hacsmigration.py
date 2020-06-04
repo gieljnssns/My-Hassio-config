@@ -57,10 +57,7 @@ class HacsMigration(HacsBase):
             await self.from_3_to_4()
             self.store.write()
 
-        elif self._old["hacs"].get("schema") == STORAGE_VERSION:
-            pass
-
-        else:
+        elif self._old["hacs"].get("schema") != STORAGE_VERSION:
             # Should not get here, but do a full scan just in case...
             await self.update_repositories()
             self.store.schema = STORAGE_VERSION

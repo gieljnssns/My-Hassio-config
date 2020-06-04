@@ -90,7 +90,7 @@ DEVICES = {}
 
 def _get_block_key(block):
     key = block.id
-    if not key in BLOCKS:
+    if key not in BLOCKS:
         BLOCKS[key] = block
     return key
 
@@ -101,7 +101,7 @@ def get_block_from_hass(hass, discovery_info):
 
 def _get_device_key(dev):
     key = dev.id + dev.device_type
-    if not key in DEVICES:
+    if key not in DEVICES:
         DEVICES[key] = dev
     return key
 

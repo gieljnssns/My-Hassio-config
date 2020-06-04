@@ -146,10 +146,7 @@ class UniFiClientTracker(ScannerEntity):
         ):
             return False
 
-        if not self.controller.option_track_wired_clients and self.is_wired:
-            return False
-
-        return True
+        return bool(self.controller.option_track_wired_clients or not self.is_wired)
 
     async def async_added_to_hass(self):
         """Client entity created."""
@@ -188,10 +185,7 @@ class UniFiClientTracker(ScannerEntity):
                 float(self.client.last_seen)
             )
 
-        if since_last_seen < self.controller.option_detection_time:
-            return True
-
-        return False
+        return since_last_seen < self.controller.option_detection_time
 
     @property
     def source_type(self):
@@ -243,9 +237,7 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        if self.controller.option_track_devices:
-            return True
-        return False
+        return bool(self.controller.option_track_devices)
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
@@ -264,13 +256,10 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def is_connected(self):
         """Return true if the device is connected to the network."""
-        if self.device.state == 1 and (
+        return self.device.state == 1 and (
             dt_util.utcnow() - dt_util.utc_from_timestamp(float(self.device.last_seen))
             < self.controller.option_detection_time
-        ):
-            return True
-
-        return False
+        )
 
     @property
     def source_type(self):

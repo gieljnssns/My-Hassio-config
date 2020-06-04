@@ -18,7 +18,7 @@ class HacsOverviewView(HacsViewBase):
         """Initilize."""
         self.url = self.url_path["overview"]
 
-    async def get(self, request):  # pylint: disable=unused-argument
+    async def get(self, request):    # pylint: disable=unused-argument
         """Serve HacsOverviewView."""
         try:
             content = self.base_content
@@ -85,9 +85,8 @@ class HacsOverviewView(HacsViewBase):
                             grid = grid.replace("{CARDS}", cards)
                             content += grid
 
-                if not types:
-                    if not self.store.task_running:
-                        content += NO_ELEMENTS
+                if not types and not self.store.task_running:
+                    content += NO_ELEMENTS
 
                 content += self.footer
 

@@ -116,8 +116,7 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
             # No tasks, we don't REALLY need to show anything.
             return {}
 
-        attributes = super().device_state_attributes
-        return attributes
+        return super().device_state_attributes
 
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""

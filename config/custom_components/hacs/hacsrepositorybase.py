@@ -258,16 +258,17 @@ class HacsRepositoryBase(HacsBase):
             if (
                 self.homeassistant_version is not None
                 and self.last_release_tag is not None
+            ) and Version(HAVERSION[0:6]) < Version(
+                str(self.homeassistant_version)
             ):
-                if Version(HAVERSION[0:6]) < Version(str(self.homeassistant_version)):
-                    message = NOT_SUPPORTED_HA_VERSION.format(
-                        HAVERSION,
-                        self.last_release_tag,
-                        self.name,
-                        str(self.homeassistant_version),
-                    )
-                    _LOGGER.error(message)
-                    return False
+                message = NOT_SUPPORTED_HA_VERSION.format(
+                    HAVERSION,
+                    self.last_release_tag,
+                    self.name,
+                    str(self.homeassistant_version),
+                )
+                _LOGGER.error(message)
+                return False
 
             # Check local directory
             await self.check_local_directory()
@@ -311,9 +312,8 @@ class HacsRepositoryBase(HacsBase):
         """Run remove tasks."""
         _LOGGER.debug("(%s) - Starting removal", self.repository_name)
 
-        if self.repository_id in self.store.repositories:
-            if not self.installed:
-                del self.store.repositories[self.repository_id]
+        if self.repository_id in self.store.repositories and not self.installed:
+            del self.store.repositories[self.repository_id]
 
     async def uninstall(self):
         """Run uninstall tasks."""
@@ -327,11 +327,7 @@ class HacsRepositoryBase(HacsBase):
     async def check_local_directory(self, path=None):
         """Check the local directory."""
         try:
-            if path is not None:
-                local_path = path
-            else:
-                local_path = self.local_path
-
+            local_path = path if path is not None else self.local_path
             # Remove if it's allready there.
             if os.path.exists(local_path):
                 await self.remove_local_directory()
@@ -394,10 +390,7 @@ class HacsRepositoryBase(HacsBase):
             if file.name.lower() in info_files:
                 info = await self.repository.get_contents(file.name, self.ref)
                 break
-        if info is None:
-            self.additional_info = ""
-        else:
-            self.additional_info = info.content
+        self.additional_info = "" if info is None else info.content
 
     async def set_repository(self):
         """Set the AIOGitHub repository object."""
@@ -427,12 +420,14 @@ class HacsRepositoryBase(HacsBase):
             self.published_tags.append(release.tag_name)
 
         self.last_release_object = temp[0]
-        if self.selected_tag is not None:
-            if self.selected_tag != self.repository.default_branch:
-                for release in temp:
-                    if release.tag_name == self.selected_tag:
-                        self.last_release_object = release
-                        break
+        if (
+            self.selected_tag is not None
+            and self.selected_tag != self.repository.default_branch
+        ):
+            for release in temp:
+                if release.tag_name == self.selected_tag:
+                    self.last_release_object = release
+                    break
         self.last_release_tag = temp[0].tag_name
 
     async def validate_repository_name(self):

@@ -196,11 +196,7 @@ class PhilipsTV(MediaPlayerDevice):
                 srcname = self._tv.sources.get(srcid, dict()).get('name', None)
                 self._source_list.append(srcname)
                 self._source_mapping[srcname] = srcid
-        if self._tv.on:
-            self._state = STATE_ON
-        else:
-            self._state = STATE_OFF
-
+        self._state = STATE_ON if self._tv.on else STATE_OFF
         self._watching_tv = bool(self._tv.source_id == 'tv')
 
         self._tv.getChannelId()

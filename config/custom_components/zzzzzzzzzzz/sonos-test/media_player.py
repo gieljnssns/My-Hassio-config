@@ -259,9 +259,7 @@ def soco_error(errorcodes=None):
             try:
                 return funct(*args, **kwargs)
             except SoCoUPnPException as err:
-                if errorcodes and err.error_code in errorcodes:
-                    pass
-                else:
+                if not errorcodes or err.error_code not in errorcodes:
                     _LOGGER.error("Error on %s with %s", funct.__name__, err)
             except SoCoException as err:
                 _LOGGER.error("Error on %s with %s", funct.__name__, err)
@@ -1034,10 +1032,7 @@ class SonosEntity(MediaPlayerDevice):
         """Snapshot the state of a player."""
         self._soco_snapshot = pysonos.snapshot.Snapshot(self.soco)
         self._soco_snapshot.snapshot()
-        if with_group:
-            self._snapshot_group = self._sonos_group.copy()
-        else:
-            self._snapshot_group = None
+        self._snapshot_group = self._sonos_group.copy() if with_group else None
 
     @staticmethod
     async def snapshot_multi(hass, entities, with_group):

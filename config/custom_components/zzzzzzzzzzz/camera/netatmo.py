@@ -41,10 +41,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         data = netatmo.CameraData(netatmo.NETATMO_AUTH, home)
         for camera_name in data.get_camera_names():
             camera_type = data.get_camera_type(camera=camera_name, home=home)
-            if CONF_CAMERAS in config:
-                if config[CONF_CAMERAS] != [] and \
-                   camera_name not in config[CONF_CAMERAS]:
-                    continue
+            if (
+                CONF_CAMERAS in config
+                and config[CONF_CAMERAS] != []
+                and camera_name not in config[CONF_CAMERAS]
+            ):
+                continue
             add_devices([NetatmoCamera(data, camera_name, home,
                                        camera_type, verify_ssl)])
     except lnetatmo.NoDevice:
@@ -60,10 +62,7 @@ class NetatmoCamera(Camera):
         self._data = data
         self._camera_name = camera_name
         self._verify_ssl = verify_ssl
-        if home:
-            self._name = home + ' / ' + camera_name
-        else:
-            self._name = camera_name
+        self._name = home + ' / ' + camera_name if home else camera_name
         camera_id = data.camera_data.cameraByName(
             camera=camera_name, home=home)['id']
         self._unique_id = "Welcome_camera {0} - {1}".format(
