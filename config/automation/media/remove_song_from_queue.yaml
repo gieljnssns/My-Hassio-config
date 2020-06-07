@@ -1,33 +1,40 @@
-alias: Keuken - remove last played song from queue
-id: Keuken - remove last played song from queue
+alias: Remove last played song from queue
+id: Remove last played song from queue
 trigger:
   - platform: state
     entity_id: media_player.keuken
+  - platform: state
+    entity_id: media_player.2c
+  - platform: state
+    entity_id: media_player.badkamer
+  - platform: state
+    entity_id: media_player.living_2
+  - platform: state
+    entity_id: media_player.living_surround
+  - platform: state
+    entity_id: media_player.move
 condition:
   condition: and
   conditions:
     - condition: template
       value_template: >
-        {{ trigger.from_state.attributes.current_queue_position | int < trigger.to_state.attributes.current_queue_position | int }}
+        {% set group = state_attr( trigger.entity_id , 'sonos_group') %}
+        {% if group[0] == trigger.entity_id %}
+          True
+        {% else %}
+          False
+        {% endif %}
     - condition: template
       value_template: >
-        {{ state_attr('media_player.keuken', 'is_playing_local_queue') == True }}
+        {% if state_attr( trigger.entity_id, 'queue_position') >= 1 %}
+          {{ 0 <= trigger.from_state.attributes.queue_position < trigger.to_state.attributes.queue_position }}
+        {% else %}
+          False
+        {% endif %}
 action:
   - service: sonos.remove_from_queue
     data_template:
-      entity_id: media_player.keuken
+      entity_id: >
+        {{ trigger.entity_id }}
       queue_position: >
-        {{ (trigger.from_state.attributes.current_queue_position | int) - 1 }}
-
-# {{ state_attr('media_player.keuken', 'sonos_group') }}
-
-# {% set trigger = 'media_player.keuken' %}
-# {% set group = state_attr( trigger , 'sonos_group') %}
-
-# {{group[0]}}
-
-# {% if group[0] == trigger %}
-#   kleir
-# {% else %}
-#   fuck
-# {% endif %}
+        {{ trigger.from_state.attributes.queue_position }}
