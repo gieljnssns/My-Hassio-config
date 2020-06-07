@@ -2,13 +2,13 @@ alias: Puschbutton leds sync
 initial_state: "on"
 trigger:
   - platform: state
-    entity_id: light.shelly2_5_76d562_relay_0
+    entity_id: light.wc_relay_0
     # entity_id: light.wc
   - platform: state
-    entity_id: light.shelly2_5_b94100_relay_0
+    entity_id: light.waskot_relay_0
     # entity_id: light.waskot
   - platform: state
-    entity_id: light.shelly2_5_b939e5_relay_0
+    entity_id: light.badkamer_hoog_relay_0
     # entity_id: light.badkamer_hoog
 action:
   - service_template: >
@@ -19,9 +19,9 @@ action:
       {% endif %}
     data_template:
       entity_id: >
-        {% if trigger.entity_id == 'light.shelly2_5_76d562_relay_0' %}
+        {% if trigger.entity_id == 'light.wc_relay_0' %}
           switch.led_wc
-        {% elif trigger.entity_id == 'light.shelly2_5_b94100_relay_0' %}
+        {% elif trigger.entity_id == 'light.waskot_relay_0' %}
           switch.led_waskot
         {% else %}
           switch.led_badkamer
