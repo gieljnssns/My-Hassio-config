@@ -4,25 +4,39 @@ Shelly platform for the cover component.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/shelly/
 """
+
+#pylint: disable=import-error
 from homeassistant.components.cover import (ATTR_POSITION,
                                             CoverDevice, SUPPORT_CLOSE,
                                             SUPPORT_OPEN, SUPPORT_STOP,
                                             SUPPORT_SET_POSITION)
 
-from . import ShellyDevice, get_device_from_hass
+from . import ShellyDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+#def setup_platform(hass, _config, add_devices, discovery_info=None):
+#    """Set up the Shelly cover platform."""
+#    dev = get_device_from_hass(hass, discovery_info)
+#    add_devices([ShellyCover(dev, instance)])
 
-def setup_platform(hass, _config, add_devices, discovery_info=None):
-    """Set up the Shelly cover platform."""
-    dev = get_device_from_hass(hass, discovery_info)
-    add_devices([ShellyCover(dev, hass)])
+async def async_setup_entry(hass, _config_entry, async_add_entities):
+    """Set up Shelly cover dynamically."""
+    async def async_discover_cover(dev, instance):
+        """Discover and add a discovered cover."""
+        async_add_entities([ShellyCover(dev, instance)])
+
+    async_dispatcher_connect(
+        hass,
+        "shelly_new_cover",
+        async_discover_cover
+    )
 
 class ShellyCover(ShellyDevice, CoverDevice):
     """Shelly cover device."""
 
-    def __init__(self, dev, hass):
+    def __init__(self, dev, instance):
         """Initialize the cover."""
-        ShellyDevice.__init__(self, dev, hass)
+        ShellyDevice.__init__(self, dev, instance)
         self._position = None
         self._last_direction = None
         self._motion_state = None

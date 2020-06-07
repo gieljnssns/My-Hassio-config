@@ -9,44 +9,49 @@ import logging
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from .const import *
 
 # from .sensor import ShellySensor
-from . import (ShellyDevice, get_device_from_hass,
-               ShellyBlock, get_block_from_hass)
+from . import (ShellyDevice, ShellyBlock)
 
 _LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, _config, add_devices, discovery_info=None):
-    """Setup the Shelly Switch platform."""
+# def setup_platform(hass, _config, add_devices, discovery_info=None):
+#    """Setup the Shelly Switch platform."""
+#
+#    if 'firmware' in discovery_info:
+#        block = get_block_from_hass(hass, discovery_info)
+#        add_devices([ShellyFirmwareUpdate(block, hass)])
+#        return
+#
+#    dev = get_device_from_hass(hass, discovery_info)
+#    add_devices([ShellySwitch(dev, hass)])
 
-    if 'firmware' in discovery_info:
-        block = get_block_from_hass(hass, discovery_info)
-        add_devices([ShellyFirmwareUpdate(block, hass)])
-        return
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Shelly switch dynamically."""
+    async def async_discover_switch(dev, instance):
+        """Discover and add a discovered sensor."""
+        if isinstance(dev, dict):
+            if 'firmware' in dev:
+                async_add_entities(
+                    [ShellyFirmwareUpdate(dev['block'], instance)])
+            return
+        async_add_entities([ShellySwitch(dev, instance)])
 
-    dev = get_device_from_hass(hass, discovery_info)
-    add_devices([ShellySwitch(dev, hass)])
+    async_dispatcher_connect(
+        hass,
+        "shelly_new_switch",
+        async_discover_switch
+    )
 
 class ShellySwitch(ShellyDevice, SwitchDevice):
     """Representation of an Shelly Switch."""
-
-    def __init__(self, dev, hass):
+    def __init__(self, dev, instance):
         """Initialize an ShellySwitch."""
-        ShellyDevice.__init__(self, dev, hass)
+        ShellyDevice.__init__(self, dev, instance)
         self._state = None
         self.update()
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        if hasattr(self._dev, 'sensorValues'):
-            return self._dev.sensorValues['watt']
-        return None
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        return None
 
     @property
     def is_on(self):
@@ -68,17 +73,20 @@ class ShellySwitch(ShellyDevice, SwitchDevice):
 class ShellyFirmwareUpdate(ShellyBlock, SwitchDevice):
     """Representation of a script entity."""
 
-    def __init__(self, block, hass):
-        ShellyBlock.__init__(self, block, hass, "_firmware_update")
-        self.entity_id = "switch" + self.entity_id
-        self._name = "Upgrade firmware " + self._name
+    def __init__(self, block, instance):
         self._updating = False
+        ShellyBlock.__init__(self, block, instance, "_firmware_update")
+        self.entity_id = "switch" + self.entity_id
         block.firmware_switch = self
 
     @property
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def name(self):
+        return "Upgrade firmware " + ShellyBlock.name.fget(self)
 
     @property
     def is_on(self):
@@ -90,7 +98,7 @@ class ShellyFirmwareUpdate(ShellyBlock, SwitchDevice):
         self._updating = True
         self.schedule_update_ha_state(False)
         self._block.update_firmware()
-            
+
     async def async_turn_off(self, **_kwargs):
         """Do nothing"""
         self.schedule_update_ha_state(False)
