@@ -1,8 +1,42 @@
+### Static IP
+sudo nano /etc/dhcpcd.conf
+
+interface eth0
+ static ip_address=192.168.79.1/24
+ static routers=192.168.79.1
+ static domain_name_servers=8.8.8.8 8.8.4.4
+
+interface wlan0
+ static ip_address=192.168.79.56/24
+ static routers=192.168.79.1
+ static domain_name_servers=8.8.8.8 8.8.4.4
+
+### Wifi power management off
+sudo nano /etc/rc.local
+
+# Print the IP address
+_IP=$(hostname -I) || true
+if [ "$_IP" ]; then
+  printf "My IP address is %s\n" "$_IP"
+fi
+iwconfig wlan0 power off
+exit 0
+
+
 Node Red
 https://nodered.org/docs/getting-started/raspberrypi
 
 
 bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
+sudo systemctl enable nodered.service
+sudo systemctl start nodered.service
+sudo systemctl stop nodered.service
+
+palettes
+node-red-contrib-vcgencmd
+node-red-contrib-os
+node-red-contrib-dht-sensor
+node-red-contrib-cpu
 
 node-red system stats
 http://estadieu.com/2017/01/16/dashboard-raspberrypi-node-red/
@@ -10,7 +44,9 @@ https://flows.nodered.org/flow/25af5334a79d6c02d6413968a8bff572
 memory calculation
 https://stackoverflow.com/questions/10585978/linux-command-for-percentage-of-memory-that-is-free
 Memory % in use                     free -m | grep Mem | awk '{print ($3+$6)/$2 * 100.0}'   
-Memory % in use   rounded           free -m | grep Mem | awk '{printf "%.2f\n", ($3+$6)/$2 * 100.0}'       
+Memory % in use   rounded           free -m | grep Mem | awk '{printf "%.2f\n", ($3+$6)/$2 * 100.0}'   
+Swap % in use                       free -m | grep Swap | awk '{printf $3/$2 * 100}'
+Swap % in use     rounded           free -m | grep Swap | awk '{printf "%.2f\n", $3/$2 * 100}'  
 Memory % free                       free -m | grep Mem | awk '{print $4/$2 * 100.0}'
 Memory % free     rounded           free -m | grep Mem | awk '{printf "%.2f\n", $4/$2 * 100.0}'
 
@@ -26,11 +62,7 @@ https://flows.nodered.org/node/node-red-contrib-ds18b20-sensor
 
 
 
-Homekit2Mqtt
-https://www.studiopieters.nl/homebridge-homekit-2-mqtt-revised-installation/
-autostart
-crontab -e
-@reboot sudo homekit2mqtt  --url mqtt://xuserx:xpasswordx@192.168.79.xx --retain --name Homekit2Mqtt --username CC:22:3D:E3:CE:F1
+
 
 
 devices/binary_sensor/
@@ -42,18 +74,7 @@ monitor
 https://github.com/andrewjfreyer/monitor
 sudo apt-get install bluez-hcidump git bc pi-bluetooth
 
-## Netdata
-https://www.netdata.cloud
 
-$ sudo /etc/netdata/edit-config charts.d.conf
-Copying '/usr/lib/netdata/conf.d/charts.d.conf' to '/etc/netdata/charts.d.conf' ...
-Editing '/etc/netdata/charts.d.conf' ...
-
-$ bash <(curl -Ss https://my-netdata.io/kickstart.sh)  --stable-channel --disable-telemetry
-
-uninstall netdata
-$ sudo find / -name netdata-uninstaller.sh
-$ sudo /usr/libexec/netdata/netdata-uninstaller.sh --force --yes
 
 sudo systemctl stop monitor
 sudo bash monitor.sh -tad -x -a -u
@@ -84,3 +105,31 @@ PREF_PASS_FILTER_MANUFACTURER_ARRIVE=".*"
 PREF_FAIL_FILTER_ADV_FLAGS_ARRIVE="NONE"
 PREF_FAIL_FILTER_MANUFACTURER_ARRIVE="NONE"
 
+
+
+
+
+
+## Netdata
+https://www.netdata.cloud
+
+$ sudo /etc/netdata/edit-config charts.d.conf
+Copying '/usr/lib/netdata/conf.d/charts.d.conf' to '/etc/netdata/charts.d.conf' ...
+Editing '/etc/netdata/charts.d.conf' ...
+
+$ bash <(curl -Ss https://my-netdata.io/kickstart.sh)  --stable-channel --disable-telemetry
+
+uninstall netdata
+$ sudo find / -name netdata-uninstaller.sh
+$ sudo /usr/libexec/netdata/netdata-uninstaller.sh --force --yes
+
+
+
+
+
+
+Homekit2Mqtt
+https://www.studiopieters.nl/homebridge-homekit-2-mqtt-revised-installation/
+autostart
+crontab -e
+@reboot sudo homekit2mqtt  --url mqtt://xuserx:xpasswordx@192.168.79.xx --retain --name Homekit2Mqtt --username CC:22:3D:E3:CE:F1
