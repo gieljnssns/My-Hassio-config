@@ -1,55 +1,64 @@
 - platform: mqtt
-  state_topic: 'Garage/input/temperatuur'
+  state_topic: "Garage/input/temperatuur"
   device_class: temperature
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '°C'
-  name: 'Buitentemperatuur'
-  availability_topic: "Garage/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'Garage/system/temp'
-  device_class: temperature
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '°C'
-  name: 'Temperatuur cpu Garage'
-  availability_topic: "Garage/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'Garage/system/cpu'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Cpu % Garage'
-  availability_topic: "Garage/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'Garage/system/mem'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Ram % Garage'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Buitentemperatuur"
   availability_topic: "Garage/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Garage/system/uptime'
+  state_topic: "Garage/system/temp"
+  device_class: temperature
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Temperatuur cpu Garage"
+  availability_topic: "Garage/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Garage/system/cpu"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Cpu % Garage"
+  availability_topic: "Garage/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Garage/system/mem"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Ram % Garage"
+  availability_topic: "Garage/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Garage/system/swap"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Swap % Garage"
+  availability_topic: "Garage/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Garage/system/uptime"
   # value_template: '{{ value_json }}'
-  name: 'Uptime Garage'
+  name: "Uptime Garage"
   availability_topic: "Garage/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Garage/system/wifi'
+  state_topic: "Garage/system/wifi"
   device_class: signal_strength
-  value_template: '{{ value_json }}'
-  unit_of_measurement: 'dBm'
-  name: 'Wifi Garage'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "dBm"
+  name: "Wifi Garage"
   availability_topic: "Garage/status"
   payload_available: "online"
   payload_not_available: "offline"

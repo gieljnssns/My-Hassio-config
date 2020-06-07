@@ -1,0 +1,40 @@
+alias: node unavailable
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.garage_echo
+    to: "off"
+    # for:
+    #   seconds: 120
+  - platform: state
+    entity_id: binary_sensor.poortpi_echo
+    to: "off"
+    # for:
+    #   seconds: 120
+  - platform: state
+    entity_id: binary_sensor.slaapkamer_echo
+    to: "off"
+    # for:
+    #   seconds: 120
+  - platform: state
+    entity_id: binary_sensor.tvpi_echo
+    to: "off"
+    # for:
+    #   seconds: 120
+action:
+  - service_template: >
+      {% if trigger.entity_id == 'binary_sensor.garage_echo' %}
+          script.garage_retain_0
+      {% elif trigger.entity_id == 'binary_sensor.slaapkamer_echo' %}
+          script.slaapkamer_retain_0
+      {% elif trigger.entity_id == 'binary_sensor.tvpi_echo' %}
+          script.tvpi_retain_0
+      {% elif trigger.entity_id == 'binary_sensor.poortpi_echo' %}
+          script.poortpi_retain_0
+      {% endif %}
+  - delay:
+      seconds: 30
+  - service: script.mqtt_arrive_trigger
+    data_template:
+      identity: >-
+        {"identity":"Node Unavailable {{now().strftime("%H:%M")}}"}

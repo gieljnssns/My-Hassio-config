@@ -1,81 +1,90 @@
 - platform: mqtt
-  state_topic: 'Keuken/input/temperatuur'
+  state_topic: "Keuken/input/temperatuur"
   device_class: temperature
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '°C'
-  name: 'Temperatuur Keuken'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Temperatuur Keuken"
   availability_topic: "Keuken/status"
   payload_available: "online"
   payload_not_available: "offline"
-  
+
 - platform: mqtt
-  state_topic: 'Keuken/input/luchtvochtigheid'
+  state_topic: "Keuken/input/luchtvochtigheid"
   device_class: humidity
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Luchtvochtigheid Keuken'
-  availability_topic: "Keuken/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'Keuken/input/pir_groot'
-  value_template: '{{ value_json }}'
-  name: 'Beweging Keuken groot'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Luchtvochtigheid Keuken"
   availability_topic: "Keuken/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Keuken/input/pir_klein'
-  value_template: '{{ value_json }}'
-  name: 'Beweging Keuken klein'
+  state_topic: "Keuken/input/pir_groot"
+  value_template: "{{ value_json }}"
+  name: "Beweging Keuken groot"
   availability_topic: "Keuken/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Keuken/system/temp'
+  state_topic: "Keuken/input/pir_klein"
+  value_template: "{{ value_json }}"
+  name: "Beweging Keuken klein"
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Keuken/system/temp"
   device_class: temperature
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '°C'
-  name: 'Temperatuur cpu Keuken'
-  availability_topic: "Keuken/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'Keuken/system/cpu'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Cpu % Keuken'
-  availability_topic: "Keuken/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'Keuken/system/mem'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Ram % Keuken'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Temperatuur cpu Keuken"
   availability_topic: "Keuken/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Keuken/system/uptime'
+  state_topic: "Keuken/system/cpu"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Cpu % Keuken"
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Keuken/system/mem"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Ram % Keuken"
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Keuken/system/swap"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Swap % Keuken"
+  availability_topic: "Keuken/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Keuken/system/uptime"
   # value_template: '{{ value_json }}'
-  name: 'Uptime Keuken'
+  name: "Uptime Keuken"
   availability_topic: "Keuken/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Keuken/system/wifi'
+  state_topic: "Keuken/system/wifi"
   device_class: signal_strength
-  value_template: '{{ value_json }}'
-  unit_of_measurement: 'dBm'
-  name: 'Wifi Keuken'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "dBm"
+  name: "Wifi Keuken"
   availability_topic: "Keuken/status"
   payload_available: "online"
   payload_not_available: "offline"

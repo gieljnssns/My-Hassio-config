@@ -1,71 +1,80 @@
 - platform: mqtt
-  state_topic: 'Slaapkamer/input/temperatuur'
+  state_topic: "Slaapkamer/input/temperatuur"
   device_class: temperature
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '°C'
-  name: 'Temperatuur slaapkamer'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Temperatuur slaapkamer"
   availability_topic: "Slaapkamer/status"
   payload_available: "online"
   payload_not_available: "offline"
-  
+
 - platform: mqtt
-  state_topic: 'Slaapkamer/input/luchtvochtigheid'
+  state_topic: "Slaapkamer/input/luchtvochtigheid"
   device_class: humidity
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Luchtvochtigheid slaapkamer'
-  availability_topic: "Slaapkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'Slaapkamer/input/pir_groot'
-  value_template: '{{ value_json }}'
-  name: 'Beweging slaapkamer groot'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Luchtvochtigheid slaapkamer"
   availability_topic: "Slaapkamer/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Slaapkamer/input/pir_klein'
-  value_template: '{{ value_json }}'
-  name: 'Beweging slaapkamer klein'
+  state_topic: "Slaapkamer/input/pir_groot"
+  value_template: "{{ value_json }}"
+  name: "Beweging slaapkamer groot"
   availability_topic: "Slaapkamer/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Slaapkamer/system/temp'
+  state_topic: "Slaapkamer/input/pir_klein"
+  value_template: "{{ value_json }}"
+  name: "Beweging slaapkamer klein"
+  availability_topic: "Slaapkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Slaapkamer/system/temp"
   device_class: temperature
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '°C'
-  name: 'Temperatuur cpu Slaapkamer'
-  availability_topic: "Slaapkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'Slaapkamer/system/cpu'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Cpu % Slaapkamer'
-  availability_topic: "Slaapkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'Slaapkamer/system/mem'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Ram % Slaapkamer'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Temperatuur cpu Slaapkamer"
   availability_topic: "Slaapkamer/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Slaapkamer/system/uptime'
+  state_topic: "Slaapkamer/system/cpu"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Cpu % Slaapkamer"
+  availability_topic: "Slaapkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Slaapkamer/system/mem"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Ram % Slaapkamer"
+  availability_topic: "Slaapkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Slaapkamer/system/swap"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Swap % Slaapkamer"
+  availability_topic: "Slaapkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Slaapkamer/system/uptime"
   # value_template: '{{ value_json }}'
-  name: 'Uptime Slaapkamer'
+  name: "Uptime Slaapkamer"
   availability_topic: "Slaapkamer/status"
   payload_available: "online"
   payload_not_available: "offline"

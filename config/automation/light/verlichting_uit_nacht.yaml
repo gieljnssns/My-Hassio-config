@@ -1,45 +1,53 @@
-  alias: Licht uit avond
-  initial_state: 'on' 
-  trigger:
-    platform: state
-    entity_id: alarm_control_panel.ha_alarm
-    to: armed_night
-  action:
-    - delay:
-        minutes: 3
-    - service: homeassistant.turn_off
-      entity_id: light.alle_tuinverlichting
-    - delay:
-        minutes: 1
-    - service: light.turn_off
-      entity_id: light.spots_tv
-    - service: light.turn_off
-      entity_id: light.waskot
-    - service: light.turn_off
-      entity_id: light.wc
-    - service: light.turn_off
-      entity_id: light.luster_danszaal
-    - service: light.turn_off
-      entity_id: light.luster_keuken
-    - service: light.turn_off
-      entity_id: light.luster_zithoek
-    - service: light.turn_off
-      entity_id: light.inkom
-    - service: light.turn_off
-      entity_id: light.spots_keuken
-    - service: light.turn_off
-      entity_id: light.spots_danszaal
-    - service_template: >
-        {% if now().hour > 22 %}
-          script.vertraagd_uit_noor_15_min
-        {% else %}
-          script.vertraagd_uit_noor_30_min
-        {% endif %}
-    - service_template: >
-        {% if now().hour > 22 %}
-          script.vertraagd_uit_fien_15_min
-        {% else %}
-          script.vertraagd_uit_fien_30_min
-        {% endif %}
-    # - service: script.vertraagd_uit_noor
-    # - service: script.vertraagd_uit_fien
+alias: Licht uit avond
+initial_state: "on"
+trigger:
+  platform: state
+  entity_id: alarm_control_panel.ha_alarm
+  to: armed_night
+action:
+  - delay:
+      minutes: 3
+  - service: homeassistant.turn_off
+    entity_id: light.alle_tuinverlichting
+  - delay:
+      minutes: 1
+  - service: light.turn_off
+    entity_id: light.spots_tv
+  - service: light.turn_off
+    entity_id: light.shelly2_5_b94100_relay_0
+    # entity_id: light.waskot
+  - service: light.turn_off
+    entity_id: light.shelly2_5_76d562_relay_0
+    # entity_id: light.wc
+  - service: light.turn_off
+    # entity_id: light.luster_danszaal
+    entity_id: light.shelly2_5_69022d_relay_1
+  - service: light.turn_off
+    entity_id: light.shelly2_5_b952fa_relay_0
+    # entity_id: light.luster_keuken
+  - service: light.turn_off
+    # entity_id: light.luster_zithoek
+    entity_id: light.shelly2_5_69022d_relay_0
+  - service: light.turn_off
+    entity_id: light.shelly2_5_76cbbd_relay_0
+    # entity_id: light.inkom
+  - service: light.turn_off
+    entity_id: light.shelly2_5_76cbbd_relay_1
+    # entity_id: light.spots_keuken
+  - service: light.turn_off
+    entity_id: light.shelly2_5_76d562_relay_1
+    # entity_id: light.spots_danszaal
+  - service_template: >
+      {% if now().hour > 22 %}
+        script.vertraagd_uit_noor_15_min
+      {% else %}
+        script.vertraagd_uit_noor_30_min
+      {% endif %}
+  - service_template: >
+      {% if now().hour > 22 %}
+        script.vertraagd_uit_fien_15_min
+      {% else %}
+        script.vertraagd_uit_fien_30_min
+      {% endif %}
+  # - service: script.vertraagd_uit_noor
+  # - service: script.vertraagd_uit_fien

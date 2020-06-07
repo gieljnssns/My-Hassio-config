@@ -1,67 +1,43 @@
-  alias: Count unavailable
-  initial_state: 'on' 
-  trigger:
-    - platform: state
-      entity_id: sensor.mphone_garage
-      to: 'unavailable'
-    - platform: state
-      entity_id: sensor.mphone_badkamer
-      to: 'unavailable'
-    - platform: state
-      entity_id: sensor.mphone_keuken
-      to: 'unavailable'
-    - platform: state
-      entity_id: sensor.mphone_living
-      to: 'unavailable'
-    - platform: state
-      entity_id: sensor.mphone_tvpi
-      to: 'unavailable'
-    - platform: state
-      entity_id: sensor.mphone_slaapkamer
-      to: 'unavailable'
-    - platform: state
-      entity_id: sensor.mphone_poortpi
-      to: 'unavailable'
-    - platform: state
-      entity_id: media_player.keuken
-      to: 'unavailable'
-    - platform: state
-      entity_id: media_player.badkamer
-      to: 'unavailable'
-    - platform: state
-      entity_id: binary_sensor.living_beweging
-      to: 'unavailable'
-    - platform: state
-      entity_id: binary_sensor.keuken_beweging_2
-      to: 'unavailable'
-  action:
-    - service: counter.increment
-      data_template:
-        entity_id: >
-          {% if trigger.entity_id == 'sensor.mphone_garage' %}
-             counter.garage
-          {% elif trigger.entity_id == 'sensor.mphone_keuken' %}
-             counter.keuken
-          {% elif trigger.entity_id == 'sensor.mphone_badkamer' %}
-             counter.badkamer
-          {% elif trigger.entity_id == 'sensor.mphone_living' %}
-             counter.living
-          {% elif trigger.entity_id == 'sensor.mphone_tvpi' %}
-             counter.tvpi
-          {% elif trigger.entity_id == 'sensor.mphone_slaapkamer' %}
-             counter.slaapkamer
-          {% elif trigger.entity_id == 'sensor.mphone_poortpi' %}
-             counter.poortpi
-          {% elif trigger.entity_id == 'media_player.keuken' %}
-             counter.sonos_keuken
-          {% elif trigger.entity_id == 'media_player.badkamer' %}
-             counter.sonos_badkamer
-          {% elif trigger.entity_id == 'binary_sensor.living_beweging' %}
-             counter.esp_living
-          {% elif trigger.entity_id == 'binary_sensor.keuken_beweging_2' %}
-             counter.esp_keuken
-          {% endif %}
-    
-
-    
-    
+alias: Count unavailable
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.monitor_garage_down
+    to: "off"
+  - platform: state
+    entity_id: binary_sensor.monitor_poortje_down
+    to: "off"
+  - platform: state
+    entity_id: binary_sensor.monitor_slaapkamer_down
+    to: "off"
+  - platform: state
+    entity_id: binary_sensor.monitor_tv_down
+    to: "off"
+  - platform: state
+    entity_id: media_player.keuken
+    to: "unavailable"
+  - platform: state
+    entity_id: media_player.badkamer
+    to: "unavailable"
+condition:
+  condition: and
+  conditions:
+    - condition: template
+      value_template: "{{ float(states('sensor.uptime_in_uren')) > 0.03 }}"
+action:
+  - service: counter.increment
+    data_template:
+      entity_id: >
+        {% if trigger.entity_id == 'binary_sensor.monitor_garage_down' %}
+          counter.garage
+        {% elif trigger.entity_id == 'binary_sensor.monitor_tv_down' %}
+          counter.tvpi
+        {% elif trigger.entity_id == 'binary_sensor.monitor_slaapkamer_down' %}
+          counter.slaapkamer
+        {% elif trigger.entity_id == 'binary_sensor.monitor_poortje_down' %}
+          counter.poortpi
+        {% elif trigger.entity_id == 'media_player.keuken' %}
+          counter.sonos_keuken
+        {% elif trigger.entity_id == 'media_player.badkamer' %}
+          counter.sonos_badkamer
+        {% endif %}

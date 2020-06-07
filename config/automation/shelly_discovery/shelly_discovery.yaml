@@ -1,0 +1,62 @@
+id: "shellies_discovery"
+alias: "Shellies Discovery"
+trigger:
+  - platform: mqtt
+    topic: shellies/announce
+action:
+  service: python_script.shellies_discovery
+  data_template:
+    id: "{{ trigger.payload_json.id }}"
+    mac: "{{ trigger.payload_json.mac }}"
+    fw_ver: "{{ trigger.payload_json.fw_ver }}"
+
+    shellyswitch25-B952FA:
+      relay-0: "light"
+      relay-1: "light"
+      mode: "relay"
+
+    shellyplug-s-7ADE98:
+      relay-0: "fan"
+
+    shellyplug-s-3CF0DE:
+      relay-0: "fan"
+
+    shellyswitch25-B939E5:
+      relay-0: "light"
+      relay-1: "light"
+      mode: "relay"
+
+    shellyswitch25-76D562:
+      relay-0: "light"
+      relay-1: "light"
+      mode: "relay"
+
+    shellyplug-s-7AE478:
+      relay-0: "switch"
+
+    shellyplug-s-7AE974:
+      relay-0: "switch"
+
+    shellyswitch25-76CBBD:
+      relay-0: "light"
+      relay-1: "light"
+      mode: "relay"
+
+    shellyswitch25-B94100:
+      relay-0: "light"
+      relay-1: "light"
+      mode: "relay"
+
+    shellyswitch25-693E1B:
+      relay-0: "light"
+      relay-1: "light"
+      mode: "relay"
+
+    shellyswitch25-69022D:
+      relay-0: "light"
+      relay-1: "light"
+      mode: "relay"
+    # shellyswitch25-76D649:
+    #   relay-0: "light"
+    #   relay-1: "light"
+    #   mode: "relay"

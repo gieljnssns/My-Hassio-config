@@ -1,32 +1,42 @@
-  alias: Timer verlichting uit
-  initial_state: 'on' 
-  trigger:
-    - platform: event
-      event_type: timer.finished
-      event_data:
-        entity_id: timer.verlichting_wc
-    - platform: event
-      event_type: timer.finished
-      event_data:
-        entity_id: timer.verlichting_waskot
-    - platform: event
-      event_type: timer.finished
-      event_data:
-        entity_id: timer.verlichting_gang_beneden
-    - platform: event
-      event_type: timer.finished
-      event_data:
-        entity_id: timer.verlichting_gang_boven
-  action:
-    service: light.turn_off
-    data_template:
-        entity_id: >
-          {% if trigger.event.data.entity_id == 'timer.verlichting_wc' %}
-            light.wc
-          {% elif trigger.event.data.entity_id == 'timer.verlichting_waskot' %}
-            light.waskot
-          {% elif trigger.event.data.entity_id == 'timer.verlichting_gang_beneden' %}
-            light.gang_beneden
-          {% else %}
-            light.gang_boven
-          {% endif %}
+alias: Timer verlichting uit
+initial_state: "on"
+trigger:
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.verlichting_wc
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.verlichting_waskot
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.verlichting_gang_beneden
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.verlichting_gang_boven
+action:
+  service: light.turn_off
+  data_template:
+    entity_id: >
+      {% if trigger.event.data.entity_id == 'timer.verlichting_wc' %}
+        light.shelly2_5_76d562_relay_0
+      {% elif trigger.event.data.entity_id == 'timer.verlichting_waskot' %}
+        light.shelly2_5_b94100_relay_0
+      {% elif trigger.event.data.entity_id == 'timer.verlichting_gang_beneden' %}
+        light.shelly2_5_b952fa_relay_1
+      {% else %}
+        light.shelly2_5_693e1b_relay_0
+      {% endif %}
+    # entity_id: >
+    #   {% if trigger.event.data.entity_id == 'timer.verlichting_wc' %}
+    #     light.wc
+    #   {% elif trigger.event.data.entity_id == 'timer.verlichting_waskot' %}
+    #     light.waskot
+    #   {% elif trigger.event.data.entity_id == 'timer.verlichting_gang_beneden' %}
+    #     light.gang_beneden
+    #   {% else %}
+    #     light.gang_boven
+    #   {% endif %}

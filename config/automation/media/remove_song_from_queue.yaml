@@ -1,0 +1,33 @@
+alias: Keuken - remove last played song from queue
+id: Keuken - remove last played song from queue
+trigger:
+  - platform: state
+    entity_id: media_player.keuken
+condition:
+  condition: and
+  conditions:
+    - condition: template
+      value_template: >
+        {{ trigger.from_state.attributes.current_queue_position | int < trigger.to_state.attributes.current_queue_position | int }}
+    - condition: template
+      value_template: >
+        {{ state_attr('media_player.keuken', 'is_playing_local_queue') == True }}
+action:
+  - service: sonos.remove_from_queue
+    data_template:
+      entity_id: media_player.keuken
+      queue_position: >
+        {{ (trigger.from_state.attributes.current_queue_position | int) - 1 }}
+
+# {{ state_attr('media_player.keuken', 'sonos_group') }}
+
+# {% set trigger = 'media_player.keuken' %}
+# {% set group = state_attr( trigger , 'sonos_group') %}
+
+# {{group[0]}}
+
+# {% if group[0] == trigger %}
+#   kleir
+# {% else %}
+#   fuck
+# {% endif %}

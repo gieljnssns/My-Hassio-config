@@ -1,78 +1,71 @@
-  alias: 'Alarm arm night'
-  initial_state: 'on' 
-  trigger:
-    - platform: state
-      entity_id: media_player.philips_tv
-      from: 'on'
-      to: 'off'
-    - platform: state
-      entity_id: device_tracker.philips_tv_ping
-      from: 'home'
-      to: 'not_home'
-    - platform: state
-      entity_id: media_player.living_2
-      from: 'playing'
-      to: 'paused'
-    - platform: state
+alias: "Alarm arm night"
+initial_state: "on"
+trigger:
+  - platform: template
+    value_template: >
+      {{ states("media_player.philips_tv") == "off" and states("device_tracker.philips_tv_ping") == "not_home" }}
+  # - platform: state
+  #   entity_id: media_player.philips_tv
+  #   from: "on"
+  #   to: "off"
+  # - platform: state
+  #   entity_id: device_tracker.philips_tv_ping
+  #   from: "home"
+  #   to: "not_home"
+  - platform: state
+    entity_id: media_player.living_2
+    from: "playing"
+    to: "idle"
+  - platform: state
+    entity_id: light.spot_slaapkamer
+    to: "off"
+  - platform: state
+    entity_id: light.spot_slaapkamer
+    to: "unavailable"
+condition:
+  condition: and
+  conditions:
+    - condition: time
+      after: "20:15:00"
+      before: "04:00:00"
+    - condition: template
+      value_template: "{{ states('alarm_control_panel.ha_alarm') != 'arming' }}"
+    - condition: template
+      value_template: "{{ states('alarm_control_panel.ha_alarm') != 'armed_night' }}"
+    - condition: template
+      value_template: "{{ states('media_player.philips_tv') != 'on' }}"
+    - condition: or
+      conditions:
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: device_tracker.martine_not_so_binary
+              state: "Thuis"
+            - condition: state
+              entity_id: device_tracker.martine_not_so_binary
+              state: "Juist Aangekomen"
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: device_tracker.giel_not_so_binary
+              state: "Thuis"
+            - condition: state
+              entity_id: device_tracker.giel_not_so_binary
+              state: "Juist Aangekomen"
+action:
+  - service: light.turn_on
+    data:
+      brightness: 255
+      rgb_color: [255, 236, 182]
       entity_id: light.spot_slaapkamer
-      to: 'off'
-    - platform: state
-      entity_id: light.spot_slaapkamer
-      to: 'unavailable'
-  condition:
-    condition: and
-    conditions:
-      - condition: time
-        after: '20:15:00'
-        before: '04:00:00'
-      - condition: template
-        value_template: "{{ states('alarm_control_panel.ha_alarm') != 'pending' }}"
-      - condition: template
-        value_template: "{{ states('alarm_control_panel.ha_alarm') != 'armed_night' }}"
-      - condition: template
-        value_template: "{{ states('media_player.philips_tv') != 'on' }}"
-      - condition: or
-        conditions:
-          # - condition: state
-          #   entity_id: input_boolean.gielthuis
-          #   state: 'on'
-          # - condition: state
-          #   entity_id: input_boolean.martinethuis
-          #   state: 'on'
-          - condition: or
-            conditions:
-              - condition: state
-                entity_id: device_tracker.martine_not_so_binary
-                state: 'Thuis'
-              - condition: state
-                entity_id: device_tracker.martine_not_so_binary
-                state: 'Juist Aangekomen'
-          - condition: or
-            conditions:
-              - condition: state
-                entity_id: device_tracker.giel_not_so_binary
-                state: 'Thuis'
-              - condition: state
-                entity_id: device_tracker.giel_not_so_binary
-                state: 'Juist Aangekomen'
-  action:
-    - service: light.turn_on
-      data:
-        brightness: 255
-        rgb_color: [255, 236, 182]
-        entity_id: light.spot_slaapkamer
-    - delay:
-        seconds: 5
-    - service: alarm_control_panel.alarm_arm_night
-      entity_id: alarm_control_panel.ha_alarm
-      data:
-        code: !secret alarm_code
-    - service: homeassistant.turn_off
-      entity_id: script.mqtt_arrive_script, script.mqtt_depart_script
-    - service: script.mqtt_arrive_script
-      data_template:
-        identity: '{"identity":"Alarm night {{now().strftime("%H:%M")}}"}'
-
-
-    
-    
+  - delay:
+      seconds: 5
+  - service: alarm_control_panel.alarm_arm_night
+    entity_id: alarm_control_panel.ha_alarm
+    data:
+      code: !secret alarm_code
+  - service: homeassistant.turn_off
+    entity_id: script.mqtt_arrive_script, script.mqtt_depart_script
+  - service: script.mqtt_arrive_script
+    data_template:
+      identity: '{"identity":"Alarm night {{now().strftime("%H:%M")}}"}'

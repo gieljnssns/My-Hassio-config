@@ -1,81 +1,90 @@
 - platform: mqtt
-  state_topic: 'Badkamer/input/temperatuur'
+  state_topic: "Badkamer/input/temperatuur"
   device_class: temperature
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '°C'
-  name: 'Temperatuur badkamer'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Temperatuur badkamer"
   availability_topic: "Badkamer/status"
   payload_available: "online"
   payload_not_available: "offline"
-  
+
 - platform: mqtt
-  state_topic: 'Badkamer/input/luchtvochtigheid'
+  state_topic: "Badkamer/input/luchtvochtigheid"
   device_class: humidity
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Luchtvochtigheid badkamer'
-  availability_topic: "Badkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'Badkamer/input/pir_groot'
-  value_template: '{{ value_json }}'
-  name: 'Beweging Badkamer groot'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Luchtvochtigheid badkamer"
   availability_topic: "Badkamer/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Badkamer/input/pir_klein'
-  value_template: '{{ value_json }}'
-  name: 'Beweging Badkamer klein'
+  state_topic: "Badkamer/input/pir_groot"
+  value_template: "{{ value_json }}"
+  name: "Beweging Badkamer groot"
   availability_topic: "Badkamer/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Badkamer/system/temp'
+  state_topic: "Badkamer/input/pir_klein"
+  value_template: "{{ value_json }}"
+  name: "Beweging Badkamer klein"
+  availability_topic: "Badkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Badkamer/system/temp"
   device_class: temperature
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '°C'
-  name: 'Temperatuur cpu Badkamer'
-  availability_topic: "Badkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'Badkamer/system/cpu'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Cpu % Badkamer'
-  availability_topic: "Badkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'Badkamer/system/mem'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Ram % Badkamer'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Temperatuur cpu Badkamer"
   availability_topic: "Badkamer/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Badkamer/system/uptime'
+  state_topic: "Badkamer/system/cpu"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Cpu % Badkamer"
+  availability_topic: "Badkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Badkamer/system/mem"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Ram % Badkamer"
+  availability_topic: "Badkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Badkamer/system/swap"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Swap % Badkamer"
+  availability_topic: "Badkamer/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "Badkamer/system/uptime"
   # value_template: '{{ value_json }}'
-  name: 'Uptime Badkamer'
+  name: "Uptime Badkamer"
   availability_topic: "Badkamer/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'Badkamer/system/wifi'
+  state_topic: "Badkamer/system/wifi"
   device_class: signal_strength
-  value_template: '{{ value_json }}'
-  unit_of_measurement: 'dBm'
-  name: 'Wifi Badkamer'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "dBm"
+  name: "Wifi Badkamer"
   availability_topic: "Badkamer/status"
   payload_available: "online"
   payload_not_available: "offline"

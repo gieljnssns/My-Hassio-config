@@ -1,37 +1,44 @@
 - platform: mqtt
-  state_topic: 'tvPi/system/temp'
+  state_topic: "tvPi/system/temp"
   device_class: temperature
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '°C'
-  name: 'Temperatuur cpu tvPi'
-  availability_topic: "tvPi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'tvPi/system/cpu'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Cpu % tvPi'
-  availability_topic: "tvPi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'tvPi/system/mem'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Ram % tvPi'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Temperatuur cpu tvPi"
   availability_topic: "tvPi/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'tvPi/system/uptime'
+  state_topic: "tvPi/system/cpu"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Cpu % tvPi"
+  availability_topic: "tvPi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "tvPi/system/mem"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Ram % tvPi"
+  availability_topic: "tvPi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "tvPi/system/swap"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Swap % tvPi"
+  availability_topic: "tvPi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "tvPi/system/uptime"
   # value_template: '{{ value_json }}'
-  name: 'Uptime tvPi'
+  name: "Uptime tvPi"
   availability_topic: "tvPi/status"
   payload_available: "online"
   payload_not_available: "offline"
-
-  

@@ -1,18 +1,17 @@
-  alias: Poortje error off
-  initial_state: 'on' 
-  trigger:
-    - platform: state
-      entity_id: sensor.beweging_poort
-      # to: 0
-    - platform: state
-      entity_id: binary_sensor.nodered_poort_down
-      to: "off"
-  condition:
-    condition: and
-    conditions:
-      - condition: state
-        entity_id: input_boolean.fotocel_poort_error
-        state: 'on'
-  action:
-    service: input_boolean.turn_off
-    entity_id: input_boolean.fotocel_poort_error
+alias: Poortje error off
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.beweging_fotocel
+  - platform: state
+    entity_id: binary_sensor.nodered_poort_down
+    to: "off"
+condition:
+  condition: and
+  conditions:
+    - condition: state
+      entity_id: input_boolean.fotocel_poort_error
+      state: "on"
+action:
+  service: input_boolean.turn_off
+  entity_id: input_boolean.fotocel_poort_error

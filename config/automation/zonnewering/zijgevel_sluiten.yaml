@@ -1,79 +1,78 @@
-  alias: Zijgevel sluiten #Sunscreen down/uitklappen
-  initial_state: 'on' #on reboot HA or reloading of automations, automation is ON
-  trigger:
-    - platform: time_pattern
-      minutes: '/5'
-      seconds: 00
-  condition:
-    condition: and # all conditions need to be TRUE before action is executed.
-    conditions:
+alias: Zijgevel sluiten #Sunscreen down/uitklappen
+initial_state: "on" #on reboot HA or reloading of automations, automation is ON
+trigger:
+  - platform: time_pattern
+    minutes: "/5"
+    seconds: 00
+condition:
+  condition: and # all conditions need to be TRUE before action is executed.
+  conditions:
+    # Sun based conditions
+    - condition: numeric_state
+      entity_id: sensor.sun_azimut
+      above: 120 #
+      below: 270
+    - condition: numeric_state
+      entity_id: sun.sun
+      value_template: "{{ state.attributes.elevation }}"
+      above: 15
+    - condition: or
+      conditions:
+        - condition: numeric_state
+          entity_id: sensor.huidige_opbrengst
+          above: 1200
+        - condition: numeric_state
+          entity_id: sensor.opbrengst_solaredge_kostal
+          above: 1200
 
-      # Sun based conditions
-      - condition: numeric_state
-        entity_id: sensor.sun_azimut
-        above: 120 # 
-        below: 270
-      - condition: numeric_state
-        entity_id: sun.sun
-        value_template: '{{ state.attributes.elevation }}'
-        above: 15  
-      - condition: or
-        conditions:
-          - condition: numeric_state
-            entity_id: sensor.huidige_opbrengst
-            above: 1200
-          - condition: numeric_state
-            entity_id: sensor.opbrengst_solaredge_kostal
-            above: 1200
+    # Weather based conditions
+    - condition: numeric_state
+      entity_id: sensor.windsnelheid
+      below: 40 # Wind strenght - I still have to tune this value
+    - condition: numeric_state
+      entity_id: sensor.ba_precipitation_forecast_average
+      below: 0.25 # Rain the next 15 min
+    - condition: numeric_state
+      entity_id: sensor.ba_precipitation
+      below: 0.25 # Rain
+    - condition: numeric_state
+      entity_id: sensor.dark_sky_uv_index_0d
+      above: 3 # This indicates direct sunlight on my location (as in: not cloudy)
 
-      # Weather based conditions
-      - condition: numeric_state
-        entity_id: sensor.windsnelheid
-        below: 40 # Wind strenght - I still have to tune this value
-      - condition: numeric_state
-        entity_id: sensor.ba_precipitation_forecast_average
-        below: 0.25 # Rain the next 15 min
-      - condition: numeric_state
-        entity_id: sensor.ba_precipitation
-        below: 0.25 # Rain
-      - condition: numeric_state
-        entity_id: sensor.dark_sky_uv_index_0d
-        above: 3 # This indicates direct sunlight on my location (as in: not cloudy)
+    # Temperature based conditions
+    - condition: numeric_state
+      entity_id: sensor.buitentemperatuur_gefilterd
+      above: 20 # only if outdoor temperature is above x then allowed to roll out
+    - condition: numeric_state
+      entity_id: sensor.gemiddelde_temp_beneden
+      above: 22 # only if indoor temperature is above x then allowed to roll out
+    - condition: numeric_state
+      entity_id: sensor.dark_sky_daytime_high_temperature_0d
+      above: 22
 
-      # Temperature based conditions
-      - condition: numeric_state
-        entity_id: sensor.buitentemperatuur_gefilterd
-        above: 20 # only if outdoor temperature is above x then allowed to roll out
-      - condition: numeric_state
-        entity_id: sensor.gemiddelde_temp_beneden
-        above: 22 # only if indoor temperature is above x then allowed to roll out
-      - condition: numeric_state
-        entity_id:  sensor.dark_sky_daytime_high_temperature_0d
-        above: 23
+    # Time based conditions
+    - condition: template
+      value_template: "{{ now().month > 3 }}" # Starting April
+    - condition: template
+      value_template: "{{ now().month < 10 }}" # Ending October
+    - condition: template
+      value_template: >
+        {{  is_state('input_boolean.living_closed', 'off') or
+            is_state('input_boolean.slaapkamer_noor_closed', 'off')  }}
 
-      # Time based conditions
-      - condition: template
-        value_template: '{{ now().month > 3 }}' # Starting April
-      - condition: template
-        value_template: '{{ now().month < 10 }}' # Ending October
-      - condition: template
-        value_template: >
-          {{  is_state('input_boolean.living_closed', 'off') or
-              is_state('input_boolean.slaapkamer_noor_closed', 'off')  }}
-      
-      # No others screens are closing
-      - condition: state
-        entity_id: script.achtergevel_sluiten
-        state: "off"
-      - condition: state
-        entity_id: script.zonnetent_my
-        state: "off"
+    # No others screens are closing
+    - condition: state
+      entity_id: script.achtergevel_sluiten
+      state: "off"
+    - condition: state
+      entity_id: script.zonnetent_my
+      state: "off"
 
-  action:
-    - service: script.zijgevel_sluiten
-    - service: notify.mobile_app_gphone
-      data:
-       message: "Het zonnescherm zijgevel gesloten"
-    - delay:
-        minutes: 5
-    - service: script.zijgevel_sluiten
+action:
+  - service: script.zijgevel_sluiten
+  - service: notify.mobile_app_gphone
+    data:
+      message: "Het zonnescherm zijgevel gesloten"
+  - delay:
+      minutes: 5
+  - service: script.zijgevel_sluiten

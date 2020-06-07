@@ -1,71 +1,80 @@
 - platform: mqtt
-  state_topic: 'PoortjePi/input/temperatuur'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '°C'
-  name: 'Temperatuur poort'
-  availability_topic: "PoortjePi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'PoortjePi/input/luchtvochtigheid'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Luchtvochtigheid poort'
-  availability_topic: "PoortjePi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'PoortjePi/input/fotocel'
-  value_template: '{{ value_json }}'
-  name: 'Beweging poort'
+  state_topic: "PoortjePi/input/temperatuur"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Temperatuur poort"
   availability_topic: "PoortjePi/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'PoortjePi/system/temp'
+  state_topic: "PoortjePi/input/luchtvochtigheid"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Luchtvochtigheid poort"
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "PoortjePi/input/fotocel"
+  value_template: "{{ value_json }}"
+  name: "Beweging poort"
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "PoortjePi/system/temp"
   device_class: temperature
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '°C'
-  name: 'Temperatuur cpu PoortjePi'
-  availability_topic: "PoortjePi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'PoortjePi/system/cpu'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Cpu % PoortjePi'
-  availability_topic: "PoortjePi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  
-- platform: mqtt
-  state_topic: 'PoortjePi/system/mem'
-  value_template: '{{ value_json }}'
-  unit_of_measurement: '%'
-  name: 'Ram % PoortjePi'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Temperatuur cpu PoortjePi"
   availability_topic: "PoortjePi/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'PoortjePi/system/uptime'
+  state_topic: "PoortjePi/system/cpu"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Cpu % PoortjePi"
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "PoortjePi/system/mem"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Ram % PoortjePi"
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "PoortjePi/system/swap"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Swap % PoortjePi"
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "PoortjePi/system/uptime"
   # value_template: '{{ value_json }}'
-  name: 'Uptime PoortjePi'
+  name: "Uptime PoortjePi"
   availability_topic: "PoortjePi/status"
   payload_available: "online"
   payload_not_available: "offline"
 
 - platform: mqtt
-  state_topic: 'PoortjePi/system/wifi'
+  state_topic: "PoortjePi/system/wifi"
   device_class: signal_strength
-  value_template: '{{ value_json }}'
-  unit_of_measurement: 'dBm'
-  name: 'Wifi PoortjePi'
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "dBm"
+  name: "Wifi PoortjePi"
   availability_topic: "PoortjePi/status"
   payload_available: "online"
   payload_not_available: "offline"

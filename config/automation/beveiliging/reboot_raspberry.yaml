@@ -1,0 +1,82 @@
+alias: Reboot raspberry
+initial_state: "on"
+trigger:
+  - platform: time
+    at: "3:30:00"
+  - platform: numeric_state
+    entity_id: sensor.swap_tvpi
+    above: 40
+    for:
+      minutes: 2
+  - platform: numeric_state
+    entity_id: sensor.swap_slaapkamer
+    above: 40
+    for:
+      minutes: 2
+condition:
+  condition: or
+  conditions:
+    - condition: template
+      value_template: >
+        {{ float(states('sensor.swap_badkamer')) > 20.00 or float(states('sensor.uptime_badkamer')) > 170.00 }}
+    - condition: template
+      value_template: >
+        {{ float(states('sensor.swap_fien')) > 20.00 or float(states('sensor.uptime_fien')) > 170.00 }}
+    - condition: template
+      value_template: >
+        {{ float(states('sensor.swap_garage')) > 20.00 or float(states('sensor.uptime_garage')) > 170.00 }}
+    - condition: template
+      value_template: >
+        {{ float(states('sensor.swap_keuken')) > 20.00 or float(states('sensor.uptime_keuken')) > 170.00 }}
+    - condition: template
+      value_template: >
+        {{ float(states('sensor.swap_noor')) > 20.00 or float(states('sensor.uptime_noor')) > 170.00 }}
+    - condition: template
+      value_template: >
+        {{ float(states('sensor.swap_pi3_living')) > 20.00 or float(states('sensor.uptime_pi3_living')) > 170.00 }}
+    - condition: template
+      value_template: >
+        {{ float(states('sensor.swap_poortjepi')) > 20.00 or float(states('sensor.uptime_poortjepi')) > 170.00 }}
+    - condition: template
+      value_template: >
+        {{ float(states('sensor.swap_slaapkamer')) > 20.00 or float(states('sensor.uptime_slaapkamer')) > 170.00 }}
+    - condition: template
+      value_template: >
+        {{ float(states('sensor.swap_tvpi')) > 20.00 or float(states('sensor.uptime_tvpi')) > 170.00 }}
+    - condition: template
+      value_template: >
+        {{ float(states('sensor.swap_verwarmingpi')) > 20.00 or float(states('sensor.uptime_verwarmingpi')) > 170.00 }}
+    - condition: template
+      value_template: >
+        {{ float(states('sensor.swap_zero_living')) > 20.00 or float(states('sensor.uptime_zero_living')) > 170.00 }}
+action:
+  - service_template: >
+      {% if trigger.entity_id == 'sensor.swap_tvpi' %}
+        script.tvpi_reboot
+      {% elif trigger.entity_id == 'sensor.swap_slaapkamer' %}
+        script.slaapkamer_reboot
+      {% else %}
+        {% if float(states('sensor.swap_badkamer')) > 20.00 or float(states('sensor.uptime_badkamer')) > 170.00 %}
+          script.badkamer_reboot
+        {% elif float(states('sensor.swap_slaapkamer')) > 20.00 or float(states('sensor.uptime_slaapkamer')) > 170.00 %}
+          script.slaapkamer_reboot
+        {% elif float(states('sensor.swap_tvpi')) > 20.00 or float(states('sensor.uptime_tvpi')) > 170.00 %}
+          script.tvpi_reboot
+        {% elif float(states('sensor.swap_fien')) > 20.00 or float(states('sensor.uptime_fien')) > 170.00 %}
+          script.fien_reboot
+        {% elif float(states('sensor.swap_garage')) > 20.00 or float(states('sensor.uptime_garage')) > 170.00 %}
+          script.garage_reboot
+        {% elif float(states('sensor.swap_keuken')) > 20.00 or float(states('sensor.uptime_keuken')) > 170.00 %}
+          script.keuken_reboot
+        {% elif float(states('sensor.swap_noor')) > 20.00 or float(states('sensor.uptime_noor')) > 170.00 %}
+          script.noor_reboot
+        {% elif float(states('sensor.swap_pi3_living')) > 20.00 or float(states('sensor.uptime_pi3_living')) > 170.00 %}
+          script.living_pi3_reboot
+        {% elif float(states('sensor.swap_poortjepi')) > 20.00 or float(states('sensor.uptime_poortjepi')) > 170.00 %}
+          script.poortpi_reboot
+        {% elif float(states('sensor.swap_verwarmingpi')) > 20.00 or float(states('sensor.uptime_verwarmingpi')) > 170.00 %}
+          script.verwarmingpi_reboot
+        {% elif float(states('sensor.swap_zero_living')) > 20.00 or float(states('sensor.uptime_zero_living')) > 170.00 %}
+          script.living_zero_reboot
+        {% endif %}
+      {% endif %}

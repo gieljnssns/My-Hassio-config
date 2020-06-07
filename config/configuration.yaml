@@ -19,6 +19,8 @@ homeassistant:
   time_zone: Europe/Brussels
   customize: !include_dir_merge_named customized
   packages: !include_dir_named packages/
+  external_url: !secret external_url
+  internal_url: !secret internal_url
   auth_providers:
     - type: homeassistant
     - type: trusted_networks
@@ -37,8 +39,7 @@ homeassistant:
           - !secret user_id_fien
       allow_bypass_login: true
   whitelist_external_dirs:
-    - '/share'
-
+    - "/share"
 
 ####################################################
 #                                                  #
@@ -64,8 +65,8 @@ discovery:
 ffmpeg:
 
 ###  HACS  ###
-hacs:
-  token: !secret hacs_token
+# hacs:
+#   token: !secret hacs_token
 
 ###  Hassio  ###
 hassio:
@@ -78,6 +79,9 @@ mobile_app:
 
 ###  Person  ###
 person:
+
+###  Python scripts  ###
+python_script:
 
 ###  Ssdp  ###
 ssdp:
@@ -93,6 +97,7 @@ system_health:
 
 ###  Checks for available updates  ###
 updater:
+  reporting: true
   include_used_components: true
 
 ###  Wake on Lan  ###
@@ -100,7 +105,6 @@ wake_on_lan:
 
 ###  Zeroconf/Avahi/Bonjour  ###
 zeroconf:
-
 
 ####################################################
 #                                                  #
@@ -153,8 +157,7 @@ frontend:
 zone: !include zones.yaml
 
 ###  Panels  ###
-panel_iframe: !include panels/iframe.yaml
-
+# panel_iframe: !include panels/iframe.yaml
 
 ####################################################
 #                                                  #
@@ -184,7 +187,6 @@ timer: !include_dir_merge_named devices/timer
 utility_meter: !include_dir_merge_named devices/utility_meter
 weather: !include_dir_merge_list devices/weather
 
-
 ####################################################
 #                                                  #
 #                     Hubs                         #
@@ -207,22 +209,22 @@ neato: !include devices/hubs/neato.yaml
 netatmo: !include devices/hubs/netatmo.yaml
 
 ###  Shelly  ###
-shelly: !include devices/hubs/shelly.yaml
+# shelly: !include devices/hubs/shelly.yaml
 
 ###  Smappee  ###
 smappee: !include devices/hubs/smappee.yaml
 
 ###  Sonos  ###
-sonos: !include devices/hubs/sonos.yaml
+# sonos: !include devices/hubs/sonos.yaml
 
 ###  Tahoma  ###
-tahoma: !include devices/hubs/tahoma.yaml
+# tahoma: !include devices/hubs/tahoma.yaml
 
 ###  Text to speech  ###
 tts: !include devices/hubs/tts.yaml
 
 ###  Unifi  ###
-unifi: !include devices/hubs/unifi.yaml
+# unifi: !include devices/hubs/unifi.yaml
 
 ###  WebOS  ###
 webostv: !include devices/hubs/lg_tv.yaml

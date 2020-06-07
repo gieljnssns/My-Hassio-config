@@ -1,22 +1,21 @@
-  alias: Zonnetent inschuiven #Sunscreen up/inklappen
-  initial_state: 'on' #on reboot HA or reloading of automations, automation is ON
-  trigger:
-
+alias: Zonnetent inschuiven #Sunscreen up/inklappen
+initial_state: "on" #on reboot HA or reloading of automations, automation is ON
+trigger:
   # Sun based triggers
   - platform: numeric_state
     entity_id: sensor.sun_azimut
     above: 320
   - platform: state
     entity_id: sensor.dark_outside
-    to: 'on'
+    to: "on"
   - platform: numeric_state
     entity_id: sensor.zonne_energie_gefilterd_lowpass
     below: 150
-    
+
   # Weather based triggers
   - platform: numeric_state
     entity_id: sensor.windsnelheid
-    above: 25 #If wind force becomes to high, sunscreen needs to go up
+    above: 26 #If wind force becomes to high, sunscreen needs to go up
   - platform: numeric_state
     entity_id: sensor.ba_precipitation_forecast_average
     above: 0.25 # Rain the next 15 min
@@ -24,21 +23,21 @@
     entity_id: sensor.ba_precipitation
     above: 0.25 # Rain
 
-  condition:
-    condition: or
-    conditions:
-      - condition: state
-        entity_id: input_boolean.zonnetent_my
-        state: 'on'
-      - condition: state
-        entity_id: input_boolean.zonnetent_closed
-        state: 'on'
+condition:
+  condition: or
+  conditions:
+    - condition: state
+      entity_id: input_boolean.zonnetent_my
+      state: "on"
+    - condition: state
+      entity_id: input_boolean.zonnetent_closed
+      state: "on"
 
-  action:
-    - service: script.zonnetent_openen
-    - service: notify.mobile_app_gphone
-      data_template:
-       message: "De zonnetent is ingeschoven, reden {{trigger.entity_id}} "
-    - delay:
-        minutes: 3
-    - service: script.zonnetent_openen
+action:
+  - service: script.zonnetent_openen
+  - service: notify.mobile_app_gphone
+    data_template:
+      message: "De zonnetent is ingeschoven, reden {{trigger.entity_id}} "
+  - delay:
+      minutes: 3
+  - service: script.zonnetent_openen

@@ -1,22 +1,24 @@
-  alias: Light inkom voordeur open
-  initial_state: 'on' 
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.voordeur_open
-      to: 'on'
-  condition:
-    condition: and
-    conditions:
-      - condition: state
-        entity_id: light.gang_boven
-        state: 'off'
-      - condition: state
-        entity_id: light.gang_beneden
-        state: 'off'
-      - condition: state
-        entity_id: sensor.dark_outside
-        state: 'true'
-  action:
-    - service: light.turn_on
-      data:
-        entity_id: light.gang_beneden
+alias: Light inkom voordeur open
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.voordeur_open
+    to: "on"
+condition:
+  condition: and
+  conditions:
+    - condition: state
+      entity_id: light.shelly2_5_693e1b_relay_0
+      # entity_id: light.gang_boven
+      state: "off"
+    - condition: state
+      entity_id: light.shelly2_5_b952fa_relay_1
+      # entity_id: light.gang_beneden
+      state: "off"
+    - condition: state
+      entity_id: sensor.dark_outside
+      state: "true"
+action:
+  - service: light.turn_on
+    data:
+      entity_id: light.shelly2_5_b952fa_relay_1

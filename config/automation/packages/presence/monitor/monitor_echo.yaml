@@ -1,0 +1,9 @@
+alias: monitor echo
+initial_state: "on"
+trigger:
+  - platform: time_pattern
+    seconds: "/45"
+action:
+  - service: mqtt.publish
+    data:
+      topic: "monitor/scan/echo"

@@ -1,28 +1,29 @@
-  # Zet de verluchting uit als bool verluchting_afkoeling aan is en
-  # de temperatuur binnen onder de 24,5 graden zakt.
+# Zet de verluchting uit als bool verluchting_afkoeling aan is en
+# de temperatuur binnen onder de 24,5 graden zakt.
 
-  alias: 'Verluchting Afkoeling Uit'
-  initial_state: 'on' 
-  trigger:
-    - platform: time_pattern
-      minutes: '/5'
-      seconds: 00
-  condition:
-    condition: and
-    conditions:
-      - condition: state
-        entity_id: binary_sensor.afkoeling_gewenst
-        state: 'off'
-      - condition: state
-        entity_id: script.verluchting_1_uur
-        state: 'off'
-      - condition: state
-        entity_id: script.verluchting_2_uur
-        state: 'off'
-  action:
-    - service: switch.turn_off
-      entity_id: switch.verluchting
-    - service: switch.turn_off
-      entity_id: switch.shelly_shplg_s_7ade98
-    - service: input_boolean.turn_off
-      entity_id: input_boolean.verluchting_afkoeling
+alias: "Verluchting Afkoeling Uit"
+initial_state: "on"
+trigger:
+  - platform: time_pattern
+    minutes: "/5"
+    seconds: 00
+condition:
+  condition: and
+  conditions:
+    - condition: state
+      entity_id: binary_sensor.afkoeling_gewenst
+      state: "off"
+    - condition: state
+      entity_id: script.verluchting_1_uur
+      state: "off"
+    - condition: state
+      entity_id: script.verluchting_2_uur
+      state: "off"
+action:
+  - service: switch.turn_off
+    entity_id: switch.verluchting
+  - service: fan.turn_off
+    entity_id: fan.shelly_plug_s_7ade98_relay_0
+    # entity_id: switch.shelly_shplg_s_7ade98
+  - service: input_boolean.turn_off
+    entity_id: input_boolean.verluchting_afkoeling

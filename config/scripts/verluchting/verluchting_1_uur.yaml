@@ -1,12 +1,14 @@
-  verluchting_1_uur:
-    sequence:
-      - service: switch.turn_on
-        entity_id: switch.verluchting
-      - service: switch.turn_on
-        entity_id: switch.shelly_shplg_s_7ade98
-      - delay:
-          minutes: 60
-      - service: switch.turn_off
-        entity_id: switch.verluchting
-      - service: switch.turn_off
-        entity_id: switch.shelly_shplg_s_7ade98
+verluchting_1_uur:
+  sequence:
+    - service: switch.turn_on
+      entity_id: switch.verluchting
+    - service: fan.turn_on
+      entity_id: fan.shelly_plug_s_7ade98_relay_0
+      # entity_id: switch.shelly_shplg_s_7ade98
+    - delay:
+        minutes: 60
+    - service: switch.turn_off
+      entity_id: switch.verluchting
+    - service: fan.turn_off
+      entity_id: fan.shelly_plug_s_7ade98_relay_0
+      # entity_id: switch.shelly_shplg_s_7ade98

@@ -1,22 +1,25 @@
-  alias: 'Koffiezet Uit tijd'
-  initial_state: 'on' 
-  trigger:
-    - platform: time
-      at: '19:00'
-    - platform: time
-      at: '21:00'
-  condition:
-    - condition: time
-      weekday:
-        - mon
-        - tue
-        - wed
-        - thu
-        - fri
-        - sat
-        - sun
-  action:
-    - service: switch.turn_off
-      entity_id:
-        - switch.shelly_shplg_s_7ae974
-        - switch.stopcontacten_terras
+alias: "Koffiezet Uit tijd"
+initial_state: "on"
+trigger:
+  - platform: time
+    at: "19:00"
+  - platform: time
+    at: "21:00"
+condition:
+  - condition: time
+    weekday:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+      - sat
+      - sun
+action:
+  - service: switch.turn_off
+    entity_id:
+      - switch.shelly_plug_s_7ae974_relay_0
+      # - switch.shelly_shplg_s_7ae974
+      - switch.stopcontacten_terras
+      - switch.stopcontact_poort
+      - switch.stopcontacten_garage

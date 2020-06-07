@@ -1,18 +1,19 @@
-  alias: 'Verlichting bij schemer'
-  initial_state: 'on' 
-  trigger:
-    - platform: state
-      entity_id: sensor.dark_outside
-  action:
-    - service_template: >
-        {% if is_state('sensor.dark_outside', 'true') %}
-          light.turn_on
-        {% else %}
-          light.turn_off
-        {% endif %}
-      entity_id: 
-        - light.trap
-        - light.led_knop_noor
-        - light.led_knop_fien
-        - light.led_knop_giel
-        - light.led_knop_martine
+alias: "Verlichting bij schemer"
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: sensor.dark_outside
+action:
+  - service_template: >
+      {% if is_state('sensor.dark_outside', 'true') %}
+        light.turn_on
+      {% else %}
+        light.turn_off
+      {% endif %}
+    entity_id:
+      - light.shelly2_5_b94100_relay_1
+      # - light.trap
+      - light.led_knop_noor
+      - light.led_knop_fien
+      - light.led_knop_giel
+      - light.led_knop_martine

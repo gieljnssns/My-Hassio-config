@@ -1,148 +1,77 @@
-  - platform: template
-    sensors:
-      monitor_slaapkamer_down:
-        friendly_name: "Monitor unavailable"
-        device_class: problem
-        value_template: >-
-          {{ states("sensor.oma_slaapkamer") == 'unavailable'}}
-      
-      monitor_garage_down:
-        friendly_name: "Monitor unavailable"
-        device_class: problem
-        value_template: >-
-          {{ states("sensor.oma_garage") == 'unavailable'}}
-      
-      monitor_tv_down:
-        friendly_name: "Monitor unavailable"
-        device_class: problem
-        value_template: >-
-          {{ states("sensor.oma_tvpi") == 'unavailable'}}
-      
-      monitor_poortje_down:
-        friendly_name: "Monitor unavailable"
-        device_class: problem
-        value_template: >-
-          {{ states("sensor.oma_poortpi") == 'unavailable'}}
-      
-      monitor_down:
-        friendly_name: "Monitor unavailable"
-        device_class: problem
-        icon_template: mdi:bluetooth-off
-        value_template: >-
-          {{  states("binary_sensor.monitor_poortje_down") == 'on' or 
-              states("binary_sensor.monitor_tv_down") == 'on' or
-              states("binary_sensor.monitor_garage_down") == 'on' or
-              states("binary_sensor.monitor_slaapkamer_down") == 'on'  }}
-      
-      monitor_arrive_depart_scanning:
-        friendly_name: "Monitor arrive/depart scanning"
-        value_template: >-
-          {{ states("script.mqtt_arrive_depart_script") == 'on'}}
-      
-      monitor_arrive_scanning:
-        friendly_name: "Monitor arrive scanning"
-        value_template: >-
-          {{ states("script.mqtt_arrive_script") == 'on'}}
-      # heartbeat_living:
-      #   friendly_name: Heartbeat Living
-      #   entity_id: sensor.heartbeat_living
-      #   icon_template: mdi:heart-pulse
-      #   value_template: "{{ is_state('sensor.heartbeat_living', 'online') }}"
-      
-      # heartbeat_keuken:
-      #   friendly_name: Heartbeat Keuken
-      #   entity_id: sensor.heartbeat_keuken
-      #   icon_template: mdi:heart-pulse
-      #   value_template: "{{ is_state('sensor.heartbeat_keuken', 'online') }}"
-      
-      # heartbeat_garage:
-      #   friendly_name: Heartbeat Garage
-      #   entity_id: sensor.heartbeat_garage
-      #   icon_template: mdi:heart-pulse
-      #   value_template: "{{ is_state('sensor.heartbeat_garage', 'online') }}"
-      
-      # badkamer_arrive:
-      #   friendly_name: Badkamer aankomst scan
-      #   entity_id: input_boolean.badkamer_arrive
-      #   icon_template: mdi:cellphone-wireless
-      #   value_template: "{{ is_state('input_boolean.badkamer_arrive', 'on') }}"
+- platform: template
+  sensors:
+    monitor_slaapkamer_down:
+      friendly_name: "Monitor unavailable"
+      device_class: problem
+      value_template: >-
+        {{ is_state('binary_sensor.slaapkamer_echo', 'off') }}
+      # value_template: >-
+      #   {{ states("sensor.oma_slaapkamer") == 'unavailable'}}
 
-      # badkamer_depart:
-      #   friendly_name: Badkamer vertrek scan
-      #   entity_id: input_boolean.badkamer_depart
-      #   icon_template: mdi:cellphone-wireless
-      #   value_template: "{{ is_state('input_boolean.badkamer_depart', 'on') }}"
+    monitor_garage_down:
+      friendly_name: "Monitor unavailable"
+      device_class: problem
+      value_template: >-
+        {{ is_state('binary_sensor.garage_echo', 'off') }}
+      # value_template: >-
+      #   {{ states("sensor.oma_garage") == 'unavailable'}}
 
-      # living_arrive:
-      #   friendly_name: Living aankomst scan
-      #   entity_id: input_boolean.living_arrive
-      #   icon_template: mdi:cellphone-wireless
-      #   value_template: "{{ is_state('input_boolean.living_arrive', 'on') }}"
+    monitor_tv_down:
+      friendly_name: "Monitor unavailable"
+      device_class: problem
+      value_template: >-
+        {{ is_state('binary_sensor.tvpi_echo', 'off') }}
+      # value_template: >-
+      #   {{ states("sensor.oma_tvpi") == 'unavailable'}}
 
-      # living_depart:
-      #   friendly_name: Living vertrek scan
-      #   entity_id: input_boolean.living_depart
-      #   icon_template: mdi:cellphone-wireless
-      #   value_template: "{{ is_state('input_boolean.living_depart', 'on') }}"
+    monitor_poortje_down:
+      friendly_name: "Monitor unavailable"
+      device_class: problem
+      value_template: >-
+        {{ is_state('binary_sensor.poortpi_echo', 'off') }}
+      # value_template: >-
+      #   {{ states("sensor.oma_poortpi") == 'unavailable'}}
 
-      # keuken_arrive:
-      #   friendly_name: Keuken aankomst scan
-      #   entity_id: input_boolean.keuken_arrive
-      #   icon_template: mdi:cellphone-wireless
-      #   value_template: "{{ is_state('input_boolean.keuken_arrive', 'on') }}"
+    monitor_down:
+      friendly_name: "Monitor unavailable"
+      device_class: problem
+      icon_template: mdi:bluetooth-off
+      value_template: >-
+        {{  states("binary_sensor.monitor_poortje_down") == 'on' or 
+            states("binary_sensor.monitor_tv_down") == 'on' or
+            states("binary_sensor.monitor_garage_down") == 'on' or
+            states("binary_sensor.monitor_slaapkamer_down") == 'on'  }}
 
-      # keuken_depart:
-      #   friendly_name: Keuken vertrek scan
-      #   entity_id: input_boolean.keuken_depart
-      #   icon_template: mdi:cellphone-wireless
-      #   value_template: "{{ is_state('input_boolean.keuken_depart', 'on') }}"
+    monitor_arrive_depart_scanning:
+      friendly_name: "Monitor arrive/depart scanning"
+      value_template: >-
+        {{ states("script.mqtt_arrive_depart_script") == 'on'}}
 
-      # garage_arrive:
-      #   friendly_name: Garage aankomst scan
-      #   entity_id: input_boolean.garage_arrive
-      #   icon_template: mdi:cellphone-wireless
-      #   value_template: "{{ is_state('input_boolean.garage_arrive', 'on') }}"
+    monitor_arrive_scanning:
+      friendly_name: "Monitor arrive scanning"
+      value_template: >-
+        {{ states("script.mqtt_arrive_script") == 'on'}}
 
-      # garage_depart:
-      #   friendly_name: Garage vertrek scan
-      #   entity_id: input_boolean.garage_depart
-      #   icon_template: mdi:cellphone-wireless
-      #   value_template: "{{ is_state('input_boolean.garage_depart', 'on') }}"
-      
-      # tvpi_arrive:
-      #   friendly_name: tvPi aankomst scan
-      #   entity_id: input_boolean.tvpi_arrive
-      #   icon_template: mdi:cellphone-wireless
-      #   value_template: "{{ is_state('input_boolean.tvpi_arrive', 'on') }}"
+- platform: mqtt
+  name: Slaapkamer echo
+  state_topic: "monitor/Slaapkamer/echo"
+  off_delay: 100
+  payload_on: "ok"
 
-      # tvpi_depart:
-      #   friendly_name: tvPi vertrek scan
-      #   entity_id: input_boolean.tvpi_depart
-      #   icon_template: mdi:cellphone-wireless
-      #   value_template: "{{ is_state('input_boolean.tvpi_depart', 'on') }}"
-      
-      # poortpi_arrive:
-      #   friendly_name: PoortPi aankomst scan
-      #   entity_id: input_boolean.poortpi_arrive
-      #   icon_template: mdi:cellphone-wireless
-      #   value_template: "{{ is_state('input_boolean.poortpi_arrive', 'on') }}"
+- platform: mqtt
+  name: Garage echo
+  state_topic: "monitor/Garage/echo"
+  off_delay: 100
+  payload_on: "ok"
 
-      # poortpi_depart:
-      #   friendly_name: PoortPi vertrek scan
-      #   entity_id: input_boolean.poortpi_depart
-      #   icon_template: mdi:cellphone-wireless
-      #   value_template: "{{ is_state('input_boolean.poortpi_depart', 'on') }}"
-        
-      # bluetooth_scan:
-      #  friendly_name: Bluetooth scan
-      #  icon_template: mdi:bluetooth-audio
-      #  value_template: "{{ is_state('binary_sensor.living_arrive', 'on')
-      #           or is_state('binary_sensor.living_depart', 'on')
-      #           or is_state('binary_sensor.keuken_depart', 'on')
-      #           or is_state('binary_sensor.keuken_arrive', 'on')
-      #           or is_state('binary_sensor.garage_arrive', 'on')
-      #           or is_state('binary_sensor.garage_depart', 'on')
-      #           or is_state('binary_sensor.tvpi_arrive', 'on')
-      #           or is_state('binary_sensor.tvpi_depart', 'on')
-      #           or is_state('binary_sensor.poortpi_arrive', 'on')
-      #           or is_state('binary_sensor.poortpi_depart', 'on') }}"
+- platform: mqtt
+  name: tvPi echo
+  state_topic: "monitor/tvPi/echo"
+  off_delay: 100
+  payload_on: "ok"
+
+- platform: mqtt
+  name: PoortPi echo
+  state_topic: "monitor/Pi-Poortje/echo"
+  off_delay: 100
+  payload_on: "ok"

@@ -1,44 +1,58 @@
-  alias: 'Uit na beweging'
-  initial_state: 'on' 
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.beweging_badkamer
-      to: 'off'
-    - platform: state
-      entity_id: binary_sensor.beweging_keuken
-      to: 'off'
-    - platform: state
-      entity_id: binary_sensor.beweging_living
-      to: 'off'
-    - platform: state
-      entity_id: binary_sensor.beweging_slaapkamer
-      to: 'off'
-      for:
-        minutes: 10
-    - platform: state
-      entity_id: binary_sensor.beweging_noor
-      to: 'off'
-      for:
-        minutes: 10
-    - platform: state
-      entity_id: binary_sensor.beweging_fien
-      to: 'off'
-      for:
-        minutes: 10
-  action:
-    - service: light.turn_off
-      data_template:
-        entity_id: >
-          {% if trigger.entity_id == 'binary_sensor.beweging_badkamer' %}
-            light.badkamer_hoog, light.badkamer_pombak
-          {% elif trigger.entity_id == 'binary_sensor.beweging_keuken' %}
-            light.spots_keuken, light.luster_keuken, light.inkom
-          {% elif trigger.entity_id == 'binary_sensor.beweging_living' %}
-            light.spots_danszaal, light.luster_danszaal, light.luster_zithoek
-          {% elif trigger.entity_id == 'binary_sensor.beweging_noor' %}
-            light.noor
-          {% elif trigger.entity_id == 'binary_sensor.beweging_fien' %}
-            light.fien
-          {% else %}
-            light.slaapkamer_hoog, light.spot_slaapkamer
-          {% endif %}
+alias: "Uit na beweging"
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.beweging_badkamer
+    to: "off"
+  - platform: state
+    entity_id: binary_sensor.beweging_keuken
+    to: "off"
+  - platform: state
+    entity_id: binary_sensor.beweging_living
+    to: "off"
+  - platform: state
+    entity_id: binary_sensor.beweging_slaapkamer
+    to: "off"
+    for:
+      minutes: 10
+  - platform: state
+    entity_id: binary_sensor.beweging_noor
+    to: "off"
+    for:
+      minutes: 10
+  - platform: state
+    entity_id: binary_sensor.beweging_fien
+    to: "off"
+    for:
+      minutes: 10
+action:
+  - service: light.turn_off
+    data_template:
+      entity_id: >
+        {% if trigger.entity_id == 'binary_sensor.beweging_badkamer' %}
+          light.shelly2_5_b939e5_relay_0, light.shelly2_5_b939e5_relay_1
+        {% elif trigger.entity_id == 'binary_sensor.beweging_keuken' %}
+          light.shelly2_5_76cbbd_relay_1, light.shelly2_5_76cbbd_relay_0, light.shelly2_5_b952fa_relay_0
+        {% elif trigger.entity_id == 'binary_sensor.beweging_living' %}
+          light.shelly2_5_69022d_relay_1, light.shelly2_5_69022d_relay_0, light.shelly2_5_76d562_relay_1
+        {% elif trigger.entity_id == 'binary_sensor.beweging_noor' %}
+          light.noor
+        {% elif trigger.entity_id == 'binary_sensor.beweging_fien' %}
+          light.fien
+        {% else %}
+          light.shelly2_5_693e1b_relay_1, 
+        {% endif %}
+      # entity_id: >
+      #   {% if trigger.entity_id == 'binary_sensor.beweging_badkamer' %}
+      #     light.badkamer_hoog, light.badkamer_pombak
+      #   {% elif trigger.entity_id == 'binary_sensor.beweging_keuken' %}
+      #     light.spots_keuken, light.luster_keuken, light.inkom
+      #   {% elif trigger.entity_id == 'binary_sensor.beweging_living' %}
+      #     light.spots_danszaal, light.luster_danszaal, light.luster_zithoek
+      #   {% elif trigger.entity_id == 'binary_sensor.beweging_noor' %}
+      #     light.noor
+      #   {% elif trigger.entity_id == 'binary_sensor.beweging_fien' %}
+      #     light.fien
+      #   {% else %}
+      #     light.slaapkamer_hoog, light.spot_slaapkamer
+      #   {% endif %}

@@ -1,0 +1,197 @@
+input_datetime:
+  zwembad_start:
+    name: "Zwembad starttijd"
+    has_date: false
+    has_time: true
+    icon: mdi:clock-start
+  zwembad_stop:
+    name: "Zwembad stoptijd"
+    has_date: false
+    has_time: true
+    icon: mdi:timer-off-outline
+
+sensor:
+  - platform: history_stats
+    name: Zwembadpomp aan vandaag
+    entity_id: switch.zwembad
+    state: "on"
+    type: time
+    start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    end: "{{ now() }}"
+
+binary_sensor:
+  - platform: template
+    sensors:
+      zwembadpomp_aan:
+        value_template: "{{ is_state('switch.zwembad', 'on') }}"
+
+input_select:
+  zwembad_modus:
+    name: "Zwembad"
+    icon: mdi:pool
+    options:
+      - "Uit"
+      - "Zonder zout"
+      - "Met zout"
+      - "Manueel"
+      - "Manueel 4u"
+
+automation:
+  - alias: Zwembadpomp aan/uit
+    trigger:
+      - platform: template
+        value_template: >
+          {{ states('sensor.time') == (state_attr('input_datetime.zwembad_start', 'timestamp') | int | timestamp_custom('%H:%M', False)) }}
+      - platform: template
+        value_template: >
+          {{ states('sensor.time') == (state_attr('input_datetime.zwembad_stop', 'timestamp') | int | timestamp_custom('%H:%M', False)) }}
+      - platform: template
+        value_template: >
+          {{ states('sensor.time') == "02:30" and states('input_select.zwembad_modus') == 'Manueel' }}
+    action:
+      - service_template: >
+          {% if states('sensor.time') == (state_attr('input_datetime.zwembad_start', 'timestamp') | int | timestamp_custom('%H:%M', False)) %}
+            script.zwembadpomp_aan
+          {% else %}
+            script.zwembadpomp_uit
+          {% endif %}
+      - condition: template
+        value_template: >
+          {{ now().hour == 2 }}
+      - service: script.zwembad_met_zout
+
+  - alias: Zwembad schema
+    trigger:
+      - platform: state
+        entity_id: switch.zwembad
+        to: "off"
+        for:
+          seconds: 20
+      - platform: state
+        entity_id: input_select.zwembad_modus
+      - platform: state
+        entity_id: switch.zwembad
+        to: "unavailable"
+        for:
+          seconds: 20
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('automation.zwembad_schema', 'last_triggered')) | float > 30 }}"
+    action:
+      service_template: >
+        {% if states('switch.zwembad') == 'unavailable' %}
+          script.zwembad_uit
+        {% else %}
+          {% if states('input_select.zwembad_modus') == 'Met zout' %}
+            script.zwembad_met_zout
+          {% elif states('input_select.zwembad_modus') == 'Zonder zout' %}
+            script.zwembad_zonder_zout
+          {% elif states('input_select.zwembad_modus') == 'Manueel' %}
+            script.zwembad_manueel
+          {% elif states('input_select.zwembad_modus') == 'Manueel 4u' %}
+            script.zwembad_manueel_4u
+          {% else %}
+            script.zwembad_uit
+          {% endif %}
+        {% endif %}
+      data_template:
+        from_state: >
+          {% if trigger.entity_id == 'input_select.zwembad_modus' %}
+            {% if trigger.to_state == 'Manueel 4u' %}
+              {{ trigger.from_state }}
+            {% else %}
+              None
+            {% endif %}
+          {% else %}
+            None
+          {% endif %}
+
+script:
+  zwembad_met_zout:
+    sequence:
+      - service: automation.turn_on
+        entity_id: automation.zwembadpomp_aan_uit
+      - service: input_datetime.set_datetime
+        entity_id: input_datetime.zwembad_start
+        data_template:
+          time: >
+            {% if states('sensor.zwembadpomp_aan_vandaag') | int < 3 %}
+              11:00
+            {% else %}
+              22:45
+            {% endif %}
+      - service: input_datetime.set_datetime
+        entity_id: input_datetime.zwembad_stop
+        data_template:
+          time: >
+            {% if states('sensor.zwembadpomp_aan_vandaag') | int < 3 %}
+              17:00
+            {% else %}
+              01:45
+            {% endif %}
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.zwembad_modus
+          option: "Met zout"
+
+  zwembad_zonder_zout:
+    sequence:
+      - service: automation.turn_on
+        entity_id: automation.zwembadpomp_aan_uit
+      - service: input_datetime.set_datetime
+        entity_id: input_datetime.zwembad_start
+        data:
+          time: "11:00"
+      - service: input_datetime.set_datetime
+        entity_id: input_datetime.zwembad_stop
+        data:
+          time: "18:00"
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.zwembad_modus
+          option: "Zonder zout"
+
+  zwembad_manueel:
+    sequence:
+      - service: automation.turn_off
+        entity_id: automation.zwembadpomp_aan_uit
+      - service: script.zwembadpomp_aan
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.zwembad_modus
+          option: "Manueel"
+
+  zwembad_uit:
+    sequence:
+      - service: automation.turn_off
+        entity_id: automation.zwembadpomp_aan_uit
+      - service: script.zwembadpomp_uit
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.zwembad_modus
+          option: "Uit"
+
+  zwembadpomp_aan:
+    sequence:
+      - service: switch.turn_on
+        entity_id: switch.zwembad
+
+  zwembadpomp_uit:
+    sequence:
+      - service: switch.turn_off
+        entity_id: switch.zwembad
+
+  zwembad_manueel_4u:
+    sequence:
+      - service: automation.turn_off
+        entity_id: automation.zwembadpomp_aan_uit
+      - service: script.zwembadpomp_aan
+      - delay:
+          hours: 4
+      - service: script.zwembadpomp_uit
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.zwembad_modus
+          option: "{{ from_state }"

@@ -1,0 +1,27 @@
+- platform: template
+  sensors:
+    unavailable_entities:
+      entity_id: sensor.time
+      friendly_name: Unavailable Entities
+      unit_of_measurement: items
+      icon_template: >
+        {% if states('sensor.unavailable_entities')|int == 0 %}
+          mdi:check-circle
+        {% else %}
+          mdi:alert-circle
+        {% endif %}
+      value_template: >
+        {% if states('sensor.uptime_in_uren')|float > 0.05|float %}
+          {{states|selectattr('state', 'in', ['unavailable','unknown','none'])
+            |reject('in', expand('group.entity_blacklist'))
+            |reject('eq', states.group.entity_blacklist)
+            |list|length}}
+        {% else %}
+          0
+        {% endif %}
+      attribute_templates:
+        entities: >
+          {{states|selectattr('state', 'in', ['unavailable','unknown','none'])
+            |reject('in', expand('group.entity_blacklist'))
+            |reject('eq' , states.group.entity_blacklist)
+            |map(attribute='entity_id')|list|join(', ')}}

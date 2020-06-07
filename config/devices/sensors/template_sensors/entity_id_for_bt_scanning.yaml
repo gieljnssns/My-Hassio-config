@@ -1,19 +1,19 @@
-  - platform: template
-    sensors:
-      entity_id_for_bt_scanning:
-        value_template: >-
-          {% if is_state('input_boolean.fotocel_poort_error', 'off')
-              and is_state('binary_sensor.beweging_fotocel', 'on') %}
-            Fotocel poort
-          {% elif is_state('input_boolean.fotocel_poort_error', 'on')
-              and is_state('binary_sensor.voordeur_open', 'on') %}
-            Voordeur open
-          {% elif is_state('input_boolean.fotocel_poort_error', 'on')
-              and is_state('binary_sensor.netatmo_webhook_trigger', 'on') %}
-            Netatmo webhook
-          {% elif is_state('input_boolean.fotocel_poort_error', 'on')
-              and is_state('binary_sensor.den_hof_outdoor_human', 'on') %}
-            Camera
-          {% else %}
-            Helemaal niets
-          {% endif %}
+- platform: template
+  sensors:
+    entity_id_for_bt_scanning:
+      value_template: >-
+        {% if is_state('input_boolean.fotocel_poort_error', 'off')
+            and is_state('binary_sensor.beweging_fotocel', 'on') %}
+          Fotocel poort
+        {% elif is_state('input_boolean.fotocel_poort_error', 'on')
+            and is_state('binary_sensor.voordeur_open', 'on') %}
+          Voordeur open
+        {% elif is_state('input_boolean.fotocel_poort_error', 'on')
+            and is_state('binary_sensor.netatmo_webhook_trigger', 'on') %}
+          Netatmo webhook
+        {% elif is_state('input_boolean.fotocel_poort_error', 'on')
+            and is_state('binary_sensor.netatmo_component_human', 'on') %}
+          Camera
+        {% else %}
+          Helemaal niets
+        {% endif %}
