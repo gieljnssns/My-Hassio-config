@@ -1,21 +1,27 @@
-"""Support for Tahoma devices."""
-from collections import defaultdict
+"""The Tahoma integration."""
+import asyncio
+
+import voluptuous as vol
 import logging
 
-from requests.exceptions import RequestException
-from tahoma_api import Action, TahomaApi
-import voluptuous as vol
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
-from homeassistant.const import CONF_EXCLUDE, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_EXCLUDE
+
+from .const import DOMAIN, TAHOMA_TYPES
+from .tahoma_api import TahomaApi
+from requests.exceptions import RequestException
+
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "tahoma"
-
-TAHOMA_ID_FORMAT = "{}_{}"
-
+# TODO Deprecate EXCLUDE for the native method of disabling entities
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -31,108 +37,84 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-TAHOMA_COMPONENTS = ["binary_sensor", "cover", "lock", "scene", "sensor", "switch"]
-
-TAHOMA_TYPES = {
-    "io:ExteriorVenetianBlindIOComponent": "cover",
-    "io:HorizontalAwningIOComponent": "cover",
-    "io:LightIOSystemSensor": "sensor",
-    "io:OnOffIOComponent": "switch",
-    "io:OnOffLightIOComponent": "switch",
-    "io:RollerShutterGenericIOComponent": "cover",
-    "io:RollerShutterUnoIOComponent": "cover",
-    "io:RollerShutterVeluxIOComponent": "cover",
-    "io:RollerShutterWithLowSpeedManagementIOComponent": "cover",
-    "io:SomfyContactIOSystemSensor": "sensor",
-    "io:VerticalExteriorAwningIOComponent": "cover",
-    "io:WindowOpenerVeluxIOComponent": "cover",
-    "io:GarageOpenerIOComponent": "cover",
-    "rtds:RTDSContactSensor": "sensor",
-    "rtds:RTDSMotionSensor": "sensor",
-    "rtds:RTDSSmokeSensor": "smoke",
-    "rts:BlindRTSComponent": "cover",
-    "rts:CurtainRTSComponent": "cover",
-    "rts:DualCurtainRTSComponent": "cover",
-    "rts:ExteriorVenetianBlindRTSComponent": "cover",
-    "rts:GarageDoor4TRTSComponent": "switch",
-    "rts:RollerShutterRTSComponent": "cover",
-    "rts:ExteriorBlindRTSComponent": "cover",
-    "rts:HorizontalAwningRTSComponent": "cover",
-    "rts:VenetianBlindRTSComponent": "cover",
-}
+PLATFORMS = [
+    "binary_sensor",
+    "cover",
+    "light",
+    "lock",
+    "sensor",
+    "switch",
+]
 
 
-def setup(hass, config):
-    """Activate Tahoma component."""
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Set up the Tahoma component."""
+    return True
 
-    conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    exclude = conf.get(CONF_EXCLUDE)
-    try:
-        api = TahomaApi(username, password)
-    except RequestException:
-        _LOGGER.exception("Error when trying to log in to the Tahoma API")
-        return False
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up Tahoma from a config entry."""
+
+    hass.data.setdefault(DOMAIN, {})
+
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
 
     try:
-        api.get_setup()
-        devices = api.get_devices()
-        scenes = api.get_action_groups()
+        controller = await hass.async_add_executor_job(TahomaApi, username, password)
+        await hass.async_add_executor_job(controller.get_setup)
+        devices = await hass.async_add_executor_job(controller.get_devices)
+        scenes = await hass.async_add_executor_job(controller.get_action_groups)
+
+    # TODO Add better exception handling
     except RequestException:
         _LOGGER.exception("Error when getting devices from the Tahoma API")
         return False
 
-    hass.data[DOMAIN] = {"controller": api, "devices": defaultdict(list), "scenes": []}
+    hass.data[DOMAIN][entry.entry_id] = {
+        "controller": controller,
+        "devices": [],
+        "scenes": [],
+    }
 
     for device in devices:
-        _device = api.get_device(device)
-        if all(ext not in _device.type for ext in exclude):
-            device_type = map_tahoma_device(_device)
-            if device_type is None:
-                _LOGGER.warning(
-                    "Unsupported type %s for Tahoma device %s",
-                    _device.type,
-                    _device.label,
-                )
-                continue
-            hass.data[DOMAIN]["devices"][device_type].append(_device)
+        _device = controller.get_device(device)
+
+        if _device.uiclass in TAHOMA_TYPES:
+            if TAHOMA_TYPES[_device.uiclass] in PLATFORMS:
+                component = TAHOMA_TYPES[_device.uiclass]
+                hass.data[DOMAIN][entry.entry_id]["devices"].append(_device)
+
+        else:
+            _LOGGER.warning(
+                "Unsupported Tahoma device (%s - %s - %s)",
+                _device.type,
+                _device.uiclass,
+                _device.widget,
+            )
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     for scene in scenes:
-        hass.data[DOMAIN]["scenes"].append(scene)
-
-    for component in TAHOMA_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+        hass.data[DOMAIN][entry.entry_id]["scenes"].append(scene)
 
     return True
 
 
-def map_tahoma_device(tahoma_device):
-    """Map Tahoma device types to Home Assistant components."""
-    return TAHOMA_TYPES.get(tahoma_device.type)
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN][entry.entry_id].pop(entry.entry_id)
 
-
-class TahomaDevice(Entity):
-    """Representation of a Tahoma device entity."""
-
-    def __init__(self, tahoma_device, controller):
-        """Initialize the device."""
-        self.tahoma_device = tahoma_device
-        self.controller = controller
-        self._name = self.tahoma_device.label
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        return {"tahoma_device_id": self.tahoma_device.url}
-
-    def apply_action(self, cmd_name, *args):
-        """Apply Action to Device."""
-        action = Action(self.tahoma_device.url)
-        action.add_command(cmd_name, *args)
-        self.controller.apply_actions("HomeAssistant", [action])
+    return unload_ok

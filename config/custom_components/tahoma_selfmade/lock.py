@@ -5,8 +5,7 @@ import logging
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED
 
-from .const import DOMAIN, TAHOMA_TYPES
-from .tahoma_device import TahomaDevice
+from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,19 +13,15 @@ SCAN_INTERVAL = timedelta(seconds=120)
 TAHOMA_STATE_LOCKED = "locked"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Tahoma locks from a config entry."""
-
-    data = hass.data[DOMAIN][entry.entry_id]
-
-    entities = []
-    controller = data.get("controller")
-
-    for device in data.get("devices"):
-        if TAHOMA_TYPES[device.uiclass] == "lock":
-            entities.append(TahomaLock(device, controller))
-
-    async_add_entities(entities)
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Tahoma lock."""
+    if discovery_info is None:
+        return
+    controller = hass.data[TAHOMA_DOMAIN]["controller"]
+    devices = []
+    for device in hass.data[TAHOMA_DOMAIN]["devices"]["lock"]:
+        devices.append(TahomaLock(device, controller))
+    add_entities(devices, True)
 
 
 class TahomaLock(TahomaDevice, LockEntity):
