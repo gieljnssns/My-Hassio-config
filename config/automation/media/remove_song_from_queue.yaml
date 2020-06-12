@@ -16,21 +16,37 @@ trigger:
 condition:
   condition: and
   conditions:
+    # Coordinator
     - condition: template
       value_template: >
-        {% set group = state_attr( trigger.entity_id , 'sonos_group') %}
-        {% if group[0] == trigger.entity_id %}
-          True
-        {% else %}
-          False
-        {% endif %}
+        {{ state_attr( trigger.entity_id , 'sonos_group')[0] ==  trigger.entity_id }}
+    # Going from queue to queue
     - condition: template
       value_template: >
-        {% if state_attr( trigger.entity_id, 'queue_position') >= 1 %}
-          {{ 0 <= trigger.from_state.attributes.queue_position < trigger.to_state.attributes.queue_position }}
-        {% else %}
-          False
-        {% endif %}
+        {{ 'queue_position' in trigger.from_state.attributes and 'queue_position' in trigger.to_state.attributes }}
+    # Moving forward
+    - condition: template
+      value_template: >
+        {{ trigger.from_state.attributes.queue_position < trigger.to_state.attributes.queue_position }}
+    # - condition: template
+    #   value_template: >
+    #     {% set group = state_attr( trigger.entity_id , 'sonos_group') %}
+    #     {% if group[0] == trigger.entity_id %}
+    #       True
+    #     {% else %}
+    #       False
+    #     {% endif %}
+    # - condition: template
+    #   value_template: >
+    #     {% if state_attr( trigger.entity_id, 'queue_position') %}
+    #       {% if state_attr( trigger.entity_id, 'queue_position') >= 1 %}
+    #         {{ trigger.from_state.attributes.queue_position < trigger.to_state.attributes.queue_position }}
+    #       {% else %}
+    #         False
+    #       {% endif %}
+    #     {% else %}
+    #       False
+    #     {% endif %}
 action:
   - service: sonos.remove_from_queue
     data_template:

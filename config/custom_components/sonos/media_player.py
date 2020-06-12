@@ -880,8 +880,8 @@ class SonosEntity(MediaPlayerEntity):
         """Current position in the playing queue."""
         if self._is_playing_local_queue:
             return self._queue_position
-        else:
-            return -1
+
+        return None
 
     @property
     @soco_coordinator
