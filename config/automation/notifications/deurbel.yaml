@@ -1,0 +1,46 @@
+alias: "Doorbell Notifications"
+trigger:
+  platform: state
+  entity_id: binary_sensor.deurbel_drukknop
+  to: "on"
+action:
+  - service: notify.mobile_app_gphone
+    data:
+      title: Deurbel
+      message: Ding dong! Er staat iemand aan de voordeur!
+      data:
+        attachment:
+          content-type: jpeg
+          url: http://tiptag.com.ar/wp-content/uploads/2018/06/timbre1.jpg
+        push:
+          sound: "House-bell-sound-effect.wav"
+  - service: notify.mobile_app_mphone
+    data:
+      title: Deurbel
+      message: Ding dong! Er staat iemand aan de voordeur!
+      data:
+        attachment:
+          content-type: jpeg
+          url: http://tiptag.com.ar/wp-content/uploads/2018/06/timbre1.jpg
+        push:
+          sound: "House-bell-sound-effect.wav"
+  - service: notify.mobile_app_nphone
+    data:
+      title: Deurbel
+      message: Ding dong! Er staat iemand aan de voordeur!
+      data:
+        attachment:
+          content-type: jpeg
+          url: http://tiptag.com.ar/wp-content/uploads/2018/06/timbre1.jpg
+        push:
+          sound: "House-bell-sound-effect.wav"
+  - service: notify.mobile_app_fphone
+    data:
+      title: Deurbel
+      message: Ding dong! Er staat iemand aan de voordeur!
+      data:
+        attachment:
+          content-type: jpeg
+          url: http://tiptag.com.ar/wp-content/uploads/2018/06/timbre1.jpg
+        push:
+          sound: "House-bell-sound-effect.wav"
