@@ -1,58 +1,108 @@
-  - platform: filter
-    name: "Zonne energie gefilterd lowpass"
-    # entity_id: sensor.smappee_thuis_solar
-    entity_id: sensor.huidige_opbrengst
-    filters:
-      - filter: lowpass
-        time_constant: 300
-        # precision: 2
+- platform: filter
+  name: "Zonne energie gefilterd lowpass"
+  # entity_id: sensor.smappee_thuis_solar
+  entity_id: sensor.huidige_opbrengst
+  filters:
+    - filter: lowpass
+      time_constant: 300
+      # precision: 2
 
-  - platform: filter
-    name: "Buitentemperatuur gefilterd"
-    entity_id: sensor.gemiddelde_temp_buiten
-    filters:
-      - filter: outlier
-        window_size: 4
-        radius: 2.0
-      - filter: lowpass
-        time_constant: 10
-      - filter: time_simple_moving_average
-        window_size: 00:05
-        precision: 2
+- platform: filter
+  name: "Buitentemperatuur gefilterd"
+  entity_id: sensor.gemiddelde_temp_buiten
+  filters:
+    - filter: outlier
+      window_size: 4
+      radius: 2.0
+    - filter: lowpass
+      time_constant: 10
+    - filter: time_simple_moving_average
+      window_size: 00:05
+      precision: 2
 
-  # - platform: filter
-  #   name: "Zonne energie omvormers gefilterd lowpass"
-  #   # entity_id: sensor.smappee_thuis_solar
-  #   entity_id: sensor.opbrengst_solaredge_kostal
-  #   filters:
-  #     - filter: lowpass
-  #       time_constant: 300
-  #       # precision: 2
+# - platform: filter
+#   name: "Zonne energie omvormers gefilterd lowpass"
+#   # entity_id: sensor.smappee_thuis_solar
+#   entity_id: sensor.opbrengst_solaredge_kostal
+#   filters:
+#     - filter: lowpass
+#       time_constant: 300
+#       # precision: 2
 
-  - platform: filter
-    name: "Buiten lowpass"
-    entity_id: sensor.gemiddelde_temp_buiten
-    filters:
-      - filter: lowpass
-        precision: 1
+# - platform: filter
+#   name: "Buiten lowpass"
+#   entity_id: sensor.gemiddelde_temp_buiten
+#   filters:
+#     - filter: outlier
+#       window_size: 4
+#       radius: 2.0
+#     - filter: lowpass
+#       time_constant: 10
+#     - filter: time_simple_moving_average
+#       window_size: 00:05
+#       precision: 2
 
-  - platform: filter
-    name: "Binnen lowpass"
-    entity_id: sensor.gemiddelde_temp_binnen
-    filters:
-      - filter: lowpass
-        precision: 1
+- platform: filter
+  name: "Binnen lowpass"
+  entity_id: sensor.gemiddelde_temp_binnen
+  filters:
+    - filter: outlier
+      window_size: 4
+      radius: 2.0
+    - filter: lowpass
+      time_constant: 10
+    - filter: time_simple_moving_average
+      window_size: 00:05
+      precision: 2
 
-  - platform: filter
-    name: "Boven lowpass"
-    entity_id: sensor.gemiddelde_temp_boven
-    filters:
-      - filter: lowpass
-        precision: 1
+- platform: filter
+  name: "Boven lowpass"
+  entity_id: sensor.gemiddelde_temp_boven
+  filters:
+    - filter: outlier
+      window_size: 4
+      radius: 2.0
+    - filter: lowpass
+      time_constant: 10
+    - filter: time_simple_moving_average
+      window_size: 00:05
+      precision: 2
 
-  - platform: filter
-    name: "Beneden lowpass"
-    entity_id: sensor.gemiddelde_temp_beneden
-    filters:
-      - filter: lowpass
-        precision: 1
+- platform: filter
+  name: "Beneden lowpass"
+  entity_id: sensor.gemiddelde_temp_beneden
+  filters:
+    - filter: outlier
+      window_size: 4
+      radius: 2.0
+    - filter: lowpass
+      time_constant: 10
+    - filter: time_simple_moving_average
+      window_size: 00:05
+      precision: 2
+
+- platform: filter
+  name: "Living temperatuur gefilterd"
+  entity_id: sensor.temperatuur_living
+  filters:
+    - filter: outlier
+      window_size: 4
+      radius: 2.0
+    - filter: lowpass
+      time_constant: 10
+    - filter: time_simple_moving_average
+      window_size: 00:05
+      precision: 2
+
+- platform: filter
+  name: "Living luchtvochtigheid gefilterd"
+  entity_id: sensor.luchtvochtigheid_living
+  filters:
+    - filter: outlier
+      window_size: 4
+      radius: 2.0
+    - filter: lowpass
+      time_constant: 10
+    - filter: time_simple_moving_average
+      window_size: 00:05
+      precision: 2

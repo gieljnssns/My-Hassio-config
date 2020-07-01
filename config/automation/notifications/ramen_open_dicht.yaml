@@ -1,32 +1,40 @@
-  alias: 'Ramen openen/sluiten'
-  initial_state: 'on' 
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.buiten_frisser_dan_binnen
+alias: "Ramen openen/sluiten"
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.buiten_frisser_dan_binnen
+    to: "on"
+    for:
+      minutes: 5
+  - platform: state
+    entity_id: binary_sensor.buiten_frisser_dan_binnen
+    to: "off"
+    for:
+      minutes: 5
 
-  condition:
-    condition: and
-    conditions:
-      - condition: numeric_state
-        entity_id:  sensor.dark_sky_daytime_high_temperature_0d
-        above: 24
-      - condition: template
-        value_template: "{{ (as_timestamp(now()) - as_timestamp(states.automation.ramen_openen_sluiten.attributes.last_triggered) | int) > 600 }}"
-    
-  action:
-    - service: notify.mobile_app_gphone
-      data_template:
-        message: >
-          {% if states('binary_sensor.buiten_frisser_dan_binnen') == 'on' %}
-            Nu kunde alles openzetten, binnen is het {{ states('sensor.gemiddelde_temp_binnen') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
-          {% else %}
-            Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.gemiddelde_temp_binnen') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
-          {% endif %}
-    - service: notify.mobile_app_mphone
-      data_template:
-        message: >
-          {% if states('binary_sensor.buiten_frisser_dan_binnen') == 'on' %}
-            Nu kunde alles openzetten, binnen is het {{ states('sensor.gemiddelde_temp_binnen') }}°Kakbraeckers en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°Kakbraeckers.
-          {% else %}
-            Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.gemiddelde_temp_binnen') }}°Kakbraeckers en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°Kakbraeckers.
-          {% endif %}
+condition:
+  condition: and
+  conditions:
+    - condition: numeric_state
+      entity_id: sensor.dark_sky_daytime_high_temperature_0d
+      above: 24
+    - condition: template
+      value_template: "{{ (as_timestamp(now()) - as_timestamp(states.automation.ramen_openen_sluiten.attributes.last_triggered) | int) > 600 }}"
+
+action:
+  - service: notify.mobile_app_gphone
+    data_template:
+      message: >
+        {% if states('binary_sensor.buiten_frisser_dan_binnen') == 'on' %}
+          Nu kunde alles openzetten, binnen is het {{ states('sensor.binnen_lowpass') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
+        {% else %}
+          Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.binnen_lowpass') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
+        {% endif %}
+  - service: notify.mobile_app_mphone
+    data_template:
+      message: >
+        {% if states('binary_sensor.buiten_frisser_dan_binnen') == 'on' %}
+          Nu kunde alles openzetten, binnen is het {{ states('sensor.binnen_lowpass') }}°Kakbraeckers en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°Kakbraeckers.
+        {% else %}
+          Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.binnen_lowpass') }}°Kakbraeckers en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°Kakbraeckers.
+        {% endif %}
