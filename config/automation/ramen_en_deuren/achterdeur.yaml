@@ -1,0 +1,160 @@
+alias: Achterdeur sluiten warm buiten
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.achterdeur_open
+    to: "on"
+    for:
+      seconds: 25
+condition:
+  condition: and
+  conditions:
+    # - condition: template
+    #   value_template: >
+    #     {{  (states('sensor.binnen_lowpass') | float < states('sensor.buitentemperatuur') | float)  }}
+    # - condition: template
+    #   value_template: >
+    #     {{  (states('sensor.binnen_lowpass') | float < states('sensor.temperatuur_poort') | float)  }}
+    - condition: state
+      entity_id: binary_sensor.buiten_frisser_dan_binnen
+      state: "off"
+    - condition: numeric_state
+      entity_id: sensor.binnen_lowpass
+      above: 22
+action:
+  - service_template: >
+      {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
+          script.sonos_pauze_spreek
+      {%  else  %}
+          script.sonos_playing_spreek
+      {%  endif  %}
+    data_template:
+      sonos_entity: media_player.keuken
+      volume: 0.65
+      speech_message: >
+        {{ [
+            "Willen we alstublieft de deur dicht doen?",
+            "Het is buiten nog te warm!",
+            "Sluiten",
+            "De deur dicht, het is te warm buiten",
+            "Dicht doen!",
+            "Hoeveel keer moet ik het nog zeggen, doe die deur dicht!"
+            ] | random }}
+  - delay:
+      seconds: 30
+  - condition: state
+    entity_id: binary_sensor.achterdeur_open
+    state: "on"
+  - service: notify.mobile_app_gphone
+    data:
+      title: Achterdeur - 2de waarschuwing!
+      message: Er heeft weer iemand de achterdeur laten openstaan!!
+      data:
+        attachment:
+          content-type: jpeg
+          url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
+        push:
+          sound: "door_creak_closing.wav"
+  - service: notify.mobile_app_mphone
+    data:
+      title: Achterdeur - 2de waarschuwing!
+      message: Er heeft weer iemand de achterdeur laten openstaan!!
+      data:
+        attachment:
+          content-type: jpeg
+          url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
+        push:
+          sound: "door_creak_closing.wav"
+  - service: notify.mobile_app_nphone
+    data:
+      title: Achterdeur - 2de waarschuwing!
+      message: Er heeft weer iemand de achterdeur laten openstaan!!
+      data:
+        attachment:
+          content-type: jpeg
+          url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
+        push:
+          sound: "door_creak_closing.wav"
+  - service: notify.mobile_app_fphone
+    data:
+      title: Achterdeur - 2de waarschuwing!
+      message: Er heeft weer iemand de achterdeur laten openstaan!!
+      data:
+        attachment:
+          content-type: jpeg
+          url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
+        push:
+          sound: "door_creak_closing.wav"
+  - service_template: >
+      {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
+          script.sonos_pauze_spreek
+      {%  else  %}
+          script.sonos_playing_spreek
+      {%  endif  %}
+    data_template:
+      sonos_entity: media_player.keuken
+      volume: 0.65
+      speech_message: >
+        {{ [
+            "Willen we alstublieft de deur dicht doen?",
+            "Het is buiten nog te warm!",
+            "Sluiten",
+            "De deur dicht, het is te warm buiten",
+            "Dicht doen!",
+            "Hoeveel keer moet ik het nog zeggen, doe die deur dicht!",
+            "Dit is al de tweede keer, hoeveel keer nog?",
+            "Dit is al de tweede keer, hoeveel keer nog?",
+            "Dit is al de tweede keer, hoeveel keer nog?"
+            ] | random }}
+  - delay:
+      seconds: 30
+  - condition: state
+    entity_id: binary_sensor.achterdeur_open
+    state: "on"
+  - service_template: >
+      {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
+          script.sonos_pauze_spreek
+      {%  else  %}
+          script.sonos_playing_spreek
+      {%  endif  %}
+    data_template:
+      sonos_entity: media_player.keuken
+      volume: 0.65
+      speech_message: >
+        {{ [
+            "Willen we alstublieft de deur dicht doen?",
+            "Het is buiten nog te warm!",
+            "Sluiten",
+            "De deur dicht, het is te warm buiten",
+            "Dicht doen!",
+            "Hoeveel keer moet ik het nog zeggen, doe die deur dicht!",
+            "Derde keer, goede keer?",
+            "Derde keer, goede keer?",
+            "Derde keer, goede keer?"
+            ] | random }}
+  - delay:
+      seconds: 30
+  - condition: state
+    entity_id: binary_sensor.achterdeur_open
+    state: "on"
+  - service_template: >
+      {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
+          script.sonos_pauze_spreek
+      {%  else  %}
+          script.sonos_playing_spreek
+      {%  endif  %}
+    data_template:
+      sonos_entity: media_player.keuken
+      volume: 0.65
+      speech_message: >
+        {{ [
+            "Willen we alstublieft de deur dicht doen?",
+            "Het is buiten nog te warm!",
+            "Sluiten",
+            "De deur dicht, het is te warm buiten",
+            "Dicht doen!",
+            "Hoeveel keer moet ik het nog zeggen, doe die deur dicht!",
+            "Trekt er uw plan mee!",
+            "Trekt er uw plan mee!",
+            "Trekt er uw plan mee!"
+            ] | random }}
