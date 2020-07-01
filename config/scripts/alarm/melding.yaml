@@ -1,27 +1,27 @@
-  melding:
-    sequence:
-      - service: notify.ios
-        data_template:
-          message: >-
-            {% if is_state("input_boolean.bompa_bt_aanwezig", "on") and is_state("input_boolean.op_verlof", "on") %}
-              "Den bompa is er. Waarschijnlijk komt hij den hond buiten laten..."
-            {% elif is_state("input_boolean.bompa_bt_aanwezig", "on") and is_state("input_boolean.oma_bt_aanwezig", "on") %}
-              "Den bompa en oma hebben een samenkomst gepland."
-            {% elif is_state("input_boolean.bompa_bt_aanwezig", "on") %}
-              "Den bompa is er, ga maar is zien in de garage wa da hem nu weer is komen halen."
-            {% else %}
-              "Oma is bij ons op bezoek"
-            {% endif %}
-          # message: 'Bezoek! -- Bompa of Oma'
-          data:
-            attachment:
-              url: "{{ state_attr('sensor.netatmo_webhook', 'snapshot_url') }}"
-              content-type: jpeg
-              hide-thumbnail: false
-            push:
-              badge: 0
-              category: 'alarm'
-              # sound: 'Siren_Noise.wav'
-            # entity_id: camera.den_hof
-            action_data:
-              entity_id: input_boolean.alarm
+melding:
+  sequence:
+    - service: notify.giel_en_martine
+      data_template:
+        message: >-
+          {% if is_state("input_boolean.bompa_bt_aanwezig", "on") and is_state("input_boolean.op_verlof", "on") %}
+            "Den bompa is er. Waarschijnlijk komt hij den hond buiten laten..."
+          {% elif is_state("input_boolean.bompa_bt_aanwezig", "on") and is_state("input_boolean.oma_bt_aanwezig", "on") %}
+            "Den bompa en oma hebben een samenkomst gepland."
+          {% elif is_state("input_boolean.bompa_bt_aanwezig", "on") %}
+            "Den bompa is er, ga maar is zien in de garage wa da hem nu weer is komen halen."
+          {% else %}
+            "Oma is bij ons op bezoek"
+          {% endif %}
+        # message: 'Bezoek! -- Bompa of Oma'
+        data:
+          attachment:
+            url: "{{ state_attr('sensor.netatmo_webhook', 'snapshot_url') }}"
+            content-type: jpeg
+            hide-thumbnail: false
+          push:
+            badge: 0
+            category: "alarm"
+            # sound: 'Siren_Noise.wav'
+          # entity_id: camera.den_hof
+          action_data:
+            entity_id: input_boolean.alarm

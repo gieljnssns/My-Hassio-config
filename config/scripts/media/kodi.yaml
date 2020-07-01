@@ -1,13 +1,13 @@
-  kodi:
-    sequence:
-      - condition: state
-        entity_id: switch.synology
-        state:  'off'
-      - service: switch.turn_on
-        entity_id: switch.synology
-      - delay:
-          seconds: 15
-      - wait_template: "{{ is_state('switch.synology', 'on') }}"
-      - service: notify.ios
-        data:
-          message: "Nu zoude op den tv kodi kunnen gebruiken."
+kodi:
+  sequence:
+    - condition: state
+      entity_id: switch.synology
+      state: "off"
+    - service: switch.turn_on
+      entity_id: switch.synology
+    - delay:
+        seconds: 15
+    - wait_template: "{{ is_state('switch.synology', 'on') }}"
+    - service: notify.giel_en_martine
+      data:
+        message: "Nu zoude op den tv kodi kunnen gebruiken."
