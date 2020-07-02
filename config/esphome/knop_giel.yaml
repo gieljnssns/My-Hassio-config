@@ -1,16 +1,27 @@
+substitutions:
+  devicename: knop_giel
+  ssid: !secret ssid
+  password: !secret password
+  
 esphome:
-  name: knop_giel
+  name: ${devicename}
   platform: ESP8266
   board: nodemcuv2
 
 wifi:
-  ssid: "XXXXXXXXXXX"
-  password: "XXXXXXXXXXX"
+  ssid: ${ssid}
+  password: ${password}
+  manual_ip:
+    static_ip: 192.168.79.84
+    gateway: 192.168.79.1
+    subnet: 255.255.255.0
+    dns1: 8.8.8.8
+    dns2: 8.8.4.4
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: "Knop Giel Fallback Hotspot"
-    password: "XXXXXXXXXXX"
+    ssid: ${devicename}
+    password: ${password}
 
 captive_portal:
 
@@ -19,10 +30,10 @@ logger:
 
 # Enable Home Assistant API
 api:
-  password: "XXXXXXXXXXX"
+  password: ${password}
 
 ota:
-  password: "XXXXXXXXXXX"
+  password: ${password}
 
 output:
   - platform: esp8266_pwm

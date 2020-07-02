@@ -22,21 +22,11 @@ action:
   data_template:
     entity_id: >
       {% if trigger.event.data.entity_id == 'timer.verlichting_wc' %}
-        light.wc_relay_0
+        light.wc
       {% elif trigger.event.data.entity_id == 'timer.verlichting_waskot' %}
-        light.waskot_relay_0
+        light.waskot
       {% elif trigger.event.data.entity_id == 'timer.verlichting_gang_beneden' %}
-        light.gang_beneden_relay_1
+        light.gang_beneden
       {% else %}
         light.gang_boven
       {% endif %}
-    # entity_id: >
-    #   {% if trigger.event.data.entity_id == 'timer.verlichting_wc' %}
-    #     light.wc
-    #   {% elif trigger.event.data.entity_id == 'timer.verlichting_waskot' %}
-    #     light.waskot
-    #   {% elif trigger.event.data.entity_id == 'timer.verlichting_gang_beneden' %}
-    #     light.gang_beneden
-    #   {% else %}
-    #     light.gang_boven
-    #   {% endif %}

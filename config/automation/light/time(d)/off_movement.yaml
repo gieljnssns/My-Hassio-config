@@ -30,11 +30,11 @@ action:
     data_template:
       entity_id: >
         {% if trigger.entity_id == 'binary_sensor.beweging_badkamer' %}
-          light.badkamer_hoog_relay_0, light.badkamer_pombak_relay_1
+          light.badkamer_hoog, light.badkamer_pombak
         {% elif trigger.entity_id == 'binary_sensor.beweging_keuken' %}
-          light.keuken_spots, light.keuken_inkom, light.keuken_luster_relay_0
+          light.keuken_spots, light.keuken_inkom, light.keuken_luster
         {% elif trigger.entity_id == 'binary_sensor.beweging_living' %}
-          light.danszaal_luster, light.zithoek_luster, light.danszaal_spots_relay_1
+          light.danszaal_luster, light.zithoek_luster, light.danszaal_spots
         {% elif trigger.entity_id == 'binary_sensor.beweging_noor' %}
           light.noor
         {% elif trigger.entity_id == 'binary_sensor.beweging_fien' %}
@@ -42,17 +42,3 @@ action:
         {% else %}
           light.slaapkamer_hoog, light.spot_slaapkamer
         {% endif %}
-      # entity_id: >
-      #   {% if trigger.entity_id == 'binary_sensor.beweging_badkamer' %}
-      #     light.badkamer_hoog, light.badkamer_pombak
-      #   {% elif trigger.entity_id == 'binary_sensor.beweging_keuken' %}
-      #     light.spots_keuken, light.luster_keuken, light.inkom
-      #   {% elif trigger.entity_id == 'binary_sensor.beweging_living' %}
-      #     light.spots_danszaal, light.luster_danszaal, light.luster_zithoek
-      #   {% elif trigger.entity_id == 'binary_sensor.beweging_noor' %}
-      #     light.noor
-      #   {% elif trigger.entity_id == 'binary_sensor.beweging_fien' %}
-      #     light.fien
-      #   {% else %}
-      #     light.slaapkamer_hoog, light.spot_slaapkamer
-      #   {% endif %}

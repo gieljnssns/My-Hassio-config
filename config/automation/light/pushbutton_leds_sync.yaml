@@ -2,14 +2,11 @@ alias: Puschbutton leds sync
 initial_state: "on"
 trigger:
   - platform: state
-    entity_id: light.wc_relay_0
-    # entity_id: light.wc
+    entity_id: light.wc
   - platform: state
-    entity_id: light.waskot_relay_0
-    # entity_id: light.waskot
+    entity_id: light.waskot
   - platform: state
-    entity_id: light.badkamer_hoog_relay_0
-    # entity_id: light.badkamer_hoog
+    entity_id: light.badkamer_hoog
 action:
   - service_template: >
       {% if trigger.to_state.state == 'on' %}
@@ -19,18 +16,10 @@ action:
       {% endif %}
     data_template:
       entity_id: >
-        {% if trigger.entity_id == 'light.wc_relay_0' %}
+        {% if trigger.entity_id == 'light.wc' %}
           switch.led_wc
-        {% elif trigger.entity_id == 'light.waskot_relay_0' %}
+        {% elif trigger.entity_id == 'light.waskot' %}
           switch.led_waskot
         {% else %}
           switch.led_badkamer
         {% endif %}
-      # entity_id: >
-      #   {% if trigger.entity_id == 'light.wc' %}
-      #     switch.led_wc
-      #   {% elif trigger.entity_id == 'light.waskot' %}
-      #     switch.led_waskot
-      #   {% else %}
-      #     switch.led_badkamer
-      #   {% endif %}

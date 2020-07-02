@@ -1,0 +1,163 @@
+substitutions:
+  devicename: shelly_25_b94100
+  channel_1: Waskot
+  channel_2: Trap
+  ssid: !secret ssid
+  password: !secret password
+
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: esp01_1m
+
+wifi:
+  ssid: ${ssid}
+  password: ${password}
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${devicename}
+    password: ${password}
+
+captive_portal:
+
+# Enable logging
+logger:
+  level: DEBUG
+  # baud_rate: 460800
+
+# Enable Home Assistant API
+api:
+  password: ${password}
+
+ota:
+  password: ${password}
+
+web_server:
+  port: 80
+
+time:
+  - platform: sntp
+    id: my_time
+
+i2c:
+  sda: GPIO12
+  scl: GPIO14
+
+sensor:
+  - platform: ade7953
+    voltage:
+      name: ${devicename} spanning
+    current_a:
+      name: ${channel_2} stroom
+      internal: true
+    current_b:
+      name: ${channel_1} stroom
+      internal: true
+    active_power_a:
+      name: ${channel_2} vermogen
+      id: power_channel_2
+      filters:
+        - multiply: 1
+      on_value_range:
+        - above: 2000.0
+          then:
+            - light.turn_off: lightid2
+    active_power_b:
+      name: ${channel_1} vermogen
+      id: power_channel_1
+      filters:
+        - multiply: -1
+      on_value_range:
+        - above: 2000.0
+          then:
+            - light.turn_off: lightid1
+    update_interval: 30s
+
+  - platform: total_daily_energy
+    name: ${channel_1} energie
+    power_id: power_channel_1
+    filters:
+        # Multiplication factor from W to kW is 0.001
+        - multiply: 0.001
+    unit_of_measurement: kW
+  
+  - platform: total_daily_energy
+    name: ${channel_2} energie
+    power_id: power_channel_2
+    filters:
+        # Multiplication factor from W to kW is 0.001
+        - multiply: 0.001
+    unit_of_measurement: kW
+    
+  # NTC Temperature
+  - platform: ntc
+    sensor: temp_resistance_reading
+    name: ${devicename} temperatuur
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    icon: "mdi:thermometer"
+    calibration:
+      b_constant: 3350
+      reference_resistance: 10kOhm
+      reference_temperature: 298.15K
+    on_value_range:
+        - above: 80.0
+          then:
+            - light.turn_off: lightid1
+            - light.turn_off: lightid2
+  - platform: resistance
+    id: temp_resistance_reading
+    sensor: temp_analog_reading
+    configuration: DOWNSTREAM
+    resistor: 32kOhm
+  - platform: adc
+    id: temp_analog_reading
+    pin: A0
+
+status_led:
+  pin:
+    number: GPIO0
+    inverted: yes
+
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: shelly_25_relay_1
+  - platform: gpio
+    pin: GPIO15
+    id: shelly_25_relay_2
+
+light:
+  - platform: binary
+    name: "${channel_1}"
+    output: shelly_25_relay_1
+    id: lightid1
+  - platform: binary
+    name: "${channel_2}"
+    output: shelly_25_relay_2
+    id: lightid2
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO13
+      #mode: INPUT_PULLUP
+      #inverted: True
+    name: "${channel_1} drukknop"
+    on_state:
+      then:
+        - light.toggle: lightid1
+    # internal: true
+    id: switchid1
+  - platform: gpio
+    pin:
+      number: GPIO5
+      #mode: INPUT_PULLUP
+      #inverted: True
+    name: "${channel_2} drukknop"
+    on_state:
+      then:
+        - light.toggle: lightid2
+    # internal: true 
+    id: switchid2

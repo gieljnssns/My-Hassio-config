@@ -1,16 +1,27 @@
+substitutions:
+  devicename: leds_drukknoppen
+  ssid: !secret ssid
+  password: !secret password
+  
 esphome:
-  name: leds_drukknoppen
+  name: ${devicename}
   platform: ESP8266
   board: nodemcuv2
 
 wifi:
-  ssid: "XXXXXXXXXXX"
-  password: "XXXXXXXXXXX"
+  ssid: ${ssid}
+  password: ${password}
+  manual_ip:
+    static_ip: 192.168.79.81
+    gateway: 192.168.79.1
+    subnet: 255.255.255.0
+    dns1: 8.8.8.8
+    dns2: 8.8.4.4
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: "Leds Drukknoppen"
-    password: "XXXXXXXXXXX"
+    ssid: ${devicename}
+    password: ${password}
 
 captive_portal:
 
@@ -19,20 +30,18 @@ logger:
 
 # Enable Home Assistant API
 api:
-  password: "XXXXXXXXXXX"
+  password: ${password}
 
 ota:
-  password: "XXXXXXXXXXX"
+  password: ${password}
 
-# output:
-#   - platform: gpio
-#     pin: D1
-#     id: gpio_d1
-  
-#   - platform: gpio
-#     pin: D2
-#     id: gpio_d1
 
+globals:
+  - id: chime
+    type: bool
+    restore_value: true
+    initial_value: 'true'
+    
 switch:
   - platform: gpio
     pin:
@@ -60,3 +69,64 @@ switch:
       # inverted: yes
     name: "Reserve"
     id: reserve
+  
+  - platform: gpio
+    pin:
+      number: D4
+      # inverted: yes
+    name: "Deurbel"
+    id: deurbel
+  
+  - platform: template
+    restore_state: false
+    name: "Deurbel actief"
+    id: deurbel_actief
+    turn_on_action:
+      - globals.set:
+          id: chime
+          value: 'true'
+    turn_off_action:
+      - globals.set:
+         id: chime
+         value: 'false'
+    lambda: |-
+      return id(chime);
+
+binary_sensor:
+  - platform: gpio
+    id: deurbel_drukknop
+    name: Deurbel drukknop
+    pin:
+      # Connected to GPIO on the ESP-01S.
+      number: D5
+      mode: INPUT_PULLUP
+      inverted: true
+    filters:
+      # Small filter, to debounce the button press.
+      - delayed_on: 25ms
+      - delayed_off: 25ms
+    on_press:
+      # Only turn on the chime when it is active.
+      then:
+        if:
+          condition:
+            - switch.is_on: deurbel_actief
+          then:
+            - switch.turn_on: deurbel
+    on_release:
+      # On release, turn of the chime.
+      - switch.turn_off: deurbel
+  
+  - platform: gpio
+    id: spots_tv_drukknop
+    name: Spots tv drukknop
+    pin:
+      # Connected to GPIO on the ESP-01S.
+      number: D6
+      mode: INPUT_PULLUP
+      inverted: true
+    on_press:
+       - homeassistant.service:
+          service: light.toggle
+          data:
+            entity_id: light.spots_tv

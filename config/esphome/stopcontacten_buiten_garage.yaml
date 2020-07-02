@@ -1,0 +1,50 @@
+substitutions:
+  devicename: stopcontacten_buiten_garage
+  ssid: !secret ssid
+  password: !secret password
+  
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: ${ssid}
+  password: ${password}
+  manual_ip:
+    static_ip: 192.168.79.86
+    gateway: 192.168.79.1
+    subnet: 255.255.255.0
+    dns1: 8.8.8.8
+    dns2: 8.8.4.4
+    
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${devicename}
+    password: ${password}
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: ${password}
+
+ota:
+  password: ${password}
+
+switch:
+  - platform: gpio
+    pin:
+      number: D0
+      # inverted: yes
+    name: "Stopcontacten garage"
+    id: stopcontacten
+    
+binary_sensor:
+  - platform: gpio
+    pin: D1
+    name: "Beweging in garage"
+    device_class: motion
