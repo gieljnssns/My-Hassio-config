@@ -64,7 +64,7 @@ class TahomaCover(TahomaDevice, CoverEntity):
 
     def update(self):
         """Update method."""
-        self.controller.get_states([self.tahoma_device])
+        # self.controller.get_states([self.tahoma_device])
 
         # For vertical covers
         self._closure = self.tahoma_device.active_states.get("core:ClosureState")
