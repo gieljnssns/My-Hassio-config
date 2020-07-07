@@ -1,27 +1,27 @@
-  alias: 'Kerstverlichting Aan/Uit'
-  initial_state: 'on' 
-  trigger:
-    - platform: time
-      at: '06:00:00'
-    - platform: time
-      at: '23:00:00'
-  condition:
-    condition: and
-    conditions:
-      - condition: time
-        weekday:
-          - mon
-          - tue
-          - wed
-          - thu
-          - fri
-          - sat
-          - sun
-  action:
-    - service_template: >
-        {% if now().hour == 23 %}
-          switch.turn_off
-        {% else %}
-          switch.turn_on
-        {% endif %}
-      entity_id: switch.kerstverlichting
+alias: "Kerstverlichting Aan/Uit"
+initial_state: "on"
+trigger:
+  - platform: time
+    at: "06:00:00"
+  - platform: time
+    at: "23:00:00"
+condition:
+  condition: and
+  conditions:
+    - condition: time
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+        - sat
+        - sun
+action:
+  - service_template: >
+      {% if now().hour == 23 %}
+        switch.turn_off
+      {% else %}
+        switch.turn_on
+      {% endif %}
+    entity_id: switch.smappee_kerstverlichting
