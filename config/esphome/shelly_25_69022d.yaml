@@ -1,9 +1,14 @@
 substitutions:
   devicename: shelly_25_69022d
+  ip: 192.168.79.72
   channel_1: Zithoek luster
   channel_2: Danszaal luster
+  
   ssid: !secret ssid
   password: !secret password
+  
+  max_power: '2000.0'
+  max_temp: '70.0'
 
 esphome:
   name: ${devicename}
@@ -13,11 +18,23 @@ esphome:
 wifi:
   ssid: ${ssid}
   password: ${password}
+  manual_ip:
+    static_ip: ${ip}
+    gateway: 192.168.79.1
+    subnet: 255.255.255.0
+    dns1: 8.8.8.8
+    dns2: 8.8.4.4
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: ${devicename}
     password: ${password}
+    manual_ip: 
+      static_ip: 192.168.100.2
+      gateway: 192.168.100.1
+      subnet: 255.255.255.0
+      dns1: 8.8.8.8
+      dns2: 8.8.4.4
 
 captive_portal:
 
@@ -60,18 +77,30 @@ sensor:
       filters:
         - multiply: 1
       on_value_range:
-        - above: 2000.0
+        - above: ${max_power}
           then:
             - light.turn_off: lightid2
+            - homeassistant.service:
+                service: persistent_notification.create
+                data:
+                  title: Message from ${devicename}
+                data_template:
+                  message: Switch turned off because power exceeded ${max_power}W
     active_power_b:
       name: ${channel_1} vermogen
       id: power_channel_1
       filters:
         - multiply: -1
       on_value_range:
-        - above: 2000.0
+        - above: ${max_power}
           then:
             - light.turn_off: lightid1
+            - homeassistant.service:
+                service: persistent_notification.create
+                data:
+                  title: Message from ${devicename}
+                data_template:
+                  message: Switch turned off because power exceeded ${max_power}W
     update_interval: 30s
 
   - platform: total_daily_energy
@@ -102,10 +131,16 @@ sensor:
       reference_resistance: 10kOhm
       reference_temperature: 298.15K
     on_value_range:
-        - above: 80.0
+        - above: ${max_temp}
           then:
             - light.turn_off: lightid1
             - light.turn_off: lightid2
+            - homeassistant.service:
+                service: persistent_notification.create
+                data:
+                  title: Message from ${devicename}
+                data_template:
+                  message: Switch turned off because temperature exceeded ${max_temp}°C
   - platform: resistance
     id: temp_resistance_reading
     sensor: temp_analog_reading

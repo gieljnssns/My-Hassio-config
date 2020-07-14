@@ -1,10 +1,10 @@
 substitutions:
-  devicename: stopcontacten_buiten_garage
-  ip: 192.168.79.86
-  
+  devicename:
+  ip: 192.168.79.xx
+
   ssid: !secret ssid
   password: !secret password
-  
+
 esphome:
   name: ${devicename}
   platform: ESP8266
@@ -19,12 +19,12 @@ wifi:
     subnet: 255.255.255.0
     dns1: 8.8.8.8
     dns2: 8.8.4.4
-    
+
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: ${devicename}
     password: ${password}
-    manual_ip: 
+    manual_ip:
       static_ip: 192.168.100.2
       gateway: 192.168.100.1
       subnet: 255.255.255.0
@@ -42,17 +42,3 @@ api:
 
 ota:
   password: ${password}
-
-switch:
-  - platform: gpio
-    pin:
-      number: D0
-      # inverted: yes
-    name: "Stopcontacten garage"
-    id: stopcontacten
-    
-binary_sensor:
-  - platform: gpio
-    pin: D1
-    name: "Beweging in garage"
-    device_class: motion

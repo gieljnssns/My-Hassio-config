@@ -1,6 +1,6 @@
 substitutions:
-  devicename: stopcontacten_buiten_garage
-  ip: 192.168.79.86
+  devicename: zolder
+  ip: 192.168.79.87
   
   ssid: !secret ssid
   password: !secret password
@@ -19,7 +19,7 @@ wifi:
     subnet: 255.255.255.0
     dns1: 8.8.8.8
     dns2: 8.8.4.4
-    
+
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: ${devicename}
@@ -43,16 +43,23 @@ api:
 ota:
   password: ${password}
 
+
 switch:
   - platform: gpio
     pin:
-      number: D0
+      number: D5
       # inverted: yes
-    name: "Stopcontacten garage"
-    id: stopcontacten
+    name: "Zolder verluchting"
+
+sensor:
+  - platform: dht
+    pin: D0
+    model: DHT22
+    temperature:
+      accuracy_decimals: 1
+      name: "Zolder temperatuur"
+    humidity:
+      accuracy_decimals: 1
+      name: "Zolder luchtvochtigheid"
+    update_interval: 60s
     
-binary_sensor:
-  - platform: gpio
-    pin: D1
-    name: "Beweging in garage"
-    device_class: motion

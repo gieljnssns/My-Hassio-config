@@ -1,5 +1,7 @@
 substitutions:
   devicename: knop_fien
+  ip: 192.168.79.82
+  
   ssid: !secret ssid
   password: !secret password
   
@@ -12,7 +14,7 @@ wifi:
   ssid: ${ssid}
   password: ${password}
   manual_ip:
-    static_ip: 192.168.79.82
+    static_ip: ${ip}
     gateway: 192.168.79.1
     subnet: 255.255.255.0
     dns1: 8.8.8.8
@@ -22,6 +24,12 @@ wifi:
   ap:
     ssid: ${devicename}
     password: ${password}
+    manual_ip: 
+      static_ip: 192.168.100.2
+      gateway: 192.168.100.1
+      subnet: 255.255.255.0
+      dns1: 8.8.8.8
+      dns2: 8.8.4.4
 
 captive_portal:
 
