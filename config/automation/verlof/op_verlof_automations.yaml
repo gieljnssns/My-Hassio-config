@@ -1,13 +1,13 @@
-  alias: 'Op verlof - automations'
-  initial_state: 'on' 
-  trigger:
-    - platform: time
-      at: '23:30:00'
-  action:
-    - service_template: >
-        {% if states('input_boolean.op_verlof') == 'on' %}
-          automation.turn_off
-        {% else %}
-          automation.turn_on
-        {% endif %}
-      entity_id: automation.kerstverlichting_aan_uit, automation.opladers_aan_uit, automation.oplader_electrische_fiets_aan_uit, automation.verluchting_afkoeling
+alias: "Op verlof - automations"
+initial_state: "on"
+trigger:
+  - platform: time
+    at: "23:30:00"
+action:
+  - service_template: >
+      {% if states('input_boolean.op_verlof') == 'on' %}
+        automation.turn_off
+      {% else %}
+        automation.turn_on
+      {% endif %}
+    entity_id: automation.kerstverlichting_aan_uit, automation.oplader_electrische_fiets_aan_uit, automation.verluchting_afkoeling, automation.achterdeur_sluiten_warm_buiten
