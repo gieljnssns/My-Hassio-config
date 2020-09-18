@@ -69,3 +69,8 @@ action:
   - service: script.mqtt_arrive_script
     data_template:
       identity: '{"identity":"Alarm night {{now().strftime("%H:%M")}}"}'
+  - condition: template
+    value_template: >
+      {{ state_attr( 'media_player.badkamer' , 'sonos_group')[0] !=  'media_player.badkamer' }}
+  - service: sonos.unjoin
+    entity_id: media_player.badkamer
