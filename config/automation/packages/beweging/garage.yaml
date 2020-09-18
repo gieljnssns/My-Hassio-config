@@ -1,0 +1,21 @@
+alias: Beweging garage
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.beweging_in_garage
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.beweging_in_garage
+    to: "off"
+    for:
+      minutes: 5
+action:
+  - service_template: >
+      {%- if trigger.to_state.state == 'on' -%}
+        input_boolean.turn_on
+      {%- elif trigger.to_state.state == 'off' -%}
+        input_boolean.turn_off
+      {%- else -%}
+        script.dummy
+      {%- endif -%}
+    entity_id: input_boolean.beweging_garage

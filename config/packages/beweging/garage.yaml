@@ -1,0 +1,11 @@
+input_boolean:
+  beweging_garage:
+
+binary_sensor:
+  - platform: template
+    sensors:
+      beweging_garage:
+        device_class: occupancy
+        friendly_name: "Beweging garage"
+        value_template: >-
+          {{ is_state('input_boolean.beweging_garage', 'on') }}
