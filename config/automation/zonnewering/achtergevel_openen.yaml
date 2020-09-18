@@ -1,50 +1,49 @@
-  alias: Achtergevel openen #Sunscreen up/inklappen
-  initial_state: 'on' #on reboot HA or reloading of automations, automation is ON
-  trigger:
-
-    # Sun based triggers
+alias: Achtergevel openen #Sunscreen up/inklappen
+initial_state: "on" #on reboot HA or reloading of automations, automation is ON
+trigger:
+  # Sun based triggers
   - platform: numeric_state
     entity_id: sensor.sun_azimut
     above: 250
   - platform: state
     entity_id: sensor.dark_outside
-    to: 'on'
+    to: "true"
   - platform: numeric_state
     entity_id: sensor.zonne_energie_gefilterd_lowpass
-    below: 350
-    
+    below: 400
+
     # Weather based triggers
   - platform: numeric_state
     entity_id: sensor.windsnelheid
     above: 40 #If wind force becomes to high, sunscreen needs to go up
   - platform: numeric_state
     entity_id: sensor.ba_precipitation_forecast_average
-    above: 0.30  # Rain the next 15 min
+    above: 0.30 # Rain the next 15 min
   - platform: numeric_state
     entity_id: sensor.ba_precipitation
-    above: 0.30  # Rain
+    above: 0.30 # Rain
 
-  condition:
-    condition: or
-    conditions:
-      - condition: state
-        entity_id: input_boolean.achtergevel_closed
-        state: 'on'
-      - condition: state
-        entity_id: input_boolean.keuken_1_closed
-        state: 'on'
-      - condition: state
-        entity_id: input_boolean.keuken_2_closed
-        state: 'on'
-      - condition: state
-        entity_id: input_boolean.slaapkamer_closed
-        state: 'on'
+condition:
+  condition: or
+  conditions:
+    - condition: state
+      entity_id: input_boolean.achtergevel_closed
+      state: "on"
+    - condition: state
+      entity_id: input_boolean.keuken_1_closed
+      state: "on"
+    - condition: state
+      entity_id: input_boolean.keuken_2_closed
+      state: "on"
+    - condition: state
+      entity_id: input_boolean.slaapkamer_closed
+      state: "on"
 
-  action:
-    - service: script.achtergevel_openen 
-    - service: notify.mobile_app_gphone
-      data_template:
-       message: "Het zonnescherm achtergevel geopend, reden {{trigger.entity_id}} "
-    - delay:
-        minutes: 5
-    - service: script.achtergevel_openen 
+action:
+  - service: script.achtergevel_openen
+  - service: notify.mobile_app_gphone
+    data_template:
+      message: "Het zonnescherm achtergevel geopend, reden {{trigger.entity_id}} "
+  - delay:
+      minutes: 5
+  - service: script.achtergevel_openen

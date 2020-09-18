@@ -15,15 +15,10 @@ condition:
     - condition: numeric_state
       entity_id: sun.sun
       value_template: "{{ state.attributes.elevation }}"
-      above: 15
-    - condition: or
-      conditions:
-        - condition: numeric_state
-          entity_id: sensor.huidige_opbrengst
-          above: 1200
-        - condition: numeric_state
-          entity_id: sensor.opbrengst_solaredge_kostal
-          above: 1200
+      above: 14
+    - condition: numeric_state
+      entity_id: sensor.zonne_energie_gefilterd_lowpass
+      above: 500
 
     # Weather based conditions
     - condition: numeric_state
@@ -42,7 +37,7 @@ condition:
     # Temperature based conditions
     - condition: numeric_state
       entity_id: sensor.buitentemperatuur_gefilterd
-      above: 20 # only if outdoor temperature is above x then allowed to roll out
+      above: 18 # only if outdoor temperature is above x then allowed to roll out
     - condition: numeric_state
       entity_id: sensor.gemiddelde_temp_beneden
       above: 22 # only if indoor temperature is above x then allowed to roll out

@@ -5,12 +5,15 @@ trigger:
   - platform: numeric_state
     entity_id: sensor.sun_azimut
     above: 320
+  - platform: numeric_state
+    entity_id: sensor.sun_elevation
+    below: -5
   - platform: state
     entity_id: sensor.dark_outside
-    to: "on"
-  - platform: numeric_state
-    entity_id: sensor.zonne_energie_gefilterd_lowpass
-    below: 150
+    to: "true"
+  # - platform: numeric_state
+  #   entity_id: sensor.zonne_energie_gefilterd_lowpass
+  #   below: 200
 
   # Weather based triggers
   - platform: numeric_state
@@ -21,7 +24,7 @@ trigger:
     above: 0.25 # Rain the next 15 min
   - platform: numeric_state
     entity_id: sensor.ba_precipitation
-    above: 0.25 # Rain
+    above: 0.20 # Rain
 
 condition:
   condition: or

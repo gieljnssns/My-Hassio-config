@@ -16,14 +16,9 @@ condition:
       entity_id: sun.sun
       value_template: "{{ state.attributes.elevation }}"
       above: 15
-    - condition: or
-      conditions:
-        - condition: numeric_state
-          entity_id: sensor.huidige_opbrengst
-          above: 1200
-        - condition: numeric_state
-          entity_id: sensor.opbrengst_solaredge_kostal
-          above: 1200
+    - condition: numeric_state
+      entity_id: sensor.zonne_energie_gefilterd_lowpass
+      above: 2300
 
     # Weather based conditions
     - condition: numeric_state
