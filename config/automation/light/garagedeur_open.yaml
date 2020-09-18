@@ -1,0 +1,28 @@
+alias: Light garage garagedeur open
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.garage_deur
+# condition:
+#   condition: and
+#   conditions:
+#     - condition: state
+#       entity_id: light.keuken_luster
+#       state: "off"
+#     - condition: state
+#       entity_id: light.keuken_inkom
+#       state: "off"
+#     - condition: state
+#       entity_id: light.keuken_spots
+#       state: "off"
+#     - condition: state
+#       entity_id: sensor.dark_outside
+#       state: "true"
+action:
+  - service_template: >
+      {% if trigger.from_state.state == "on" and states("binary_sensor.beweging_garage") == "off" %}
+        light.turn_off
+      {% else %}
+        light.turn_on
+      {% endif %}
+    entity_id: light.garage

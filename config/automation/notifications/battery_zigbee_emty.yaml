@@ -1,0 +1,36 @@
+id: "1594823233838"
+alias: Zigbee sensors batterijen
+description: ""
+trigger:
+  - below: 10
+    device_id: ea0138c960394e76b8c2db023bb46837
+    domain: sensor
+    entity_id: sensor.schakelaar_slaapkamer_noor_power
+    platform: device
+    type: battery_level
+  - below: 10
+    device_id: 9826e5006c01436eb8414b63bfdfd9bc
+    domain: sensor
+    entity_id: sensor.schakelaar_slaapkamer_fien_power
+    platform: device
+    type: battery_level
+  - platform: numeric_state
+    entity_id: sensor.gang_rookmelder_battery
+    below: 10
+  - platform: numeric_state
+    entity_id: sensor.living_rookmelder_battery
+    below: 10
+  - platform: numeric_state
+    entity_id: sensor.waskot_rookmelder_battery
+    below: 10
+  - platform: numeric_state
+    entity_id: sensor.garage_deur_battery
+    below: 10
+  - platform: numeric_state
+    entity_id: sensor.keuken_achterdeur_battery
+    below: 10
+condition: []
+action:
+  - service: notify.giel_en_martine
+    data_template:
+      message: Batterijen van zigbee sensor {{ trigger.entity_id }} nakijken

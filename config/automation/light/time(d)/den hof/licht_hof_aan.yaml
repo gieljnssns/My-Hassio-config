@@ -1,49 +1,48 @@
-  alias: Licht hof aan
-  initial_state: 'on' 
-  trigger:
-    - platform: state
-      entity_id: input_boolean.presence_licht_aan
-      to: 'on'
-    - platform: state
-      entity_id: device_tracker.giel_not_so_binary
-      to: 'Juist Aangekomen'
-    - platform: state
-      entity_id: device_tracker.martine_not_so_binary
-      to: 'Juist Aangekomen'
-    - platform: state
-      entity_id: input_boolean.noorthuis
-      to: 'on'
-    - platform: state
-      entity_id: input_boolean.fienthuis
-      to: 'on'
-    - platform: state
-      entity_id: binary_sensor.achterdeur_open
-      to: 'on'
-    - platform: state
-      entity_id: binary_sensor.beweging_hof
-      to: 'on'
-    - platform: state
-      entity_id: binary_sensor.beweging_fotocel
-      to: 'on'
-  condition:
-    - condition: state
-      entity_id: sensor.dark_outside
-      state: 'true'
-  action:
-    - service: light.turn_on
-      entity_id: light.alle_tuinverlichting
-    - service_template: >
-        {% if states("timer.verlichting_hof") == 'idle' %}
-          timer.start
-        {% else %}
-          timer.cancel
-        {% endif %}
-      entity_id: timer.verlichting_hof
-    - delay:
-        seconds: 5
-    - condition: state
-      entity_id: timer.verlichting_hof
-      state: 'idle'
-    - service: timer.start
-      entity_id: timer.verlichting_hof
-    
+alias: Licht hof aan
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: input_boolean.presence_licht_aan
+    to: "on"
+  - platform: state
+    entity_id: device_tracker.giel_not_so_binary
+    to: "Juist Aangekomen"
+  - platform: state
+    entity_id: device_tracker.martine_not_so_binary
+    to: "Juist Aangekomen"
+  - platform: state
+    entity_id: input_boolean.noorthuis
+    to: "on"
+  - platform: state
+    entity_id: input_boolean.fienthuis
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.keuken_achterdeur
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.beweging_hof
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.beweging_fotocel
+    to: "on"
+condition:
+  - condition: state
+    entity_id: sensor.dark_outside
+    state: "true"
+action:
+  - service: light.turn_on
+    entity_id: light.alle_tuinverlichting
+  - service_template: >
+      {% if states("timer.verlichting_hof") == 'idle' %}
+        timer.start
+      {% else %}
+        timer.cancel
+      {% endif %}
+    entity_id: timer.verlichting_hof
+  - delay:
+      seconds: 5
+  - condition: state
+    entity_id: timer.verlichting_hof
+    state: "idle"
+  - service: timer.start
+    entity_id: timer.verlichting_hof

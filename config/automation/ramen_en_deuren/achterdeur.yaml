@@ -2,7 +2,7 @@ alias: Achterdeur sluiten warm buiten
 initial_state: "on"
 trigger:
   - platform: state
-    entity_id: binary_sensor.achterdeur_open
+    entity_id: binary_sensor.keuken_achterdeur
     to: "on"
     for:
       seconds: 25
@@ -43,7 +43,7 @@ action:
   - delay:
       seconds: 30
   - condition: state
-    entity_id: binary_sensor.achterdeur_open
+    entity_id: binary_sensor.keuken_achterdeur
     state: "on"
   - service: notify.mobile_app_gphone
     data:
@@ -109,7 +109,7 @@ action:
   - delay:
       seconds: 30
   - condition: state
-    entity_id: binary_sensor.achterdeur_open
+    entity_id: binary_sensor.keuken_achterdeur
     state: "on"
   - service_template: >
       {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
@@ -135,7 +135,7 @@ action:
   - delay:
       seconds: 30
   - condition: state
-    entity_id: binary_sensor.achterdeur_open
+    entity_id: binary_sensor.keuken_achterdeur
     state: "on"
   - service_template: >
       {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
