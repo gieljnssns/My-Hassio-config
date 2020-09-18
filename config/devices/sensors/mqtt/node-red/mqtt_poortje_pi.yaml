@@ -1,8 +1,10 @@
+###  BME280  ###
 - platform: mqtt
   state_topic: "PoortjePi/input/temperatuur"
   value_template: "{{ value_json }}"
   unit_of_measurement: "°C"
   name: "Temperatuur poort"
+  device_class: temperature
   availability_topic: "PoortjePi/status"
   payload_available: "online"
   payload_not_available: "offline"
@@ -12,10 +14,65 @@
   value_template: "{{ value_json }}"
   unit_of_measurement: "%"
   name: "Luchtvochtigheid poort"
+  device_class: humidity
   availability_topic: "PoortjePi/status"
   payload_available: "online"
   payload_not_available: "offline"
 
+- platform: mqtt
+  state_topic: "PoortjePi/input/heatindex"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Gevoelstemperatuur poort"
+  device_class: temperature
+  icon: "mdi:thermometer-alert"
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "PoortjePi/input/dewpoint"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Dauwpunt poort"
+  device_class: temperature
+  icon: "mdi:thermometer-alert"
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "PoortjePi/input/pressure"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "hPa"
+  name: "Luchtdruk poort"
+  device_class: pressure
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+###  DHT22  ###
+- platform: mqtt
+  state_topic: "PoortjePi/input/temperatuur-dht"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "°C"
+  name: "Temperatuur poort dht"
+  device_class: temperature
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+- platform: mqtt
+  state_topic: "PoortjePi/input/luchtvochtigheid-dht"
+  value_template: "{{ value_json }}"
+  unit_of_measurement: "%"
+  name: "Luchtvochtigheid poort dht"
+  device_class: humidity
+  availability_topic: "PoortjePi/status"
+  payload_available: "online"
+  payload_not_available: "offline"
+
+###  Fotocel  ###
 - platform: mqtt
   state_topic: "PoortjePi/input/fotocel"
   value_template: "{{ value_json }}"
@@ -24,6 +81,7 @@
   payload_available: "online"
   payload_not_available: "offline"
 
+###  System  ###
 - platform: mqtt
   state_topic: "PoortjePi/system/temp"
   device_class: temperature
