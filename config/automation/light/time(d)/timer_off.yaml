@@ -17,6 +17,10 @@ trigger:
     event_type: timer.finished
     event_data:
       entity_id: timer.verlichting_gang_boven
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.verlichting_garage
 action:
   service: light.turn_off
   data_template:
@@ -27,6 +31,8 @@ action:
         light.waskot
       {% elif trigger.event.data.entity_id == 'timer.verlichting_gang_beneden' %}
         light.gang_beneden
+      {% elif trigger.event.data.entity_id == 'timer.verlichting_garage' and states("binary_sensor.beweging_garage") == "off" %}
+        light.garage, light.garage_werkbank
       {% else %}
         light.gang_boven
       {% endif %}

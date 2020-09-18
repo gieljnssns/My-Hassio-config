@@ -5,14 +5,19 @@
       entity_id: sensor.dark_outside
       to: 'true'
   condition:
-    condition: or
+    condition: and
     conditions:
       - condition: state
-        entity_id: alarm_control_panel.ha_alarm
-        state: armed_home
-      - condition: state
-        entity_id: alarm_control_panel.ha_alarm
-        state: armed_away
+        entity_id: input_boolean.op_verlof
+        state: "off"
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: alarm_control_panel.ha_alarm
+            state: armed_home
+          - condition: state
+            entity_id: alarm_control_panel.ha_alarm
+            state: armed_away
   action:
     - service: light.turn_on
       entity_id: light.spots_tv

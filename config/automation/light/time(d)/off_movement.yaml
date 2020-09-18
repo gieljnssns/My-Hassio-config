@@ -25,6 +25,11 @@ trigger:
     to: "off"
     for:
       minutes: 10
+  - platform: state
+    entity_id: binary_sensor.beweging_garage
+    to: "off"
+    for:
+      minutes: 10
 action:
   - service: light.turn_off
     data_template:
@@ -39,6 +44,8 @@ action:
           light.noor
         {% elif trigger.entity_id == 'binary_sensor.beweging_fien' %}
           light.fien
+        {% elif trigger.entity_id == 'binary_sensor.beweging_garage' %}
+          light.garage, light.garage_werkbank
         {% else %}
           light.slaapkamer_hoog, light.spot_slaapkamer
         {% endif %}
