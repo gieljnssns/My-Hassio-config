@@ -1,0 +1,91 @@
+- platform: template
+  sensors:
+    verwarming_fien_template_power:
+      friendly_name: Verwarming Fien vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("switch.fien") == "on" %}
+            {{ 1030 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+
+    verwarming_noor_template_power:
+      friendly_name: Verwarming Noor vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("switch.noor") == "on" %}
+            {{ 1030 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+
+    verwarming_badkamer_template_power:
+      friendly_name: Verwarming badkamer vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("switch.badkamer") == "on" %}
+            {{ 1030 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+
+    verwarming_slaapkamer_template_power:
+      friendly_name: Verwarming slaapkamer vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("switch.slaapkamer") == "on" %}
+            {{ 1520 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+
+    verwarming_wc_template_power:
+      friendly_name: Verwarming wc vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("switch.wc") == "on" %}
+            {{ 1000 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+
+    verwarming_bureau_template_power:
+      friendly_name: Verwarming bureau vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("switch.smappee_verwarming_bureau") == "on" %}
+            {{ 1010 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+
+    verluchting_template_power:
+      friendly_name: Verluchting vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("switch.verluchting") == "on" %}
+            {{ 100 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+
+    zolder_verluchting_template_power:
+      friendly_name: Zolder verluchting vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("switch.zolder_verluchting") == "on" %}
+            {{ 25 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+
+    zwembad_template_power:
+      friendly_name: Zwembadpomp vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("switch.zwembad") == "on" %}
+            {{ 190 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
