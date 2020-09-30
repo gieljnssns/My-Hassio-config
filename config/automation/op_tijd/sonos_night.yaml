@@ -1,16 +1,15 @@
-  alias: "Sonos Enable/Disable speech enhance and night sound"
-  initial_state: 'on'
-  trigger:
-    - platform: time
-      at: '23:00:00'
-    - platform: time
-      at: '06:00:00'
-  action:
-    - service_template: >
-        {% if now().hour == 22 %}
-          switch.turn_on
-        {% else %}
-          switch.turn_off
-        {% endif %}
-      entity_id: switch.night_sound, switch.speech_enhance
-    
+alias: "Sonos Enable/Disable speech enhance and night sound"
+initial_state: "on"
+trigger:
+  - platform: time
+    at: "23:02:00"
+  - platform: time
+    at: "06:00:00"
+action:
+  - service_template: >
+      {% if as_local(states.sensor.time.last_changed).hour == 23 %}
+        switch.turn_on
+      {% else %}
+        switch.turn_off
+      {% endif %}
+    entity_id: switch.night_sound, switch.speech_enhance

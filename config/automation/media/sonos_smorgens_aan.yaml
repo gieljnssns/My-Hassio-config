@@ -24,14 +24,14 @@ condition:
         - condition: template
           value_template: >
             {% if states.calendar.monnikenheide_monnikenheide.attributes.start_time is defined %}
-              {{as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 26.640}}
+              {{as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(as_local(states.sensor.time.last_changed)) | float < 26.640}}
             {% else %}
               False
             {% endif %}
         - condition: template
           value_template: >
             {% if states.calendar.mondelez_de_vroege.attributes.start_time is defined %}
-              {{as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(now()) | float < 108000}}
+              {{as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(as_local(states.sensor.time.last_changed)) | float < 108000}}
             {% else %}
               False
             {% endif %}

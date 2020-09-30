@@ -1,30 +1,30 @@
-  alias: Bayesian Bluetooth
-  initial_state: 'on' 
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.giel_bayesian_on_bluetooth_off
-      to: 'on'
-    - platform: state
-      entity_id: binary_sensor.martine_bayesian_on_bluetooth_off
-      to: 'on'
-    - platform: state
-      entity_id: binary_sensor.giel_bayesian_off_bluetooth_on
-      to: 'on'
-    - platform: state
-      entity_id: binary_sensor.martine_bayesian_off_bluetooth_on
-      to: 'on'
-  action:
-    - service: notify.mobile_app_gphone
+alias: Bayesian Bluetooth
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.giel_bayesian_on_bluetooth_off
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.martine_bayesian_on_bluetooth_off
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.giel_bayesian_off_bluetooth_on
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.martine_bayesian_off_bluetooth_on
+    to: "on"
+action:
+  - service: notify.mobile_app_gphone
+    data:
+      title: "Melding van Home-Assistant"
+      message: "Verschil tussen bayesian en bluetooth"
       data:
-        title: "Melding van Home-Assistant"
-        message: "Verschil tussen bayesian en bluetooth"
-        data:
-          push:
-            sound: default
-    - service: script.request_all_update
-    - condition: template
-      value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.mqtt_arrive_depart_script', 'last_triggered')) | float > 45 }}"
-    - service: script.mqtt_arrive_depart_script
-      data_template:
-        identity: >
-          {"identity":"{{trigger.entity_id.split(".")[1]}} {{now().strftime("%H:%M")}}"}
+        push:
+          sound: default
+  - service: script.request_all_update
+  - condition: template
+    value_template: "{{as_timestamp(as_local(states.sensor.time.last_changed)) - as_timestamp(state_attr('script.mqtt_arrive_depart_script', 'last_triggered')) | float > 45 }}"
+  - service: script.mqtt_arrive_depart_script
+    data_template:
+      identity: >
+        {"identity":"{{trigger.entity_id.split(".")[1]}} {{as_local(states.sensor.time.last_changed).strftime("%H:%M")}}"}

@@ -1,26 +1,26 @@
-  alias: 'Wifi terug op'
-  initial_state: 'on' 
-  trigger:
-    - platform: template
-      value_template: "{{ state_attr('input_datetime.wifi_noor','timestamp') | timestamp_custom('%Y-%m-%d') == states('sensor.date') }}"
-    - platform: template
-      value_template: "{{ state_attr('input_datetime.wifi_fien','timestamp') | timestamp_custom('%Y-%m-%d') == states('sensor.date') }}"
-  condition:
-    condition: or
-    conditions:
-      - condition: state
-        entity_id: switch.npad
-        state: 'off'
-      - condition: state
-        entity_id: switch.fpad
-        state: 'off'
-   
-  action:
-    - service: switch.turn_on
-      data_template:
-        entity_id: >
-          {% if state_attr('input_datetime.wifi_noor','timestamp') | timestamp_custom('%Y-%m-%d') == now().strftime('%Y-%m-%d') %}
-            switch.npad
-          {% else %}
-            switch.fpad
-          {% endif %}
+alias: "Wifi terug op"
+initial_state: "on"
+trigger:
+  - platform: template
+    value_template: "{{ state_attr('input_datetime.wifi_noor','timestamp') | timestamp_custom('%Y-%m-%d') == states('sensor.date') }}"
+  - platform: template
+    value_template: "{{ state_attr('input_datetime.wifi_fien','timestamp') | timestamp_custom('%Y-%m-%d') == states('sensor.date') }}"
+condition:
+  condition: or
+  conditions:
+    - condition: state
+      entity_id: switch.npad
+      state: "off"
+    - condition: state
+      entity_id: switch.fpad
+      state: "off"
+
+action:
+  - service: switch.turn_on
+    data_template:
+      entity_id: >
+        {% if state_attr('input_datetime.wifi_noor','timestamp') | timestamp_custom('%Y-%m-%d') == as_local(states.sensor.time.last_changed).strftime('%Y-%m-%d') %}
+          switch.npad
+        {% else %}
+          switch.fpad
+        {% endif %}
