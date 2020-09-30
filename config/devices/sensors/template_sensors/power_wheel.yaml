@@ -1,53 +1,53 @@
 - platform: template
   sensors:
-      grid_consumption:
-          friendly_name: Net afname
-          unit_of_measurement: "W"
-          value_template: >-
-              {%- if states("sensor.huidige_opbrengst") | float < states("sensor.huidig_verbruik") | float %}
-                  {{ states("sensor.huidig_verbruik") | float - states("sensor.huidige_opbrengst") | float }}
-              {%- elif states("sensor.huidige_opbrengst") | float > states("sensor.huidig_verbruik") | float %}
-                  {{ 0 | float }}
-              {% endif %}
+    grid_consumption:
+      friendly_name: Net afname
+      unit_of_measurement: "W"
+      value_template: >-
+        {%- if states("sensor.huidige_opbrengst") | float < states("sensor.huidig_verbruik") | float %}
+            {{ states("sensor.huidig_verbruik") | float - states("sensor.huidige_opbrengst") | float }}
+        {%- elif states("sensor.huidige_opbrengst") | float > states("sensor.huidig_verbruik") | float %}
+            {{ 0 | float }}
+        {% endif %}
 
-      grid_production:
-          friendly_name: Net terugsturen
-          unit_of_measurement: "W"
-          value_template: >-
-              {%- if states("sensor.huidige_opbrengst") | float < states("sensor.huidig_verbruik") | float %}
-                  {{ 0 | float }}
-              {%- elif states("sensor.huidige_opbrengst") | float > states("sensor.huidig_verbruik") | float %}
-                  {{ states("sensor.huidige_opbrengst") | float - states("sensor.huidig_verbruik") | float }}
-              {% endif %}
+    grid_production:
+      friendly_name: Net terugsturen
+      unit_of_measurement: "W"
+      value_template: >-
+        {%- if states("sensor.huidige_opbrengst") | float < states("sensor.huidig_verbruik") | float %}
+            {{ 0 | float }}
+        {%- elif states("sensor.huidige_opbrengst") | float > states("sensor.huidig_verbruik") | float %}
+            {{ states("sensor.huidige_opbrengst") | float - states("sensor.huidig_verbruik") | float }}
+        {% endif %}
 
-      grid_energy_consumption:
-          friendly_name: Net afname
-          unit_of_measurement: "kWh"
-          value_template: >-
-              {%- if states("sensor.daily_solar") | float < states("sensor.daily_energy") | float %}
-                  {{ (states("sensor.daily_energy") | float - states("sensor.daily_solar") | float)  | round(3)  }}
-              {%- elif states("sensor.daily_solar") | float > states("sensor.daily_energy") | float %}
-                  {{ 0 | float }}
-              {% endif %}
+    grid_energy_consumption:
+      friendly_name: Net afname
+      unit_of_measurement: "kWh"
+      value_template: >-
+        {%- if states("sensor.daily_solar") | float < states("sensor.daily_energy") | float %}
+            {{ (states("sensor.daily_energy") | float - states("sensor.daily_solar") | float)  | round(3)  }}
+        {%- elif states("sensor.daily_solar") | float > states("sensor.daily_energy") | float %}
+            {{ 0 | float }}
+        {% endif %}
 
-      grid_energy_production:
-          friendly_name: Net terugsturen
-          unit_of_measurement: "kWh"
-          value_template: >-
-              {%- if states("sensor.daily_solar") | float < states("sensor.daily_energy") | float %}
-                  {{ 0 | float }}
-              {%- elif states("sensor.daily_solar") | float > states("sensor.daily_energy") | float %}
-                  {{ (states("sensor.daily_solar") | float - states("sensor.daily_energy") | float)  | round(3) }}
-              {% endif %}
+    grid_energy_production:
+      friendly_name: Net terugsturen
+      unit_of_measurement: "kWh"
+      value_template: >-
+        {%- if states("sensor.daily_solar") | float < states("sensor.daily_energy") | float %}
+            {{ 0 | float }}
+        {%- elif states("sensor.daily_solar") | float > states("sensor.daily_energy") | float %}
+            {{ (states("sensor.daily_solar") | float - states("sensor.daily_energy") | float)  | round(3) }}
+        {% endif %}
 
-      eigen_verbruik:
-          friendly_name: Eigen verbruik
-          unit_of_measurement: "W"
-          value_template: >-
-              {% if (states("sensor.huidige_opbrengst") | float - states("sensor.huidig_verbruik") | float) > 0 %}
-                  {{ states("sensor.huidig_verbruik") | float  }}
-              {% elif (states("sensor.huidige_opbrengst") | float - states("sensor.huidig_verbruik") | float) < 0 and states("sensor.huidige_opbrengst") | float > 0 %}
-                  {{ states("sensor.huidige_opbrengst") | float  }}
-              {% else  %}
-                  {{ 0 | float }}
-              {% endif %}
+    eigen_verbruik:
+      friendly_name: Eigen verbruik
+      unit_of_measurement: "W"
+      value_template: >-
+        {% if (states("sensor.huidige_opbrengst") | float - states("sensor.huidig_verbruik") | float) > 0 %}
+            {{ states("sensor.huidig_verbruik") | float  }}
+        {% elif (states("sensor.huidige_opbrengst") | float - states("sensor.huidig_verbruik") | float) < 0 and states("sensor.huidige_opbrengst") | float > 0 %}
+            {{ states("sensor.huidige_opbrengst") | float  }}
+        {% else  %}
+            {{ 0 | float }}
+        {% endif %}
