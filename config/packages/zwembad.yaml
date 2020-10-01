@@ -21,8 +21,8 @@ sensor:
     entity_id: switch.zwembad
     state: "on"
     type: time
-    start: "{{ now().replace(hour=0, minute=0, second=0) }}"
-    end: "{{ now() }}"
+    start: "{{ as_local(states.sensor.time.last_changed).replace(hour=0, minute=0, second=0) }}"
+    end: "{{ as_local(states.sensor.time.last_changed) }}"
 
 binary_sensor:
   - platform: template
@@ -81,7 +81,7 @@ automation:
       condition: and
       conditions:
         - condition: template
-          value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('automation.zwembad_schema', 'last_triggered')) | float > 30 }}"
+          value_template: "{{as_timestamp(as_local(states.sensor.time.last_changed)) - as_timestamp(state_attr('automation.zwembad_schema', 'last_triggered')) | float > 30 }}"
     action:
       service_template: >
         {% if states('switch.zwembad') == 'unavailable' %}
@@ -127,7 +127,7 @@ script:
         entity_id: input_datetime.zwembad_boost_stop
         data_template:
           datetime: >
-            {{ (as_timestamp(now())+ 176400) | timestamp_custom('%Y-%m-%d %H:%M:%S') }}
+            {{ (as_timestamp(as_local(states.sensor.time.last_changed))+ 176400) | timestamp_custom('%Y-%m-%d %H:%M:%S') }}
 
   zwembad_uit:
     sequence:

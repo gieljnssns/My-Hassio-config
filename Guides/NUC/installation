@@ -102,5 +102,19 @@ curl -fsSL https://unms.com/v1/install > /tmp/unms_inst.sh && sudo bash /tmp/unm
 ## Edgerouter firmware update
 https://www.youtube.com/watch?v=TtCScmoRE70
 
-## plex
-https://www.linuxbabe.com/ubuntu/install-plex-media-server-ubuntu-18-04
+## Py-Spy
+# Installation
+ssh root@192.168.79.54 -p 22222
+login
+docker exec -it homeassistant /bin/bash
+echo 'manylinux1_compatible = True' > /usr/local/lib/python3.8/site-packages/_manylinux.py
+pip install py-spy
+https://developers.home-assistant.io/docs/operating-system/debugging/#ssh-access-to-the-host
+
+# Usage
+ssh root@192.168.79.54 -p 22222
+login
+docker exec -it homeassistant /bin/bash
+py-spy record --pid 233 --duration 120 --output /config/www/spy-startup.svg
+py-spy dump --pid 233
+py-spy top --pid 233
