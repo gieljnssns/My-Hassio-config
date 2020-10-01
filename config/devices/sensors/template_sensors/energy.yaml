@@ -9,6 +9,7 @@
         {%- elif states("sensor.huidige_opbrengst") | float > states("sensor.huidig_verbruik") | float %}
             {{ 0 | float }}
         {% endif %}
+
     grid_production:
       friendly_name: Net terugsturen
       unit_of_measurement: "W"
@@ -18,6 +19,7 @@
         {%- elif states("sensor.huidige_opbrengst") | float > states("sensor.huidig_verbruik") | float %}
             {{ states("sensor.huidige_opbrengst") | float - states("sensor.huidig_verbruik") | float }}
           {% endif %}
+
     grid_energy_consumption:
       friendly_name: Net afname
       unit_of_measurement: "kWh"
@@ -27,6 +29,7 @@
         {%- elif states("sensor.daily_solar") | float > states("sensor.daily_energy") | float %}
             {{ 0 | float }}
         {% endif %}
+
     grid_energy_production:
       friendly_name: Net terugsturen
       unit_of_measurement: "kWh"
@@ -36,6 +39,7 @@
         {%- elif states("sensor.daily_solar") | float > states("sensor.daily_energy") | float %}
             {{ (states("sensor.daily_solar") | float - states("sensor.daily_energy") | float)  | round(3) }}
         {% endif %}
+
     eigen_verbruik:
       friendly_name: Eigen verbruik
       unit_of_measurement: "W"
@@ -47,23 +51,32 @@
         {% else  %}
             {{ 0 | float }}
         {% endif %}
-    verlichting_verbruik:
-      friendly_name: Verlichting energie
-      unit_of_measurement: "kWh"
+
+    verlichting_vermogen:
+      friendly_name: Verlichting vermogen
+      unit_of_measurement: "W"
       value_template: >-
-        {{ (states("sensor.danszaal_luster_energie") | float + 
-            states("sensor.zithoek_luster_energie") | float + 
-            states("sensor.gang_boven_energie") | float + 
-            states("sensor.slaapkamer_hoog_energie") | float + 
-            states("sensor.keuken_inkom_energie") | float + 
-            states("sensor.keuken_spots_energie") | float + 
-            states("sensor.danszaal_spots_energie") | float + 
-            states("sensor.wc_energie") | float + 
-            states("sensor.garage_energie") | float + 
-            states("sensor.garage_werkbank_energie") | float + 
-            states("sensor.badkamer_hoog_energie") | float + 
-            states("sensor.badkamer_pombak_energie") | float + 
-            states("sensor.gang_beneden_energie") | float + 
-            states("sensor.keuken_luster_energie") | float + 
-            states("sensor.trap_energie") | float + 
-            states("sensor.waskot_energie") | float) | round (3)}}
+        {{ (states("sensor.danszaal_luster_vermogen") | float + 
+            states("sensor.zithoek_luster_vermogen") | float + 
+            states("sensor.gang_boven_vermogen") | float + 
+            states("sensor.slaapkamer_hoog_vermogen") | float + 
+            states("sensor.keuken_inkom_vermogen") | float + 
+            states("sensor.keuken_spots_vermogen") | float + 
+            states("sensor.danszaal_spots_vermogen") | float + 
+            states("sensor.wc_vermogen") | float + 
+            states("sensor.garage_vermogen") | float + 
+            states("sensor.garage_werkbank_vermogen") | float + 
+            states("sensor.badkamer_hoog_vermogen") | float + 
+            states("sensor.badkamer_pombak_vermogen") | float + 
+            states("sensor.gang_beneden_vermogen") | float + 
+            states("sensor.keuken_luster_vermogen") | float + 
+            states("sensor.trap_vermogen") | float + 
+            states("sensor.waskot_vermogen") | float) | round (3)}}
+
+    verluchting_vermogen:
+      friendly_name: Verluchting vermogen
+      unit_of_measurement: "W"
+      value_template: >-
+        {{ (states("sensor.zolder_verluchting_template_power") | float + 
+            states("sensor.verluchting_template_power") | float + 
+            states("sensor.badkamer_verluchting_vermogen") | float) | round (3)}}
