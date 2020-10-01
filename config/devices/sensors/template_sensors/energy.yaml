@@ -18,7 +18,7 @@
             {{ 0 | float }}
         {%- elif states("sensor.huidige_opbrengst") | float > states("sensor.huidig_verbruik") | float %}
             {{ states("sensor.huidige_opbrengst") | float - states("sensor.huidig_verbruik") | float }}
-        {% endif %}
+          {% endif %}
 
     grid_energy_consumption:
       friendly_name: Net afname
@@ -51,3 +51,32 @@
         {% else  %}
             {{ 0 | float }}
         {% endif %}
+
+    verlichting_vermogen:
+      friendly_name: Verlichting vermogen
+      unit_of_measurement: "W"
+      value_template: >-
+        {{ (states("sensor.danszaal_luster_vermogen") | float + 
+            states("sensor.zithoek_luster_vermogen") | float + 
+            states("sensor.gang_boven_vermogen") | float + 
+            states("sensor.slaapkamer_hoog_vermogen") | float + 
+            states("sensor.keuken_inkom_vermogen") | float + 
+            states("sensor.keuken_spots_vermogen") | float + 
+            states("sensor.danszaal_spots_vermogen") | float + 
+            states("sensor.wc_vermogen") | float + 
+            states("sensor.garage_vermogen") | float + 
+            states("sensor.garage_werkbank_vermogen") | float + 
+            states("sensor.badkamer_hoog_vermogen") | float + 
+            states("sensor.badkamer_pombak_vermogen") | float + 
+            states("sensor.gang_beneden_vermogen") | float + 
+            states("sensor.keuken_luster_vermogen") | float + 
+            states("sensor.trap_vermogen") | float + 
+            states("sensor.waskot_vermogen") | float) | round (3)}}
+
+    verluchting_vermogen:
+      friendly_name: Verluchting vermogen
+      unit_of_measurement: "W"
+      value_template: >-
+        {{ (states("sensor.zolder_verluchting_template_power") | float + 
+            states("sensor.verluchting_template_power") | float + 
+            states("sensor.badkamer_verluchting_vermogen") | float) | round (3)}}
