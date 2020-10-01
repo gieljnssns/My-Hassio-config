@@ -1,15 +1,15 @@
-  alias: 'Thuiskomst aan/af'
-  initial_state: 'on' 
-  trigger:
-    - platform: time
-      at: '23:00'
-    - platform: time
-      at: '08:30'
-  action:
-    - service_template: >
-        {% if now().hour == 23 %}
-          automation.turn_off
-        {% else %}
-          automation.turn_on
-        {% endif %}
-      entity_id: automation.welkom_allemaal_sonos_paused, automation.welkom_allemaal_sonos_playing, automation.welkom_sonos_paused, automation.welkom_sonos_playing
+alias: "Thuiskomst aan/af"
+initial_state: "on"
+trigger:
+  - platform: time
+    at: "23:02"
+  - platform: time
+    at: "08:30"
+action:
+  - service_template: >
+      {% if as_local(states.sensor.time.last_changed).hour == 23 %}
+        automation.turn_off
+      {% else %}
+        automation.turn_on
+      {% endif %}
+    entity_id: automation.welkom_allemaal_sonos_paused, automation.welkom_allemaal_sonos_playing, automation.welkom_sonos_paused, automation.welkom_sonos_playing

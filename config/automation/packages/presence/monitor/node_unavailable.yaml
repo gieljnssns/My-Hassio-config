@@ -37,4 +37,4 @@ action:
   - service: script.mqtt_arrive_trigger
     data_template:
       identity: >-
-        {"identity":"Node Unavailable {{now().strftime("%H:%M")}}"}
+        {"identity":"Node Unavailable {{as_local(states.sensor.time.last_changed).strftime("%H:%M")}}"}

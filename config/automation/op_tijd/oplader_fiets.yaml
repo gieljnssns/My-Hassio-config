@@ -2,7 +2,7 @@ alias: "Oplader electrische fiets aan/uit"
 initial_state: "on"
 trigger:
   - platform: time
-    at: "16:00:00"
+    at: "16:02:00"
   - platform: state
     entity_id: alarm_control_panel.ha_alarm
     to: "armed_night"
@@ -28,7 +28,7 @@ condition:
         - sun
 action:
   - service_template: >
-      {% if now().hour == 16 %}
+      {% if as_local(states.sensor.time.last_changed).hour == 16 %}
         switch.turn_on
       {% else %}
         switch.turn_off

@@ -1,14 +1,13 @@
-  alias: Knop Fien 2 klik
-  initial_state: 'on' 
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.knop_fien_2_klik
-      to: 'on'
-  action:
-    service_template: >
-      {% if now().hour < 12  %}
-        script.vertraagd_aan_fien_5_min
-      {% else %}
-        script.vertraagd_uit_fien_30_min
-      {% endif %}
-    
+alias: Knop Fien 2 klik
+initial_state: "on"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.knop_fien_2_klik
+    to: "on"
+action:
+  service_template: >
+    {% if as_local(states.sensor.time.last_changed).hour < 12  %}
+      script.vertraagd_aan_fien_5_min
+    {% else %}
+      script.vertraagd_uit_fien_30_min
+    {% endif %}

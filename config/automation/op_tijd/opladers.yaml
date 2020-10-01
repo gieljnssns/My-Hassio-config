@@ -6,7 +6,7 @@ trigger:
   - platform: time
     at: "09:00"
   - platform: time
-    at: "22:00"
+    at: "22:02"
 condition:
   - condition: time
     weekday:
@@ -19,7 +19,7 @@ condition:
       - sun
 action:
   - service_template: >
-      {% if now().hour == 22 %}
+      {% if as_local(states.sensor.time.last_changed).hour == 22 %}
         switch.turn_off
       {% else %}
         switch.turn_on

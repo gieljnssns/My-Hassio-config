@@ -19,7 +19,7 @@ condition:
       entity_id: sensor.dark_sky_daytime_high_temperature_0d
       above: 24
     - condition: template
-      value_template: "{{ (as_timestamp(now()) - as_timestamp(states.automation.ramen_openen_sluiten.attributes.last_triggered) | int) > 600 }}"
+      value_template: "{{ (as_timestamp(as_local(states.sensor.time.last_changed)) - as_timestamp(states.automation.ramen_openen_sluiten.attributes.last_triggered) | int) > 600 }}"
 
 action:
   - service: notify.mobile_app_gphone
