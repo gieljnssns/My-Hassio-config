@@ -22,24 +22,23 @@ switch:
 automation:
   - id: enable_youtube
     alias: Enable Youtube
-    initial_state: 'on'
     trigger:
       platform: state
       entity_id: input_boolean.allowyoutube
       to: 'on'
     action:
-    - service: adguard.disable_url
+    - service: adguard.remove_url
       data:
-        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-youtube.txt
+        url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-youtube.txt"
 
   - id: disable_youtube
     alias: Disable Youtube
-    initial_state: 'on'
     trigger:
       platform: state
       entity_id: input_boolean.allowyoutube
       to: 'off'
     action:
-    - service: adguard.enable_url
+    - service: adguard.add_url
       data:
-        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-youtube.txt
+        url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-youtube.txt"
+        name: Youtube

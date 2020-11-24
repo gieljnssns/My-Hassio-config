@@ -22,24 +22,23 @@ switch:
 automation:
   - id: enable_whatsapp
     alias: Enable Whatsapp
-    initial_state: 'on'
     trigger:
       platform: state
       entity_id: input_boolean.allowwhatsapp
       to: 'on'
     action:
-    - service: adguard.disable_url
+    - service: adguard.remove_url
       data:
-        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-whatsapp.txt
+        url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-whatsapp.txt"
 
   - id: disable_whatsapp
     alias: Disable Whatsapp
-    initial_state: 'on'
     trigger:
       platform: state
       entity_id: input_boolean.allowwhatsapp
       to: 'off'
     action:
-    - service: adguard.enable_url
+    - service: adguard.add_url
       data:
-        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-whatsapp.txt
+        url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-whatsapp.txt"
+        name: WhatsApp

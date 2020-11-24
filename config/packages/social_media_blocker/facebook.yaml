@@ -1,14 +1,14 @@
 input_boolean:
   allowfacebook:
     name: Facebook
-    icon: mdi:facebook-box
+    icon: mdi:facebook
 
 switch:
   - platform: template
     switches:
       allowfacebook:
         value_template: "{{ is_state('input_boolean.allowfacebook', 'on') }}"
-        icon_template: mdi:facebook-box
+        icon_template: mdi:facebook
         friendly_name: Facebook
         turn_on:
           - service: input_boolean.turn_on
@@ -22,24 +22,23 @@ switch:
 automation:
   - id: enable_facebook
     alias: Enable Facebook
-    initial_state: 'on'
     trigger:
       platform: state
       entity_id: input_boolean.allowfacebook
       to: 'on'
     action:
-    - service: adguard.disable_url
+    - service: adguard.remove_url
       data:
-        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-facebook.txt
+        url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-facebook.txt"
 
   - id: disable_facebook
     alias: Disable Facebook
-    initial_state: 'on'
     trigger:
       platform: state
       entity_id: input_boolean.allowfacebook
       to: 'off'
     action:
-    - service: adguard.enable_url
+    - service: adguard.add_url
       data:
-        url: https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-facebook.txt
+        url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-facebook.txt"
+        name: Facebook
