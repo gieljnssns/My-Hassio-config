@@ -4,6 +4,10 @@
     - platform: numeric_state
       entity_id: sensor.zonne_energie_gefilterd_lowpass
       above: 100
+    - platform: numeric_state
+      entity_id: sun.sun
+      value_template: "{{ state.attributes.elevation }}"
+      above: 6.0
     # - platform: numeric_state
     #   entity_id: sensor.zonne_energie_omvormers_gefilterd_lowpass
     #   above: 100

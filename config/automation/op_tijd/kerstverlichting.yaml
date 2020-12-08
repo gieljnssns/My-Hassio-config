@@ -17,6 +17,8 @@ condition:
         - fri
         - sat
         - sun
+    - condition: template
+      value_template: "{{ now().month == 12 or now().month == 1  }}"
 action:
   - service_template: >
       {% if as_local(states.sensor.time.last_changed).hour == 23 %}
@@ -24,4 +26,4 @@ action:
       {% else %}
         switch.turn_on
       {% endif %}
-    entity_id: switch.smappee_kerstverlichting
+    entity_id: switch.ventilator_kerstverlichting
