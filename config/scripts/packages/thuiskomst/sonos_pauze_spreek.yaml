@@ -9,28 +9,34 @@
           entity_id: "{{ sonos_entity }}"
           volume_level: "{{ volume }}"
       - delay: '00:00:01'
-      # - service: tts.voicerss_say
-      # - service: tts.google_translate_say
-      - service_template: >
+      - service: >
           {% if is_state('input_select.tts', 'VoiceRSS') %}
             tts.voicerss_say
           {% elif is_state('input_select.tts', 'Google') %}
             tts.google_translate_say
           {% else %}
-              False
+            False
           {% endif %}
         data_template:
           entity_id: "{{ sonos_entity }}"
           message: "{{ speech_message }}"
-      - delay: '00:00:02'
+          language: >
+            {% if is_state('input_select.tts', 'VoiceRSS') %}
+              nl-be
+            {% elif is_state('input_select.tts', 'Google') %}
+              nl
+            {% else %}
+              False
+            {% endif %}
+      - delay: '00:00:03'
       - wait_template: "{{ states('binary_sensor.keuken_not_playing') == 'on' }}"
       - delay: '00:00:01'
       - service: sonos.restore
         data_template:
           entity_id: "{{ sonos_entity }}"
       - delay: '00:00:03'
-      - service_template: >-
-          {% if state_attr('media_player.keuken', 'media_artist') == 'nl-nl' or state_attr('media_player.keuken', 'media_artist') == 'nl' %}
+      - service: >
+          {% if state_attr('media_player.keuken', 'media_artist') == 'nl-nl' or state_attr('media_player.keuken', 'media_artist') == 'nl' or state_attr('media_player.keuken', 'media_artist') == 'nl-be' %}
             script.sonos_pauze_spreek_nl
           {% else %}
             script.sonos_pauze_spreek_non_nl

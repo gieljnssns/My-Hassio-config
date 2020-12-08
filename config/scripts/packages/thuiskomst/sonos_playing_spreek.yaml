@@ -3,17 +3,17 @@ sonos_playing_spreek:
     - service: sonos.snapshot
       data_template:
         entity_id: "{{ sonos_entity }}"
-    - delay: "00:00:01"
+    - delay: "00:00:03"
     - service: media_player.media_pause
       data_template:
         entity_id: "{{ sonos_entity }}"
-    - delay: "00:00:01"
+    - delay: "00:00:03"
     - service: media_player.volume_set
       data_template:
         entity_id: "{{ sonos_entity }}"
         volume_level: "{{ volume }}"
     - delay: "00:00:01"
-    - service_template: >
+    - service: >
         {% if is_state('input_select.tts', 'VoiceRSS') %}
           tts.voicerss_say
         {% elif is_state('input_select.tts', 'Google') %}
@@ -24,7 +24,15 @@ sonos_playing_spreek:
       data_template:
         entity_id: "{{ sonos_entity }}"
         message: "{{ speech_message }}"
-    - delay: "00:00:01"
+        language: >
+          {% if is_state('input_select.tts', 'VoiceRSS') %}
+            nl-be
+          {% elif is_state('input_select.tts', 'Google') %}
+            nl
+          {% else %}
+            False
+          {% endif %}
+    - delay: "00:00:03"
     - wait_template: "{{ states('binary_sensor.keuken_not_playing') == 'on' }}"
     - delay: "00:00:01"
     - service: sonos.restore

@@ -9,6 +9,8 @@
               media_player.badkamer
             {% elif is_state('input_select.welke_sonos', 'Living') %}
               media_player.living_2
+            {% elif is_state('input_select.welke_sonos', 'Move') %}
+              media_player.move
             {% else %}
               False
             {% endif %}
@@ -22,6 +24,8 @@
               media_player.badkamer
             {% elif is_state('input_select.welke_sonos', 'Living') %}
               media_player.living_2
+            {% elif is_state('input_select.welke_sonos', 'Move') %}
+              media_player.move
             {% else %}
               False
             {% endif %}
@@ -35,6 +39,8 @@
               media_player.badkamer
             {% elif is_state('input_select.welke_sonos', 'Living') %}
               media_player.living_2
+            {% elif is_state('input_select.welke_sonos', 'Move') %}
+              media_player.move
             {% else %}
               False
             {% endif %}
@@ -52,7 +58,7 @@
             {% else %}
               False
             {% endif %}
-      - service_template: >
+      - service: >
           {% if is_state('input_select.tts', 'VoiceRSS') %}
             tts.voicerss_say
           {% elif is_state('input_select.tts', 'Google') %}
@@ -68,10 +74,11 @@
               media_player.badkamer
             {% elif is_state('input_select.welke_sonos', 'Living') %}
               media_player.living_2
+            {% elif is_state('input_select.welke_sonos', 'Move') %}
+              media_player.move
             {% else %}
               False
             {% endif %}
-          message: "{{ states('input_text.sonos_spraak') }}"
           language: >
             {% if is_state('input_select.tts', 'VoiceRSS') and is_state('input_select.language', 'Engels') %}
               en-us
@@ -79,6 +86,8 @@
               de-de
             {% elif is_state('input_select.tts', 'VoiceRSS') and is_state('input_select.language', 'Nederlands') %}
               nl-nl
+            {% elif is_state('input_select.tts', 'VoiceRSS') and is_state('input_select.language', 'Vlaams') %}
+              nl-be
             {% elif is_state('input_select.tts', 'VoiceRSS') and is_state('input_select.language', 'Italiaans') %}
               it-it
             {% elif is_state('input_select.tts', 'VoiceRSS') and is_state('input_select.language', 'Frans') %}
@@ -93,8 +102,16 @@
               it
             {% elif is_state('input_select.tts', 'Google') and is_state('input_select.language', 'Frans') %}
               fr
+            {% elif is_state('input_select.tts', 'Google') and is_state('input_select.language', 'Vlaams') %}
+              nl
             {% else %}
               False
+            {% endif %}
+          message: >
+            {% if is_state('input_select.tts', 'Google') and is_state('input_select.language', 'Vlaams') %}
+              Bij Google translate heb je niet de mogelijkheid om een Vlaamse stem te gebruiken
+            {% else %}
+              {{ states('input_text.sonos_spraak') }}
             {% endif %}
       - delay: '00:00:02'
       - wait_template: >-
@@ -104,6 +121,8 @@
             {{ states('binary_sensor.badkamer_not_playing') == 'on' }}
           {% elif is_state('input_select.welke_sonos', 'Living') %}
             {{ states('binary_sensor.living_2_not_playing') == 'on' }}
+          {% elif is_state('input_select.welke_sonos', 'Move') %}
+            {{ states('binary_sensor.move_not_playing') == 'on' }}
           {% else %}
               False
           {% endif %}
@@ -116,6 +135,8 @@
               media_player.badkamer
             {% elif is_state('input_select.welke_sonos', 'Living') %}
               media_player.living_2
+            {% elif is_state('input_select.welke_sonos', 'Move') %}
+              media_player.move
             {% else %}
               False
             {% endif %}
