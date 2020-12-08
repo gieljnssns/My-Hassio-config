@@ -14,7 +14,8 @@ script:
       - service: light.turn_on
         data_template:
           entity_id: light.spot_slaapkamer
-          brightness: "{{ states.light.spot_slaapkamer.attributes.brightness - 10 }}"
+          brightness_step: 10
+          # brightness: "{{ states.light.spot_slaapkamer.attributes.brightness - 10 }}"
       - service: script.turn_off
         entity_id: script.dim_spot_slaapkamer
       - service: script.dim_spot_slaapkamer
@@ -29,14 +30,14 @@ script:
       - service: light.turn_on
         data_template:
           entity_id: light.spot_slaapkamer
-          brightness: "{{ states.light.spot_slaapkamer.attributes.brightness + 10 }}"
+          brightness_step: -10
+          # brightness: "{{ states.light.spot_slaapkamer.attributes.brightness + 10 }}"
       - service: script.turn_off
         entity_id: script.brighten_spot_slaapkamer
       - service: script.brighten_spot_slaapkamer
 
 automation:     
   - alias: Brighten spot slaapkamer
-    initial_state: 'on'
     trigger:
       - platform: state
         entity_id: binary_sensor.knop_giel_lange_klik
@@ -57,7 +58,6 @@ automation:
       - service: script.brighten_spot_slaapkamer
           
   - alias: Brighten off spot slaapkamer
-    initial_state: 'on'
     trigger:
       - platform: state
         entity_id: binary_sensor.knop_giel_lange_klik
@@ -81,7 +81,6 @@ automation:
         entity_id: input_boolean.spot_slaapkamer_dimmer
           
   - alias: Dim spot slaapkamer
-    initial_state: 'on'
     trigger:
       - platform: state
         entity_id: binary_sensor.knop_giel_lange_klik
@@ -102,7 +101,6 @@ automation:
       - service: script.dim_spot_slaapkamer
 
   - alias: Dim off spot slaapkamer
-    initial_state: 'on'
     trigger:
       - platform: state
         entity_id: binary_sensor.knop_giel_lange_klik
@@ -124,4 +122,3 @@ automation:
     action:
       - service: input_boolean.turn_off
         entity_id: input_boolean.spot_slaapkamer_dimmer
-       

@@ -14,7 +14,8 @@ script:
       - service: light.turn_on
         data_template:
           entity_id: light.noor
-          brightness: "{{ states.light.noor.attributes.brightness - 10 }}"
+          brightness_step: -10
+          # brightness: "{{ states.light.noor.attributes.brightness - 10 }}"
       - service: script.turn_off
         entity_id: script.dim_noor
       - service: script.dim_noor
@@ -29,14 +30,14 @@ script:
       - service: light.turn_on
         data_template:
           entity_id: light.noor
-          brightness: "{{ states.light.noor.attributes.brightness + 10 }}"
+          brightness_step: 10
+          # brightness: "{{ states.light.noor.attributes.brightness + 10 }}"
       - service: script.turn_off
         entity_id: script.brighten_noor
       - service: script.brighten_noor
 
 automation:     
   - alias: Brighten noor
-    initial_state: 'on'
     trigger:
       - platform: state
         entity_id: binary_sensor.knop_noor_lange_klik
@@ -54,7 +55,6 @@ automation:
       - service: script.brighten_noor
           
   - alias: Brighten off noor
-    initial_state: 'on'
     trigger:
       - platform: state
         entity_id: binary_sensor.knop_noor_lange_klik
@@ -74,7 +74,6 @@ automation:
         entity_id: input_boolean.noor_dimmer
         
   - alias: Dim noor
-    initial_state: 'on'
     trigger:
       - platform: state
         entity_id: binary_sensor.knop_noor_lange_klik
@@ -92,7 +91,6 @@ automation:
       - service: script.dim_noor
         
   - alias: Dim off noor
-    initial_state: 'on'
     trigger:
       - platform: state
         entity_id: binary_sensor.knop_noor_lange_klik

@@ -14,7 +14,8 @@ script:
       - service: light.turn_on
         data_template:
           entity_id: light.fien
-          brightness: "{{ states.light.fien.attributes.brightness - 10 }}"
+          brightness_step: -10
+          # brightness: "{{ states.light.fien.attributes.brightness - 10 }}"
       - service: script.turn_off
         entity_id: script.dim_fien
       - service: script.dim_fien
@@ -29,14 +30,14 @@ script:
       - service: light.turn_on
         data_template:
           entity_id: light.fien
-          brightness: "{{ states.light.fien.attributes.brightness + 10 }}"
+          brightness_step: 10
+          # brightness: "{{ states.light.fien.attributes.brightness + 10 }}"
       - service: script.turn_off
         entity_id: script.brighten_fien
       - service: script.brighten_fien
 
 automation:     
   - alias: Brighten fien
-    initial_state: 'on'
     trigger:
       - platform: state
         entity_id: binary_sensor.knop_fien_lange_klik
@@ -54,7 +55,6 @@ automation:
       - service: script.brighten_fien
           
   - alias: Brighten off fien
-    initial_state: 'on'
     trigger:
       - platform: state
         entity_id: binary_sensor.knop_fien_lange_klik
@@ -74,7 +74,6 @@ automation:
         entity_id: input_boolean.fien_dimmer
           
   - alias: Dim fien
-    initial_state: 'on'
     trigger:
       - platform: state
         entity_id: binary_sensor.knop_fien_lange_klik
@@ -92,7 +91,6 @@ automation:
       - service: script.dim_fien
         
   - alias: Dim off fien
-    initial_state: 'on'
     trigger:
       - platform: state
         entity_id: binary_sensor.knop_fien_lange_klik
