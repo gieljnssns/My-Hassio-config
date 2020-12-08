@@ -3,7 +3,7 @@
     afkoeling_gewenst:
       friendly_name: Afkoeling
       value_template: "{{ is_state('sensor.binnen_vs_buiten', 'Afkoeling') }}"
-      icon_template: >-
+      icon_template: >
         {% if is_state('sensor.binnen_vs_buiten', 'Afkoeling') %}
         mdi:fan
         {% else %}
@@ -20,47 +20,61 @@
     buiten_frisser_dan_binnen_old:
       friendly_name: Buiten frisser
       device_class: cold
-      value_template: "{{ (states('sensor.binnen_lowpass') | float > states('sensor.buitentemperatuur_gefilterd') | float) }}"
+      value_template: >
+        {{ (states('sensor.binnen_lowpass') | float > states('sensor.buitentemperatuur_gefilterd') | float) }}
 
     binnen_warm:
       device_class: heat
       friendly_name: Binnen heet
-      value_template: "{{ states('sensor.binnen_lowpass') | float > 26 }}"
+      value_template: >
+        {{ states('sensor.binnen_lowpass') | float > 26 }}
 
     buiten_warm:
       device_class: heat
       friendly_name: Buiten heet
-      value_template: "{{ states('sensor.buitentemperatuur_gefilterd') | float > 25 }}"
+      value_template: >
+        {{ states('sensor.buitentemperatuur_gefilterd') | float > 25 }}
 
     buiten_fris_genoeg:
       device_class: cold
       friendly_name: Buiten aangenaam
-      value_template: "{{ states('sensor.buitentemperatuur_gefilterd') | float < 25 }}"
+      value_template: >
+        {{ states('sensor.buitentemperatuur_gefilterd') | float < 25 }}
 
     verluchting_afkoeling:
       device_class: cold
-      value_template: "{{ is_state('input_boolean.verluchting_afkoeling', 'on') }}"
+      value_template: >
+        {{ is_state('input_boolean.verluchting_afkoeling', 'on') }}
 
     bathroom_humidity_rising_template:
       friendly_name: "Badkamer luchtvochtigheid Rising"
       icon_template: mdi:water-percent
-      value_template: >-
+      value_template: >
         {{ states.sensor.badkamer_luchtvochtigheid_stats.attributes.change | float >= 5 | float }}
 
     bathroom_humidity_falling_template:
       friendly_name: "Badkamer luchtvochtigheid falling"
       icon_template: mdi:water-percent
-      value_template: >-
+      value_template: >
         {{ states.sensor.badkamer_luchtvochtigheid_stats.attributes.change | float <= -5 | float }}
 
     keuken_humidity_rising_template:
       friendly_name: "Keuken luchtvochtigheid Rising"
       icon_template: mdi:water-percent
-      value_template: >-
+      value_template: >
         {{ states.sensor.keuken_luchtvochtigheid_stats.attributes.change | float >= 5 | float }}
 
     keuken_humidity_falling_template:
       friendly_name: "Keuken luchtvochtigheid falling"
       icon_template: mdi:water-percent
-      value_template: >-
+      value_template: >
         {{ states.sensor.keuken_luchtvochtigheid_stats.attributes.change | float <= -5 | float }}
+
+    should_run_dehumidifier_zolder:
+      friendly_name: "Luchtontvochtiger moet aan"
+      value_template: >
+        {{  (states('sensor.zolder_luchtvochtigheid') | float) >
+            (states('sensor.max_humidity_allowed_zolder') | float)
+            + (1.0 if is_state('binary_sensor.should_run_dehumidifier_zolder', false) else 0)
+            - (4.0 if is_state('binary_sensor.should_run_dehumidifier_zolder', true) else 0)  
+            }}

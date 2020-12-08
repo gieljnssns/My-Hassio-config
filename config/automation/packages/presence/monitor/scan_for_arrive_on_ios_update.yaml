@@ -21,22 +21,22 @@ condition:
 action:
   - service_template: >
       {% if is_state('script.mqtt_arrive_script', 'on') %}
-         script.turn_off
+        script.turn_off
       {% else %}
-         script.turn_on
+        script.turn_on
       {% endif %}
     data_template:
       entity_id: >
         {% if is_state('script.mqtt_arrive_script', 'on') %}
-           script.mqtt_arrive_script
+          script.mqtt_arrive_script
         {% else %}
-           script.dummy
+          script.dummy
         {% endif %}
   - wait_template: "{{ is_state('script.dummy', 'off') }}"
   - service: script.mqtt_arrive_script
     data_template:
       identity: >
-        {"identity":"{{trigger.entity_id.split(".")[1]}} {{as_local(states.sensor.time.last_changed).strftime("%H:%M")}}"}
+        {{ trigger.entity_id.split(".")[1] }} {{ now().strftime("%H:%M") }}
       # identity: >
       #   {% if trigger.platform == 'state' %}
       #      {"identity":"{{states("sensor.entity_id_for_bt_scanning")}} {{as_local(states.sensor.time.last_changed).strftime("%H:%M")}}"}

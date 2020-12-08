@@ -68,7 +68,9 @@ action:
     entity_id: script.mqtt_arrive_script, script.mqtt_depart_script
   - service: script.mqtt_arrive_script
     data_template:
-      identity: '{"identity":"Alarm night {{as_local(states.sensor.time.last_changed).strftime("%H:%M")}}"}'
+      identity: >
+        Alarm night {{ now().strftime("%H:%M") }}
+      # identity: '{"identity":"Alarm night {{as_local(states.sensor.time.last_changed).strftime("%H:%M")}}"}'
   - condition: template
     value_template: >
       {{ state_attr( 'media_player.badkamer' , 'sonos_group')[0] !=  'media_player.badkamer' }}
