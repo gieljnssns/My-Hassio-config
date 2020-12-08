@@ -23,7 +23,8 @@ condition:
   condition: and
   conditions:
     - condition: template
-      value_template: "{{ float(states('sensor.uptime_in_uren')) > 0.03 }}"
+      value_template: >
+        {{ (as_timestamp(now()) - as_timestamp(states("sensor.uptime"))) / 3600 | float > 0.03 | float }}
 action:
   - service: counter.increment
     data_template:
