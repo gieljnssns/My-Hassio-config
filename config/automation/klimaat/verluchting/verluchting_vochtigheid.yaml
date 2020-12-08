@@ -24,6 +24,16 @@ condition:
     - condition: numeric_state
       entity_id: sensor.luchtvochtigheid_keuken
       below: 101
+    - condition: or
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.bathroom_humidity_falling_template
+          state: "off"
+          for:
+            minutes: 10
+        - condition: numeric_state
+          entity_id: sensor.luchtvochtigheid_badkamer
+          above: 70
 action:
   - service: script.turn_off
     entity_id: script.verluchting_1_uur
