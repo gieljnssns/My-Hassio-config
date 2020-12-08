@@ -1,0 +1,40 @@
+alias: Deurbel
+id: ad40debe-bbaf-43a9-8181-168321d2fa25
+description: >-
+  De deurbel mag niet gaan wanneer er iemand met de nacht gestaan heeft
+trigger:
+  - platform: time
+    at: "16:00:13"
+  - platform: time
+    at: "12:00:13"
+  - platform: state
+    entity_id: calendar.mondelez_de_nacht
+    to: 'off'
+condition: []
+action:
+  - choose:
+      - conditions:
+        - condition: or
+          conditions:
+            - condition: and
+              conditions:
+                - condition: time
+                  after: "16:00:00"
+                - condition: state
+                  entity_id: binary_sensor.v_nacht
+                  state:  "on"
+            - condition: and
+              conditions:
+                - condition: time
+                  after: "12:00:00"
+                - condition: state
+                  entity_id: binary_sensor.v_nacht
+                  state:  "off"
+        sequence:
+          - service: switch.turn_on
+            entity_id:
+              - switch.deurbel_actief
+    default:
+      - service: switch.turn_off
+        entity_id: switch.deurbel_actief
+mode: single
