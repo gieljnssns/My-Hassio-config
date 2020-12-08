@@ -1,0 +1,37 @@
+id: "1588617733442"
+alias: Tv der kinders uit
+description: Tv der kinders uit
+trigger:
+  - platform: time
+    at: "22:30"
+  - platform: time
+    at: "22:00"
+condition:
+  - condition: state
+    entity_id: media_player.tv_der_kinders
+    state: "on"
+action:
+  - choose:
+      - conditions:
+          - condition: time
+            before: '22:10:00'
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.schooldag
+                state:  "on"
+              - condition: and
+                conditions:
+                  - condition: time
+                    weekday:
+                      -  sun
+                  - condition: state
+                    entity_id: calendar.schoolvakanties_schoolvakanties
+                    state:  "off"
+        sequence:
+          - service: media_player.turn_off
+            entity_id:
+              - media_player.tv_der_kinders
+    default:
+      - service: media_player.turn_off
+        entity_id: media_player.tv_der_kinders
