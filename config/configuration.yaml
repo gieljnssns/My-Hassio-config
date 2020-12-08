@@ -17,7 +17,7 @@ homeassistant:
   unit_system: metric
   # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   time_zone: Europe/Brussels
-  customize: !include_dir_merge_named customized
+  customize: !include customize.yaml
   packages: !include_dir_named packages/
   external_url: !secret external_url
   internal_url: !secret internal_url
@@ -36,6 +36,7 @@ homeassistant:
       allow_bypass_login: true
   allowlist_external_dirs:
     - "/share"
+  # legacy_templates: true
 
 ####################################################
 #                                                  #
@@ -105,6 +106,9 @@ wake_on_lan:
 ###  Zeroconf/Avahi/Bonjour  ###
 zeroconf:
 
+###  Zha-map  ###
+zha_map:
+  
 ####################################################
 #                                                  #
 #                     Includes                     #
@@ -160,6 +164,7 @@ zone: !include zones.yaml
 
 ###  Panels  ###
 panel_iframe: !include panels/iframe.yaml
+panel_custom: !include panels/custom.yaml
 
 ####################################################
 #                                                  #
