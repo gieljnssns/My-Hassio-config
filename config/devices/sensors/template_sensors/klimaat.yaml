@@ -1,44 +1,58 @@
 - platform: template
   sensors:
     temp_living:
-      value_template: "{{ states.climate.netatmo_living.attributes.current_temperature }}"
+      value_template: >
+        {{ state_attr("climate.netatmo_living", "current_temperature") }}
       unit_of_measurement: "°C"
 
+    climate_living_heat_request:
+      value_template: >
+        {{ state_attr("climate.netatmo_living", "current_temperature") < state_attr("climate.netatmo_living", "temperature") }}
+
     verwarming_beneden:
-      # value_template: "{{states.climate.netatmo_living.attributes.operation_mode}}"
-      # value_template: "{{states.climate.netatmo_living.attributes.boiler_status}}"
-      value_template: "{{states.climate.netatmo_living.attributes.hvac_action}}"
+      value_template: >
+        {{state_attr("climate.netatmo_living", "hvac_action") }}
 
     binnen_vs_buiten:
-      value_template: >-
+      value_template: >
         {% if (states('sensor.binnen_lowpass')) > (states('sensor.gemiddelde_temp_buiten')) and states('sensor.binnen_lowpass') | float > 26 %}
-           Afkoeling
+          Afkoeling
         {% else %}
-           Geen afkoeling
+          Geen afkoeling
         {% endif %}
 
     bathroom_humidity_change_template:
       friendly_name: "Badkamer luchtvochtigheid verandering"
       icon_template: mdi:water-percent
-      value_template: >-
-        {{ states.sensor.badkamer_luchtvochtigheid_stats.attributes.change | float }}
+      value_template: >
+        {{ state_attr("sensor.badkamer_luchtvochtigheid_stats", "change") | float }}
 
     bathroom_humidity_change_template_percent:
       friendly_name: "Badkamer luchtvochtigheid verandering"
       icon_template: mdi:water-percent
       unit_of_measurement: "%"
-      value_template: >-
-        {{ states.sensor.badkamer_luchtvochtigheid_stats.attributes.change | float }}
+      value_template: >
+        {{ state_attr("sensor.badkamer_luchtvochtigheid_stats", "change") | float }}
 
     keuken_humidity_change_template:
       friendly_name: "Keuken luchtvochtigheid verandering"
       icon_template: mdi:water-percent
-      value_template: >-
-        {{ states.sensor.keuken_luchtvochtigheid_stats.attributes.change | float }}
+      value_template: >
+        {{ state_attr("sensor.keuken_luchtvochtigheid_stats", "change") | float }}
 
     keuken_humidity_change_template_percent:
       friendly_name: "Keuken luchtvochtigheid verandering"
       icon_template: mdi:water-percent
       unit_of_measurement: "%"
-      value_template: >-
-        {{ states.sensor.keuken_luchtvochtigheid_stats.attributes.change | float }}
+      value_template: >
+        {{ state_attr("sensor.keuken_luchtvochtigheid_stats", "change") | float }}
+
+    max_humidity_allowed_zolder:
+      # based on this formula: https://bmcnoldy.rsmas.miami.edu/Humidity.html
+      # RH: = 100 * ( EXP( (17.625*TD)/(243.04+TD) ) / EXP( (17.625*T)/(243.04+T) ) )
+      friendly_name: Max luchtvochtigheid toegestaan
+      device_class: humidity
+      unit_of_measurement: '%'
+      icon_template: mdi:water-percent
+      value_template: >
+        {{ (100.0 * ( e ** ((17.625*(states('sensor.temperatuur_poort')|float))/(243.04+(states('sensor.temperatuur_poort')|float))) ) / ( e ** ((17.625*(states('sensor.zolder_temperatuur')|float))/(243.04+(states('sensor.zolder_temperatuur')|float))) )) | round(0) }}
