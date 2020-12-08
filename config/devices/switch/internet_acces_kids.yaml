@@ -1,0 +1,103 @@
+  - platform: template
+    switches:
+      nphone_internet:
+        friendly_name: "nPhone internet"
+        value_template: >
+          {{ "192.168.79.12" not in state_attr("sensor.adguard_clients_blocked", "disallowed_clients") }}
+        turn_on:
+          service: adguard.enable_client
+          data: 
+            ip_address: 192.168.79.12
+        turn_off:
+          service: adguard.disable_client
+          data:
+            ip_address: 192.168.79.12
+        icon_template: mdi:cellphone-iphone
+
+      npad_internet:
+        friendly_name: "nPad internet"
+        value_template: >
+          {{ "192.168.79.10" not in state_attr("sensor.adguard_clients_blocked", "disallowed_clients") }}
+        turn_on:
+          service: adguard.enable_client
+          data: 
+            ip_address: 192.168.79.10
+        turn_off:
+          service: adguard.disable_client
+          data:
+            ip_address: 192.168.79.10
+        icon_template: mdi:tablet-ipad
+      
+      nmac_internet:
+        friendly_name: "Mac mini internet"
+        value_template: >
+          {{ "192.168.79.14" not in state_attr("sensor.adguard_clients_blocked", "disallowed_clients") }}
+        turn_on:
+          service: adguard.enable_client
+          data: 
+            ip_address: 192.168.79.14
+        turn_off:
+          service: adguard.disable_client
+          data:
+            ip_address: 192.168.79.14
+        icon_template: mdi:desktop-mac
+
+      ntv_internet:
+        friendly_name: "LG tv internet"
+        value_template: >
+          {{ "192.168.79.36" not in state_attr("sensor.adguard_clients_blocked", "disallowed_clients") }}
+        turn_on:
+          service: adguard.enable_client
+          data: 
+            ip_address: 192.168.79.36
+        turn_off:
+          service: adguard.disable_client
+          data:
+            ip_address: 192.168.79.36
+        icon_template: mdi:television
+
+
+###  Fien  ###
+  - platform: template
+    switches:
+      fphone_internet:
+        friendly_name: "fPhone internet"
+        value_template: >
+          {{ "192.168.79.13" not in state_attr("sensor.adguard_clients_blocked", "disallowed_clients") }}
+        turn_on:
+          service: adguard.enable_client
+          data:
+            ip_address: 192.168.79.13
+        turn_off:
+          service: adguard.disable_client
+          data:
+            ip_address: 192.168.79.13
+        icon_template: mdi:cellphone-iphone
+      
+      fpad_internet:
+        friendly_name: "fPad internet"
+        value_template: >
+          {{ "192.168.79.11" not in state_attr("sensor.adguard_clients_blocked", "disallowed_clients") }}
+        turn_on:
+          service: adguard.enable_client
+          data:
+            ip_address: 192.168.79.11
+        turn_off:
+          service: adguard.disable_client
+          data:
+            ip_address: 192.168.79.11
+        icon_template: mdi:tablet-ipad
+      
+      fmac_internet:
+        friendly_name: "iMac Fien internet"
+        value_template: >
+          {{ "192.168.79.26" not in state_attr("sensor.adguard_clients_blocked", "disallowed_clients") }}
+        turn_on:
+          service: adguard.enable_client
+          data: 
+            ip_address: 192.168.79.26
+        turn_off:
+          service: adguard.disable_client
+          data:
+            ip_address: 192.168.79.26
+        icon_template: mdi:desktop-mac
