@@ -1,0 +1,16 @@
+id: "1596733904625"
+alias: Unavailable & batteryentities sensor update
+description: ""
+trigger:
+  - platform: time_pattern
+    minutes: /5
+condition:
+  - condition: template
+    value_template: >
+      {{ (as_timestamp(now()) - as_timestamp(states("sensor.uptime"))) / 3600 | float > 0.05 | float }}
+    # value_template: "{{ states('sensor.uptime_in_uren')|float > 0.05|float }}"
+action:
+  - service: python_script.unavailable
+  - delay:
+      seconds: 10
+  - service: python_script.low_battery
