@@ -9,5 +9,18 @@ trigger:
     subtype: remote_button_short_press
 
 action:
-  service: light.toggle
-  entity_id: light.fien
+  - choose:
+    - conditions:
+        - condition: template
+          value_template: >
+            {{ states("light.fien") == 'on' }}
+      sequence:
+        - service: light.turn_off
+          entity_id:
+            - light.fien
+    default:
+      - service: light.turn_on
+        data:
+          entity_id: light.fien
+          brightness: 255
+          rgb_color: [255, 236, 182]
