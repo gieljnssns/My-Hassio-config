@@ -1,0 +1,273 @@
+# Core and supervisor
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/core/stats
+  name: core
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 16
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/supervisor/stats
+  name: supervisor
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 17
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+  
+# Addons
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/a0d7b954_unifi/stats
+  name: UniFi Controller
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 59
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/a0d7b954_adguard/stats
+  name: AdGuard Home
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 57
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/a0d7b954_appdaemon/stats
+  name: AppDaemon 4
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 37
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/core_duckdns/stats
+  name: Duck DNS
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 84
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/fe41fc28_caddy/stats
+  name: Caddy Proxy
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 74
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/15ef4d2f_esphome/stats
+  name: ESPHome
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 47
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/a0d7b954_grafana/stats
+  name: Grafana
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 39
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/a0d7b954_influxdb/stats
+  name: InfluxDb
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 37
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/core_mariadb/stats
+  name: MariaDB
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 27
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/core_mosquitto/stats
+  name: Mosquitto broker
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 34
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/core_samba/stats
+  name: Samba share
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 61
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/a0d7b954_wireguard/stats
+  name: WireGuard
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.data.cpu_percent }}'
+  scan_interval: 88
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
+  json_attributes_path: "$.data"
+  json_attributes:
+    - memory_percent
+    - network_rx
+    - network_tx
+    - blk_read
+    - blk_write
+
+# - platform: rest
+#   resource: http://192.168.79.54:8123/api/hassio/addons/bf72466c_watsor/stats
+#   name: Watsor
+#   unit_of_measurement: '%'
+#   value_template: '{{ value_json.data.cpu_percent }}'
+#   scan_interval: 97
+#   headers:
+#     Authorization: !secret llt
+#     Content-Type: application/json
+#   json_attributes_path: "$.data"
+#   json_attributes:
+#     - memory_percent
+#     - network_rx
+#     - network_tx
+#     - blk_read
+#     - blk_write
+
+# - platform: rest
+#   resource: http://192.168.79.54:8123/api/hassio/addons/a0d7b954_vscode/stats
+#   name: Visual Studio Code
+#   unit_of_measurement: '%'
+#   value_template: '{{ value_json.data.cpu_percent }}'
+#   scan_interval: 53
+#   headers:
+#     Authorization: !secret llt
+#     Content-Type: application/json
+#   json_attributes_path: "$.data"
+#   json_attributes:
+#     - memory_percent
+#     - network_rx
+#     - network_tx
+#     - blk_read
+#     - blk_write
