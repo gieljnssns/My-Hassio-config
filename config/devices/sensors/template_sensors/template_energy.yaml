@@ -89,3 +89,63 @@
         {% else %}
             {{ 0 | float }}
         {% endif %}
+
+    verlichting_noor_template_power:
+      friendly_name: Verlichting Noor vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("light.noor") == "on" %}
+            {{ 20 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+    
+    verlichting_fien_template_power:
+      friendly_name: Verlichting Fien vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("light.fien") == "on" %}
+            {{ 20 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+    
+    verlichting_slaapkamer_spot_template_power:
+      friendly_name: Verlichting slaapkamer spot vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("light.spot_slaapkamer") == "on" %}
+            {{ 6 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+      
+    verlichting_zithoek_spots_template_power:
+      friendly_name: Verlichting zithoek spots vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("light.spot_slaapkamer") == "on" %}
+            {{ 30 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+    
+    verlichting_hof_template_power:
+      friendly_name: Verlichting hof vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("light.den_hof") == "on" %}
+            {{ 20 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}
+    
+    verlichting_terras_template_power:
+      friendly_name: Verlichting terras vermogen
+      unit_of_measurement: "W"
+      value_template: >
+        {% if states("light.terras") == "on" %}
+            {{ 20 | float }}
+        {% else %}
+            {{ 0 | float }}
+        {% endif %}

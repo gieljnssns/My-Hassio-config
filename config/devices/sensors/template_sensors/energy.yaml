@@ -6,7 +6,7 @@
       value_template: >-
         {%- if states("sensor.huidige_opbrengst") | float < states("sensor.huidig_verbruik") | float %}
             {{ states("sensor.huidig_verbruik") | float - states("sensor.huidige_opbrengst") | float }}
-        {%- elif states("sensor.huidige_opbrengst") | float > states("sensor.huidig_verbruik") | float %}
+        {%- elif states("sensor.huidige_opbrengst") | float >= states("sensor.huidig_verbruik") | float %}
             {{ 0 | float }}
         {% endif %}
 
@@ -14,7 +14,7 @@
       friendly_name: Net terugsturen
       unit_of_measurement: "W"
       value_template: >-
-        {%- if states("sensor.huidige_opbrengst") | float < states("sensor.huidig_verbruik") | float %}
+        {%- if states("sensor.huidige_opbrengst") | float <= states("sensor.huidig_verbruik") | float %}
             {{ 0 | float }}
         {%- elif states("sensor.huidige_opbrengst") | float > states("sensor.huidig_verbruik") | float %}
             {{ states("sensor.huidige_opbrengst") | float - states("sensor.huidig_verbruik") | float }}
@@ -34,7 +34,7 @@
       friendly_name: Net terugsturen
       unit_of_measurement: "kWh"
       value_template: >-
-        {%- if states("sensor.daily_solar") | float < states("sensor.daily_energy") | float %}
+        {%- if states("sensor.daily_solar") | float <= states("sensor.daily_energy") | float %}
             {{ 0 | float }}
         {%- elif states("sensor.daily_solar") | float > states("sensor.daily_energy") | float %}
             {{ (states("sensor.daily_solar") | float - states("sensor.daily_energy") | float)  | round(3) }}
@@ -44,7 +44,7 @@
       friendly_name: Eigen verbruik
       unit_of_measurement: "W"
       value_template: >-
-        {% if (states("sensor.huidige_opbrengst") | float - states("sensor.huidig_verbruik") | float) > 0 %}
+        {% if (states("sensor.huidige_opbrengst") | float - states("sensor.huidig_verbruik") | float) >= 0 %}
             {{ states("sensor.huidig_verbruik") | float  }}
         {% elif (states("sensor.huidige_opbrengst") | float - states("sensor.huidig_verbruik") | float) < 0 and states("sensor.huidige_opbrengst") | float > 0 %}
             {{ states("sensor.huidige_opbrengst") | float  }}
@@ -71,6 +71,12 @@
             states("sensor.gang_beneden_vermogen") | float + 
             states("sensor.keuken_luster_vermogen") | float + 
             states("sensor.trap_vermogen") | float + 
+            states("sensor.verlichting_noor_template_power") | float + 
+            states("sensor.verlichting_fien_template_power") | float + 
+            states("sensor.verlichting_slaapkamer_spot_template_power") | float + 
+            states("sensor.verlichting_zithoek_spots_template_power") | float + 
+            states("sensor.verlichting_hof_template_power") | float + 
+            states("sensor.verlichting_terras_template_power") | float + 
             states("sensor.waskot_vermogen") | float) | round (3)}}
 
     verluchting_vermogen:
@@ -80,3 +86,56 @@
         {{ (states("sensor.zolder_verluchting_template_power") | float + 
             states("sensor.verluchting_template_power") | float + 
             states("sensor.badkamer_verluchting_vermogen") | float) | round (3)}}
+    
+    rest_vermogen:
+      friendly_name: Vermogen van al de rest
+      unit_of_measurement: "W"
+      value_template: >
+        {{ ( states("sensor.huidig_verbruik") | float - states("sensor.warmtepomp_huidig_verbruik") | float 
+            - states("sensor.warmtepompboiler_huidig_verbruik") | float 
+            - states("sensor.verwarming_fien_template_power") | float 
+            - states("sensor.verwarming_noor_template_power") | float 
+            - states("sensor.verwarming_badkamer_template_power") | float 
+            - states("sensor.verwarming_slaapkamer_template_power") | float 
+            - states("sensor.verwarming_wc_template_power") | float 
+            - states("sensor.verwarming_bureau_template_power") | float 
+            - states("sensor.koffiezet_vermogen") | float 
+            - states("sensor.verlichting_vermogen") | float 
+            - states("sensor.verluchting_vermogen") | float 
+            - states("sensor.zwembad_template_power") | float 
+            - states("sensor.keuken_ijskast_vermogen") | float 
+            - states("sensor.regenwaterpomp_vermogen") | float 
+            - states("sensor.keuken_toestellen_vermogen") | float 
+            - states("sensor.afwasmachien_vermogen") | float 
+            - states("sensor.wasmachien_vermogen") | float 
+            - states("sensor.droogkast_vermogen") | float )
+            | round (2)
+            }}
+            
+    percentage_eigen_verbruik_dagelijks:
+      friendly_name: Eigen verbruik dagelijks
+      unit_of_measurement: "%"
+      value_template: >
+        {% if states("sensor.daily_solar") | float > 0 and (states("sensor.daily_own_consumption") | float - states("sensor.daily_solar") | float) <= 0 %}
+          {{ (states("sensor.daily_own_consumption") | float / states("sensor.daily_solar") | float * 100 ) | round(2) }}
+        {% else  %}
+          {{ 100 | float }}
+        {% endif %}    
+    percentage_eigen_verbruik_maandelijks:
+      friendly_name: Eigen verbruik maandelijks
+      unit_of_measurement: "%"
+      value_template: >
+        {% if states("sensor.monthly_solar") | float > 0 and (states("sensor.monthly_own_consumption") | float - states("sensor.monthly_solar") | float) <= 0 %}
+          {{ (states("sensor.monthly_own_consumption") | float / states("sensor.monthly_solar") | float * 100 ) | round(2) }}
+        {% else  %}
+          {{ 100 | float }}
+        {% endif %}    
+    percentage_eigen_verbruik_jaarlijks:
+      friendly_name: Eigen verbruik jaarlijks
+      unit_of_measurement: "%"
+      value_template: >
+        {% if states("sensor.yearly_solar") | float > 0 and (states("sensor.yearly_own_consumption") | float - states("sensor.yearly_solar") | float) <= 0 %}
+          {{ (states("sensor.yearly_own_consumption") | float / states("sensor.yearly_solar") | float * 100 ) | round(2) }}
+        {% else  %}
+          {{ 100 | float }}
+        {% endif %}  

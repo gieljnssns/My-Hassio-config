@@ -1,0 +1,78 @@
+id: 99e9bba8-66c9-4f54-967b-08ef8fa8695e
+alias: Integration error notification
+description: ""
+trigger:
+  - platform: template
+    value_template: >
+      {{ states("sensor.eigen_verbruik") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.huidig_verbruik") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.huidige_opbrengst") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.grid_consumption") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.warmtepomp_huidig_verbruik") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.warmtepompboiler_huidig_verbruik") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.verwarming_fien_template_power") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.verwarming_noor_template_power") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.verwarming_badkamer_template_power") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.verwarming_slaapkamer_template_power") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.verwarming_wc_template_power") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.verwarming_bureau_template_power") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.verlichting_vermogen") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.verluchting_vermogen") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.zwembad_template_power") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.koffiezet_vermogen") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.regenwaterpomp_vermogen") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.keuken_toestellen_vermogen") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.afwasmachien_vermogen") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.wasmachien_vermogen") == None }}
+  # - platform: template
+  #   value_template: >
+  #     {{ states("sensor.droogkast_vermogen") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.keuken_ijskast_vermogen") == None }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.rest_vermogen") == None }}
+condition: []
+action:
+  - service: persistent_notification.create
+    data_template:
+      message:  "{{ trigger.entity_id }} was gelijk aan None"
