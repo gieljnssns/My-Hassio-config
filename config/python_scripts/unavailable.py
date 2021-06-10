@@ -121,6 +121,7 @@ attributes["unfiltered_count"] = count_unfiltered
 attributes["friendly_name"] = "Unavailable"
 attributes["icon"] = icon
 attributes["icon_color"] = icon_color
+attributes["unit_of_measurement"] = "st"
 
 # set the sensor
 hass.states.set("sensor.uun_ordered", count_all, attributes)

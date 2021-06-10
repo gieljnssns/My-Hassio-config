@@ -7,7 +7,13 @@
 attributes = {}
 
 list_device_tracker_battery_entities = []
+list_friendly_device_tracker_battery_entities = []
 list_sensor_battery_entities = []
+list_friendly_sensor_battery_entities = []
+list_binary_sensor_battery_entities = []
+list_friendly_binary_sensor_battery_entities = []
+list_climate_battery_entities = []
+list_friendly_climate_battery_entities = []
 
 
 def persistent_warning_message(devices):
@@ -27,6 +33,8 @@ def get_battery_entities():
         for entity_id in hass.states.entity_ids("device_tracker"):
             state = hass.states.get(entity_id)
             if "battery_level" in state.attributes:
+                friendly_name = state.attributes["friendly_name"]
+                list_friendly_device_tracker_battery_entities.append(friendly_name)
                 list_device_tracker_battery_entities.append(entity_id)
                 out.update({entity_id: state.attributes["battery_level"]})
         return out
@@ -41,14 +49,42 @@ def get_battery_entities():
                 and "charging" not in state.state
                 and "discharging" not in state.state
                 and "unavailable" not in state.state
+                and "unknown" not in state.state
             ):
+                friendly_name = state.attributes["friendly_name"]
+                list_friendly_sensor_battery_entities.append(friendly_name)
                 list_sensor_battery_entities.append(entity_id)
                 out.update({entity_id: int(state.state)})
         return out
 
+    def get_binary_sensor_battery_entities():
+        out = {}
+        for entity_id in hass.states.entity_ids("binary_sensor"):
+            state = hass.states.get(entity_id)
+            if "battery_level" in state.attributes:
+                friendly_name = state.attributes["friendly_name"]
+                list_friendly_binary_sensor_battery_entities.append(friendly_name)
+                list_binary_sensor_battery_entities.append(entity_id)
+                out.update({entity_id: state.attributes["battery_level"]})
+        return out
+
+    # def get_climate_battery_entities():
+    #     out = {}
+    #     for entity_id in hass.states.entity_ids("climate"):
+    #         state = hass.states.get(entity_id)
+
+    #         if "battery_level" in state.attributes:
+    #             friendly_name = state.attributes["friendly_name"]
+    #             list_friendly_climate_battery_entities.append(friendly_name)
+    #             list_climate_battery_entities.append(entity_id)
+    #             out.update({entity_id: state.attributes["battery_level"]})
+    #     return out
+
     entities = {}
     entities.update(get_device_tracker_battery_entities())
     entities.update(get_sensor_battery_entities())
+    entities.update(get_binary_sensor_battery_entities())
+    # entities.update(get_climate_battery_entities())
     return entities
 
 
@@ -77,9 +113,17 @@ else:
     attributes["all_entities"] = "All entities OK!"
 
 attributes["friendly_name"] = "Low battery"
-attributes["battery_sensors"] = ",\n".join(sorted(list_sensor_battery_entities))
+attributes["battery_sensors"] = ",\n".join(
+    sorted(list_friendly_sensor_battery_entities)
+)
+attributes["battery_binary_sensors"] = ",\n".join(
+    sorted(list_friendly_binary_sensor_battery_entities)
+)
 attributes["battery_trackers"] = ",\n".join(
-    sorted(list_device_tracker_battery_entities)
+    sorted(list_friendly_device_tracker_battery_entities)
+)
+attributes["battery_climate"] = ",\n".join(
+    sorted(list_friendly_climate_battery_entities)
 )
 attributes["icon"] = icon
 attributes["icon_color"] = icon_color
