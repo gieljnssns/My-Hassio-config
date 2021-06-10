@@ -8,6 +8,9 @@
           topic: monitor/scan/restart
           # payload: '{{ identity }}'
           payload: '{"identity":"HA"}'
-      - service: script.mqtt_trigger_blok
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.bluetooth_trigger_blok
+      # - service: script.mqtt_trigger_blok
+
 
       # journalctl -f -u monitor.service

@@ -15,6 +15,12 @@
         {{ is_state('binary_sensor.garage_echo', 'off') }}
       # value_template: >-
       #   {{ states("sensor.oma_garage") == 'unavailable'}}
+    
+    monitor_brewpi_down:
+      friendly_name: "Monitor unavailable"
+      device_class: problem
+      value_template: >-
+        {{ is_state('binary_sensor.brewpi_echo', 'off') }}
 
     monitor_tv_down:
       friendly_name: "Monitor unavailable"
@@ -40,6 +46,7 @@
         {{  states("binary_sensor.monitor_poortje_down") == 'on' or 
             states("binary_sensor.monitor_tv_down") == 'on' or
             states("binary_sensor.monitor_garage_down") == 'on' or
+            states("binary_sensor.monitor_brewpi_down") == 'on' or
             states("binary_sensor.monitor_slaapkamer_down") == 'on'  }}
 
     monitor_arrive_depart_scanning:
@@ -61,6 +68,12 @@
 - platform: mqtt
   name: Garage echo
   state_topic: "monitor/Garage/echo"
+  off_delay: 150
+  payload_on: "ok"
+
+- platform: mqtt
+  name: brewPi echo
+  state_topic: "monitor/brewPi/echo"
   off_delay: 150
   payload_on: "ok"
 

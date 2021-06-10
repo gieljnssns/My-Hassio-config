@@ -99,3 +99,13 @@
 #   payload_available: "online"
 #   payload_not_available: "offline"
 #   json_attributes_topic: 'monitor/Garage/C8:3B:BB:14:93:03'
+
+- platform: mqtt
+  state_topic: 'monitor/brewPi/mphone'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'mPhone brewPi'
+  # availability_topic: "monitor/Living/status"
+  # payload_available: "online"
+  # payload_not_available: "offline"
+  json_attributes_topic: 'monitor/brewPi/mphone'

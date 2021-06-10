@@ -99,3 +99,13 @@
 #   payload_not_available: "offline"
 #   json_attributes_topic: 'monitor/Garage/FD:BE:FE:17:E4:83'
 #   json_attributes_topic: 'monitor/Garage/FD:BE:FE:17:E4:83'
+
+- platform: mqtt
+  state_topic: 'monitor/brewPi/gphone'
+  value_template: '{{ value_json.confidence }}'
+  unit_of_measurement: '%'
+  name: 'gPhone brewPi'
+  # availability_topic: "monitor/Living/status"
+  # payload_available: "online"
+  # payload_not_available: "offline"
+  json_attributes_topic: 'monitor/brewPi/gphone'
