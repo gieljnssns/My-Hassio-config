@@ -1,0 +1,56 @@
+# https://github.com/thorrak/fermentrack/issues/571
+
+# Default server configuration located at /etc/nginx/sites-enabled
+# Defaulting default server to Fermentrack
+server {
+        # listen 80 default_server;
+        listen [::]:80 default_server ipv6only=off;
+
+    # NOTE - All instances of 'fermentrack' are replaced with the username collected during installation
+        root /home/fermentrack/fermentrack;
+
+        server_name _;
+
+    location / {
+      try_files /off.html @applocation;
+    }
+
+    location @applocation {
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header Host $http_host;
+      proxy_redirect off;
+      proxy_pass http://127.0.0.1:8123;
+    }
+
+    # static is where we store static files
+    location /static {
+      alias /home/fermentrack/fermentrack/collected_static/;
+      access_log off;
+      expires 30s;
+      log_not_found off;
+    }
+
+    # media is where we would store uploaded files (if we ever add that feature)
+    location /media {
+      alias /home/fermentrack/fermentrack/media/;
+      access_log off;
+      expires 30s;
+      log_not_found off;
+    }
+
+    # data is where we store csv files containing beer data
+    location /data {
+      alias /home/fermentrack/fermentrack/data/;
+      access_log off;
+      expires 10s;
+      log_not_found off;
+    }
+
+    # alias favicon.* to static
+    location ~ ^/favicon.(\w*)$ {
+      alias /home/fermentrack/fermentrack/collected_static/favicon.$1;
+      access_log off;
+      expires 90s;
+      log_not_found off;
+    }
+}
