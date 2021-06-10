@@ -1,0 +1,23 @@
+# To add the Zigzag panel to Home Assistant
+# Add the contents of this file to your Home Assistant configuration.yaml file as explained here
+# https://www.home-assistant.io/integrations/panel_custom/
+
+panel_custom:
+  - name: custom-panel-zigzag
+    sidebar_title: Zigzag
+    sidebar_icon: mdi:zigbee
+    url_path: zigzag
+    module_url: /local/zigzag/zigzag-panel.esm.js
+    trust_external_script: true
+    config:
+      who: world
+      zigzag: # Identifies this as Zigzag configuration
+        plugin-path: "/local/zigzag/plugins" # Path to the directory where your Zigzag plugins are located
+        plugin-data:    # Configuration for the data plugin
+          type: "zha"   # Specify we will use the zha data plugin.
+
+        plugin-layout:  # Configuration for the data plugin
+          type: "d3"    # Specify we will use the d3 layout plugin.
+
+        plugin-render:  # Configuration for the render plugin
+          type: "pixi"  # Use the pixi.js plugin to display a 2d Zigzag graph.
