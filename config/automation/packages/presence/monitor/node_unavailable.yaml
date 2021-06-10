@@ -1,5 +1,5 @@
 alias: node unavailable
-initial_state: "on"
+id: 1e234462-7e45-4011-8c83-c75133d4e3db
 trigger:
   - platform: state
     entity_id: binary_sensor.garage_echo
@@ -25,6 +25,8 @@ action:
   - service_template: >
       {% if trigger.entity_id == 'binary_sensor.garage_echo' %}
           script.garage_retain_0
+      {% elif trigger.entity_id == 'binary_sensor.brewpi_echo' %}
+          script.brewpi_retain_0
       {% elif trigger.entity_id == 'binary_sensor.slaapkamer_echo' %}
           script.slaapkamer_retain_0
       {% elif trigger.entity_id == 'binary_sensor.tvpi_echo' %}

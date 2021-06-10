@@ -1,5 +1,6 @@
   alias: Beweging hof
   initial_state: 'on' 
+  mode: single
   trigger:
     - platform: state
       entity_id: binary_sensor.netatmo_webhook_trigger, binary_sensor.netatmo_component_human
@@ -19,3 +20,5 @@
           script.dummy
         {%- endif -%}
       entity_id:  input_boolean.beweging_hof
+    - delay:
+        seconds: 10

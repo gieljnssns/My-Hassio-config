@@ -1,5 +1,6 @@
 alias: Licht hof aan
-initial_state: "on"
+id: 25632745-3abf-4ae9-a64e-181845b9dec6
+mode: restart
 trigger:
   - platform: state
     entity_id: input_boolean.presence_licht_aan
@@ -14,13 +15,10 @@ trigger:
     entity_id: device_tracker.martine_not_so_binary
     to: "Juist Aangekomen"
   - platform: state
-    entity_id: input_boolean.noorthuis
-    to: "on"
-  - platform: state
-    entity_id: input_boolean.fienthuis
-    to: "on"
-  - platform: state
     entity_id: binary_sensor.keuken_achterdeur
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.garage_deur
     to: "on"
   - platform: state
     entity_id: binary_sensor.beweging_hof
@@ -48,4 +46,6 @@ action:
     entity_id: timer.verlichting_hof
     state: "idle"
   - service: timer.start
-    entity_id: timer.verlichting_hof
+    data:
+      entity_id: timer.verlichting_hof
+      duration: "00:10:00"

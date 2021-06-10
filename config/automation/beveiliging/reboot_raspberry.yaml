@@ -1,5 +1,6 @@
 alias: Reboot raspberry
-initial_state: "on"
+id: 0ecdc2c9-da09-475b-a348-a850d0e0b5f5
+description: ''
 trigger:
   - platform: time
     at: "3:30:00"
@@ -18,37 +19,37 @@ condition:
   conditions:
     - condition: template
       value_template: >
-        {{ float(states('sensor.swap_badkamer')) > 20.00 or float(states('sensor.uptime_badkamer')) > 170.00 }}
+        {{ states('sensor.swap_badkamer') | float > 20.00 or states('sensor.uptime_badkamer') | float > 170.00 }}
     - condition: template
       value_template: >
-        {{ float(states('sensor.swap_fien')) > 20.00 or float(states('sensor.uptime_fien')) > 170.00 }}
+        {{ states('sensor.swap_fien') | float > 20.00 or states('sensor.uptime_fien') | float > 170.00 }}
     - condition: template
       value_template: >
-        {{ float(states('sensor.swap_garage')) > 20.00 or float(states('sensor.uptime_garage')) > 170.00 }}
+        {{ states('sensor.swap_garage') | float > 20.00 or states('sensor.uptime_garage') | float > 170.00 }}
     - condition: template
       value_template: >
-        {{ float(states('sensor.swap_keuken')) > 20.00 or float(states('sensor.uptime_keuken')) > 170.00 }}
+        {{ states('sensor.swap_keuken') | float > 20.00 or states('sensor.uptime_keuken') | float > 170.00 }}
     - condition: template
       value_template: >
-        {{ float(states('sensor.swap_noor')) > 20.00 or float(states('sensor.uptime_noor')) > 170.00 }}
+        {{ states('sensor.swap_noor') | float > 20.00 or states('sensor.uptime_noor') | float > 170.00 }}
     - condition: template
       value_template: >
-        {{ float(states('sensor.swap_pi3_living')) > 20.00 or float(states('sensor.uptime_pi3_living')) > 170.00 }}
+        {{ states('sensor.swap_pi3_living') | float > 20.00 or states('sensor.uptime_pi3_living') | float > 170.00 }}
     - condition: template
       value_template: >
-        {{ float(states('sensor.swap_poortjepi')) > 20.00 or float(states('sensor.uptime_poortjepi')) > 170.00 }}
+        {{ states('sensor.swap_poortjepi') | float > 20.00 or states('sensor.uptime_poortjepi') | float > 170.00 }}
     - condition: template
       value_template: >
-        {{ float(states('sensor.swap_slaapkamer')) > 20.00 or float(states('sensor.uptime_slaapkamer')) > 170.00 }}
+        {{ states('sensor.swap_slaapkamer') | float > 20.00 or states('sensor.uptime_slaapkamer') | float > 170.00 }}
     - condition: template
       value_template: >
-        {{ float(states('sensor.swap_tvpi')) > 20.00 or float(states('sensor.uptime_tvpi')) > 170.00 }}
+        {{ states('sensor.swap_tvpi') | float > 20.00 or states('sensor.uptime_tvpi') | float > 170.00 }}
     - condition: template
       value_template: >
-        {{ float(states('sensor.swap_verwarmingpi')) > 20.00 or float(states('sensor.uptime_verwarmingpi')) > 170.00 }}
+        {{ states('sensor.swap_verwarmingpi') | float > 20.00 or states('sensor.uptime_verwarmingpi') | float > 170.00 }}
     - condition: template
       value_template: >
-        {{ float(states('sensor.swap_zero_living')) > 20.00 or float(states('sensor.uptime_zero_living')) > 170.00 }}
+        {{ states('sensor.swap_zero_living') | float > 20.00 or states('sensor.uptime_zero_living') | float > 170.00 }}
 action:
   - service_template: >
       {% if trigger.entity_id == 'sensor.swap_tvpi' %}
@@ -56,27 +57,27 @@ action:
       {% elif trigger.entity_id == 'sensor.swap_slaapkamer' %}
         script.slaapkamer_reboot
       {% else %}
-        {% if float(states('sensor.swap_badkamer')) > 20.00 or float(states('sensor.uptime_badkamer')) > 170.00 %}
+        {% if states('sensor.swap_badkamer') | float > 20.00 or states('sensor.uptime_badkamer') | float > 170.00 %}
           script.badkamer_reboot
-        {% elif float(states('sensor.swap_slaapkamer')) > 20.00 or float(states('sensor.uptime_slaapkamer')) > 170.00 %}
+        {% elif states('sensor.swap_slaapkamer') | float > 20.00 or states('sensor.uptime_slaapkamer') | float > 170.00 %}
           script.slaapkamer_reboot
-        {% elif float(states('sensor.swap_tvpi')) > 20.00 or float(states('sensor.uptime_tvpi')) > 170.00 %}
+        {% elif states('sensor.swap_tvpi') | float > 20.00 or states('sensor.uptime_tvpi') | float > 170.00 %}
           script.tvpi_reboot
-        {% elif float(states('sensor.swap_fien')) > 20.00 or float(states('sensor.uptime_fien')) > 170.00 %}
+        {% elif states('sensor.swap_fien') | float > 20.00 or states('sensor.uptime_fien') | float > 170.00 %}
           script.fien_reboot
-        {% elif float(states('sensor.swap_garage')) > 20.00 or float(states('sensor.uptime_garage')) > 170.00 %}
+        {% elif states('sensor.swap_garage') | float > 20.00 or states('sensor.uptime_garage') | float > 170.00 %}
           script.garage_reboot
-        {% elif float(states('sensor.swap_keuken')) > 20.00 or float(states('sensor.uptime_keuken')) > 170.00 %}
+        {% elif states('sensor.swap_keuken') | float > 20.00 or states('sensor.uptime_keuken') | float > 170.00 %}
           script.keuken_reboot
-        {% elif float(states('sensor.swap_noor')) > 20.00 or float(states('sensor.uptime_noor')) > 170.00 %}
+        {% elif states('sensor.swap_noor') | float > 20.00 or states('sensor.uptime_noor') | float > 170.00 %}
           script.noor_reboot
-        {% elif float(states('sensor.swap_pi3_living')) > 20.00 or float(states('sensor.uptime_pi3_living')) > 170.00 %}
+        {% elif states('sensor.swap_pi3_living') | float > 20.00 or states('sensor.uptime_pi3_living') | float > 170.00 %}
           script.living_pi3_reboot
-        {% elif float(states('sensor.swap_poortjepi')) > 20.00 or float(states('sensor.uptime_poortjepi')) > 170.00 %}
+        {% elif states('sensor.swap_poortjepi') | float > 20.00 or states('sensor.uptime_poortjepi') | float > 170.00 %}
           script.poortpi_reboot
-        {% elif float(states('sensor.swap_verwarmingpi')) > 20.00 or float(states('sensor.uptime_verwarmingpi')) > 170.00 %}
+        {% elif states('sensor.swap_verwarmingpi') | float > 20.00 or states('sensor.uptime_verwarmingpi') | float > 170.00 %}
           script.verwarmingpi_reboot
-        {% elif float(states('sensor.swap_zero_living')) > 20.00 or float(states('sensor.uptime_zero_living')) > 170.00 %}
+        {% elif states('sensor.swap_zero_living') | float > 20.00 or states('sensor.uptime_zero_living') | float > 170.00 %}
           script.living_zero_reboot
         {% endif %}
       {% endif %}

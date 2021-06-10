@@ -1,5 +1,6 @@
   alias: 'Alarm arm away'
-  initial_state: 'on' 
+  id: 73eba5ec-f30e-4963-94f8-5c5520ce2ab0
+  mode: parallel
   trigger:
     - platform: state
       entity_id: device_tracker.giel_not_so_binary
@@ -50,8 +51,6 @@
           - condition: state
             entity_id: device_tracker.giel_not_so_binary
             state: 'Langdurig Afwezig'
-
-     
   action:
     - service: alarm_control_panel.alarm_arm_away
       entity_id: alarm_control_panel.ha_alarm
@@ -63,4 +62,8 @@
       entity_id: media_player.keuken
     - service: media_player.media_pause
       entity_id: media_player.living_2
+    # - service: hassio.addon_start
+    #   data:
+    #     addon: ccab4aaf_frigate
+      
     

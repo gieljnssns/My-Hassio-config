@@ -1,5 +1,5 @@
   alias: Spots aan schooldag of late
-  initial_state: 'on' 
+  id: 463b0a9c-0f70-4ccf-b095-52f8496c4361
   trigger:
     platform: state
     entity_id: binary_sensor.pir_living
@@ -10,6 +10,9 @@
       - condition: time
         after: '07:30:00'
         before: '11:00:00'
+      - condition: state
+        entity_id: light.spots_tv
+        state: 'off'
       # - condition: or
       #   conditions:
       #     - condition: state

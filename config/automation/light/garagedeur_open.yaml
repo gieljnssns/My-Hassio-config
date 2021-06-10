@@ -1,28 +1,49 @@
 alias: Light garage garagedeur open
-initial_state: "on"
+id: 9b86be0a-0d8e-4605-bfad-27f55017efd7
+description: ''
 trigger:
   - platform: state
     entity_id: binary_sensor.garage_deur
-# condition:
-#   condition: and
-#   conditions:
-#     - condition: state
-#       entity_id: light.keuken_luster
-#       state: "off"
-#     - condition: state
-#       entity_id: light.keuken_inkom
-#       state: "off"
-#     - condition: state
-#       entity_id: light.keuken_spots
-#       state: "off"
-#     - condition: state
-#       entity_id: sensor.dark_outside
-#       state: "true"
+
 action:
-  - service_template: >
-      {% if trigger.from_state.state == "on" and states("binary_sensor.beweging_garage") == "off" %}
-        light.turn_off
-      {% else %}
-        light.turn_on
-      {% endif %}
-    entity_id: light.garage
+  - choose:
+    - conditions:
+        - condition: template
+          value_template: >
+            {{  states('binary_sensor.garage_deur') == "off" and 
+                states("binary_sensor.beweging_garage") == "off"  }}
+      sequence:
+        - service: light.turn_off
+          data:
+            entity_id: light.garage
+    - conditions:
+        - condition: template
+          value_template: >
+            {{  states('binary_sensor.garage_deur') == "off" and 
+                states("binary_sensor.beweging_garage") == "off" and 
+                states("light.garage") == "off"  }}
+      sequence:
+        - service: light.turn_off
+          data:
+            entity_id: light.garage
+    - conditions:
+        - condition: template
+          value_template: >
+            {{  states('binary_sensor.garage_deur') == "off" and 
+                states("binary_sensor.beweging_garage") == "on" and 
+                states("light.garage") == "off"  }}
+      sequence:
+        - service: light.turn_off
+          data:
+            entity_id: light.garage
+    default:
+        - service: light.turn_on
+          data:
+            entity_id: light.garage
+  # - service_template: >
+  #     {% if trigger.from_state.state == "on" and states("binary_sensor.beweging_garage") == "off" %}
+  #       light.turn_off
+  #     {% else %}
+  #       light.turn_on
+  #     {% endif %}
+  #   entity_id: light.garage

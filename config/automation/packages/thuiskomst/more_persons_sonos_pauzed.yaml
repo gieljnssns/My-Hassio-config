@@ -1,30 +1,31 @@
 alias: Welkom allemaal, sonos paused
-initial_state: "on"
+id: b070f06f-a9e1-4e05-94b2-8e6e7c2d1372
+mode: restart
 trigger:
   - platform: template
     value_template: >
-      {{ is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and 
-         is_state('binary_sensor.beweging_keuken_pir_klein', 'on') }}
+      {{  is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and 
+          is_state('binary_sensor.beweging_keuken_pir_klein', 'on') }}
   - platform: template
     value_template: >
-      {{ is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and 
-         is_state('binary_sensor.beweging_keuken_pir_groot', 'on') }}
+      {{  is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and 
+          is_state('binary_sensor.beweging_keuken_pir_groot', 'on') }}
   - platform: template
     value_template: >
-      {{ is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and 
-         is_state('binary_sensor.beweging_keuken_camera', 'on') }}
+      {{  is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and 
+          is_state('binary_sensor.beweging_keuken_camera', 'on') }}
   - platform: template
     value_template: >
-      {{ is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and 
-         is_state('binary_sensor.beweging_keuken_pir_klein', 'on') }}
+      {{  is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and 
+          is_state('binary_sensor.beweging_keuken_pir_klein', 'on') }}
   - platform: template
     value_template: >
-      {{ is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and 
-         is_state('binary_sensor.beweging_keuken_pir_groot', 'on') }}
+      {{  is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and 
+          is_state('binary_sensor.beweging_keuken_pir_groot', 'on') }}
   - platform: template
     value_template: >
-      {{ is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and 
-         is_state('binary_sensor.beweging_keuken_camera', 'on') }}
+      {{  is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and 
+          is_state('binary_sensor.beweging_keuken_camera', 'on') }}
 condition:
   condition: and
   conditions:
@@ -43,9 +44,9 @@ condition:
       entity_id: sensor.people_arrive_count
       above: 1
     - condition: template
-      value_template: "{{as_timestamp(as_local(states.sensor.time.last_changed)) - as_timestamp(state_attr('script.sonos_pauze_spreek', 'last_triggered')) | float > 310 }}"
+      value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_pauze_spreek', 'last_triggered')) | float > 310 }}"
     - condition: template
-      value_template: "{{as_timestamp(as_local(states.sensor.time.last_changed)) - as_timestamp(state_attr('script.sonos_playing_spreek', 'last_triggered')) | float > 310 }}"
+      value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_playing_spreek', 'last_triggered')) | float > 310 }}"
 action:
   - service: script.sonos_pauze_spreek
     data_template:

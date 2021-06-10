@@ -1,27 +1,46 @@
 alias: Achtergevel openen #Sunscreen up/inklappen
-initial_state: "on" #on reboot HA or reloading of automations, automation is ON
+id: 295ff81a-e388-498f-8c2c-077f9734d06c
 trigger:
   # Sun based triggers
   - platform: numeric_state
     entity_id: sensor.sun_azimut
-    above: 250
+    above: 260
   - platform: state
     entity_id: sensor.dark_outside
     to: "true"
+    for:
+      minutes: 5
   - platform: numeric_state
     entity_id: sensor.zonne_energie_gefilterd_lowpass
     below: 400
+    for:
+      minutes: 5
 
     # Weather based triggers
   - platform: numeric_state
-    entity_id: sensor.windsnelheid
+    entity_id: sensor.weatherbit_wind_speed
     above: 40 #If wind force becomes to high, sunscreen needs to go up
-  - platform: numeric_state
-    entity_id: sensor.ba_precipitation_forecast_average
-    above: 0.30 # Rain the next 15 min
-  - platform: numeric_state
-    entity_id: sensor.ba_precipitation
-    above: 0.30 # Rain
+  # - platform: numeric_state
+  #   entity_id: sensor.ba_precipitation_forecast_average
+  #   above: 0.30 # Rain the next 15 min
+  # - platform: numeric_state
+  #   entity_id: sensor.ba_precipitation
+  #   above: 0.30 # Rain
+  
+  - platform: template
+    value_template: >
+      {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
+        {{ states("sensor.ba_precipitation_forecast_average") | float > 0.30 }}
+      {% else %}
+        {{ states("sensor.openweathermap_forecast_precipitation")  | float > 0.30 }}
+      {% endif %}
+  - platform: template
+    value_template: >
+      {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
+        {{ states("sensor.ba_precipitation") | float > 0.30 }}
+      {% else %}
+        {{ states("sensor.openweathermap_rain")  | float > 0.30 }}
+      {% endif %}
 
 condition:
   condition: or

@@ -1,18 +1,6 @@
 alias: Timer verlichting op
-initial_state: "on"
+id: f669df9d-c3b7-445e-bce8-f05346470c35
 trigger:
-  - platform: state
-    entity_id: light.wc
-    to: "on"
-  - platform: state
-    entity_id: light.waskot
-    to: "on"
-  - platform: state
-    entity_id: light.gang_beneden
-    to: "on"
-  - platform: state
-    entity_id: light.gang_boven
-    to: "on"
   - platform: state
     entity_id: light.garage
     to: "on"
@@ -21,16 +9,13 @@ trigger:
     to: "on"
 action:
   - service: timer.start
-    data_template:
-      entity_id: >
-        {% if trigger.entity_id == 'light.wc' %}
-          timer.verlichting_wc
-        {% elif trigger.entity_id == 'light.waskot' %}
-          timer.verlichting_waskot
-        {% elif trigger.entity_id == 'light.gang_beneden' %}
-          timer.verlichting_gang_beneden
-        {% elif trigger.entity_id == 'light.garage' or trigger.entity_id == 'light.garage_werkbank' %}
-          timer.verlichting_garage
-        {% else %}
-          timer.verlichting_gang_boven
-        {% endif %}
+    entity_id: timer.verlichting_garage
+    # data_template:
+    #   entity_id: >
+    #     {% if trigger.entity_id == 'light.wc' %}
+    #       timer.verlichting_wc
+    #     {% elif trigger.entity_id == 'light.garage' or trigger.entity_id == 'light.garage_werkbank' %}
+    #       timer.verlichting_garage
+    #     {% else %}
+    #       timer.verlichting_waskot
+    #     {% endif %}

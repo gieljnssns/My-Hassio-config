@@ -1,30 +1,31 @@
 alias: Welkom, sonos playing
-initial_state: "on"
+id: e842f573-e463-40b3-af63-305d1be0e346
+mode: restart
 trigger:
   - platform: template
     value_template: >
-      {{ is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and 
-         is_state('binary_sensor.beweging_keuken_pir_klein', 'on') }}
+      {{  is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and 
+          is_state('binary_sensor.beweging_keuken_pir_klein', 'on') }}
   - platform: template
     value_template: >
-      {{ is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and 
-         is_state('binary_sensor.beweging_keuken_pir_groot', 'on') }}
+      {{  is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and 
+          is_state('binary_sensor.beweging_keuken_pir_groot', 'on') }}
   - platform: template
     value_template: >
-      {{ is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and 
-         is_state('binary_sensor.beweging_keuken_camera', 'on') }}
+      {{  is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and 
+          is_state('binary_sensor.beweging_keuken_camera', 'on') }}
   - platform: template
     value_template: >
-      {{ is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and 
-         is_state('binary_sensor.beweging_keuken_pir_klein', 'on') }}
+      {{  is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and 
+          is_state('binary_sensor.beweging_keuken_pir_klein', 'on') }}
   - platform: template
     value_template: >
-      {{ is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and 
-         is_state('binary_sensor.beweging_keuken_pir_groot', 'on') }}
+      {{  is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and 
+          is_state('binary_sensor.beweging_keuken_pir_groot', 'on') }}
   - platform: template
     value_template: >
-      {{ is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and 
-         is_state('binary_sensor.beweging_keuken_camera', 'on') }}
+      {{  is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and 
+          is_state('binary_sensor.beweging_keuken_camera', 'on') }}
 condition:
   condition: and
   conditions:
@@ -43,9 +44,9 @@ condition:
       entity_id: sensor.people_arrive_count
       state: "1"
     - condition: template
-      value_template: "{{as_timestamp(as_local(states.sensor.time.last_changed)) - as_timestamp(state_attr('script.sonos_pauze_spreek', 'last_triggered')) | float > 310 }}"
+      value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_pauze_spreek', 'last_triggered')) | float > 310 }}"
     - condition: template
-      value_template: "{{as_timestamp(as_local(states.sensor.time.last_changed)) - as_timestamp(state_attr('script.sonos_playing_spreek', 'last_triggered')) | float > 310 }}"
+      value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_playing_spreek', 'last_triggered')) | float > 310 }}"
 action:
   - service: script.sonos_playing_spreek
     data_template:
@@ -70,12 +71,9 @@ action:
           "Hallo " + person + ", welkom thuis.",
           "Welkom thuis " + person + ", zware dag gehad?",
           "Blij dat je thuis bent " + person ,
-          "De grote baas is thuis!",
-          "Iedereen knielen voor de almachtige heerser",
           "Wees welkom " + person + ", toch niet te veel gedronken?",
           "Stel niet uit tot morgen... Wat je vandaag door een ander kan laten doen.",
           "Stel niet uit tot morgen... Wat je overmorgen ook kan doen.",
-          "Het was niet god of allah die de mens heeft geschapen... Het is was de mens die god en allah heeft geschapen.",
           "Ik ben niet lui... Ik sta in energiebesparende modus",
           "Als het gras groener is bij de buren... Zal het wel kunstgras zijn",
           "Al schud de jongen nog zo kloek., de laatste druppel valt in de broek.",
@@ -93,7 +91,6 @@ action:
           "Welkom thuis " + person + ", zware dag gehad?",
           "Blij dat je thuis bent " + person ,
           "Hokus Pokus pats, ik wou da " + person + " thuis was",
-          "De rechterhand van de almachtige is aanwezig.",
           "Spiegeltje, spiegeltje aan de wand, hier is de mooiste van het land.",
           "Sims salla bime, hier is " + person ,
           "Die da Disneyland, hier is " + person + " en dat is plezant.",

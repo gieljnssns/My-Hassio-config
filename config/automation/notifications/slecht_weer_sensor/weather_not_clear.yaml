@@ -1,5 +1,5 @@
   alias: 'Bad weather notification - clear'
-  initial_state: 'on'
+  id: 45a4e1d5-aa55-4c81-b15e-337eed05db82
   trigger:
     platform: template
     value_template: '{{ states.sensor.time.state == states.sensor.notification_time_long.state }}'
@@ -15,4 +15,5 @@
   action:
     - service: notify.mobile_app_mphone
       data:
-        message: "Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}. De voorspelling voor de komende 12 u is: {{ states.sensor.dark_sky_summary_0d.state }}"
+        message: >
+          " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "

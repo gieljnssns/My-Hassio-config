@@ -1,5 +1,5 @@
 alias: "Alarm disarm"
-initial_state: "on"
+id: 94a4b642-8571-4080-8c7d-fed9b86375c1
 trigger:
   - platform: state
     entity_id: device_tracker.giel_not_so_binary
@@ -15,7 +15,10 @@ trigger:
     from: "off"
     to: "on"
 action:
-  service: alarm_control_panel.alarm_disarm
-  entity_id: alarm_control_panel.ha_alarm
-  data:
-    code: !secret alarm_code
+  - service: alarm_control_panel.alarm_disarm
+    entity_id: alarm_control_panel.ha_alarm
+    data:
+      code: !secret alarm_code
+  # - service: hassio.addon_stop
+  #   data:
+  #     addon: ccab4aaf_frigate

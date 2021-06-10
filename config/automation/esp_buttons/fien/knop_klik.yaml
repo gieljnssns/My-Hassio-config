@@ -1,20 +1,23 @@
-  alias: Knop Fien klik
-  initial_state: 'on' 
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.knop_fien_klik
-      to: 'on'
-  action:
-    - service: light.toggle
-      entity_id: light.fien
-    - delay:
-        seconds: 1
-    - condition: state
-      entity_id: light.fien
-      state:  'on'
-    - service: light.turn_on
-      data:
-        brightness: 255
-        rgb_color: [255, 236, 182]
-        entity_id: light.fien
-        
+alias: Knop Fien klik
+id: a53e7d6b-3e8a-4b90-834b-29be302b84c9
+trigger:
+  - platform: state
+    entity_id: binary_sensor.knop_fien_klik
+    to: 'on'
+
+action:
+  - choose:
+    - conditions:
+        - condition: template
+          value_template: >
+            {{ states("light.fien") == 'on' }}
+      sequence:
+        - service: light.turn_off
+          entity_id:
+            - light.fien
+    default:
+      - service: light.turn_on
+        data:
+          entity_id: light.fien
+          brightness: 255
+          rgb_color: [255, 236, 182]

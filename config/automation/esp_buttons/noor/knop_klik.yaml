@@ -1,20 +1,22 @@
-  alias: Knop Noor klik
-  initial_state: 'on' 
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.knop_noor_klik
-      to: 'on'
-  action:
-    - service: light.toggle
-      entity_id: light.noor
-    - delay:
-        seconds: 1
-    - condition: state
-      entity_id: light.noor
-      state:  'on'
-    - service: light.turn_on
-      data:
-        brightness: 255
-        rgb_color: [255, 236, 182]
-        entity_id: light.noor
-        
+alias: Knop Noor klik
+id: 41167ec0-0d4e-4d94-808a-ff94da618d3b
+trigger:
+  - platform: state
+    entity_id: binary_sensor.knop_noor_klik
+    to: 'on'
+
+action:
+  - choose:
+    - conditions:
+        - condition: template
+          value_template: >
+            {{ states("light.noor") == 'on' }}
+      sequence:
+        - service: light.turn_off
+          entity_id:
+            - light.noor
+    default:
+      - service: light.turn_on
+        data:
+          entity_id: light.noor
+          brightness: 255

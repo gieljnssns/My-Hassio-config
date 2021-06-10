@@ -1,0 +1,14 @@
+  alias: Fermentrack Webhook
+  id: b764d7e2-6b88-44a5-b8de-e02dd5d7b55c
+  trigger:
+    platform: webhook
+    webhook_id: fermentrack
+  action:
+    - service: mqtt.publish
+      data_template:
+        topic: 'fermentrack/update'
+        retain: true
+        payload_template: >
+          {{ trigger.payload }}
+#          {{ trigger.json | tojson }}
+

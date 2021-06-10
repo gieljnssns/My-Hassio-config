@@ -1,5 +1,5 @@
   alias: Reset unavailable counter
-  initial_state: 'on' 
+  id: a3fcebde-7e35-42f9-9b78-b5109bde78e8 
   trigger:
     - platform: state
       entity_id: input_select.reset_counter
@@ -39,27 +39,27 @@
       data_template:
         entity_id: >
           {% if states("input_select.reset_counter") == 'Garage' %}
-             counter.garage
+              counter.garage
           {% elif states("input_select.reset_counter") == 'Keuken' %}
-             counter.keuken
+              counter.keuken
           {% elif states("input_select.reset_counter") == 'Badkamer' %}
-             counter.badkamer
+              counter.badkamer
           {% elif states("input_select.reset_counter") == 'Living' %}
-             counter.living
+              counter.living
           {% elif states("input_select.reset_counter") == 'tvPi' %}
-             counter.tvpi
+              counter.tvpi
           {% elif states("input_select.reset_counter") == 'Slaapkamer' %}
-             counter.slaapkamer
+              counter.slaapkamer
           {% elif states("input_select.reset_counter") == 'PoortPi' %}
-             counter.poortpi
+              counter.poortpi
           {% elif states("input_select.reset_counter") == 'Sonos Keuken' %}
-             counter.sonos_keuken
+              counter.sonos_keuken
           {% elif states("input_select.reset_counter") == 'Sonos Badkamer' %}
-             counter.sonos_badkamer
+              counter.sonos_badkamer
           {% elif states("input_select.reset_counter") == 'Esp Keuken' %}
-             counter.esp_keuken
+              counter.esp_keuken
           {% elif states("input_select.reset_counter") == 'Esp Living' %}
-             counter.esp_living
+              counter.esp_living
           {% endif %}
     - delay: '00:00:03'
     - service: input_select.select_option

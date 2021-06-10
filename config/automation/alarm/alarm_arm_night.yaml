@@ -1,5 +1,5 @@
 alias: "Alarm arm night"
-initial_state: "on"
+id: 3ab59385-d409-4777-abae-9c461a9fd442
 trigger:
   - platform: template
     value_template: >
@@ -23,35 +23,46 @@ trigger:
     entity_id: light.spot_slaapkamer
     to: "unavailable"
 condition:
-  condition: and
-  conditions:
-    - condition: time
-      after: "20:15:00"
-      before: "04:00:00"
-    - condition: template
-      value_template: "{{ states('alarm_control_panel.ha_alarm') != 'arming' }}"
-    - condition: template
-      value_template: "{{ states('alarm_control_panel.ha_alarm') != 'armed_night' }}"
-    - condition: template
-      value_template: "{{ states('media_player.philips_tv') != 'on' }}"
-    - condition: or
-      conditions:
-        - condition: or
-          conditions:
-            - condition: state
-              entity_id: device_tracker.martine_not_so_binary
-              state: "Thuis"
-            - condition: state
-              entity_id: device_tracker.martine_not_so_binary
-              state: "Juist Aangekomen"
-        - condition: or
-          conditions:
-            - condition: state
-              entity_id: device_tracker.giel_not_so_binary
-              state: "Thuis"
-            - condition: state
-              entity_id: device_tracker.giel_not_so_binary
-              state: "Juist Aangekomen"
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: media_player.living_2
+        state: "playing"
+      - condition: state
+        entity_id: media_player.keuken
+        state: "playing"
+  - condition: and
+    conditions:
+      - condition: time
+        after: "20:15:00"
+        before: "04:00:00"
+      - condition: state
+        entity_id: media_player.keuken
+        state:  "paused"
+      - condition: template
+        value_template: "{{ states('alarm_control_panel.ha_alarm') != 'arming' }}"
+      - condition: template
+        value_template: "{{ states('alarm_control_panel.ha_alarm') != 'armed_night' }}"
+      - condition: template
+        value_template: "{{ states('media_player.philips_tv') != 'on' }}"
+      - condition: or
+        conditions:
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: device_tracker.martine_not_so_binary
+                state: "Thuis"
+              - condition: state
+                entity_id: device_tracker.martine_not_so_binary
+                state: "Juist Aangekomen"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: device_tracker.giel_not_so_binary
+                state: "Thuis"
+              - condition: state
+                entity_id: device_tracker.giel_not_so_binary
+                state: "Juist Aangekomen"
 action:
   - service: light.turn_on
     data:
@@ -64,6 +75,9 @@ action:
     entity_id: alarm_control_panel.ha_alarm
     data:
       code: !secret alarm_code
+  # - service: hassio.addon_start
+  #   data:
+  #     addon: ccab4aaf_frigate
   - service: homeassistant.turn_off
     entity_id: script.mqtt_arrive_script, script.mqtt_depart_script
   - service: script.mqtt_arrive_script
@@ -76,3 +90,4 @@ action:
       {{ state_attr( 'media_player.badkamer' , 'sonos_group')[0] !=  'media_player.badkamer' }}
   - service: sonos.unjoin
     entity_id: media_player.badkamer
+  

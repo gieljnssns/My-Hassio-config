@@ -1,13 +1,13 @@
 alias: "Ramen openen/sluiten"
-initial_state: "on"
+id: 10a371eb-8dfd-44c3-90cd-46519ae531de
 trigger:
   - platform: state
-    entity_id: binary_sensor.buiten_frisser_dan_binnen
+    entity_id: binary_sensor.buiten_frisser_dan_binnen_old
     to: "on"
-    for:
-      minutes: 5
+    # for:
+    #   minutes: 5
   - platform: state
-    entity_id: binary_sensor.buiten_frisser_dan_binnen
+    entity_id: binary_sensor.buiten_frisser_dan_binnen_old
     to: "off"
     for:
       minutes: 5
@@ -15,9 +15,12 @@ trigger:
 condition:
   condition: and
   conditions:
-    - condition: numeric_state
-      entity_id: sensor.dark_sky_daytime_high_temperature_0d
-      above: 24
+    # - condition: numeric_state
+    #   entity_id: sensor.dark_sky_daytime_high_temperature_0d
+    #   above: 24
+    - condition: template
+      value_template: >
+        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 22 }}
     - condition: template
       value_template: "{{ (as_timestamp(as_local(states.sensor.time.last_changed)) - as_timestamp(states.automation.ramen_openen_sluiten.attributes.last_triggered) | int) > 600 }}"
 

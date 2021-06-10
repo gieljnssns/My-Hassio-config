@@ -1,5 +1,5 @@
   alias: 'Bad weather notification - frost'
-  initial_state: 'on'
+  id: 177426d9-8cd4-47fa-852b-ba466e36bfb9
   trigger:
     platform: template
     value_template: '{{ states.sensor.time.state == states.sensor.notification_time_long.state }}'
@@ -15,4 +15,4 @@
   action:
     - service: notify.mobile_app_mphone
       data:
-        message: 'Er wordt ijzel voorspeld, op tijd vertrekken! Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}. De voorspelling voor de komende 12 u is: {{ states.sensor.dark_sky_summary_0d.state }}'
+        message: 'Er wordt ijzel voorspeld, op tijd vertrekken! Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }}'

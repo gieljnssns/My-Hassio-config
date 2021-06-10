@@ -1,0 +1,18 @@
+alias: Backwash pomp
+id: 7bdb4460-94c0-45bb-a508-51c33600c301
+description: ''
+mode: single
+trigger:
+  - platform: state
+    entity_id: binary_sensor.flow
+    to: 'off'
+    for:
+      minutes: 1
+condition:
+  - condition: state
+    entity_id: switch.zwembad
+    state: 'on'
+action:
+  - service: notify.giel_en_martine
+    data:
+      message: Het is nog eens tijd om de zwembadpomp een backwash te geven

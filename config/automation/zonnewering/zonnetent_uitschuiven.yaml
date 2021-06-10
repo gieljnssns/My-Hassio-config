@@ -1,5 +1,5 @@
 alias: Zonnetent uitschuiven #Sunscreen down/uitklappen
-initial_state: "on" #on reboot HA or reloading of automations, automation is ON
+id: bd69f161-08bf-4d31-aef5-19cef0dee2ab
 trigger:
   - platform: time_pattern
     minutes: "/4"
@@ -10,40 +10,73 @@ condition:
     # Sun based conditions
     - condition: numeric_state
       entity_id: sensor.sun_azimut
-      above: 115 #
+      above: 105 #
       below: 270
     - condition: numeric_state
       entity_id: sun.sun
       value_template: "{{ state.attributes.elevation }}"
-      above: 15
+      above: 10
     - condition: numeric_state
       entity_id: sensor.zonne_energie_gefilterd_lowpass
-      above: 2300
+      above: 750
 
     # Weather based conditions
     - condition: numeric_state
-      entity_id: sensor.windsnelheid
+      entity_id: sensor.weatherbit_wind_speed
       below: 25 # Wind strenght - I still have to tune this value
+    - condition: template
+      value_template: >
+        {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
+          {{ states("sensor.ba_precipitation_forecast_average") | float < 0.20 }}
+        {% else %}
+          {{ states("sensor.openweathermap_forecast_precipitation")  | float < 0.20 }}
+        {% endif %}
+    - condition: template
+      value_template: >
+        {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
+          {{ states("sensor.ba_precipitation") | float < 0.20 }}
+        {% else %}
+          {{ states("sensor.openweathermap_rain")  | float < 0.20 }}
+        {% endif %}
+    # - condition: or
+    #   conditions:
+    #   - condition: numeric_state
+    #     entity_id: sensor.ba_precipitation_forecast_average
+    #     below: 0.20 # Rain the next 15 min
+    #   - condition: numeric_state
+    #     entity_id: sensor.openweathermap_forecast_precipitation
+    #     below: 0.20
+    # - condition: or
+    #   conditions:
+    #   - condition: numeric_state
+    #     entity_id: sensor.ba_precipitation
+    #     below: 0.20 # Rain
+    #   - condition: numeric_state
+    #     entity_id: sensor.openweathermap_rain
+    #     below: 0.20
+    #- condition: numeric_state
+    #  entity_id: sensor.ba_precipitation_forecast_average
+    #  below: 0.20 # Rain the next 15 min
+    #- condition: numeric_state
+    #  entity_id: sensor.ba_precipitation
+    #  below: 0.25 # Rain
     - condition: numeric_state
-      entity_id: sensor.ba_precipitation_forecast_average
-      below: 0.20 # Rain the next 15 min
-    - condition: numeric_state
-      entity_id: sensor.ba_precipitation
-      below: 0.25 # Rain
-    - condition: numeric_state
-      entity_id: sensor.dark_sky_uv_index_0d
+      entity_id: sensor.max_uv_index
       above: 3 # This indicates direct sunlight on my location (as in: not cloudy)
 
     # Temperature based conditions
     - condition: numeric_state
       entity_id: sensor.buitentemperatuur_gefilterd
-      above: 20 # only if outdoor temperature is above x then allowed to roll out
+      above: 18 # only if outdoor temperature is above x then allowed to roll out
     - condition: numeric_state
       entity_id: sensor.gemiddelde_temp_beneden
       above: 22 # only if indoor temperature is above x then allowed to roll out
-    - condition: numeric_state
-      entity_id: sensor.dark_sky_daytime_high_temperature_0d
-      above: 22
+    # - condition: numeric_state
+    #   entity_id: sensor.dark_sky_daytime_high_temperature_0d
+    #   above: 22
+    - condition: template
+      value_template: >
+        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 20 }}
 
     # Time based conditions
     - condition: template
