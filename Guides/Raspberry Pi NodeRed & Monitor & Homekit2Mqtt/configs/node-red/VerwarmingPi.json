@@ -1,1 +1,1148 @@
-[{"id":"a014c472.608d28","type":"tab","label":"Verwarming","disabled":false,"info":""},{"id":"cb671993.7bfbf","type":"mqtt-broker","z":"","name":"Home-Assistant broker","broker":"192.168.79.54","port":"1883","clientid":"","usetls":false,"compatmode":true,"keepalive":"60","cleansession":true,"birthTopic":"verwarmingPi/status","birthQos":"0","birthRetain":"true","birthPayload":"online","closeTopic":"verwarmingPi/status","closeQos":"0","closeRetain":"true","closePayload":"offline","willTopic":"verwarmingPi/status","willQos":"0","willRetain":"true","willPayload":"offline"},{"id":"1eac1af2.ba6de5","type":"rpi-gpio out","z":"a014c472.608d28","name":"Verluchting","pin":"15","set":"","level":"0","freq":"","out":"out","x":770,"y":95,"wires":[]},{"id":"69ae971.3e36668","type":"rpi-gpio out","z":"a014c472.608d28","name":"Reserve","pin":"7","set":false,"level":"0","freq":"","out":"out","x":770,"y":413,"wires":[]},{"id":"fd4f21ca.f66d8","type":"rpi-gpio out","z":"a014c472.608d28","name":"Badkamer","pin":"13","set":"","level":"0","freq":"","out":"out","x":661,"y":625,"wires":[]},{"id":"cbc73c60.594ad","type":"rpi-gpio out","z":"a014c472.608d28","name":"Slaapkamer","pin":"19","set":"","level":"0","freq":"","out":"out","x":787,"y":803,"wires":[]},{"id":"b54f8107.d9c03","type":"rpi-gpio out","z":"a014c472.608d28","name":"Fien","pin":"29","set":"","level":"0","freq":"","out":"out","x":775,"y":1259,"wires":[]},{"id":"d4eb7f54.f30f3","type":"rpi-gpio out","z":"a014c472.608d28","name":"Noor","pin":"21","set":"","level":"0","freq":"","out":"out","x":778,"y":1032,"wires":[]},{"id":"ca636da.f94a99","type":"rpi-gpio out","z":"a014c472.608d28","name":"Wc","pin":"23","set":"","level":"0","freq":"","out":"out","x":771,"y":1450,"wires":[]},{"id":"954c4c9a.6d861","type":"mqtt in","z":"a014c472.608d28","name":"Verluchting","topic":"verwarmingPi/output/verluchting/set","qos":"2","datatype":"auto","broker":"cb671993.7bfbf","x":161,"y":103,"wires":[["355476f0.37a75a","39468de9.1ea402"]]},{"id":"be370a4f.fc42a8","type":"mqtt in","z":"a014c472.608d28","name":"Reserve","topic":"verwarmingPi/output/reserve/set","qos":"2","datatype":"auto","broker":"cb671993.7bfbf","x":170,"y":413,"wires":[["da7d4653.2fbe08","97da4a3d.e186f8"]]},{"id":"2890b608.af39ca","type":"mqtt in","z":"a014c472.608d28","name":"Badkamer","topic":"verwarmingPi/output/badkamer/set","qos":"2","datatype":"auto","broker":"cb671993.7bfbf","x":163,"y":635,"wires":[["b1718dd9.c1ec2","472c2d3.3b695d4"]]},{"id":"879e7c22.eb77e","type":"mqtt in","z":"a014c472.608d28","name":"Slaapkamer","topic":"verwarmingPi/output/slaapkamer/set","qos":"2","datatype":"auto","broker":"cb671993.7bfbf","x":187,"y":803,"wires":[["6a29d99e.2bb798","6a50a67d.0ec2a8"]]},{"id":"f4da1cb7.b4284","type":"mqtt in","z":"a014c472.608d28","name":"Noor","topic":"verwarmingPi/output/noor/set","qos":"2","datatype":"auto","broker":"cb671993.7bfbf","x":148,"y":1052,"wires":[["1b36c187.2913ee","7de36ebb.acce8"]]},{"id":"66eed22b.ee276c","type":"mqtt in","z":"a014c472.608d28","name":"Fien","topic":"verwarmingPi/output/fien/set","qos":"2","datatype":"auto","broker":"cb671993.7bfbf","x":175,"y":1259,"wires":[["74860f4f.e0fdc","df7f8a93.834108"]]},{"id":"9516f00e.afd83","type":"mqtt in","z":"a014c472.608d28","name":"Wc","topic":"verwarmingPi/output/wc/set","qos":"2","datatype":"auto","broker":"cb671993.7bfbf","x":171,"y":1450,"wires":[["55baafaf.c7ef2","65a838d3.82d148"]]},{"id":"da7d4653.2fbe08","type":"function","z":"a014c472.608d28","name":"Off -> 0 and On -> 1","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg","outputs":1,"noerr":0,"x":500,"y":414,"wires":[["69ae971.3e36668"]]},{"id":"9005daa6.a72dc8","type":"mqtt out","z":"a014c472.608d28","name":"Reserve status","topic":"verwarmingPi/output/reserve/status","qos":"","retain":"","broker":"cb671993.7bfbf","x":790,"y":461,"wires":[]},{"id":"97da4a3d.e186f8","type":"function","z":"a014c472.608d28","name":"Status msg","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg","outputs":1,"noerr":0,"x":471,"y":467,"wires":[["9005daa6.a72dc8"]]},{"id":"6a29d99e.2bb798","type":"function","z":"a014c472.608d28","name":"Off -> 0 and On -> 1","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg","outputs":1,"noerr":0,"x":415,"y":804,"wires":[["cbc73c60.594ad"]]},{"id":"6a50a67d.0ec2a8","type":"function","z":"a014c472.608d28","name":"Status msg","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg","outputs":1,"noerr":0,"x":389,"y":879,"wires":[["f6b3e3ed.9e847"]]},{"id":"f6b3e3ed.9e847","type":"mqtt out","z":"a014c472.608d28","name":"Slaapkamer status","topic":"verwarmingPi/output/slaapkamer/status","qos":"","retain":"","broker":"cb671993.7bfbf","x":718,"y":873,"wires":[]},{"id":"472c2d3.3b695d4","type":"function","z":"a014c472.608d28","name":"Off -> 0 and On -> 1","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg","outputs":1,"noerr":0,"x":376,"y":621,"wires":[["fd4f21ca.f66d8"]]},{"id":"b1718dd9.c1ec2","type":"function","z":"a014c472.608d28","name":"Status msg","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg","outputs":1,"noerr":0,"x":353,"y":683,"wires":[["ee88d78.c849128"]]},{"id":"ee88d78.c849128","type":"mqtt out","z":"a014c472.608d28","name":"Badkamer status","topic":"verwarmingPi/output/badkamer/status","qos":"","retain":"","broker":"cb671993.7bfbf","x":682,"y":677,"wires":[]},{"id":"1b36c187.2913ee","type":"function","z":"a014c472.608d28","name":"Off -> 0 and On -> 1","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg","outputs":1,"noerr":0,"x":363,"y":1047,"wires":[["d4eb7f54.f30f3"]]},{"id":"7de36ebb.acce8","type":"function","z":"a014c472.608d28","name":"Status msg","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg","outputs":1,"noerr":0,"x":334,"y":1100,"wires":[["603b1e0e.7cc96"]]},{"id":"603b1e0e.7cc96","type":"mqtt out","z":"a014c472.608d28","name":"Noor status","topic":"verwarmingPi/output/noor/status","qos":"","retain":"","broker":"cb671993.7bfbf","x":643,"y":1094,"wires":[]},{"id":"55baafaf.c7ef2","type":"function","z":"a014c472.608d28","name":"Off -> 0 and On -> 1","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg","outputs":1,"noerr":0,"x":506,"y":1448,"wires":[["ca636da.f94a99"]]},{"id":"65a838d3.82d148","type":"function","z":"a014c472.608d28","name":"Status msg","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg","outputs":1,"noerr":0,"x":477,"y":1501,"wires":[["a4a7bb29.c5c0c8"]]},{"id":"a4a7bb29.c5c0c8","type":"mqtt out","z":"a014c472.608d28","name":"Wc status","topic":"verwarmingPi/output/wc/status","qos":"","retain":"","broker":"cb671993.7bfbf","x":776,"y":1495,"wires":[]},{"id":"74860f4f.e0fdc","type":"function","z":"a014c472.608d28","name":"Off -> 0 and On -> 1","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg","outputs":1,"noerr":0,"x":520,"y":1258,"wires":[["b54f8107.d9c03"]]},{"id":"df7f8a93.834108","type":"function","z":"a014c472.608d28","name":"Status msg","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg","outputs":1,"noerr":0,"x":491,"y":1311,"wires":[["3ad08523.17d9da"]]},{"id":"3ad08523.17d9da","type":"mqtt out","z":"a014c472.608d28","name":"Fien status","topic":"verwarmingPi/output/fien/status","qos":"","retain":"","broker":"cb671993.7bfbf","x":800,"y":1305,"wires":[]},{"id":"355476f0.37a75a","type":"function","z":"a014c472.608d28","name":"Off -> 0 and On -> 1","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg","outputs":1,"noerr":0,"x":441,"y":106,"wires":[["1eac1af2.ba6de5"]]},{"id":"39468de9.1ea402","type":"function","z":"a014c472.608d28","name":"Status msg","func":"var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg","outputs":1,"noerr":0,"x":412,"y":159,"wires":[["135641b.4dfccbe"]]},{"id":"135641b.4dfccbe","type":"mqtt out","z":"a014c472.608d28","name":"Verluchting status","topic":"verwarmingPi/output/verluchting/status","qos":"","retain":"","broker":"cb671993.7bfbf","x":741,"y":153,"wires":[]},{"id":"39d463f5.bc6f8c","type":"inject","z":"a014c472.608d28","name":"","topic":"","payload":"","payloadType":"date","repeat":"60","crontab":"","once":false,"onceDelay":"","x":112.5,"y":1897.25,"wires":[["feaaec0b.cac05","d6070fee.9b844","9c12fe9b.7ce7f","5fd44ca5.e9d074"]]},{"id":"feaaec0b.cac05","type":"vcgencmd","z":"a014c472.608d28","name":"","command":"get_throttled","codec":"H264","clock":"core","voltage":"core","memory":"arm","videoOutput":"0","separateMsg":false,"x":382,"y":1905,"wires":[["e164d1e6.de6ef","463236d2.2dc138"]]},{"id":"1a900220.072dde","type":"cpu","z":"a014c472.608d28","name":"","msgCore":false,"msgOverall":true,"msgArray":false,"msgTemp":false,"x":391,"y":2355,"wires":[["7a33ec52.561bf4"]]},{"id":"d6070fee.9b844","type":"vcgencmd","z":"a014c472.608d28","name":"","command":"measure_temp","codec":"H264","clock":"core","voltage":"core","memory":"arm","videoOutput":"0","separateMsg":false,"x":389,"y":1615,"wires":[["e9ef6dec.68034"]]},{"id":"e2f14336.4ff43","type":"Uptime","z":"a014c472.608d28","name":"","x":329,"y":2446,"wires":[["35e60173.cdf02e"]]},{"id":"9c12fe9b.7ce7f","type":"Memory","z":"a014c472.608d28","name":"","x":371,"y":1762,"wires":[["123d094e.231737"]]},{"id":"8ced58a1.18b6e8","type":"inject","z":"a014c472.608d28","name":"update","topic":"","payload":"","payloadType":"date","repeat":"3600","crontab":"","once":true,"onceDelay":"","x":147,"y":2446,"wires":[["e2f14336.4ff43"]]},{"id":"35e60173.cdf02e","type":"function","z":"a014c472.608d28","name":"","func":"function timeConversion(millisec) {\n\n    var seconds = (millisec / 1000).toFixed(1);\n\n    var minutes = (millisec / (1000 * 60)).toFixed(1);\n\n    var hours = (millisec / (1000 * 60 * 60)).toFixed(1);\n\n    var days = (millisec / (1000 * 60 * 60 * 24)).toFixed(1);\n\n    if (seconds < 60) {\n        return seconds + \" Sec\";\n    } else if (minutes < 60) {\n        return minutes + \" Min\";\n    } else if (hours < 24) {\n        return hours + \" Hrs\";\n    } else {\n        return days + \" Days\"\n    }\n}\n\nmsg.payload = timeConversion(msg.payload.uptime * 1000);\nreturn msg;","outputs":1,"noerr":0,"x":489,"y":2446,"wires":[["84fbd825.f298f8"]]},{"id":"123d094e.231737","type":"function","z":"a014c472.608d28","name":"","func":"msg.payload = msg.payload.memusage;\nreturn msg;","outputs":1,"noerr":0,"x":544,"y":1762,"wires":[["56a0e0a5.d5dfc"]]},{"id":"e164d1e6.de6ef","type":"function","z":"a014c472.608d28","name":"Undervoltage","func":"msg.payload = msg.payload.underVoltage;\nreturn msg;","outputs":1,"noerr":0,"x":586,"y":1908,"wires":[["6ec2256d.c023ec"]]},{"id":"463236d2.2dc138","type":"function","z":"a014c472.608d28","name":"Throttle","func":"msg.payload = msg.payload.throttled;\nreturn msg;","outputs":1,"noerr":0,"x":574,"y":2035,"wires":[["686316a0.9b3b68"]]},{"id":"e9ef6dec.68034","type":"mqtt out","z":"a014c472.608d28","name":"","topic":"verwarmingPi/system/temp","qos":"","retain":"","broker":"cb671993.7bfbf","x":823,"y":1613,"wires":[]},{"id":"7a33ec52.561bf4","type":"mqtt out","z":"a014c472.608d28","name":"","topic":"verwarmingPi/system/cpu","qos":"","retain":"","broker":"cb671993.7bfbf","x":819,"y":2360,"wires":[]},{"id":"56a0e0a5.d5dfc","type":"mqtt out","z":"a014c472.608d28","name":"","topic":"verwarmingPi/system/mem","qos":"","retain":"","broker":"cb671993.7bfbf","x":825,"y":1762,"wires":[]},{"id":"6ec2256d.c023ec","type":"mqtt out","z":"a014c472.608d28","name":"","topic":"verwarmingPi/system/undervoltage","qos":"","retain":"","broker":"cb671993.7bfbf","x":859,"y":1905,"wires":[]},{"id":"686316a0.9b3b68","type":"mqtt out","z":"a014c472.608d28","name":"","topic":"verwarmingPi/system/throttle","qos":"","retain":"","broker":"cb671993.7bfbf","x":816,"y":2040,"wires":[]},{"id":"84fbd825.f298f8","type":"mqtt out","z":"a014c472.608d28","name":"","topic":"verwarmingPi/system/uptime","qos":"","retain":"","broker":"cb671993.7bfbf","x":771,"y":2449,"wires":[]},{"id":"c6ac4317.21e52","type":"inject","z":"a014c472.608d28","name":"","topic":"","payload":"","payloadType":"date","repeat":"10","crontab":"","once":false,"onceDelay":0.1,"x":136,"y":2350,"wires":[["1a900220.072dde"]]},{"id":"84662569.f231c8","type":"exec","z":"a014c472.608d28","command":"sudo reboot","addpay":false,"append":"","useSpawn":"","timer":"","name":"Reboot","x":461,"y":2563,"wires":[[],[],[]]},{"id":"f4216bd5.1d15c8","type":"exec","z":"a014c472.608d28","command":"sudo shutdown -h now","addpay":false,"append":"","useSpawn":"","timer":"","name":"Shutdown","x":471,"y":2643,"wires":[[],[],[]]},{"id":"f701630e.9529f","type":"mqtt in","z":"a014c472.608d28","name":"","topic":"verwarmingPi/system/reboot","qos":"2","datatype":"auto","broker":"cb671993.7bfbf","x":191,"y":2563,"wires":[["84662569.f231c8"]]},{"id":"584636b7.743948","type":"mqtt in","z":"a014c472.608d28","name":"","topic":"verwarmingPi/system/shutdown","qos":"2","datatype":"auto","broker":"cb671993.7bfbf","x":201,"y":2643,"wires":[["f4216bd5.1d15c8"]]},{"id":"8b65f2c0.50353","type":"inject","z":"a014c472.608d28","name":"","topic":"","payload":"online","payloadType":"str","repeat":"60","crontab":"","once":false,"onceDelay":0.1,"x":158,"y":266,"wires":[["16797bde.c622d4"]]},{"id":"16797bde.c622d4","type":"mqtt out","z":"a014c472.608d28","name":"","topic":"verwarmingPi/status","qos":"","retain":"","broker":"cb671993.7bfbf","x":394,"y":274,"wires":[]},{"id":"5fd44ca5.e9d074","type":"exec","z":"a014c472.608d28","command":"free -m | grep Swap | awk '{printf \"%.2f\\n\", $3/$2 * 100}'","addpay":false,"append":"","useSpawn":"false","timer":"","oldrc":false,"name":"Swap %","x":364,"y":2181,"wires":[["362c2e67.05b1c2"],[],[]]},{"id":"362c2e67.05b1c2","type":"mqtt out","z":"a014c472.608d28","name":"","topic":"verwarmingPi/system/swap","qos":"","retain":"","broker":"cb671993.7bfbf","x":794,"y":2181,"wires":[]}]
+[
+    {
+        "id": "9e356609.6e8e98",
+        "type": "tab",
+        "label": "Verwarming",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "c01eb7a.2ab1b48",
+        "type": "mqtt-broker",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "verwarmingPi/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "verwarmingPi/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "verwarmingPi/status",
+        "willQos": "0",
+        "willRetain": "true",
+        "willPayload": "offline"
+    },
+    {
+        "id": "2db99275.8fd19e",
+        "type": "mqtt-broker",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "Slaapkamer/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "Slaapkamer/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "Slaapkamer/status",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "offline"
+    },
+    {
+        "id": "d09f5885.869a78",
+        "type": "rpi-gpio out",
+        "z": "9e356609.6e8e98",
+        "name": "Verluchting",
+        "pin": "15",
+        "set": "",
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 770,
+        "y": 95,
+        "wires": []
+    },
+    {
+        "id": "ee12d265.2a0cf",
+        "type": "rpi-gpio out",
+        "z": "9e356609.6e8e98",
+        "name": "Reserve",
+        "pin": "7",
+        "set": false,
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 770,
+        "y": 413,
+        "wires": []
+    },
+    {
+        "id": "f168fb9f.d97308",
+        "type": "rpi-gpio out",
+        "z": "9e356609.6e8e98",
+        "name": "Badkamer",
+        "pin": "13",
+        "set": "",
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 661,
+        "y": 625,
+        "wires": []
+    },
+    {
+        "id": "184ec60f.51721a",
+        "type": "rpi-gpio out",
+        "z": "9e356609.6e8e98",
+        "name": "Slaapkamer",
+        "pin": "19",
+        "set": "",
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 787,
+        "y": 803,
+        "wires": []
+    },
+    {
+        "id": "a293de97.c89b4",
+        "type": "rpi-gpio out",
+        "z": "9e356609.6e8e98",
+        "name": "Fien",
+        "pin": "29",
+        "set": "",
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 775,
+        "y": 1259,
+        "wires": []
+    },
+    {
+        "id": "afb1fe2b.29c5e",
+        "type": "rpi-gpio out",
+        "z": "9e356609.6e8e98",
+        "name": "Noor",
+        "pin": "21",
+        "set": "",
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 778,
+        "y": 1032,
+        "wires": []
+    },
+    {
+        "id": "369cf478.4707ec",
+        "type": "rpi-gpio out",
+        "z": "9e356609.6e8e98",
+        "name": "Wc",
+        "pin": "23",
+        "set": "",
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 771,
+        "y": 1450,
+        "wires": []
+    },
+    {
+        "id": "abedc065.d51f8",
+        "type": "mqtt in",
+        "z": "9e356609.6e8e98",
+        "name": "Verluchting",
+        "topic": "verwarmingPi/output/verluchting/set",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 161,
+        "y": 103,
+        "wires": [
+            [
+                "5fa95ea4.4aa89",
+                "a18c7c3.0b4a88"
+            ]
+        ]
+    },
+    {
+        "id": "a5afb672.17ea28",
+        "type": "mqtt in",
+        "z": "9e356609.6e8e98",
+        "name": "Reserve",
+        "topic": "verwarmingPi/output/reserve/set",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 170,
+        "y": 413,
+        "wires": [
+            [
+                "cd7e14a4.266c78",
+                "e99db693.41f208"
+            ]
+        ]
+    },
+    {
+        "id": "4383ca9c.3ff334",
+        "type": "mqtt in",
+        "z": "9e356609.6e8e98",
+        "name": "Badkamer",
+        "topic": "verwarmingPi/output/badkamer/set",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 163,
+        "y": 635,
+        "wires": [
+            [
+                "18ed8931.cd6d77",
+                "2d615a6f.9f2056"
+            ]
+        ]
+    },
+    {
+        "id": "99b07aff.9f39a8",
+        "type": "mqtt in",
+        "z": "9e356609.6e8e98",
+        "name": "Slaapkamer",
+        "topic": "verwarmingPi/output/slaapkamer/set",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 187,
+        "y": 803,
+        "wires": [
+            [
+                "55fa8dee.6904d4",
+                "b7f8a908.27e818"
+            ]
+        ]
+    },
+    {
+        "id": "f57fca5e.a2ae38",
+        "type": "mqtt in",
+        "z": "9e356609.6e8e98",
+        "name": "Noor",
+        "topic": "verwarmingPi/output/noor/set",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 148,
+        "y": 1052,
+        "wires": [
+            [
+                "d00fa3f.290ff6",
+                "af56c951.912f08"
+            ]
+        ]
+    },
+    {
+        "id": "d8116369.e5b9c",
+        "type": "mqtt in",
+        "z": "9e356609.6e8e98",
+        "name": "Fien",
+        "topic": "verwarmingPi/output/fien/set",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 175,
+        "y": 1259,
+        "wires": [
+            [
+                "a65e96e6.8bcf88",
+                "bac72c18.e331a"
+            ]
+        ]
+    },
+    {
+        "id": "4496ccd4.ac4ff4",
+        "type": "mqtt in",
+        "z": "9e356609.6e8e98",
+        "name": "Wc",
+        "topic": "verwarmingPi/output/wc/set",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 171,
+        "y": 1450,
+        "wires": [
+            [
+                "2a62f879.f2bd88",
+                "c590f6ac.cc4908"
+            ]
+        ]
+    },
+    {
+        "id": "cd7e14a4.266c78",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Off -> 0 and On -> 1",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 500,
+        "y": 414,
+        "wires": [
+            [
+                "ee12d265.2a0cf"
+            ]
+        ]
+    },
+    {
+        "id": "6d7635c9.cfdcbc",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "Reserve status",
+        "topic": "verwarmingPi/output/reserve/status",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 790,
+        "y": 461,
+        "wires": []
+    },
+    {
+        "id": "e99db693.41f208",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Status msg",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 471,
+        "y": 467,
+        "wires": [
+            [
+                "6d7635c9.cfdcbc"
+            ]
+        ]
+    },
+    {
+        "id": "55fa8dee.6904d4",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Off -> 0 and On -> 1",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 415,
+        "y": 804,
+        "wires": [
+            [
+                "184ec60f.51721a"
+            ]
+        ]
+    },
+    {
+        "id": "b7f8a908.27e818",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Status msg",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 389,
+        "y": 879,
+        "wires": [
+            [
+                "adffbea0.4dd6f"
+            ]
+        ]
+    },
+    {
+        "id": "adffbea0.4dd6f",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "Slaapkamer status",
+        "topic": "verwarmingPi/output/slaapkamer/status",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 718,
+        "y": 873,
+        "wires": []
+    },
+    {
+        "id": "2d615a6f.9f2056",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Off -> 0 and On -> 1",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 376,
+        "y": 621,
+        "wires": [
+            [
+                "f168fb9f.d97308"
+            ]
+        ]
+    },
+    {
+        "id": "18ed8931.cd6d77",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Status msg",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 353,
+        "y": 683,
+        "wires": [
+            [
+                "af6727f.ea814d8"
+            ]
+        ]
+    },
+    {
+        "id": "af6727f.ea814d8",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "Badkamer status",
+        "topic": "verwarmingPi/output/badkamer/status",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 682,
+        "y": 677,
+        "wires": []
+    },
+    {
+        "id": "d00fa3f.290ff6",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Off -> 0 and On -> 1",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 363,
+        "y": 1047,
+        "wires": [
+            [
+                "afb1fe2b.29c5e"
+            ]
+        ]
+    },
+    {
+        "id": "af56c951.912f08",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Status msg",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 334,
+        "y": 1100,
+        "wires": [
+            [
+                "b9baaa38.1fd608"
+            ]
+        ]
+    },
+    {
+        "id": "b9baaa38.1fd608",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "Noor status",
+        "topic": "verwarmingPi/output/noor/status",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 643,
+        "y": 1094,
+        "wires": []
+    },
+    {
+        "id": "2a62f879.f2bd88",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Off -> 0 and On -> 1",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 506,
+        "y": 1448,
+        "wires": [
+            [
+                "369cf478.4707ec"
+            ]
+        ]
+    },
+    {
+        "id": "c590f6ac.cc4908",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Status msg",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 477,
+        "y": 1501,
+        "wires": [
+            [
+                "10d71dff.39f2a2"
+            ]
+        ]
+    },
+    {
+        "id": "10d71dff.39f2a2",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "Wc status",
+        "topic": "verwarmingPi/output/wc/status",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 776,
+        "y": 1495,
+        "wires": []
+    },
+    {
+        "id": "a65e96e6.8bcf88",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Off -> 0 and On -> 1",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 520,
+        "y": 1258,
+        "wires": [
+            [
+                "a293de97.c89b4"
+            ]
+        ]
+    },
+    {
+        "id": "bac72c18.e331a",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Status msg",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 491,
+        "y": 1311,
+        "wires": [
+            [
+                "b4bb5d50.91183"
+            ]
+        ]
+    },
+    {
+        "id": "b4bb5d50.91183",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "Fien status",
+        "topic": "verwarmingPi/output/fien/status",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 800,
+        "y": 1305,
+        "wires": []
+    },
+    {
+        "id": "5fa95ea4.4aa89",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Off -> 0 and On -> 1",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = 0\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = 1\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 441,
+        "y": 106,
+        "wires": [
+            [
+                "d09f5885.869a78"
+            ]
+        ]
+    },
+    {
+        "id": "a18c7c3.0b4a88",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Status msg",
+        "func": "var newMsg = {}\nif (msg.payload === \"OFF\"){\n  newMsg.payload = \"OFF\"\n} else if (msg.payload === \"ON\"){\n  newMsg.payload = \"ON\"\n}\nreturn newMsg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 412,
+        "y": 159,
+        "wires": [
+            [
+                "23dd5ced.b60144"
+            ]
+        ]
+    },
+    {
+        "id": "23dd5ced.b60144",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "Verluchting status",
+        "topic": "verwarmingPi/output/verluchting/status",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 741,
+        "y": 153,
+        "wires": []
+    },
+    {
+        "id": "e6fe4b9e.908a68",
+        "type": "inject",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "repeat": "60",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 90,
+        "y": 2160,
+        "wires": [
+            [
+                "422de10e.dafbc",
+                "743a4524.8cb7ec",
+                "be6df9d9.408628",
+                "de27eefd.a6b5e"
+            ]
+        ]
+    },
+    {
+        "id": "485b3da0.f473f4",
+        "type": "inject",
+        "z": "9e356609.6e8e98",
+        "name": "update",
+        "repeat": "3600",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 147,
+        "y": 2446,
+        "wires": [
+            [
+                "2628efec.e4b09"
+            ]
+        ]
+    },
+    {
+        "id": "6179992f.3cd318",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "func": "function timeConversion(millisec) {\n\n    var hours = (millisec / (1000 * 60 * 60)).toFixed(1);\n\n        return hours ;\n\n}\n\nmsg.payload = timeConversion(msg.payload.uptime * 1000);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 489,
+        "y": 2446,
+        "wires": [
+            [
+                "d82cb82f.d6a9a8"
+            ]
+        ]
+    },
+    {
+        "id": "aff0030d.f5761",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "func": "msg.payload = msg.payload.memusage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 500,
+        "y": 2240,
+        "wires": [
+            [
+                "e2ece3cf.e7a98"
+            ]
+        ]
+    },
+    {
+        "id": "75f4bb77.8497b4",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Undervoltage",
+        "func": "msg.payload = msg.payload.underVoltage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 540,
+        "y": 2040,
+        "wires": [
+            [
+                "f8efecb2.f1084"
+            ]
+        ]
+    },
+    {
+        "id": "ce20ee28.7a55a",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Throttle",
+        "func": "msg.payload = msg.payload.throttled;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 534,
+        "y": 2092,
+        "wires": [
+            [
+                "3714585a.f79fd8"
+            ]
+        ]
+    },
+    {
+        "id": "467e09fc.0d84e8",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "topic": "verwarmingPi/system/temp",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 780,
+        "y": 2180,
+        "wires": []
+    },
+    {
+        "id": "4377a397.0e894c",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "topic": "verwarmingPi/system/cpu",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 770,
+        "y": 2360,
+        "wires": []
+    },
+    {
+        "id": "e2ece3cf.e7a98",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "topic": "verwarmingPi/system/mem",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 781,
+        "y": 2240,
+        "wires": []
+    },
+    {
+        "id": "f8efecb2.f1084",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "topic": "verwarmingPi/system/undervoltage",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 813,
+        "y": 2037,
+        "wires": []
+    },
+    {
+        "id": "3714585a.f79fd8",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "topic": "verwarmingPi/system/throttle",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 776,
+        "y": 2097,
+        "wires": []
+    },
+    {
+        "id": "d82cb82f.d6a9a8",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "topic": "verwarmingPi/system/uptime",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 771,
+        "y": 2449,
+        "wires": []
+    },
+    {
+        "id": "edcf4606.01d468",
+        "type": "inject",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "repeat": "10",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 2360,
+        "wires": [
+            [
+                "a417ae01.e4962"
+            ]
+        ]
+    },
+    {
+        "id": "4b72cefd.d6e16",
+        "type": "exec",
+        "z": "9e356609.6e8e98",
+        "command": "sudo reboot",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Reboot",
+        "x": 461,
+        "y": 2563,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "ef649493.c339a8",
+        "type": "exec",
+        "z": "9e356609.6e8e98",
+        "command": "sudo shutdown -h now",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Shutdown",
+        "x": 471,
+        "y": 2643,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "96e5a866.505ac8",
+        "type": "mqtt in",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "topic": "verwarmingPi/system/reboot",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 191,
+        "y": 2563,
+        "wires": [
+            [
+                "4b72cefd.d6e16"
+            ]
+        ]
+    },
+    {
+        "id": "158cded9.0630b1",
+        "type": "mqtt in",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "topic": "verwarmingPi/system/shutdown",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 201,
+        "y": 2643,
+        "wires": [
+            [
+                "ef649493.c339a8"
+            ]
+        ]
+    },
+    {
+        "id": "100dd127.b9be7f",
+        "type": "inject",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "repeat": "60",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "online",
+        "payloadType": "str",
+        "x": 350,
+        "y": 1620,
+        "wires": [
+            [
+                "b0e8016b.2130a"
+            ]
+        ]
+    },
+    {
+        "id": "b0e8016b.2130a",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "topic": "verwarmingPi/status",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 780,
+        "y": 1620,
+        "wires": []
+    },
+    {
+        "id": "de27eefd.a6b5e",
+        "type": "exec",
+        "z": "9e356609.6e8e98",
+        "command": "free -m | grep Swap | awk '{printf \"%.2f\\n\", $3/$2 * 100}'",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "Swap %",
+        "x": 320,
+        "y": 2300,
+        "wires": [
+            [
+                "5b15f66c.594758"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "5b15f66c.594758",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "topic": "verwarmingPi/system/swap",
+        "qos": "",
+        "retain": "",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 780,
+        "y": 2300,
+        "wires": []
+    },
+    {
+        "id": "422de10e.dafbc",
+        "type": "vcgencmd",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "command": "get_throttled",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 336,
+        "y": 2037,
+        "wires": [
+            [
+                "75f4bb77.8497b4",
+                "ce20ee28.7a55a"
+            ]
+        ]
+    },
+    {
+        "id": "743a4524.8cb7ec",
+        "type": "vcgencmd",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "command": "measure_temp",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 346,
+        "y": 2182,
+        "wires": [
+            [
+                "467e09fc.0d84e8"
+            ]
+        ]
+    },
+    {
+        "id": "2628efec.e4b09",
+        "type": "Uptime",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "x": 329,
+        "y": 2446,
+        "wires": [
+            [
+                "6179992f.3cd318"
+            ]
+        ]
+    },
+    {
+        "id": "be6df9d9.408628",
+        "type": "Memory",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "x": 327,
+        "y": 2240,
+        "wires": [
+            [
+                "aff0030d.f5761"
+            ]
+        ]
+    },
+    {
+        "id": "a417ae01.e4962",
+        "type": "cpu",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "msgCore": false,
+        "msgOverall": true,
+        "msgArray": false,
+        "msgTemp": false,
+        "x": 390,
+        "y": 2360,
+        "wires": [
+            [
+                "4377a397.0e894c"
+            ]
+        ]
+    },
+    {
+        "id": "e6a9a2b5.91f9a",
+        "type": "mqtt out",
+        "z": "9e356609.6e8e98",
+        "name": "Send Messages",
+        "topic": "",
+        "qos": "2",
+        "retain": "true",
+        "broker": "c01eb7a.2ab1b48",
+        "x": 780,
+        "y": 1840,
+        "wires": []
+    },
+    {
+        "id": "61e5f9b0.beddb8",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Format config messages binary sensors",
+        "func": "var ident = \"verwarming_pi\";\nvar name = \"VerwarmingPi\";\nvar model = \"3B+\";\nvar manufact = \"DIY\";\n\nvar t = \"verwarmingPi/\";\nvar av_t = \"verwarmingPi/status\";\n\n// var name1 = \"Beweging slaapkamer pir klein\";\n// var id1 = (name1.toLowerCase()).split(' ').join('_');\n// var config1 = {\n//     payload: {\n//         name: name1,\n//         uniq_id: id1,\n//         stat_t: t+\"input/pir_klein\",\n//         avty_t: av_t,\n//         dev_cla: \"motion\",\n//         pl_off: 0,\n//         pl_on: 1,\n//         dev:  {\n//             identifiers: [ident],\n//             name: name, \n//             model: model, \n//             manufacturer: manufact\n            \n//         }\n//     },\n//     topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id1+\"/config\"\n// };\n// var name2 = \"Beweging slaapkamer pir groot\";\n// var id2 = (name2.toLowerCase()).split(' ').join('_');\n// var config2 = {\n//     payload: {\n//         name: name2,\n//         uniq_id: id2,\n//         stat_t: t+\"input/pir_groot\",\n//         avty_t: av_t,\n//         dev_cla: \"motion\",\n//         pl_off: 0,\n//         pl_on: 1,\n//         dev:  {\n//             identifiers: [ident],\n//             name: name, \n//             model: model, \n//             manufacturer: manufact\n            \n//         }\n//     },\n//     topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id2+\"/config\"\n// };\n// var name3 = \"Beweging Living Pi3\";\n// var id3 = (name3.toLowerCase()).split(' ').join('_');\n// var config3 = {\n//     payload: {\n//         name: name3,\n//         uniq_id: id3,\n//         stat_t: t+\"input/pir\",\n//         avty_t: av_t,\n//         dev_cla: \"motion\",\n//         pl_off: 0,\n//         pl_on: 1,\n//         dev:  {\n//             identifiers: [ident],\n//             name: name, \n//             model: model, \n//             manufacturer: manufact\n            \n//         }\n//     },\n//     topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id3+\"/config\"\n// };\nvar name4 = \"verwarmingPi throttle\";\nvar id4 = (name4.toLowerCase()).split(' ').join('_');\nvar config4 = {\n    payload: {\n        name: name4,\n        uniq_id: id4,\n        stat_t: t+\"system/throttle\",\n        avty_t: av_t,\n        dev_cla: \"problem\",\n        pl_off: \"false\",\n        pl_on: \"true\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id4+\"/config\"\n};\nvar name5 = \"verwarmingPi undervoltage\";\nvar id5 = (name5.toLowerCase()).split(' ').join('_');\nvar config5 = {\n    payload: {\n        name: name5,\n        uniq_id: id5,\n        stat_t: t+\"system/undervoltage\",\n        avty_t: av_t,\n        dev_cla: \"problem\",\n        pl_off: \"false\",\n        pl_on: \"true\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id5+\"/config\"\n};\nvar name6 = \"verwarmingPi online\";\nvar id6 = (name6.toLowerCase()).split(' ').join('_');\nvar config6 = {\n    payload: {\n        name: name6,\n        uniq_id: id6,\n        stat_t: t+\"status\",\n        avty_t: av_t,\n        dev_cla: \"connectivity\",\n        pl_off: \"offline\",\n        pl_on: \"online\",\n        off_dly: 75,\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id6+\"/config\"\n};\n\nreturn [config4, config5, config6];\n\n",
+        "outputs": 3,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 420,
+        "y": 1880,
+        "wires": [
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ]
+        ]
+    },
+    {
+        "id": "1869b93f.32d947",
+        "type": "inject",
+        "z": "9e356609.6e8e98",
+        "name": "",
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "topic": "",
+        "payload": "Started!",
+        "payloadType": "str",
+        "x": 80,
+        "y": 1840,
+        "wires": [
+            [
+                "61e5f9b0.beddb8",
+                "2bb0d8a5.4d98f8",
+                "7df955c3.40efac"
+            ]
+        ]
+    },
+    {
+        "id": "2bb0d8a5.4d98f8",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Format config messages sensors",
+        "func": "var ident = \"verwarming_pi\";\nvar name = \"VerwarmingPi\";\nvar model = \"3B+\";\nvar manufact = \"DIY\";\n\nvar t = \"verwarmingPi/\";\nvar av_t = \"verwarmingPi/status\";\n\n// var name1 = \"Temperatuur slaapkamer\";\n// var id1 = (name1.toLowerCase()).split(' ').join('_');\n// var config1 = {\n//     payload: {\n//         name: name1,\n//         uniq_id: id1,\n//         stat_t: t+\"input/temperatuur\",\n//         avty_t: av_t,\n//         dev_cla: \"temperature\",\n//         unit_of_meas: \"°C\",\n//         dev:  {\n//             identifiers: [ident],\n//             name: name, \n//             model: model, \n//             manufacturer: manufact\n            \n//         }\n//     },\n//     topic: \"homeassistant/sensor/\"+ident+\"/\"+id1+\"/config\"\n// };\n// var name2 = \"Luchtvochtigheid slaapkamer\";\n// var id2 = (name2.toLowerCase()).split(' ').join('_');\n// var config2 = {\n//     payload: {\n//         name: name2,\n//         uniq_id: id2,\n//         stat_t: t+\"input/luchtvochtigheid\",\n//         avty_t: av_t,\n//         dev_cla: \"humidity\",\n//         unit_of_meas: \"%\",\n//         dev:  {\n//             identifiers: [ident],\n//             name: name, \n//             model: model, \n//             manufacturer: manufact\n            \n//         }\n//     },\n//     topic: \"homeassistant/sensor/\"+ident+\"/\"+id2+\"/config\"\n// };\nvar name3 = \"Temperatuur cpu verwarmingPi\";\nvar id3 = (name3.toLowerCase()).split(' ').join('_');\nvar config3 = {\n    payload: {\n        name: name3,\n        uniq_id: id3,\n        stat_t: t+\"system/temp\",\n        avty_t: av_t,\n        dev_cla: \"temperature\",\n        unit_of_meas: \"°C\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id3+\"/config\"\n};\nvar name4 = \"Cpu verwarmingPi\";\nvar id4 = (name4.toLowerCase()).split(' ').join('_');\nvar config4 = {\n    payload: {\n        name: name4,\n        uniq_id: id4,\n        stat_t: t+\"system/cpu\",\n        avty_t: av_t,\n        unit_of_meas: \"%\",\n        ic: \"mdi:cpu-32-bit\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id4+\"/config\"\n};\nvar name5 = \"Ram verwarmingPi\";\nvar id5 = (name5.toLowerCase()).split(' ').join('_');\nvar config5 = {\n    payload: {\n        name: name5,\n        uniq_id: id5,\n        stat_t: t+\"system/mem\",\n        avty_t: av_t,\n        unit_of_meas: \"%\",\n        ic: \"mdi:memory\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id5+\"/config\"\n};\nvar name6 = \"Swap verwarmingPi\";\nvar id6 = (name6.toLowerCase()).split(' ').join('_');\nvar config6 = {\n    payload: {\n        name: name6,\n        uniq_id: id6,\n        stat_t: t+\"system/swap\",\n        avty_t: av_t,\n        unit_of_meas: \"%\",\n        ic: \"mdi:memory\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id6+\"/config\"\n};\nvar name7 = \"Uptime verwarmingPi\";\nvar id7 = (name7.toLowerCase()).split(' ').join('_');\nvar config7 = {\n    payload: {\n        name: name7,\n        uniq_id: id7,\n        stat_t: t+\"system/uptime\",\n        avty_t: av_t,\n        ic: \"mdi:av-timer\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id7+\"/config\"\n};\n\nreturn [config3, config4, config5, config6, config7];\n",
+        "outputs": 5,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 400,
+        "y": 1960,
+        "wires": [
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ]
+        ]
+    },
+    {
+        "id": "7df955c3.40efac",
+        "type": "function",
+        "z": "9e356609.6e8e98",
+        "name": "Format config messages switches",
+        "func": "var ident = \"verwarming_pi\";\nvar name = \"VerwarmingPi\";\nvar model = \"3B+\";\nvar manufact = \"DIY\";\n\nvar t = \"verwarmingPi/output/\";\nvar av_t = \"verwarmingPi/status\";\n\nvar name1 = \"Verluchting\";\nvar id1 = (name1.toLowerCase()).split(' ').join('_');\nvar config1 = {\n    payload: {\n        name: name1,\n        uniq_id: id1,\n        stat_t: t+\"verluchting/status\",\n        cmd_t: t+\"verluchting/set\",\n        ic: \"mdi:fan\",\n        ret: true,\n        avty_t: av_t,\n        pl_off: \"OFF\",\n        pl_on: \"ON\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/switch/\"+ident+\"/\"+id1+\"/config\"\n};\nvar name2 = \"Badkamer\";\nvar id2 = (name2.toLowerCase()).split(' ').join('_');\nvar config2 = {\n    payload: {\n        name: name2,\n        uniq_id: id2,\n        stat_t: t+\"badkamer/status\",\n        cmd_t: t+\"badkamer/set\",\n        ic: \"mdi:radiator\",\n        ret: true,\n        avty_t: av_t,\n        pl_off: \"OFF\",\n        pl_on: \"ON\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/switch/\"+ident+\"/\"+id2+\"/config\"\n};\nvar name3 = \"Reserve_mqtt\";\nvar id3 = (name3.toLowerCase()).split(' ').join('_');\nvar config3 = {\n    payload: {\n        name: name3,\n        uniq_id: id3,\n        stat_t: t+\"reserve/status\",\n        cmd_t: t+\"reserve/set\",\n        ret: true,\n        avty_t: av_t,\n        pl_off: \"OFF\",\n        pl_on: \"ON\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/switch/\"+ident+\"/\"+id3+\"/config\"\n};\nvar name4 = \"Slaapkamer\";\nvar id4 = (name4.toLowerCase()).split(' ').join('_');\nvar config4 = {\n    payload: {\n        name: name4,\n        uniq_id: id4,\n        stat_t: t+\"slaapkamer/status\",\n        cmd_t: t+\"slaapkamer/set\",\n        ic: \"mdi:radiator\",\n        ret: true,\n        avty_t: av_t,\n        pl_off: \"OFF\",\n        pl_on: \"ON\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/switch/\"+ident+\"/\"+id4+\"/config\"\n};\nvar name5 = \"Noor\";\nvar id5 = (name5.toLowerCase()).split(' ').join('_');\nvar config5 = {\n    payload: {\n        name: name5,\n        uniq_id: id5,\n        stat_t: t+\"noor/status\",\n        cmd_t: t+\"noor/set\",\n        ic: \"mdi:radiator\",\n        ret: true,\n        avty_t: av_t,\n        pl_off: \"OFF\",\n        pl_on: \"ON\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/switch/\"+ident+\"/\"+id5+\"/config\"\n};\nvar name6 = \"Fien\";\nvar id6 = (name6.toLowerCase()).split(' ').join('_');\nvar config6 = {\n    payload: {\n        name: name6,\n        uniq_id: id6,\n        stat_t: t+\"fien/status\",\n        cmd_t: t+\"fien/set\",\n        ic: \"mdi:radiator\",\n        ret: true,\n        avty_t: av_t,\n        pl_off: \"OFF\",\n        pl_on: \"ON\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/switch/\"+ident+\"/\"+id6+\"/config\"\n};\nvar name7 = \"Wc\";\nvar id7 = (name7.toLowerCase()).split(' ').join('_');\nvar config7 = {\n    payload: {\n        name: name7,\n        uniq_id: id7,\n        stat_t: t+\"wc/status\",\n        cmd_t: t+\"wc/set\",\n        ic: \"mdi:radiator\",\n        ret: true,\n        avty_t: av_t,\n        pl_off: \"OFF\",\n        pl_on: \"ON\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/switch/\"+ident+\"/\"+id7+\"/config\"\n};\n\nreturn [config1, config2, config3, config4, config5, config6, config7];\n\n",
+        "outputs": 7,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 400,
+        "y": 1760,
+        "wires": [
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ]
+        ]
+    }
+]

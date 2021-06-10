@@ -1,1 +1,939 @@
-[{"id":"bcba8eab.38f3c","type":"tab","label":"Badkamer","disabled":false,"info":""},{"id":"ac24ccdd.432f","type":"mqtt-broker","z":"","name":"Home-Assistant broker","broker":"192.168.79.54","port":"1883","clientid":"","usetls":false,"compatmode":false,"keepalive":"60","cleansession":true,"birthTopic":"Badkamer/status","birthQos":"0","birthRetain":"true","birthPayload":"online","closeTopic":"Badkamer/status","closeQos":"0","closeRetain":"true","closePayload":"offline","willTopic":"Badkamer/status","willQos":"0","willRetain":"false","willPayload":"offline"},{"id":"c639df4d.44293","type":"rpi-gpio in","z":"bcba8eab.38f3c","name":"Pin 15 pir klein","pin":"15","intype":"tri","debounce":"25","read":false,"x":130,"y":200,"wires":[["1b49a626.5b0eea"]]},{"id":"1187ac75.aa0194","type":"rpi-dht22","z":"bcba8eab.38f3c","name":"DHT22","topic":"rpi-dht22","dht":22,"pintype":"2","pin":"7","x":280,"y":380,"wires":[["57349295.3b560c","a9fd68ac.f1c5e8"]]},{"id":"57349295.3b560c","type":"function","z":"bcba8eab.38f3c","name":"temperatuur","func":"msg.payload = msg.payload\nreturn msg;","outputs":1,"noerr":0,"x":510,"y":380,"wires":[["28bd464e.f5ce2a"]]},{"id":"a9fd68ac.f1c5e8","type":"function","z":"bcba8eab.38f3c","name":"luchtvochtigheid","func":"msg.payload = msg.humidity\nreturn msg;","outputs":1,"noerr":0,"x":520,"y":500,"wires":[["a9086d2a.f4261"]]},{"id":"1b49a626.5b0eea","type":"mqtt out","z":"bcba8eab.38f3c","name":"Mqtt Pir klein","topic":"Badkamer/input/pir_klein","qos":"","retain":"","broker":"ac24ccdd.432f","x":750,"y":200,"wires":[]},{"id":"28bd464e.f5ce2a","type":"mqtt out","z":"bcba8eab.38f3c","name":"MQTT DHT temperatuur","topic":"Badkamer/input/temperatuur","qos":"","retain":"","broker":"ac24ccdd.432f","x":830,"y":380,"wires":[]},{"id":"a9086d2a.f4261","type":"mqtt out","z":"bcba8eab.38f3c","name":"MQTT DHT luchtvochtigheid","topic":"Badkamer/input/luchtvochtigheid","qos":"","retain":"","broker":"ac24ccdd.432f","x":840,"y":500,"wires":[]},{"id":"6aeb11d7.52097","type":"inject","z":"bcba8eab.38f3c","name":"Elke minuut","topic":"","payload":"","payloadType":"date","repeat":"60","crontab":"","once":false,"onceDelay":0.1,"x":90,"y":900,"wires":[["1187ac75.aa0194","9d747c77.232b","d9391477.090ca8","fd57a247.5a28e","11f9cb3a.b89df5","1ca25946.b81007"]]},{"id":"e07389e6.4077c","type":"rpi-gpio in","z":"bcba8eab.38f3c","name":"Pin 13 pir groot","pin":"13","intype":"tri","debounce":"25","read":false,"x":150,"y":80,"wires":[["f7ebdd06.6b00c"]]},{"id":"f7ebdd06.6b00c","type":"mqtt out","z":"bcba8eab.38f3c","name":"MQTT pir groot","topic":"Badkamer/input/pir_groot","qos":"","retain":"","broker":"ac24ccdd.432f","x":630,"y":100,"wires":[]},{"id":"768a18d0.ac4938","type":"inject","z":"bcba8eab.38f3c","name":"","topic":"","payload":"","payloadType":"date","repeat":"10","crontab":"","once":false,"onceDelay":"","x":150,"y":1520,"wires":[["57062e61.94963"]]},{"id":"11f9cb3a.b89df5","type":"vcgencmd","z":"bcba8eab.38f3c","name":"","command":"get_throttled","codec":"H264","clock":"core","voltage":"core","memory":"arm","videoOutput":"0","separateMsg":false,"x":380,"y":920,"wires":[["a991feb4.202fb","603d110a.96e24"]]},{"id":"57062e61.94963","type":"cpu","z":"bcba8eab.38f3c","name":"","msgCore":false,"msgOverall":true,"msgArray":false,"msgTemp":false,"x":408.5,"y":1525.75,"wires":[["127a296e.0b1d07"]]},{"id":"d9391477.090ca8","type":"vcgencmd","z":"bcba8eab.38f3c","name":"","command":"measure_temp","codec":"H264","clock":"core","voltage":"core","memory":"arm","videoOutput":"0","separateMsg":false,"x":400.5,"y":638.75,"wires":[["f3feeb89.9f7578"]]},{"id":"60bcae10.29985","type":"Uptime","z":"bcba8eab.38f3c","name":"","x":360,"y":1640,"wires":[["6e2e2299.d2ac2c"]]},{"id":"fd57a247.5a28e","type":"Memory","z":"bcba8eab.38f3c","name":"","x":369,"y":777,"wires":[["dd08eeda.21c75"]]},{"id":"dfd9fc84.85a2","type":"inject","z":"bcba8eab.38f3c","name":"update","topic":"","payload":"","payloadType":"date","repeat":"3600","crontab":"","once":true,"onceDelay":"","x":178,"y":1640,"wires":[["60bcae10.29985"]]},{"id":"6e2e2299.d2ac2c","type":"function","z":"bcba8eab.38f3c","name":"","func":"function timeConversion(millisec) {\n\n    var seconds = (millisec / 1000).toFixed(1);\n\n    var minutes = (millisec / (1000 * 60)).toFixed(1);\n\n    var hours = (millisec / (1000 * 60 * 60)).toFixed(1);\n\n    var days = (millisec / (1000 * 60 * 60 * 24)).toFixed(1);\n\n    if (seconds < 60) {\n        return seconds + \" Sec\";\n    } else if (minutes < 60) {\n        return minutes + \" Min\";\n    } else if (hours < 24) {\n        return hours + \" Hrs\";\n    } else {\n        return days + \" Days\"\n    }\n}\n\nmsg.payload = timeConversion(msg.payload.uptime * 1000);\nreturn msg;","outputs":1,"noerr":0,"x":520,"y":1640,"wires":[["13f236ae.46c819"]]},{"id":"dd08eeda.21c75","type":"function","z":"bcba8eab.38f3c","name":"","func":"msg.payload = msg.payload.memusage;\nreturn msg;","outputs":1,"noerr":0,"x":542,"y":777,"wires":[["f959ce31.c19e5"]]},{"id":"a991feb4.202fb","type":"function","z":"bcba8eab.38f3c","name":"Undervoltage","func":"msg.payload = msg.payload.underVoltage;\nreturn msg;","outputs":1,"noerr":0,"x":584,"y":923,"wires":[["d0f7a077.d76d6"]]},{"id":"603d110a.96e24","type":"function","z":"bcba8eab.38f3c","name":"Throttle","func":"msg.payload = msg.payload.throttled;\nreturn msg;","outputs":1,"noerr":0,"x":572,"y":1050,"wires":[["95a8e978.777ec8"]]},{"id":"f3feeb89.9f7578","type":"mqtt out","z":"bcba8eab.38f3c","name":"","topic":"Badkamer/system/temp","qos":"","retain":"","broker":"ac24ccdd.432f","x":824.5,"y":636.75,"wires":[]},{"id":"127a296e.0b1d07","type":"mqtt out","z":"bcba8eab.38f3c","name":"","topic":"Badkamer/system/cpu","qos":"","retain":"","broker":"ac24ccdd.432f","x":826.5,"y":1530.75,"wires":[]},{"id":"f959ce31.c19e5","type":"mqtt out","z":"bcba8eab.38f3c","name":"","topic":"Badkamer/system/mem","qos":"","retain":"","broker":"ac24ccdd.432f","x":813,"y":777,"wires":[]},{"id":"d0f7a077.d76d6","type":"mqtt out","z":"bcba8eab.38f3c","name":"","topic":"Badkamer/system/undervoltage","qos":"","retain":"","broker":"ac24ccdd.432f","x":847,"y":920,"wires":[]},{"id":"95a8e978.777ec8","type":"mqtt out","z":"bcba8eab.38f3c","name":"","topic":"Badkamer/system/throttle","qos":"","retain":"","broker":"ac24ccdd.432f","x":804,"y":1055,"wires":[]},{"id":"13f236ae.46c819","type":"mqtt out","z":"bcba8eab.38f3c","name":"","topic":"Badkamer/system/uptime","qos":"","retain":"","broker":"ac24ccdd.432f","x":792,"y":1643,"wires":[]},{"id":"9d747c77.232b","type":"exec","z":"bcba8eab.38f3c","command":"cat /proc/net/wireless | grep wlan0: | awk '{print int($4)}'","addpay":false,"append":"","useSpawn":"false","timer":"","oldrc":false,"name":"Wifi signal","x":354.5,"y":1204.25,"wires":[["7a400e6c.657cf"],[],[]]},{"id":"7a400e6c.657cf","type":"mqtt out","z":"bcba8eab.38f3c","name":"","topic":"Badkamer/system/wifi","qos":"","retain":"","broker":"ac24ccdd.432f","x":754.5,"y":1204.25,"wires":[]},{"id":"5cc43778.83a998","type":"exec","z":"bcba8eab.38f3c","command":"sudo reboot","addpay":false,"append":"","useSpawn":"","timer":"","name":"Reboot","x":500,"y":1760,"wires":[[],[],[]]},{"id":"620c5689.aeed28","type":"exec","z":"bcba8eab.38f3c","command":"sudo shutdown -h now","addpay":false,"append":"","useSpawn":"","timer":"","name":"Shutdown","x":510,"y":1840,"wires":[[],[],[]]},{"id":"49d55eee.f06b7","type":"mqtt in","z":"bcba8eab.38f3c","name":"","topic":"Badkamer/system/reboot","qos":"2","datatype":"auto","broker":"ac24ccdd.432f","x":220,"y":1760,"wires":[["5cc43778.83a998"]]},{"id":"65c88c9c.bd5974","type":"mqtt in","z":"bcba8eab.38f3c","name":"","topic":"Badkamer/system/shutdown","qos":"2","datatype":"auto","broker":"ac24ccdd.432f","x":230,"y":1840,"wires":[["620c5689.aeed28"]]},{"id":"4b53c6db.fb3948","type":"inject","z":"bcba8eab.38f3c","name":"","topic":"","payload":"online","payloadType":"str","repeat":"60","crontab":"","once":false,"onceDelay":0.1,"x":110,"y":300,"wires":[["ba4456a7.550518"]]},{"id":"ba4456a7.550518","type":"mqtt out","z":"bcba8eab.38f3c","name":"","topic":"Badkamer/status","qos":"","retain":"","broker":"ac24ccdd.432f","x":770,"y":300,"wires":[]},{"id":"1ca25946.b81007","type":"exec","z":"bcba8eab.38f3c","command":"free -m | grep Swap | awk '{printf \"%.2f\\n\", $3/$2 * 100}'","addpay":false,"append":"","useSpawn":"false","timer":"","oldrc":false,"name":"Swap %","x":344.5,"y":1344.25,"wires":[["b9453f3b.ad83a"],[],[]]},{"id":"b9453f3b.ad83a","type":"mqtt out","z":"bcba8eab.38f3c","name":"","topic":"Badkamer/system/swap","qos":"","retain":"","broker":"ac24ccdd.432f","x":764.5,"y":1344.25,"wires":[]}]
+[
+    {
+        "id": "bcba8eab.38f3c",
+        "type": "tab",
+        "label": "Badkamer",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "ac24ccdd.432f",
+        "type": "mqtt-broker",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": false,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "Badkamer/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "Badkamer/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "Badkamer/status",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "offline"
+    },
+    {
+        "id": "34844a19.ca7f36",
+        "type": "mqtt-broker",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "Keuken/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "Keuken/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "Keuken/status",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "offline"
+    },
+    {
+        "id": "c639df4d.44293",
+        "type": "rpi-gpio in",
+        "z": "bcba8eab.38f3c",
+        "name": "Pin 15 pir klein",
+        "pin": "15",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 320,
+        "y": 660,
+        "wires": [
+            [
+                "1b49a626.5b0eea"
+            ]
+        ]
+    },
+    {
+        "id": "1187ac75.aa0194",
+        "type": "rpi-dht22",
+        "z": "bcba8eab.38f3c",
+        "name": "DHT22",
+        "topic": "rpi-dht22",
+        "dht": 22,
+        "pintype": "2",
+        "pin": "7",
+        "x": 300,
+        "y": 880,
+        "wires": [
+            [
+                "57349295.3b560c",
+                "a9fd68ac.f1c5e8"
+            ]
+        ]
+    },
+    {
+        "id": "57349295.3b560c",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "temperatuur",
+        "func": "msg.payload = msg.payload\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 510,
+        "y": 840,
+        "wires": [
+            [
+                "28bd464e.f5ce2a"
+            ]
+        ]
+    },
+    {
+        "id": "a9fd68ac.f1c5e8",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "luchtvochtigheid",
+        "func": "msg.payload = msg.humidity\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 520,
+        "y": 900,
+        "wires": [
+            [
+                "a9086d2a.f4261"
+            ]
+        ]
+    },
+    {
+        "id": "1b49a626.5b0eea",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "Mqtt Pir klein",
+        "topic": "Badkamer/input/pir_klein",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 790,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "28bd464e.f5ce2a",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/input/temperatuur-dht",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 860,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "a9086d2a.f4261",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/input/luchtvochtigheid-dht",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 870,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "6aeb11d7.52097",
+        "type": "inject",
+        "z": "bcba8eab.38f3c",
+        "name": "Elke minuut",
+        "repeat": "60",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 90,
+        "y": 900,
+        "wires": [
+            [
+                "1187ac75.aa0194",
+                "9d747c77.232b",
+                "d9391477.090ca8",
+                "fd57a247.5a28e",
+                "11f9cb3a.b89df5",
+                "1ca25946.b81007",
+                "af4c1e65.e608e"
+            ]
+        ]
+    },
+    {
+        "id": "e07389e6.4077c",
+        "type": "rpi-gpio in",
+        "z": "bcba8eab.38f3c",
+        "name": "Pin 13 pir groot",
+        "pin": "13",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 320,
+        "y": 600,
+        "wires": [
+            [
+                "f7ebdd06.6b00c"
+            ]
+        ]
+    },
+    {
+        "id": "f7ebdd06.6b00c",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "MQTT pir groot",
+        "topic": "Badkamer/input/pir_groot",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 790,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "768a18d0.ac4938",
+        "type": "inject",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "repeat": "10",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 1520,
+        "wires": [
+            [
+                "57062e61.94963"
+            ]
+        ]
+    },
+    {
+        "id": "11f9cb3a.b89df5",
+        "type": "vcgencmd",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "command": "get_throttled",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 380,
+        "y": 720,
+        "wires": [
+            [
+                "a991feb4.202fb",
+                "603d110a.96e24"
+            ]
+        ]
+    },
+    {
+        "id": "57062e61.94963",
+        "type": "cpu",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "msgCore": false,
+        "msgOverall": true,
+        "msgArray": false,
+        "msgTemp": false,
+        "x": 408.5,
+        "y": 1525.75,
+        "wires": [
+            [
+                "127a296e.0b1d07"
+            ]
+        ]
+    },
+    {
+        "id": "d9391477.090ca8",
+        "type": "vcgencmd",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "command": "measure_temp",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 400,
+        "y": 1260,
+        "wires": [
+            [
+                "f3feeb89.9f7578"
+            ]
+        ]
+    },
+    {
+        "id": "60bcae10.29985",
+        "type": "Uptime",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "x": 360,
+        "y": 1640,
+        "wires": [
+            [
+                "6e2e2299.d2ac2c"
+            ]
+        ]
+    },
+    {
+        "id": "fd57a247.5a28e",
+        "type": "Memory",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "x": 380,
+        "y": 1320,
+        "wires": [
+            [
+                "dd08eeda.21c75"
+            ]
+        ]
+    },
+    {
+        "id": "dfd9fc84.85a2",
+        "type": "inject",
+        "z": "bcba8eab.38f3c",
+        "name": "update",
+        "repeat": "3600",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 178,
+        "y": 1640,
+        "wires": [
+            [
+                "60bcae10.29985"
+            ]
+        ]
+    },
+    {
+        "id": "6e2e2299.d2ac2c",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "func": "function timeConversion(millisec) {\n\n    var hours = (millisec / (1000 * 60 * 60)).toFixed(1);\n\n        return hours ;\n\n}\n\nmsg.payload = timeConversion(msg.payload.uptime * 1000);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 520,
+        "y": 1640,
+        "wires": [
+            [
+                "13f236ae.46c819"
+            ]
+        ]
+    },
+    {
+        "id": "dd08eeda.21c75",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "func": "msg.payload = msg.payload.memusage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 553,
+        "y": 1320,
+        "wires": [
+            [
+                "f959ce31.c19e5"
+            ]
+        ]
+    },
+    {
+        "id": "a991feb4.202fb",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "Undervoltage",
+        "func": "msg.payload = msg.payload.underVoltage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 584,
+        "y": 723,
+        "wires": [
+            [
+                "d0f7a077.d76d6"
+            ]
+        ]
+    },
+    {
+        "id": "603d110a.96e24",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "Throttle",
+        "func": "msg.payload = msg.payload.throttled;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 580,
+        "y": 780,
+        "wires": [
+            [
+                "95a8e978.777ec8"
+            ]
+        ]
+    },
+    {
+        "id": "f3feeb89.9f7578",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/system/temp",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 824,
+        "y": 1258,
+        "wires": []
+    },
+    {
+        "id": "127a296e.0b1d07",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/system/cpu",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 826.5,
+        "y": 1530.75,
+        "wires": []
+    },
+    {
+        "id": "f959ce31.c19e5",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/system/mem",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 824,
+        "y": 1320,
+        "wires": []
+    },
+    {
+        "id": "d0f7a077.d76d6",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/system/undervoltage",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 847,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "95a8e978.777ec8",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/system/throttle",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 812,
+        "y": 785,
+        "wires": []
+    },
+    {
+        "id": "13f236ae.46c819",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/system/uptime",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 792,
+        "y": 1643,
+        "wires": []
+    },
+    {
+        "id": "9d747c77.232b",
+        "type": "exec",
+        "z": "bcba8eab.38f3c",
+        "command": "cat /proc/net/wireless | grep wlan0: | awk '{print int($4)}'",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "Wifi signal",
+        "x": 410,
+        "y": 1380,
+        "wires": [
+            [
+                "7a400e6c.657cf"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "7a400e6c.657cf",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/system/wifi",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 810,
+        "y": 1380,
+        "wires": []
+    },
+    {
+        "id": "5cc43778.83a998",
+        "type": "exec",
+        "z": "bcba8eab.38f3c",
+        "command": "sudo reboot",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Reboot",
+        "x": 500,
+        "y": 1760,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "620c5689.aeed28",
+        "type": "exec",
+        "z": "bcba8eab.38f3c",
+        "command": "sudo shutdown -h now",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Shutdown",
+        "x": 510,
+        "y": 1840,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "49d55eee.f06b7",
+        "type": "mqtt in",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/system/reboot",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "ac24ccdd.432f",
+        "x": 220,
+        "y": 1760,
+        "wires": [
+            [
+                "5cc43778.83a998"
+            ]
+        ]
+    },
+    {
+        "id": "65c88c9c.bd5974",
+        "type": "mqtt in",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/system/shutdown",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "ac24ccdd.432f",
+        "x": 230,
+        "y": 1840,
+        "wires": [
+            [
+                "620c5689.aeed28"
+            ]
+        ]
+    },
+    {
+        "id": "4b53c6db.fb3948",
+        "type": "inject",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "repeat": "60",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "online",
+        "payloadType": "str",
+        "x": 250,
+        "y": 80,
+        "wires": [
+            [
+                "ba4456a7.550518"
+            ]
+        ]
+    },
+    {
+        "id": "ba4456a7.550518",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/status",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 790,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "1ca25946.b81007",
+        "type": "exec",
+        "z": "bcba8eab.38f3c",
+        "command": "free -m | grep Swap | awk '{printf \"%.2f\\n\", $3/$2 * 100}'",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "Swap %",
+        "x": 404.5,
+        "y": 1464.25,
+        "wires": [
+            [
+                "b9453f3b.ad83a"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "b9453f3b.ad83a",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/system/swap",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 824.5,
+        "y": 1464.25,
+        "wires": []
+    },
+    {
+        "id": "af4c1e65.e608e",
+        "type": "Bme280",
+        "z": "bcba8eab.38f3c",
+        "name": "BME280",
+        "bus": "1",
+        "address": "0x76",
+        "topic": "bme280",
+        "extra": true,
+        "x": 360,
+        "y": 1060,
+        "wires": [
+            [
+                "8585a22d.70b8e",
+                "e4570753.0b2668",
+                "f6ae7f2f.03268",
+                "c2d0a5a0.90d888",
+                "4e45a42d.ee201c"
+            ]
+        ]
+    },
+    {
+        "id": "a44310ca.dbb6b",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/input/temperatuur",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 840,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "99707f25.6577c",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/input/luchtvochtigheid",
+        "qos": "",
+        "retain": "true",
+        "broker": "ac24ccdd.432f",
+        "x": 860,
+        "y": 1020,
+        "wires": []
+    },
+    {
+        "id": "28c2e22c.ba640e",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/input/heatindex",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 840,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "5b5bc9d6.76bc48",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/input/dewpoint",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 830,
+        "y": 1140,
+        "wires": []
+    },
+    {
+        "id": "c8a53d76.afb96",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "topic": "Badkamer/input/pressure",
+        "qos": "",
+        "retain": "",
+        "broker": "ac24ccdd.432f",
+        "x": 830,
+        "y": 1200,
+        "wires": []
+    },
+    {
+        "id": "8585a22d.70b8e",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "Temperatuur",
+        "func": "msg.payload = msg.payload.temperature_C\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 590,
+        "y": 960,
+        "wires": [
+            [
+                "a44310ca.dbb6b"
+            ]
+        ]
+    },
+    {
+        "id": "e4570753.0b2668",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "Luchtvochtigheid",
+        "func": "msg.payload = parseFloat(msg.payload.humidity.toFixed(2))\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 610,
+        "y": 1020,
+        "wires": [
+            [
+                "99707f25.6577c"
+            ]
+        ]
+    },
+    {
+        "id": "f6ae7f2f.03268",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "HeatIndex",
+        "func": "msg.payload = parseFloat(msg.payload.heatIndex.toFixed(2))\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 590,
+        "y": 1080,
+        "wires": [
+            [
+                "28c2e22c.ba640e"
+            ]
+        ]
+    },
+    {
+        "id": "c2d0a5a0.90d888",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "Dauwpunt",
+        "func": "msg.payload = parseFloat(msg.payload.dewPoint_C.toFixed(2))\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 590,
+        "y": 1140,
+        "wires": [
+            [
+                "5b5bc9d6.76bc48"
+            ]
+        ]
+    },
+    {
+        "id": "4e45a42d.ee201c",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "Luchtdruk",
+        "func": "msg.payload = parseFloat(msg.payload.pressure_hPa.toFixed(2))\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 580,
+        "y": 1200,
+        "wires": [
+            [
+                "c8a53d76.afb96"
+            ]
+        ]
+    },
+    {
+        "id": "25d1697e.d81fe6",
+        "type": "mqtt out",
+        "z": "bcba8eab.38f3c",
+        "name": "Send Messages",
+        "topic": "",
+        "qos": "2",
+        "retain": "true",
+        "broker": "ac24ccdd.432f",
+        "x": 840,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "2082ddac.7b7672",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "Format config messages binary sensors",
+        "func": "var ident = \"badkamerpi\";\nvar name = \"BadkamerPi Zero\";\nvar model = \"Zero\";\nvar manufact = \"DIY\";\n\nvar t = \"Badkamer/\";\nvar av_t = \"Badkamer/status\";\n\nvar name1 = \"Beweging badkamer pir groot\";\nvar id1 = (name1.toLowerCase()).split(' ').join('_');\nvar config1 = {\n    payload: {\n        name: name1,\n        uniq_id: id1,\n        stat_t: t+\"input/pir_groot\",\n        avty_t: av_t,\n        dev_cla: \"motion\",\n        pl_off: 0,\n        pl_on: 1,\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id1+\"/config\"\n};\nvar name2 = \"Beweging badkamer pir klein\";\nvar id2 = (name2.toLowerCase()).split(' ').join('_');\nvar config2 = {\n    payload: {\n        name: name2,\n        uniq_id: id2,\n        stat_t: t+\"input/pir_klein\",\n        avty_t: av_t,\n        dev_cla: \"motion\",\n        pl_off: 0,\n        pl_on: 1,\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id2+\"/config\"\n};\n// var name3 = \"Beweging Keuken Camera\";\n// var id3 = (name3.toLowerCase()).split(' ').join('_');\n// var config3 = {\n//     payload: {\n//         name: name3,\n//         uniq_id: id3,\n//         stat_t: t+\"motion\",\n//         avty_t: av_t,\n//         dev_cla: \"motion\",\n//         pl_off: \"FALSE\",\n//         pl_on: \"TRUE\",\n//         dev:  {\n//             identifiers: [ident],\n//             name: name, \n//             model: model, \n//             manufacturer: manufact\n            \n//         }\n//     },\n//     topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id3+\"/config\"\n// };\nvar name4 = \"Badkamer throttle\";\nvar id4 = (name4.toLowerCase()).split(' ').join('_');\nvar config4 = {\n    payload: {\n        name: name4,\n        uniq_id: id4,\n        stat_t: t+\"system/throttle\",\n        avty_t: av_t,\n        dev_cla: \"problem\",\n        pl_off: \"false\",\n        pl_on: \"true\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id4+\"/config\"\n};\nvar name5 = \"Badkamer undervoltage\";\nvar id5 = (name5.toLowerCase()).split(' ').join('_');\nvar config5 = {\n    payload: {\n        name: name5,\n        uniq_id: id5,\n        stat_t: t+\"system/undervoltage\",\n        avty_t: av_t,\n        dev_cla: \"problem\",\n        pl_off: \"false\",\n        pl_on: \"true\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id5+\"/config\"\n};\nvar name6 = \"Badkamer online\";\nvar id6 = (name6.toLowerCase()).split(' ').join('_');\nvar config6 = {\n    payload: {\n        name: name6,\n        uniq_id: id6,\n        stat_t: t+\"status\",\n        avty_t: av_t,\n        dev_cla: \"connectivity\",\n        pl_off: \"offline\",\n        pl_on: \"online\",\n        off_dly: 75,\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id6+\"/config\"\n};\n\nreturn [config1, config2, config4, config5, config6];\n\n",
+        "outputs": 5,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 488,
+        "y": 213,
+        "wires": [
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ]
+        ]
+    },
+    {
+        "id": "1ec1471a.f824e9",
+        "type": "inject",
+        "z": "bcba8eab.38f3c",
+        "name": "",
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "topic": "",
+        "payload": "Started!",
+        "payloadType": "str",
+        "x": 160,
+        "y": 320,
+        "wires": [
+            [
+                "2082ddac.7b7672",
+                "5fdbf959.910bb8"
+            ]
+        ]
+    },
+    {
+        "id": "5fdbf959.910bb8",
+        "type": "function",
+        "z": "bcba8eab.38f3c",
+        "name": "Format config messages sensors",
+        "func": "var ident = \"badkamerpi\";\nvar name = \"BadkamerPi Zero\";\nvar model = \"Zero\";\nvar manufact = \"DIY\";\n\nvar t = \"Badkamer/\";\nvar av_t = \"Badkamer/status\";\n\nvar name1 = \"Temperatuur badkamer\";\nvar id1 = (name1.toLowerCase()).split(' ').join('_');\nvar config1 = {\n    payload: {\n        name: name1,\n        uniq_id: id1,\n        stat_t: t+\"input/temperatuur\",\n        avty_t: av_t,\n        dev_cla: \"temperature\",\n        unit_of_meas: \"°C\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id1+\"/config\"\n};\nvar name2 = \"Luchtvochtigheid badkamer\";\nvar id2 = (name2.toLowerCase()).split(' ').join('_');\nvar config2 = {\n    payload: {\n        name: name2,\n        uniq_id: id2,\n        stat_t: t+\"input/luchtvochtigheid\",\n        avty_t: av_t,\n        dev_cla: \"humidity\",\n        unit_of_meas: \"%\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id2+\"/config\"\n};\nvar name3 = \"Temperatuur cpu Badkamer\";\nvar id3 = (name3.toLowerCase()).split(' ').join('_');\nvar config3 = {\n    payload: {\n        name: name3,\n        uniq_id: id3,\n        stat_t: t+\"system/temp\",\n        avty_t: av_t,\n        dev_cla: \"temperature\",\n        unit_of_meas: \"°C\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id3+\"/config\"\n};\nvar name4 = \"Cpu Badkamer\";\nvar id4 = (name4.toLowerCase()).split(' ').join('_');\nvar config4 = {\n    payload: {\n        name: name4,\n        uniq_id: id4,\n        stat_t: t+\"system/cpu\",\n        avty_t: av_t,\n        unit_of_meas: \"%\",\n        ic: \"mdi:cpu-32-bit\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id4+\"/config\"\n};\nvar name5 = \"Ram Badkamer\";\nvar id5 = (name5.toLowerCase()).split(' ').join('_');\nvar config5 = {\n    payload: {\n        name: name5,\n        uniq_id: id5,\n        stat_t: t+\"system/mem\",\n        avty_t: av_t,\n        unit_of_meas: \"%\",\n        ic: \"mdi:memory\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id5+\"/config\"\n};\nvar name6 = \"Swap Badkamer\";\nvar id6 = (name6.toLowerCase()).split(' ').join('_');\nvar config6 = {\n    payload: {\n        name: name6,\n        uniq_id: id6,\n        stat_t: t+\"system/swap\",\n        avty_t: av_t,\n        unit_of_meas: \"%\",\n        ic: \"mdi:memory\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id6+\"/config\"\n};\nvar name7 = \"Uptime Badkamer\";\nvar id7 = (name7.toLowerCase()).split(' ').join('_');\nvar config7 = {\n    payload: {\n        name: name7,\n        uniq_id: id7,\n        stat_t: t+\"system/uptime\",\n        avty_t: av_t,\n        ic: \"mdi:av-timer\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id7+\"/config\"\n};\nvar name8 = \"Wifi Badkamer\";\nvar id8 = (name8.toLowerCase()).split(' ').join('_');\nvar config8 = {\n    payload: {\n        name: name8,\n        uniq_id: id8,\n        stat_t: t+\"system/wifi\",\n        avty_t: av_t,\n        unit_of_meas: \"%\",\n        ic: \"mdi:wifi-strength-2\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id8+\"/config\"\n};\nvar name9 = \"Temperatuur badkamer dht\";\nvar id9 = (name9.toLowerCase()).split(' ').join('_');\nvar config9 = {\n    payload: {\n        name: name9,\n        uniq_id: id9,\n        stat_t: t+\"input/temperatuur-dht\",\n        avty_t: av_t,\n        dev_cla: \"temperature\",\n        unit_of_meas: \"°C\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id9+\"/config\"\n};\nvar name10 = \"Luchtvochtigheid badkamer dht\";\nvar id10 = (name10.toLowerCase()).split(' ').join('_');\nvar config10 = {\n    payload: {\n        name: name10,\n        uniq_id: id10,\n        stat_t: t+\"input/luchtvochtigheid-dht\",\n        avty_t: av_t,\n        dev_cla: \"humidity\",\n        unit_of_meas: \"%\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id10+\"/config\"\n};\nvar name11 = \"Gevoelstemperatuur badkamer\";\nvar id11 = (name11.toLowerCase()).split(' ').join('_');\nvar config11 = {\n    payload: {\n        name: name11,\n        uniq_id: id11,\n        stat_t: t+\"input/heatindex\",\n        avty_t: av_t,\n        dev_cla: \"temperature\",\n        ic: \"mdi:thermometer-alert\",\n        unit_of_meas: \"°C\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id11+\"/config\"\n};\nvar name12 = \"Dauwpunt badkamer\";\nvar id12 = (name12.toLowerCase()).split(' ').join('_');\nvar config12 = {\n    payload: {\n        name: name12,\n        uniq_id: id12,\n        stat_t: t+\"input/dewpoint\",\n        avty_t: av_t,\n        dev_cla: \"temperature\",\n        ic: \"mdi:thermometer-alert\",\n        unit_of_meas: \"°C\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id12+\"/config\"\n};\nvar name13 = \"Luchtdruk badkamer\";\nvar id13 = (name13.toLowerCase()).split(' ').join('_');\nvar config13 = {\n    payload: {\n        name: name13,\n        uniq_id: id13,\n        stat_t: t+\"input/pressure\",\n        avty_t: av_t,\n        dev_cla: \"pressure\",\n        unit_of_meas: \"hPa\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id13+\"/config\"\n};\n\nreturn [config1, config2, config3, config4, config5, config6, config7, config8, config9, config10, config11, config12, config13];\n",
+        "outputs": 13,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 495,
+        "y": 396,
+        "wires": [
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ],
+            [
+                "25d1697e.d81fe6"
+            ]
+        ]
+    }
+]

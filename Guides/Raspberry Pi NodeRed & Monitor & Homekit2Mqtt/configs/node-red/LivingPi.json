@@ -1,1 +1,724 @@
-[{"id":"47f701cb.f5e21","type":"tab","label":"Living/pi3","disabled":false,"info":""},{"id":"75850069.5261b","type":"mqtt-broker","z":"","name":"Home-Assistant broker","broker":"192.168.79.54","port":"1883","clientid":"","usetls":false,"compatmode":true,"keepalive":"60","cleansession":true,"birthTopic":"Living/pi3/status","birthQos":"0","birthRetain":"true","birthPayload":"online","closeTopic":"Living/pi3/status","closeQos":"0","closeRetain":"true","closePayload":"offline","willTopic":"Living/pi3/status","willQos":"0","willRetain":"false","willPayload":"offline"},{"id":"9a6fcf5.5a8783","type":"inject","z":"47f701cb.f5e21","name":"Elke minuut","topic":"","payload":"","payloadType":"date","repeat":"60","crontab":"","once":false,"onceDelay":0.1,"x":115.5,"y":751,"wires":[["e419194b.996868","10e681d0.56f7ee","c3452d1d.28da5","bf131e50.8eb19","52aa61ae.44cd","676f83da.50ecec"]]},{"id":"1cce5ac2.be6235","type":"mqtt out","z":"47f701cb.f5e21","name":"MQTT DHT temperatuur","topic":"Living/pi3/input/temperatuur","qos":"","retain":"","broker":"75850069.5261b","x":803.5,"y":245,"wires":[]},{"id":"7a270586.8eee2c","type":"function","z":"47f701cb.f5e21","name":"temperatuur","func":"msg.payload = msg.payload\nreturn msg;","outputs":1,"noerr":0,"x":526.5,"y":244,"wires":[["1cce5ac2.be6235"]]},{"id":"2a6febec.1fa1f4","type":"function","z":"47f701cb.f5e21","name":"luchtvochtigheid","func":"msg.payload = msg.humidity\nreturn msg;","outputs":1,"noerr":0,"x":528.5,"y":371,"wires":[["60cb7636.a84268"]]},{"id":"60cb7636.a84268","type":"mqtt out","z":"47f701cb.f5e21","name":"MQTT DHT luchtvochtigheid","topic":"Living/pi3/input/luchtvochtigheid","qos":"","retain":"","broker":"75850069.5261b","x":810.5,"y":370,"wires":[]},{"id":"106d1110.a2239f","type":"rpi-gpio in","z":"47f701cb.f5e21","name":"Pin 13 pir groot","pin":"13","intype":"tri","debounce":"25","read":false,"x":212,"y":109,"wires":[["51cae843.87a368"]]},{"id":"51cae843.87a368","type":"mqtt out","z":"47f701cb.f5e21","name":"MQTT pir pi3","topic":"Living/pi3/input/pir","qos":"","retain":"","broker":"75850069.5261b","x":652,"y":89,"wires":[]},{"id":"e419194b.996868","type":"rpi-dht22","z":"47f701cb.f5e21","name":"DHT22","topic":"rpi-dht22","dht":22,"pintype":"2","pin":"7","x":325.5,"y":247,"wires":[["7a270586.8eee2c","2a6febec.1fa1f4"]]},{"id":"c8011546.193408","type":"inject","z":"47f701cb.f5e21","name":"","topic":"","payload":"","payloadType":"date","repeat":"10","crontab":"","once":false,"onceDelay":"","x":177,"y":1382.25,"wires":[["c1b9c76d.9635e8"]]},{"id":"bf131e50.8eb19","type":"vcgencmd","z":"47f701cb.f5e21","name":"","command":"get_throttled","codec":"H264","clock":"core","voltage":"core","memory":"arm","videoOutput":"0","separateMsg":false,"x":370.5,"y":764,"wires":[["85f14f35.e7012","b22b0a5c.49f338"]]},{"id":"c1b9c76d.9635e8","type":"cpu","z":"47f701cb.f5e21","name":"","msgCore":false,"msgOverall":true,"msgArray":false,"msgTemp":false,"x":427.5,"y":1384,"wires":[["50654a2a.0f35c4"]]},{"id":"10e681d0.56f7ee","type":"vcgencmd","z":"47f701cb.f5e21","name":"","command":"measure_temp","codec":"H264","clock":"core","voltage":"core","memory":"arm","videoOutput":"0","separateMsg":false,"x":384.5,"y":518,"wires":[["6bd5c7ee.57ec58"]]},{"id":"362a04bc.7536bc","type":"Uptime","z":"47f701cb.f5e21","name":"","x":353.5,"y":1540,"wires":[["cd7b9adc.96d308"]]},{"id":"c3452d1d.28da5","type":"Memory","z":"47f701cb.f5e21","name":"","x":359.5,"y":621,"wires":[["dedf94e7.725398"]]},{"id":"600cc12b.67175","type":"inject","z":"47f701cb.f5e21","name":"update","topic":"","payload":"","payloadType":"date","repeat":"3600","crontab":"","once":true,"onceDelay":"","x":171.5,"y":1540,"wires":[["362a04bc.7536bc"]]},{"id":"cd7b9adc.96d308","type":"function","z":"47f701cb.f5e21","name":"","func":"function timeConversion(millisec) {\n\n    var seconds = (millisec / 1000).toFixed(1);\n\n    var minutes = (millisec / (1000 * 60)).toFixed(1);\n\n    var hours = (millisec / (1000 * 60 * 60)).toFixed(1);\n\n    var days = (millisec / (1000 * 60 * 60 * 24)).toFixed(1);\n\n    if (seconds < 60) {\n        return seconds + \" Sec\";\n    } else if (minutes < 60) {\n        return minutes + \" Min\";\n    } else if (hours < 24) {\n        return hours + \" Hrs\";\n    } else {\n        return days + \" Days\"\n    }\n}\n\nmsg.payload = timeConversion(msg.payload.uptime * 1000);\nreturn msg;","outputs":1,"noerr":0,"x":513.5,"y":1540,"wires":[["92e9dd50.f6bcc"]]},{"id":"dedf94e7.725398","type":"function","z":"47f701cb.f5e21","name":"","func":"msg.payload = msg.payload.memusage;\nreturn msg;","outputs":1,"noerr":0,"x":532.5,"y":621,"wires":[["ca82d7e2.9a0cf8"]]},{"id":"85f14f35.e7012","type":"function","z":"47f701cb.f5e21","name":"Undervoltage","func":"msg.payload = msg.payload.underVoltage;\nreturn msg;","outputs":1,"noerr":0,"x":574.5,"y":767,"wires":[["df80628a.efe3a"]]},{"id":"b22b0a5c.49f338","type":"function","z":"47f701cb.f5e21","name":"Throttle","func":"msg.payload = msg.payload.throttled;\nreturn msg;","outputs":1,"noerr":0,"x":562.5,"y":894,"wires":[["e52d71e0.7a6f"]]},{"id":"6bd5c7ee.57ec58","type":"mqtt out","z":"47f701cb.f5e21","name":"","topic":"Living/pi3/system/temp","qos":"","retain":"","broker":"75850069.5261b","x":808.5,"y":516,"wires":[]},{"id":"50654a2a.0f35c4","type":"mqtt out","z":"47f701cb.f5e21","name":"","topic":"Living/pi3/system/cpu","qos":"","retain":"","broker":"75850069.5261b","x":845.5,"y":1389,"wires":[]},{"id":"ca82d7e2.9a0cf8","type":"mqtt out","z":"47f701cb.f5e21","name":"","topic":"Living/pi3/system/mem","qos":"","retain":"","broker":"75850069.5261b","x":803.5,"y":621,"wires":[]},{"id":"df80628a.efe3a","type":"mqtt out","z":"47f701cb.f5e21","name":"","topic":"Living/pi3/system/undervoltage","qos":"","retain":"","broker":"75850069.5261b","x":837.5,"y":764,"wires":[]},{"id":"e52d71e0.7a6f","type":"mqtt out","z":"47f701cb.f5e21","name":"","topic":"Living/pi3/system/throttle","qos":"","retain":"","broker":"75850069.5261b","x":794.5,"y":899,"wires":[]},{"id":"92e9dd50.f6bcc","type":"mqtt out","z":"47f701cb.f5e21","name":"","topic":"Living/pi3/system/uptime","qos":"","retain":"","broker":"75850069.5261b","x":785.5,"y":1543,"wires":[]},{"id":"52aa61ae.44cd","type":"exec","z":"47f701cb.f5e21","command":"cat /proc/net/wireless | grep wlan0: | awk '{print int($4)}'","addpay":false,"append":"","useSpawn":"false","timer":"","oldrc":false,"name":"Wifi signal","x":370,"y":1029.25,"wires":[["c905a4ee.77d728"],[],[]]},{"id":"c905a4ee.77d728","type":"mqtt out","z":"47f701cb.f5e21","name":"","topic":"Living/pi3/system/wifi","qos":"","retain":"","broker":"75850069.5261b","x":770,"y":1029.25,"wires":[]},{"id":"a2fac073.0796e","type":"exec","z":"47f701cb.f5e21","command":"sudo reboot","addpay":false,"append":"","useSpawn":"","timer":"","name":"Reboot","x":478,"y":1684.25,"wires":[[],[],[]]},{"id":"e898fd06.e6bf9","type":"exec","z":"47f701cb.f5e21","command":"sudo shutdown -h now","addpay":false,"append":"","useSpawn":"","timer":"","name":"Shutdown","x":488,"y":1764.25,"wires":[[],[],[]]},{"id":"b5bc96.ae941368","type":"mqtt in","z":"47f701cb.f5e21","name":"","topic":"Living/pi3/system/reboot","qos":"2","datatype":"auto","broker":"75850069.5261b","x":198,"y":1684.25,"wires":[["a2fac073.0796e"]]},{"id":"a826bc6.543a14","type":"mqtt in","z":"47f701cb.f5e21","name":"","topic":"Living/pi3/system/shutdown","qos":"2","datatype":"auto","broker":"75850069.5261b","x":208,"y":1764.25,"wires":[["e898fd06.e6bf9"]]},{"id":"70c9eb1.f770914","type":"inject","z":"47f701cb.f5e21","name":"","topic":"","payload":"online","payloadType":"str","repeat":"60","crontab":"","once":false,"onceDelay":0.1,"x":120,"y":41,"wires":[["5e154c4.1c510b4"]]},{"id":"5e154c4.1c510b4","type":"mqtt out","z":"47f701cb.f5e21","name":"","topic":"Living/pi3/status","qos":"","retain":"","broker":"75850069.5261b","x":409,"y":46,"wires":[]},{"id":"676f83da.50ecec","type":"exec","z":"47f701cb.f5e21","command":"free -m | grep Swap | awk '{printf \"%.2f\\n\", $3/$2 * 100}'","addpay":false,"append":"","useSpawn":"false","timer":"","oldrc":false,"name":"Swap %","x":366,"y":1187,"wires":[["6d373e63.a324a"],[],[]]},{"id":"6d373e63.a324a","type":"mqtt out","z":"47f701cb.f5e21","name":"","topic":"Living/pi3/system/swap","qos":"","retain":"","broker":"75850069.5261b","x":786,"y":1187,"wires":[]}]
+[
+    {
+        "id": "47f701cb.f5e21",
+        "type": "tab",
+        "label": "Living/pi3",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "75850069.5261b",
+        "type": "mqtt-broker",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "Living/pi3/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "Living/pi3/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "Living/pi3/status",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "offline"
+    },
+    {
+        "id": "5f5c661d.f66188",
+        "type": "mqtt-broker",
+        "name": "Home-Assistant broker",
+        "broker": "192.168.79.54",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "Living/zero/status",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "online",
+        "closeTopic": "Living/zero/status",
+        "closeQos": "0",
+        "closeRetain": "true",
+        "closePayload": "offline",
+        "willTopic": "Living/zero/status",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "offline"
+    },
+    {
+        "id": "9a6fcf5.5a8783",
+        "type": "inject",
+        "z": "47f701cb.f5e21",
+        "name": "Elke minuut",
+        "repeat": "60",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 115.5,
+        "y": 751,
+        "wires": [
+            [
+                "e419194b.996868",
+                "10e681d0.56f7ee",
+                "c3452d1d.28da5",
+                "bf131e50.8eb19",
+                "52aa61ae.44cd",
+                "676f83da.50ecec"
+            ]
+        ]
+    },
+    {
+        "id": "1cce5ac2.be6235",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "MQTT DHT temperatuur",
+        "topic": "Living/pi3/input/temperatuur",
+        "qos": "",
+        "retain": "",
+        "broker": "75850069.5261b",
+        "x": 874.5,
+        "y": 785,
+        "wires": []
+    },
+    {
+        "id": "7a270586.8eee2c",
+        "type": "function",
+        "z": "47f701cb.f5e21",
+        "name": "temperatuur",
+        "func": "msg.payload = msg.payload\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 594.5,
+        "y": 795,
+        "wires": [
+            [
+                "1cce5ac2.be6235"
+            ]
+        ]
+    },
+    {
+        "id": "2a6febec.1fa1f4",
+        "type": "function",
+        "z": "47f701cb.f5e21",
+        "name": "luchtvochtigheid",
+        "func": "msg.payload = msg.humidity\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 597.5,
+        "y": 879,
+        "wires": [
+            [
+                "60cb7636.a84268"
+            ]
+        ]
+    },
+    {
+        "id": "60cb7636.a84268",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "MQTT DHT luchtvochtigheid",
+        "topic": "Living/pi3/input/luchtvochtigheid",
+        "qos": "",
+        "retain": "",
+        "broker": "75850069.5261b",
+        "x": 869.5,
+        "y": 863,
+        "wires": []
+    },
+    {
+        "id": "106d1110.a2239f",
+        "type": "rpi-gpio in",
+        "z": "47f701cb.f5e21",
+        "name": "Pin 13 pir groot",
+        "pin": "13",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 349,
+        "y": 577,
+        "wires": [
+            [
+                "51cae843.87a368"
+            ]
+        ]
+    },
+    {
+        "id": "51cae843.87a368",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "MQTT pir pi3",
+        "topic": "Living/pi3/input/pir",
+        "qos": "",
+        "retain": "",
+        "broker": "75850069.5261b",
+        "x": 793,
+        "y": 581,
+        "wires": []
+    },
+    {
+        "id": "e419194b.996868",
+        "type": "rpi-dht22",
+        "z": "47f701cb.f5e21",
+        "name": "DHT22",
+        "topic": "rpi-dht22",
+        "dht": 22,
+        "pintype": "2",
+        "pin": "7",
+        "x": 375.5,
+        "y": 807,
+        "wires": [
+            [
+                "7a270586.8eee2c",
+                "2a6febec.1fa1f4"
+            ]
+        ]
+    },
+    {
+        "id": "c8011546.193408",
+        "type": "inject",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "repeat": "10",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 177,
+        "y": 1382.25,
+        "wires": [
+            [
+                "c1b9c76d.9635e8"
+            ]
+        ]
+    },
+    {
+        "id": "bf131e50.8eb19",
+        "type": "vcgencmd",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "command": "get_throttled",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 401.5,
+        "y": 670,
+        "wires": [
+            [
+                "85f14f35.e7012",
+                "b22b0a5c.49f338"
+            ]
+        ]
+    },
+    {
+        "id": "c1b9c76d.9635e8",
+        "type": "cpu",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "msgCore": false,
+        "msgOverall": true,
+        "msgArray": false,
+        "msgTemp": false,
+        "x": 427.5,
+        "y": 1384,
+        "wires": [
+            [
+                "50654a2a.0f35c4"
+            ]
+        ]
+    },
+    {
+        "id": "10e681d0.56f7ee",
+        "type": "vcgencmd",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "command": "measure_temp",
+        "codec": "H264",
+        "clock": "core",
+        "voltage": "core",
+        "memory": "arm",
+        "videoOutput": "0",
+        "separateMsg": false,
+        "x": 401.5,
+        "y": 928,
+        "wires": [
+            [
+                "6bd5c7ee.57ec58"
+            ]
+        ]
+    },
+    {
+        "id": "362a04bc.7536bc",
+        "type": "Uptime",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "x": 353.5,
+        "y": 1540,
+        "wires": [
+            [
+                "cd7b9adc.96d308"
+            ]
+        ]
+    },
+    {
+        "id": "c3452d1d.28da5",
+        "type": "Memory",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "x": 383.5,
+        "y": 1020,
+        "wires": [
+            [
+                "dedf94e7.725398"
+            ]
+        ]
+    },
+    {
+        "id": "600cc12b.67175",
+        "type": "inject",
+        "z": "47f701cb.f5e21",
+        "name": "update",
+        "repeat": "3600",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 171.5,
+        "y": 1540,
+        "wires": [
+            [
+                "362a04bc.7536bc"
+            ]
+        ]
+    },
+    {
+        "id": "cd7b9adc.96d308",
+        "type": "function",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "func": "function timeConversion(millisec) {\n\n    var hours = (millisec / (1000 * 60 * 60)).toFixed(1);\n\n        return hours ;\n\n}\n\nmsg.payload = timeConversion(msg.payload.uptime * 1000);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 513.5,
+        "y": 1540,
+        "wires": [
+            [
+                "92e9dd50.f6bcc"
+            ]
+        ]
+    },
+    {
+        "id": "dedf94e7.725398",
+        "type": "function",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "func": "msg.payload = msg.payload.memusage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 579.5,
+        "y": 1020,
+        "wires": [
+            [
+                "ca82d7e2.9a0cf8"
+            ]
+        ]
+    },
+    {
+        "id": "85f14f35.e7012",
+        "type": "function",
+        "z": "47f701cb.f5e21",
+        "name": "Undervoltage",
+        "func": "msg.payload = msg.payload.underVoltage;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 615.5,
+        "y": 661,
+        "wires": [
+            [
+                "df80628a.efe3a"
+            ]
+        ]
+    },
+    {
+        "id": "b22b0a5c.49f338",
+        "type": "function",
+        "z": "47f701cb.f5e21",
+        "name": "Throttle",
+        "func": "msg.payload = msg.payload.throttled;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 596.5,
+        "y": 748,
+        "wires": [
+            [
+                "e52d71e0.7a6f"
+            ]
+        ]
+    },
+    {
+        "id": "6bd5c7ee.57ec58",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "topic": "Living/pi3/system/temp",
+        "qos": "",
+        "retain": "",
+        "broker": "75850069.5261b",
+        "x": 854.5,
+        "y": 932,
+        "wires": []
+    },
+    {
+        "id": "50654a2a.0f35c4",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "topic": "Living/pi3/system/cpu",
+        "qos": "",
+        "retain": "",
+        "broker": "75850069.5261b",
+        "x": 845.5,
+        "y": 1389,
+        "wires": []
+    },
+    {
+        "id": "ca82d7e2.9a0cf8",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "topic": "Living/pi3/system/mem",
+        "qos": "",
+        "retain": "",
+        "broker": "75850069.5261b",
+        "x": 830.5,
+        "y": 1013,
+        "wires": []
+    },
+    {
+        "id": "df80628a.efe3a",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "topic": "Living/pi3/system/undervoltage",
+        "qos": "",
+        "retain": "",
+        "broker": "75850069.5261b",
+        "x": 858.5,
+        "y": 665,
+        "wires": []
+    },
+    {
+        "id": "e52d71e0.7a6f",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "topic": "Living/pi3/system/throttle",
+        "qos": "",
+        "retain": "",
+        "broker": "75850069.5261b",
+        "x": 868.5,
+        "y": 733,
+        "wires": []
+    },
+    {
+        "id": "92e9dd50.f6bcc",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "topic": "Living/pi3/system/uptime",
+        "qos": "",
+        "retain": "",
+        "broker": "75850069.5261b",
+        "x": 785.5,
+        "y": 1543,
+        "wires": []
+    },
+    {
+        "id": "52aa61ae.44cd",
+        "type": "exec",
+        "z": "47f701cb.f5e21",
+        "command": "cat /proc/net/wireless | grep wlan0: | awk '{print int($4)}'",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "Wifi signal",
+        "x": 379,
+        "y": 1108.25,
+        "wires": [
+            [
+                "c905a4ee.77d728"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "c905a4ee.77d728",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "topic": "Living/pi3/system/wifi",
+        "qos": "",
+        "retain": "",
+        "broker": "75850069.5261b",
+        "x": 788,
+        "y": 1112.25,
+        "wires": []
+    },
+    {
+        "id": "a2fac073.0796e",
+        "type": "exec",
+        "z": "47f701cb.f5e21",
+        "command": "sudo reboot",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Reboot",
+        "x": 478,
+        "y": 1684.25,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "e898fd06.e6bf9",
+        "type": "exec",
+        "z": "47f701cb.f5e21",
+        "command": "sudo shutdown -h now",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "Shutdown",
+        "x": 488,
+        "y": 1764.25,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "b5bc96.ae941368",
+        "type": "mqtt in",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "topic": "Living/pi3/system/reboot",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "75850069.5261b",
+        "x": 198,
+        "y": 1684.25,
+        "wires": [
+            [
+                "a2fac073.0796e"
+            ]
+        ]
+    },
+    {
+        "id": "a826bc6.543a14",
+        "type": "mqtt in",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "topic": "Living/pi3/system/shutdown",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "75850069.5261b",
+        "x": 208,
+        "y": 1764.25,
+        "wires": [
+            [
+                "e898fd06.e6bf9"
+            ]
+        ]
+    },
+    {
+        "id": "70c9eb1.f770914",
+        "type": "inject",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "repeat": "60",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "online",
+        "payloadType": "str",
+        "x": 120,
+        "y": 41,
+        "wires": [
+            [
+                "5e154c4.1c510b4"
+            ]
+        ]
+    },
+    {
+        "id": "5e154c4.1c510b4",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "topic": "Living/pi3/status",
+        "qos": "",
+        "retain": "",
+        "broker": "75850069.5261b",
+        "x": 409,
+        "y": 46,
+        "wires": []
+    },
+    {
+        "id": "676f83da.50ecec",
+        "type": "exec",
+        "z": "47f701cb.f5e21",
+        "command": "free -m | grep Swap | awk '{printf \"%.2f\\n\", $3/$2 * 100}'",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "Swap %",
+        "x": 366,
+        "y": 1187,
+        "wires": [
+            [
+                "6d373e63.a324a"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "6d373e63.a324a",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "topic": "Living/pi3/system/swap",
+        "qos": "",
+        "retain": "",
+        "broker": "75850069.5261b",
+        "x": 786,
+        "y": 1187,
+        "wires": []
+    },
+    {
+        "id": "e6a9a2b5.91f9a",
+        "type": "mqtt out",
+        "z": "47f701cb.f5e21",
+        "name": "Send Messages",
+        "topic": "",
+        "qos": "2",
+        "retain": "true",
+        "broker": "75850069.5261b",
+        "x": 769,
+        "y": 337,
+        "wires": []
+    },
+    {
+        "id": "61e5f9b0.beddb8",
+        "type": "function",
+        "z": "47f701cb.f5e21",
+        "name": "Format config messages binary sensors",
+        "func": "var ident = \"living_pi3\";\nvar name = \"LivingPi\";\nvar model = \"3B\";\nvar manufact = \"DIY\";\n\nvar t = \"Living/pi3/\";\nvar av_t = \"Living/pi3/status\";\n\n// var name1 = \"Danszaal pir\";\n// var id1 = (name1.toLowerCase()).split(' ').join('_');\n// var config1 = {\n//     payload: {\n//         name: name1,\n//         uniq_id: id1,\n//         stat_t: t+\"input/danszaal_pir\",\n//         avty_t: av_t,\n//         dev_cla: \"motion\",\n//         pl_off: 0,\n//         pl_on: 1,\n//         dev:  {\n//             identifiers: [ident],\n//             name: name, \n//             model: model, \n//             manufacturer: manufact\n            \n//         }\n//     },\n//     topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id1+\"/config\"\n// };\n// var name2 = \"Zithoek pir\";\n// var id2 = (name2.toLowerCase()).split(' ').join('_');\n// var config2 = {\n//     payload: {\n//         name: name2,\n//         uniq_id: id2,\n//         stat_t: t+\"input/zithoek_pir\",\n//         avty_t: av_t,\n//         dev_cla: \"motion\",\n//         pl_off: 0,\n//         pl_on: 1,\n//         dev:  {\n//             identifiers: [ident],\n//             name: name, \n//             model: model, \n//             manufacturer: manufact\n            \n//         }\n//     },\n//     topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id2+\"/config\"\n// };\nvar name3 = \"Beweging Living Pi3\";\nvar id3 = (name3.toLowerCase()).split(' ').join('_');\nvar config3 = {\n    payload: {\n        name: name3,\n        uniq_id: id3,\n        stat_t: t+\"input/pir\",\n        avty_t: av_t,\n        dev_cla: \"motion\",\n        pl_off: 0,\n        pl_on: 1,\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id3+\"/config\"\n};\nvar name4 = \"Living pi3 throttle\";\nvar id4 = (name4.toLowerCase()).split(' ').join('_');\nvar config4 = {\n    payload: {\n        name: name4,\n        uniq_id: id4,\n        stat_t: t+\"system/throttle\",\n        avty_t: av_t,\n        dev_cla: \"problem\",\n        pl_off: \"false\",\n        pl_on: \"true\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id4+\"/config\"\n};\nvar name5 = \"Living pi3 undervoltage\";\nvar id5 = (name5.toLowerCase()).split(' ').join('_');\nvar config5 = {\n    payload: {\n        name: name5,\n        uniq_id: id5,\n        stat_t: t+\"system/undervoltage\",\n        avty_t: av_t,\n        dev_cla: \"problem\",\n        pl_off: \"false\",\n        pl_on: \"true\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id5+\"/config\"\n};\nvar name6 = \"Living pi3 online\";\nvar id6 = (name6.toLowerCase()).split(' ').join('_');\nvar config6 = {\n    payload: {\n        name: name6,\n        uniq_id: id6,\n        stat_t: t+\"status\",\n        avty_t: av_t,\n        dev_cla: \"connectivity\",\n        pl_off: \"offline\",\n        pl_on: \"online\",\n        off_dly: 75,\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/binary_sensor/\"+ident+\"/\"+id6+\"/config\"\n};\n\nreturn [config3, config4, config5, config6];\n\n",
+        "outputs": 4,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 422,
+        "y": 266,
+        "wires": [
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ]
+        ]
+    },
+    {
+        "id": "1869b93f.32d947",
+        "type": "inject",
+        "z": "47f701cb.f5e21",
+        "name": "",
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "topic": "",
+        "payload": "Started!",
+        "payloadType": "str",
+        "x": 109,
+        "y": 358,
+        "wires": [
+            [
+                "61e5f9b0.beddb8",
+                "2bb0d8a5.4d98f8"
+            ]
+        ]
+    },
+    {
+        "id": "2bb0d8a5.4d98f8",
+        "type": "function",
+        "z": "47f701cb.f5e21",
+        "name": "Format config messages sensors",
+        "func": "var ident = \"living_pi3\";\nvar name = \"LivingPi\";\nvar model = \"3B\";\nvar manufact = \"DIY\";\n\nvar t = \"Living/pi3/\";\nvar av_t = \"Living/pi3/status\";\n\nvar name1 = \"Temperatuur Pi3 Living\";\nvar id1 = (name1.toLowerCase()).split(' ').join('_');\nvar config1 = {\n    payload: {\n        name: name1,\n        uniq_id: id1,\n        stat_t: t+\"input/temperatuur\",\n        avty_t: av_t,\n        dev_cla: \"temperature\",\n        unit_of_meas: \"°C\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id1+\"/config\"\n};\nvar name2 = \"Luchtvochtigheid Pi3 Living\";\nvar id2 = (name2.toLowerCase()).split(' ').join('_');\nvar config2 = {\n    payload: {\n        name: name2,\n        uniq_id: id2,\n        stat_t: t+\"input/luchtvochtigheid\",\n        avty_t: av_t,\n        dev_cla: \"humidity\",\n        unit_of_meas: \"%\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id2+\"/config\"\n};\nvar name3 = \"Temperatuur cpu Pi3 Living\";\nvar id3 = (name3.toLowerCase()).split(' ').join('_');\nvar config3 = {\n    payload: {\n        name: name3,\n        uniq_id: id3,\n        stat_t: t+\"system/temp\",\n        avty_t: av_t,\n        dev_cla: \"temperature\",\n        unit_of_meas: \"°C\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id3+\"/config\"\n};\nvar name4 = \"Cpu Pi3 Living\";\nvar id4 = (name4.toLowerCase()).split(' ').join('_');\nvar config4 = {\n    payload: {\n        name: name4,\n        uniq_id: id4,\n        stat_t: t+\"system/cpu\",\n        avty_t: av_t,\n        unit_of_meas: \"%\",\n        ic: \"mdi:cpu-32-bit\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id4+\"/config\"\n};\nvar name5 = \"Ram Pi3 Living\";\nvar id5 = (name5.toLowerCase()).split(' ').join('_');\nvar config5 = {\n    payload: {\n        name: name5,\n        uniq_id: id5,\n        stat_t: t+\"system/mem\",\n        avty_t: av_t,\n        unit_of_meas: \"%\",\n        ic: \"mdi:memory\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id5+\"/config\"\n};\nvar name6 = \"Swap Pi3 Living\";\nvar id6 = (name6.toLowerCase()).split(' ').join('_');\nvar config6 = {\n    payload: {\n        name: name6,\n        uniq_id: id6,\n        stat_t: t+\"system/swap\",\n        avty_t: av_t,\n        unit_of_meas: \"%\",\n        ic: \"mdi:memory\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id6+\"/config\"\n};\nvar name7 = \"Uptime Pi3 Living\";\nvar id7 = (name7.toLowerCase()).split(' ').join('_');\nvar config7 = {\n    payload: {\n        name: name7,\n        uniq_id: id7,\n        stat_t: t+\"system/uptime\",\n        avty_t: av_t,\n        ic: \"mdi:av-timer\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id7+\"/config\"\n};\nvar name8 = \"Wifi Pi3 Living\";\nvar id8 = (name8.toLowerCase()).split(' ').join('_');\nvar config8 = {\n    payload: {\n        name: name8,\n        uniq_id: id8,\n        stat_t: t+\"system/wifi\",\n        avty_t: av_t,\n        unit_of_meas: \"%\",\n        ic: \"mdi:wifi-strength-2\",\n        dev:  {\n            identifiers: [ident],\n            name: name, \n            model: model, \n            manufacturer: manufact\n            \n        }\n    },\n    topic: \"homeassistant/sensor/\"+ident+\"/\"+id8+\"/config\"\n};\nreturn [config1, config2, config3, config4, config5, config6, config7, config8];\n",
+        "outputs": 8,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 424,
+        "y": 433,
+        "wires": [
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ],
+            [
+                "e6a9a2b5.91f9a"
+            ]
+        ]
+    }
+]
