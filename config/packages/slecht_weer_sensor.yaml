@@ -73,10 +73,14 @@ sensor:
       bad_weather:
         friendly_name: 'Slecht weer'
         value_template: >
-          {% if (states.sensor.dark_sky_precip.state == "snow") %}snow
-          {% elif ((states.sensor.dark_sky_overnight_low_temperature_0d.state | int < 4) and (states.sensor.dark_sky_dew_point.state | int < 6) and (states.sensor.dark_sky_wind_speed.state | int < 12) and (states.sensor.dark_sky_cloud_coverage_0d.state | int < 20) and (states.sensor.dark_sky_humidity.state | int > 50)) %} frost
-          {% elif (states.sensor.dark_sky_precip_intensity | int > 7) %} heavy_rain
-          {% else %} clear
+          {% if (states.sensor.weatherbit_snow_rate.state | int > 0) %}
+            snow
+          {% elif ((state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['templow']  | int < 4) and (states.sensor.dauwpunt_poort.state | int < 6) and (states.sensor.weatherbit_wind_speed.state | int < 12) and (states.sensor.weatherbit_cloud_coverage.state | int < 20) and (states.sensor.luchtvochtigheid_poort.state | int > 50)) %} 
+            frost
+          {% elif (states.sensor.weatherbit_rain_rate | int > 7) %} 
+            heavy_rain
+          {% else %} 
+            clear
           {% endif %}
 
       notification_hour:
@@ -104,20 +108,4 @@ sensor:
           {%- endif -%}
             {{ states.sensor.notification_minute.state }}
 
-# group:
-#   slecht_weer_sensor:
-#     name: Slecht weer sensor
-#     control: hidden
-#     entities:
-#       - sensor.dark_outside
-#       - sensor.bad_weather
-#       - sensor.notification_time
-#       - input_number.notification_hour
-#       - input_number.notification_minute
-#       - sensor.dark_sky_precip
-#       - sensor.dark_sky_precip_intensity
-#       - sensor.dark_sky_humidity
-#       - sensor.dark_sky_cloud_coverage
-#       - sensor.dark_sky_wind_speed
-#       - sensor.dark_sky_dew_point
-#       - sensor.dark_sky_daily_low_temperature
+

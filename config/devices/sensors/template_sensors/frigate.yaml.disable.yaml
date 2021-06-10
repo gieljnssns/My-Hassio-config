@@ -1,0 +1,17 @@
+  - platform: template
+    sensors:
+      living_fps: 
+        value_template: '{{ states.sensor.frigate_debug.attributes["living"]["camera_fps"] }}'
+        unit_of_measurement: 'FPS'
+      living_skipped_fps: 
+        value_template: '{{ states.sensor.frigate_debug.attributes["living"]["skipped_fps"] }}'
+        unit_of_measurement: 'FPS'
+      living_detection_fps: 
+        value_template: '{{ states.sensor.frigate_debug.attributes["living"]["detection_fps"] }}'
+        unit_of_measurement: 'FPS'
+      frigate_detection_fps: 
+        value_template: '{{ states.sensor.frigate_debug.attributes["detection_fps"] }}'
+        unit_of_measurement: 'FPS'
+      frigate_coral_inference:
+        value_template: '{{ states.sensor.frigate_debug.attributes["detectors"]["coral"]["inference_speed"] }}' 
+        unit_of_measurement: 'ms'

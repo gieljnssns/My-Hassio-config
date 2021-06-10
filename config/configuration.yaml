@@ -40,33 +40,32 @@ homeassistant:
 
 ####################################################
 #                                                  #
-#                     Enables                      #
+#                Default config                    #
 #                                                  #
 ####################################################
 
-###  Browser  ###
-browser:
+### Automation ###
+automation old: !include_dir_list automation
+automation: !include automations.yaml
 
 ###  Config  ###
 config:
 
-###  Allows you to issue voice commands from the frontend  ###
-# conversation:
+###  DHCP Discovery  ###
+dhcp:
 
-###  Discovery  ###
-discovery:
-  ignore:
-    - apple_tv
+###  Frontend  ###
+frontend:
+  themes: !include_dir_merge_named themes/
 
-###  FFmpeg  ###
-ffmpeg:
+###  History  ###
+history: !include history.yaml
 
-###  HACS  ###
-# hacs:
-#   token: !secret hacs_token
+###  Image  ###
+image:
 
-###  Hassio  ###
-hassio:
+###  Logbook  ###
+logbook: !include logbook.yaml
 
 ###  Map  ###
 map:
@@ -77,17 +76,23 @@ media_source:
 ###  Mobile app  ###
 mobile_app:
 
+###  My Home Assistant  ###
+my:
+
+###  Network  ###
+network:
+
 ###  Person  ###
 person:
 
-###  Python scripts  ###
-python_script:
+###  Scenes  ###
+scene: !include scenes.yaml
 
-###  Ssdp  ###
+### Scripts ###
+script: !include_dir_merge_named scripts
+
+###  Simple Service Discovery Protocol  ###
 ssdp:
-
-###  Stream  ###
-stream:
 
 ###  Sun  ###
 sun:
@@ -95,19 +100,57 @@ sun:
 ###  System Health  ###
 system_health:
 
+###  Tag  ###
+tag:
+
 ###  Checks for available updates  ###
 updater:
-  reporting: true
-  include_used_components: true
-
-###  Wake on Lan  ###
-wake_on_lan:
 
 ###  Zeroconf/Avahi/Bonjour  ###
 zeroconf:
 
+###  Zones  ###
+zone: !include zones.yaml
+
+####################################################
+#                                                  #
+#                     Enables                      #
+#                                                  #
+####################################################
+
+###  Browser  ###
+browser:
+
+###  Allows you to issue voice commands from the frontend  ###
+# conversation:
+
+###  Discovery  ###
+discovery:
+  ignore:
+    - apple_tv
+
+###  FFmpeg  ###
+# ffmpeg:
+
+###  HACS  ###
+# hacs:
+#   token: !secret hacs_token
+
+###  Hassio  ###
+hassio:
+
+###  Python scripts  ###
+python_script:
+
+
+###  Stream  ###
+stream:
+
+###  Wake on Lan  ###
+wake_on_lan:
+
 ###  Zha-map  ###
-zha_map:
+# zha_map:
   
 ####################################################
 #                                                  #
@@ -115,15 +158,8 @@ zha_map:
 #                                                  #
 ####################################################
 
-### Automation ###
-automation old: !include_dir_list automation
-automation: !include automations.yaml
-
 ###  Groups  ###
 group: !include_dir_merge_named groups/
-
-###  History  ###
-history: !include history.yaml
 
 ###  Homekit  ###
 homekit: !include homekit.yaml
@@ -133,9 +169,6 @@ http: !include http.yaml
 
 ###  IOS  ###
 ios: !include ios.yaml
-
-###  Logbook  ###
-logbook: !include logbook.yaml
 
 ###  Logger  ###
 logger: !include logger.yaml
@@ -149,22 +182,9 @@ notify: !include notify.yaml
 ###  Recorder  ###
 recorder: !include recorder.yaml
 
-###  Scenes  ###
-scene: !include scenes.yaml
-
-### Scripts ###
-script: !include_dir_merge_named scripts
-
-###  Frontend  ###
-frontend:
-  themes: !include_dir_merge_named themes/
-
-###  Zones  ###
-zone: !include zones.yaml
-
 ###  Panels  ###
 panel_iframe: !include panels/iframe.yaml
-panel_custom: !include panels/custom.yaml
+# panel_custom: !include panels/custom.yaml
 
 ####################################################
 #                                                  #
@@ -183,6 +203,7 @@ device_tracker: !include_dir_merge_list devices/device_tracker
 # image_processing: !include_dir_merge_list devices/image_processing
 input_boolean: !include_dir_merge_named devices/input_boolean
 input_datetime: !include_dir_merge_named devices/input_datetime
+input_number: !include_dir_merge_named devices/input_number
 input_select: !include_dir_merge_named devices/input_select
 input_text: !include_dir_merge_named devices/input_text
 light: !include_dir_merge_list devices/light
@@ -191,6 +212,7 @@ rest_command: !include_dir_merge_named devices/restful_commands
 sensor: !include_dir_merge_list devices/sensors
 shell_command: !include devices/shell_commands.yaml
 switch: !include_dir_merge_list devices/switch
+template: !include_dir_merge_list devices/templates
 timer: !include_dir_merge_named devices/timer
 utility_meter: !include_dir_merge_named devices/utility_meter
 weather: !include_dir_merge_list devices/weather
@@ -201,8 +223,14 @@ weather: !include_dir_merge_list devices/weather
 #                                                  #
 ####################################################
 
+###  Dahua  ###
+amcrest: !include devices/hubs/dahua.yaml
+
 ###  Hue  ###
 # hue: !include devices/hubs/hue.yaml
+
+###  Modbus  ###
+modbus: !include devices/hubs/modbus.yaml
 
 ###  Neato  ###
 neato: !include devices/hubs/neato.yaml
@@ -210,8 +238,20 @@ neato: !include devices/hubs/neato.yaml
 ###  Netatmo  ###
 netatmo: !include devices/hubs/netatmo.yaml
 
+###  SolarEdge modbus  ###
+solaredge_modbus: !include devices/hubs/solaredge_modbus.yaml
+
+###  Solcast  ###
+solcast: !include devices/hubs/solcast.yaml
+
+###  Solcast  ###
+solcast_garage: !include devices/hubs/solcast_garage.yaml
+
 ###  Sonos  ###
 sonos: !include devices/hubs/sonos.yaml
+
+###  Spotify  ###
+spotify: !include devices/hubs/spotify.yaml
 
 ###  Tahoma  ###
 tahoma: !include devices/hubs/tahoma.yaml

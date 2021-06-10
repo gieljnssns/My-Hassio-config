@@ -1,0 +1,44 @@
+  backwash:
+    alias: Backwash pomp
+    variables:
+      pump_state: >
+        {{ states("switch.zwembad") }}
+    sequence:
+      - alias: "Pomp afzetten"
+        service: switch.turn_off
+        target:
+          entity_id: switch.zwembad
+      - delay:
+          seconds: 15
+      - alias: "Pomp opzetten - backwash"
+        service: switch.turn_on
+        target:
+          entity_id: switch.zwembad
+      - delay:
+          minutes: 1
+      - alias: "Pomp afzetten"
+        service: switch.turn_off
+        target:
+          entity_id: switch.zwembad
+      - delay:
+          seconds: 15
+      - alias: "Pomp opzetten - rinse"
+        service: switch.turn_on
+        target:
+          entity_id: switch.zwembad
+      - delay:
+          minutes: 1
+      - alias: "Pomp afzetten"
+        service: switch.turn_off
+        target:
+          entity_id: switch.zwembad
+      - delay:
+          seconds: 15
+      - service_template: >
+          {% if pump_state == 'on' %}
+              switch.turn_on
+          {% else %}
+              switch.turn_off
+          {% endif %}
+        target:
+          entity_id: switch.zwembad

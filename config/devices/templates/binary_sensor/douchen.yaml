@@ -1,0 +1,15 @@
+- binary_sensor:
+    # Keep track how many days have past since a date
+    - name: Douchen
+      unique_id: a93c8715-f581-458e-986c-05a99e4839ba
+      state: >
+        {% if is_state("binary_sensor.bathroom_humidity_rising_template", "on" ) %} 
+            on
+        {% else %}
+            off
+        {% endif %}
+      icon: mdi:shower-head
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.bathroom_humidity_rising_template 
+

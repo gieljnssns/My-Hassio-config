@@ -46,7 +46,9 @@
 
       zonnetent_temp:
         friendly_name: "Zonnetent"
-        value_template: "{{ is_state('input_boolean.zonnetent_closed', 'off')}}"
+        value_template: >
+          {{  is_state('input_boolean.zonnetent_closed', 'off') or
+              is_state('input_boolean.zonnetent_my', 'off')  }}
         open_cover:
           service: script.turn_on
           data:

@@ -7,6 +7,13 @@
       - service: input_boolean.turn_on
         entity_id: input_boolean.zonnetent_closed
       
+      # - service: cover.close_cover
+      #   entity_id: cover.zonnetent
+      # - delay:
+      #     seconds: 30
+      # - service: input_boolean.turn_on
+      #   entity_id: input_boolean.zonnetent_closed
+      
   zonnetent_openen:
     sequence:
       - service: cover.open_cover
@@ -60,6 +67,58 @@
       - service: notify.mobile_app_gphone
         data_template:
           message: "Der is iets mis me die Somfy van de zonnetent. Fix het maar!! "
+      
+      # - service: cover.open_cover
+      #   entity_id: cover.zonnetent
+      # - delay:
+      #     seconds: 30
+      # - service: input_boolean.turn_off
+      #   entity_id: input_boolean.zonnetent_closed
+      # - service: input_boolean.turn_off
+      #   entity_id: input_boolean.zonnetent_my
+      # - condition: or
+      #   conditions:
+      #     - condition: state
+      #       entity_id: 'input_boolean.zonnetent_closed'
+      #       state: 'on'
+      #     - condition: state
+      #       entity_id: 'input_boolean.zonnetent_my'
+      #       state: 'on'
+      # - service: cover.open_cover
+      #   entity_id: cover.zonnetent
+      # - delay:
+      #     seconds: 30
+      # - service: input_boolean.turn_off
+      #   entity_id: input_boolean.zonnetent_closed
+      # - service: input_boolean.turn_off
+      #   entity_id: input_boolean.zonnetent_my
+      # - condition: or
+      #   conditions:
+      #     - condition: state
+      #       entity_id: 'input_boolean.zonnetent_closed'
+      #       state: 'on'
+      #     - condition: state
+      #       entity_id: 'input_boolean.zonnetent_my'
+      #       state: 'on'
+      # - service: cover.open_cover
+      #   entity_id: cover.zonnetent
+      # - delay:
+      #     seconds: 30
+      # - service: input_boolean.turn_off
+      #   entity_id: input_boolean.zonnetent_closed
+      # - service: input_boolean.turn_off
+      #   entity_id: input_boolean.zonnetent_my
+      # - condition: or
+      #   conditions:
+      #     - condition: state
+      #       entity_id: 'input_boolean.zonnetent_closed'
+      #       state: 'on'
+      #     - condition: state
+      #       entity_id: 'input_boolean.zonnetent_my'
+      #       state: 'on'
+      # - service: notify.mobile_app_gphone
+      #   data_template:
+      #     message: "Der is iets mis me die Somfy van de zonnetent. Fix het maar!! "
 
   zonnetent_my:
     sequence:
@@ -67,7 +126,8 @@
       #   entity_id: cover.zonnetent
       # - delay:
       #     seconds: 20
-      - service: cover.stop_cover
+      # - service: cover.stop_cover
+      - service: tahoma.set_cover_my_position
         entity_id: cover.zonnetent
       - delay:
           seconds: 20

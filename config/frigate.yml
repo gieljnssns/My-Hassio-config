@@ -1,0 +1,293 @@
+detectors:
+  coral:
+    type: edgetpu
+    device: usb
+mqtt:
+  host: core-mosquitto.local.hass.io
+  topic_prefix: frigate
+  client_id: frigate
+  user: hass
+  password: stamnummer1
+ffmpeg:
+  global_args:
+    - '-hide_banner'
+    - '-loglevel'
+    - panic
+  hwaccel_args:
+    - '-hwaccel'
+    - vaapi
+    - '-hwaccel_device'
+    - /dev/dri/renderD128
+    - '-hwaccel_output_format'
+    - yuv420p
+  input_args:
+    - '-avoid_negative_ts'
+    - make_zero
+    - '-fflags'
+    - nobuffer
+    - '-flags'
+    - low_delay
+    - '-strict'
+    - experimental
+    - '-fflags'
+    - +genpts+discardcorrupt
+    - '-rtsp_transport'
+    - tcp
+    - '-stimeout'
+    - '5000000'
+    - '-use_wallclock_as_timestamps'
+    - '1'
+  output_args:
+    # Optional: output args for detect streams (default: shown below)
+    detect: -f rawvideo -pix_fmt yuv420p
+    # Optional: output args for record streams (default: shown below)
+    record: -f segment -segment_time 60 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c copy -an
+    # Optional: output args for clips streams (default: shown below)
+    clips: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c copy -an
+    # Optional: output args for rtmp streams (default: shown below)
+    rtmp: -c copy -f flv
+cameras:
+  # tuin_live:
+  #   ffmpeg:
+  #     inputs:
+  #       - path: >-
+  #           rtsp://admin:stamnummer1@192.168.89.132:554/live
+  #         roles:
+  #           - detect
+  #           - rtmp
+  #   width: 3840
+  #   height: 2160
+  #   fps: 15
+  #   detect:
+  #     # Optional: enables detection for the camera (default: True)
+  #     # This value can be set via MQTT and will be updated in startup based on retained value
+  #     enabled: False
+  #     # Optional: Number of frames without a detection before frigate considers an object to be gone. (default: 5x the frame rate)
+  #     max_disappeared: 25
+  tuin:
+    ffmpeg:
+      inputs:
+        - path: rtsp://admin:stamnummer1@192.168.89.132:554/cam/realmonitor?channel=1&subtype=2
+          roles:
+            - detect
+            # - rtmp
+            # - clips
+            # - record
+            
+        - path: rtsp://admin:stamnummer1@192.168.89.132:554/live
+          roles:
+            - rtmp
+            - clips
+            # - record
+    width: 1280
+    height: 720
+    fps: 5
+    # motion:
+      # mask:
+      #   - 0,227,145,183,238,182,235,0,0,0
+      #   - 342,480,640,480,640,277,330,291
+    detect:
+      # Optional: enables detection for the camera (default: True)
+      # This value can be set via MQTT and will be updated in startup based on retained value
+      enabled: True
+      # Optional: Number of frames without a detection before frigate considers an object to be gone. (default: 5x the frame rate)
+      max_disappeared: 25
+    clips:
+      # Required: enables clips for the camera (default: shown below)
+      # This value can be set via MQTT and will be updated in startup based on retained value
+      enabled: False
+      # Optional: Number of seconds before the event to include in the clips (default: shown below)
+      pre_capture: 15
+      # Optional: Number of seconds after the event to include in the clips (default: shown below)
+      post_capture: 15
+      # Optional: Objects to save clips for. (default: all tracked objects)
+      objects:
+        - person
+      # Optional: Restrict clips to objects that entered any of the listed zones (default: no required zones)
+      required_zones: []
+      # Optional: Camera override for retention settings (default: global values)
+      retain:
+        # Required: Default retention days (default: shown below)
+        default: 10
+        # Optional: Per object retention days
+        objects:
+          person: 15
+
+    # Optional: 24/7 recording configuration
+    record:
+      # Optional: Enable recording (default: global setting)
+      enabled: False
+      # Optional: Number of days to retain (default: global setting)
+      retain_days: 30
+    rtmp:
+      # Required: Enable the live stream (default: True)
+      enabled: True
+
+    # Optional: Configuration for the jpg snapshots written to the clips directory for each event
+    snapshots:
+      # Optional: Enable writing jpg snapshot to /media/frigate/clips (default: shown below)
+      # This value can be set via MQTT and will be updated in startup based on retained value
+      enabled: False
+      # Optional: print a timestamp on the snapshots (default: shown below)
+      timestamp: False
+      # Optional: draw bounding box on the snapshots (default: shown below)
+      bounding_box: False
+      # Optional: crop the snapshot (default: shown below)
+      crop: False
+      # Optional: height to resize the snapshot to (default: original size)
+      height: 175
+      # Optional: Restrict snapshots to objects that entered any of the listed zones (default: no required zones)
+      required_zones: []
+      # Optional: Camera override for retention settings (default: global values)
+      retain:
+        # Required: Default retention days (default: shown below)
+        default: 10
+        # Optional: Per object retention days
+        objects:
+          person: 15
+
+    # Optional: Configuration for the jpg snapshots published via MQTT
+    mqtt:
+      # Optional: Enable publishing snapshot via mqtt for camera (default: shown below)
+      # NOTE: Only applies to publishing image data to MQTT via 'frigate/<camera_name>/<object_name>/snapshot'.
+      # All other messages will still be published.
+      enabled: True
+      # Optional: print a timestamp on the snapshots (default: shown below)
+      timestamp: True
+      # Optional: draw bounding box on the snapshots (default: shown below)
+      bounding_box: True
+      # Optional: crop the snapshot (default: shown below)
+      crop: True
+      # Optional: height to resize the snapshot to (default: shown below)
+      height: 270
+      # Optional: Restrict mqtt messages to objects that entered any of the listed zones (default: no required zones)
+      required_zones: []
+
+    # Optional: Camera level object filters config.
+    objects:
+      track:
+        - person
+      filters:
+        person:
+          min_area: 5000
+          max_area: 100000
+          min_score: 0.5
+          threshold: 0.65
+  keuken:
+    ffmpeg:
+      inputs:
+        - path: rtsp://192.168.89.67:8554/unicast
+          roles:
+            - detect
+            - rtmp
+            - clips
+            # - record
+            
+        # - path: rtsp://admin:stamnummer1@192.168.89.132:554/live
+        #   roles:
+        #     - rtmp
+        #     - clips
+            # - record
+    width: 1280
+    height: 720
+    fps: 5
+    # motion:
+      # mask:
+      #   - 0,227,145,183,238,182,235,0,0,0
+      #   - 342,480,640,480,640,277,330,291
+    detect:
+      # Optional: enables detection for the camera (default: True)
+      # This value can be set via MQTT and will be updated in startup based on retained value
+      enabled: True
+      # Optional: Number of frames without a detection before frigate considers an object to be gone. (default: 5x the frame rate)
+      max_disappeared: 25
+    clips:
+      # Required: enables clips for the camera (default: shown below)
+      # This value can be set via MQTT and will be updated in startup based on retained value
+      enabled: False
+      # Optional: Number of seconds before the event to include in the clips (default: shown below)
+      pre_capture: 15
+      # Optional: Number of seconds after the event to include in the clips (default: shown below)
+      post_capture: 15
+      # Optional: Objects to save clips for. (default: all tracked objects)
+      objects:
+        - person
+      # Optional: Restrict clips to objects that entered any of the listed zones (default: no required zones)
+      required_zones: []
+      # Optional: Camera override for retention settings (default: global values)
+      retain:
+        # Required: Default retention days (default: shown below)
+        default: 10
+        # Optional: Per object retention days
+        objects:
+          person: 15
+
+    # Optional: 24/7 recording configuration
+    record:
+      # Optional: Enable recording (default: global setting)
+      enabled: False
+      # Optional: Number of days to retain (default: global setting)
+      retain_days: 30
+    rtmp:
+      # Required: Enable the live stream (default: True)
+      enabled: True
+
+    # Optional: Configuration for the jpg snapshots written to the clips directory for each event
+    snapshots:
+      # Optional: Enable writing jpg snapshot to /media/frigate/clips (default: shown below)
+      # This value can be set via MQTT and will be updated in startup based on retained value
+      enabled: False
+      # Optional: print a timestamp on the snapshots (default: shown below)
+      timestamp: False
+      # Optional: draw bounding box on the snapshots (default: shown below)
+      bounding_box: False
+      # Optional: crop the snapshot (default: shown below)
+      crop: False
+      # Optional: height to resize the snapshot to (default: original size)
+      height: 175
+      # Optional: Restrict snapshots to objects that entered any of the listed zones (default: no required zones)
+      required_zones: []
+      # Optional: Camera override for retention settings (default: global values)
+      retain:
+        # Required: Default retention days (default: shown below)
+        default: 10
+        # Optional: Per object retention days
+        objects:
+          person: 15
+
+    # Optional: Configuration for the jpg snapshots published via MQTT
+    mqtt:
+      # Optional: Enable publishing snapshot via mqtt for camera (default: shown below)
+      # NOTE: Only applies to publishing image data to MQTT via 'frigate/<camera_name>/<object_name>/snapshot'.
+      # All other messages will still be published.
+      enabled: True
+      # Optional: print a timestamp on the snapshots (default: shown below)
+      timestamp: True
+      # Optional: draw bounding box on the snapshots (default: shown below)
+      bounding_box: True
+      # Optional: crop the snapshot (default: shown below)
+      crop: True
+      # Optional: height to resize the snapshot to (default: shown below)
+      height: 270
+      # Optional: Restrict mqtt messages to objects that entered any of the listed zones (default: no required zones)
+      required_zones: []
+
+    # Optional: Camera level object filters config.
+    objects:
+      track:
+        - person
+      filters:
+        person:
+          min_area: 5000
+          max_area: 100000
+          min_score: 0.5
+          threshold: 0.65
+objects:
+  track:
+    - person
+  # filters:
+  #   person:
+  #     min_area: 5000
+  #     max_area: 100000
+  #     min_score: 0.5
+  #     threshold: 0.85
