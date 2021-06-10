@@ -1,0 +1,40 @@
+type: 'custom:apexcharts-card'
+graph_span: 24h
+apex_config:
+  chart:
+    height: 500px
+  plotOptions:
+    pie:
+      donut:
+        total:
+          show: true
+          showAlways: true
+          formatter: sensor.daily_energy
+span:
+  start: day
+  offset: '-1d'
+header:
+  show: true
+  title: Stroomverbruik gisteren
+chart_type: donut
+series:
+  - entity: sensor.daily_warmtepomp
+    name: Verwarming
+  - entity: sensor.daily_warmtepompboiler
+    name: Boiler
+  - entity: sensor.daily_koffiezet
+    name: Koffiezet
+  - entity: sensor.daily_verluchting
+    name: Verluchting
+  - entity: sensor.daily_wasmachien
+    name: Wasmachien
+  - entity: sensor.daily_verlichting
+    name: Verlichting
+  - entity: sensor.daily_ijskast
+    name: Ijskast
+  - entity: sensor.daily_keuken_oven
+    name: Oven
+  - entity: sensor.daily_keuken_microgolf
+    name: Microgolf
+  - entity: sensor.daily_keuken_toestellen
+    name: Keuken toestellen

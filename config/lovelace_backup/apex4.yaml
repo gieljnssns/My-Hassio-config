@@ -1,0 +1,48 @@
+type: 'custom:apexcharts-card'
+graph_span: 7d1s
+span:
+  end: day
+header:
+  show: true
+  title: Energie per dag in kWh
+apex_config:
+  chart:
+    type: area
+    height: 400
+  stroke:
+    show: true
+    width: 1
+    curve: smooth
+  legend:
+    show: false
+  dataLabels:
+    enabled: false
+  xaxis:
+    labels:
+      format: dd-MM
+  fill:
+    type: gradient
+    gradient:
+      shadeIntensity: 0.1
+      opacityFrom: 0.25
+      opacityTo: 1
+      inverseColors: true
+      stops:
+        - 0
+        - 90
+        - 100
+series:
+  - color: 'rgb(255,51,51)'
+    entity: sensor.daily_energy
+    name: Verbruik
+    type: column
+    group_by:
+      func: max
+      duration: 24h
+  - color: 'rgb(51,255,51)'
+    entity: sensor.daily_solar
+    name: Opbrengst
+    type: column
+    group_by:
+      func: max
+      duration: 24h
