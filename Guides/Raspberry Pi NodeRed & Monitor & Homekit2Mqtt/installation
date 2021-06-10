@@ -1,3 +1,9 @@
+## Oh My Zsh
+https://www.seeedstudio.com/blog/2020/03/06/prettify-raspberry-pi-shell-with-oh-my-zsh/
+## Theme
+https://gist.github.com/gieljnssns/d7b7517d697932c15b0cafaa414a2af4
+
+
 ### Static IP
 sudo nano /etc/dhcpcd.conf
 
@@ -22,6 +28,21 @@ fi
 iwconfig wlan0 power off
 exit 0
 
+Install Mosquitto 1.5+ (important step!):
+# get repo key
+wget http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
+
+#add repo
+sudo apt-key add mosquitto-repo.gpg.key
+
+#download appropriate lists file 
+cd /etc/apt/sources.list.d/
+sudo wget http://repo.mosquitto.org/debian/mosquitto-buster.list
+
+#update caches and install 
+apt-cache search mosquitto
+sudo apt-get update
+sudo apt-get install -f libmosquitto-dev mosquitto mosquitto-clients libmosquitto1
 
 Node Red
 https://nodered.org/docs/getting-started/raspberrypi
