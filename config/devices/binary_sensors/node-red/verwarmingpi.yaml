@@ -1,38 +1,38 @@
-- platform: mqtt
-  name: "verwarmingPi throttle"
-  state_topic: "verwarmingPi/system/throttle"
-  payload_off: "false"
-  payload_on: "true"
-  availability_topic: "verwarmingPi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: problem
+# - platform: mqtt
+#   name: "verwarmingPi throttle"
+#   state_topic: "verwarmingPi/system/throttle"
+#   payload_off: "false"
+#   payload_on: "true"
+#   availability_topic: "verwarmingPi/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: problem
 
-- platform: mqtt
-  name: "verwarmingPi undervoltage"
-  state_topic: "verwarmingPi/system/undervoltage"
-  payload_off: "false"
-  payload_on: "true"
-  availability_topic: "verwarmingPi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: problem
+# - platform: mqtt
+#   name: "verwarmingPi undervoltage"
+#   state_topic: "verwarmingPi/system/undervoltage"
+#   payload_off: "false"
+#   payload_on: "true"
+#   availability_topic: "verwarmingPi/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: problem
 
-- platform: mqtt
-  name: "verwarmingPi online"
-  state_topic: "verwarmingPi/status"
-  payload_off: "offline"
-  payload_on: "online"
-  availability_topic: "verwarmingPi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: connectivity
-  off_delay: 75
+# - platform: mqtt
+#   name: "verwarmingPi online"
+#   state_topic: "verwarmingPi/status"
+#   payload_off: "offline"
+#   payload_on: "online"
+#   availability_topic: "verwarmingPi/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: connectivity
+#   off_delay: 75
 
 - platform: template
   sensors:
     nodered_verwarming_down:
       friendly_name: "NodeRed unavailable"
       device_class: problem
-      value_template: >-
+      value_template: >
         {{ states("switch.reserve_mqtt") == 'unavailable'}}

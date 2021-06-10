@@ -1,65 +1,65 @@
-- platform: mqtt
-  name: "Beweging slaapkamer pir klein"
-  state_topic: "Slaapkamer/input/pir_klein"
-  payload_on: 1
-  payload_off: 0
-  availability_topic: "Slaapkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: motion
+# - platform: mqtt
+#   name: "Beweging slaapkamer pir klein"
+#   state_topic: "Slaapkamer/input/pir_klein"
+#   payload_on: 1
+#   payload_off: 0
+#   availability_topic: "Slaapkamer/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: motion
 
-- platform: mqtt
-  name: "Beweging slaapkamer pir groot"
-  state_topic: "Slaapkamer/input/pir_groot"
-  payload_on: 1
-  payload_off: 0
-  availability_topic: "Slaapkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: motion
+# - platform: mqtt
+#   name: "Beweging slaapkamer pir groot"
+#   state_topic: "Slaapkamer/input/pir_groot"
+#   payload_on: 1
+#   payload_off: 0
+#   availability_topic: "Slaapkamer/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: motion
 
-- platform: mqtt
-  name: "Slaapkamer throttle"
-  state_topic: "Slaapkamer/system/throttle"
-  payload_off: "false"
-  payload_on: "true"
-  availability_topic: "Slaapkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: problem
+# - platform: mqtt
+#   name: "Slaapkamer throttle"
+#   state_topic: "Slaapkamer/system/throttle"
+#   payload_off: "false"
+#   payload_on: "true"
+#   availability_topic: "Slaapkamer/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: problem
 
-- platform: mqtt
-  name: "Slaapkamer undervoltage"
-  state_topic: "Slaapkamer/system/undervoltage"
-  payload_off: "false"
-  payload_on: "true"
-  availability_topic: "Slaapkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: problem
+# - platform: mqtt
+#   name: "Slaapkamer undervoltage"
+#   state_topic: "Slaapkamer/system/undervoltage"
+#   payload_off: "false"
+#   payload_on: "true"
+#   availability_topic: "Slaapkamer/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: problem
 
-- platform: mqtt
-  name: "Slaapkamer online"
-  state_topic: "Slaapkamer/status"
-  payload_off: "offline"
-  payload_on: "online"
-  availability_topic: "Slaapkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: connectivity
-  off_delay: 75
+# - platform: mqtt
+#   name: "Slaapkamer online"
+#   state_topic: "Slaapkamer/status"
+#   payload_off: "offline"
+#   payload_on: "online"
+#   availability_topic: "Slaapkamer/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: connectivity
+#   off_delay: 75
 
 - platform: template
   sensors:
     nodered_slaapkamer_down:
       friendly_name: "NodeRed unavailable"
       device_class: problem
-      value_template: >-
+      value_template: >
         {{ states("binary_sensor.beweging_slaapkamer_pir_klein") == 'unavailable'}}
 
     pir_slaapkamer:
       friendly_name: "Pir slaapkamer"
       device_class: motion
       value_template: >
-          {{ is_state('binary_sensor.beweging_slaapkamer_pir_groot', 'on') 
-             or is_state('binary_sensor.beweging_slaapkamer_pir_klein', 'on') }}
+          {{  is_state('binary_sensor.beweging_slaapkamer_pir_groot', 'on') 
+              or is_state('binary_sensor.beweging_slaapkamer_pir_klein', 'on') }}

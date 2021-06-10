@@ -1,65 +1,65 @@
-- platform: mqtt
-  name: "Beweging badkamer pir klein"
-  state_topic: "Badkamer/input/pir_klein"
-  payload_on: 1
-  payload_off: 0
-  availability_topic: "Badkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: motion
+# - platform: mqtt
+#   name: "Beweging badkamer pir klein"
+#   state_topic: "Badkamer/input/pir_klein"
+#   payload_on: 1
+#   payload_off: 0
+#   availability_topic: "Badkamer/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: motion
 
-- platform: mqtt
-  name: "Beweging badkamer pir groot"
-  state_topic: "Badkamer/input/pir_groot"
-  payload_on: 1
-  payload_off: 0
-  availability_topic: "Badkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: motion
+# - platform: mqtt
+#   name: "Beweging badkamer pir groot"
+#   state_topic: "Badkamer/input/pir_groot"
+#   payload_on: 1
+#   payload_off: 0
+#   availability_topic: "Badkamer/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: motion
 
-- platform: mqtt
-  name: "Badkamer throttle"
-  state_topic: "Badkamer/system/throttle"
-  payload_off: "false"
-  payload_on: "true"
-  availability_topic: "Badkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: problem
+# - platform: mqtt
+#   name: "Badkamer throttle"
+#   state_topic: "Badkamer/system/throttle"
+#   payload_off: "false"
+#   payload_on: "true"
+#   availability_topic: "Badkamer/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: problem
 
-- platform: mqtt
-  name: "Badkamer undervoltage"
-  state_topic: "Badkamer/system/undervoltage"
-  payload_off: "false"
-  payload_on: "true"
-  availability_topic: "Badkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: problem
+# - platform: mqtt
+#   name: "Badkamer undervoltage"
+#   state_topic: "Badkamer/system/undervoltage"
+#   payload_off: "false"
+#   payload_on: "true"
+#   availability_topic: "Badkamer/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: problem
 
-- platform: mqtt
-  name: "Badkamer online"
-  state_topic: "Badkamer/status"
-  payload_off: "offline"
-  payload_on: "online"
-  availability_topic: "Badkamer/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: connectivity
-  off_delay: 75
+# - platform: mqtt
+#   name: "Badkamer online"
+#   state_topic: "Badkamer/status"
+#   payload_off: "offline"
+#   payload_on: "online"
+#   availability_topic: "Badkamer/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: connectivity
+#   off_delay: 75
 
 - platform: template
   sensors:
     nodered_badkamer_down:
       friendly_name: "NodeRed unavailable"
       device_class: problem
-      value_template: >-
+      value_template: >
         {{ states("binary_sensor.beweging_badkamer_pir_klein") == 'unavailable'}}
 
     pir_badkamer:
       friendly_name: "Pir badkamer"
       device_class: motion
       value_template: >
-          {{ is_state('binary_sensor.beweging_badkamer_pir_groot', 'on') 
-             or is_state('binary_sensor.beweging_badkamer_pir_klein', 'on') }}
+          {{  is_state('binary_sensor.beweging_badkamer_pir_groot', 'on') 
+              or is_state('binary_sensor.beweging_badkamer_pir_klein', 'on') }}

@@ -1,65 +1,65 @@
-- platform: mqtt
-  name: "Beweging Noor pir klein"
-  state_topic: "Noor/input/pir_klein"
-  payload_on: 1
-  payload_off: 0
-  availability_topic: "Noor/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: motion
+# - platform: mqtt
+#   name: "Beweging Noor pir klein"
+#   state_topic: "Noor/input/pir_klein"
+#   payload_on: 1
+#   payload_off: 0
+#   availability_topic: "Noor/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: motion
 
-- platform: mqtt
-  name: "Beweging Noor pir groot"
-  state_topic: "Noor/input/pir_groot"
-  payload_on: 1
-  payload_off: 0
-  availability_topic: "Noor/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: motion
+# - platform: mqtt
+#   name: "Beweging Noor pir groot"
+#   state_topic: "Noor/input/pir_groot"
+#   payload_on: 1
+#   payload_off: 0
+#   availability_topic: "Noor/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: motion
 
-- platform: mqtt
-  name: "Noor throttle"
-  state_topic: "Noor/system/throttle"
-  payload_off: "false"
-  payload_on: "true"
-  availability_topic: "Noor/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: problem
+# - platform: mqtt
+#   name: "Noor throttle"
+#   state_topic: "Noor/system/throttle"
+#   payload_off: "false"
+#   payload_on: "true"
+#   availability_topic: "Noor/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: problem
 
-- platform: mqtt
-  name: "Noor undervoltage"
-  state_topic: "Noor/system/undervoltage"
-  payload_off: "false"
-  payload_on: "true"
-  availability_topic: "Noor/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: problem
+# - platform: mqtt
+#   name: "Noor undervoltage"
+#   state_topic: "Noor/system/undervoltage"
+#   payload_off: "false"
+#   payload_on: "true"
+#   availability_topic: "Noor/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: problem
 
-- platform: mqtt
-  name: "Noor online"
-  state_topic: "Noor/status"
-  payload_off: "offline"
-  payload_on: "online"
-  availability_topic: "Noor/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: connectivity
-  off_delay: 75
+# - platform: mqtt
+#   name: "Noor online"
+#   state_topic: "Noor/status"
+#   payload_off: "offline"
+#   payload_on: "online"
+#   availability_topic: "Noor/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: connectivity
+#   off_delay: 75
 
 - platform: template
   sensors:
     nodered_noor_down:
       friendly_name: "NodeRed unavailable"
       device_class: problem
-      value_template: >-
+      value_template: >
         {{ states("binary_sensor.beweging_noor_pir_klein") == 'unavailable'}}
 
     pir_noor:
       friendly_name: "Pir Noor"
       device_class: motion
       value_template: >
-          {{ is_state('binary_sensor.beweging_noor_pir_groot', 'on') 
-             or is_state('binary_sensor.beweging_noor_pir_klein', 'on') }}
+          {{  is_state('binary_sensor.beweging_noor_pir_groot', 'on') 
+              or is_state('binary_sensor.beweging_noor_pir_klein', 'on') }}

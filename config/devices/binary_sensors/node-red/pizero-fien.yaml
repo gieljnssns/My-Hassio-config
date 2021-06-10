@@ -1,53 +1,53 @@
-- platform: mqtt
-  name: "Beweging Fien pir klein"
-  state_topic: "Fien/input/pir_klein"
-  payload_on: 1
-  payload_off: 0
-  availability_topic: "Fien/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: motion
+# - platform: mqtt
+#   name: "Beweging Fien pir klein"
+#   state_topic: "Fien/input/pir_klein"
+#   payload_on: 1
+#   payload_off: 0
+#   availability_topic: "Fien/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: motion
 
-- platform: mqtt
-  name: "Beweging Fien pir groot"
-  state_topic: "Fien/input/pir_groot"
-  payload_on: 1
-  payload_off: 0
-  availability_topic: "Fien/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: motion
+# - platform: mqtt
+#   name: "Beweging Fien pir groot"
+#   state_topic: "Fien/input/pir_groot"
+#   payload_on: 1
+#   payload_off: 0
+#   availability_topic: "Fien/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: motion
 
-- platform: mqtt
-  name: "Fien throttle"
-  state_topic: "Fien/system/throttle"
-  payload_off: "false"
-  payload_on: "true"
-  availability_topic: "Fien/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: problem
+# - platform: mqtt
+#   name: "Fien throttle"
+#   state_topic: "Fien/system/throttle"
+#   payload_off: "false"
+#   payload_on: "true"
+#   availability_topic: "Fien/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: problem
 
-- platform: mqtt
-  name: "Fien undervoltage"
-  state_topic: "Fien/system/undervoltage"
-  payload_off: "false"
-  payload_on: "true"
-  availability_topic: "Fien/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: problem
+# - platform: mqtt
+#   name: "Fien undervoltage"
+#   state_topic: "Fien/system/undervoltage"
+#   payload_off: "false"
+#   payload_on: "true"
+#   availability_topic: "Fien/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: problem
 
-- platform: mqtt
-  name: "Fien online"
-  state_topic: "Fien/status"
-  payload_off: "offline"
-  payload_on: "online"
-  availability_topic: "Fien/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: connectivity
-  off_delay: 75
+# - platform: mqtt
+#   name: "Fien online"
+#   state_topic: "Fien/status"
+#   payload_off: "offline"
+#   payload_on: "online"
+#   availability_topic: "Fien/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: connectivity
+#   off_delay: 75
 
 - platform: template
   sensors:
@@ -61,5 +61,5 @@
       friendly_name: "Pir Fien"
       device_class: motion
       value_template: >
-          {{ is_state('binary_sensor.beweging_fien_pir_groot', 'on') 
-             or is_state('binary_sensor.beweging_fien_pir_klein', 'on') }}
+          {{  is_state('binary_sensor.beweging_fien_pir_groot', 'on') 
+              or is_state('binary_sensor.beweging_fien_pir_klein', 'on') }}

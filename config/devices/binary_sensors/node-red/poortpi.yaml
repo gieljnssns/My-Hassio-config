@@ -1,54 +1,53 @@
-- platform: mqtt
-  name: "Beweging fotocel"
-  state_topic: "PoortjePi/input/fotocel"
-  payload_on: 1
-  payload_off: 0
-  availability_topic: "PoortjePi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: motion
+# - platform: mqtt
+#   name: "Beweging fotocel"
+#   state_topic: "PoortjePi/input/fotocel"
+#   payload_on: 1
+#   payload_off: 0
+#   availability_topic: "PoortjePi/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: motion
 
-- platform: mqtt
-  name: "PoortPi throttle"
-  state_topic: "PoortjePi/system/throttle"
-  payload_off: "false"
-  payload_on: "true"
-  availability_topic: "PoortjePi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: problem
+# - platform: mqtt
+#   name: "PoortPi throttle"
+#   state_topic: "PoortjePi/system/throttle"
+#   payload_off: "false"
+#   payload_on: "true"
+#   availability_topic: "PoortjePi/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: problem
 
-- platform: mqtt
-  name: "PoortPi undervoltage"
-  state_topic: "PoortjePi/system/undervoltage"
-  payload_off: "false"
-  payload_on: "true"
-  availability_topic: "PoortjePi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: problem
+# - platform: mqtt
+#   name: "PoortPi undervoltage"
+#   state_topic: "PoortjePi/system/undervoltage"
+#   payload_off: "false"
+#   payload_on: "true"
+#   availability_topic: "PoortjePi/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: problem
 
-- platform: mqtt
-  name: "PoortPi online"
-  state_topic: "PoortjePi/status"
-  payload_off: "offline"
-  payload_on: "online"
-  availability_topic: "PoortjePi/status"
-  payload_available: "online"
-  payload_not_available: "offline"
-  device_class: connectivity
-  off_delay: 75
+# - platform: mqtt
+#   name: "PoortPi online"
+#   state_topic: "PoortjePi/status"
+#   payload_off: "offline"
+#   payload_on: "online"
+#   availability_topic: "PoortjePi/status"
+#   payload_available: "online"
+#   payload_not_available: "offline"
+#   device_class: connectivity
+#   off_delay: 75
 
 - platform: template
   sensors:
     fotocel_poort_error:
       friendly_name: Foutcel in fout
-      entity_id: input_boolean.fotocel_poort_error
       icon_template: mdi:alert-circle-outline
       value_template: "{{ is_state('input_boolean.fotocel_poort_error', 'on') }}"
     
     nodered_poort_down:
       friendly_name: "NodeRed unavailable"
       device_class: problem
-      value_template: >-
+      value_template: >
         {{ states("binary_sensor.beweging_fotocel") == 'unavailable'}}
