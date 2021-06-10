@@ -1,0 +1,51 @@
+blueprint:
+  name: Occupancy
+  domain: automation
+  input:
+    motion_entity:
+      name: Motion entity
+      description: Motion entity that turns on occupancy.
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: motion
+
+    input_boolean_target:
+      name: Bool
+      selector:
+        target:
+          entity:
+            domain: input_boolean
+
+    no_motion_wait:
+      name: Wait time
+      description: Time to wait until the occupancy should be turned off.
+      default: 300
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+
+# If motion is detected within the delay,
+# we restart the script.
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: !input motion_entity
+    from: "off"
+    to: "on"
+
+action:
+  - service: input_boolean.turn_on
+    target: !input input_boolean_target
+  - wait_for_trigger:
+      platform: state
+      entity_id: !input motion_entity
+      from: "on"
+      to: "off"
+  - delay: !input no_motion_wait
+  - service: input_boolean.turn_off
+    target: !input input_boolean_target

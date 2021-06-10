@@ -1,0 +1,51 @@
+blueprint:
+  name: Motion-activated Light bathroom
+  domain: automation
+  source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/automation/blueprints/motion_light.yaml
+  input:
+    entity:
+      name: Entity
+      selector:
+        entity:
+
+    light_target:
+      name: Light
+      selector:
+        target:
+          entity:
+            domain: light
+    no_motion_wait:
+      name: Wait time
+      description: Time to wait until the light should be turned off.
+      default: 210
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+
+# If motion is detected within the delay,
+# we restart the script.
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: !input entity
+    from: "off"
+    to: "on"
+    
+action:
+  - service: light.turn_on
+    target: !input light_target
+  - wait_for_trigger:
+      platform: state
+      entity_id: !input entity
+      from: "on"
+      to: "off"
+  - delay: !input no_motion_wait
+  - condition: state
+    entity_id: binary_sensor.douchen
+    state: "off"
+  - service: light.turn_off
+    target: !input light_target
