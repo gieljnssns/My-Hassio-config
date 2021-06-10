@@ -1,7 +1,7 @@
 # - {"event": "Slaapkamer_uit"}
 
 alias: "Verwarming Slaapkamer Aan/Uit"
-initial_state: "on"
+id: 4231743f-fe60-4208-96b7-fc82b9246691
 trigger:
   - platform: time
     at: "06:02"
@@ -14,7 +14,7 @@ action:
       {% else %}
         automation.turn_off
       {% endif %}
-    entity_id: automation.verwarming_bij_beweging_slaapkamer
+    entity_id: automation.verwarming_bij_aanwezigheid_slaapkamer
   - condition: template
     value_template: "{{as_local(states.sensor.time.last_changed).hour != 6}}"
   - service: climate.set_temperature

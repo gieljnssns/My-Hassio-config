@@ -1,0 +1,21 @@
+# - {"event": "Badkamer_uit"}
+
+alias: "Verwarming garage Aan/Uit"
+id: ce345a61-9254-48d5-88ce-060b3a5bfcbc
+trigger:
+  - platform: template
+    value_template: "{{ now().weekday() == 4 and now().hour == 14 }}"
+  - platform: template
+    value_template: "{{ now().weekday() == 6 and now().hour == 23 }}"
+action:
+  - service_template: >
+      {% if now().weekday() == 4 %}
+        automation.turn_on
+      {% else %}
+        automation.turn_off
+      {% endif %}
+    entity_id: automation.verwarming_bij_aanwezigheid_garage
+  - service: climate.set_hvac_mode
+    entity_id: climate.garage
+    data:
+      hvac_mode: "off"

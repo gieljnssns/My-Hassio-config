@@ -1,0 +1,14 @@
+  alias: Verwarming altijd uit bij afwezigheid garage
+  id: ed0fdef6-d669-4850-b375-86fb3b4c19f1
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.beweging_garage
+      to: 'off'
+  action:
+    service: climate.turn_off
+    entity_id: climate.garage
+    # data_template:
+    #   entity_id: climate.garage
+    #   hvac_mode: off
+    
+

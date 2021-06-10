@@ -1,19 +1,19 @@
-  alias: Verwarming bij beweging badkamer
-  initial_state: 'on' 
+  alias: Verwarming bij aanwezigheid badkamer
+  id: b57adf81-739a-4fa1-befa-993d097b3946
   trigger:
     - platform: state
-      entity_id: binary_sensor.beweging_badkamer
+      entity_id: binary_sensor.aanwezigheid_badkamer
       to: 'on'
     - platform: state
-      entity_id: binary_sensor.beweging_badkamer
+      entity_id: binary_sensor.aanwezigheid_badkamer
       to: 'off'
   action:
     service: climate.set_temperature
     data_template:
       entity_id: climate.badkamer
       temperature: >
-        {% if is_state('binary_sensor.beweging_badkamer', 'on') %}
+        {% if is_state('binary_sensor.aanwezigheid_badkamer', 'on') %}
           {{states('input_select.setpunt_badkamer')}}
-        {% elif is_state('binary_sensor.beweging_badkamer', 'off') %}
+        {% elif is_state('binary_sensor.aanwezigheid_badkamer', 'off') %}
           10
         {% endif %}

@@ -1,0 +1,19 @@
+alias: Maximum piek
+id: cfa1b69b-abe9-44de-9bbe-44c5be09ea9d
+description: ''
+mode: parallel
+trigger:
+  - platform: state
+    entity_id: sensor.max_peak
+      # {{  states("sensor.max_peak") | float > states("input_number.max_peak") | float }}
+condition:
+  - condition: template
+    value_template: >
+      {{  states("sensor.max_peak") | float > states("input_number.max_peak") | float }}
+action:
+  - service: input_number.set_value
+    target:
+      entity_id: input_number.max_peak
+    data:
+        value: >
+          {{ states("sensor.max_peak") | float }}

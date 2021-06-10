@@ -80,16 +80,6 @@
             {{ 0 | float }}
         {% endif %}
 
-    zwembad_template_power:
-      friendly_name: Zwembadpomp vermogen
-      unit_of_measurement: "W"
-      value_template: >
-        {% if states("switch.zwembad") == "on" %}
-            {{ 190 | float }}
-        {% else %}
-            {{ 0 | float }}
-        {% endif %}
-
     verlichting_noor_template_power:
       friendly_name: Verlichting Noor vermogen
       unit_of_measurement: "W"
@@ -124,7 +114,7 @@
       friendly_name: Verlichting zithoek spots vermogen
       unit_of_measurement: "W"
       value_template: >
-        {% if states("light.spot_slaapkamer") == "on" %}
+        {% if states("light.spots_tv") == "on" %}
             {{ 30 | float }}
         {% else %}
             {{ 0 | float }}

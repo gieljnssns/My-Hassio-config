@@ -1,7 +1,7 @@
 # - {"event": "Fien_uit"}
 
 alias: "Verwarming Fien Aan/Uit"
-initial_state: "on"
+id: 98518b24-44a5-4878-839f-d23dd4e3390f
 trigger:
   - platform: time
     at: "06:02"
@@ -14,7 +14,7 @@ action:
       {% else %}
         automation.turn_off
       {% endif %}
-    entity_id: automation.verwarming_bij_beweging_fien
+    entity_id: automation.verwarming_bij_aanwezigheid_fien
   - condition: template
     value_template: "{{as_local(states.sensor.time.last_changed).hour != 6}}"
   - service: climate.set_temperature

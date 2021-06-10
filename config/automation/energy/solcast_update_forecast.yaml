@@ -1,0 +1,20 @@
+  id: solcast_update_forecast
+  alias: 'Solcast Update Forecast'
+  
+  description: >
+    Update forecast each 45 min
+    
+  trigger:
+    - platform: time_pattern
+      minutes: 45
+  
+  condition:
+    - condition: template
+      value_template: "{{ state_attr('sun.sun', 'elevation') > 3 }}"
+    # condition: state  # 'day' condition: from sunrise until sunset
+    # entity_id: sun.sun
+    # state: "above_horizon"
+
+  action:
+    - service: solcast.update_forecast
+    - service: solcast_garage.update_forecast      

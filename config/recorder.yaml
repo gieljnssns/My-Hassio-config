@@ -1,5 +1,6 @@
 db_url: !secret mysql
-commit_interval: 5
+commit_interval: 60
+purge_keep_days: 7
 exclude:
   domains:
     - camera
@@ -10,6 +11,56 @@ exclude:
     - weather
     - zone
   entities:
+    # - sensor.eigen_verbruik
+    # - sensor.huidig_verbruik
+    # - sensor.huidige_opbrengst
+    # - sensor.net_afname
+    # - sensor.net_terugsturen
+    # - sensor.huidig_fluivius
+    # - sensor.l1_net_afname
+    # - sensor.l1_net_terugsturen
+    # - sensor.l1_vermogen
+    # - sensor.s1_vermogen
+    # - sensor.v1_vermogen
+    # - sensor.l2_net_afname
+    # - sensor.l2_net_terugsturen
+    # - sensor.l2_vermogen
+    # - sensor.s2_vermogen
+    # - sensor.v2_vermogen
+    # - sensor.l3_net_afname
+    # - sensor.l3_net_terugsturen
+    # - sensor.l3_vermogen
+    # - sensor.s3_vermogen
+    # - sensor.v3_vermogen
+###  Integration (energy_counter)  ###
+    - sensor.eigen_verbruik_kwh
+    - sensor.verbruik_kwh
+    - sensor.grid_consumption_kwh
+    - sensor.grid_production_kwh
+    - sensor.opbrengst_kwh
+    - sensor.warmtepomp_kwh
+    - sensor.warmtepompboiler_kwh
+    - sensor.fien_verwarming_kwh
+    - sensor.noor_verwarming_kwh
+    - sensor.badkamer_verwarming_kwh
+    - sensor.slaapkamer_verwarming_kwh
+    - sensor.wc_verwarming_kwh
+    - sensor.bureau_verwarming_kwh
+    - sensor.verlichting_kwh
+    - sensor.verluchting_kwh
+    - sensor.zwembad_kwh
+    - sensor.koffiezet_kwh
+    - sensor.regenwaterpomp_kwh
+    - sensor.keuken_toestellen_kwh
+    - sensor.afwasmachien_kwh
+    - sensor.wasmachien_kwh
+    - sensor.droogkast_kwh
+    - sensor.ijskast_kwh
+    - sensor.rest_kwh
+    - sensor.keuken_oven_kwh
+    - sensor.keuken_microgolf_kwh
+    - sensor.living_ventilator_kerstverlichting_kwh
+
     - binary_sensor.bluetooth_scan
     - sensor.dark_sky_cloud_coverage_1
     - sensor.dark_sky_cloud_coverage_2

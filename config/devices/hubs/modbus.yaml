@@ -1,0 +1,84 @@
+type: tcp
+host: 192.168.79.55
+# host: 192.168.200.1
+port: 502
+#close_comm_on_error: false
+# delay: 20
+#timeout: 20
+name: sun2000
+sensors:
+  - name: Huawei string 1 DC spanning
+    slave: 1
+    scan_interval: 30
+    unit_of_measurement: V
+    device_class: voltage
+    address: 32016
+    data_type: int
+    scale: 0.1
+    precision: 1
+  # - name: Huawei string 1 stroom
+  #   unit_of_measurement: A
+  #   device_class: current
+  #   address: 32017
+  #   data_type: int
+  #   scale: 0.01
+  #   precision: 2
+  - name: Huawei string 2 DC spanning
+    slave: 1
+    scan_interval: 30
+    unit_of_measurement: V
+    device_class: voltage
+    address: 32018
+    data_type: int
+    scale: 0.1
+    precision: 1
+  # - name: Huawei string 2 stroom
+  #   unit_of_measurement: A
+  #   device_class: current
+  #   address: 32019
+  #   data_type: int
+  #   scale: 0.01
+  #   precision: 2
+  - name: Huawei vermogen
+    slave: 1
+    scan_interval: 15
+    unit_of_measurement: W
+    device_class: power
+    count: 2
+    address: 32080
+    data_type: int
+  - name: Huawei DC ingangsvermogen
+    slave: 1
+    scan_interval: 30
+    unit_of_measurement: W
+    device_class: power
+    count: 2
+    address: 32064
+    data_type: int
+  - name: Huawei efficientie
+    slave: 1
+    scan_interval: 300
+    unit_of_measurement: "%"
+    scale: 0.01
+    address: 32086
+    data_type: uint
+  - name: Huawei dagelijkse opbrengst
+    slave: 1
+    scan_interval: 300
+    unit_of_measurement: kWh
+    device_class: energy
+    count: 2
+    address: 32114
+    data_type: uint
+    scale: 0.01
+    precision: 2
+  - name: Huawei totale opbrengst
+    slave: 1
+    scan_interval: 300
+    unit_of_measurement: kWh
+    device_class: energy
+    count: 2
+    address: 32106
+    data_type: uint
+    scale: 0.01
+    precision: 2

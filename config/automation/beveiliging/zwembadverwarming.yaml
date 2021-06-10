@@ -1,0 +1,56 @@
+alias: Beveiliging flow controle zwembadverwarming
+description: ''
+id: b4712918-29d6-4346-bb2d-99bf4d7cc093
+mode: parallel
+trigger:
+  - type: not_connected
+    platform: device
+    device_id: a8435c3149f04c5e866491faeb9054da
+    entity_id: binary_sensor.esp_zwembad_status
+    domain: binary_sensor
+    for:
+      seconds: 20
+  - platform: device
+    type: turned_off
+    device_id: a8435c3149f04c5e866491faeb9054da
+    entity_id: switch.zwembad
+    domain: switch
+    for:
+      seconds: 5
+  - platform: state
+    entity_id: switch.zwembad
+    from: 'on'
+    to: "off"
+    for:
+      seconds: 5
+  - platform: state
+    entity_id: switch.zwembad
+    from: 'on'
+    to: "unavailable"
+    for:
+      seconds: 20
+  - type: not_connected
+    platform: device
+    device_id: d241b131e2b1af79ae3036beab81fdc0
+    entity_id: binary_sensor.esp_zwembadverwarming_status
+    domain: binary_sensor
+    for:
+      seconds: 20
+  - platform: state
+    entity_id: switch.zwembadverwarming
+    to: "unavailable"
+    for:
+      seconds: 20
+condition:
+  - alias: "Warmtepomp staat op"
+    condition: state
+    entity_id: switch.zwembadverwarming
+    state: "on"
+action:
+  - service: switch.turn_off
+    target:
+      entity_id: switch.stopcontacten_garage
+  - service: switch.turn_off
+    target:
+      entity_id: switch.zwembadverwarming
+max: 10

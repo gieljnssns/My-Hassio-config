@@ -1,0 +1,12 @@
+  alias: "Update OpenUV every 20 minutes while the sun is at least 10 degrees above the horizon"
+  id: a76736f6-a5c1-40a6-b764-2f4c3786c04b
+  trigger:
+    platform: time_pattern
+    minutes: "/30"
+  condition:
+    condition: numeric_state
+    entity_id: sun.sun
+    value_template: "{{ state.attributes.elevation }}"
+    above: 10
+  action:
+    service: openuv.update_uv_index_data

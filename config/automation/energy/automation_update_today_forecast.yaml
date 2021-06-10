@@ -1,0 +1,35 @@
+  id: solcast_update_today_forecast
+  alias: 'Solcast Update Today Forecast'
+  mode: parallel
+  
+  description: >
+    Add production so far to today forecast to give total forecast
+    
+  trigger:
+    platform: state
+    entity_id: 
+      - sensor.solcast_solaredge_forecast
+      - sensor.solcast_huawei_forecast
+
+  action:
+    - choose:
+        - conditions: >
+            {{ trigger.entity_id == 'sensor.solcast_solaredge_forecast'  }}
+          sequence:
+            - service: input_number.set_value
+              data:
+                entity_id: input_number.solcast_solaredge_latest_today_forecast
+                value: "{{ (states('sensor.solaredge_production_daily') | float + states('sensor.solcast_solaredge_forecast') | float ) | round(1) }}"
+      default:
+        - delay:
+            seconds: 3
+        - service: input_number.set_value
+          data:
+            entity_id: input_number.solcast_huawei_latest_today_forecast
+            value: "{{ (states('sensor.huawei_dagelijkse_opbrengst') | float + states('sensor.solcast_huawei_forecast') | float ) | round(1) }}"
+        - service: input_number.set_value
+          data:
+            entity_id: input_number.solcast_latest_today_forecast
+            value: "{{ (states('sensor.huawei_dagelijkse_opbrengst') | float + states('sensor.solaredge_production_daily') | float + states('sensor.solcast_solaredge_forecast') | float + states('sensor.solcast_huawei_forecast') | float ) | round(1) }}"
+
+

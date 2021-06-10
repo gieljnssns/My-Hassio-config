@@ -1,0 +1,76 @@
+alias: Zwembadverwarming 
+id: c3214453-f469-4d01-93db-bc91d57b0eb5
+description: ''
+mode: single
+trigger:
+  - platform: template
+    value_template: >
+      {{ states("sensor.l1_net_terugsturen") | float > 2000 | float }}
+    for:
+      minutes: 15
+condition:
+  - condition: state
+    entity_id: input_boolean.op_verlof
+    state: 'off'
+  - condition: state
+    entity_id: switch.zwembad
+    state: "on"
+  - condition: template
+    value_template: >
+      {{  now().month >= 5 or now().month <= 9 }}
+  - condition: time
+    after: " 12:00:00"
+    before: " 17:00:00"
+  - condition: numeric_state
+    entity_id: sensor.in
+    below: 30
+  - condition: template
+    value_template: >
+      {{ as_timestamp(now()) - as_timestamp(state_attr('automation.zwembadverwarming', 'last_triggered')) | float > 36000 }}
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >-
+              {{ (states("sensor.solcast_solaredge_forecast") | float +
+                  states("sensor.solcast_huawei_forecast") | float) | round(2) > 50 | float }}
+          - condition: state
+            entity_id: input_boolean.zwembad_warm_water_2u, input_boolean.zwembad_warm_water_3u, input_boolean.zwembad_warm_water_4u, input_boolean.zwembad_warm_water_5u
+            state: "off"
+        sequence:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.zwembad_warm_water_5u
+      - conditions:
+          - condition: template
+            value_template: >-
+              {{ (states("sensor.solcast_solaredge_forecast") | float +
+                  states("sensor.solcast_huawei_forecast") | float) | round(2) > 40 | float }}
+          - condition: state
+            entity_id: input_boolean.zwembad_warm_water_2u, input_boolean.zwembad_warm_water_3u, input_boolean.zwembad_warm_water_4u, input_boolean.zwembad_warm_water_5u
+            state: "off"
+        sequence:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.zwembad_warm_water_4u
+      - conditions:
+          - condition: template
+            value_template: >-
+              {{ (states("sensor.solcast_solaredge_forecast") | float +
+                  states("sensor.solcast_huawei_forecast") | float) | round(2) > 30 | float }}
+          - condition: state
+            entity_id: input_boolean.zwembad_warm_water_2u, input_boolean.zwembad_warm_water_3u, input_boolean.zwembad_warm_water_4u, input_boolean.zwembad_warm_water_5u
+            state: "off"
+        sequence:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.zwembad_warm_water_3u
+    default:
+      - condition: time
+        before: "19:00:00"
+      - condition: state
+        entity_id: input_boolean.zwembad_warm_water_2u, input_boolean.zwembad_warm_water_3u, input_boolean.zwembad_warm_water_4u, input_boolean.zwembad_warm_water_5u
+        state: "off"
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.zwembad_warm_water_2u

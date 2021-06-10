@@ -70,11 +70,43 @@
       value_template: >
         {{ states.sensor.keuken_luchtvochtigheid_stats.attributes.change | float <= -5 | float }}
 
-    should_run_dehumidifier_zolder:
-      friendly_name: "Luchtontvochtiger moet aan"
+    # should_run_dehumidifier_zolder:
+    #   friendly_name: "Luchtontvochtiger moet aan"
+    #   value_template: >
+    #     {{  (states('sensor.zolder_luchtvochtigheid') | float) >
+    #         (states('sensor.max_humidity_allowed_zolder') | float)
+    #         + (1.0 if is_state('binary_sensor.should_run_dehumidifier_zolder', false) else 0)
+    #         - (4.0 if is_state('binary_sensor.should_run_dehumidifier_zolder', true) else 0)  
+    #         }}
+
+    warmtepomp_aan:
+      device_class: power
+      unique_id: c8bb853c-63ec-4fd1-b18f-05624ee48fde
+      friendly_name: Warmtepomp aan
       value_template: >
-        {{  (states('sensor.zolder_luchtvochtigheid') | float) >
-            (states('sensor.max_humidity_allowed_zolder') | float)
-            + (1.0 if is_state('binary_sensor.should_run_dehumidifier_zolder', false) else 0)
-            - (4.0 if is_state('binary_sensor.should_run_dehumidifier_zolder', true) else 0)  
-            }}
+        {{ states('sensor.warmtepomp_huidig_verbruik') | float > 25 }} 
+    
+    warmtepompboiler_aan:
+      device_class: power
+      unique_id: 7b3bdc4b-5335-4101-890b-75540ced60e1
+      friendly_name: Warmtepomp boiler aan
+      value_template: >
+        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float > 25 }}
+
+    warmtepomp_aan_delay_off:
+      device_class: power
+      unique_id: befaae46-c7b5-4d6c-80ad-2b93d3eb6b96
+      friendly_name: Warmtepomp aan
+      value_template: >
+        {{ states('sensor.warmtepomp_huidig_verbruik') | float > 25 }}
+      delay_off:
+        minutes: 7
+    
+    warmtepompboiler_aan_delay_off:
+      device_class: power
+      unique_id: a1ca83c5-df8a-45e5-9845-21e49169a63e
+      friendly_name: Warmtepomp boiler aan
+      value_template: >
+        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float > 25 }}
+      delay_off:
+        minutes: 30

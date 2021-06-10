@@ -1,7 +1,7 @@
 # - {"event": "Noor_uit"}
 
 alias: "Verwarming Noor Aan/Uit"
-initial_state: "on"
+id: 9d7c82a3-25c9-4fce-9ff0-d857ee188cb4
 trigger:
   - platform: time
     at: "06:02"
@@ -14,7 +14,7 @@ action:
       {% else %}
         automation.turn_off
       {% endif %}
-    entity_id: automation.verwarming_bij_beweging_noor
+    entity_id: automation.verwarming_bij_aanwezigheid_noor
   - condition: template
     value_template: "{{as_local(states.sensor.time.last_changed).hour != 6}}"
   - service: climate.set_temperature

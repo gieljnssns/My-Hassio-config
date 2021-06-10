@@ -1,0 +1,42 @@
+alias: Warmtepomp warm water
+id: 8766541b-6bb2-4bc8-87af-f29e0accd997
+description: ''
+mode: single
+trigger:
+  - platform: numeric_state
+    entity_id: sensor.l1_net_terugsturen
+    above: 1200
+    for:
+      minutes: 5
+  - platform: state
+    entity_id: binary_sensor.douchen
+    to: 'on'
+condition:
+  - condition: state
+    entity_id: input_boolean.op_verlof
+    state: 'off'
+  - condition: numeric_state
+    entity_id: sensor.thermostaat
+    below: 46
+  - condition: template
+    value_template: >
+      {{  states("input_boolean.warm_water_5u") == "off" and states("input_boolean.warm_water_2u") == "off" }}
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >-
+              {{ (states("sensor.solcast_solaredge_forecast") | float +
+                  states("sensor.solcast_huawei_forecast") | float) | round(2) > 20 | float }}
+        sequence:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.warm_water_5u
+    default:
+      - condition: time
+        before: "22:00:00"
+      - condition: time
+        after: "08:00:00"
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.warm_water_2u

@@ -17,11 +17,42 @@
   unit_prefix: k
   round: 3
 
+# - platform: integration
+#   source: sensor.grid_consumption
+#   name: Grid consumption kWh old
+#   unit_prefix: k
+#   round: 3
+
 - platform: integration
-  source: sensor.grid_consumption
+  source: sensor.net_afname
   name: Grid consumption kWh
   unit_prefix: k
   round: 3
+
+- platform: integration
+  source: sensor.net_terugsturen
+  name: Grid production kWh
+  unit_prefix: k
+  round: 3
+
+###  Fluvius TEST  ###
+# - platform: integration
+#   source: sensor.eigen_verbruik_test
+#   name: Eigen verbruik kWh test
+#   unit_prefix: k
+#   round: 3
+
+# - platform: integration
+#   source: sensor.huidig_verbruik_test
+#   name: Verbruik kWh test
+#   unit_prefix: k
+#   round: 3
+
+# - platform: integration
+#   source: sensor.huidige_opbrengst_test
+#   name: Opbrengst kWh test
+#   unit_prefix: k
+#   round: 3
 
 ###  Verwarming  ###
 - platform: integration
@@ -93,9 +124,9 @@
   round: 3
 
 - platform: integration
-  source: sensor.zwembad_template_power
+  source: sensor.zwembad_alles_vermogen
   method: left
-  name: Zwembadpomp kWh
+  name: Zwembad kWh
   unit_prefix: k
   round: 3
 
@@ -147,5 +178,25 @@
 - platform: integration
   source: sensor.rest_vermogen
   name: Rest kWh
+  unit_prefix: k
+  round: 3
+
+- platform: integration
+  source: sensor.keuken_oven_vermogen
+  name: Keuken oven kWh
+  method: left
+  unit_prefix: k
+  round: 3
+
+- platform: integration
+  source: sensor.keuken_microgolf_vermogen
+  name: Keuken microgolf kWh
+  method: left
+  unit_prefix: k
+  round: 3
+
+- platform: integration
+  source: sensor.ventilator_kerstverlichting_vermogen
+  name: Living Ventilator Kerstverlichting kWh
   unit_prefix: k
   round: 3
