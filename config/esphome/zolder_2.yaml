@@ -1,0 +1,49 @@
+substitutions:
+  devicename: zolder_2
+  platform: ESP8266
+  board: nodemcuv2
+  upper_devicename: Esp zolder
+  ssid: !secret ssid-waskot
+
+packages:
+  wifi: !include common/wifi-waskot.yaml
+  device_base: !include common/device_base.yaml
+
+i2c:
+  sda: 4
+  scl: 5
+  scan: True
+  id: bus_a
+
+switch:
+  - platform: gpio
+    pin:
+      number: D5
+      # inverted: yes
+    name: "Zolder verluchting"
+  
+sensor:
+  - platform: bme280
+    temperature:
+      name: "Zolder temperatuur"
+      id: bme280_temperature
+      oversampling: 1x
+    pressure:
+      name: "Zolder luchtdruk"
+      id: bme280_pressure
+      oversampling: 1x
+    humidity:
+      name: "Zolder luchtvochtigheid"
+      id: bme280_humidity
+      oversampling: 1x
+    address: 0x76
+    i2c_id: bus_a
+    update_interval: 30s
+  
+  - platform: template
+    name: "Zolder dauwpunt"
+    lambda: return (243.5*(log(id(bme280_humidity).state/100)+((17.67*id(bme280_temperature).state)/
+      (243.5+id(bme280_temperature).state)))/(17.67-log(id(bme280_humidity).state/100)-
+      ((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state))));
+    unit_of_measurement: °C
+    icon: 'mdi:thermometer-alert'

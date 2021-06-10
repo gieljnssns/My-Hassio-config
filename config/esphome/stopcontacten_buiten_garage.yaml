@@ -1,47 +1,13 @@
 substitutions:
   devicename: stopcontacten_buiten_garage
-  ip: 192.168.79.86
-  
-  ssid: !secret ssid
-  password: !secret password
-  
-esphome:
-  name: ${devicename}
   platform: ESP8266
   board: nodemcuv2
+  upper_devicename: Esp garage
+  ssid: !secret ssid-garage
 
-wifi:
-  ssid: ${ssid}
-  password: ${password}
-  manual_ip:
-    static_ip: ${ip}
-    gateway: 192.168.79.1
-    subnet: 255.255.255.0
-    dns1: 8.8.8.8
-    dns2: 8.8.4.4
-    
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
-  ap:
-    ssid: ${devicename}
-    password: ${password}
-    manual_ip: 
-      static_ip: 192.168.100.2
-      gateway: 192.168.100.1
-      subnet: 255.255.255.0
-      dns1: 8.8.8.8
-      dns2: 8.8.4.4
-
-captive_portal:
-
-# Enable logging
-logger:
-
-# Enable Home Assistant API
-api:
-  password: ${password}
-
-ota:
-  password: ${password}
+packages:
+  wifi: !include common/wifi-garage.yaml
+  device_base: !include common/device_base.yaml
 
 switch:
   - platform: gpio
@@ -50,6 +16,12 @@ switch:
       # inverted: yes
     name: "Stopcontacten garage"
     id: stopcontacten
+  - platform: gpio
+    pin:
+      number: D2
+      # inverted: yes
+    name: "Garage verwarming"
+    id: heater
     
 binary_sensor:
   - platform: gpio

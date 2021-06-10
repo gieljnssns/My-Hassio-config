@@ -1,70 +1,27 @@
 substitutions:
   devicename: shelly_plug_s_7ae974
+  platform: ESP8266
+  board: esp8285
+  upper_devicename: Shelly Keuken koffiezet
   channel_1: Koffiezet
-  ip: 192.168.79.66
-  
-  ssid: !secret ssid
-  password: !secret password
-  
   # Higher value gives lower watt readout
   current_res: '0.00290'
   # Lower value gives lower voltage readout
   voltage_div: '940'
   max_power: '2000'
-  max_temp: '70.0'
+  max_temp: '75.0'
+  ssid: !secret ssid-slaapkamer
 
-esphome:
-  name: ${devicename}
-  platform: ESP8266
-  board: esp8285
-
-wifi:
-  ssid: ${ssid}
-  password: ${password}
-  manual_ip:
-    static_ip: ${ip}
-    gateway: 192.168.79.1
-    subnet: 255.255.255.0
-    dns1: 8.8.8.8
-    dns2: 8.8.4.4
-    
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
-  ap:
-    ssid: ${devicename}
-    password: ${password}
-    manual_ip: 
-      static_ip: 192.168.100.2
-      gateway: 192.168.100.1
-      subnet: 255.255.255.0
-      dns1: 8.8.8.8
-      dns2: 8.8.4.4
-
-captive_portal:
-
-# Enable logging
-logger:
-  level: DEBUG
-
-# Enable Home Assistant API
-api:
-  password: ${password}
-
-ota:
-  password: ${password}
-
-web_server:
-  port: 80
-
-time:
-  - platform: sntp
-    id: my_time
+packages:
+  wifi: !include common/wifi-slaapkamer.yaml
+  device_base: !include common/device_base.yaml
     
 binary_sensor:
   - platform: gpio
     pin:
       number: GPIO13
       inverted: True
-    name: "${devicename}_button"
+    name: "${upper_devicename} knopje"
     on_press:
       - switch.toggle: relay
 
@@ -90,14 +47,10 @@ switch:
       - output.turn_off: led
 
 sensor:
-  - platform: wifi_signal
-    name: '${devicename} WiFi Signal'
-    update_interval: 300s
-  
   # NTC Temperature
   - platform: ntc
     sensor: temp_resistance_reading
-    name: ${devicename} temperatuur
+    name: ${upper_devicename} temperatuur
     unit_of_measurement: "°C"
     accuracy_decimals: 1
     icon: "mdi:thermometer"
@@ -112,7 +65,7 @@ sensor:
             - homeassistant.service:
                 service: persistent_notification.create
                 data:
-                  title: Message from ${devicename}
+                  title: Message from ${upper_devicename}
                 data_template:
                   message: Switch turned off because temperature exceeded ${max_temp}°C
   - platform: resistance
@@ -155,7 +108,7 @@ sensor:
             - homeassistant.service:
                 service: persistent_notification.create
                 data:
-                  title: Message from ${devicename}
+                  title: Message from ${upper_devicename}
                 data_template:
                   message: Switch turned off because power exceeded ${max_power}W
     update_interval: 10s

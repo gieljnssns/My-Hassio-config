@@ -1,0 +1,135 @@
+substitutions:
+  devicename: smappee_solar
+  platform: ESP8266
+  board: nodemcuv2
+  upper_devicename: Smappee solar
+  ssid: !secret ssid-waskot
+
+packages:
+  wifi: !include common/wifi-waskot.yaml
+  device_base: !include common/device_base.yaml
+  
+logger:
+  baud_rate: 0
+
+uart:
+  - id: ubus
+    tx_pin: GPIO1
+    rx_pin: GPIO3
+    baud_rate: 9600
+    stop_bits: 1
+
+modbus:
+  id: mbus
+  uart_id: ubus
+    
+sensor:
+  - platform: pzemac
+    address: 1
+    modbus_id: mbus
+    current:
+      name: "S1 stroom"
+      id: currentS1
+    voltage:
+      name: "S1 spanning"
+      id: voltageS1
+    energy:
+      name: "S1 opbrengst"
+      id: energyS1
+    power:
+      name: "Huidige opbrengst S1"
+      id: powerS1
+    frequency:
+      name: "S1 frequentie"
+    power_factor:
+      name: "S1 cos phi"
+    update_interval: 2s
+  - platform: pzemac
+    address: 2
+    modbus_id: mbus
+    current:
+      name: "S2 stroom"
+      id: currentS2
+    voltage:
+      name: "S2 spanning"
+      id: voltageS2
+    energy:
+      name: "S2 opbrengst"
+      id: energyS2
+    power:
+      name: "Huidige opbrengst S2"
+      id: powerS2
+    frequency:
+      name: "S2 frequentie"
+    power_factor:
+      name: "S2 cos phi"
+    update_interval: 2s
+  - platform: pzemac
+    address: 3
+    modbus_id: mbus
+    current:
+      name: "S3 stroom"
+      id: currentS3
+    voltage:
+      name: "S3 spanning"
+      id: voltageS3
+    energy:
+      name: "S3 opbrengst"
+      id: energyS3
+    power:
+      name: "Huidige opbrengst S3"
+      id: powerS3
+    frequency:
+      name: "S3 frequentie"
+    power_factor:
+      name: "S3 cos phi"
+    update_interval: 2s
+  ###  Template sensors  ###
+  - platform: template
+    name: "Huidige opbrengst"
+    unit_of_measurement: W
+    icon: mdi:flash-outline
+    id: power
+    update_interval: 2s
+    lambda: |-
+      return (id(powerS1).state + id(powerS2).state + id(powerS3).state);
+  - platform: template
+    name: "Schijnbare opbrengst"
+    unit_of_measurement: VA
+    icon: mdi:flash-outline
+    id: reactive_power
+    update_interval: 5s
+    lambda: |-
+      return (id(reactive_power_S1).state + id(reactive_power_S2).state + id(reactive_power_S3).state );
+  - platform: template
+    name: "Schijnbare opbrengst S1"
+    id: reactive_power_S1
+    update_interval: 5s
+    internal: true
+    lambda: |-
+      return (id(currentS1).state * id(voltageS1).state);
+  - platform: template
+    name: "Schijnbare opbrengst S2"
+    id: reactive_power_S2
+    update_interval: 5s
+    internal: true
+    lambda: |-
+      return (id(currentS2).state * id(voltageS2).state);
+  - platform: template
+    name: "Schijnbare opbrengst S3"
+    id: reactive_power_S3
+    update_interval: 5s
+    internal: true
+    lambda: |-
+      return (id(currentS3).state * id(voltageS3).state);
+  
+  ###  Daily energy  ###
+  - platform: total_daily_energy
+    name: "Dagelijkse opbrengst"
+    power_id: power 
+    filters:
+        # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001
+    unit_of_measurement: kWh
+    icon: mdi:counter
+    accuracy_decimals: 3

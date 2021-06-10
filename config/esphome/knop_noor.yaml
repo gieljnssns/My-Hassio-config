@@ -1,48 +1,38 @@
 substitutions:
   devicename: knop_noor
-  ip: 192.168.79.80
-  
-  ssid: !secret ssid
-  password: !secret password
-  
-esphome:
-  name: ${devicename}
   platform: ESP8266
   board: nodemcuv2
+  upper_devicename: Knop Noor
+  ssid: !secret ssid-waskot
 
-wifi:
-  ssid: ${ssid}
-  password: ${password}
-  manual_ip:
-    static_ip: ${ip}
-    gateway: 192.168.79.1
-    subnet: 255.255.255.0
-    dns1: 8.8.8.8
-    dns2: 8.8.4.4
+packages:
+  wifi: !include common/wifi-waskot.yaml
+  device_base: !include common/device_base.yaml
 
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
-  ap:
-    ssid: ${devicename}
-    password: ${password}
-    manual_ip: 
-      static_ip: 192.168.100.2
-      gateway: 192.168.100.1
-      subnet: 255.255.255.0
-      dns1: 8.8.8.8
-      dns2: 8.8.4.4
-
-captive_portal:
-
-# Enable logging
-logger:
-
-# Enable Home Assistant API
-api:
-  password: ${password}
-
-ota:
-  password: ${password}
-
+i2c:
+  sda: 4
+  scl: 5
+  scan: True
+  id: bus_a
+  
+sensor:
+  - platform: bme280
+    temperature:
+      name: "Slaapkamer Noor temperatuur"
+      id: bme280_temperature
+      oversampling: 1x
+    pressure:
+      name: "Slaapkamer Noor luchtdruk"
+      id: bme280_pressure
+      oversampling: 1x
+    humidity:
+      name: "Slaapkamer Noor luchtvochtigheid"
+      id: bme280_humidity
+      oversampling: 1x
+    address: 0x76
+    i2c_id: bus_a
+    update_interval: 60s
+    
 output:
   - platform: esp8266_pwm
     pin: D0

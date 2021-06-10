@@ -1,61 +1,17 @@
 substitutions:
   devicename: shelly_25_b939e5
-  ip: 192.168.79.63
-  channel_1: Badkamer hoog
-  channel_2: Badkamer pombak
-  
-  ssid: !secret ssid
-  password: !secret password
-  
-  max_power: '2000.0'
-  max_temp: '70.0'
-
-esphome:
-  name: ${devicename}
   platform: ESP8266
   board: esp01_1m
+  upper_devicename: Shelly Badkamer hoog/pombak
+  channel_1: Badkamer hoog
+  channel_2: Badkamer pombak
+  max_power: '2000.0'
+  max_temp: '75.0'
+  ssid: !secret ssid-waskot
 
-wifi:
-  ssid: ${ssid}
-  password: ${password}
-  manual_ip:
-    static_ip: ${ip}
-    gateway: 192.168.79.1
-    subnet: 255.255.255.0
-    dns1: 8.8.8.8
-    dns2: 8.8.4.4
-
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
-  ap:
-    ssid: ${devicename}
-    password: ${password}
-    manual_ip: 
-      static_ip: 192.168.100.2
-      gateway: 192.168.100.1
-      subnet: 255.255.255.0
-      dns1: 8.8.8.8
-      dns2: 8.8.4.4
-
-captive_portal:
-
-# Enable logging
-logger:
-  level: DEBUG
-  # baud_rate: 460800
-
-# Enable Home Assistant API
-api:
-  password: ${password}
-
-ota:
-  password: ${password}
-
-web_server:
-  port: 80
-
-time:
-  - platform: sntp
-    id: my_time
+packages:
+  wifi: !include common/wifi-waskot.yaml
+  device_base: !include common/device_base.yaml
 
 i2c:
   sda: GPIO12
@@ -64,7 +20,7 @@ i2c:
 sensor:
   - platform: ade7953
     voltage:
-      name: ${devicename} spanning
+      name: ${upper_devicename} spanning
     current_a:
       name: ${channel_2} stroom
       internal: true
@@ -83,9 +39,9 @@ sensor:
             - homeassistant.service:
                 service: persistent_notification.create
                 data:
-                  title: Message from ${devicename}
+                  title: Message from ${upper_devicename}
                 data_template:
-                  message: Switch turned off because power exceeded ${max_power}W
+                  message: Switch turned off because power ${channel_2} exceeded ${max_power}W
     active_power_b:
       name: ${channel_1} vermogen
       id: power_channel_1
@@ -98,9 +54,9 @@ sensor:
             - homeassistant.service:
                 service: persistent_notification.create
                 data:
-                  title: Message from ${devicename}
+                  title: Message from ${upper_devicename}
                 data_template:
-                  message: Switch turned off because power exceeded ${max_power}W
+                  message: Switch turned off because power ${channel_1} exceeded ${max_power}W
     update_interval: 30s
 
   - platform: total_daily_energy
@@ -122,7 +78,7 @@ sensor:
   # NTC Temperature
   - platform: ntc
     sensor: temp_resistance_reading
-    name: ${devicename} temperatuur
+    name: ${upper_devicename} temperatuur
     unit_of_measurement: "°C"
     accuracy_decimals: 1
     icon: "mdi:thermometer"
@@ -138,7 +94,7 @@ sensor:
             - homeassistant.service:
                 service: persistent_notification.create
                 data:
-                  title: Message from ${devicename}
+                  title: Message from ${upper_devicename}
                 data_template:
                   message: Switch turned off because temperature exceeded ${max_temp}°C
   - platform: resistance
@@ -196,3 +152,7 @@ binary_sensor:
         - light.toggle: lightid2
     # internal: true 
     id: switchid2
+  - platform: gpio
+    pin: GPIO16
+    name: "ade7953 IRQ pin"
+    internal: true

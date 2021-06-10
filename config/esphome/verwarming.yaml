@@ -1,0 +1,76 @@
+substitutions:
+  devicename: verwarming_3
+  platform: ESP8266
+  board: nodemcuv2
+  upper_devicename: Esp verwarming
+  ssid: !secret ssid-waskot
+
+packages:
+  wifi: !include common/wifi-waskot.yaml
+  device_base: !include common/device_base.yaml
+  
+dallas:
+  - pin: D6
+    id: masser
+    
+    # 0xEC3C01D075637428
+    # 0x273C01D6075FEC28
+    # 0xD03C01D607B86528
+    # 0x563C01D607E4C728
+    # 0x423C01D075CD3928
+    # 0x133C01D607F68D28
+
+# Individual sensors
+sensor:
+  - platform: dallas
+    address: 0xEC3C01D075637428
+    name: "Vloerverwarming heen"
+    dallas_id: masser
+  - platform: dallas
+    address: 0x273C01D6075FEC28
+    name: "Boiler uit"
+    dallas_id: masser
+  - platform: dallas
+    address: 0xD03C01D607B86528
+    name: "Boiler in"
+    dallas_id: masser
+  - platform: dallas
+    address: 0x563C01D607E4C728
+    name: "Vloerverwarming terug"
+    dallas_id: masser
+  - platform: dallas
+    address: 0x423C01D075CD3928
+    name: "Kelder"
+    dallas_id: masser
+  - platform: dallas
+    address: 0x133C01D607F68D28
+    name: "Thermostaat"
+    dallas_id: masser
+  
+  - platform: dht
+    pin: D1
+    model: DHT22
+    temperature:
+      accuracy_decimals: 1
+      name: "Kelder temperatuur DHT"
+    humidity:
+      accuracy_decimals: 1
+      name: "Kelder luchtvochtigheid"
+    update_interval: 60s
+  
+switch:
+  - platform: gpio
+    pin:
+      number: D2
+      # inverted: yes
+    name: "Vloerverwarming"
+    id: pomp_vloerverwarming
+  
+  - platform: gpio
+    pin:
+      number: D5
+      # inverted: yes
+    name: "Warm water"
+    id: warm_water
+  
+

@@ -1,48 +1,13 @@
 substitutions:
   devicename: leds_drukknoppen
-  ip: 192.168.79.81
-  
-  ssid: !secret ssid
-  password: !secret password
-
-esphome:
-  name: ${devicename}
   platform: ESP8266
   board: nodemcuv2
+  upper_devicename: Leds drukknoppen
+  ssid: !secret ssid-waskot
 
-wifi:
-  ssid: ${ssid}
-  password: ${password}
-  manual_ip:
-    static_ip: ${ip}
-    gateway: 192.168.79.1
-    subnet: 255.255.255.0
-    dns1: 8.8.8.8
-    dns2: 8.8.4.4
-
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
-  ap:
-    ssid: ${devicename}
-    password: ${password}
-    manual_ip: 
-      static_ip: 192.168.100.2
-      gateway: 192.168.100.1
-      subnet: 255.255.255.0
-      dns1: 8.8.8.8
-      dns2: 8.8.4.4
-
-captive_portal:
-
-# Enable logging
-logger:
-
-# Enable Home Assistant API
-api:
-  password: ${password}
-
-ota:
-  password: ${password}
-
+packages:
+  wifi: !include common/wifi-waskot.yaml
+  device_base: !include common/device_base.yaml
 
 globals:
   - id: chime
@@ -54,7 +19,7 @@ switch:
   - platform: gpio
     pin:
       number: D0
-      # inverted: yes
+      inverted: yes
     name: "Led wc"
     id: wc
   - platform: gpio
@@ -66,7 +31,7 @@ switch:
   
   - platform: gpio
     pin:
-      number: D2
+      number: D4
       # inverted: yes
     name: "Led badkamer"
     id: badkamer
@@ -75,12 +40,12 @@ switch:
     pin:
       number: D3
       # inverted: yes
-    name: "Reserve"
+    name: "Stopcontacten terras"
     id: reserve
   
   - platform: gpio
     pin:
-      number: D4
+      number: D2
       # inverted: yes
     name: "Deurbel"
     id: deurbel
@@ -95,8 +60,8 @@ switch:
           value: 'true'
     turn_off_action:
       - globals.set:
-         id: chime
-         value: 'false'
+          id: chime
+          value: 'false'
     lambda: |-
       return id(chime);
 
@@ -132,7 +97,7 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true
     on_press:
-       - homeassistant.service:
+      - homeassistant.service:
           service: light.toggle
           data:
             entity_id: light.spots_tv
@@ -145,7 +110,7 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true
     on_press:
-       - homeassistant.service:
+      - homeassistant.service:
           service: light.toggle
           data:
             entity_id: light.spot_slaapkamer
