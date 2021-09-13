@@ -1,12 +1,11 @@
 """Class for python_scripts in HACS."""
-from integrationhelper import Logger
+from custom_components.hacs.enums import HacsCategory
+from custom_components.hacs.exceptions import HacsException
+from custom_components.hacs.helpers.classes.repository import HacsRepository
+from custom_components.hacs.helpers.functions.information import find_file_name
 
-from .repository import HacsRepository
-from ..hacsbase.exceptions import HacsException
-from ..helpers.information import find_file_name
 
-
-class HacsPythonScript(HacsRepository):
+class HacsPythonScriptRepository(HacsRepository):
     """python_scripts in HACS."""
 
     category = "python_script"
@@ -15,11 +14,16 @@ class HacsPythonScript(HacsRepository):
         """Initialize."""
         super().__init__()
         self.data.full_name = full_name
-        self.data.category = "python_script"
+        self.data.full_name_lower = full_name.lower()
+        self.data.category = HacsCategory.PYTHON_SCRIPT
         self.content.path.remote = "python_scripts"
-        self.content.path.local = f"{self.hacs.system.config_path}/python_scripts"
+        self.content.path.local = self.localpath
         self.content.single = True
-        self.logger = Logger(f"hacs.repository.{self.data.category}.{full_name}")
+
+    @property
+    def localpath(self):
+        """Return localpath."""
+        return f"{self.hacs.core.config_path}/python_scripts"
 
     async def validate_repository(self):
         """Validate."""
@@ -32,40 +36,30 @@ class HacsPythonScript(HacsRepository):
 
         compliant = False
         for treefile in self.treefiles:
-            if treefile.startswith(f"{self.content.path.remote}") and treefile.endswith(
-                ".py"
-            ):
+            if treefile.startswith(f"{self.content.path.remote}") and treefile.endswith(".py"):
                 compliant = True
                 break
         if not compliant:
             raise HacsException(
-                f"Repostitory structure for {self.ref.replace('tags/','')} is not compliant"
+                f"Repository structure for {self.ref.replace('tags/','')} is not compliant"
             )
 
         # Handle potential errors
         if self.validate.errors:
             for error in self.validate.errors:
-                if not self.hacs.system.status.startup:
-                    self.logger.error(error)
+                if not self.hacs.status.startup:
+                    self.logger.error("%s %s", self, error)
         return self.validate.success
 
-    async def registration(self):
+    async def async_post_registration(self):
         """Registration."""
-        if not await self.validate_repository():
-            return False
-
-        # Run common registration steps.
-        await self.common_registration()
-
         # Set name
         find_file_name(self)
 
-    async def update_repository(self):  # lgtm[py/similar-function]
+    async def update_repository(self, ignore_issues=False, force=False):
         """Update."""
-        if self.hacs.github.ratelimits.remaining == 0:
+        if not await self.common_update(ignore_issues, force):
             return
-        # Run common update steps.
-        await self.common_update()
 
         # Get python_script objects.
         if self.data.content_in_root:
@@ -73,14 +67,12 @@ class HacsPythonScript(HacsRepository):
 
         compliant = False
         for treefile in self.treefiles:
-            if treefile.startswith(f"{self.content.path.remote}") and treefile.endswith(
-                ".py"
-            ):
+            if treefile.startswith(f"{self.content.path.remote}") and treefile.endswith(".py"):
                 compliant = True
                 break
         if not compliant:
             raise HacsException(
-                f"Repostitory structure for {self.ref.replace('tags/','')} is not compliant"
+                f"Repository structure for {self.ref.replace('tags/','')} is not compliant"
             )
 
         # Update name

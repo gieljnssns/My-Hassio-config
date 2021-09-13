@@ -1,120 +1,372 @@
-"""The Tahoma integration."""
+"""The Overkiz (by Somfy) integration."""
 import asyncio
-
-import voluptuous as vol
+from collections import defaultdict
+from datetime import datetime, timedelta
+from enum import Enum
 import logging
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_EXCLUDE
-
-from .const import DOMAIN, TAHOMA_TYPES
-from .tahoma_api import TahomaApi
-from requests.exceptions import RequestException
-
+from aiohttp import ClientError, ServerDisconnectedError
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.scene import DOMAIN as SCENE
+from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_EXCLUDE, CONF_PASSWORD, CONF_SOURCE, CONF_USERNAME
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
-    discovery,
+    service,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from pyhoma.client import TahomaClient
+from pyhoma.const import SUPPORTED_SERVERS
+from pyhoma.exceptions import (
+    BadCredentialsException,
+    InvalidCommandException,
+    MaintenanceException,
+    TooManyRequestsException,
+)
+from pyhoma.models import Command, Device
+import voluptuous as vol
+
+from .const import (
+    CONF_HUB,
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_HUB,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    IGNORED_OVERKIZ_DEVICES,
+    OVERKIZ_DEVICE_TO_PLATFORM,
+)
+from .coordinator import OverkizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO Deprecate EXCLUDE for the native method of disabling entities
+SERVICE_EXECUTE_COMMAND = "execute_command"
+
+HOMEKIT_SETUP_CODE = "homekit:SetupCode"
+HOMEKIT_STACK = "HomekitStack"
+
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_EXCLUDE, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-            }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_EXCLUDE),
+            vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_EXCLUDE, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [
-    "binary_sensor",
-    "cover",
-    "light",
-    "lock",
-    "sensor",
-    "switch",
-]
-
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Tahoma component."""
+    """Set up the TaHoma component."""
+    configuration = config.get(DOMAIN)
+
+    if configuration is None:
+        return True
+
+    if any(
+        configuration.get(CONF_USERNAME) in entry.data.get(CONF_USERNAME)
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    ):
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_IMPORT},
+            data=configuration,
+        )
+    )
+
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up Tahoma from a config entry."""
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
 
+    if config_entry.version == 1:
+
+        MAPPING = {
+            "Cozytouch": "atlantic_cozytouch",
+            "eedomus": "nexity",
+            "Hi Kumo": "hi_kumo_europe",
+            "Rexel Energeasy Connect": "rexel",
+            "Somfy Connexoon IO": "somfy_europe",
+            "Somfy Connexoon RTS": "somfy_oceania",
+            "Somfy TaHoma": "somfy_europe",
+        }
+
+        entry_data = {**config_entry.data}
+        old_hub = entry_data.get(CONF_HUB, "Somfy TaHoma")
+        entry_data[CONF_HUB] = MAPPING[old_hub]
+
+        _LOGGER.debug("Migrated %s to %s", old_hub, entry_data[CONF_HUB])
+
+        config_entry.data = {**entry_data}
+        config_entry.version = 2
+
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up TaHoma from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
+    username = entry.data.get(CONF_USERNAME)
+    password = entry.data.get(CONF_PASSWORD)
+    server = SUPPORTED_SERVERS[entry.data.get(CONF_HUB, DEFAULT_HUB)]
+
+    session = async_get_clientsession(hass)
+    client = TahomaClient(
+        username,
+        password,
+        session=session,
+        api_url=server.endpoint,
+    )
 
     try:
-        controller = await hass.async_add_executor_job(TahomaApi, username, password)
-        await hass.async_add_executor_job(controller.get_setup)
-        devices = await hass.async_add_executor_job(controller.get_devices)
-        scenes = await hass.async_add_executor_job(controller.get_action_groups)
+        await client.login()
 
-    # TODO Add better exception handling
-    except RequestException:
-        _LOGGER.exception("Error when getting devices from the Tahoma API")
+        tasks = [
+            client.get_devices(),
+            client.get_scenarios(),
+            client.get_gateways(),
+            client.get_places(),
+        ]
+        devices, scenarios, gateways, places = await asyncio.gather(*tasks)
+    except BadCredentialsException as exception:
+        raise ConfigEntryAuthFailed from exception
+    except TooManyRequestsException as exception:
+        raise ConfigEntryNotReady("Too many requests, try again later") from exception
+    except (TimeoutError, ClientError, ServerDisconnectedError) as exception:
+        raise ConfigEntryNotReady("Failed to connect") from exception
+    except MaintenanceException as exception:
+        raise ConfigEntryNotReady("Server is down for maintenance") from exception
+    except Exception as exception:  # pylint: disable=broad-except
+        _LOGGER.exception(exception)
         return False
 
+    update_interval = timedelta(
+        seconds=entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
+    )
+
+    coordinator = OverkizDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="device events",
+        client=client,
+        devices=devices,
+        places=places,
+        update_interval=update_interval,
+        config_entry_id=entry.entry_id,
+    )
+
+    _LOGGER.debug(
+        "Initialized DataUpdateCoordinator with %s interval.", str(update_interval)
+    )
+
+    await coordinator.async_refresh()
+
+    platforms = defaultdict(list)
+    platforms[SCENE] = scenarios
+
     hass.data[DOMAIN][entry.entry_id] = {
-        "controller": controller,
-        "devices": [],
-        "scenes": [],
+        "platforms": platforms,
+        "coordinator": coordinator,
+        "update_listener": entry.add_update_listener(update_listener),
     }
 
-    for device in devices:
-        _device = controller.get_device(device)
+    # Map Overkiz device to Home Assistant platform
+    for device in coordinator.data.values():
+        platform = OVERKIZ_DEVICE_TO_PLATFORM.get(
+            device.widget
+        ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class)
+        if platform:
+            platforms[platform].append(device)
+            log_device("Added device", device)
+        elif (
+            device.widget not in IGNORED_OVERKIZ_DEVICES
+            and device.ui_class not in IGNORED_OVERKIZ_DEVICES
+        ):
+            log_device("Unsupported device detected", device)
 
-        if _device.uiclass in TAHOMA_TYPES:
-            if TAHOMA_TYPES[_device.uiclass] in PLATFORMS:
-                component = TAHOMA_TYPES[_device.uiclass]
-                hass.data[DOMAIN][entry.entry_id]["devices"].append(_device)
+        if device.widget == HOMEKIT_STACK:
+            print_homekit_setup_code(device)
 
-        else:
-            _LOGGER.warning(
-                "Unsupported Tahoma device (%s - %s - %s)",
-                _device.type,
-                _device.uiclass,
-                _device.widget,
-            )
+    supported_platforms = set(platforms.keys())
 
-    for component in PLATFORMS:
+    # Sensor and Binary Sensor will be added dynamically, based on the device states
+    # Switch will be added dynamically, based on device features (e.g. low speed cover switch)
+    supported_platforms.update((BINARY_SENSOR, SENSOR, SWITCH))
+    for platform in supported_platforms:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
-    for scene in scenes:
-        hass.data[DOMAIN][entry.entry_id]["scenes"].append(scene)
+    device_registry = await dr.async_get_registry(hass)
+
+    for gateway in gateways:
+        _LOGGER.debug(
+            "Added gateway (%s - %s - %s)",
+            gateway.id,
+            gateway.type,
+            gateway.sub_type,
+        )
+
+        gateway_model = (
+            beautify_name(gateway.sub_type.name)
+            if isinstance(gateway.sub_type, Enum)
+            else None
+        )
+
+        gateway_name = (
+            f"{beautify_name(gateway.type.name)} hub"
+            if isinstance(gateway.type, Enum)
+            else gateway.type
+        )
+
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, gateway.id)},
+            model=gateway_model,
+            manufacturer=server.manufacturer,
+            name=gateway_name,
+            sw_version=gateway.connectivity.protocol_version,
+        )
+
+    async def handle_execute_command(call: ServiceCall):
+        """Handle execute command service."""
+        entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+        for entity_id in call.data.get("entity_id"):
+            entity = entity_registry.entities.get(entity_id)
+
+            try:
+                await coordinator.client.execute_command(
+                    entity.unique_id,
+                    Command(call.data.get("command"), call.data.get("args")),
+                    "Home Assistant Service",
+                )
+            except InvalidCommandException as exception:
+                _LOGGER.error(exception)
+
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_EXECUTE_COMMAND,
+        handle_execute_command,
+        vol.Schema(
+            {
+                vol.Required("entity_id"): [cv.entity_id],
+                vol.Required("command"): cv.string,
+                vol.Optional("args", default=[]): vol.All(
+                    cv.ensure_list, [vol.Any(str, int)]
+                ),
+            },
+        ),
+    )
+
+    async def handle_get_execution_history(call):
+        """Handle get execution history service."""
+        await write_execution_history_to_log(coordinator.client)
+
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        "get_execution_history",
+        handle_get_execution_history,
+    )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    entities_per_platform = hass.data[DOMAIN][entry.entry_id]["platforms"]
+
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in entities_per_platform
             ]
         )
     )
+
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id].pop(entry.entry_id)
+        hass.data[DOMAIN][entry.entry_id]["update_listener"]()
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Update when config_entry options update."""
+    if entry.options[CONF_UPDATE_INTERVAL]:
+        coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+        new_update_interval = timedelta(seconds=entry.options[CONF_UPDATE_INTERVAL])
+        coordinator.update_interval = new_update_interval
+        coordinator.original_update_interval = new_update_interval
+
+        await coordinator.async_refresh()
+
+
+def print_homekit_setup_code(device: Device):
+    """Retrieve and print HomeKit Setup Code."""
+    if device.attributes:
+        homekit = device.attributes.get(HOMEKIT_SETUP_CODE)
+
+        if homekit:
+            _LOGGER.info("HomeKit support detected with setup code %s.", homekit.value)
+
+
+async def write_execution_history_to_log(client: TahomaClient):
+    """Retrieve execution history and write output to log."""
+    history = await client.get_execution_history()
+
+    for item in history:
+        timestamp = datetime.fromtimestamp(int(item.event_time) / 1000)
+
+        for command in item.commands:
+            date = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+
+            _LOGGER.info(
+                "{timestamp}: {command} executed via {app} on {device}, with {parameters}.".format(
+                    command=command.command,
+                    timestamp=date,
+                    device=command.deviceurl,
+                    parameters=command.parameters,
+                    app=item.label,
+                )
+            )
+
+
+def beautify_name(name: str):
+    """Return human readable string."""
+    return name.replace("_", " ").title()
+
+
+def log_device(message: str, device: Device) -> None:
+    """Log device information."""
+    _LOGGER.debug(
+        "%s (%s - %s - %s - %s)",
+        message,
+        device.controllable_name,
+        device.ui_class,
+        device.widget,
+        device.deviceurl,
+    )

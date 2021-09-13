@@ -1,52 +1,41 @@
-"""Support for Tahoma scenes."""
-import logging
+"""Support for Overkiz scenes."""
 from typing import Any
 
-from homeassistant.components.scene import Scene
+from homeassistant.components.scene import DOMAIN as SCENE, Scene
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pyhoma.client import TahomaClient
+from pyhoma.models import Scenario
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Tahoma scenes from a config entry."""
-
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
+    """Set up the Overkiz scenes from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = data["coordinator"]
 
-    entities = []
-    controller = data.get("controller")
-
-    for scene in data.get("scenes"):
-        entities.append(TahomaScene(scene, controller))
-
+    entities = [
+        OverkizScene(scene, coordinator.client) for scene in data["platforms"][SCENE]
+    ]
     async_add_entities(entities)
 
 
-class TahomaScene(Scene):
-    """Representation of a Tahoma scene entity."""
+class OverkizScene(Scene):
+    """Representation of an Overkiz scene entity."""
 
-    def __init__(self, tahoma_scene, controller):
+    def __init__(self, scenario: Scenario, client: TahomaClient):
         """Initialize the scene."""
-        self.tahoma_scene = tahoma_scene
-        self.controller = controller
-        self._name = self.tahoma_scene.name
+        self.scenario = scenario
+        self.client = client
+        self._attr_name = self.scenario.label
+        self._attr_unique_id = self.scenario.oid
 
-    def activate(self, **kwargs: Any) -> None:
+    async def async_activate(self, **_: Any) -> None:
         """Activate the scene."""
-        self.controller.launch_action_group(self.tahoma_scene.oid)
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self.tahoma_scene.oid
-
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._name
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the scene."""
-        return {"tahoma_scene_oid": self.tahoma_scene.oid}
+        await self.client.execute_scenario(self.scenario.oid)

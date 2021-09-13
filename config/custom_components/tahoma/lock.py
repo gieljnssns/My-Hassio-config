@@ -1,94 +1,47 @@
-"""Support for Tahoma lock."""
-from datetime import timedelta
-import logging
+"""Support for Overkiz lock."""
+from homeassistant.components.lock import DOMAIN as LOCK, LockEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_LOCKED
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from homeassistant.components.lock import LockEntity
-from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED
+from .const import DOMAIN
+from .entity import OverkizEntity
 
-from .const import DOMAIN, TAHOMA_TYPES
-from .tahoma_device import TahomaDevice
+COMMAND_LOCK = "lock"
+COMMAND_UNLOCK = "unlock"
 
-_LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=120)
-TAHOMA_STATE_LOCKED = "locked"
+CORE_LOCKED_UNLOCKED_STATE = "core:LockedUnlockedState"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Tahoma locks from a config entry."""
-
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
+    """Set up the Overkiz locks from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = data["coordinator"]
 
-    entities = []
-    controller = data.get("controller")
-
-    for device in data.get("devices"):
-        if TAHOMA_TYPES[device.uiclass] == "lock":
-            entities.append(TahomaLock(device, controller))
+    entities = [
+        OverkizLock(device.deviceurl, coordinator) for device in data["platforms"][LOCK]
+    ]
 
     async_add_entities(entities)
 
 
-class TahomaLock(TahomaDevice, LockEntity):
-    """Representation a Tahoma lock."""
+class OverkizLock(OverkizEntity, LockEntity):
+    """Representation of a TaHoma Lock."""
 
-    def __init__(self, tahoma_device, controller):
-        """Initialize the device."""
-        super().__init__(tahoma_device, controller)
-        self._lock_status = None
-        self._available = False
-        self._battery_level = None
-        self._name = None
-
-    def update(self):
-        """Update method."""
-        self.controller.get_states([self.tahoma_device])
-        self._battery_level = self.tahoma_device.active_states["core:BatteryState"]
-        self._name = self.tahoma_device.active_states["core:NameState"]
-        if (
-            self.tahoma_device.active_states.get("core:LockedUnlockedState")
-            == TAHOMA_STATE_LOCKED
-        ):
-            self._lock_status = STATE_LOCKED
-        else:
-            self._lock_status = STATE_UNLOCKED
-        self._available = (
-            self.tahoma_device.active_states.get("core:AvailabilityState")
-            == "available"
-        )
-
-    def unlock(self, **kwargs):
+    async def async_unlock(self, **_):
         """Unlock method."""
-        _LOGGER.debug("Unlocking %s", self._name)
-        self.apply_action("unlock")
+        await self.executor.async_execute_command(COMMAND_UNLOCK)
 
-    def lock(self, **kwargs):
+    async def async_lock(self, **_):
         """Lock method."""
-        _LOGGER.debug("Locking %s", self._name)
-        self.apply_action("lock")
-
-    @property
-    def name(self):
-        """Return the name of the lock."""
-        return self._name
-
-    @property
-    def available(self):
-        """Return True if the lock is available."""
-        return self._available
+        await self.executor.async_execute_command(COMMAND_LOCK)
 
     @property
     def is_locked(self):
         """Return True if the lock is locked."""
-        return self._lock_status == STATE_LOCKED
-
-    @property
-    def device_state_attributes(self):
-        """Return the lock state attributes."""
-        attr = {
-            ATTR_BATTERY_LEVEL: self._battery_level,
-        }
-        super_attr = super().device_state_attributes
-        if super_attr is not None:
-            attr.update(super_attr)
-        return attr
+        return self.executor.select_state(CORE_LOCKED_UNLOCKED_STATE) == STATE_LOCKED

@@ -1,84 +1,118 @@
-"""Support for Tahoma binary sensors."""
-from datetime import timedelta
-import logging
+"""Support for Overkiz binary sensors."""
+from __future__ import annotations
 
+from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    TAHOMA_TYPES,
-    TAHOMA_BINARY_SENSOR_DEVICE_CLASSES,
-    CORE_SMOKE_STATE,
-    CORE_OCCUPANCY_STATE,
-    CORE_CONTACT_STATE,
-)
-from .tahoma_device import TahomaDevice
+from .const import DOMAIN
+from .entity import OverkizBinarySensorDescription, OverkizDescriptiveEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=120)
+STATE_OPEN = "open"
+STATE_PERSON_INSIDE = "personInside"
+STATE_DETECTED = "detected"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Tahoma sensors from a config entry."""
+BINARY_SENSOR_DESCRIPTIONS = [
+    # RainSensor/RainSensor
+    OverkizBinarySensorDescription(
+        key="core:RainState",
+        name="Rain",
+        icon="mdi:weather-rainy",
+        is_on=lambda state: state == STATE_DETECTED,
+    ),
+    # SmokeSensor/SmokeSensor
+    OverkizBinarySensorDescription(
+        key="core:SmokeState",
+        name="Smoke",
+        device_class=binary_sensor.DEVICE_CLASS_SMOKE,
+        is_on=lambda state: state == STATE_DETECTED,
+    ),
+    # WaterSensor/WaterDetectionSensor
+    OverkizBinarySensorDescription(
+        key="core:WaterDetectionState",
+        name="Water",
+        icon="mdi:water",
+        is_on=lambda state: state == STATE_DETECTED,
+    ),
+    # AirSensor/AirFlowSensor
+    OverkizBinarySensorDescription(
+        key="core:GasDetectionState",
+        name="Gas",
+        device_class=binary_sensor.DEVICE_CLASS_GAS,
+        is_on=lambda state: state == STATE_DETECTED,
+    ),
+    # OccupancySensor/OccupancySensor
+    # OccupancySensor/MotionSensor
+    OverkizBinarySensorDescription(
+        key="core:OccupancyState",
+        name="Occupancy",
+        device_class=binary_sensor.DEVICE_CLASS_OCCUPANCY,
+        is_on=lambda state: state == STATE_PERSON_INSIDE,
+    ),
+    # ContactSensor/WindowWithTiltSensor
+    OverkizBinarySensorDescription(
+        key="core:VibrationState",
+        name="Vibration",
+        device_class=binary_sensor.DEVICE_CLASS_VIBRATION,
+        is_on=lambda state: state == STATE_DETECTED,
+    ),
+    # ContactSensor/ContactSensor
+    OverkizBinarySensorDescription(
+        key="core:ContactState",
+        name="Contact",
+        device_class=binary_sensor.DEVICE_CLASS_DOOR,
+        is_on=lambda state: state == STATE_OPEN,
+    ),
+    # Unknown
+    OverkizBinarySensorDescription(
+        key="io:VibrationDetectedState",
+        name="Vibration",
+        device_class=binary_sensor.DEVICE_CLASS_VIBRATION,
+        is_on=lambda state: state == STATE_DETECTED,
+    ),
+]
 
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
+    """Set up the Overkiz sensors from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
-
+    coordinator = data["coordinator"]
     entities = []
-    controller = data.get("controller")
 
-    for device in data.get("devices"):
-        if TAHOMA_TYPES[device.uiclass] == "binary_sensor":
-            entities.append(TahomaBinarySensor(device, controller))
+    key_supported_states = {
+        description.key: description for description in BINARY_SENSOR_DESCRIPTIONS
+    }
+
+    for device in coordinator.data.values():
+        for state in device.definition.states:
+            if description := key_supported_states.get(state.qualified_name):
+                entities.append(
+                    OverkizBinarySensor(
+                        device.deviceurl,
+                        coordinator,
+                        description,
+                    )
+                )
 
     async_add_entities(entities)
 
 
-class TahomaBinarySensor(TahomaDevice, BinarySensorEntity):
-    """Representation of a Tahoma Binary Sensor."""
-
-    def __init__(self, tahoma_device, controller):
-        """Initialize the sensor."""
-        super().__init__(tahoma_device, controller)
-
-        self._state = None
+class OverkizBinarySensor(OverkizDescriptiveEntity, BinarySensorEntity):
+    """Representation of an Overkiz Binary Sensor."""
 
     @property
     def is_on(self):
         """Return the state of the sensor."""
-        return bool(self._state == STATE_ON)
+        state = self.device.states.get(self.entity_description.key)
 
-    @property
-    def device_class(self):
-        """Return the class of the device."""
-        return (
-            TAHOMA_BINARY_SENSOR_DEVICE_CLASSES.get(self.tahoma_device.widget)
-            or TAHOMA_BINARY_SENSOR_DEVICE_CLASSES.get(self.tahoma_device.uiclass)
-            or None
-        )
+        if not state:
+            return None
 
-    def update(self):
-        """Update the state."""
-        self.controller.get_states([self.tahoma_device])
-
-        if CORE_CONTACT_STATE in self.tahoma_device.active_states:
-            self.current_value = (
-                self.tahoma_device.active_states.get(CORE_CONTACT_STATE) == "open"
-            )
-
-        if CORE_OCCUPANCY_STATE in self.tahoma_device.active_states:
-            self.current_value = (
-                self.tahoma_device.active_states.get(CORE_OCCUPANCY_STATE)
-                == "personInside"
-            )
-
-        if CORE_SMOKE_STATE in self.tahoma_device.active_states:
-            self.current_value = (
-                self.tahoma_device.active_states.get(CORE_SMOKE_STATE) == "detected"
-            )
-
-        if self.current_value:
-            self._state = STATE_ON
-        else:
-            self._state = STATE_OFF
+        return self.entity_description.is_on(state.value)

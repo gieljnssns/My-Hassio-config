@@ -1,128 +1,144 @@
-"""Tahoma light platform that implements dimmable tahoma lights."""
-import logging
-from datetime import timedelta
-
+"""Support for Overkiz light devices."""
 from homeassistant.components.light import (
-    LightEntity,
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
+    ATTR_HS_COLOR,
+    DOMAIN as LIGHT,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
     SUPPORT_EFFECT,
+    LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.util.color as color_util
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from .const import COMMAND_OFF, COMMAND_ON, CORE_ON_OFF_STATE, DOMAIN
+from .coordinator import OverkizDataUpdateCoordinator
+from .entity import OverkizEntity
 
-from .const import DOMAIN, TAHOMA_TYPES
-from .tahoma_device import TahomaDevice
+COMMAND_MY = "my"
+COMMAND_SET_INTENSITY = "setIntensity"
+COMMAND_SET_RGB = "setRGB"
+COMMAND_WINK = "wink"
 
-_LOGGER = logging.getLogger(__name__)
+CORE_BLUE_COLOR_INTENSITY_STATE = "core:BlueColorIntensityState"
+CORE_GREEN_COLOR_INTENSITY_STATE = "core:GreenColorIntensityState"
+CORE_LIGHT_INTENSITY_STATE = "core:LightIntensityState"
+CORE_RED_COLOR_INTENSITY_STATE = "core:RedColorIntensityState"
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SERVICE_LIGHT_MY_POSITION = "set_light_my_position"
+
+SUPPORT_MY = 512
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Tahoma lights from a config entry."""
-
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
+    """Set up the Overkiz lights from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = data["coordinator"]
 
-    entities = []
-    controller = data.get("controller")
-
-    for device in data.get("devices"):
-        if TAHOMA_TYPES[device.uiclass] == "light":
-            entities.append(TahomaLight(device, controller))
+    entities = [
+        OverkizLight(device.deviceurl, coordinator)
+        for device in data["platforms"][LIGHT]
+    ]
 
     async_add_entities(entities)
 
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_LIGHT_MY_POSITION, {}, "async_my", [SUPPORT_MY]
+    )
 
-class TahomaLight(TahomaDevice, LightEntity):
-    """Representation of a Tahome light"""
 
-    def __init__(self, tahoma_device, controller):
-        super().__init__(tahoma_device, controller)
+class OverkizLight(OverkizEntity, LightEntity):
+    """Representation of an Overkiz Light."""
 
-        self._skip_update = False
+    def __init__(self, device_url: str, coordinator: OverkizDataUpdateCoordinator):
+        """Initialize a device."""
+        super().__init__(device_url, coordinator)
         self._effect = None
-        self._brightness = None
-        self._state = None
-        
-        self.update()
 
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        return int(self._brightness * (255 / 100))
+        brightness = self.executor.select_state(CORE_LIGHT_INTENSITY_STATE)
+        return round(brightness * 255 / 100)
 
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self._state
+        return self.executor.select_state(CORE_ON_OFF_STATE) == STATE_ON
+
+    @property
+    def hs_color(self):
+        """Return the hue and saturation color value [float, float]."""
+        r = self.executor.select_state(CORE_RED_COLOR_INTENSITY_STATE)
+        g = self.executor.select_state(CORE_GREEN_COLOR_INTENSITY_STATE)
+        b = self.executor.select_state(CORE_BLUE_COLOR_INTENSITY_STATE)
+        return None if None in [r, g, b] else color_util.color_RGB_to_hs(r, g, b)
 
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-
         supported_features = 0
 
-        if "setIntensity" in self.tahoma_device.command_definitions:
+        if self.executor.has_command(COMMAND_SET_INTENSITY):
             supported_features |= SUPPORT_BRIGHTNESS
 
-        if "wink" in self.tahoma_device.command_definitions:
+        if self.executor.has_command(COMMAND_WINK):
             supported_features |= SUPPORT_EFFECT
+
+        if self.executor.has_command(COMMAND_SET_RGB):
+            supported_features |= SUPPORT_COLOR
+
+        if self.executor.has_command(COMMAND_MY):
+            supported_features |= SUPPORT_MY
 
         return supported_features
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the light on."""
-        self._state = True
-        self._skip_update = True
+        if ATTR_HS_COLOR in kwargs:
+            await self.executor.async_execute_command(
+                COMMAND_SET_RGB,
+                *[
+                    round(float(c))
+                    for c in color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+                ],
+            )
 
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = int(float(kwargs[ATTR_BRIGHTNESS]) / 255 * 100)
-            self.apply_action("setIntensity", self._brightness)
+            brightness = round(float(kwargs[ATTR_BRIGHTNESS]) / 255 * 100)
+            await self.executor.async_execute_command(COMMAND_SET_INTENSITY, brightness)
+
         elif ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT]
-            self.apply_action("wink", 100)
+            await self.executor.async_execute_command(self._effect, 100)
+
         else:
-            self.apply_action("on")
+            await self.executor.async_execute_command(COMMAND_ON)
 
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **_) -> None:
         """Turn the light off."""
-        self._state = False
-        self._skip_update = True
-        self.apply_action("off")
+        await self.executor.async_execute_command(COMMAND_OFF)
 
-        self.async_write_ha_state()
+    async def async_my(self, **_):
+        """Set light to preset position."""
+        await self.executor.async_execute_command(COMMAND_MY)
 
     @property
     def effect_list(self) -> list:
         """Return the list of supported effects."""
-        return ["wink"]
+        return [COMMAND_WINK] if self.executor.has_command(COMMAND_WINK) else None
 
     @property
     def effect(self) -> str:
         """Return the current effect."""
         return self._effect
-
-    def update(self):
-        """Fetch new state data for this light.
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        # Postpone the immediate state check for changes that take time.
-        if self._skip_update:
-            self._skip_update = False
-            return
-
-        self.controller.get_states([self.tahoma_device])
-
-        if "core:LightIntensityState" in self.tahoma_device.active_states:
-            self._brightness = self.tahoma_device.active_states.get(
-                "core:LightIntensityState"
-            )
-
-        if self.tahoma_device.active_states.get("core:OnOffState") == "on":
-            self._state = True
-        else:
-            self._state = False
