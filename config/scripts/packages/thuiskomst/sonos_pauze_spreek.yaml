@@ -33,10 +33,17 @@
       - delay: '00:00:01'
       - service: sonos.restore
         data_template:
+          with_group: false
           entity_id: "{{ sonos_entity }}"
       - delay: '00:00:03'
+      # - service: >
+      #     {% if state_attr('media_player.keuken', 'media_artist') == 'nl-nl' or state_attr('media_player.keuken', 'media_artist') == 'nl' or state_attr('media_player.keuken', 'media_artist') == 'nl-be' %}
+      #       script.sonos_pauze_spreek_nl
+      #     {% else %}
+      #       script.sonos_pauze_spreek_non_nl
+      #     {% endif %}
       - service: >
-          {% if state_attr('media_player.keuken', 'media_artist') == 'nl-nl' or state_attr('media_player.keuken', 'media_artist') == 'nl' or state_attr('media_player.keuken', 'media_artist') == 'nl-be' %}
+          {% if 'nl-nl' in state_attr("media_player.keuken", "media_title") or 'nl' in state_attr("media_player.keuken", "media_title") or 'nl-be' in state_attr("media_player.keuken", "media_title") %}
             script.sonos_pauze_spreek_nl
           {% else %}
             script.sonos_pauze_spreek_non_nl

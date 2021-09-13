@@ -15,8 +15,9 @@
       #   entity_id: input_boolean.zonnetent_closed
       
   zonnetent_openen:
+  # open -> close
     sequence:
-      - service: cover.open_cover
+      - service: cover.close_cover
         entity_id: cover.zonnetent
       - delay:
           seconds: 30
@@ -32,7 +33,7 @@
           - condition: state
             entity_id: 'input_boolean.zonnetent_my'
             state: 'on'
-      - service: cover.open_cover
+      - service: cover.close_cover
         entity_id: cover.zonnetent
       - delay:
           seconds: 30
@@ -48,7 +49,7 @@
           - condition: state
             entity_id: 'input_boolean.zonnetent_my'
             state: 'on'
-      - service: cover.open_cover
+      - service: cover.close_cover
         entity_id: cover.zonnetent
       - delay:
           seconds: 30

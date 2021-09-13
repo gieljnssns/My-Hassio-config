@@ -1,0 +1,13 @@
+type: markdown
+content: |-
+  |H|M||Name|
+  |----:|----:|:--:|:----|
+  {% for state in states.automation
+     |selectattr('attributes.last_triggered')
+     |sort(attribute='attributes.last_triggered', reverse=true) 
+     if (now() - state.attributes.last_triggered).days < 1 %}
+    {%- set t = now() - state.attributes.last_triggered -%}
+    {%- set hrs = t.seconds//3600 %}
+    {%- set hrs = hrs if hrs > 0 else '&nbsp;' -%}
+    |{{hrs}}|{{(t.seconds//60)%60}}||_{{state.name}}_|
+  {% endfor %}

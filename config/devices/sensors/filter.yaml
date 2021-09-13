@@ -9,7 +9,33 @@
 
 - platform: filter
   name: "Buitentemperatuur gefilterd"
-  entity_id: sensor.gemiddelde_temp_buiten
+  entity_id: sensor.temperatuur_gemiddeld_buiten
+  filters:
+    - filter: outlier
+      window_size: 4
+      radius: 2.0
+    - filter: lowpass
+      time_constant: 10
+    - filter: time_simple_moving_average
+      window_size: 00:05
+      precision: 2
+
+- platform: filter
+  name: "Temperatuur buiten gefilterd"
+  entity_id: sensor.buitentemperatuur
+  filters:
+    - filter: outlier
+      window_size: 4
+      radius: 2.0
+    - filter: lowpass
+      time_constant: 10
+    - filter: time_simple_moving_average
+      window_size: 00:05
+      precision: 2
+
+- platform: filter
+  name: "Temperatuur poort gefilterd"
+  entity_id: sensor.temperatuur_poort
   filters:
     - filter: outlier
       window_size: 4
