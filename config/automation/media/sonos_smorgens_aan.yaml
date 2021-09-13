@@ -10,12 +10,15 @@ condition:
   conditions:
     - condition: time
       after: "08:00:00"
-      before: "12:00:00"
+      before: "12:30:00"
     - condition: state
       entity_id: binary_sensor.keuken_not_playing
       state: "on" # {{ states('media_player.keuken') != 'playing' }}
       for:
         hours: 5
+    - condition: state
+      entity_id: input_boolean.giel_slaapt_na_nacht
+      state: "off"
     - condition: or
       conditions:
         - condition: state
@@ -35,20 +38,21 @@ condition:
             {% else %}
               False
             {% endif %}
+        - condition: template
+          value_template: >
+            {% if states.calendar.mondelez_de_late.attributes.start_time is defined %}
+              True
+            {% else %}
+              False
+            {% endif %}
     - condition: or
       conditions:
-        # - condition: state
-        #   entity_id: input_boolean.gielthuis
-        #   state: 'on'
         - condition: state
           entity_id: device_tracker.giel_not_so_binary
           state: "Thuis"
         - condition: state
           entity_id: device_tracker.martine_not_so_binary
           state: "Thuis"
-        # - condition: state
-        #   entity_id: input_boolean.martinethuis
-        #   state: 'on'
 action:
   - service: media_player.volume_set
     data_template:
@@ -57,8 +61,6 @@ action:
   - service: media_player.select_source
     data_template:
       entity_id: media_player.keuken
-      # source: 'Willy'
-      # source: 'Arrow Classic Rock'
       source: >
         {{ [
           'Willy',
@@ -69,7 +71,6 @@ action:
           'Alternative Energy',
           'New Lords of Metal',
           'Punk Riot',
-          'Bear Metal Radio',
           'KXLU',
           'MetalRock.FM',
           'VRT Studio Brussel Bruut',

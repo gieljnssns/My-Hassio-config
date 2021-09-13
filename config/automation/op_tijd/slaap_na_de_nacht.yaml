@@ -1,0 +1,46 @@
+alias: Slaap na de nacht
+id: 7e9cc1fa-4db2-433a-a372-043d538d13a9
+description: >-
+  Input boolean Giel slaapt na de nacht
+trigger:
+  - platform: time
+    at: "16:00:13"
+  - platform: time
+    at: "12:00:13"
+  - platform: state
+    entity_id: calendar.mondelez_de_nacht
+    to: 'off'
+  - platform: state
+    entity_id: calendar.mondelez_weekend_nacht
+    to: 'off'
+condition: []
+action:
+  - choose:
+      - conditions:
+        - condition: or
+          conditions:
+            - condition: and
+              conditions:
+                - condition: time
+                  after: "16:00:00"
+                # - condition: state
+                #   entity_id: binary_sensor.v_nacht
+                #   state:  "on"
+            - condition: and
+              conditions:
+                - condition: time
+                  after: "12:00:00"
+                - condition: state
+                  entity_id: binary_sensor.v_nacht
+                  state:  "off"
+                - condition: state
+                  entity_id: binary_sensor.v_w_nacht
+                  state:  "off"
+        sequence:
+          - service: input_boolean.turn_off
+            entity_id:
+              - input_boolean.giel_slaapt_na_nacht
+    default:
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.giel_slaapt_na_nacht
+mode: single

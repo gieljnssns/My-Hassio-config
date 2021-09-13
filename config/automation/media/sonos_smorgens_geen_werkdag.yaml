@@ -10,7 +10,7 @@ condition:
   conditions:
     - condition: time
       after: "08:30:00"
-      before: "12:00:00"
+      before: "12:15:00"
     - condition: state
       entity_id: binary_sensor.keuken_not_playing
       state: "on" # {{ states('media_player.keuken') != 'playing' }}
@@ -20,25 +20,16 @@ condition:
       entity_id: binary_sensor.v_werken
       state: "off"
     - condition: state
-      entity_id: binary_sensor.v_nacht
-      state: "off"
-    - condition: state
-      entity_id: binary_sensor.v_w_nacht
+      entity_id: input_boolean.giel_slaapt_na_nacht
       state: "off"
     - condition: or
       conditions:
-        # - condition: state
-        #   entity_id: input_boolean.gielthuis
-        #   state: 'on'
         - condition: state
           entity_id: device_tracker.giel_not_so_binary
           state: "Thuis"
         - condition: state
           entity_id: device_tracker.martine_not_so_binary
           state: "Thuis"
-        # - condition: state
-        #   entity_id: input_boolean.martinethuis
-        #   state: 'on'
 action:
   - service: media_player.volume_set
     data_template:
@@ -47,8 +38,6 @@ action:
   - service: media_player.select_source
     data_template:
       entity_id: media_player.keuken
-      # source: 'Willy'
-      # source: 'Fuzz FM'
       source: >
         {{ [
           'Willy',
@@ -56,12 +45,10 @@ action:
           'Alternative Energy',
           'New Lords of Metal',
           'Punk Riot',
-          'Bear Metal Radio',
           'Black Label Extreme Metal Radio',
           'VRT Studio Brussel Bruut',
           'Hard Rock Hell Radio',
           'KXLU',
-          'Bear Metal Radio',
           'MetalRock.FM',
           'VRT Studio Brussel Bruut',
           'Hand of Doom Radio',

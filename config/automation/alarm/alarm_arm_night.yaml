@@ -12,10 +12,10 @@ trigger:
   #   entity_id: device_tracker.philips_tv_ping
   #   from: "home"
   #   to: "not_home"
-  - platform: state
-    entity_id: media_player.living_2
-    from: "playing"
-    to: "idle"
+  # - platform: state
+  #   entity_id: media_player.living_2
+  #   from: "playing"
+  #   to: "idle"
   - platform: state
     entity_id: light.spot_slaapkamer
     to: "off"
@@ -25,9 +25,9 @@ trigger:
 condition:
   - condition: not
     conditions:
-      - condition: state
-        entity_id: media_player.living_2
-        state: "playing"
+      # - condition: state
+      #   entity_id: media_player.living_2
+      #   state: "playing"
       - condition: state
         entity_id: media_player.keuken
         state: "playing"
@@ -36,15 +36,14 @@ condition:
       - condition: time
         after: "20:15:00"
         before: "04:00:00"
-      - condition: state
-        entity_id: media_player.keuken
-        state:  "paused"
       - condition: template
         value_template: "{{ states('alarm_control_panel.ha_alarm') != 'arming' }}"
       - condition: template
         value_template: "{{ states('alarm_control_panel.ha_alarm') != 'armed_night' }}"
       - condition: template
         value_template: "{{ states('media_player.philips_tv') != 'on' }}"
+      - condition: template
+        value_template: "{{ states('device_tracker.philips_tv_ping') != 'home' }}"
       - condition: or
         conditions:
           - condition: or

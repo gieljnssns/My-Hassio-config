@@ -14,6 +14,23 @@ trigger:
     entity_id: switch.koffiezet
     from: "off"
     to: "on"
+condition:
+  condition: and
+  conditions:
+    - condition: or
+      conditions:
+        - condition: state
+          entity_id: device_tracker.giel_not_so_binary
+          state: "Thuis"
+        - condition: state
+          entity_id: device_tracker.martine_not_so_binary
+          state: "Thuis"
+        - condition: state
+          entity_id: device_tracker.giel_not_so_binary
+          state: "Juist Aangekomen"
+        - condition: state
+          entity_id: device_tracker.martine_not_so_binary
+          state: "Juist Aangekomen"
 action:
   - service: alarm_control_panel.alarm_disarm
     entity_id: alarm_control_panel.ha_alarm

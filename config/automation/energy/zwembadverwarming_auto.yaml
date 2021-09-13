@@ -13,6 +13,9 @@ condition:
     entity_id: input_boolean.op_verlof
     state: 'off'
   - condition: state
+    entity_id: binary_sensor.schooldag
+    state: "off"
+  - condition: state
     entity_id: switch.zwembad
     state: "on"
   - condition: template
@@ -24,6 +27,9 @@ condition:
   - condition: numeric_state
     entity_id: sensor.in
     below: 30
+  - condition: template
+    value_template: >
+      {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 23 }}
   - condition: template
     value_template: >
       {{ as_timestamp(now()) - as_timestamp(state_attr('automation.zwembadverwarming', 'last_triggered')) | float > 36000 }}

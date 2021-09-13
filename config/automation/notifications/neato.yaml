@@ -1,0 +1,28 @@
+id: a93a9015-67e5-4111-825f-44b49e8e745c
+alias: Stoffy notification
+description: ""
+trigger:
+  - platform: state
+    entity_id: alarm_control_panel.ha_alarm
+    to: "armed_night"
+condition: []
+action:
+  service: notify.mobile_app_gphone
+  data:
+    message: "Waar moet onze stoffy kuisen?"
+    data:
+      actions:
+        - action: "ALLES"
+          title: "Alles"
+        - action: "LIVING"
+          title: "Living"
+        - action: "KEUKEN"
+          title: "Keuken"
+        - action: "DANSZAAL"
+          title: "Danszaal"
+        - action: "ZITHOEK"
+          title: "Zithoek"
+        - action: "EETZAAL"
+          title: "Eetzaal"
+        - action: "INKOM"
+          title: "Inkom"

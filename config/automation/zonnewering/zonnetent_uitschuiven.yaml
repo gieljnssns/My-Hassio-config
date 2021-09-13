@@ -18,12 +18,12 @@ condition:
       above: 10
     - condition: numeric_state
       entity_id: sensor.zonne_energie_gefilterd_lowpass
-      above: 750
+      above: 1500
 
     # Weather based conditions
     - condition: numeric_state
       entity_id: sensor.weatherbit_wind_speed
-      below: 25 # Wind strenght - I still have to tune this value
+      below: 20 # Wind strenght - I still have to tune this value
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
@@ -55,9 +55,6 @@ condition:
     #     entity_id: sensor.openweathermap_rain
     #     below: 0.20
     #- condition: numeric_state
-    #  entity_id: sensor.ba_precipitation_forecast_average
-    #  below: 0.20 # Rain the next 15 min
-    #- condition: numeric_state
     #  entity_id: sensor.ba_precipitation
     #  below: 0.25 # Rain
     - condition: numeric_state
@@ -67,7 +64,7 @@ condition:
     # Temperature based conditions
     - condition: numeric_state
       entity_id: sensor.buitentemperatuur_gefilterd
-      above: 18 # only if outdoor temperature is above x then allowed to roll out
+      above: 21 # only if outdoor temperature is above x then allowed to roll out
     - condition: numeric_state
       entity_id: sensor.gemiddelde_temp_beneden
       above: 22 # only if indoor temperature is above x then allowed to roll out
@@ -76,7 +73,7 @@ condition:
     #   above: 22
     - condition: template
       value_template: >
-        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 20 }}
+        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 21 }}
 
     # Time based conditions
     - condition: template

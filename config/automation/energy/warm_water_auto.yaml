@@ -24,6 +24,10 @@ condition:
 action:
   - choose:
       - conditions:
+          - alias: "Niet op verlof"
+            condition: state
+            entity_id: input_boolean.op_verlof
+            state: "off"
           - condition: template
             value_template: >-
               {{ (states("sensor.solcast_solaredge_forecast") | float +
