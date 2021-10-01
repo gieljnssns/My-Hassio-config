@@ -3,10 +3,11 @@ substitutions:
   platform: ESP8266
   board: nodemcuv2
   upper_devicename: Esp zwembad
-  ssid: !secret ssid-garage
+  ssid: !secret ssid-slaapkamer
+  manual_ip: 192.168.89.118
 
 packages:
-  wifi: !include common/wifi-garage.yaml
+  wifi: !include common/wifi-slaapkamer.yaml
   device_base: !include common/device_base.yaml
 
 switch:
@@ -16,3 +17,22 @@ switch:
       # inverted: yes
     name: "Zwembad"
     id: zwembad
+    on_turn_on:
+    - delay: 10s
+    - switch.turn_on: chloor
+    on_turn_off:
+    - switch.turn_off: chloor
+  - platform: gpio
+    pin:
+      number: D2
+      # inverted: yes
+    name: "Chloor"
+    id: chloor
+    
+    
+binary_sensor:
+  - platform: gpio
+    name: Flow
+    pin:
+      number: D5
+    id: "flow"
