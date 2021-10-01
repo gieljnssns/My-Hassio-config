@@ -1,0 +1,82 @@
+substitutions:
+  devicename: garage
+  platform: ESP8266
+  board: nodemcuv2
+  upper_devicename: Esp garage
+  ssid: !secret ssid-garage
+  manual_ip: 192.168.89.120
+
+packages:
+  wifi: !include common/wifi-garage.yaml
+  device_base: !include common/device_base.yaml
+
+output:
+  - platform: gpio
+    pin:
+      number: D2
+      # inverted: yes
+    id: vogelpik 
+
+light:
+  - platform: binary
+    name: "Vogelpik"
+    output: vogelpik
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: D1
+    num_leds: 60
+    rgb_order: BRG
+    name: "Vogelpik ledstrip"
+    effects:
+      - addressable_rainbow:
+      - addressable_color_wipe:
+      - addressable_scan:
+          move_interval: 10ms
+          scan_width: 2
+      - addressable_twinkle:
+      - addressable_random_twinkle:
+      - addressable_fireworks:
+          use_random_color: true
+      - addressable_scan:
+          move_interval: 10ms
+          scan_width: 1
+          name: Fast Scan
+      - addressable_lambda:
+          name: "Expo Light"
+          update_interval: 16ms
+          lambda: |-
+            static int x = -400;
+            float y = 0.35+0.65*exp(-pow(x, 2)/49000);
+            int8_t r = ceil(current_color.r * y);
+            int8_t g = ceil(current_color.g * y);
+            int8_t b = ceil(current_color.b * y);
+            it.all() = ESPColor(r,g,b);
+            x += 1;
+            if (x == 400)
+              x = -400;
+      # - addressable_lambda:
+      #     name: "Wipe In"
+      #     update_interval: 12ms
+      #     lambda: |-
+      #       static int x = 0;
+      #       if (initial_run) {
+      #         x = 0;
+      #         it.all() = ESPColor::BLACK;
+      #       }
+      #       if (x < it.size()) {
+      #         it[x] = current_color;
+      #         x += 1;
+      #       }
+      # - addressable_lambda:
+      #     name: "Wipe Out"
+      #     update_interval: 12ms
+      #     lambda: |-
+      #       static int x = 0;
+      #       if (initial_run) {
+      #         x = it.size();
+      #       }
+      #       if (x > 0) {
+      #         x -= 1; 
+      #         it[x] = ESPColor::BLACK;
+      #       }
+      

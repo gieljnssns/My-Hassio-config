@@ -4,6 +4,7 @@ substitutions:
   board: nodemcuv2
   upper_devicename: Smappee L2
   ssid: !secret ssid-waskot
+  manual_ip: 192.168.89.115
 
 packages:
   wifi: !include common/wifi-waskot.yaml
@@ -35,107 +36,96 @@ sensor:
     address: 1
     modbus_id: mbus
     current:
-      name: "L2 stroom"
+      #name: "L2 stroom"
       id: currentL2
     voltage:
-      name: "L2 spanning"
+      #name: "L2 spanning"
       id: voltageL2
     energy:
-      name: "L2 energie"
+      #name: "L2 energie"
       id: energyL2
     power:
-      name: "L2 vermogen"
+      #name: "L2 vermogen"
       id: powerL2
     frequency:
-      name: "L2 frequentie"
+      #name: "L2 frequentie"
+      id: L2freq
     power_factor:
-      name: "L2 cos phi"
+      #name: "L2 cos phi"
+      id: L2cosphi
     update_interval: 2s
   - platform: pzemac
     address: 2
     modbus_id: mbus
     current:
-      name: "S2 stroom"
+      #name: "S2 stroom"
       id: currentS2
     voltage:
-      name: "S2 spanning"
+      #name: "S2 spanning"
       id: voltageS2
     energy:
-      name: "S2 energie"
+      #name: "S2 energie"
       id: energyS2
     power:
-      name: "S2 vermogen"
+      #name: "S2 vermogen"
       id: powerS2
     frequency:
-      name: "S2 frequentie"
+      #name: "S2 frequentie"
+      id: S2freq
     power_factor:
-      name: "S2 cos phi"
+      #name: "S2 cos phi"
+      id: S2cosphi
     update_interval: 2s
   - platform: pzemac
     address: 3
     modbus_id: mbus
     current:
-      name: "V2 stroom"
+      #name: "V2 stroom"
       id: currentV2
     voltage:
-      name: "V2 spanning"
+      #name: "V2 spanning"
       id: voltageV2
     energy:
-      name: "V2 energie"
+      #name: "V2 energie"
       id: energyV2
     power:
-      name: "V2 vermogen"
+      #name: "V2 vermogen"
       id: powerV2
     frequency:
-      name: "V2 frequentie"
+      #name: "V2 frequentie"
+      id: V2freq
     power_factor:
-      name: "V2 cos phi"
+      #name: "V2 cos phi"
+      id: V2cosphi
     update_interval: 2s
   ###  Template sensors  ###
-  - platform: template
-    name: "L2 schijnbaar vermogen"
-    id: reactive_power_L2
-    update_interval: 2s
-    unit_of_measurement: "VA"
-    # internal: true
-    lambda: |-
-      return (id(currentL2).state * id(voltageL2).state);
-  - platform: template
-    name: "S2 schijnbaar vermogen"
-    id: reactive_power_S2
-    update_interval: 2s
-    unit_of_measurement: "VA"
-    # internal: true
-    lambda: |-
-      return (id(currentS2).state * id(voltageS2).state);
-  - platform: template
-    name: "V2 schijnbaar vermogen"
-    id: reactive_power_V2
-    update_interval: 2s
-    unit_of_measurement: "VA"
-    # internal: true
-    lambda: |-
-      return (id(currentV2).state * id(voltageV2).state);
   # - platform: template
-  #   name: "L2 Spanning solar-fluvius"
-  #   unit_of_measurement: V
-  #   icon: mdi:flash-outline
+  #   name: "L2 schijnbaar vermogen"
+  #   id: reactive_power_L2
   #   update_interval: 2s
+  #   unit_of_measurement: "VA"
+  #   # internal: true
   #   lambda: |-
-  #     return (id(voltageS2).state - id(voltageL2).state);
-  
-  
+  #     return (id(currentL2).state * id(voltageL2).state);
   # - platform: template
-  #   name: "L2 vermogen fluvius-solar"
-  #   id: fluvius_min_solar
-  #   unit_of_measurement: W
-  #   icon: mdi:flash-outline
+  #   name: "S2 schijnbaar vermogen"
+  #   id: reactive_power_S2
   #   update_interval: 2s
+  #   unit_of_measurement: "VA"
+  #   # internal: true
   #   lambda: |-
-  #     return (id(powerL2).state - id(powerS2).state);
+  #     return (id(currentS2).state * id(voltageS2).state);
+  # - platform: template
+  #   name: "V2 schijnbaar vermogen"
+  #   id: reactive_power_V2
+  #   update_interval: 2s
+  #   unit_of_measurement: "VA"
+  #   # internal: true
+  #   lambda: |-
+  #     return (id(currentV2).state * id(voltageV2).state);
   
   - platform: template
-    name: "V2 vermogen test2"
+    name: "V2 vermogen"
     id: powerV2_test2
     update_interval: 2s
     unit_of_measurement: "W"
@@ -161,19 +151,19 @@ sensor:
               - sensor.template.publish:
                   id: powerS2_test2
                   state: !lambda 'return id(powerS2).state;'
-              - logger.log: 
-                  format: "(L2 - S2) - V2 = %.1f"
-                  args: [ '(id(powerL2).state - id(powerS2).state) - id(powerV2).state' ]
+              # - logger.log: 
+              #     format: "(L2 - S2) - V2 = %.1f"
+              #     args: [ '(id(powerL2).state - id(powerS2).state) - id(powerV2).state' ]
   
   
   - platform: template
-    name: "S2 vermogen test2"
+    name: "S2 vermogen"
     id: powerS2_test2
     update_interval: 2s
     unit_of_measurement: "W"
   
   - platform: template
-    name: "L2 vermogen test2"
+    name: "L2 vermogen"
     id: powerL2_test2
     update_interval: 2s
     unit_of_measurement: "W"
@@ -206,61 +196,13 @@ sensor:
                   state: 0
     
   - platform: template
-    name: "L2 net terugsturen test2"
+    name: "L2 net terugsturen"
     id: grid_production_test2
     update_interval: 2s
     unit_of_measurement: "W"
   
   - platform: template
-    name: "L2 net afname test2"
+    name: "L2 net afname"
     id: grid_consumption_test2
     update_interval: 2s
     unit_of_measurement: "W"
-  # - platform: template
-  #   name: "Huidige opbrengst"
-  #   unit_of_measurement: W
-  #   icon: mdi:flash-outline
-  #   id: power
-  #   update_interval: 2s
-  #   lambda: |-
-  #     return (id(powerS1).state + id(powerS2).state + id(powerS3).state);
-  # - platform: template
-  #   name: "Schijnbare opbrengst"
-  #   unit_of_measurement: VA
-  #   icon: mdi:flash-outline
-  #   id: reactive_power
-  #   update_interval: 5s
-  #   lambda: |-
-  #     return (id(reactive_power_S1).state + id(reactive_power_S2).state + id(reactive_power_S3).state );
-  # - platform: template
-  #   name: "Schijnbare opbrengst S1"
-  #   id: reactive_power_S1
-  #   update_interval: 5s
-  #   internal: true
-  #   lambda: |-
-  #     return (id(currentS1).state * id(voltageS1).state);
-  # - platform: template
-  #   name: "Schijnbare opbrengst S2"
-  #   id: reactive_power_S2
-  #   update_interval: 5s
-  #   internal: true
-  #   lambda: |-
-  #     return (id(currentS2).state * id(voltageS2).state);
-  # - platform: template
-  #   name: "Schijnbare opbrengst S3"
-  #   id: reactive_power_S3
-  #   update_interval: 5s
-  #   internal: true
-  #   lambda: |-
-  #     return (id(currentS3).state * id(voltageS3).state);
-  
-  # ###  Daily energy  ###
-  # - platform: total_daily_energy
-  #   name: "Dagelijkse opbrengst"
-  #   power_id: power 
-  #   filters:
-  #       # Multiplication factor from W to kW is 0.001
-  #     - multiply: 0.001
-  #   unit_of_measurement: kWh
-  #   icon: mdi:counter
-  #   accuracy_decimals: 3
