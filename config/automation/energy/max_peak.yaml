@@ -5,15 +5,15 @@ mode: parallel
 trigger:
   - platform: state
     entity_id: sensor.max_peak
-      # {{  states("sensor.max_peak") | float > states("input_number.max_peak") | float }}
+      # {{  states("sensor.max_peak") | float(default=0)> states("input_number.max_peak") | float(default=0)}}
 condition:
   - condition: template
     value_template: >
-      {{  states("sensor.max_peak") | float > states("input_number.max_peak") | float }}
+      {{  states("sensor.max_peak") | float(default=0)> states("input_number.max_peak") | float(default=0)}}
 action:
   - service: input_number.set_value
     target:
       entity_id: input_number.max_peak
     data:
         value: >
-          {{ states("sensor.max_peak") | float }}
+          {{ states("sensor.max_peak") | float(default=0)}}

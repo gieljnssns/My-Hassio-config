@@ -30,8 +30,8 @@ action:
             state: "off"
           - condition: template
             value_template: >-
-              {{ (states("sensor.solcast_solaredge_forecast") | float +
-                  states("sensor.solcast_huawei_forecast") | float) | round(2) > 20 | float }}
+              {{ (states("sensor.solcast_solaredge_forecast") | float(default=0)+
+                  states("sensor.solcast_huawei_forecast") | float(default=0)) | round(2) > 20 | float(default=0)}}
         sequence:
           - service: input_boolean.turn_on
             target:

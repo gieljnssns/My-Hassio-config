@@ -19,17 +19,17 @@
             - service: input_number.set_value
               data:
                 entity_id: input_number.solcast_solaredge_latest_today_forecast
-                value: "{{ (states('sensor.solaredge_production_daily') | float + states('sensor.solcast_solaredge_forecast') | float ) | round(1) }}"
+                value: "{{ (states('sensor.solaredge_production_daily') | float(default=0)+ states('sensor.solcast_solaredge_forecast') | float(default=0)) | round(1) }}"
       default:
         - delay:
             seconds: 3
         - service: input_number.set_value
           data:
             entity_id: input_number.solcast_huawei_latest_today_forecast
-            value: "{{ (states('sensor.huawei_daily_energy_yield') | float + states('sensor.solcast_huawei_forecast') | float ) | round(1) }}"
+            value: "{{ (states('sensor.huawei_daily_energy_yield') | float(default=0)+ states('sensor.solcast_huawei_forecast') | float(default=0)) | round(1) }}"
         - service: input_number.set_value
           data:
             entity_id: input_number.solcast_latest_today_forecast
-            value: "{{ (states('sensor.huawei_daily_energy_yield') | float + states('sensor.solaredge_production_daily') | float + states('sensor.solcast_solaredge_forecast') | float + states('sensor.solcast_huawei_forecast') | float ) | round(1) }}"
+            value: "{{ (states('sensor.huawei_daily_energy_yield') | float(default=0)+ states('sensor.solaredge_production_daily') | float(default=0)+ states('sensor.solcast_solaredge_forecast') | float(default=0)+ states('sensor.solcast_huawei_forecast') | float(default=0)) | round(1) }}"
 
 

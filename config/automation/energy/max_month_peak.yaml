@@ -14,7 +14,7 @@ action:
         sequence:
           - condition: template
             value_template: >
-              {{  states("sensor.max_peak") | float > states("input_number.january_peak") | float }}
+              {{  states("sensor.max_peak") | float(default=0)> states("input_number.january_peak") | float(default=0)}}
           - service: input_number.set_value
             target:
               entity_id: input_number.january_peak
@@ -41,7 +41,7 @@ action:
         sequence:
           - condition: template
             value_template: >
-              {{  states("sensor.max_peak") | float > states("input_number.february_peak") | float }}
+              {{  states("sensor.max_peak") | float(default=0)> states("input_number.february_peak") | float(default=0)}}
           - service: input_number.set_value
             target:
               entity_id: input_number.february_peak
@@ -68,7 +68,7 @@ action:
         sequence:
           - condition: template
             value_template: >
-              {{  states("sensor.max_peak") | float > states("input_number.march_peak") | float }}
+              {{  states("sensor.max_peak") | float(default=0)> states("input_number.march_peak") | float(default=0)}}
           - service: input_number.set_value
             target:
               entity_id: input_number.march_peak
@@ -95,7 +95,7 @@ action:
         sequence:
           - condition: template
             value_template: >
-              {{  states("sensor.max_peak") | float > states("input_number.april_peak") | float }}
+              {{  states("sensor.max_peak") | float(default=0)> states("input_number.april_peak") | float(default=0)}}
           - service: input_number.set_value
             target:
               entity_id: input_number.april_peak
@@ -122,7 +122,7 @@ action:
         sequence:
           - condition: template
             value_template: >
-              {{  states("sensor.max_peak") | float > states("input_number.may_peak") | float }}
+              {{  states("sensor.max_peak") | float(default=0)> states("input_number.may_peak") | float(default=0)}}
           - service: input_number.set_value
             target:
               entity_id: input_number.may_peak
@@ -149,7 +149,7 @@ action:
         sequence:
           - condition: template
             value_template: >
-              {{  states("sensor.max_peak") | float > states("input_number.june_peak") | float }}
+              {{  states("sensor.max_peak") | float(default=0)> states("input_number.june_peak") | float(default=0)}}
           - service: input_number.set_value
             target:
               entity_id: input_number.june_peak
@@ -176,7 +176,7 @@ action:
         sequence:
           - condition: template
             value_template: >
-              {{  states("sensor.max_peak") | float > states("input_number.july_peak") | float }}
+              {{  states("sensor.max_peak") | float(default=0)> states("input_number.july_peak") | float(default=0)}}
           - service: input_number.set_value
             target:
               entity_id: input_number.july_peak
@@ -203,7 +203,7 @@ action:
         sequence:
           - condition: template
             value_template: >
-              {{  states("sensor.max_peak") | float > states("input_number.august_peak") | float }}
+              {{  states("sensor.max_peak") | float(default=0)> states("input_number.august_peak") | float(default=0)}}
           - service: input_number.set_value
             target:
               entity_id: input_number.august_peak
@@ -230,7 +230,7 @@ action:
         sequence:
           - condition: template
             value_template: >
-              {{  states("sensor.max_peak") | float > states("input_number.september_peak") | float }}
+              {{  states("sensor.max_peak") | float(default=0)> states("input_number.september_peak") | float(default=0)}}
           - service: input_number.set_value
             target:
               entity_id: input_number.september_peak
@@ -257,7 +257,7 @@ action:
         sequence:
           - condition: template
             value_template: >
-              {{  states("sensor.max_peak") | float > states("input_number.october_peak") | float }}
+              {{  states("sensor.max_peak") | float(default=0)> states("input_number.october_peak") | float(default=0)}}
           - service: input_number.set_value
             target:
               entity_id: input_number.october_peak
@@ -284,7 +284,7 @@ action:
         sequence:
           - condition: template
             value_template: >
-              {{  states("sensor.max_peak") | float > states("input_number.november_peak") | float }}
+              {{  states("sensor.max_peak") | float(default=0)> states("input_number.november_peak") | float(default=0)}}
           - service: input_number.set_value
             target:
               entity_id: input_number.november_peak
@@ -308,7 +308,7 @@ action:
     default:
       - condition: template
         value_template: >
-          {{  states("sensor.max_peak") | float > states("input_number.december_peak") | float }}
+          {{  states("sensor.max_peak") | float(default=0)> states("input_number.december_peak") | float(default=0)}}
       - service: input_number.set_value
         target:
           entity_id: input_number.december_peak
