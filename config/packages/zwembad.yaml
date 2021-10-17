@@ -51,7 +51,8 @@ automation:
           {{ states('sensor.time') == (state_attr('input_datetime.zwembad_stop', 'timestamp') | int | timestamp_custom('%H:%M', False)) and states('input_select.zwembad_modus') != 'Boost' }}
       - platform: template
         value_template: >
-          {{ strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M:%S') == (state_attr('input_datetime.zwembad_boost_stop', 'timestamp') | int | timestamp_custom('%Y-%m-%d, %H:%M')) and states('input_select.zwembad_modus') == 'Boost' }}
+          {{ states("sensor.date_time") == (state_attr('input_datetime.zwembad_boost_stop', 'timestamp') | int | timestamp_custom('%Y-%m-%d, %H:%M')) and states('input_select.zwembad_modus') == 'Boost' }}
+        # {{ strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M:%S') == (state_attr('input_datetime.zwembad_boost_stop', 'timestamp') | int | timestamp_custom('%Y-%m-%d, %H:%M')) and states('input_select.zwembad_modus') == 'Boost' }}
     action:
       - service_template: >
           {% if states('sensor.time') == (state_attr('input_datetime.zwembad_start', 'timestamp') | int | timestamp_custom('%H:%M', False)) %}
@@ -61,7 +62,8 @@ automation:
           {% endif %}
       - condition: template
         value_template: >
-          {{ strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M:%S') == (state_attr('input_datetime.zwembad_boost_stop', 'timestamp') | int | timestamp_custom('%Y-%m-%d, %H:%M')) }}
+          {{ states("sensor.date_time") == (state_attr('input_datetime.zwembad_boost_stop', 'timestamp') | int | timestamp_custom('%Y-%m-%d, %H:%M')) }}
+        # {{ strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M:%S') == (state_attr('input_datetime.zwembad_boost_stop', 'timestamp') | int | timestamp_custom('%Y-%m-%d, %H:%M')) }}
       - service: script.zwembad_met_zout
 
   - alias: Zwembad schema
