@@ -1,0 +1,159 @@
+substitutions:
+  devicename: zwembadverwarming
+  platform: ESP8266
+  board: nodemcuv2
+  upper_devicename: Esp zwembadverwarming
+  ssid: !secret ssid
+  manual_ip: 192.168.89.119
+
+packages:
+  wifi: !include common/wifi-garage.yaml
+  device_base: !include common/device_base.yaml
+
+switch:
+  - platform: gpio
+    pin:
+      number: D1
+      inverted: yes
+    name: "Zwembadverwarming"
+    id: zwembadverwarming
+    on_turn_off:
+    - homeassistant.service:
+        service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.zwembad_warm_water_2u, input_boolean.zwembad_warm_water_3u, input_boolean.zwembad_warm_water_4u, input_boolean.zwembad_warm_water_5u
+
+dallas:
+  - pin: D2
+    id: temp
+    
+
+# Individual sensors
+
+# 0x893C01D607F4DC28
+# 0xEF3C01D607099F28
+sensor:
+  - platform: dallas
+    address: 0x893C01D607F4DC28
+    name: "In"
+    dallas_id: temp
+  - platform: dallas
+    address: 0xEF3C01D607099F28
+    name: "Uit"
+    dallas_id: temp
+
+binary_sensor:
+  - platform: homeassistant
+    name: "Pomp"
+    id: pomp
+    internal: true
+    entity_id: switch.zwembad
+    on_release:
+      if:
+        condition:
+          # Same syntax for is_off
+          switch.is_on: zwembadverwarming
+        then:
+          - switch.turn_off: zwembadverwarming
+          - homeassistant.service:
+                service: notify.mobile_app_gphone
+                data:
+                  message: Warmtepomp zwembad uit - pomp uit
+        # - delay: 2h
+        # - switch.turn_off: zwembadverwarming
+        # - homeassistant.service:
+        #     service: input_boolean.turn_off
+        #     data:
+        #       entity_id: input_boolean.warm_water_2u
+        # - homeassistant.service:
+        #         service: notify.mobile_app_gphone
+        #         data:
+        #           message: Warmtepomp zwembad 2u uit
+  - platform: homeassistant
+    name: "2u"
+    id: uu
+    internal: true
+    entity_id: input_boolean.zwembad_warm_water_2u
+    on_press:
+      then:
+        - switch.turn_on: zwembadverwarming
+        - homeassistant.service:
+                service: notify.mobile_app_gphone
+                data:
+                  message: Warmtepomp zwembad 2u aan
+        - delay: 2h
+        - switch.turn_off: zwembadverwarming
+        - homeassistant.service:
+            service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.zwembad_warm_water_2u
+        - homeassistant.service:
+                service: notify.mobile_app_gphone
+                data:
+                  message: Warmtepomp zwembad 2u uit
+  - platform: homeassistant
+    name: "3u"
+    id: uuu
+    internal: true
+    entity_id: input_boolean.zwembad_warm_water_3u
+    on_press:
+      then:
+        - switch.turn_on: zwembadverwarming
+        - homeassistant.service:
+                service: notify.mobile_app_gphone
+                data:
+                  message: Warmtepomp zwembad 3u aan
+        - delay: 3h
+        - switch.turn_off: zwembadverwarming
+        - homeassistant.service:
+            service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.zwembad_warm_water_3u
+        - homeassistant.service:
+                service: notify.mobile_app_gphone
+                data:
+                  message: Warmtepomp zwembad 3u uit
+  - platform: homeassistant
+    name: "4u"
+    id: uuuu
+    internal: true
+    entity_id: input_boolean.zwembad_warm_water_4u
+    on_press:
+      then:
+        - switch.turn_on: zwembadverwarming
+        - homeassistant.service:
+                service: notify.mobile_app_gphone
+                data:
+                  message: Warmtepomp zwembad 4u aan
+        - delay: 4h
+        - switch.turn_off: zwembadverwarming
+        - homeassistant.service:
+            service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.zwembad_warm_water_4u
+        - homeassistant.service:
+                service: notify.mobile_app_gphone
+                data:
+                  message: Warmtepomp zwembad 4u uit
+  - platform: homeassistant
+    name: "5u"
+    id: uuuuu
+    internal: true
+    entity_id: input_boolean.zwembad_warm_water_5u
+    on_press:
+      then:
+        - switch.turn_on: zwembadverwarming
+        - homeassistant.service:
+                service: notify.mobile_app_gphone
+                data:
+                  message: Warmtepomp zwembad 5u aan
+        - delay: 5h
+        - switch.turn_off: zwembadverwarming
+        - homeassistant.service:
+            service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.zwembad_warm_water_5u
+        - homeassistant.service:
+                service: notify.mobile_app_gphone
+                data:
+                  message: Warmtepomp zwembad 5u uit
