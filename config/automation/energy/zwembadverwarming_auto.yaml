@@ -5,7 +5,7 @@ mode: single
 trigger:
   - platform: template
     value_template: >
-      {{ states("sensor.l1_net_terugsturen") | float > 2000 | float }}
+      {{ states("sensor.l1_net_terugsturen") | float(default=0)> 2000 | float(default=0)}}
     for:
       minutes: 15
 condition:
@@ -32,14 +32,14 @@ condition:
       {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 23 }}
   - condition: template
     value_template: >
-      {{ as_timestamp(now()) - as_timestamp(state_attr('automation.zwembadverwarming', 'last_triggered')) | float > 36000 }}
+      {{ as_timestamp(now()) - as_timestamp(state_attr('automation.zwembadverwarming', 'last_triggered')) | float(default=0)> 36000 }}
 action:
   - choose:
       - conditions:
           - condition: template
             value_template: >-
-              {{ (states("sensor.solcast_solaredge_forecast") | float +
-                  states("sensor.solcast_huawei_forecast") | float) | round(2) > 50 | float }}
+              {{ (states("sensor.solcast_solaredge_forecast") | float(default=0)+
+                  states("sensor.solcast_huawei_forecast") | float(default=0)) | round(2) > 50 | float(default=0)}}
           - condition: state
             entity_id: input_boolean.zwembad_warm_water_2u, input_boolean.zwembad_warm_water_3u, input_boolean.zwembad_warm_water_4u, input_boolean.zwembad_warm_water_5u
             state: "off"
@@ -50,8 +50,8 @@ action:
       - conditions:
           - condition: template
             value_template: >-
-              {{ (states("sensor.solcast_solaredge_forecast") | float +
-                  states("sensor.solcast_huawei_forecast") | float) | round(2) > 40 | float }}
+              {{ (states("sensor.solcast_solaredge_forecast") | float(default=0)+
+                  states("sensor.solcast_huawei_forecast") | float(default=0)) | round(2) > 40 | float(default=0)}}
           - condition: state
             entity_id: input_boolean.zwembad_warm_water_2u, input_boolean.zwembad_warm_water_3u, input_boolean.zwembad_warm_water_4u, input_boolean.zwembad_warm_water_5u
             state: "off"
@@ -62,8 +62,8 @@ action:
       - conditions:
           - condition: template
             value_template: >-
-              {{ (states("sensor.solcast_solaredge_forecast") | float +
-                  states("sensor.solcast_huawei_forecast") | float) | round(2) > 30 | float }}
+              {{ (states("sensor.solcast_solaredge_forecast") | float(default=0)+
+                  states("sensor.solcast_huawei_forecast") | float(default=0)) | round(2) > 30 | float(default=0)}}
           - condition: state
             entity_id: input_boolean.zwembad_warm_water_2u, input_boolean.zwembad_warm_water_3u, input_boolean.zwembad_warm_water_4u, input_boolean.zwembad_warm_water_5u
             state: "off"

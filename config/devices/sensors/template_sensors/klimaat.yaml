@@ -15,7 +15,7 @@
 
     binnen_vs_buiten:
       value_template: >
-        {% if (states('sensor.binnen_lowpass')) > (states('sensor.gemiddelde_temp_buiten')) and states('sensor.binnen_lowpass') | float > 26 %}
+        {% if (states('sensor.binnen_lowpass')) > (states('sensor.gemiddelde_temp_buiten')) and states('sensor.binnen_lowpass') | float(default=0)> 26 %}
           Afkoeling
         {% else %}
           Geen afkoeling
@@ -25,27 +25,27 @@
       friendly_name: "Badkamer luchtvochtigheid verandering"
       icon_template: mdi:water-percent
       value_template: >
-        {{ state_attr("sensor.badkamer_luchtvochtigheid_stats", "change") | float }}
+        {{ state_attr("sensor.badkamer_luchtvochtigheid_stats", "change") | float(default=0)}}
 
     bathroom_humidity_change_template_percent:
       friendly_name: "Badkamer luchtvochtigheid verandering"
       icon_template: mdi:water-percent
       unit_of_measurement: "%"
       value_template: >
-        {{ state_attr("sensor.badkamer_luchtvochtigheid_stats", "change") | float }}
+        {{ state_attr("sensor.badkamer_luchtvochtigheid_stats", "change") | float(default=0)}}
 
     keuken_humidity_change_template:
       friendly_name: "Keuken luchtvochtigheid verandering"
       icon_template: mdi:water-percent
       value_template: >
-        {{ state_attr("sensor.keuken_luchtvochtigheid_stats", "change") | float }}
+        {{ state_attr("sensor.keuken_luchtvochtigheid_stats", "change") | float(default=0)}}
 
     keuken_humidity_change_template_percent:
       friendly_name: "Keuken luchtvochtigheid verandering"
       icon_template: mdi:water-percent
       unit_of_measurement: "%"
       value_template: >
-        {{ state_attr("sensor.keuken_luchtvochtigheid_stats", "change") | float }}
+        {{ state_attr("sensor.keuken_luchtvochtigheid_stats", "change") | float(default=0)}}
 
     # max_humidity_allowed_zolder:
     #   # based on this formula: https://bmcnoldy.rsmas.miami.edu/Humidity.html

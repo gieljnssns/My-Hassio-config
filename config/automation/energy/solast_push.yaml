@@ -8,13 +8,13 @@
     - choose:
           # Average Power less than 10kWh and Last Meter Was stored between 29 and 31 mins  
         - conditions: >
-            {{ ((states('sensor.huawei_accumulated_energy_yield') | float -  states('input_number.huawei_30_mins_ago') | float) * 12.0 < 10.0) and
+            {{ ((states('sensor.huawei_accumulated_energy_yield') | float(default=0)-  states('input_number.huawei_30_mins_ago') | float(default=0)) * 12.0 < 10.0) and
             ((as_timestamp(now())-state_attr('input_datetime.huawei_last_stored_data', 'timestamp')) < 1860)  and
             ((as_timestamp(now())-state_attr('input_datetime.huawei_last_stored_data', 'timestamp')) > 1740)   }}
           sequence:
             - service: solcast.push_measurement
               data:
-                total_power: "{{ (((states('sensor.huawei_accumulated_energy_yield') | float) -  (states('input_number.huawei_30_mins_ago') | float)) * 2.0) | round(2) }}"        
+                total_power: "{{ (((states('sensor.huawei_accumulated_energy_yield') | float(default=0)) -  (states('input_number.huawei_30_mins_ago') | float(default=0))) * 2.0) | round(2) }}"        
                 period: 'PT30M'
                 period_end: "{{ utcnow() |  replace(' ','T') }}"    
             - service: input_number.set_value
@@ -38,13 +38,13 @@
     - choose:
           # Average Power less than 10kWh and Last Meter Was stored between 29 and 31 mins  
         - conditions: >
-            {{ ((states('sensor.solaredge_accumulated_energy_yield') | float -  states('input_number.solaredge_30_mins_ago') | float) * 12.0 < 10.0) and
+            {{ ((states('sensor.solaredge_accumulated_energy_yield') | float(default=0)-  states('input_number.solaredge_30_mins_ago') | float(default=0)) * 12.0 < 10.0) and
             ((as_timestamp(now())-state_attr('input_datetime.solaredge_last_stored_data', 'timestamp')) < 1860)  and
             ((as_timestamp(now())-state_attr('input_datetime.solaredge_last_stored_data', 'timestamp')) > 1740)   }}
           sequence:
             - service: solcast_garage.push_measurement
               data:
-                total_power: "{{ (((states('sensor.solaredge_accumulated_energy_yield') | float) -  (states('input_number.solaredge_30_mins_ago') | float)) * 2.0) | round(2) }}"        
+                total_power: "{{ (((states('sensor.solaredge_accumulated_energy_yield') | float(default=0)) -  (states('input_number.solaredge_30_mins_ago') | float(default=0))) * 2.0) | round(2) }}"        
                 period: 'PT30M'
                 period_end: "{{ utcnow() |  replace(' ','T') }}"    
             - service: input_number.set_value
