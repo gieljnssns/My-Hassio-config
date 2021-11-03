@@ -133,52 +133,6 @@
             {{ (states("sensor.daily_solar") | float(default=0) - states("sensor.daily_energy") | float(default=0))  | round(3) }}
         {% endif %}
 
-    ###  Schijnbaar  ###
-    # huidige_opbrengst_schijnbaar:
-    #   friendly_name: Huidige schijnbare opbrengst
-    #   unit_of_measurement: "VA"
-    #   value_template: >
-    #     {{ (states("sensor.s1_schijnbaar_vermogen") | float(default=0) + states("sensor.s2_schijnbaar_vermogen") | float(default=0) + states("sensor.s3_schijnbaar_vermogen") | float(default=0)) | round(2) }}
-
-    # huidig_verbruik_schijnbaar:
-    #   friendly_name: Huidig schijnbaar verbruik
-    #   unit_of_measurement: "VA"
-    #   value_template: >
-    #     {{ (states("sensor.v1_schijnbaar_vermogen") | float(default=0) + states("sensor.v2_schijnbaar_vermogen") | float(default=0) + states("sensor.v3_schijnbaar_vermogen") | float(default=0)) | round(2) }}
-    
-    # huidige_fluvius_schijnbaar:
-    #   friendly_name: Fluivius schijnbaar
-    #   unit_of_measurement: "VA"
-    #   value_template: >
-    #     {{ (states("sensor.l1_schijnbaar_vermogen") | float(default=0) + states("sensor.l2_schijnbaar_vermogen") | float(default=0) + states("sensor.l3_schijnbaar_vermogen") | float(default=0)) | round(2) }}
-
-    ###  Tests  ###
-    # huidig_verbruik_test:
-    #   friendly_name: Huidig verbruik test
-    #   unit_of_measurement: "W"
-    #   device_class: power
-    #   value_template: >
-    #     {{ (states("sensor.v1_vermogen_test2") | float(default=0) + states("sensor.v2_vermogen_test2") | float(default=0) + states("sensor.v3_vermogen_test2") | float(default=0)) | round(2) }}
-    
-    # eigen_verbruik_test:
-    #   friendly_name: Eigen verbruik test
-    #   unit_of_measurement: "W"
-    #   device_class: power
-    #   value_template: >
-    #     {% if (states("sensor.huidige_opbrengst_test") | float(default=0) - states("sensor.huidig_verbruik_test") | float(default=0)) >= 0 %}
-    #         {{ (states("sensor.huidig_verbruik_test") | float(default=0)) | round(2)  }}
-    #     {% elif (states("sensor.huidige_opbrengst_test") | float(default=0) - states("sensor.huidig_verbruik_test") | float(default=0)) < 0 and states("sensor.huidige_opbrengst_test") | float(default=0) > 0 %}
-    #         {{ (states("sensor.huidige_opbrengst_test") | float(default=0)) | round(2)  }}
-    #     {% else  %}
-    #         {{ 0 | float(default=0) }}
-    #     {% endif %}
-
-    # huidige_opbrengst_test:
-    #   friendly_name: Huidige opbrengst test
-    #   unit_of_measurement: "W"
-    #   device_class: power
-    #   value_template: >
-    #     {{ (states("sensor.s1_vermogen_test2") | float(default=0) + states("sensor.s2_vermogen_test2") | float(default=0) + states("sensor.s3_vermogen_test2") | float(default=0)) | round(2) }}
 
     ###  Combinatie  ###
     verlichting_vermogen:
@@ -237,6 +191,7 @@
             - states("sensor.verluchting_vermogen") | float(default=0) 
             - states("sensor.zwembad_alles_vermogen") | float(default=0) 
             - states("sensor.keuken_ijskast_vermogen") | float(default=0) 
+            - states("sensor.garage_ijskast_vermogen") | float(default=0) 
             - states("sensor.regenwaterpomp_vermogen") | float(default=0) 
             - states("sensor.keuken_toestellen_vermogen") | float(default=0) 
             - states("sensor.afwasmachien_vermogen") | float(default=0) 
@@ -282,8 +237,18 @@
       unit_of_measurement: "W"
       device_class: power
       value_template: >
-        {% set peak = (states.sensor.energie_kwartierpiek.state | float(default=0)) %}
-        {% set max_peak = (states.input_number.max_peak.state | float(default=0)) %}
+        {% set peak = (states("sensor.energie_kwartierpiek") | float(default=0)) %}
+        {% set max_peak = (states("input_number.max_peak") | float(default=0)) %}
+        {% macro max(X, Y) -%} {{X|float if X|float > Y|float else Y|float }} {%- endmacro %}
+        {{ max(max_peak, peak) }}
+    
+    max_peak_2:
+      friendly_name: Maximum piek 2 
+      unit_of_measurement: "kW"
+      device_class: power
+      value_template: >
+        {% set peak = ((states("sensor.quarter_hourly_grid_consumption") | float(default=0)) * 4) %}
+        {% set max_peak = (states("input_number.max_peak_2") | float(default=0)) %}
         {% macro max(X, Y) -%} {{X|float if X|float > Y|float else Y|float }} {%- endmacro %}
         {{ max(max_peak, peak) }}
     
@@ -304,4 +269,23 @@
               states('input_number.october_peak') | float(default=0) +
               states('input_number.november_peak') | float(default=0) +
               states('input_number.december_peak') | float(default=0) ) / 12) | round(2)
+        }}
+    
+    year_peak_2:
+      friendly_name: Gemiddelde jaarpiek 2
+      unit_of_measurement: "kW"
+      device_class: power
+      value_template: >
+        {{ (( states('input_number.january_peak_2') | float(default=0) +
+              states('input_number.february_peak_2') | float(default=0) +
+              states('input_number.march_peak_2') | float(default=0) +
+              states('input_number.april_peak_2') | float(default=0) +
+              states('input_number.may_peak_2') | float(default=0) +
+              states('input_number.june_peak_2') | float(default=0) +
+              states('input_number.july_peak_2') | float(default=0) +
+              states('input_number.august_peak_2') | float(default=0) +
+              states('input_number.september_peak_2') | float(default=0) +
+              states('input_number.october_peak_2') | float(default=0) +
+              states('input_number.november_peak_2') | float(default=0) +
+              states('input_number.december_peak_2') | float(default=0) ) / 12) | round(2)
         }}

@@ -1,0 +1,19 @@
+alias: Maximum piek 2
+id: 546462125er
+description: ''
+mode: parallel
+trigger:
+  - platform: state
+    entity_id: sensor.max_peak_2
+      # {{  states("sensor.max_peak") | float(default=0)> states("input_number.max_peak") | float(default=0)}}
+condition:
+  - condition: template
+    value_template: >
+      {{  states("sensor.max_peak_2") | float(default=0)> states("input_number.max_peak_2") | float(default=0)}}
+action:
+  - service: input_number.set_value
+    target:
+      entity_id: input_number.max_peak_2
+    data:
+        value: >
+          {{ states("sensor.max_peak_2") | float(default=0)}}
