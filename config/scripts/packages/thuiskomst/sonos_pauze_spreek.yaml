@@ -43,8 +43,12 @@
       #       script.sonos_pauze_spreek_non_nl
       #     {% endif %}
       - service: >
-          {% if 'nl-nl' in state_attr("media_player.keuken", "media_title") or 'nl' in state_attr("media_player.keuken", "media_title") or 'nl-be' in state_attr("media_player.keuken", "media_title") %}
-            script.sonos_pauze_spreek_nl
+          {% if states.media_player.keuken.attributes.media_title is defined %}
+            {% if 'nl-nl' in state_attr("media_player.keuken", "media_title") or 'nl' in state_attr("media_player.keuken", "media_title") or 'nl-be' in state_attr("media_player.keuken", "media_title") %}
+              script.sonos_pauze_spreek_nl
+            {% else %}
+              script.sonos_pauze_spreek_non_nl
+            {% endif %}
           {% else %}
             script.sonos_pauze_spreek_non_nl
           {% endif %}
