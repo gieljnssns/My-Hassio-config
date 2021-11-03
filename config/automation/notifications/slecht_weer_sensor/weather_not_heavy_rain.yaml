@@ -2,7 +2,8 @@
   id: 616a6577-504c-4c5f-a85e-f17d4737561c
   trigger:
     platform: template
-    value_template: '{{ states.sensor.time.state == states.sensor.notification_time_long.state }}'
+    value_template: >
+      {{ states("sensor.time") == states("sensor.notification_time_long") }}
   condition:
     condition: and
     conditions:
@@ -14,5 +15,11 @@
         state: 'on'
   action:
     - service: notify.mobile_app_mphone
+      data:
+        message: 'Er wordt hevige regen voorspeld, op tijd vertrekken!  Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }}'
+    - condition: state
+      entity_id: binary_sensor.schooldag
+      state: "on"
+    - service: notify.noor_en_fien
       data:
         message: 'Er wordt hevige regen voorspeld, op tijd vertrekken!  Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }}'

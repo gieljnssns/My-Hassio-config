@@ -50,25 +50,22 @@ sensor:
   - platform: template
     sensors:
       giel_status:
-        value_template: '{{ states.input_select.giel_status_dropdown.state }}'
+        value_template: >
+          {{ states("input_select.giel_status_dropdown") }}
         friendly_name: 'Giel'
       martine_status:
-        value_template: '{{ states.input_select.martine_status_dropdown.state }}'
+        value_template: >
+          {{ states("input_select.martine_status_dropdown") }}
         friendly_name: 'Martine'
       noor_status:
-        value_template: '{{ states.input_select.noor_status_dropdown.state }}'
+        value_template: >
+          {{ states("input_select.noor_status_dropdown") }}
         friendly_name: 'Noor'
       fien_status:
-        value_template: '{{ states.input_select.fien_status_dropdown.state }}'
+        value_template: >
+          {{ states("input_select.fien_status_dropdown") }}
         friendly_name: 'Fien'
       people_arrive_count:
-        entity_id: 
-          - device_tracker.martine_not_so_binary
-          - device_tracker.giel_not_so_binary
-          - binary_sensor.noor_juist_aangekomen
-          - binary_sensor.fien_juist_aangekomen
-          # - device_tracker.noor_not_so_binary
-          # - device_tracker.fien_not_so_binary
         value_template: >-
           {% set count = 0 %}
           {% if is_state("device_tracker.martine_not_so_binary", "Juist Aangekomen") %}
