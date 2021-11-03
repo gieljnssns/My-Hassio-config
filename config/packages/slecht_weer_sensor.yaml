@@ -52,60 +52,49 @@ sensor:
       dark_outside:
         friendly_name: 'Donker buiten'
         value_template: >
-          {% if (states.input_boolean.donker_buiten_lowpass.state == 'on') %}true
-          {% else %}false
+          {% if (states("input_boolean.donker_buiten_lowpass") == 'on') %}
+            true
+          {% else %}
+            false
           {% endif %}
-
-      # dark_outside_lowpass:
-      #   friendly_name: 'Donker buiten lowpass'
-      #   value_template: >
-      #     {% if (states.input_boolean.donker_buiten_lowpass.state == 'on') %}true
-      #     {% else %}false
-      #     {% endif %}
-      #
-      # dark_outside_throttle:
-      #   friendly_name: 'Donker buiten throttle'
-      #   value_template: >
-      #     {% if (states.input_boolean.donker_buiten_throttle.state == 'on') %}true
-      #     {% else %}false
-      #     {% endif %}
-
       bad_weather:
         friendly_name: 'Slecht weer'
         value_template: >
-          {% if (states.sensor.weatherbit_snow_rate.state | int > 0) %}
+          {% if states("sensor.weatherbit_snow_rate") | int > 0 %}
             snow
-          {% elif ((state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['templow']  | int < 4) and (states.sensor.dauwpunt_poort.state | int < 6) and (states.sensor.weatherbit_wind_speed.state | int < 12) and (states.sensor.weatherbit_cloud_coverage.state | int < 20) and (states.sensor.luchtvochtigheid_poort.state | int > 50)) %} 
+          {% elif ((state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['templow']  | int < 4) and states("sensor.dauwpunt_poort") | int < 6 and states("sensor.weatherbit_wind_speed") | int < 12 and states("sensor.weatherbit_cloud_coverage") | int < 20 and states("sensor.luchtvochtigheid_poort") | int > 50) %} 
             frost
-          {% elif (states.sensor.weatherbit_rain_rate | int > 7) %} 
+          {% elif states("sensor.weatherbit_rain_rate") | int > 7 %} 
             heavy_rain
           {% else %} 
             clear
           {% endif %}
 
       notification_hour:
-        value_template: '{{ states.input_number.notification_hour.state | int }}'
+        value_template: >
+          {{ states("input_number.notification_hour") | int }}
 
       notification_minute:
-        value_template: '{{ states.input_number.notification_minute.state | int }}'
+        value_template: >
+          {{ states("input_number.notification_minute") | int }}
 
       notification_time:
         value_template: >-
-          {{ states.sensor.notification_hour.state }}:
-          {%- if states.sensor.notification_minute.state|length == 1 -%}
+          {{ states("sensor.notification_hour") }}:
+          {%- if states("sensor.notification_minute") | length == 1 -%}
             0
           {%- endif -%}
-            {{ states.sensor.notification_minute.state }}
+            {{ states("sensor.notification_minute") }}
 
       notification_time_long:
         value_template: >-
-          {% if states.sensor.notification_hour.state|length == 1 -%}
+          {% if states("sensor.notification_hour") | length == 1 -%}
             0
           {%- endif -%}
-            {{ states.sensor.notification_hour.state }}:
-          {%- if states.sensor.notification_minute.state|length == 1 -%}
+            {{ states("sensor.notification_hour") }}:
+          {%- if states("sensor.notification_minute") | length == 1 -%}
             0
           {%- endif -%}
-            {{ states.sensor.notification_minute.state }}
+            {{ states("sensor.notification_minute") }}
 
 

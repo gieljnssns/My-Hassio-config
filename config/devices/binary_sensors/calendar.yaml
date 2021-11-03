@@ -1,111 +1,70 @@
 - platform: template
   sensors:
     martine_vertrekt_naart_werk:
-      entity_id:
-        - sensor.time
       friendly_name: Martine moet vertrekken
       value_template: >
-        {% if states.calendar.monnikenheide_monnikenheide.attributes.start_time is defined %}
-          {{ (as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) |  float > 300) and (as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 3600) }}
+        {% if state_attr("calendar.monnikenheide_monnikenheide", "start_time") %}
+          {{ (as_timestamp(state_attr("calendar.monnikenheide_monnikenheide", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) |  float > 300) and (as_timestamp(state_attr("calendar.monnikenheide_monnikenheide", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 3600) }}
         {% else %}
           False
         {% endif %}
 
     giel_vertrekt_naart_werk:
-      entity_id:
-        - sensor.time
       friendly_name: Giel moet vertrekken
       value_template: >
-        {% if states.calendar.mondelez_de_vroege.attributes.start_time is defined %}
-          {{ (as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) |  float > 1800) and (as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 4200) }}
+        {% if state_attr("calendar.mondelez_de_vroege", "start_time") %}
+          {{ (as_timestamp(state_attr("calendar.mondelez_de_vroege", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) |  float > 1800) and (as_timestamp(state_attr("calendar.mondelez_de_vroege", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 4200) }}
         {% else %}
           False
         {% endif %}
 
     v_vroege:
-      entity_id:
-        - sensor.time
       value_template: >
-        {% if states.calendar.mondelez_de_vroege.attributes.start_time is defined %}
-          {{as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 21610}}
+        {% if state_attr("calendar.mondelez_de_vroege", "start_time") %}
+          {{as_timestamp(state_attr("calendar.mondelez_de_vroege", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 21610}}
         {% else %}
           False
         {% endif %}
 
     v_late:
-      entity_id:
-        - sensor.time
       value_template: >
-        {% if states.calendar.mondelez_de_late.attributes.start_time is defined %}
-          {{as_timestamp(states.calendar.mondelez_de_late.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 50410}}
+        {% if state_attr("calendar.mondelez_de_late", "start_time") %}
+          {{as_timestamp(state_attr("calendar.mondelez_de_late", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 50410}}
         {% else %}
           False
         {% endif %}
 
     v_nacht:
-      entity_id:
-        - sensor.time
       value_template: >
-        {% if states.calendar.mondelez_de_nacht.attributes.start_time is defined %}
-          {{as_timestamp(states.calendar.mondelez_de_nacht.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 79210}}
+        {% if state_attr("calendar.mondelez_de_nacht", "start_time") %}
+          {{as_timestamp(state_attr("calendar.mondelez_de_nacht", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 79210}}
         {% else %}
           False
         {% endif %}
 
     v_w_nacht:
-      entity_id:
-        - sensor.time
       value_template: >
-        {% if states.calendar.mondelez_weekend_nacht.attributes.start_time is defined %}
-          {{as_timestamp(states.calendar.mondelez_weekend_nacht.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 64810}}
+        {% if state_attr("calendar.mondelez_weekend_nacht", "start_time") %}
+          {{as_timestamp(state_attr("calendar.mondelez_weekend_nacht", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 64810}}
         {% else %}
           False
         {% endif %}
 
     v_w_dag:
-      entity_id:
-        - sensor.time
       value_template: >
-        {% if states.calendar.mondelez_weekend_dag.attributes.start_time is defined %}
-          {{as_timestamp(states.calendar.mondelez_weekend_dag.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 21610}}
+        {% if state_attr("calendar.mondelez_weekend_dag", "start_time") %}
+          {{as_timestamp(state_attr("calendar.mondelez_weekend_dag", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 21610}}
         {% else %}
           False
         {% endif %}
-
-    # m_vroege:
-    #   value_template: "{{as_timestamp(states.calendar.vroege.attributes.start_time) - as_timestamp(as_local(states.sensor.time.last_changed)) | float < 108000}}"
-    #
-    # m_late:
-    #   value_template: "{{as_timestamp(states.calendar.late.attributes.start_time) - as_timestamp(as_local(states.sensor.time.last_changed)) | float < 136800}}"
-    #
-    # m_nacht:
-    #   value_template: "{{as_timestamp(states.calendar.nacht.attributes.start_time) - as_timestamp(as_local(states.sensor.time.last_changed)) | float < 165600}}"
-    #
-    # m_w_nacht:
-    #   value_template: "{{as_timestamp(states.calendar.w_nacht.attributes.start_time) - as_timestamp(as_local(states.sensor.time.last_changed)) | float < 165600}}"
-    #
-    # m_w_dag:
-    #   value_template: "{{as_timestamp(states.calendar.w_dag.attributes.start_time) - as_timestamp(as_local(states.sensor.time.last_changed)) | float < 108000}}"
-    #
-    # v_monnikenheide:
-    #   value_template: "{{as_timestamp(states.calendar.monnikenheide_google.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 28810}}"
-
     v_monnikenheide:
-      entity_id:
-        - sensor.time
       value_template: >
-        {% if states.calendar.monnikenheide_monnikenheide.attributes.start_time is defined %}
-          {{as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(strptime(states.sensor.date_time.state, '%Y-%m-%d, %H:%M')) | float < 28810}}
+        {% if state_attr("calendar.monnikenheide_monnikenheide", "start_time") %}
+          {{as_timestamp(state_attr("calendar.monnikenheide_monnikenheide", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 28810}}
         {% else %}
           False
         {% endif %}
-
-    # m_monnikenheide:
-    #   value_template: "{{as_timestamp(states.calendar.monnikenheide.attributes.start_time) - as_timestamp(as_local(states.sensor.time.last_changed)) | float < 113040}}"
-
     v_werken:
-      entity_id:
-        - sensor.time
       value_template: "{{ is_state('binary_sensor.v_late', 'on')
         or is_state('calendar.monnikenheide_monnikenheide', 'on')
         or is_state('calendar.mondelez_de_vroege', 'on')
@@ -116,9 +75,7 @@
         or is_state('binary_sensor.v_w_dag', 'on') }}"
 
     schooldag:
-      entity_id:
-        - sensor.time
       value_template:
-        "{{ is_state('calendar.schoolvakanties_schoolvakanties', 'off')
+        "{{ is_state('calendar.belgie_verlof', 'off')
         and as_local(states.sensor.time.last_changed).weekday() != 6
         and as_local(states.sensor.time.last_changed).weekday() != 5}}"
