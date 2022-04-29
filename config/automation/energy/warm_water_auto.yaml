@@ -1,33 +1,60 @@
 alias: Warmtepomp warm water
 id: 8766541b-6bb2-4bc8-87af-f29e0accd997
-description: ''
+description: ""
 mode: single
 trigger:
-  - platform: numeric_state
+  - platform: state
     entity_id: sensor.l2_net_terugsturen
-    above: 600
-    for:
-      minutes: 5
+  #   above: 600
+  # - platform: template
+  #   value_template: >
+  #     {{ states("sensor.l2_net_terugsturen") | int(default=0) > 600 }}
   - platform: state
     entity_id: binary_sensor.douchen
-    to: 'on'
+    to: "on"
+  - platform: numeric_state
+    entity_id: sensor.thermostaat
+    below: 42
 condition:
-  - condition: state
-    entity_id: input_boolean.op_verlof
-    state: 'off'
+  # - condition: state
+  #   entity_id: input_boolean.op_verlof
+  #   state: "off"
   - condition: numeric_state
     entity_id: sensor.thermostaat
-    below: 46
+    below: 45
   - condition: template
     value_template: >
       {{  states("input_boolean.warm_water_5u") == "off" and states("input_boolean.warm_water_2u") == "off" }}
+  - condition: state
+    entity_id: binary_sensor.warmtepompboiler_aan_delay_off
+    state: "off"
+    for:
+      minutes: 60
+  # - condition: template
+  #   value_template: >
+  #     {{ as_timestamp(now()) - as_timestamp(state_attr('automation.warmtepomp_warm_water', 'last_triggered')) | float(default=0)> 36000 }}
 action:
   - choose:
+      - conditions:
+          - alias: "Op verlof"
+            condition: state
+            entity_id: input_boolean.op_verlof
+            state: "on"
+          - condition: template
+            value_template: >
+              {{ states("sensor.l2_net_terugsturen") | int(default=0) > 300 }}
+        sequence:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.warm_water_1u
       - conditions:
           - alias: "Niet op verlof"
             condition: state
             entity_id: input_boolean.op_verlof
             state: "off"
+          - condition: template
+            value_template: >
+              {{ states("sensor.l2_net_terugsturen") | int(default=0) > 600 }}
           - condition: template
             value_template: >-
               {{ (states("sensor.solcast_solaredge_forecast") | float(default=0)+
@@ -36,11 +63,22 @@ action:
           - service: input_boolean.turn_on
             target:
               entity_id: input_boolean.warm_water_5u
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.douchen
+            state: "on"
+          - condition: time
+            before: "22:00:00"
+          - condition: time
+            after: "08:00:00"
+        sequence:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.warm_water_2u
     default:
-      - condition: time
-        before: "22:00:00"
-      - condition: time
-        after: "08:00:00"
+      - condition: template
+        value_template: >
+          {{ states("sensor.l2_net_terugsturen") | int(default=0) > 600 }}
       - service: input_boolean.turn_on
         target:
           entity_id: input_boolean.warm_water_2u

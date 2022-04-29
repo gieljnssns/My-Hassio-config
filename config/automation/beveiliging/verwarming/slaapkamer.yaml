@@ -1,13 +1,15 @@
-  alias: 'beveiliging verwarming slaapkamer'
-  id: fe68544f-dca9-4560-9871-91818b485703
-  trigger:
-    - platform: time_pattern
-      minutes: '/5'
-      seconds: 00
-  condition: 
+alias: "beveiliging verwarming slaapkamer"
+id: fe68544f-dca9-4560-9871-91818b485703
+trigger:
+  - platform: time_pattern
+    minutes: "/5"
+    seconds: 00
+condition:
+  condition: not
+  conditions:
     - condition: state
-      entity_id: 'switch.slaapkamer'
-      state: 'off'
-  action:
-    - service: switch.turn_off
-      entity_id: switch.slaapkamer
+      entity_id: "switch.slaapkamer"
+      state: "on"
+action:
+  - service: switch.turn_off
+    entity_id: switch.slaapkamer

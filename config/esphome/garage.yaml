@@ -1,8 +1,8 @@
 substitutions:
-  devicename: garage
+  devicename: garage_knopjes
   platform: ESP8266
   board: nodemcuv2
-  upper_devicename: Esp garage
+  upper_devicename: Esp garage knopjes
   ssid: !secret ssid-garage
   manual_ip: 192.168.89.120
 
@@ -11,72 +11,190 @@ packages:
   device_base: !include common/device_base.yaml
 
 output:
-  - platform: gpio
-    pin:
-      number: D2
-      # inverted: yes
-    id: vogelpik 
+  - platform: esp8266_pwm
+    pin: D0
+    id: redgpio
+  
+  - platform: esp8266_pwm
+    pin: D1
+    id: greengpio
+  
+  - platform: esp8266_pwm
+    pin: D2
+    id: bluegpio
 
 light:
-  - platform: binary
-    name: "Vogelpik"
-    output: vogelpik
-  - platform: fastled_clockless
-    chipset: WS2812B
-    pin: D1
-    num_leds: 60
-    rgb_order: BRG
-    name: "Vogelpik ledstrip"
+  - platform: monochromatic
+    name: "Led knop Sjotterbak"
+    internal: true
+    id: lichtsjotterbak
+    output: redgpio
     effects:
-      - addressable_rainbow:
-      - addressable_color_wipe:
-      - addressable_scan:
-          move_interval: 10ms
-          scan_width: 2
-      - addressable_twinkle:
-      - addressable_random_twinkle:
-      - addressable_fireworks:
-          use_random_color: true
-      - addressable_scan:
-          move_interval: 10ms
-          scan_width: 1
-          name: Fast Scan
-      - addressable_lambda:
-          name: "Expo Light"
-          update_interval: 16ms
-          lambda: |-
-            static int x = -400;
-            float y = 0.35+0.65*exp(-pow(x, 2)/49000);
-            int8_t r = ceil(current_color.r * y);
-            int8_t g = ceil(current_color.g * y);
-            int8_t b = ceil(current_color.b * y);
-            it.all() = ESPColor(r,g,b);
-            x += 1;
-            if (x == 400)
-              x = -400;
-      # - addressable_lambda:
-      #     name: "Wipe In"
-      #     update_interval: 12ms
-      #     lambda: |-
-      #       static int x = 0;
-      #       if (initial_run) {
-      #         x = 0;
-      #         it.all() = ESPColor::BLACK;
-      #       }
-      #       if (x < it.size()) {
-      #         it[x] = current_color;
-      #         x += 1;
-      #       }
-      # - addressable_lambda:
-      #     name: "Wipe Out"
-      #     update_interval: 12ms
-      #     lambda: |-
-      #       static int x = 0;
-      #       if (initial_run) {
-      #         x = it.size();
-      #       }
-      #       if (x > 0) {
-      #         x -= 1; 
-      #         it[x] = ESPColor::BLACK;
-      #       }
+      - strobe:
+      - flicker:
+  
+  - platform: monochromatic
+    name: "Led knop Sfeer"
+    internal: true
+    id: lichtsfeer
+    output: greengpio
+    effects:
+      - strobe:
+      - flicker:
+  
+  - platform: monochromatic
+    name: "Led knop Vogelpik"
+    id: lichtvogelpik
+    internal: true
+    output: bluegpio
+    effects:
+      - strobe:
+      - flicker:
       
+binary_sensor:
+  - platform: gpio
+    pin: D7
+    name: "Garage pir sjotterbak"
+    device_class: motion
+    
+  - platform: homeassistant
+    id: dark
+    internal: true
+    entity_id: sensor.dark_outside
+    on_press:
+      then:
+        - light.turn_on: lichtsjotterbak
+        - light.turn_on: lichtsfeer
+        - light.turn_on: lichtvogelpik
+    on_release:
+      then:
+        - light.turn_off: lichtsjotterbak
+        - light.turn_off: lichtsfeer
+        - light.turn_off: lichtvogelpik
+  
+  - platform: gpio
+    pin:
+      number: D5
+    id: "knop_sjotterbak"
+    on_multi_click:
+    - timing:
+        - ON for at most 1s
+        - OFF for at least 0.5s
+      then:
+          - binary_sensor.template.publish:
+              id: sjotterbak
+              state: ON
+          - if:
+              condition:
+                light.is_on: lichtsjotterbak
+              then:
+                - delay: 1s
+                - light.turn_on:
+                    id: lichtsjotterbak
+                    effect: strobe
+                - delay: 1s
+                - light.turn_off:
+                    id: lichtsjotterbak
+                - light.turn_on:
+                    id: lichtsjotterbak
+              else:
+                - delay: 1s
+                - light.turn_on:
+                    id: lichtsjotterbak
+                    effect: strobe
+                - delay: 1s
+                - light.turn_off:
+                    id: lichtsjotterbak
+          - delay: 2s
+          - binary_sensor.template.publish:
+              id: sjotterbak
+              state: OFF
+  
+  - platform: gpio
+    pin:
+      number: D6
+    id: "knop_sfeer"
+    on_multi_click:
+    - timing:
+        - ON for at most 1s
+        - OFF for at least 0.5s
+      then:
+          - binary_sensor.template.publish:
+              id: sfeer
+              state: ON
+          - if:
+              condition:
+                light.is_on: lichtsfeer
+              then:
+                - delay: 1s
+                - light.turn_on:
+                    id: lichtsfeer
+                    effect: strobe
+                - delay: 1s
+                - light.turn_off:
+                    id: lichtsfeer
+                - light.turn_on:
+                    id: lichtsfeer
+              else:
+                - delay: 1s
+                - light.turn_on:
+                    id: lichtsfeer
+                    effect: strobe
+                - delay: 1s
+                - light.turn_off:
+                    id: lichtsfeer
+          - delay: 2s
+          - binary_sensor.template.publish:
+              id: sfeer
+              state: OFF
+              
+  - platform: gpio
+    pin:
+      number: D8
+    id: "knop_vogelpik"
+    on_multi_click:
+    - timing:
+        - ON for at most 1s
+        - OFF for at least 0.5s
+      then:
+          - binary_sensor.template.publish:
+              id: vogelpik
+              state: ON
+          - if:
+              condition:
+                light.is_on: lichtvogelpik
+              then:
+                - delay: 1s
+                - light.turn_on:
+                    id: lichtvogelpik
+                    effect: strobe
+                - delay: 1s
+                - light.turn_off:
+                    id: lichtvogelpik
+                - light.turn_on:
+                    id: lichtvogelpik
+              else:
+                - delay: 1s
+                - light.turn_on:
+                    id: lichtvogelpik
+                    effect: strobe
+                - delay: 1s
+                - light.turn_off:
+                    id: lichtvogelpik
+          - delay: 2s
+          - binary_sensor.template.publish:
+              id: vogelpik
+              state: OFF
+
+  
+  - platform: template
+    id: sjotterbak
+    name: "Knop sjotterbak"
+  
+  - platform: template
+    id: sfeer
+    name: "Knop sfeer"
+  
+  - platform: template
+    id: vogelpik
+    name: "Knop vogelpik"

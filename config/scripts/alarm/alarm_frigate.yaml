@@ -1,0 +1,19 @@
+alarm_frigate:
+  sequence:
+    service: notify.giel_en_martine
+    data:
+      message: "Bezoek! -- Alarm opzetten?"
+      data:
+        image: '/api/frigate/notifications/{{states("sensor.frigate_events")}}/thumbnail.jpg'
+        # attachment:
+        #   url: '/api/frigate/notifications/{{states("sensor.frigate_events")}}/thumbnail.jpg'
+        actions:
+          - action: "URI"
+            title: "Filmke zien"
+            uri: '{{states("input_text.base_url")}}/api/frigate/notifications/{{states("sensor.frigate_events")}}/tuin/clip.mp4'
+          - action: "URI"
+            title: "Alle camera's"
+            uri: "/lovelace/camera"
+          - action: "ALARM"
+            title: "Alarm opzetten"
+            destructive: true

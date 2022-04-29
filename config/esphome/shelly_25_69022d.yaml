@@ -14,12 +14,16 @@ packages:
   wifi: !include common/wifi-waskot.yaml
   device_base: !include common/device_base.yaml
 
+wifi:
+  power_save_mode: HIGH
+  
 i2c:
   sda: GPIO12
   scl: GPIO14
 
 sensor:
   - platform: ade7953
+    irq_pin: GPIO16 # Prevent overheating by setting this
     voltage:
       name: ${upper_devicename} spanning
     current_a:
@@ -153,7 +157,4 @@ binary_sensor:
         - light.toggle: lightid2
     # internal: true 
     id: switchid2
-  - platform: gpio
-    pin: GPIO16
-    name: "ade7953 IRQ pin"
-    internal: true
+  

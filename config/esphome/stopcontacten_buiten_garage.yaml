@@ -14,15 +14,45 @@ switch:
   - platform: gpio
     pin:
       number: D0
-      # inverted: yes
     name: "Stopcontacten garage"
     id: stopcontacten
   - platform: gpio
     pin:
       number: D2
-      # inverted: yes
     name: "Garage verwarming"
     id: heater
+
+output:
+  - platform: gpio
+    pin:
+      number: D5
+    id: sfeer
+  - platform: gpio
+    pin:
+      number: D6
+    id: sjotterbak
+  - platform: gpio
+    pin:
+      number: D7
+    id: afdak
+  - platform: gpio
+    pin:
+      number: D8
+    id: vogelpik 
+
+light:
+  - platform: binary
+    name: "Vogelpik"
+    output: vogelpik
+  - platform: binary
+    name: "Garage sfeerverlichting"
+    output: sfeer
+  - platform: binary
+    name: "Garage sjotterbak"
+    output: sjotterbak
+  - platform: binary
+    name: "Afdak verlichting"
+    output: afdak
     
 binary_sensor:
   - platform: gpio

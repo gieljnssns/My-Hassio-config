@@ -98,7 +98,7 @@ def get_low_battery_entities(battery_entities, threshold):
     ]
 
 
-threshold = data.get("threshold", 10)
+threshold = data.get("threshold", 5)
 low_battery_devices = get_low_battery_entities(get_battery_entities(), threshold)
 if len(low_battery_devices) > 0:
     persistent_warning_message(low_battery_devices)

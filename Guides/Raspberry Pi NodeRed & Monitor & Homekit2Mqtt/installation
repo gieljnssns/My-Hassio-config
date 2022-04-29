@@ -93,16 +93,29 @@ temperatuursensoren MIN-MAX sensoren en generic thermostat
 
 monitor
 https://github.com/andrewjfreyer/monitor
-sudo apt-get install bluez-hcidump git bc pi-bluetooth
+sudo apt-get install bluez-hcidump git bc pi-bluetooth -y
 
+git clone git://github.com/andrewjfreyer/monitor
 
+cd monitor/
 
-sudo systemctl stop monitor
+sudo bash monitor.sh
+
+sudo nano mqtt_preferences
+
+sudo bash monitor.sh
+
+sudo nano behavior_preferences
+
+sudo nano known_static_addresses
+
 sudo bash monitor.sh -tad -x -a -u
 
+sudo systemctl start monitor
 
-$ sudo nano behavior_preferences
-$ sudo systemctl start monitor
+sudo systemctl stop monitor
+
+$ 
 
 
 
@@ -147,10 +160,44 @@ $ sudo /usr/libexec/netdata/netdata-uninstaller.sh --force --yes
 
 
 
-
-
 Homekit2Mqtt
 https://www.studiopieters.nl/homebridge-homekit-2-mqtt-revised-installation/
 autostart
 crontab -e
 @reboot sudo homekit2mqtt  --url mqtt://xuserx:xpasswordx@192.168.79.xx --retain --name Homekit2Mqtt --username CC:22:3D:E3:CE:F1
+
+
+
+
+
+
+rPiPlay
+https://qengineering.eu/install-gstreamer-1.18-on-raspberry-pi-4.html
+
+
+https://github.com/FD-/RPiPlay/issues/296
+
+sudo apt-get install \
+     libx264-dev \
+     libjpeg-dev \
+     libgstreamer1.0-dev \
+     libgstreamer-plugins-base1.0-dev \
+     libgstreamer-plugins-bad1.0-dev \
+     gstreamer1.0-plugins-ugly \
+     gstreamer1.0-tools \
+     gstreamer1.0-gl \
+     gstreamer1.0-gtk3 \
+     gstreamer1.0-plugins-good --fix-missing -y
+
+sudo apt-get install git cmake libavahi-compat-libdnssd-dev libplist-dev libssl-dev -y
+
+git clone https://github.com/FD-/RPiPlay.git
+cd RPiPlay
+mkdir build
+cd build
+cmake ..
+make -j
+
+sudo make install
+
+/usr/local/bin/rpiplay -n slaapkamerPi -b on -a hdmi

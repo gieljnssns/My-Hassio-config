@@ -24,7 +24,7 @@ action:
           Niemand thuis, beveiliging ingeschakeld.
         {%- elif is_state("alarm_control_panel.ha_alarm", "disarmed") -%}
           Beveiliging uitgeschakeld.
-        {%- elif is_state("alarm_control_panel.ha_alarm", "armed_night") -%}
+        {%- elif as_timestamp(now()) - as_timestamp(state_attr('automation.alarm_arm_night', 'last_triggered')) | float(default=0) < 600 -%}
           Slaapwel, beveiliging ingeschakeld.
         {%- elif is_state("alarm_control_panel.ha_alarm", "armed_home") -%}
           Beveiliging ingeschakeld terwijl er iemand thuis is.

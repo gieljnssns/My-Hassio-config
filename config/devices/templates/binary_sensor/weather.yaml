@@ -1,0 +1,73 @@
+- binary_sensor:
+    - unique_id: weatherbit_alert
+      name: Weatherbit waarschuwing
+      state: >
+        {% if states('sensor.weatherbit_weather_alerts')|int(default=0) > 0 %}
+          {% if as_timestamp(state_attr('sensor.weatherbit_weather_alerts','alerts')[0].effective) < as_timestamp(now()) < as_timestamp(state_attr('sensor.weatherbit_weather_alerts','alerts')[0].ends)%}
+              {{states('sensor.weatherbit_weather_alerts')}}
+          {% else %}
+              False
+          {% endif %}
+        {% else %}
+          False
+        {% endif %}
+      # state: >
+      #   {{states('sensor.weatherbit_weather_alerts')|int(default=0) > 0}}
+      attributes:
+        titel: >
+          {% if states('sensor.weatherbit_weather_alerts')|int(default=0) > 0 %}
+            {{state_attr('sensor.weatherbit_weather_alerts','alerts')[0].title}}
+          {% else %}
+            No alert
+          {% endif %}
+        regio: >
+          {% if states('sensor.weatherbit_weather_alerts')|int(default=0) > 0 %}
+            {{state_attr('sensor.weatherbit_weather_alerts','alerts')
+              [0].regions[0]}}
+          {% else %}
+            No alert
+          {% endif %}
+        stad: >
+          {% if states('sensor.weatherbit_weather_alerts')|int(default=0) > 0 %}
+            {{state_attr('sensor.weatherbit_weather_alerts','alerts')
+              [0].city_name}}
+          {% else %}
+            No alert
+          {% endif %}
+        beschrijving: >
+          {% if states('sensor.weatherbit_weather_alerts')|int(default=0) > 0 %}
+            {{(state_attr('sensor.weatherbit_weather_alerts','alerts')
+              [0].description_local).split(': ')[0]}}
+          {% else %}
+            No alert
+          {% endif %}
+        severity: >
+          {% if states('sensor.weatherbit_weather_alerts')|int(default=0) > 0 %}
+            {{state_attr('sensor.weatherbit_weather_alerts','alerts')[0].severity}}
+          {% else %}
+            No alert
+          {% endif %}
+        start: >
+          {% if states('sensor.weatherbit_weather_alerts')|int(default=0) > 0 %}
+            {{as_timestamp(state_attr('sensor.weatherbit_weather_alerts','alerts')
+              [0].effective,none)|timestamp_custom('%H:%M %d/%m/%Y',default='Not yet set')}}
+          {% else %}
+            No alert
+          {% endif %}
+        einde: >
+          {% if states('sensor.weatherbit_weather_alerts')|int(default=0) > 0 %}
+            {{as_timestamp(state_attr('sensor.weatherbit_weather_alerts','alerts')
+              [0].expires,none)|timestamp_custom('%H:%M %d/%m/%Y',default='Not yet set')}}
+          {% else %}
+            No alert
+          {% endif %}
+        uri: >
+          {% if states('sensor.weatherbit_weather_alerts')|int(default=0) > 0 %}
+            {{state_attr('sensor.weatherbit_weather_alerts','alerts')
+              [0].uri}}
+          {% else %}
+            No alert
+          {% endif %}
+      device_class: safety
+      availability: >
+        {{states('sensor.weatherbit_weather_alerts') not in ['unavailable','unknown']}}

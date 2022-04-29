@@ -1,13 +1,15 @@
-  alias: 'beveiliging verwarming wc'
-  id: e0250f04-7ade-43e7-8f30-ea8c00370d08
-  trigger:
-    - platform: time_pattern
-      minutes: '/5'
-      seconds: 00
-  condition: 
+alias: "beveiliging verwarming wc"
+id: e0250f04-7ade-43e7-8f30-ea8c00370d08
+trigger:
+  - platform: time_pattern
+    minutes: "/5"
+    seconds: 00
+condition:
+  condition: not
+  conditions:
     - condition: state
-      entity_id: 'switch.wc'
-      state: 'off'
-  action:
-    - service: switch.turn_off
-      entity_id: switch.wc
+      entity_id: "switch.wc"
+      state: "on"
+action:
+  - service: switch.turn_off
+    entity_id: switch.wc

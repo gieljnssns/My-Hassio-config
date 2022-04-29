@@ -1,0 +1,18 @@
+verwarming_1u:
+  alias: Verwarming 1u
+  sequence:
+    - delay:
+        seconds: 3
+    - service: input_select.select_option
+      target:
+        entity_id: "{{ input_select }}"
+      data:
+        option: "{{ temp }}"
+    - delay:
+        hours: 1
+    - service: input_select.select_option
+      target:
+        entity_id: "{{ input_select }}"
+      data:
+        option: "{{ temp_2 }}"
+  mode: parallel

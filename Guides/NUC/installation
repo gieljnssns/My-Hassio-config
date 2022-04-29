@@ -108,17 +108,19 @@ https://www.youtube.com/watch?v=TtCScmoRE70
 ## Py-Spy
 # Installation
 ssh root@192.168.79.54 -p 22222
-login
+# login
 docker exec -it homeassistant /bin/bash
-echo 'manylinux1_compatible = True' > /usr/local/lib/python3.8/site-packages/_manylinux.py
+apk add py-spy --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ --allow-untrusted
+apk add gmp-dev mpfr-dev mpc1-dev gcc musl-dev openssl-dev libffi-dev ffmpeg-dev rust cargo zlib-dev jpeg-dev g++ make
+echo 'manylinux1_compatible = True' > /usr/local/lib/python3.9/site-packages/_manylinux.py
 pip install py-spy
 https://developers.home-assistant.io/docs/operating-system/debugging/#ssh-access-to-the-host
 
 # Usage
 ssh root@192.168.79.54 -p 22222
-login
+# login
 docker exec -it homeassistant /bin/bash
-py-spy record --pid 236 --duration 120 --output /config/www/spy-0.118b0-startup.svg
+py-spy record --pid 188 --duration 900 --output /config/www/spy-2022.4.7-900s.svg
 py-spy record --pid 232 --duration 600 --output /config/www/spy-0.118b2-10min.svg
 py-spy dump --pid 233
 py-spy top --pid 232

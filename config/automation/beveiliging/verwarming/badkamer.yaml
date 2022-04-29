@@ -1,18 +1,20 @@
-  alias: 'beveiliging verwarming badkamer'
-  id: 83eacc0d-19be-46cc-9bdf-78dd96de73e9 
-  trigger:
-    - platform: time_pattern
-      minutes: '/5'
-      seconds: 00
-  condition: 
+alias: "beveiliging verwarming badkamer"
+id: 83eacc0d-19be-46cc-9bdf-78dd96de73e9
+trigger:
+  - platform: time_pattern
+    minutes: "/5"
+    seconds: 00
+condition:
+  condition: not
+  conditions:
     - condition: state
-      entity_id: 'switch.badkamer'
-      state: 'off'
-  action:
-    # - service: switch.turn_off
-    #   entity_id: switch.badkamer
-    - service: mqtt.publish
-      data:
-        topic: "verwarmingPi/output/badkamer/set"
-        retain: true
-        payload: "OFF"
+      entity_id: "switch.badkamer"
+      state: "on"
+action:
+  # - service: switch.turn_off
+  #   entity_id: switch.badkamer
+  - service: mqtt.publish
+    data:
+      topic: "verwarmingPi/output/badkamer/set"
+      retain: true
+      payload: "OFF"

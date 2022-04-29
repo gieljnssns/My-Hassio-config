@@ -1,13 +1,13 @@
 alias: "Alarm arm night"
 id: 3ab59385-d409-4777-abae-9c461a9fd442
 trigger:
-  - platform: template
-    value_template: >
-      {{ states("media_player.philips_tv") == "off" and states("device_tracker.philips_tv_ping") == "not_home" }}
-  # - platform: state
-  #   entity_id: media_player.philips_tv
-  #   from: "on"
-  #   to: "off"
+  # - platform: template
+  #   value_template: >
+  #     {{ states("media_player.philips_tv") == "off" and states("device_tracker.philips_tv_ping") == "not_home" }}
+  - platform: state
+    entity_id: media_player.philips_tv
+    from: "on"
+    to: "off"
   # - platform: state
   #   entity_id: device_tracker.philips_tv_ping
   #   from: "home"
@@ -42,8 +42,8 @@ condition:
         value_template: "{{ states('alarm_control_panel.ha_alarm') != 'armed_night' }}"
       - condition: template
         value_template: "{{ states('media_player.philips_tv') != 'on' }}"
-      - condition: template
-        value_template: "{{ states('device_tracker.philips_tv_ping') != 'home' }}"
+      # - condition: template
+      #   value_template: "{{ states('device_tracker.philips_tv_ping') != 'home' }}"
       - condition: or
         conditions:
           - condition: or

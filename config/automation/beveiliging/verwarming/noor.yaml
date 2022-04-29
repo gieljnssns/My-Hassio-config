@@ -1,13 +1,15 @@
-  alias: 'beveiliging verwarming noor'
-  id: 430dfacf-b512-4d9f-93eb-8311fdc81035
-  trigger:
-    - platform: time_pattern
-      minutes: '/5'
-      seconds: 00
-  condition: 
+alias: "beveiliging verwarming noor"
+id: 430dfacf-b512-4d9f-93eb-8311fdc81035
+trigger:
+  - platform: time_pattern
+    minutes: "/5"
+    seconds: 00
+condition:
+  condition: not
+  conditions:
     - condition: state
-      entity_id: 'switch.noor'
-      state: 'off'
-  action:
-    - service: switch.turn_off
-      entity_id: switch.noor
+      entity_id: "switch.noor"
+      state: "on"
+action:
+  - service: switch.turn_off
+    entity_id: switch.noor

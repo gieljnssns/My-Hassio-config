@@ -1,0 +1,94 @@
+- sensor:
+    - name: "SolarEdge Status"
+      unique_id: 1ff8c063-fbc5-42a8-bbcc-8d9821d2005c
+      state: >
+        {% if states('sensor.solaredge_status_2') | int(0) == 1 %}
+          Off
+        {% elif states('sensor.solaredge_status_2') | int(0) == 2 %}
+          Sleep
+        {% elif states('sensor.solaredge_status_2') | int(0) == 3 %}
+          Wake-Up
+        {% elif states('sensor.solaredge_status_2') | int(0) == 4 %}
+          Working
+        {% elif states('sensor.solaredge_status_2') | int(0) == 5 %}
+          Throttled
+        {% elif states('sensor.solaredge_status_2') | int(0) == 6 %}
+          Shut-Down
+        {% elif states('sensor.solaredge_status_2') | int(0) == 7 %}
+          Fault
+        {% elif states('sensor.solaredge_status_2') | int(0) == 8 %}
+          Maintenance
+        {% else %}
+          Unknown
+        {% endif %}
+    # # solaredge_active_power:
+    # - name: Solaredge active power
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   state_class: measurement
+    #   state: >
+    #     {{ states("sensor.solaredge_active_power_not_scaled") | float(default=0) * 10 ** states("sensor.solaredge_power_scalefactor") | float(default=0) }}
+    # # solaredge_accumulated_energy_yield:
+    # - name: Solaredge accumulated energy yield test
+    #   unit_of_measurement: "kWh"
+    #   device_class: energy
+    #   state_class: measurement
+    #   state: >
+    #     {{ states("sensor.solaredge_accumulated_energy_yield_not_scaled") | float(default=0) * 10 ** states("sensor.solaredge_energy_scalefactor") | float(default=0) }}
+    # # solaredge_dc_voltage:
+    # - name: Solaredge DC voltage
+    #   unit_of_measurement: "V"
+    #   device_class: voltage
+    #   state_class: measurement
+    #   state: >
+    #     {{ states("sensor.solaredge_dc_voltage_not_scaled") | float(default=0) * 10 ** states("sensor.solaredge_dc_voltage_scalefactor") | float(default=0) }}
+    # # solaredge_dc_input_power:
+    # - name: Solaredge DC input power
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   state_class: measurement
+    #   state: >
+    #     {{ states("sensor.solaredge_dc_input_power_not_scaled") | float(default=0) * 10 ** states("sensor.solaredge_dc_power_scalefactor") | float(default=0) }}
+    #   # solaredge_ac_total_current:
+    #   #     friendly_name: "SolarEdge stroom"
+    #   #     value_template: "{{ state_attr('sensor.solaredge_modbus', 'ac_total_current') }}"
+    #   #     unit_of_measurement: 'A'
+    #   #     device_class: current
+    #   # solaredge_ac_voltage_phase_ab:
+    #   #     friendly_name: "SolarEdge spanning"
+    #   #     value_template: "{{ state_attr('sensor.solaredge_modbus', 'ac_voltage_phase_ab') }}"
+    #   #     unit_of_measurement: 'V'
+    #   #     device_class: voltage
+    #   # solaredge_ac_power_output:
+    #   #     friendly_name: "SolarEdge vermogen"
+    #   #     value_template: "{{ state_attr('sensor.solaredge_modbus', 'ac_power_output') }}"
+    #   #     unit_of_measurement: 'W'
+    #   #     device_class: power
+    #   # solaredge_dc_current:
+    #   #     friendly_name: "SolarEdge DC stroom"
+    #   #     value_template: "{{ state_attr('sensor.solaredge_modbus', 'dc_current') }}"
+    #   #     unit_of_measurement: 'A'
+    #   #     device_class: current
+    #   # solaredge_dc_voltage:
+    #   #     friendly_name: "SolarEdge DC spanning"
+    #   #     value_template: "{{ state_attr('sensor.solaredge_modbus', 'dc_voltage') }}"
+    #   #     unit_of_measurement: 'V'
+    #   # solaredge_dc_power_input:
+    #   #     friendly_name: "SolarEdge DC ingangsvermogen"
+    #   #     value_template: "{{ state_attr('sensor.solaredge_modbus', 'dc_power_input') }}"
+    #   #     unit_of_measurement: 'W'
+    #   #     device_class: power
+    #   # solaredge_heatsink_temp:
+    #   #     friendly_name: "SolarEdge interne temperatuur"
+    #   #     value_template: "{{ state_attr('sensor.solaredge_modbus', 'heat_sink_temperature') }}"
+    #   #     unit_of_measurement: '°C'
+    #   #     device_class: temperature
+    #   # solaredge_inverter_efficiency:
+    #   #     friendly_name: "SolarEdge efficientie"
+    #   #     value_template: "{{ state_attr('sensor.solaredge_modbus', 'computed_inverter_efficiency') }}"
+    #   #     unit_of_measurement: '%'
+    #   # solaredge_lifetime_production:
+    #   #     friendly_name: "SolarEdge totale productie"
+    #   #     value_template: "{{ (state_attr('sensor.solaredge_modbus', 'ac_lifetimeproduction') / 1000.0) | round(2) }}"
+    #   #     unit_of_measurement: 'kWh'
+    #   #     device_class: energy

@@ -5,9 +5,12 @@ trigger:
   - platform: state
     entity_id: alarm_control_panel.ha_alarm
     to: "armed_night"
-condition: []
+condition:
+  - condition: template
+    value_template: >
+      {{ as_timestamp(now()) - as_timestamp(state_attr('automation.alarm_arm_night', 'last_triggered')) | float(default=0) < 600 }}
 action:
-  service: notify.mobile_app_gphone
+  service: notify.giel_en_martine
   data:
     message: "Waar moet onze stoffy kuisen?"
     data:

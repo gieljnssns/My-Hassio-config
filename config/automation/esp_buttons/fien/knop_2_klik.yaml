@@ -5,9 +5,9 @@ trigger:
     entity_id: binary_sensor.knop_fien_2_klik
     to: "on"
 action:
-  service_template: >
-    {% if as_local(states.sensor.time.last_changed).hour < 12  %}
-      script.vertraagd_aan_fien_5_min
-    {% else %}
-      script.vertraagd_uit_fien_30_min
-    {% endif %}
+  - service: script.verwarming_1u
+    data:
+      input_select: input_select.setpunt_fien
+      temp: 19
+      temp_2: >
+        {{ states("input_select.setpunt_fien") }}

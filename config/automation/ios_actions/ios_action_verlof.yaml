@@ -1,44 +1,32 @@
-  alias: Ios action verlof
-  id: 5a8189fa-2338-4df0-9531-58207186427e
-  trigger:
-    - platform: event
-      event_type: ios.notification_action_fired
-      event_data:
-        actionName: VERLOF_AAN
-    - platform: event
-      event_type: ios.notification_action_fired
-      event_data:
-        actionName: VERLOF_UIT
-  condition:
-    condition: template
-    value_template: "{{(trigger.event.data.actionName.split('_')[0] == 'VERLOF')}}"
-  action:
-    - service_template: >-
-        {% set domain = (trigger.event.data['action_data']['entity_id'].split('.')[0]) %}
-        {% set function = (trigger.event.data.actionName.split('_')[1]) %}
-        {% set entity_id = (trigger.event.data['action_data']['entity_id']) %}
-        {% if (function == 'AAN') -%}
-          {% if (domain == 'cover') -%}
-            cover.open_cover
-          {% elif (domain in ['light', 'switch', 'script', 'automation', 'input_boolean', 'group']) -%}
-            homeassistant.turn_on
-          {% elif (domain == 'lock') -%}
-            lock.lock
-          {% else -%}
-          Invalid Domain:{{domain}} Function: {{function}} or entity:{{entity_id}}
-          {% endif -%}
-        {% elif (function == 'UIT') -%}
-          {% if (domain == 'cover') -%}
-            cover.close_cover
-          {% elif (domain in ['light', 'switch', 'script', 'automation', 'input_boolean', 'group']) -%}
-            homeassistant.turn_off
-          {% elif (domain == 'lock') -%}
-            lock.unlock
-          {% else -%}
-          Invalid Domain:{{domain}} Function: {{function}} or entity:{{entity_id}}
-          {% endif -%}
-        {% else -%}
-        Invalid Domain:{{domain}} Function: {{function}} or entity:{{entity_id}}
-        {% endif -%}
-      data_template:
-        entity_id: "{{trigger.event.data['action_data']['entity_id']}}"
+alias: Ios action verlof
+id: 5a8189fa-2338-4df0-9531-58207186427e
+trigger:
+  - platform: event
+    event_type: mobile_app_notification_action
+    event_data:
+      action: "VERLOF_AAN"
+    id: "aan"
+  - platform: event
+    event_type: mobile_app_notification_action
+    event_data:
+      action: "VERLOF_UIT"
+    id: "uit"
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "aan"
+        sequence:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.op_verlof
+          # - service: notify.mobile_app_gphone
+          #   data:
+          #     message: "Aan"
+    default:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.op_verlof
+      # - service: notify.mobile_app_gphone
+      #   data:
+      #     message: "Uit"

@@ -60,11 +60,11 @@ sensor:
       bad_weather:
         friendly_name: 'Slecht weer'
         value_template: >
-          {% if states("sensor.weatherbit_snow_rate") | int > 0 %}
+          {% if states("sensor.weatherbit_snow_rate") | int(default=0) > 0 %}
             snow
-          {% elif ((state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['templow']  | int < 4) and states("sensor.dauwpunt_poort") | int < 6 and states("sensor.weatherbit_wind_speed") | int < 12 and states("sensor.weatherbit_cloud_coverage") | int < 20 and states("sensor.luchtvochtigheid_poort") | int > 50) %} 
+          {% elif ((state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['templow']  | int(default=0) < 4) and states("sensor.dauwpunt_poort") | int(default=0) < 6 and states("sensor.weatherbit_wind_speed") | int(default=0) < 12 and states("sensor.weatherbit_cloud_coverage") | int(default=0) < 20 and states("sensor.luchtvochtigheid_poort") | int(default=0) > 50) %} 
             frost
-          {% elif states("sensor.weatherbit_rain_rate") | int > 7 %} 
+          {% elif states("sensor.weatherbit_rain_rate") | int(default=0) > 7 %} 
             heavy_rain
           {% else %} 
             clear

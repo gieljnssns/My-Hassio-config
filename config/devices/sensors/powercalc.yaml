@@ -1,0 +1,205 @@
+# Sonos
+- platform: powercalc
+  entity_id: media_player.living_2
+  fixed:
+    states_power:
+      playing: 26.6
+      paused: 9.8
+      idle: 9.8
+- platform: powercalc
+  entity_id: media_player.keuken
+  fixed:
+    states_power:
+      playing: 9.3
+      paused: 2.2
+      idle: 2.2
+- platform: powercalc
+  entity_id: media_player.badkamer
+  fixed:
+    states_power:
+      playing: 8.3
+      paused: 3.4
+      idle: 3.4
+- platform: powercalc
+  entity_id: media_player.move
+  fixed:
+    states_power:
+      playing: 8.3
+      paused: 3.2
+      idle: 3.2
+- platform: powercalc
+  entity_id: media_player.2c
+  fixed:
+    states_power:
+      playing: 7.3
+      paused: 2.55
+      idle: 2.55
+
+# Tv
+- platform: powercalc
+  entity_id: media_player.philips_tv
+  standby_power: 0.8
+  fixed:
+    power: 102
+- platform: powercalc
+  entity_id: media_player.philips_tv_boven
+  standby_power: 0.8
+  fixed:
+    power: 87
+- platform: powercalc
+  entity_id: media_player.tv_der_kinders
+  standby_power: 0.4
+  fixed:
+    power: 79
+
+# Verwarming
+- platform: powercalc
+  name: Slaapkamer Fien verwarming
+  entity_id: switch.fien
+  fixed:
+    power: 1000
+- platform: powercalc
+  name: Slaapkamer Noor verwarming
+  entity_id: switch.noor
+  fixed:
+    power: 1000
+- platform: powercalc
+  name: Badkamer verwarming
+  entity_id: switch.badkamer
+  fixed:
+    power: 1000
+- platform: powercalc
+  name: Slaapkamer verwarming
+  entity_id: switch.slaapkamer
+  fixed:
+    power: 1500
+- platform: powercalc
+  name: Wc verwarming
+  entity_id: switch.wc
+  fixed:
+    power: 1000
+- platform: powercalc
+  name: Circulatie verwarming
+  entity_id: switch.vloerverwarming
+  fixed:
+    power: 65
+
+# Verluchting
+- platform: powercalc
+  name: Verluchting masser
+  entity_id: switch.verluchting
+  fixed:
+    power: 100
+- platform: powercalc
+  entity_id: switch.zolder_verluchting
+  fixed:
+    power: 50
+
+# Verlichting
+- platform: powercalc
+  entity_id: light.noor_1
+  standby_power: 0.4
+  linear:
+    min_power: 0.4
+    max_power: 9
+- platform: powercalc
+  entity_id: light.noor_2
+  standby_power: 0.4
+  linear:
+    min_power: 0.4
+    max_power: 9
+- platform: powercalc
+  entity_id: light.spot_slaapkamer
+  standby_power: 0.3
+  linear:
+    min_power: 0.3
+    max_power: 5
+
+# Raspberry Pi's
+- platform: powercalc
+  name: badkamerPi
+  entity_id: sensor.cpu_badkamer
+  standby_power: 0.6
+  linear:
+    calibrate:
+      - 0 -> 0.6
+      - 100 -> 1.75
+- platform: powercalc
+  name: brewPi
+  entity_id: sensor.cpu_brewpi
+  standby_power: 2.35
+  linear:
+    calibrate:
+      - 0 -> 2.35
+      - 100 -> 5.5
+- platform: powercalc
+  name: garagePi
+  entity_id: sensor.cpu_garage
+  standby_power: 2.25
+  linear:
+    calibrate:
+      - 0 -> 2.25
+      - 100 -> 5.4
+- platform: powercalc
+  name: keukenPi
+  entity_id: sensor.cpu_keuken
+  standby_power: 2.35
+  linear:
+    calibrate:
+      - 0 -> 2.35
+      - 100 -> 5.5
+- platform: powercalc
+  name: livingPi
+  entity_id: sensor.cpu_pi3_living
+  standby_power: 1.6
+  linear:
+    calibrate:
+      - 0 -> 1.6
+      - 100 -> 6.6
+- platform: powercalc
+  name: poortPi
+  entity_id: sensor.cpu_poortjepi
+  standby_power: 2.25
+  linear:
+    calibrate:
+      - 0 -> 2.25
+      - 100 -> 5.4
+- platform: powercalc
+  name: slaapkamerPi
+  entity_id: sensor.cpu_slaapkamer
+  standby_power: 3.1
+  linear:
+    calibrate:
+      - 0 -> 3.1
+      - 100 -> 6.15
+- platform: powercalc
+  name: tvPi
+  entity_id: sensor.cpu_tvpi
+  standby_power: 2.35
+  linear:
+    calibrate:
+      - 0 -> 2.35
+      - 100 -> 5.5
+- platform: powercalc
+  name: verwarmingPi
+  entity_id: sensor.cpu_verwarmingpi
+  standby_power: 2.35
+  linear:
+    calibrate:
+      - 0 -> 2.35
+      - 100 -> 5.5
+
+# Computers
+- platform: powercalc
+  name: iMac5k
+  entity_id: binary_sensor.imac_5k_active_2
+  fixed:
+    power: 105
+
+# Playstation
+- platform: powercalc
+  name: Ps4
+  entity_id: device_tracker.playstation4
+  standby_power: 8.4
+  fixed:
+    power: 95

@@ -1,15 +1,17 @@
-  alias: RAFC_lichten_aan
-  id: 881fc702-28a1-4616-8fe4-7490e60db9ed
-  trigger:
-    - entity_id: calendar.rafc
-      platform: state
-      to: 'on'
-  condition: []
-  action:
-    - service: light.turn_on
-      data:
-        rgb_color: [206, 21, 55]
-        brightness: 255
-        entity_id: light.spots_tv
-    - service: script.rafc2_1
-
+alias: RAFC_lichten_aan
+id: 881fc702-28a1-4616-8fe4-7490e60db9ed
+trigger:
+  - entity_id: calendar.rafc
+    platform: state
+    to: "on"
+condition: []
+action:
+  - service: light.turn_on
+    data:
+      rgb_color: [206, 21, 55]
+      brightness: 255
+      entity_id: light.spots_tv
+  - service: script.turn_on
+    data:
+      entity_id: script.rafc2_1
+  # - service: script.rafc2_1

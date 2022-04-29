@@ -1,0 +1,20 @@
+alias: knop_vogelpik
+id: e1ea94ff-f30a-4310-bac7-9c70ce63c8dd
+trigger:
+  - platform: state
+    entity_id: binary_sensor.knop_vogelpik
+    to: "on"
+action:
+  - choose:
+    - conditions:
+        - condition: template
+          value_template: >
+            {{ states("light.vogelpik") == 'on' }}
+      sequence:
+        - service: light.turn_off
+          entity_id:
+            - light.vogelpik
+    default:
+      - service: light.turn_on
+        data:
+          entity_id: light.vogelpik

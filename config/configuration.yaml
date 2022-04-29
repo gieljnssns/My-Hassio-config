@@ -6,16 +6,11 @@
 
 ###  Global configuration  ###
 homeassistant:
-  # Name of the location where Home Assistant is running
   name: Nummer 79
-  # Location required to calculate the time the sun rises and sets
   latitude: !secret latitude
   longitude: !secret longitude
-  # Impacts weather/sunrise data (altitude above sea level)
   elevation: !secret elevation
-  # 'metric' for Metric, 'imperial' for Imperial
   unit_system: metric
-  # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   time_zone: Europe/Brussels
   customize: !include customize.yaml
   packages: !include_dir_named packages/
@@ -107,7 +102,7 @@ system_health:
 tag:
 
 ###  Checks for available updates  ###
-updater:
+# updater:
 
 ###  Zeroconf/Avahi/Bonjour  ###
 zeroconf:
@@ -124,20 +119,10 @@ zone: !include zones.yaml
 ###  Browser  ###
 browser:
 
-###  Allows you to issue voice commands from the frontend  ###
-# conversation:
-
 ###  Discovery  ###
 discovery:
   ignore:
     - apple_tv
-
-###  FFmpeg  ###
-# ffmpeg:
-
-###  HACS  ###
-# hacs:
-#   token: !secret hacs_token
 
 ###  Hassio  ###
 hassio:
@@ -145,16 +130,12 @@ hassio:
 ###  Python scripts  ###
 python_script:
 
-
 ###  Stream  ###
 stream:
 
 ###  Wake on Lan  ###
 wake_on_lan:
 
-###  Zha-map  ###
-# zha_map:
-  
 ####################################################
 #                                                  #
 #                     Includes                     #
@@ -170,14 +151,8 @@ homekit: !include homekit.yaml
 ###   HTTP  ###
 http: !include http.yaml
 
-###  IOS  ###
-ios: !include ios.yaml
-
 ###  Logger  ###
 logger: !include logger.yaml
-
-### InfluxDB  ###
-# influxdb: !include influxdb.yaml
 
 ###  Notification  ###
 notify: !include notify.yaml
@@ -187,7 +162,7 @@ recorder: !include recorder.yaml
 
 ###  Panels  ###
 panel_iframe: !include panels/iframe.yaml
-# panel_custom: !include panels/custom.yaml
+panel_custom: !include panels/custom.yaml
 
 ####################################################
 #                                                  #
@@ -203,7 +178,6 @@ climate: !include_dir_merge_list devices/climate
 counter: !include_dir_merge_named devices/counter
 cover: !include_dir_merge_list devices/cover
 device_tracker: !include_dir_merge_list devices/device_tracker
-# image_processing: !include_dir_merge_list devices/image_processing
 input_boolean: !include_dir_merge_named devices/input_boolean
 input_datetime: !include_dir_merge_named devices/input_datetime
 input_number: !include_dir_merge_named devices/input_number
@@ -211,7 +185,6 @@ input_select: !include_dir_merge_named devices/input_select
 input_text: !include_dir_merge_named devices/input_text
 light: !include_dir_merge_list devices/light
 media_player: !include_dir_merge_list devices/media_player
-rest_command: !include_dir_merge_named devices/restful_commands
 sensor: !include_dir_merge_list devices/sensors
 shell_command: !include devices/shell_commands.yaml
 switch: !include_dir_merge_list devices/switch
@@ -226,53 +199,23 @@ weather: !include_dir_merge_list devices/weather
 #                                                  #
 ####################################################
 
-###  Dahua  ###
-# amcrest: !include devices/hubs/dahua.yaml
-
-###  Hue  ###
-# hue: !include devices/hubs/hue.yaml
-
-###  Modbus  ###
-# modbus: !include devices/hubs/modbus.yaml
-
 ###  Neato  ###
 neato: !include devices/hubs/neato.yaml
 
 ###  Netatmo  ###
 netatmo: !include devices/hubs/netatmo.yaml
 
-###  SolarEdge modbus  ###
-# solaredge_modbus: !include devices/hubs/solaredge_modbus.yaml
-
-###  Solar inverter modbus  ###
-solar_inverter_modbus: !include devices/hubs/solar_inverter_modbus.yaml
-
-###  Solcast  ###
-solcast: !include devices/hubs/solcast.yaml
-
-###  Solcast  ###
-solcast_garage: !include devices/hubs/solcast_garage.yaml
+###  PowerCalc  ###
+powercalc: !include devices/hubs/powercalc.yaml
 
 ###  Sonos  ###
 sonos: !include devices/hubs/sonos.yaml
 
-###  Spotcast  ###
-spotcast: !include devices/hubs/spotcast.yaml
-
 ###  Spotify  ###
 spotify: !include devices/hubs/spotify.yaml
 
-###  Tahoma  ###
-# tahoma: !include devices/hubs/tahoma.yaml
-
 ###  Text to speech  ###
 tts: !include devices/hubs/tts.yaml
-
-###  Unifi  ###
-# unifi: !include devices/hubs/unifi.yaml
-
-###  WebOS  ###
-webostv: !include devices/hubs/lg_tv.yaml
 
 ###  ZHA  ###
 zha: !include devices/hubs/zha.yaml

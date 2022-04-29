@@ -1,0 +1,29 @@
+douchen_giel:
+  sequence:
+    - service: media_player.volume_set
+      data_template:
+        entity_id: media_player.badkamer
+        volume_level: 0.30
+    - service: media_player.select_source
+      data_template:
+        entity_id: media_player.badkamer
+        source: >
+          {{ [
+            'VRT Studio Brussel Bruut',
+            'Brutale Belgen 🇧🇪💪🏻☠️',
+            'VRT Studio Brussel Bruut',
+            'Het betere genre',
+            'Brutale Belgen 🇧🇪💪🏻☠️',
+            'Het betere genre +',
+            'Punk In Drublic',
+            'VRT Studio Brussel Bruut',
+            'Pinguin Aardschok',
+            'Pinguin On The Rocks',
+            'Belgische gitaren�',
+            'GARAGE BANGERS!',
+            "PUNK!!! Let's go!!",
+            'VAN EIGEN BODEM! (Belgische Gitaren)'
+          ] | random }}
+    - service: script.turn_on
+      target:
+        entity_id: script.verluchting_2_uur

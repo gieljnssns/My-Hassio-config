@@ -1,31 +1,31 @@
 alias: Pomp vloerverwarming
 id: 19651013-1164-44e7-a2b9-361ab2c437e4
 description: >-
-  De pomp moet draaien wanneer de temperatuur van de living onder de ingestelde
-  temperatuur is
+  De pomp moet draaien wanneer de warmtepomp draait en 20 min nadraaien
 trigger:
   - platform: state
-    entity_id: sensor.climate_living_heat_request
-  - platform: state
-    entity_id: sensor.climate_living_heat_request
-    to: 'False'
-    for:
-      minutes: 20
+    entity_id: binary_sensor.warmtepomp_aan
+    to: "on"
+  # - platform: state
+  #   entity_id: binary_sensor.warmtepomp_aan_delay_off
+  #   to: "off"
+  - platform: template
+    value_template: >
+      {{ states("sensor.vloerverwarming_terug") | float(default=0) < state_attr("climate.netatmo_living", "current_temperature") }}
 condition: []
 action:
   - choose:
-      # IF temperatuur > setpoint for 2 minutes
       - conditions:
+          # - condition: state
+          #   entity_id: binary_sensor.warmtepomp_aan_delay_off
+          #   state: "off"
           - condition: state
-            entity_id: sensor.climate_living_heat_request
-            state: 'False'
-            for:
-              minutes: 20
+            entity_id: binary_sensor.warmtepomp_aan
+            state: "off"
         sequence:
           - service: switch.turn_off
             entity_id:
               - switch.vloerverwarming
-    # ELSE (i.e., temperatuur < setpoint)
     default:
       - service: switch.turn_on
         entity_id: switch.vloerverwarming

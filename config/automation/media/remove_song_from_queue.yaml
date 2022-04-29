@@ -9,8 +9,6 @@ trigger:
     entity_id: media_player.badkamer
   - platform: state
     entity_id: media_player.living_2
-  # - platform: state
-  #   entity_id: media_player.living_surround
   - platform: state
     entity_id: media_player.move
 condition:
@@ -28,29 +26,12 @@ condition:
     - condition: template
       value_template: >
         {{ trigger.from_state.attributes.queue_position < trigger.to_state.attributes.queue_position }}
-    # - condition: template
-    #   value_template: >
-    #     {% set group = state_attr( trigger.entity_id , 'sonos_group') %}
-    #     {% if group[0] == trigger.entity_id %}
-    #       True
-    #     {% else %}
-    #       False
-    #     {% endif %}
-    # - condition: template
-    #   value_template: >
-    #     {% if state_attr( trigger.entity_id, 'queue_position') %}
-    #       {% if state_attr( trigger.entity_id, 'queue_position') >= 1 %}
-    #         {{ trigger.from_state.attributes.queue_position < trigger.to_state.attributes.queue_position }}
-    #       {% else %}
-    #         False
-    #       {% endif %}
-    #     {% else %}
-    #       False
-    #     {% endif %}
 action:
+  - delay:
+      seconds: 2
   - service: sonos.remove_from_queue
     data_template:
       entity_id: >
         {{ trigger.entity_id }}
       queue_position: >
-        {{ trigger.from_state.attributes.queue_position }}
+        {{ trigger.from_state.attributes.queue_position - 1 }}

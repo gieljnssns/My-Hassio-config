@@ -1,19 +1,22 @@
-  - platform: statistics
-    name: Badkamer luchtvochtigheid stats
-    entity_id: sensor.luchtvochtigheid_badkamer
-    sampling_size: 15
+- platform: statistics
+  name: Badkamer luchtvochtigheid stats
+  entity_id: sensor.luchtvochtigheid_badkamer
+  state_characteristic: change
+  sampling_size: 15
 
-  - platform: statistics
-    name: Keuken luchtvochtigheid stats
-    entity_id: sensor.luchtvochtigheid_keuken
-    sampling_size: 15
+- platform: statistics
+  name: Keuken luchtvochtigheid stats
+  entity_id: sensor.luchtvochtigheid_keuken
+  state_characteristic: change
+  sampling_size: 15
 
 ###  CapaciteitsTarief  ###
 # Kwartierpiek
-  - platform: statistics
-    entity_id: sensor.net_afname
-    name: energie_kwartierpiek
-    precision: 1
-    sampling_size: 900
-    max_age:
-      minutes: 15
+- platform: statistics
+  entity_id: sensor.net_afname
+  state_characteristic: mean
+  name: energie_kwartierpiek
+  precision: 1
+  sampling_size: 900
+  max_age:
+    minutes: 15

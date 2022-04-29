@@ -1,0 +1,155 @@
+- type: tcp
+  host: 192.168.79.60
+  port: 502
+  close_comm_on_error: false
+  name: huawei
+  sensors:
+    - name: Huawei Active power
+      slave: 1
+      scan_interval: 15
+      unit_of_measurement: W
+      device_class: power
+      count: 2
+      address: 32080
+      data_type: int32
+      precision: 0
+      state_class: measurement
+    - name: Huawei DC input power
+      slave: 1
+      scan_interval: 30
+      unit_of_measurement: W
+      device_class: power
+      count: 2
+      address: 32064
+      data_type: int32
+      precision: 0
+      state_class: measurement
+    - name: Huawei Daily energy yield
+      slave: 1
+      scan_interval: 300
+      unit_of_measurement: kWh
+      device_class: energy
+      count: 2
+      address: 32114
+      data_type: uint32
+      scale: 0.01
+      precision: 2
+      state_class: total_increasing
+    - name: Huawei PV1 voltage
+      slave: 1
+      scan_interval: 30
+      unit_of_measurement: V
+      device_class: voltage
+      address: 32016
+      data_type: int16
+      scale: 0.1
+      precision: 0
+      state_class: measurement
+    - name: Huawei PV2 voltage
+      slave: 1
+      scan_interval: 30
+      unit_of_measurement: V
+      device_class: voltage
+      address: 32018
+      data_type: int16
+      scale: 0.1
+      precision: 0
+      state_class: measurement
+    - name: Huawei Accumulated energy yield
+      slave: 1
+      scan_interval: 300
+      unit_of_measurement: kWh
+      device_class: energy
+      count: 2
+      address: 32106
+      data_type: uint32
+      scale: 0.01
+      precision: 2
+      state_class: total_increasing
+# - type: tcp
+#   host: 192.168.79.56
+#   port: 502
+#   close_comm_on_error: false
+#   name: solaredge
+#   # retry_on_empty: true
+#   # retries: 30
+#   delay: 5
+#   timeout: 14
+#   sensors:
+#     - name: Solaredge Active power not scaled
+#       slave: 1
+#       scan_interval: 18
+#       unit_of_measurement: W
+#       device_class: power
+#       # count: 1
+#       address: 40083
+#       data_type: int16
+#       precision: 0
+#       # scale: 0.1
+#       state_class: measurement
+
+#     - name: Solaredge Accumulated energy yield
+#       slave: 1
+#       scan_interval: 300
+#       unit_of_measurement: kWh
+#       device_class: energy
+#       count: 2
+#       address: 40093
+#       data_type: uint32
+#       scale: 0.001
+#       precision: 2
+#       state_class: total_increasing
+
+#     - name: Solaredge DC voltage not scaled
+#       slave: 1
+#       scan_interval: 18
+#       unit_of_measurement: V
+#       device_class: voltage
+#       address: 40098
+#       data_type: uint16
+#       precision: 0
+#       # scale: 0.1
+#       state_class: measurement
+
+#     - name: Solaredge DC input power not scaled
+#       slave: 1
+#       scan_interval: 30
+#       unit_of_measurement: W
+#       device_class: power
+#       address: 40100
+#       data_type: int16
+#       precision: 0
+#       # scale: 0.1
+#       state_class: measurement
+
+#     - name: Solaredge Power scalefactor
+#       unit_of_measurement: q
+#       scan_interval: 18
+#       slave: 1
+#       address: 40084
+#       data_type: int16
+#       precision: 0
+
+#     - name: Solaredge DC Power scalefactor
+#       unit_of_measurement: q
+#       scan_interval: 30
+#       slave: 1
+#       address: 40101
+#       data_type: int16
+#       precision: 0
+
+#     - name: Solaredge DC Voltage scalefactor
+#       unit_of_measurement: q
+#       scan_interval: 18
+#       slave: 1
+#       address: 40099
+#       data_type: int16
+#       precision: 0
+
+#     - name: Solaredge Energy scalefactor
+#       unit_of_measurement: q
+#       scan_interval: 300
+#       slave: 1
+#       address: 40095
+#       data_type: int16
+#       precision: 0

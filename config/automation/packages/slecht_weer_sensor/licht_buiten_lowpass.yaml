@@ -1,17 +1,25 @@
-  alias: 'Licht buiten_lowpass'
-  id: 827c4b46-d0b8-460a-9436-747dee073906
-  trigger:
-    - platform: numeric_state
-      entity_id: sensor.zonne_energie_gefilterd_lowpass
-      above: 100
-    # - platform: numeric_state
-    #   entity_id: sun.sun
-    #   value_template: "{{ state.attributes.elevation }}"
-    #   above: 6.0
-    # - platform: numeric_state
-    #   entity_id: sensor.zonne_energie_omvormers_gefilterd_lowpass
-    #   above: 100
-  action:
-    - service: input_boolean.turn_off
-      entity_id:
-        - input_boolean.donker_buiten_lowpass
+alias: "Licht buiten_lowpass"
+id: 827c4b46-d0b8-460a-9436-747dee073906
+trigger:
+  - platform: numeric_state
+    entity_id: sensor.huidige_opbrengst
+    above: 30
+  # - platform: numeric_state
+  #   entity_id: sensor.zonne_energie_gefilterd_lowpass
+  #   above: 100
+  # - platform: numeric_state
+  #   entity_id: sun.sun
+  #   value_template: "{{ state.attributes.elevation }}"
+  #   above: 6.0
+  # - platform: numeric_state
+  #   entity_id: sensor.zonne_energie_omvormers_gefilterd_lowpass
+  #   above: 100
+condition:
+  - alias: "Alleen voor de middag"
+    condition: time
+    before: " 13:00:00"
+
+action:
+  - service: input_boolean.turn_off
+    entity_id:
+      - input_boolean.donker_buiten_lowpass

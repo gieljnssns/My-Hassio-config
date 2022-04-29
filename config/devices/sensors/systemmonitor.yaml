@@ -1,18 +1,18 @@
-  - platform: systemmonitor
-    resources:
-      - type: memory_use
-      - type: memory_free
-      - type: processor_use
-      - type: last_boot
-      - type: swap_use
-  
-  - platform: command_line
-    name: NUC CPU Temperatuur
-    command: "cat /sys/class/thermal/thermal_zone2/temp"
-    value_template: '{{ value | multiply(0.001) | round(2) }}'
-    unit_of_measurement: '°C'
-  - platform: command_line
-    name: NUC Wifi Temperatuur
-    command: "cat /sys/class/thermal/thermal_zone3/temp"
-    value_template: '{{ value | multiply(0.001) | round(2) }}'
-    unit_of_measurement: '°C'
+- platform: systemmonitor
+  resources:
+    - type: memory_use
+    - type: memory_free
+    - type: processor_use
+    - type: last_boot
+    - type: swap_use
+
+- platform: command_line
+  name: NUC CPU Temperatuur
+  command: "cat /sys/class/thermal/thermal_zone2/temp"
+  value_template: "{{ value | multiply(0.001) | round(2) }}"
+  unit_of_measurement: "°C"
+# - platform: command_line
+#   name: NUC Wifi Temperatuur
+#   command: "cat /sys/class/thermal/thermal_zone3/temp"
+#   value_template: '{{ value | multiply(0.001) | round(2) }}'
+#   unit_of_measurement: '°C'

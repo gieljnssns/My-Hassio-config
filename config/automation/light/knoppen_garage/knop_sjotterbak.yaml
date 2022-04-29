@@ -1,0 +1,20 @@
+alias: Knop sjotterbak
+id: 4da0d527-a14e-4ede-a5d7-3877b62a1b70
+trigger:
+  - platform: state
+    entity_id: binary_sensor.knop_sjotterbak
+    to: "on"
+action:
+  - choose:
+    - conditions:
+        - condition: template
+          value_template: >
+            {{ states("light.garage_sjotterbak") == 'on' }}
+      sequence:
+        - service: light.turn_off
+          entity_id:
+            - light.garage_sjotterbak
+    default:
+      - service: light.turn_on
+        data:
+          entity_id: light.garage_sjotterbak

@@ -1,90 +1,106 @@
-  rafc2_2:
-    mode: queued
-    sequence:
-      - service: light.turn_on
-        data:
-          rgb_color: [255, 255, 255]
-          brightness: 255
-          entity_id:
-            - light.rechts_midden
-      - delay:
-          seconds: 8
-      - service: light.turn_on
-        data:
-          rgb_color: [255, 255, 255]
-          brightness: 255
-          entity_id:
-            - light.rechts_achter
-      - service: light.turn_on
-        data:
-          rgb_color: [206, 21, 55]
-          brightness: 255
-          entity_id:
-            - light.rechts_midden
-      - delay:
-          seconds: 8
-      - service: light.turn_on
-        data:
-          rgb_color: [255, 255, 255]
-          brightness: 255
-          entity_id:
-            - light.links_achter
-      - service: light.turn_on
-        data:
-          rgb_color: [206, 21, 55]
-          brightness: 255
-          entity_id:
-            - light.rechts_achter
-      - delay:
-          seconds: 8
-      - service: light.turn_on
-        data:
-          rgb_color: [255, 255, 255]
-          brightness: 255
-          entity_id:
-            - light.links_midden
-      - service: light.turn_on
-        data:
-          rgb_color: [206, 21, 55]
-          brightness: 255
-          entity_id:
-            - light.links_achter
-      - delay:
-          seconds: 8
-      - service: light.turn_on
-        data:
-          rgb_color: [255, 255, 255]
-          brightness: 255
-          entity_id:
-            - light.links_voor
-      - service: light.turn_on
-        data:
-          rgb_color: [206, 21, 55]
-          brightness: 255
-          entity_id:
-            - light.links_midden
-      - delay:
-          seconds: 8
-      - service: light.turn_on
-        data:
-          rgb_color: [255, 255, 255]
-          brightness: 255
-          entity_id:
-            - light.rechts_voor
-      - service: light.turn_on
-        data:
-          rgb_color: [206, 21, 55]
-          brightness: 255
-          entity_id:
-            - light.links_voor
-      - delay:
-          seconds: 8
-      - service: light.turn_on
-        data:
-          rgb_color: [206, 21, 55]
-          brightness: 255
-          entity_id:
-            - light.rechts_voor
-      - service: script.rafc2_1
-      - delay:
-          seconds: 2
+rafc2_2:
+  mode: queued
+  sequence:
+    - service: light.turn_on
+      data:
+        rgb_color: [255, 255, 255]
+        brightness: 135
+        entity_id:
+          - light.rechts_midden
+    - delay:
+        seconds: 10
+    - service: light.turn_on
+      data:
+        rgb_color: [206, 21, 55]
+        brightness: 255
+        entity_id:
+          - light.rechts_midden
+    - delay:
+        seconds: 30
+    - service: light.turn_on
+      data:
+        rgb_color: [255, 255, 255]
+        brightness: 135
+        entity_id:
+          - light.rechts_achter
+    - delay:
+        seconds: 10
+    - service: light.turn_on
+      data:
+        rgb_color: [206, 21, 55]
+        brightness: 255
+        entity_id:
+          - light.rechts_achter
+    - delay:
+        seconds: 30
+    - service: light.turn_on
+      data:
+        rgb_color: [255, 255, 255]
+        brightness: 135
+        entity_id:
+          - light.links_achter
+    - delay:
+        seconds: 10
+    - service: light.turn_on
+      data:
+        rgb_color: [206, 21, 55]
+        brightness: 255
+        entity_id:
+          - light.links_achter
+    - delay:
+        seconds: 30
+    - service: light.turn_on
+      data:
+        rgb_color: [255, 255, 255]
+        brightness: 135
+        entity_id:
+          - light.links_midden
+
+    - delay:
+        seconds: 10
+    - service: light.turn_on
+      data:
+        rgb_color: [206, 21, 55]
+        brightness: 255
+        entity_id:
+          - light.links_midden
+    - delay:
+        seconds: 30
+    - service: light.turn_on
+      data:
+        rgb_color: [255, 255, 255]
+        brightness: 135
+        entity_id:
+          - light.links_voor
+    - delay:
+        seconds: 10
+    - service: light.turn_on
+      data:
+        rgb_color: [206, 21, 55]
+        brightness: 255
+        entity_id:
+          - light.links_voor
+    - delay:
+        seconds: 30
+    - service: light.turn_on
+      data:
+        rgb_color: [255, 255, 255]
+        brightness: 135
+        entity_id:
+          - light.rechts_voor
+
+    - delay:
+        seconds: 10
+    - service: light.turn_on
+      data:
+        rgb_color: [206, 21, 55]
+        brightness: 255
+        entity_id:
+          - light.rechts_voor
+    - service: script.turn_on
+      data:
+        entity_id:
+          - script.rafc2_1
+    # - service: script.rafc2_1
+    # - delay:
+    #     seconds: 2

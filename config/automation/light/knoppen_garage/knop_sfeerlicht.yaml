@@ -1,0 +1,20 @@
+alias: Knop sfeerlicht
+id: 0d8ad9a0-1ef5-4ebe-a8c4-1739872a5690
+trigger:
+  - platform: state
+    entity_id: binary_sensor.knop_sfeer
+    to: "on"
+action:
+  - choose:
+    - conditions:
+        - condition: template
+          value_template: >
+            {{ states("light.garage_sfeerverlichting") == 'on' }}
+      sequence:
+        - service: light.turn_off
+          entity_id:
+            - light.garage_sfeerverlichting
+    default:
+      - service: light.turn_on
+        data:
+          entity_id: light.garage_sfeerverlichting

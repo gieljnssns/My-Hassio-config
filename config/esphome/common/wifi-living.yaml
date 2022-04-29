@@ -1,25 +1,26 @@
 wifi:
   networks:
-  - ssid: !secret ssid-living
-    password: !secret password
-    bssid: !secret bssid-living
-    priority: 2
-    id: ssid2
-  - ssid: !secret ssid
-    password: !secret password
-    bssid: !secret bssid-living-wannacry
-    priority: 1
-    id: ssid1
-  - ssid: !secret ssid
-    password: !secret password
-    priority: 0
-    id: ssid0
+    - ssid: !secret ssid-living
+      password: !secret password
+      bssid: !secret bssid-living
+      priority: 2
+      id: ssid2
+    - ssid: !secret ssid
+      password: !secret password
+      bssid: !secret bssid-living-wannacry
+      priority: 1
+      id: ssid1
+    - ssid: !secret ssid
+      password: !secret password
+      priority: 0
+      id: ssid0
   power_save_mode: none
-  enable_mdns: false
   manual_ip:
     static_ip: ${manual_ip}
     gateway: 192.168.89.1
     subnet: 255.255.255.0
-  # ap:
-  #   ssid: ${devicename}
-  #   password: !secret password
+    dns1: 1.1.1.1
+    dns2: 8.8.8.8
+
+mdns:
+  disabled: true

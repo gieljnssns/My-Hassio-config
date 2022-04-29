@@ -1,21 +1,21 @@
-  alias: "Update OpenUV every hour while the sun is at least 10 degrees above the horizon"
-  id: a76736f6-a5c1-40a6-b764-2f4c3786c04b
-  trigger:
-    platform: time_pattern
-    minutes: "/59"
-  condition:
-    condition: numeric_state
-    entity_id: sun.sun
-    value_template: "{{ state.attributes.elevation }}"
-    above: 10
-  action:
-    - service: openuv.update_uv_index_data
-    - delay:
-        minutes: 1
-    - alias: "OpenUV unavailable"
-      condition: state
-      entity_id: sensor.current_uv_level
-      state: "unavailable"
-    - delay:
-        minutes: 1
-    - service: openuv.update_uv_index_data
+alias: "Update OpenUV every 50min while the sun is at least 10 degrees above the horizon"
+id: a76736f6-a5c1-40a6-b764-2f4c3786c04b
+trigger:
+  platform: time_pattern
+  minutes: "/50"
+condition:
+  condition: numeric_state
+  entity_id: sun.sun
+  value_template: "{{ state.attributes.elevation }}"
+  above: 10
+action:
+  - service: openuv.update_uv_index_data
+  - delay:
+      minutes: 1
+  - alias: "OpenUV unavailable"
+    condition: state
+    entity_id: sensor.current_uv_level
+    state: "unavailable"
+  - delay:
+      minutes: 1
+  - service: openuv.update_uv_index_data

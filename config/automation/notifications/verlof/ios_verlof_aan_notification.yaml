@@ -30,8 +30,13 @@ action:
     data_template:
       message: "Zijn jullie op vakantie vertrokken? Zet dan Vakantie-modus aan."
       data:
-        push:
-          badge: 0
-          category: "verlof"
-        action_data:
-          entity_id: input_boolean.op_verlof
+        actions:
+          - action: "VERLOF_AAN"
+            title: "Vakantie-modus aan."
+          - action: "VERLOF_UIT"
+            title: "Vakantie-modus uit."
+        # push:
+        #   badge: 0
+        #   category: "verlof"
+        # action_data:
+        #   entity_id: input_boolean.op_verlof
