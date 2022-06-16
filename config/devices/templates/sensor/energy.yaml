@@ -1,0 +1,7 @@
+- sensor:
+  - name: "SolarEdge totaal"
+    state: "{{ (states('sensor.solaredge_lifetime_energy') | float / 1000) | round(2) }}"
+    unit_of_measurement: "kWh"
+    state_class: total_increasing
+    device_class: energy
+    unique_id: 70625593-4660-42d3-ad93-6ce179a96205

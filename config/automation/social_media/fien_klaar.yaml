@@ -1,0 +1,28 @@
+alias: "Fien social media"
+id: dcda6a40-15a2-4779-8a3c-21914df8779f
+trigger:
+  - platform: state
+    entity_id: input_boolean.fien_huiswerk
+    to: "on"
+  - platform: state
+    entity_id: input_boolean.fien_drum
+    to: "on"
+condition:
+  - condition: and
+    conditions:
+      - condition: state
+        entity_id: input_boolean.fien_huiswerk
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.fien_drum
+        state: "on"
+action:
+  - service: notify.giel_en_martine
+    data:
+      message: "Ons Fien zou klaar zijn met alles."
+      data:
+        actions:
+          - action: "ROBLOX"
+            title: "Ok zet Roblox maar op."
+          - action: "GEEN_ROBLOX"
+            title: "Volgens mij is ze nog niet klaar."

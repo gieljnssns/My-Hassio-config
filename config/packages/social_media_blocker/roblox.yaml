@@ -1,0 +1,44 @@
+input_boolean:
+  allowroblox:
+    name: Roblox
+    icon: mdi:square-off-outline
+
+switch:
+  - platform: template
+    switches:
+      allowroblox:
+        value_template: "{{ is_state('input_boolean.allowroblox', 'on') }}"
+        icon_template: mdi:square-off-outline
+        friendly_name: Roblox
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.allowroblox
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.allowroblox
+
+automation:
+  - id: enable_roblox
+    alias: Enable roblox
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowroblox
+      to: "on"
+    action:
+      - service: adguard.remove_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-roblox.txt"
+
+  - id: disable_roblox
+    alias: Disable roblox
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowroblox
+      to: "off"
+    action:
+      - service: adguard.add_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-roblox.txt"
+          name: Roblox

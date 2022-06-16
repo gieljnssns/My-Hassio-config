@@ -47,7 +47,7 @@ automation: !include automations.yaml
 config:
 
 ###  DHCP Discovery  ###
-dhcp:
+# dhcp:
 
 ###  Energy  ###
 energy:
@@ -90,7 +90,7 @@ scene: !include scenes.yaml
 script: !include_dir_merge_named scripts
 
 ###  Simple Service Discovery Protocol  ###
-ssdp:
+# ssdp:
 
 ###  Sun  ###
 sun:
@@ -101,8 +101,8 @@ system_health:
 ###  Tag  ###
 tag:
 
-###  Checks for available updates  ###
-# updater:
+###  USB Discovery  ###
+usb:
 
 ###  Zeroconf/Avahi/Bonjour  ###
 zeroconf:
@@ -120,9 +120,9 @@ zone: !include zones.yaml
 browser:
 
 ###  Discovery  ###
-discovery:
-  ignore:
-    - apple_tv
+# discovery:
+#   ignore:
+#     - apple_tv
 
 ###  Hassio  ###
 hassio:
@@ -185,6 +185,9 @@ input_select: !include_dir_merge_named devices/input_select
 input_text: !include_dir_merge_named devices/input_text
 light: !include_dir_merge_list devices/light
 media_player: !include_dir_merge_list devices/media_player
+mqtt:
+  sensor: !include_dir_merge_list devices/mqtt/sensor
+  binary_sensor: !include_dir_merge_list devices/mqtt/binary_sensor
 sensor: !include_dir_merge_list devices/sensors
 shell_command: !include devices/shell_commands.yaml
 switch: !include_dir_merge_list devices/switch
@@ -200,7 +203,7 @@ weather: !include_dir_merge_list devices/weather
 ####################################################
 
 ###  Neato  ###
-neato: !include devices/hubs/neato.yaml
+# neato: !include devices/hubs/neato.yaml
 
 ###  Netatmo  ###
 netatmo: !include devices/hubs/netatmo.yaml
@@ -209,10 +212,10 @@ netatmo: !include devices/hubs/netatmo.yaml
 powercalc: !include devices/hubs/powercalc.yaml
 
 ###  Sonos  ###
-sonos: !include devices/hubs/sonos.yaml
+# sonos: !include devices/hubs/sonos.yaml
 
 ###  Spotify  ###
-spotify: !include devices/hubs/spotify.yaml
+# spotify: !include devices/hubs/spotify.yaml
 
 ###  Text to speech  ###
 tts: !include devices/hubs/tts.yaml

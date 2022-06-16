@@ -1,0 +1,38 @@
+alias: "Sociale media af"
+id: e123627d-0573-45ab-9f9d-e6232b3f51db
+trigger:
+  - platform: time
+    at: "00:01:00"
+    id: week
+  - platform: time
+    at: "01:00:00"
+    id: weekend
+condition:
+  - condition: or
+    conditions:
+      - condition: and
+        conditions:
+          - condition: trigger
+            id: week
+          - condition: state
+            entity_id: binary_sensor.schooldag
+            state: "on"
+      - condition: and
+        conditions:
+          - condition: trigger
+            id: weekend
+          - condition: time
+            weekday:
+              - "mon"
+              - "tue"
+              - "wed"
+              - "thu"
+              - "fri"
+              - "sat"
+          - condition: state
+            entity_id: binary_sensor.schooldag
+            state: "off"
+action:
+  - service: input_boolean.turn_off
+    # entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_viool, input_boolean.noor_huiswerk, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube
+    entity_id: input_boolean.fien_huiswerk, input_boolean.noor_huiswerk, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube

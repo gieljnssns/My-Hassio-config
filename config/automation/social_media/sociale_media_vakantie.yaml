@@ -1,0 +1,12 @@
+alias: "Sociale media aan vakantie"
+id: 8d8624d2-312b-4614-94f0-1228ef555b54
+trigger:
+  - platform: time
+    at: "08:30:00"
+condition:
+  - condition: state
+    entity_id: binary_sensor.schooldag
+    state: "off"
+action:
+  - service: input_boolean.turn_on
+    entity_id: input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube

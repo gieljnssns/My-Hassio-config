@@ -48,6 +48,7 @@ condition:
     - condition: template
       value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.sonos_playing_spreek', 'last_triggered')) | float > 310 }}"
 action:
+  # https://www.wijsheidspreuk.nl/tegeltjesmaker
   - service: script.sonos_playing_spreek
     data_template:
       sonos_entity: media_player.keuken
@@ -71,6 +72,8 @@ action:
           "Hallo " + person + ", welkom thuis.",
           "Welkom thuis " + person + ", zware dag gehad?",
           "Blij dat je thuis bent " + person ,
+          "Ik drink nooit meer, maar ook niet minder",
+          "Water doet de palen rotten, die het drinken zijn de zotten.",
           "Wees welkom " + person + ", toch niet te veel gedronken?",
           "Stel niet uit tot morgen... Wat je vandaag door een ander kan laten doen.",
           "Stel niet uit tot morgen... Wat je overmorgen ook kan doen.",
@@ -89,11 +92,14 @@ action:
           {{ [
           "Hallo " + person + ", welkom thuis.",
           "Welkom thuis " + person + ", zware dag gehad?",
+          "Ik drink nooit meer, maar ook niet minder",
           "Blij dat je thuis bent " + person ,
           "Hokus Pokus pats, ik wou da " + person + " thuis was",
           "Spiegeltje, spiegeltje aan de wand, hier is de mooiste van het land.",
+          "Water doet de palen rotten, die het drinken zijn de zotten.",
           "Sims salla bime, hier is " + person ,
           "Die da Disneyland, hier is " + person + " en dat is plezant.",
+          "Jij bent de zon, jij bent de zee, jij doet de afwas, ik kijk tv. ",
           "Sorry, voor de rommel in huis,. Neem de stofzuiger en voel je thuis!",
           "Al schud de jongen nog zo kloek., de laatste druppel valt in de broek.",
           "Calorieën zijn toch die beestjes die 's nachts je kleding kleiner maken?",
@@ -114,6 +120,18 @@ action:
           ] | random }}
         {% elif states("binary_sensor.noor_juist_aangekomen") == 'on' %}
           {{ [
+          "De jeugd eindigt wanneer men relaties gaat maken in plaats van vrienden.",
+          "Jeugd voelt verder dan ervaring ziet.",
+          "De hedendaagse jeugd wil niet meer wachten tot ze oud is om ontgoocheld te worden.",
+          "Op de ontgoocheling der jeugd volgt de teleurstelling der volwassenheid.",
+          "De middelbare leeftijd is de tijd waarin een vrouw steeds denkt dat zij zich over een paar weken weer net zo goed als vroeger zal voelen.",
+          "De jeugd is de tijd om de wijsheid te bestuderen, de ouderdom de tijd om haar toe te passen.",
+          "Men moet zichzelf nieuwe redenen tot leven geven naarmate men zijn jeugd verliest.",
+          "Jeugd is een wonderbaarlijk iets; wat zonde om haar aan kinderen te verspillen.",
+          "Men kan beter een jonge meikever zijn dan een oude paradijsvogel.",
+          "Jeugd is geen leeftijd, het is een geestestoestand.",
+          "De jeugd spreekt over de ouderdom als over een ongeluk dat hen niet treffen kan.",
+          "Oude mensen geloven alles, mensen van middelbare leeftijd vermoeden alles, jonge mensen weten alles.",
           "Hallo " + person + ", welkom thuis.",
           "Welkom thuis " + person + ", zware dag gehad?",
           "Blij dat je thuis bent " + person ,
@@ -129,6 +147,18 @@ action:
           ] | random }}
         {% elif states("binary_sensor.fien_juist_aangekomen") == 'on' %}
           {{ [
+          "De jeugd eindigt wanneer men relaties gaat maken in plaats van vrienden.",
+          "Jeugd voelt verder dan ervaring ziet.",
+          "De hedendaagse jeugd wil niet meer wachten tot ze oud is om ontgoocheld te worden.",
+          "Op de ontgoocheling der jeugd volgt de teleurstelling der volwassenheid.",
+          "De middelbare leeftijd is de tijd waarin een vrouw steeds denkt dat zij zich over een paar weken weer net zo goed als vroeger zal voelen.",
+          "De jeugd is de tijd om de wijsheid te bestuderen, de ouderdom de tijd om haar toe te passen.",
+          "Men moet zichzelf nieuwe redenen tot leven geven naarmate men zijn jeugd verliest.",
+          "Jeugd is een wonderbaarlijk iets; wat zonde om haar aan kinderen te verspillen.",
+          "Men kan beter een jonge meikever zijn dan een oude paradijsvogel.",
+          "Jeugd is geen leeftijd, het is een geestestoestand.",
+          "De jeugd spreekt over de ouderdom als over een ongeluk dat hen niet treffen kan.",
+          "Oude mensen geloven alles, mensen van middelbare leeftijd vermoeden alles, jonge mensen weten alles.",
           "Hallo " + person + ", welkom thuis.",
           "Welkom thuis " + person + ", zware dag gehad?",
           "Blij dat je thuis bent " + person ,

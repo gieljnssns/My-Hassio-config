@@ -86,7 +86,6 @@ action:
       # identity: '{"identity":"Alarm night {{as_local(states.sensor.time.last_changed).strftime("%H:%M")}}"}'
   - condition: template
     value_template: >
-      {{ state_attr( 'media_player.badkamer' , 'sonos_group')[0] !=  'media_player.badkamer' }}
+      {{ state_attr( 'media_player.badkamer' , 'group_members')[0] !=  'media_player.badkamer' }}
   - service: sonos.unjoin
     entity_id: media_player.badkamer
-  
