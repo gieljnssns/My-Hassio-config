@@ -45,7 +45,7 @@ sensor:
       #name: "L2 energie"
       id: energyL2
     power:
-      #name: "L2 vermogen"
+      # name: "L2_test"
       id: powerL2
     frequency:
       #name: "L2 frequentie"
@@ -53,7 +53,7 @@ sensor:
     power_factor:
       #name: "L2 cos phi"
       id: L2cosphi
-    update_interval: 2s
+    update_interval: 4s
   - platform: pzemac
     address: 2
     modbus_id: mbus
@@ -67,7 +67,7 @@ sensor:
       #name: "S2 energie"
       id: energyS2
     power:
-      #name: "S2 vermogen"
+      # name: "S2_test"
       id: powerS2
     frequency:
       #name: "S2 frequentie"
@@ -75,7 +75,7 @@ sensor:
     power_factor:
       #name: "S2 cos phi"
       id: S2cosphi
-    update_interval: 2s
+    update_interval: 4s
   - platform: pzemac
     address: 3
     modbus_id: mbus
@@ -89,7 +89,7 @@ sensor:
       #name: "V2 energie"
       id: energyV2
     power:
-      #name: "V2 vermogen"
+      # name: "V2_test"
       id: powerV2
     frequency:
       #name: "V2 frequentie"
@@ -97,7 +97,7 @@ sensor:
     power_factor:
       #name: "V2 cos phi"
       id: V2cosphi
-    update_interval: 2s
+    update_interval: 4s
   ###  Template sensors  ###
   # - platform: template
   #   name: "L2 schijnbaar vermogen"
@@ -131,7 +131,7 @@ sensor:
     unit_of_measurement: "W"
     # internal: true
     lambda: !lambda |-
-      if (( -7 < (id(powerL2).state - id(powerS2).state) - id(powerV2).state && (id(powerL2).state - id(powerS2).state) - id(powerV2).state < 7 )  || (id(elevation).state < 0))   {
+      if (( -6 < (id(powerL2).state - id(powerS2).state) - id(powerV2).state && (id(powerL2).state - id(powerS2).state) - id(powerV2).state < 6 )  || (id(elevation).state < 0))   {
         return id(powerL2).state;
       } else {
         return id(powerV2).state;
@@ -206,3 +206,12 @@ sensor:
     id: grid_consumption_test2
     update_interval: 2s
     unit_of_measurement: "W"
+    
+  # - platform: template
+  #   name: "L2-S2-V2"
+  #   id: l_s_v
+  #   update_interval: 2s
+  #   unit_of_measurement: "W"
+  #   lambda: !lambda |-
+  #     return (id(powerL2).state - id(powerS2).state) - id(powerV2).state;
+

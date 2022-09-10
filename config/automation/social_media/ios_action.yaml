@@ -27,8 +27,11 @@ action:
           - condition: trigger
             id: "tiktok"
         sequence:
-          - service: input_boolean.turn_on
-            entity_id: input_boolean.allowtiktok, input_boolean.allowinstagram
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.noor_blocker
+          - service: notify.mobile_app_nphone
+            data:
+              message: "Alles is terug beschikbaar, laat je gaan. Slechte muziek en rare dansjes staan klaar voor jou."
       - conditions:
           - condition: trigger
             id: "geen_tiktok"
@@ -40,8 +43,11 @@ action:
           - condition: trigger
             id: "roblox"
         sequence:
-          - service: input_boolean.turn_on
-            entity_id: input_boolean.allowroblox, input_boolean.allowyoutube
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.fien_blocker
+          - service: notify.mobile_app_fphone
+            data:
+              message: "Roblox is er klaar voor, en bij de kampioenen is er volgens mij ook weer een misverstand gebeurd."
       - conditions:
           - condition: trigger
             id: "geen_roblox"
@@ -49,5 +55,3 @@ action:
           - service: notify.mobile_app_fphone
             data:
               message: "Zijde zeker da ge me alle klaar zij?"
-    # default:
-    #   - service: script.stoffy_alles

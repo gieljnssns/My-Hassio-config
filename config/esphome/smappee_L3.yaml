@@ -45,7 +45,7 @@ sensor:
       # name: "L3 energie"
       id: energyL3
     power:
-      # name: "L3 vermogen"
+      # name: "L3_test"
       id: powerL3
     frequency:
       # name: "L3 frequentie"
@@ -53,7 +53,7 @@ sensor:
     power_factor:
       # name: "L3 cos phi"
       id: L3cosphi
-    update_interval: 2s
+    update_interval: 4s
   - platform: pzemac
     address: 2
     modbus_id: mbus
@@ -67,7 +67,7 @@ sensor:
       # name: "S3 energie"
       id: energyS3
     power:
-      # name: "S3 vermogen"
+      # name: "S3_test"
       id: powerS3
     frequency:
       # name: "S3 frequentie"
@@ -75,7 +75,7 @@ sensor:
     power_factor:
       # name: "S3 cos phi"
       id: S3cosphi
-    update_interval: 2s
+    update_interval: 4s
   - platform: pzemac
     address: 3
     modbus_id: mbus
@@ -89,7 +89,7 @@ sensor:
       # name: "V3 energie"
       id: energyV3
     power:
-      # name: "V3 vermogen"
+      # name: "V3_test"
       id: powerV3
     frequency:
       # name: "V3 frequentie"
@@ -97,7 +97,7 @@ sensor:
     power_factor:
       # name: "V3 cos phi"
       id: V3cosphi
-    update_interval: 2s
+    update_interval: 4s
   ###  Template sensors  ###
   # - platform: template
   #   name: "L3 schijnbaar vermogen"
@@ -206,3 +206,13 @@ sensor:
     id: grid_consumption_test2
     update_interval: 2s
     unit_of_measurement: "W"
+    
+    
+  # - platform: template
+  #   name: "L3-S3-V3"
+  #   id: l_s_v
+  #   update_interval: 2s
+  #   unit_of_measurement: "W"
+  #   lambda: !lambda |-
+  #     return (id(powerL3).state - id(powerS3).state) - id(powerV3).state;
+

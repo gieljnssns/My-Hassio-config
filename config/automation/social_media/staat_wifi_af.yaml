@@ -1,0 +1,87 @@
+alias: Staat wifi af?
+description: "Zijn mijn kinderen aan het valsspelen door hun wifi af te zetten?"
+id: 020eddb1-5614-4a97-acd1-3ee2f930d15b
+mode: parallel
+trigger:
+  - platform: state
+    entity_id: device_tracker.nphone_ping
+    id: noor
+    to: "off"
+    for:
+      minutes: 5
+  - platform: state
+    entity_id: device_tracker.nphone_detect
+    id: noor
+    to: "off"
+    for:
+      minutes: 5
+  - platform: state
+    entity_id: device_tracker.nphone_nmap
+    id: noor
+    to: "off"
+    for:
+      minutes: 5
+  - platform: state
+    entity_id: device_tracker.fphone_ping
+    id: fien
+    to: "off"
+    for:
+      minutes: 5
+  - platform: state
+    entity_id: device_tracker.fphone_detect
+    id: fien
+    to: "off"
+    for:
+      minutes: 5
+  - platform: state
+    entity_id: device_tracker.fphone_nmap
+    id: fien
+    to: "off"
+    for:
+      minutes: 5
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: noor
+          - condition: state
+            entity_id: device_tracker.nphone_ping
+            state: "off"
+          - condition: state
+            entity_id: device_tracker.nphone_detect
+            state: "off"
+          - condition: state
+            entity_id: device_tracker.nphone_nmap
+            state: "off"
+          - condition: numeric_state
+            entity_id: sensor.nphone_bt_thuis
+            above: 43
+        sequence:
+          - service: notify.giel_en_martine
+            data:
+              message: De kans bestaat dat ons Noor haar wifi heeft afgezet om toch TikTok filmpjes te kunnen zien.
+              data:
+                push:
+                  sound: default
+      - conditions:
+          - condition: trigger
+            id: fien
+          - condition: state
+            entity_id: device_tracker.fphone_ping
+            state: "off"
+          - condition: state
+            entity_id: device_tracker.fphone_detect
+            state: "off"
+          - condition: state
+            entity_id: device_tracker.fphone_nmap
+            state: "off"
+          - condition: numeric_state
+            entity_id: sensor.fphone_bt_thuis
+            above: 43
+        sequence:
+          - service: notify.giel_en_martine
+            data:
+              message: De kans bestaat dat ons Fien haar wifi heeft afgezet om toch met de kampioenen te kunnen lachen.
+              data:
+                push:
+                  sound: default

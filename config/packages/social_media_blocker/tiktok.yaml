@@ -19,27 +19,26 @@ switch:
             data:
               entity_id: input_boolean.allowtiktok
 
-
 automation:
   - id: enable_tiktok
     alias: Enable tiktok
     trigger:
       platform: state
       entity_id: input_boolean.allowtiktok
-      to: 'on'
+      to: "on"
     action:
-    - service: adguard.remove_url
-      data:
-        url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-tiktok.txt"
+      - service: adguard.remove_block_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-tiktok.txt"
 
   - id: disable_tiktok
     alias: Disable tiktok
     trigger:
       platform: state
       entity_id: input_boolean.allowtiktok
-      to: 'off'
+      to: "off"
     action:
-    - service: adguard.add_url
-      data:
-        url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-tiktok.txt"
-        name: TikTok
+      - service: adguard.add_block_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-tiktok.txt"
+          name: TikTok

@@ -1,0 +1,55 @@
+alias: Toestellen beveiliging
+description: "Laten weten wanneer de ijskast of verwarming is uitgevallen."
+id: 2caba416-4d71-4f30-9ba6-071395f6224c
+mode: parallel
+trigger:
+  - platform: state
+    entity_id: switch.keuken_ijskast
+    id: ijskast
+    to: "off"
+    for:
+      minutes: 10
+  - platform: state
+    entity_id: switch.kelder_warmtepomp
+    id: warmtepomp
+    to: "off"
+    for:
+      minutes: 10
+  - platform: state
+    entity_id: switch.warmtepompboiler
+    id: boiler
+    to: "off"
+    for:
+      minutes: 10
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: ijskast
+        sequence:
+          - service: notify.mobile_app_gphone
+            data:
+              message: De ijskast staat al 10min uit.
+              data:
+                push:
+                  sound: default
+      - conditions:
+          - condition: trigger
+            id: warmtepomp
+        sequence:
+          - service: notify.mobile_app_gphone
+            data:
+              message: De warmetepomp staat al 10min uit.
+              data:
+                push:
+                  sound: default
+      - conditions:
+          - condition: trigger
+            id: boiler
+        sequence:
+          - service: notify.mobile_app_gphone
+            data:
+              message: De boiler staat al 10min uit.
+              data:
+                push:
+                  sound: default

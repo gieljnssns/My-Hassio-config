@@ -80,9 +80,13 @@ condition:
 
     # Time based conditions
     - condition: template
-      value_template: "{{ as_local(states.sensor.time.last_changed).month > 3 }}" # Starting April
+      value_template: "{{ now().month > 3 }}" # Starting April
     - condition: template
-      value_template: "{{ as_local(states.sensor.time.last_changed).month < 10 }}" # Ending October
+      value_template: "{{ now().month < 10 }}" # Ending October
+    # - condition: template
+    #   value_template: "{{ as_local(states.sensor.time.last_changed).month > 3 }}" # Starting April
+    # - condition: template
+    #   value_template: "{{ as_local(states.sensor.time.last_changed).month < 10 }}" # Ending October
     - condition: template
       value_template: >
         {{  is_state('input_boolean.living_closed', 'off') or

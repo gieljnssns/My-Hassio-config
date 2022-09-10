@@ -25,20 +25,20 @@ automation:
     trigger:
       platform: state
       entity_id: input_boolean.allowfacebook
-      to: 'on'
+      to: "on"
     action:
-    - service: adguard.remove_url
-      data:
-        url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-facebook.txt"
+      - service: adguard.remove_block_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-facebook.txt"
 
   - id: disable_facebook
     alias: Disable Facebook
     trigger:
       platform: state
       entity_id: input_boolean.allowfacebook
-      to: 'off'
+      to: "off"
     action:
-    - service: adguard.add_url
-      data:
-        url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-facebook.txt"
-        name: Facebook
+      - service: adguard.add_block_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-facebook.txt"
+          name: Facebook

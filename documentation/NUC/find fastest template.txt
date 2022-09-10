@@ -1,0 +1,17 @@
+{% set a = now() %}
+a- {% set nu = now().replace(hour=0, minute=0, second=0) %}
+a- {{ nu }}
+
+{% set b = now() %}
+b- {% set nu2 = as_local(states.sensor.time.last_changed).replace(hour=0, minute=0, second=0) %}
+b- {{ nu2 }}
+
+{% set c = now() %}
+c- {% set nu3 = now().replace(hour=0, minute=0, second=0) %}
+c- {{ nu3 }}
+
+{% set d = now() %}
+
+at- {{ as_timestamp(b) - as_timestamp(a) }}
+bt- {{ as_timestamp(c) - as_timestamp(b) }}
+ct- {{ as_timestamp(d) - as_timestamp(c) }}

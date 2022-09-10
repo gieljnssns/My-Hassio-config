@@ -5,7 +5,8 @@
   type: count
   duration:
     hours: 1
-  end: "{{ as_local(states.sensor.time.last_changed) }}"
+  end: "{{ now() }}"
+  # end: "{{ as_local(states.sensor.time.last_changed) }}"
 - platform: history_stats
   name: count fphone detection last hour
   entity_id: binary_sensor.fien_bayesian_off_bluetooth_on
@@ -13,7 +14,8 @@
   type: count
   duration:
     hours: 1
-  end: "{{ as_local(states.sensor.time.last_changed) }}"
+  end: "{{ now() }}"
+  # end: "{{ as_local(states.sensor.time.last_changed) }}"
 # - platform: history_stats
 #   name: Branduren Verw. slaapkamer Vandaag
 #   entity_id: switch.slaapkamer

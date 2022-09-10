@@ -1,0 +1,45 @@
+esphome:
+  name: temp-tester
+  platform: ESP8266
+  board: nodemcuv2
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  password: "fbcbb3741c650d01dc7ad26933d73e5c"
+
+wifi:
+  ssid: "WannaCry"
+  password: "stamnummer1"
+  
+  manual_ip:
+    static_ip: 192.168.89.219
+    gateway: 192.168.89.1
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Temp-Tester Fallback Hotspot"
+    password: "qkFeTJkI1vCm"
+
+captive_portal:
+
+dallas:
+  - pin: D6
+    update_interval: 10s
+
+    # 0xE83C01D60766B528
+    # 0xCF3C01D60711F728
+
+# Individual sensors
+sensor:
+  - platform: dallas
+    address: 0xE83C01D60766B528
+    name: "test 1"
+  - platform: dallas
+    address: 0xCF3C01D60711F728
+    name: "test 2"

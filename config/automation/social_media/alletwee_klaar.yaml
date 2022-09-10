@@ -1,0 +1,33 @@
+alias: "Alletwee klaar"
+id: cdbefdf8-e3ac-4fa9-8e88-d8037b9d0db6
+trigger:
+  - platform: state
+    entity_id: input_boolean.fien_huiswerk
+    to: "on"
+  - platform: state
+    entity_id: input_boolean.fien_drum
+    to: "on"
+  - platform: state
+    entity_id: input_boolean.noor_huiswerk
+    to: "on"
+  - platform: state
+    entity_id: input_boolean.noor_viool
+    to: "on"
+condition:
+  - condition: and
+    conditions:
+      - condition: state
+        entity_id: input_boolean.fien_huiswerk
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.fien_drum
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.noor_huiswerk
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.noor_viool
+        state: "on"
+action:
+  - service: input_boolean.turn_on
+    entity_id: input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz

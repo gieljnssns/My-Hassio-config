@@ -1,0 +1,44 @@
+input_boolean:
+  fien_blocker:
+    name: Fien block
+    icon: mdi:link-lock
+
+switch:
+  - platform: template
+    switches:
+      fien_block:
+        value_template: "{{ is_state('input_boolean.fien_blocker', 'on') }}"
+        icon_template: mdi:link-lock
+        friendly_name: Fien block
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.fien_blocker
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.fien_blocker
+
+automation:
+  - id: fien_block
+    alias: Fien block
+    trigger:
+      platform: state
+      entity_id: input_boolean.fien_blocker
+      to: "on"
+    action:
+      - service: adguard.remove_allow_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/fien.txt"
+
+  - id: fien_allow
+    alias: Fien allow
+    trigger:
+      platform: state
+      entity_id: input_boolean.fien_blocker
+      to: "off"
+    action:
+      - service: adguard.add_allow_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/fien.txt"
+          name: Fien

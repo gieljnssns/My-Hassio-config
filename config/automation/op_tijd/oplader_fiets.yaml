@@ -28,9 +28,16 @@ condition:
         - sun
 action:
   - service_template: >
-      {% if as_local(states.sensor.time.last_changed).hour == 16 %}
+      {% if now().hour == 16 %}
         switch.turn_on
       {% else %}
         switch.turn_off
       {% endif %}
     entity_id: switch.garage_oplader
+  # - service_template: >
+  #     {% if as_local(states.sensor.time.last_changed).hour == 16 %}
+  #       switch.turn_on
+  #     {% else %}
+  #       switch.turn_off
+  #     {% endif %}
+  #   entity_id: switch.garage_oplader

@@ -21,8 +21,10 @@ sensor:
     entity_id: switch.zwembad
     state: "on"
     type: time
-    start: "{{ as_local(states.sensor.time.last_changed).replace(hour=0, minute=0, second=0) }}"
-    end: "{{ as_local(states.sensor.time.last_changed) }}"
+    start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    end: "{{ now() }}"
+    # start: "{{ as_local(states.sensor.time.last_changed).replace(hour=0, minute=0, second=0) }}"
+    # end: "{{ as_local(states.sensor.time.last_changed) }}"
 
 binary_sensor:
   - platform: template

@@ -1,0 +1,44 @@
+input_boolean:
+  allowstreamz:
+    name: Streamz
+    icon: mdi:monitor-account
+
+switch:
+  - platform: template
+    switches:
+      allowstreamz:
+        value_template: "{{ is_state('input_boolean.allowstreamz', 'on') }}"
+        icon_template: mdi:monitor-account
+        friendly_name: Streamz
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.allowstreamz
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.allowstreamz
+
+automation:
+  - id: enable_streamz
+    alias: Enable Streamz
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowstreamz
+      to: "on"
+    action:
+      - service: adguard.remove_block_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-streamz.txt"
+
+  - id: disable_streamz
+    alias: Disable Streamz
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowstreamz
+      to: "off"
+    action:
+      - service: adguard.add_block_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-streamz.txt"
+          name: Streamz

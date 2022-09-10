@@ -1,19 +1,19 @@
 alias: Backwash pomp
 id: 7bdb4460-94c0-45bb-a508-51c33600c301
-description: ''
+description: ""
 mode: single
 trigger:
   - platform: state
     entity_id: binary_sensor.flow
-    to: 'off'
+    to: "off"
     for:
       minutes: 10
 condition:
   - condition: state
     entity_id: switch.zwembad
-    state: 'on'
-  - condition: template
-    value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('automation.backwash_pump', 'last_triggered')) | float > 3600 }}"
+    state: "on"
+  # - condition: template
+  #   value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('automation.backwash_pump', 'last_triggered')) | float > 3600 }}"
 action:
   - service: notify.giel_en_martine
     data:

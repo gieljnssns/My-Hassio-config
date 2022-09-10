@@ -75,7 +75,10 @@
         or is_state('binary_sensor.v_w_dag', 'on') }}"
 
     schooldag:
-      value_template:
-        "{{ is_state('calendar.belgie_verlof', 'off')
-        and as_local(states.sensor.time.last_changed).weekday() != 6
-        and as_local(states.sensor.time.last_changed).weekday() != 5}}"
+      value_template: "{{ is_state('calendar.belgie_verlof', 'off')
+        and now().weekday() != 6
+        and now().weekday() != 5}}"
+      # value_template:
+      #   "{{ is_state('calendar.belgie_verlof', 'off')
+      #   and as_local(states.sensor.time.last_changed).weekday() != 6
+      #   and as_local(states.sensor.time.last_changed).weekday() != 5}}"

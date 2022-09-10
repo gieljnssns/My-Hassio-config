@@ -3,7 +3,7 @@
       name: Weatherbit waarschuwing
       state: >
         {% if states('sensor.weatherbit_weather_alerts')|int(default=0) > 0 %}
-          {% if as_timestamp(state_attr('sensor.weatherbit_weather_alerts','alerts')[0].effective) < as_timestamp(now()) < as_timestamp(state_attr('sensor.weatherbit_weather_alerts','alerts')[0].ends)%}
+          {% if sensor.weatherbit_weather_alerts','alerts')[0].effective) < as_timestamp(now()) < sensor.weatherbit_weather_alerts','alerts')[0].ends)%}
               {{states('sensor.weatherbit_weather_alerts')}}
           {% else %}
               False
@@ -49,14 +49,14 @@
           {% endif %}
         start: >
           {% if states('sensor.weatherbit_weather_alerts')|int(default=0) > 0 %}
-            {{as_timestamp(state_attr('sensor.weatherbit_weather_alerts','alerts')
+            {{sensor.weatherbit_weather_alerts','alerts')
               [0].effective,none)|timestamp_custom('%H:%M %d/%m/%Y',default='Not yet set')}}
           {% else %}
             No alert
           {% endif %}
         einde: >
           {% if states('sensor.weatherbit_weather_alerts')|int(default=0) > 0 %}
-            {{as_timestamp(state_attr('sensor.weatherbit_weather_alerts','alerts')
+            {{sensor.weatherbit_weather_alerts','alerts')
               [0].expires,none)|timestamp_custom('%H:%M %d/%m/%Y',default='Not yet set')}}
           {% else %}
             No alert

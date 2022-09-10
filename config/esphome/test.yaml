@@ -1,0 +1,64 @@
+substitutions:
+  devicename: keypad
+
+  ssid: !secret ssid
+  password: !secret password
+  
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: nodemcuv2
+  includes:
+    - keypad_textsensor.h
+  libraries:
+    - "Keypad"
+
+wifi:
+  ssid: ${ssid}
+  password: ${password}
+  # manual_ip:
+  #   static_ip: ${ip}
+  #   gateway: 192.168.0.1
+  #   subnet: 255.255.255.0
+  #   dns1: 8.8.8.8
+  #   dns2: 8.8.4.4
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${devicename}
+    password: ${password}
+    manual_ip: 
+      static_ip: 192.168.100.2
+      gateway: 192.168.100.1
+      subnet: 255.255.255.0
+      dns1: 8.8.8.8
+      dns2: 8.8.4.4
+
+captive_portal:
+
+debug:
+
+# Enable logging
+logger:
+  level: debug
+
+# Enable Home Assistant API
+api:
+  password: ${password}
+
+ota:
+  password: ${password}
+
+text_sensor:
+  - platform: custom
+    lambda: |-
+      auto my_sensor = new KeypadTextSensor();
+      App.register_component(my_sensor);
+      return {my_sensor};
+    
+    text_sensors:
+      name: "Keypad TextSensor"
+
+switch:
+  - platform: restart
+    name: "Keypad Restart"

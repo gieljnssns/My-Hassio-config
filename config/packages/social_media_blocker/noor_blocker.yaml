@@ -1,0 +1,44 @@
+input_boolean:
+  noor_blocker:
+    name: Noor block
+    icon: mdi:link-lock
+
+switch:
+  - platform: template
+    switches:
+      noor_block:
+        value_template: "{{ is_state('input_boolean.noor_blocker', 'on') }}"
+        icon_template: mdi:link-lock
+        friendly_name: Noor block
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.noor_blocker
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.noor_blocker
+
+automation:
+  - id: noor_block
+    alias: Noor block
+    trigger:
+      platform: state
+      entity_id: input_boolean.noor_blocker
+      to: "on"
+    action:
+      - service: adguard.remove_allow_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/noor.txt"
+
+  - id: noor_allow
+    alias: Noor allow
+    trigger:
+      platform: state
+      entity_id: input_boolean.noor_blocker
+      to: "off"
+    action:
+      - service: adguard.add_allow_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/noor.txt"
+          name: Noor

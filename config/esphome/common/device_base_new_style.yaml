@@ -27,20 +27,6 @@ sensor:
     id: up
     internal: true
     update_interval: 300s
-    # on_value:
-    #     then:
-    #       - if:
-    #           condition:
-    #             lambda: |-
-    #               (id(ssid).state) != "${ssid}";
-    #           then:
-    #             - homeassistant.service:
-    #                 service: notify.persistent_notification
-    #                 data:
-    #                   title: EspHome ${upper_devicename} Wifi
-    #                   message: "Verkeerd wifi netwerk - herstart binnen 5min"
-    #             - delay: 300s
-    #             - switch.turn_on: restart_device
 
 binary_sensor:
   - platform: status
@@ -53,20 +39,7 @@ text_sensor:
     ssid:
       name: ${upper_devicename} SSID
       id: ssid
-      # on_value:
-      #   then:
-      #     - if:
-      #         condition:
-      #           lambda: |-
-      #             (id(ssid).state) != "${ssid}";
-      #         then:
-      #           - homeassistant.service:
-      #               service: notify.persistent_notification
-      #               data:
-      #                 title: EspHome ${upper_devicename} Wifi
-      #                 message: "Verkeerd wifi netwerk - herstart binnen 5min"
-      #           - delay: 300s
-      #           - switch.turn_on: restart_device
+
     bssid:
       name: ${upper_devicename} BSSID
   - platform: template
@@ -138,25 +111,4 @@ switch:
     name: ${upper_devicename} verkeerde wifi
     id: restart_actief
     icon: mdi:restart-off
-    # turn_on_action:
-    #   - globals.set:
-    #       id: chime
-    #       value: 'true'
-    # turn_off_action:
-    #   - globals.set:
-    #       id: chime
-    #       value: 'false'
-    # lambda: |-
-    #   return id(chime);
 
-# script:
-#   - id: restart_script
-#     then:
-#       - logger.log: WiFi is verkeerd!
-#       - homeassistant.service:
-#           service: persistent_notification.create
-#           data:
-#             title: EspHome ${upper_devicename} Wifi
-#             message: "Verkeerd wifi netwerk - herstart binnen 5min"
-#       - delay: 300s
-#       - switch.turn_on: restart_device

@@ -1,0 +1,126 @@
+alias: Herstarten smappee
+description: "Herstarten Smappee DIY wanneer unknown"
+id: 0f92f6c0-97b8-48f3-81f3-a67f84644b06
+mode: parallel
+trigger:
+  - platform: state
+    entity_id: sensor.l3_net_afname
+    id: L3
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.l3_net_terugsturen
+    id: L3
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.l3_vermogen
+    id: L3
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.s3_vermogen
+    id: L3
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.v3_vermogen
+    id: L3
+    to: "unknown"
+    for:
+      minutes: 1
+
+  - platform: state
+    entity_id: sensor.l2_net_afname
+    id: L2
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.l2_net_terugsturen
+    id: L2
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.l2_vermogen
+    id: L2
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.s2_vermogen
+    id: L2
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.v2_vermogen
+    id: L2
+    to: "unknown"
+    for:
+      minutes: 1
+
+  - platform: state
+    entity_id: sensor.l1_net_afname
+    id: L1
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.l1_net_terugsturen
+    id: L1
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.l1_vermogen
+    id: L1
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.s1_vermogen
+    id: L1
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.v1_vermogen
+    id: L1
+    to: "unknown"
+    for:
+      minutes: 1
+action:
+  - choose:
+      - conditions: 
+          - condition: trigger
+            id: L1
+        sequence:
+          - service: switch.turn_on
+            entity_id: switch.smappee_l1_herstarten
+          - service: persistent_notification.create
+            data:
+              message: Smappee L1 is herstart omdat er iets onbekend was
+      - conditions: 
+          - condition: trigger
+            id: L2
+        sequence:
+          - service: switch.turn_on
+            entity_id: switch.smappee_l2_herstarten
+          - service: persistent_notification.create
+            data:
+              message: Smappee L3 is herstart omdat er iets onbekend was
+      - conditions: 
+          - condition: trigger
+            id: L3
+        sequence:
+          - service: switch.turn_on
+            entity_id: switch.smappee_l3_herstarten
+          - service: persistent_notification.create
+            data:
+              message: Smappee L3 is herstart omdat er iets onbekend was
