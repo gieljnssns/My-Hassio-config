@@ -1,6 +1,6 @@
-alias: Zwembadverwarming 
+alias: Zwembadverwarming
 id: c3214453-f469-4d01-93db-bc91d57b0eb5
-description: ''
+description: ""
 mode: single
 trigger:
   - platform: template
@@ -11,7 +11,7 @@ trigger:
 condition:
   - condition: state
     entity_id: input_boolean.op_verlof
-    state: 'off'
+    state: "off"
   - condition: state
     entity_id: binary_sensor.schooldag
     state: "off"
@@ -38,7 +38,7 @@ action:
       - conditions:
           - condition: template
             value_template: >-
-              {{ (states("sensor.solcast_solaredge_forecast") | float(default=0)+
+              {{ (states("sensor.solcast_solaredge_forecast_remaining_today") | float(default=0)+
                   states("sensor.solcast_huawei_forecast") | float(default=0)) | round(2) > 50 | float(default=0)}}
           - condition: state
             entity_id: input_boolean.zwembad_warm_water_2u, input_boolean.zwembad_warm_water_3u, input_boolean.zwembad_warm_water_4u, input_boolean.zwembad_warm_water_5u
@@ -50,7 +50,7 @@ action:
       - conditions:
           - condition: template
             value_template: >-
-              {{ (states("sensor.solcast_solaredge_forecast") | float(default=0)+
+              {{ (states("sensor.solcast_solaredge_forecast_remaining_today") | float(default=0)+
                   states("sensor.solcast_huawei_forecast") | float(default=0)) | round(2) > 40 | float(default=0)}}
           - condition: state
             entity_id: input_boolean.zwembad_warm_water_2u, input_boolean.zwembad_warm_water_3u, input_boolean.zwembad_warm_water_4u, input_boolean.zwembad_warm_water_5u
@@ -62,7 +62,7 @@ action:
       - conditions:
           - condition: template
             value_template: >-
-              {{ (states("sensor.solcast_solaredge_forecast") | float(default=0)+
+              {{ (states("sensor.solcast_solaredge_forecast_remaining_today") | float(default=0)+
                   states("sensor.solcast_huawei_forecast") | float(default=0)) | round(2) > 30 | float(default=0)}}
           - condition: state
             entity_id: input_boolean.zwembad_warm_water_2u, input_boolean.zwembad_warm_water_3u, input_boolean.zwembad_warm_water_4u, input_boolean.zwembad_warm_water_5u
