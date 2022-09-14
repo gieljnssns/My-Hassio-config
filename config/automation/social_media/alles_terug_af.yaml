@@ -7,6 +7,48 @@ trigger:
   - platform: time
     at: "01:00:00"
     id: weekend
+  - platform: time
+    at: "09:00:00"
+    id: week
+# action:
+#   - choose:
+#       - condition: or
+#         conditions:
+#           - condition: and
+#             conditions:
+#               - condition: trigger
+#                 id: week
+#               - condition: state
+#                 entity_id: binary_sensor.schooldag
+#                 state: "on"
+#           - condition: and
+#             conditions:
+#               - condition: trigger
+#                 id: weekend
+#               - condition: time
+#                 weekday:
+#                   - "mon"
+#                   - "tue"
+#                   - "wed"
+#                   - "thu"
+#                   - "fri"
+#                   - "sat"
+#               - condition: state
+#                 entity_id: binary_sensor.schooldag
+#                 state: "off"
+#         sequence:
+#           - service: input_boolean.turn_off
+#             entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_viool, input_boolean.noor_huiswerk, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz
+#             # entity_id: input_boolean.fien_huiswerk, input_boolean.noor_huiswerk, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz
+#           - service: input_boolean.turn_on
+#             entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+
+#       - conditions:
+#           - condition: trigger
+#             id: smorgens
+#         sequence:
+#           - service: input_boolean.turn_off
+#             entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
 condition:
   - condition: or
     conditions:
