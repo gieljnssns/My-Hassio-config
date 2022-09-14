@@ -3,18 +3,18 @@ id: 41167ec0-0d4e-4d94-808a-ff94da618d3b
 trigger:
   - platform: state
     entity_id: binary_sensor.knop_noor_klik
-    to: 'on'
+    to: "on"
 
 action:
   - choose:
-    - conditions:
-        - condition: template
-          value_template: >
-            {{ states("light.noor") == 'on' }}
-      sequence:
-        - service: light.turn_off
-          entity_id:
-            - light.noor
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ states("light.noor") == 'on' }}
+        sequence:
+          - service: light.turn_off
+            entity_id:
+              - light.noor
     default:
       - service: light.turn_on
         data:

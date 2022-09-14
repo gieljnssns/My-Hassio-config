@@ -1,0 +1,13 @@
+alias: Knop Noor 5 klik
+id: 40a60f6c-c147-4b72-b7c0-1eb0f85df9eb
+trigger:
+  - platform: state
+    entity_id: binary_sensor.knop_noor_5_klik
+    to: "on"
+action:
+  - service: script.verwarming_1u
+    data:
+      input_select: input_select.setpunt_noor
+      temp: 19
+      temp_2: >
+        {{ states("input_select.setpunt_noor") }}
