@@ -1,0 +1,19 @@
+alias: Reload huawei
+description: "Herladen van huawei integratie bij unkown of unavailable."
+id: 1fd268f1-9082-4242-84d9-44d83173fc74
+mode: parallel
+trigger:
+  - platform: state
+    entity_id: sensor.huawei_active_power
+    to: "unknown"
+    for:
+      minutes: 1
+  - platform: state
+    entity_id: sensor.huawei_active_power
+    to: "unavailable"
+    for:
+      minutes: 1
+action:
+  service: homeassistant.reload_config_entry
+  data:
+    entry_id: 43ced650aefc3e42711d9f9632c2cf82
