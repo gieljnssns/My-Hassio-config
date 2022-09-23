@@ -5,7 +5,7 @@ trigger:
     entity_id: binary_sensor.keuken_achterdeur
     to: "on"
     for:
-      seconds: 25
+      seconds: 60
 condition:
   condition: and
   conditions:
@@ -29,7 +29,7 @@ action:
           script.sonos_playing_spreek
       {%  endif  %}
     data_template:
-      sonos_entity: media_player.keuken
+      sonos_entity: mass_keuken
       volume: 0.65
       speech_message: >
         {{ [
@@ -41,7 +41,7 @@ action:
             "Hoeveel keer moet ik het nog zeggen, doe die deur dicht!"
             ] | random }}
   - delay:
-      seconds: 30
+      seconds: 40
   - condition: state
     entity_id: binary_sensor.keuken_achterdeur
     state: "on"
@@ -92,7 +92,8 @@ action:
           script.sonos_playing_spreek
       {%  endif  %}
     data_template:
-      sonos_entity: media_player.keuken
+      sonos_entity: media_player.mass_keuken
+      tts_entity: media_player.keuken
       volume: 0.65
       speech_message: >
         {{ [
@@ -107,7 +108,7 @@ action:
             "Dit is al de tweede keer, hoeveel keer nog?"
             ] | random }}
   - delay:
-      seconds: 30
+      seconds: 40
   - condition: state
     entity_id: binary_sensor.keuken_achterdeur
     state: "on"
@@ -118,7 +119,8 @@ action:
           script.sonos_playing_spreek
       {%  endif  %}
     data_template:
-      sonos_entity: media_player.keuken
+      sonos_entity: media_player.mass_keuken
+      tts_entity: media_player.keuken
       volume: 0.65
       speech_message: >
         {{ [
@@ -144,7 +146,8 @@ action:
           script.sonos_playing_spreek
       {%  endif  %}
     data_template:
-      sonos_entity: media_player.keuken
+      sonos_entity: media_player.mass_keuken
+      tts_entity: media_player.keuken
       volume: 0.65
       speech_message: >
         {{ [
