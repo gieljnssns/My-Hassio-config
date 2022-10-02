@@ -38,7 +38,7 @@ condition:
           entity_id: binary_sensor.gang_voordeur_last_5_min
           state: "on"
     - condition: state
-      entity_id: media_player.keuken
+      entity_id: media_player.mass_keuken
       state: playing
     - condition: state
       entity_id: sensor.people_arrive_count
@@ -51,7 +51,8 @@ action:
   # https://www.wijsheidspreuk.nl/tegeltjesmaker
   - service: script.sonos_playing_spreek
     data_template:
-      sonos_entity: media_player.keuken
+      sonos_entity: media_player.mass_keuken
+      tts_entity: media_player.keuken
       volume: 0.65
       delay: "00:00:08"
       speech_message: >

@@ -13,12 +13,6 @@ trigger:
   - platform: state
     entity_id: binary_sensor.monitor_tv_down
     to: "off"
-  - platform: state
-    entity_id: media_player.keuken
-    to: "unavailable"
-  - platform: state
-    entity_id: media_player.badkamer
-    to: "unavailable"
 condition:
   condition: and
   conditions:
@@ -37,8 +31,4 @@ action:
           counter.slaapkamer
         {% elif trigger.entity_id == 'binary_sensor.monitor_poortje_down' %}
           counter.poortpi
-        {% elif trigger.entity_id == 'media_player.keuken' %}
-          counter.sonos_keuken
-        {% elif trigger.entity_id == 'media_player.badkamer' %}
-          counter.sonos_badkamer
         {% endif %}

@@ -1,22 +1,22 @@
-  alias: "Alarm uit"
-  id: 128652ab-6a7c-44db-9cd4-820f7b0ff909
-  trigger:
-    platform: state
-    entity_id: input_boolean.alarm
-    to: 'off'
-  action:
-    - service: script.turn_off
-      entity_id: 
-        - script.alarm_lights1
-        - script.alarm_lights2
-        - script.alarm_sound
-    - delay: '00:00:09'
-    - service: light.turn_off
-      entity_id:
-        - light.alle_tuinverlichting
-        - light.spots_tv
-    - service: sonos.restore
-      data:
-        entity_id: media_player.keuken
-        with_group: false
-
+alias: "Alarm uit"
+id: 128652ab-6a7c-44db-9cd4-820f7b0ff909
+trigger:
+  platform: state
+  entity_id: input_boolean.alarm
+  to: "off"
+action:
+  - service: script.turn_off
+    entity_id:
+      - script.alarm_lights1
+      - script.alarm_lights2
+      - script.alarm_sound
+  - delay: "00:00:09"
+  - service: light.turn_off
+    entity_id:
+      - light.alle_tuinverlichting
+      - light.spots_tv
+  - service: mass.queue_command
+    data:
+      command: snapshot_restore
+    target:
+      entity_id: media_player.mass_keuken
