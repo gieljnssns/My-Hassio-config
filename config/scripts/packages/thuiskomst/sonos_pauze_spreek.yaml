@@ -1,7 +1,9 @@
 sonos_pauze_spreek:
   sequence:
-    - service: sonos.snapshot
-      data_template:
+    - service: mass.queue_command
+      data:
+        command: snapshot_create
+      target:
         entity_id: "{{ sonos_entity }}"
     - delay: "00:00:03"
     - service: media_player.volume_set
@@ -18,7 +20,7 @@ sonos_pauze_spreek:
           False
         {% endif %}
       data_template:
-        entity_id: "{{ sonos_entity }}"
+        entity_id: "{{ tts_entity }}"
         message: "{{ speech_message }}"
         language: >
           {% if is_state('input_select.tts', 'VoiceRSS') %}
@@ -31,9 +33,10 @@ sonos_pauze_spreek:
     - delay: "00:00:03"
     - wait_template: "{{ states('binary_sensor.keuken_not_playing') == 'on' }}"
     - delay: "00:00:01"
-    - service: sonos.restore
-      data_template:
-        with_group: false
+    - service: mass.queue_command
+      data:
+        command: snapshot_restore
+      target:
         entity_id: "{{ sonos_entity }}"
     - delay: "00:00:03"
     - service: >

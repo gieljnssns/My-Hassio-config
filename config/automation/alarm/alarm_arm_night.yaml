@@ -1,21 +1,10 @@
 alias: "Alarm arm night"
 id: 3ab59385-d409-4777-abae-9c461a9fd442
 trigger:
-  # - platform: template
-  #   value_template: >
-  #     {{ states("media_player.philips_tv") == "off" and states("device_tracker.philips_tv_ping") == "not_home" }}
   - platform: state
     entity_id: media_player.philips_tv
     from: "on"
     to: "off"
-  # - platform: state
-  #   entity_id: device_tracker.philips_tv_ping
-  #   from: "home"
-  #   to: "not_home"
-  # - platform: state
-  #   entity_id: media_player.living_2
-  #   from: "playing"
-  #   to: "idle"
   - platform: state
     entity_id: light.spot_slaapkamer
     to: "off"
@@ -25,11 +14,8 @@ trigger:
 condition:
   - condition: not
     conditions:
-      # - condition: state
-      #   entity_id: media_player.living_2
-      #   state: "playing"
       - condition: state
-        entity_id: media_player.keuken
+        entity_id: media_player.mass_keuken
         state: "playing"
   - condition: and
     conditions:
@@ -42,8 +28,6 @@ condition:
         value_template: "{{ states('alarm_control_panel.ha_alarm') != 'armed_night' }}"
       - condition: template
         value_template: "{{ states('media_player.philips_tv') != 'on' }}"
-      # - condition: template
-      #   value_template: "{{ states('device_tracker.philips_tv_ping') != 'home' }}"
       - condition: or
         conditions:
           - condition: or
@@ -74,18 +58,15 @@ action:
     entity_id: alarm_control_panel.ha_alarm
     data:
       code: !secret alarm_code
-  # - service: hassio.addon_start
-  #   data:
-  #     addon: ccab4aaf_frigate
   - service: homeassistant.turn_off
     entity_id: script.mqtt_arrive_script, script.mqtt_depart_script
   - service: script.mqtt_arrive_script
     data_template:
       identity: >
         Alarm night {{ now().strftime("%H:%M") }}
-      # identity: '{"identity":"Alarm night {{as_local(states.sensor.time.last_changed).strftime("%H:%M")}}"}'
-  - condition: template
-    value_template: >
-      {{ state_attr( 'media_player.badkamer' , 'group_members')[0] !=  'media_player.badkamer' }}
-  - service: sonos.unjoin
-    entity_id: media_player.badkamer
+  - condition: state
+    entity_id: binary_sensor.badkamer_grouped_not_master
+    state: "on"
+  - service: media_player.unjoin
+    target:
+      entity_id: media_player.2c

@@ -39,7 +39,7 @@ condition:
           state: "on"
     - condition: state
       entity_id: binary_sensor.keuken_not_playing
-      state: "on" # {{ states('media_player.keuken') != 'playing' }}
+      state: "on"
     - condition: state
       entity_id: sensor.people_arrive_count
       state: "1"
@@ -50,7 +50,8 @@ condition:
 action:
   - service: script.sonos_pauze_spreek
     data_template:
-      sonos_entity: media_player.keuken
+      sonos_entity: media_player.mass_keuken
+      tts_entity: media_player.keuken
       volume: 0.65
       delay: "00:00:08"
       speech_message: >
