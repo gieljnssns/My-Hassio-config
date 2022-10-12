@@ -9,7 +9,9 @@ condition:
   value_template: "{{ state.attributes.elevation }}"
   above: 10
 action:
-  - service: openuv.update_uv_index_data
+  - service: homeassistant.update_entity
+    target:
+      entity_id: sensor.current_uv_index
   - delay:
       minutes: 1
   - alias: "OpenUV unavailable"
@@ -18,4 +20,6 @@ action:
     state: "unavailable"
   - delay:
       minutes: 1
-  - service: openuv.update_uv_index_data
+  - service: homeassistant.update_entity
+    target:
+      entity_id: sensor.current_uv_index

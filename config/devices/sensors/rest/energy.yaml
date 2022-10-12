@@ -1,0 +1,23 @@
+- platform: rest
+  name: "Solcast Forecast huis"
+  json_attributes:
+    - forecasts
+  resource: !secret solcast_huis
+  method: GET
+  value_template: "{{ (value_json.forecasts[0].pv_estimate)|round(2) }}"
+  unit_of_measurement: "kW"
+  device_class: power
+  scan_interval: 86400
+  force_update: true
+
+- platform: rest
+  name: "Solcast Forecast garage"
+  json_attributes:
+    - forecasts
+  resource: !secret solcast_garage
+  method: GET
+  value_template: "{{ (value_json.forecasts[0].pv_estimate)|round(2) }}"
+  unit_of_measurement: "kW"
+  device_class: power
+  scan_interval: 86400
+  force_update: true

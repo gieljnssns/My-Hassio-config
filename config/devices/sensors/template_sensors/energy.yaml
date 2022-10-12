@@ -14,15 +14,6 @@
       value_template: >
         {{ (states("sensor.v1_vermogen") | float(default=0) + states("sensor.v2_vermogen") | float(default=0) + states("sensor.v3_vermogen") | float(default=0)) | round(2) }}
 
-    huidig_verbruik_zonder_wp:
-      friendly_name: Verbruik zonder warmtepompen
-      unit_of_measurement: "W"
-      device_class: power
-      value_template: >
-        {{ (states("sensor.huidig_verbruik") | float(default=0) - 
-            states("sensor.warmtepomp_huidig_verbruik") | float(default=0) - 
-            states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0)) | round(1)}}
-
     eigen_verbruik:
       friendly_name: Eigen verbruik
       unit_of_measurement: "W"
@@ -389,3 +380,52 @@
               states('input_number.november_peak_2') | float(default=0) +
               states('input_number.december_peak_2') | float(default=0) ) / 12) | round(2)
         }}
+
+    ###  EMHASS
+
+    huidig_verbruik_zonder_wp:
+      friendly_name: Verbruik zonder deferrable loads
+      unit_of_measurement: "W"
+      device_class: power
+      value_template: >
+        {{ (states("sensor.huidig_verbruik") | float(default=0) - 
+            states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
+            states("sensor.wasmachien_vermogen") | float(default=0) - 
+            states("sensor.droogkast_vermogen") | float(default=0) -  
+            states("sensor.afwasmachien_vermogen") | float(default=0) -  
+            states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0)) | round(1)}}
+
+    solcast_24hrs_forecast_garage:
+      value_template: >-
+        {%- set awattar_all_list = state_attr('sensor.solcast_forecast_garage', 'forecasts') | map(attribute='pv_estimate') | list %}
+        {%- set values_all = namespace(all=[]) %}
+        {% for i in range(awattar_all_list | length) %}
+          {%- set v = (awattar_all_list[i] | float |multiply(1000) ) | int(0) %}
+          {%- set values_all.all = values_all.all + [ v ] %}
+        {%- endfor %} {{ (values_all.all)[:48] }}
+
+    solcast_24hrs_forecast_huis:
+      value_template: >-
+        {%- set awattar_all_list = state_attr('sensor.solcast_forecast_huis', 'forecasts') | map(attribute='pv_estimate') | list %}
+        {%- set values_all = namespace(all=[]) %}
+        {% for i in range(awattar_all_list | length) %}
+          {%- set v = (awattar_all_list[i] | float |multiply(1000) ) | int(0) %}
+          {%- set values_all.all = values_all.all + [ v ] %}
+        {%- endfor %} {{ (values_all.all)[:48] }}
+
+    solcast_24hrs_forecast:
+      value_template: >-
+        {% set a = states("sensor.solcast_24hrs_forecast_garage")[1:-1].split(',') | map('int') | list %}
+        {% set b = states("sensor.solcast_24hrs_forecast_huis")[1:-1].split(',') | map('int') | list %}
+        {% set ns = namespace(items = []) %}
+        {% for i in range(a | length) %}
+          {% set ns.items = ns.items + [ a[i]  + b[i]  ] %}
+        {% endfor %}
+        {{ ns.items }}
+
+    zonne_opbrengst:
+      friendly_name: Zon
+      unit_of_measurement: "W"
+      device_class: power
+      value_template: >
+        {{ (states("sensor.huawei_active_power") | float(default=0) + states("sensor.solaredge_inverter_watts") | float(default=0)) | round(2) }}
