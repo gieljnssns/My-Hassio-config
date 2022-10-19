@@ -1,26 +1,25 @@
 - sensor:
-  - name: "SolarEdge totaal"
-    state: "{{ (states('sensor.solaredge_lifetime_energy') | float / 1000) | round(2) }}"
-    unit_of_measurement: "kWh"
-    state_class: total_increasing
-    device_class: energy
-    unique_id: 70625593-4660-42d3-ad93-6ce179a96205
-  
-  - name: "SolarEdge energy" 
-    icon: "mdi:counter"
-    unique_id: f7e4ae3b-cb83-4e93-8955-c681d4025ea6
-    unit_of_measurement: "kWh"
-    device_class: energy
-    state_class: total_increasing
-    state: "{{ (states('sensor.solaredge_inverter_watthours')|float(0) / 1000) | round(2) }}"
-    availability: "{{ states('sensor.solaredge_inverter_watthours')|float(0) > 1 }}"
-  
-  - name: "Huawei energy" 
-    icon: "mdi:counter"
-    unique_id: 6a30e60a-2a55-4677-8d23-a5314b5f10db
-    unit_of_measurement: "kWh"
-    device_class: energy
-    state_class: total_increasing
-    state: "{{ states('sensor.huawei_daily_energy_yield')|float(0) | round(2) }}"
-    availability: "{{ states('sensor.huawei_daily_energy_yield')|float(0) > 1 }}"
+    - name: "SolarEdge totaal"
+      state: "{{ (states('sensor.solaredge_lifetime_energy') | float / 1000) | round(2) }}"
+      unit_of_measurement: "kWh"
+      state_class: total_increasing
+      device_class: energy
+      unique_id: 70625593-4660-42d3-ad93-6ce179a96205
 
+    - name: "SolarEdge energy"
+      icon: "mdi:counter"
+      unique_id: f7e4ae3b-cb83-4e93-8955-c681d4025ea6
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      state: "{{ (states('sensor.solaredge_inverter_watthours')|float(0) / 1000) | round(2) }}"
+      availability: "{{ states('sensor.solaredge_inverter_watthours')|float(0) > 1 }}"
+
+    - name: "Huawei energy"
+      icon: "mdi:counter"
+      unique_id: 25ef22b2-ff2f-4d79-88fb-9ab0905cfd65
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      state: "{{ states('sensor.huawei_accumulated_energy_yield')|float(0) | round(2) }}"
+      availability: "{{ states('sensor.huawei_accumulated_energy_yield')|float(0) > 1 }}"
