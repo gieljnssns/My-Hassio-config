@@ -1,0 +1,23 @@
+alias: Emhass droogkast
+id: ca1bfea1-3d3f-4082-a57a-2ad5db0cc6c6
+trigger:
+  - minutes: /5
+    platform: time_pattern
+action:
+  - choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.p_deferrable3
+            above: 0.1
+        sequence:
+          - service: homeassistant.turn_on
+            target:
+              entity_id: input_boolean.emhass_droogkast
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.p_deferrable0
+            below: 0.1
+        sequence:
+          - service: homeassistant.turn_off
+            target:
+              entity_id: input_boolean.emhass_droogkast

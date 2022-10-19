@@ -1,0 +1,23 @@
+alias: Emhass afwasmachien
+id: 13c7e741-1dd2-4bd4-9c03-d6060176b9c6
+trigger:
+  - minutes: /5
+    platform: time_pattern
+action:
+  - choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.p_deferrable4
+            above: 0.1
+        sequence:
+          - service: homeassistant.turn_on
+            target:
+              entity_id: input_boolean.emhass_afwasmachien
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.p_deferrable0
+            below: 0.1
+        sequence:
+          - service: homeassistant.turn_off
+            target:
+              entity_id: input_boolean.emhass_afwasmachien

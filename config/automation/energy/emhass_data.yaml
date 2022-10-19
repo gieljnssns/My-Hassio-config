@@ -1,0 +1,25 @@
+alias: EMHASS data
+id: 684e7c96-7eb8-41fa-b81c-e3c97e234b56
+trigger:
+  - platform: time
+    at: "05:30:00"
+    id: "dayahead"
+  - platform: time_pattern
+    minutes: /5
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "dayahead"
+        sequence:
+          - service: homeassistant.update_entity
+            data: {}
+            target:
+              entity_id:
+                - sensor.solcast_forecast_garage
+                - sensor.solcast_forecast_huis
+          - delay:
+              minutes: 1
+          - service: shell_command.dayahead_optim
+    default:
+      - service: shell_command.publish_data

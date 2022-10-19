@@ -1,0 +1,23 @@
+alias: Emhass warmtepomp
+id: c5057565-f78b-478b-b9db-d7659b3caf72
+trigger:
+  - minutes: /5
+    platform: time_pattern
+action:
+  - choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.p_deferrable0
+            above: 0.1
+        sequence:
+          - service: homeassistant.turn_on
+            target:
+              entity_id: input_boolean.emhass_warmtepomp
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.p_deferrable0
+            below: 0.1
+        sequence:
+          - service: homeassistant.turn_off
+            target:
+              entity_id: input_boolean.emhass_warmtepomp
