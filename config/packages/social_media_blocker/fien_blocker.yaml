@@ -27,8 +27,9 @@ automation:
       entity_id: input_boolean.fien_blocker
       to: "on"
     action:
-      - service: adguard.remove_allow_url
+      - service: adguard.remove_url
         data:
+          allow: true
           url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/fien.txt"
 
   - id: fien_allow
@@ -38,7 +39,8 @@ automation:
       entity_id: input_boolean.fien_blocker
       to: "off"
     action:
-      - service: adguard.add_allow_url
+      - service: adguard.add_url
         data:
+          allow: true
           url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/fien.txt"
           name: Fien
