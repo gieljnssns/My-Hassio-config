@@ -1,0 +1,23 @@
+mount_nas: sudo mount 192.168.79.30:/volume1/video /usr/share/hassio/share/nasvideo
+publish_data: "curl -i -H 'Content-Type:application/json' -X POST -d '{}' http://localhost:5001/action/publish-data"
+# dayahead_optim: !secret emhass_dayahead
+dayahead_optim: curl -i -H 'Content-Type:application/json' -X POST -d '{"set_def_constant":[false, true, true, true, true], "pv_power_forecast":{{states('sensor.solcast_24hrs_forecast')}}}' http://localhost:5001/action/dayahead-optim
+
+post_mpc_optim: >-
+  curl -i -H 'Content-Type: application/json" -X POST -d '{"def_total_hours":[0, 0,
+    {% if states("switch.wasmachien") == 'off'%}
+      2
+    {% else %}
+      0
+    {% endif %},
+    {% if states("switch.droogkast") == 'off'%}
+      3
+    {% else %}
+      0
+    {% endif %},
+    {% if states("switch.afwasmachien") == 'off'%}
+      1
+    {% else %}
+      0
+    {% endif %}
+    ]}' http://localhost:5001/action/naive-mpc-optim
