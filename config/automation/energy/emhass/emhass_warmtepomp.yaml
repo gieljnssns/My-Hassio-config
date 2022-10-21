@@ -13,6 +13,9 @@ action:
           - service: homeassistant.turn_on
             target:
               entity_id: input_boolean.emhass_warmtepomp
+          - service: homeassistant.turn_on
+            target:
+              entity_id: script.living_heat_boost
       - conditions:
           - condition: numeric_state
             entity_id: sensor.p_deferrable0
@@ -21,3 +24,6 @@ action:
           - service: homeassistant.turn_off
             target:
               entity_id: input_boolean.emhass_warmtepomp
+          - service: homeassistant.turn_off
+            target:
+              entity_id: input_boolean.verwarming_starten

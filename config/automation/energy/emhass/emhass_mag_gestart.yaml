@@ -1,0 +1,70 @@
+alias: Emhass mag gestart worden
+id: e1b7948d-f045-4c61-8155-8d15b13bdc1a
+trigger:
+  - platform: state
+    entity_id: switch.wasmachien
+    id: wasmachien
+    to: "off"
+    for:
+      minutes: 3
+  - platform: state
+    entity_id: switch.droogkast
+    id: droogkast
+    to: "off"
+    for:
+      minutes: 3
+  - platform: state
+    entity_id: switch.afwasmachien
+    id: afwasmachien
+    to: "off"
+    for:
+      minutes: 3
+  - platform: state
+    entity_id: binary_sensor.warm_water_mag_op
+    id: warm_water
+    to: "on"
+    for:
+      minutes: 3
+  - platform: state
+    entity_id: binary_sensor.verwarming_boost_mag_op
+    id: verwarming
+    to: "on"
+    for:
+      minutes: 3
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: wasmachien
+        sequence:
+          - service: homeassistant.turn_on
+            target:
+              entity_id: input_boolean.wasmachien_starten
+      - conditions:
+          - condition: trigger
+            id: droogkast
+        sequence:
+          - service: homeassistant.turn_on
+            target:
+              entity_id: input_boolean.droogkast_starten
+      - conditions:
+          - condition: trigger
+            id: afwasmachien
+        sequence:
+          - service: homeassistant.turn_on
+            target:
+              entity_id: input_boolean.afwasmachien_starten
+      - conditions:
+          - condition: trigger
+            id: warm_water
+        sequence:
+          - service: homeassistant.turn_on
+            target:
+              entity_id: input_boolean.warm_water_starten
+      - conditions:
+          - condition: trigger
+            id: verwarming
+        sequence:
+          - service: homeassistant.turn_on
+            target:
+              entity_id: input_boolean.verwarming_starten

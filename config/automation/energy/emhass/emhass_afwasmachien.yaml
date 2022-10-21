@@ -12,12 +12,18 @@ action:
         sequence:
           - service: homeassistant.turn_on
             target:
+              entity_id: switch.afwasmachien
+          - service: homeassistant.turn_on
+            target:
               entity_id: input_boolean.emhass_afwasmachien
       - conditions:
           - condition: numeric_state
             entity_id: sensor.p_deferrable0
             below: 0.1
         sequence:
+          - service: homeassistant.turn_off
+            target:
+              entity_id: input_boolean.afwasmachien_starten
           - service: homeassistant.turn_off
             target:
               entity_id: input_boolean.emhass_afwasmachien

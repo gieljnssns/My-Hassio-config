@@ -4,18 +4,28 @@ publish_data: "curl -i -H 'Content-Type:application/json' -X POST -d '{}' http:/
 dayahead_optim: curl -i -H 'Content-Type:application/json' -X POST -d '{"set_def_constant":[false, true, true, true, true], "pv_power_forecast":{{states('sensor.solcast_24hrs_forecast')}}}' http://localhost:5001/action/dayahead-optim
 
 post_mpc_optim: >-
-  curl -i -H 'Content-Type: application/json" -X POST -d '{"def_total_hours":[0, 0,
-    {% if states("switch.wasmachien") == 'off'%}
+  curl -i -H 'Content-Type: application/json' -X POST -d '{"def_total_hours":[
+    {% if states("input_boolean.verwarming_starten") == 'on'%}
+      1
+    {% else %}
+      0
+    {% endif %},
+    {% if states("input_boolean.warm_water_starten") == 'on'%}
       2
     {% else %}
       0
     {% endif %},
-    {% if states("switch.droogkast") == 'off'%}
+    {% if states("input_boolean.wasmachien_starten") == 'on'%}
+      2
+    {% else %}
+      0
+    {% endif %},
+    {% if states("input_boolean.drookast_starten") == 'on'%}
       3
     {% else %}
       0
     {% endif %},
-    {% if states("switch.afwasmachien") == 'off'%}
+    {% if states("input_boolean.afwasmachien_starten") == 'on'%}
       1
     {% else %}
       0
