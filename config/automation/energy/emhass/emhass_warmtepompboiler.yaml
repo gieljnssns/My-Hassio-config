@@ -3,9 +3,17 @@ id: 2dbe7701-5976-4ce8-aaad-0298d80cb019
 trigger:
   - minutes: /5
     platform: time_pattern
+    id: update
+  - platform: numeric_state
+    entity_id: sensor.p_deferrable1
+    below: 0.1
+    for: "00:00:05"
+    id: turn_off
 action:
   - choose:
       - conditions:
+          - condition: trigger
+            id: update
           - condition: numeric_state
             entity_id: sensor.p_deferrable1
             above: 0.1
@@ -13,10 +21,12 @@ action:
           - service: homeassistant.turn_on
             target:
               entity_id: input_boolean.emhass_warmtepompboiler
-          - service: homeassistant.turn_on
-            target:
-              entity_id: input_boolean.warm_water_2u
+          # - service: homeassistant.turn_on
+          #   target:
+          #     entity_id: input_boolean.warm_water_2u
       - conditions:
+          - condition: trigger
+            id: turn_off
           - condition: numeric_state
             entity_id: sensor.p_deferrable1
             below: 0.1

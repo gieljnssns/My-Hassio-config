@@ -3,9 +3,17 @@ id: ca1bfea1-3d3f-4082-a57a-2ad5db0cc6c6
 trigger:
   - minutes: /5
     platform: time_pattern
+    id: update
+  - platform: numeric_state
+    entity_id: sensor.p_deferrable3
+    below: 0.1
+    for: "00:00:05"
+    id: turn_off
 action:
   - choose:
       - conditions:
+          - condition: trigger
+            id: update
           - condition: numeric_state
             entity_id: sensor.p_deferrable3
             above: 0.1
@@ -17,8 +25,10 @@ action:
             target:
               entity_id: input_boolean.emhass_droogkast
       - conditions:
+          - condition: trigger
+            id: turn_off
           - condition: numeric_state
-            entity_id: sensor.p_deferrable0
+            entity_id: sensor.p_deferrable3
             below: 0.1
         sequence:
           - service: homeassistant.turn_off
