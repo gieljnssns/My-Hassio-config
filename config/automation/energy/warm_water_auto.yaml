@@ -3,12 +3,18 @@ id: 8766541b-6bb2-4bc8-87af-f29e0accd997
 description: ""
 mode: single
 trigger:
+  - platform: template
+    id: zon
+    value_template: >
+      {{ states("sensor.l2_net_terugsturen") | float(default=0) > 600 | float(default=0) }}
+  # - platform: state
+  #   entity_id: sensor.l2_net_terugsturen
   - platform: state
-    entity_id: sensor.l2_net_terugsturen
-  - platform: state
+    id: douche
     entity_id: binary_sensor.douchen
     to: "on"
   - platform: numeric_state
+    id: thermostaat
     entity_id: sensor.thermostaat
     below: 42
 condition:
@@ -17,7 +23,7 @@ condition:
     below: 45
   - condition: template
     value_template: >
-      {{  states("input_boolean.warm_water_5u") == "off" and states("input_boolean.warm_water_2u") == "off" }}
+      {{  states("input_boolean.warm_water_5u") == "off" and states("input_boolean.warm_water_2u") == "off" and states("input_boolean.warm_water_1u") == "off" }}
   - condition: state
     entity_id: binary_sensor.warmtepompboiler_aan_delay_off
     state: "off"
@@ -30,9 +36,8 @@ action:
             condition: state
             entity_id: input_boolean.op_verlof
             state: "on"
-          - condition: template
-            value_template: >
-              {{ states("sensor.l2_net_terugsturen") | int(default=0) > 300 }}
+          - condition: trigger
+            id: zon
         sequence:
           - service: input_boolean.turn_on
             target:
@@ -42,21 +47,18 @@ action:
             condition: state
             entity_id: input_boolean.op_verlof
             state: "off"
-          - condition: template
-            value_template: >
-              {{ states("sensor.l2_net_terugsturen") | int(default=0) > 600 }}
+          - condition: trigger
+            id: zon
           - condition: template
             value_template: >-
-              {{ (states("sensor.solcast_solaredge_forecast_remaining_today") | float(default=0)+
-                  states("sensor.solcast_huawei_forecast") | float(default=0)) | round(2) > 20 | float(default=0)}}
+              {{ (states("sensor.solcast_forecast_remaining_today") | float(default=0)) | round(2) > 20 | float(default=0)}}
         sequence:
           - service: input_boolean.turn_on
             target:
               entity_id: input_boolean.warm_water_5u
       - conditions:
-          - condition: state
-            entity_id: binary_sensor.douchen
-            state: "on"
+          - condition: trigger
+            id: douche
           - condition: time
             before: "22:00:00"
           - condition: time
@@ -66,9 +68,10 @@ action:
             target:
               entity_id: input_boolean.warm_water_2u
     default:
-      - condition: template
-        value_template: >
-          {{ states("sensor.l2_net_terugsturen") | int(default=0) > 600 }}
+      - condition: trigger
+        id:
+          - zon
+          - thermostaat
       - service: input_boolean.turn_on
         target:
           entity_id: input_boolean.warm_water_2u
