@@ -1,0 +1,16 @@
+beveiliging_verwarming_slaapkamer:
+  alias: "beveiliging verwarming slaapkamer"
+  sequence:
+    - if:
+        not:
+          - condition: state
+            entity_id: "switch.slaapkamer"
+            state: "on"
+      then:
+        - service: mqtt.publish
+          data:
+            topic: "verwarmingPi/output/slaapkamer/set"
+            retain: true
+            payload: "OFF"
+        # - service: switch.turn_off
+        #   entity_id: switch.slaapkamer

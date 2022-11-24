@@ -1,0 +1,14 @@
+beveiliging_verwarming_badkamer:
+  alias: "beveiliging verwarming badkamer"
+  sequence:
+    - if:
+        not:
+          - condition: state
+            entity_id: "switch.badkamer"
+            state: "on"
+      then:
+        - service: mqtt.publish
+          data:
+            topic: "verwarmingPi/output/badkamer/set"
+            retain: true
+            payload: "OFF"

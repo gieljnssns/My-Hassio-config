@@ -1,0 +1,16 @@
+beveiliging_verwarming_wc:
+  alias: "beveiliging verwarming wc"
+  sequence:
+    - if:
+        not:
+          - condition: state
+            entity_id: "switch.wc"
+            state: "on"
+      then:
+        - service: mqtt.publish
+          data:
+            topic: "verwarmingPi/output/wc/set"
+            retain: true
+            payload: "OFF"
+        # - service: switch.turn_off
+        #   entity_id: switch.wc

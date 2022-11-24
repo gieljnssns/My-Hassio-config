@@ -1,0 +1,16 @@
+beveiliging_verwarming_fien:
+  alias: "beveiliging verwarming fien"
+  sequence:
+    - if:
+        not:
+          - condition: state
+            entity_id: "switch.fien"
+            state: "on"
+      then:
+        - service: mqtt.publish
+          data:
+            topic: "verwarmingPi/output/fien/set"
+            retain: true
+            payload: "OFF"
+        # - service: switch.turn_off
+        #   entity_id: switch.fien

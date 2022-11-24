@@ -1,0 +1,16 @@
+beveiliging_verwarming_noor:
+  alias: "beveiliging verwarming noor"
+  sequence:
+    - if:
+        not:
+          - condition: state
+            entity_id: "switch.noor"
+            state: "on"
+      then:
+        - service: mqtt.publish
+          data:
+            topic: "verwarmingPi/output/noor/set"
+            retain: true
+            payload: "OFF"
+        # - service: switch.turn_off
+        #   entity_id: switch.noor
