@@ -4,67 +4,70 @@ id: 020eddb1-5614-4a97-acd1-3ee2f930d15b
 mode: parallel
 trigger:
   - platform: state
-    entity_id: device_tracker.nphone
-    to: "home"
+    entity_id: device_tracker.noor_not_so_binary
+    to: "Afwezig"
     id: noor
     for:
-      minutes: 5
+      minutes: 2
+  # - platform: state
+  #   entity_id: device_tracker.nphone_ping
+  #   id: noor
+  #   to: "off"
+  #   for:
+  #     minutes: 5
+  # - platform: state
+  #   entity_id: device_tracker.nphone_detect
+  #   id: noor
+  #   to: "off"
+  #   for:
+  #     minutes: 5
+  # - platform: state
+  #   entity_id: device_tracker.nphone_nmap
+  #   id: noor
+  #   to: "off"
+  #   for:
+  #     minutes: 5
   - platform: state
-    entity_id: device_tracker.nphone_ping
-    id: noor
-    to: "off"
-    for:
-      minutes: 5
-  - platform: state
-    entity_id: device_tracker.nphone_detect
-    id: noor
-    to: "off"
-    for:
-      minutes: 5
-  - platform: state
-    entity_id: device_tracker.nphone_nmap
-    id: noor
-    to: "off"
-    for:
-      minutes: 5
-  - platform: state
-    entity_id: device_tracker.fphone
-    to: "home"
+    entity_id: device_tracker.fien_not_so_binary
+    to: "Afwezig"
     id: fien
     for:
-      minutes: 5
-  - platform: state
-    entity_id: device_tracker.fphone_ping
-    id: fien
-    to: "off"
-    for:
-      minutes: 5
-  - platform: state
-    entity_id: device_tracker.fphone_detect
-    id: fien
-    to: "off"
-    for:
-      minutes: 5
-  - platform: state
-    entity_id: device_tracker.fphone_nmap
-    id: fien
-    to: "off"
-    for:
-      minutes: 5
+      minutes: 2
+  # - platform: state
+  #   entity_id: device_tracker.fphone_ping
+  #   id: fien
+  #   to: "off"
+  #   for:
+  #     minutes: 5
+  # - platform: state
+  #   entity_id: device_tracker.fphone_detect
+  #   id: fien
+  #   to: "off"
+  #   for:
+  #     minutes: 5
+  # - platform: state
+  #   entity_id: device_tracker.fphone_nmap
+  #   id: fien
+  #   to: "off"
+  #   for:
+  #     minutes: 5
 action:
   - choose:
       - conditions:
           - condition: trigger
             id: noor
           - condition: state
-            entity_id: device_tracker.nphone_ping
-            state: "off"
-          - condition: state
-            entity_id: device_tracker.nphone_detect
-            state: "off"
-          - condition: state
-            entity_id: device_tracker.nphone_nmap
-            state: "off"
+            entity_id: device_tracker.nphone
+            state: "home"
+          # - condition: state
+          #   entity_id: device_tracker.nphone_ping
+          #   state: "off"
+          # - condition: state
+          #   entity_id: device_tracker.nphone_detect
+          #   state: "off"
+          # - condition: state
+          #   entity_id: device_tracker.nphone_nmap
+          #   state: "off"
           - condition: numeric_state
             entity_id: sensor.nphone_bt_thuis
             above: 43
@@ -79,14 +82,17 @@ action:
           - condition: trigger
             id: fien
           - condition: state
-            entity_id: device_tracker.fphone_ping
-            state: "off"
-          - condition: state
-            entity_id: device_tracker.fphone_detect
-            state: "off"
-          - condition: state
-            entity_id: device_tracker.fphone_nmap
-            state: "off"
+            entity_id: device_tracker.fphone
+            state: "home"
+          # - condition: state
+          #   entity_id: device_tracker.fphone_ping
+          #   state: "off"
+          # - condition: state
+          #   entity_id: device_tracker.fphone_detect
+          #   state: "off"
+          # - condition: state
+          #   entity_id: device_tracker.fphone_nmap
+          #   state: "off"
           - condition: numeric_state
             entity_id: sensor.fphone_bt_thuis
             above: 43
