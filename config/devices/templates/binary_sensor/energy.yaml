@@ -3,7 +3,7 @@
     - name: Warm water mag op
       unique_id: 3d3546e3-6a19-4d11-b0db-a5590a9f6f3d
       state: >
-        {{  states('sensor.thermostaat') | int < 45 and
+        {{  states('sensor.thermostaat') | int(0) < 45 and
             states("input_boolean.warm_water_5u") == "off" and 
             states("input_boolean.warm_water_2u") == "off" and
             states("binary_sensor.warmtepompboiler_aan_delay_off") == "off" }}
@@ -12,7 +12,7 @@
     - name: Verwarming boost mag op
       unique_id: 9306b37c-4103-4e37-a9e8-91139171dd39
       state: >
-        {{  states('sensor.temperatuur_gemiddeld_buiten') | float < 12 and
+        {{  states('sensor.temperatuur_gemiddeld_buiten') | float(default=0) < 12 and
             states("input_boolean.op_verlof") == "off" and
             state_attr("climate.netatmo_living", "preset_mode") == "Schedule" and 
             state_attr("climate.netatmo_living", "current_temperature") | int < 20 }}
