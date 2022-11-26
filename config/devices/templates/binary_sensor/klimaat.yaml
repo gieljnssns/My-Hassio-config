@@ -1,124 +1,102 @@
-- platform: template
-  sensors:
-    afkoeling_gewenst:
-      friendly_name: Afkoeling
-      value_template: "{{ is_state('sensor.binnen_vs_buiten', 'Afkoeling') }}"
-      icon_template: >
+- binary_sensor:
+    - name: Afkoeling gewenst
+      unique_id: 61efbf71-ab3f-4e70-8d0f-81eff1e49d46
+      state: >
+        {{ is_state('sensor.binnen_vs_buiten', 'Afkoeling') }}
+      icon: >
         {% if is_state('sensor.binnen_vs_buiten', 'Afkoeling') %}
         mdi:fan
         {% else %}
         mdi:fan-off
         {% endif %}
 
-    buiten_frisser_dan_binnen:
-      friendly_name: Buiten frisser
+    - name: Buiten frisser dan binnen
+      unique_id: 54f0fc98-2bac-4e56-8427-ad0549642afa
       device_class: cold
-      value_template: >
-        {{  (states('sensor.binnen_lowpass') | float(default=0)> states('sensor.buitentemperatuur') | float(default=0))  and
-            (states('sensor.binnen_lowpass') | float(default=0)> states('sensor.temperatuur_poort') | float(default=0))  }}
+      state: >
+        {{  (states('sensor.binnen_lowpass') | float(default=0) > states('sensor.buitentemperatuur') | float(default=0))  and
+            (states('sensor.binnen_lowpass') | float(default=0) > states('sensor.temperatuur_poort') | float(default=0))  }}
 
-    buiten_frisser_dan_binnen_old:
-      friendly_name: Buiten frisser
+    - name: Buiten frisser dan binnen old
+      unique_id: 56947e08-4306-434e-9064-7e8e99e89b9e
       device_class: cold
-      value_template: >
-        {{ (states('sensor.binnen_lowpass') | float(default=0)> states('sensor.buitentemperatuur_gefilterd') | float(default=0)) }}
+      state: >
+        {{ (states('sensor.binnen_lowpass') | float(default=0) > states('sensor.buitentemperatuur_gefilterd') | float(default=0)) }}
 
-    binnen_warm:
-      device_class: heat
-      friendly_name: Binnen heet
-      value_template: >
-        {{ states('sensor.binnen_lowpass') | float(default=0)> 26 }}
+    # - name: binnen_warm
+    #   unique_id: 28fb2228-ffdc-423c-b835-4413f6af9fbe
+    #   device_class: heat
+    #   state : >
+    #     {{ states('sensor.binnen_lowpass') | float(default=0)> 26 }}
 
-    buiten_warm:
-      device_class: heat
-      friendly_name: Buiten heet
-      value_template: >
-        {{ states('sensor.buitentemperatuur_gefilterd') | float(default=0)> 25 }}
+    # - name: buiten_warm
+    #   unique_id: b33a6fb4-69a3-4bc9-b69f-d6e1e734f6da
+    #   device_class: heat
+    #   state : >
+    #     {{ states('sensor.buitentemperatuur_gefilterd') | float(default=0)> 25 }}
 
-    buiten_fris_genoeg:
+    - name: Buiten fris genoeg
+      unique_id: 5c88bc6c-e453-4ea6-acbb-1eb5bbff493e
       device_class: cold
-      friendly_name: Buiten aangenaam
-      value_template: >
-        {{ states('sensor.buitentemperatuur_gefilterd') | float(default=0)< 25 }}
+      state: >
+        {{ states('sensor.buitentemperatuur_gefilterd') | float(default=0) < 25 }}
 
-    verluchting_afkoeling:
+    - name: Verluchting afkoeling
+      unique_id: 29b8677e-24fd-43c3-b81d-e8a2a7cac149
       device_class: cold
-      value_template: >
+      state: >
         {{ is_state('input_boolean.verluchting_afkoeling', 'on') }}
 
-    bathroom_humidity_rising_template:
-      friendly_name: "Badkamer luchtvochtigheid Rising"
-      icon_template: mdi:water-percent
-      value_template: >
-        {{ states("sensor.badkamer_luchtvochtigheid_stats") | float(default=0)>= 7 | float(default=0)}}
-      # value_template: >
-      #   {{ states.sensor.badkamer_luchtvochtigheid_stats.attributes.change | float(default=0)>= 5 | float(default=0)}}
+    - name: Bathroom humidity rising template
+      unique_id: 8b0ef76e-b2b4-4215-b84b-a9807032b956
+      icon: mdi:water-percent
+      state: >
+        {{ states("sensor.badkamer_luchtvochtigheid_stats") | float(default=0) >= 7 | float(default=0)}}
 
-    bathroom_humidity_falling_template:
-      friendly_name: "Badkamer luchtvochtigheid falling"
-      icon_template: mdi:water-percent
-      value_template: >
-        {{ states("sensor.badkamer_luchtvochtigheid_stats") | float(default=0)<= -5 | float(default=0)}}
-      # value_template: >
-      #   {{ states.sensor.badkamer_luchtvochtigheid_stats.attributes.change | float(default=0)<= -5 | float(default=0)}}
+    - name: Bathroom humidity falling template
+      unique_id: 4474709e-2bf0-49a1-9d8c-f294c4895194
+      icon: mdi:water-percent
+      state: >
+        {{ states("sensor.badkamer_luchtvochtigheid_stats") | float(default=0) <= -5 | float(default=0)}}
 
-    keuken_humidity_rising_template:
-      friendly_name: "Keuken luchtvochtigheid Rising"
-      icon_template: mdi:water-percent
-      value_template: >
-        {{ states("sensor.keuken_luchtvochtigheid_stats") | float(default=0)>= 7 | float(default=0)}}
-      # value_template: >
-      #   {{ states.sensor.keuken_luchtvochtigheid_stats.attributes.change | float(default=0)>= 5 | float(default=0)}}
+    # - name: keuken_humidity_rising_template
+    #   unique_id: 5b823bf5-57cb-43a2-b98c-5eb8809cc41e
+    #   icon: mdi:water-percent
+    #   state : >
+    #     {{ states("sensor.keuken_luchtvochtigheid_stats") | float(default=0) >= 7 | float(default=0)}}
 
-    keuken_humidity_falling_template:
-      friendly_name: "Keuken luchtvochtigheid falling"
-      icon_template: mdi:water-percent
-      value_template: >
-        {{ states("sensor.keuken_luchtvochtigheid_stats") | float(default=0)<= -5 | float(default=0)}}
-      # value_template: >
-      #   {{ states.sensor.keuken_luchtvochtigheid_stats.attributes.change | float(default=0)<= -5 | float(default=0)}}
+    # - name: keuken_humidity_falling_template
+    #   unique_id: 5c1b1e0d-4ed8-4d0f-99c1-04948d78e90e
+    #   icon: mdi:water-percent
+    #   state : >
+    #     {{ states("sensor.keuken_luchtvochtigheid_stats") | float(default=0) <= -5 | float(default=0)}}
 
-    # should_run_dehumidifier_zolder:
-    #   friendly_name: "Luchtontvochtiger moet aan"
-    #   value_template: >
-    #     {{  (states('sensor.zolder_luchtvochtigheid') | float(default=0) >
-    #         (states('sensor.max_humidity_allowed_zolder') | float(default=0)
-    #         + (1.0 if is_state('binary_sensor.should_run_dehumidifier_zolder', false) else 0)
-    #         - (4.0 if is_state('binary_sensor.should_run_dehumidifier_zolder', true) else 0)
-    #         }}
-
-    warmtepomp_aan:
+    - name: Warmtepomp aan
       device_class: power
       unique_id: c8bb853c-63ec-4fd1-b18f-05624ee48fde
-      friendly_name: Warmtepomp aan
-      value_template: >
-        {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0) > 25 or
+      state: >
+        {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0) > 25 or
           state_attr('climate.netatmo_living', "hvac_action") == "heating" or 
           states('climate.netatmo_living') == "heat" }}
-      # value_template: >
-      #   {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0)> 25 }}
 
-    warmtepompboiler_aan:
+    - name: Warmtepompboiler aan
       device_class: power
       unique_id: 7b3bdc4b-5335-4101-890b-75540ced60e1
-      friendly_name: Warmtepomp boiler aan
-      value_template: >
-        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float(default=0)> 25 }}
+      state: >
+        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float(default=0) > 25 }}
 
-    warmtepomp_aan_delay_off:
+    - name: Warmtepomp aan delay off
       device_class: power
       unique_id: befaae46-c7b5-4d6c-80ad-2b93d3eb6b96
-      friendly_name: Warmtepomp aan
-      value_template: >
-        {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0)> 25 }}
+      state: >
+        {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0) > 25 }}
       delay_off:
         minutes: 20
 
-    warmtepompboiler_aan_delay_off:
+    - name: Warmtepompboiler aan delay off
       device_class: power
       unique_id: a1ca83c5-df8a-45e5-9845-21e49169a63e
-      friendly_name: Warmtepomp boiler aan
-      value_template: >
-        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float(default=0)> 25 }}
+      state: >
+        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float(default=0) > 25 }}
       delay_off:
         minutes: 30

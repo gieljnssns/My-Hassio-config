@@ -1,10 +1,8 @@
-- platform: template
-  sensors:
-    entity_id_for_bt_scanning:
-      value_template: >
-        {{  (( is_state('binary_sensor.netatmo_webhook_trigger', 'on') 
-            or is_state('binary_sensor.netatmo_component_human', 'on')
-            or is_state('binary_sensor.gang_voordeur', 'on')
+- binary_sensor:
+    - name: Entity id for bt scanning
+      unique_id: 1f1d9ca5-29e9-4ecd-b6fb-7a272e22e57b
+      state: >
+        {{  (( is_state('binary_sensor.gang_voordeur', 'on')
             or is_state('binary_sensor.tuin_person_motion', 'on')
             or is_state('binary_sensor.giel_bayesian_on_bluetooth_off', 'on')
             or is_state('binary_sensor.martine_bayesian_on_bluetooth_off', 'on')

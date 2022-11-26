@@ -1,84 +1,89 @@
-- platform: template
-  sensors:
-    martine_vertrekt_naart_werk:
-      friendly_name: Martine moet vertrekken
-      value_template: >
+- binary_sensor:
+    - name: Martine vertrekt naart werk
+      unique_id: 956d2801-634b-4d23-8383-1c3ce6c014df
+      state: >
         {% if state_attr("calendar.monnikenheide_monnikenheide", "start_time") %}
           {{ (as_timestamp(state_attr("calendar.monnikenheide_monnikenheide", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) |  float > 300) and (as_timestamp(state_attr("calendar.monnikenheide_monnikenheide", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 3600) }}
         {% else %}
           False
         {% endif %}
 
-    giel_vertrekt_naart_werk:
-      friendly_name: Giel moet vertrekken
-      value_template: >
+    - name: Giel vertrekt naart werk
+      unique_id: fa528039-b874-4412-b0b8-e66316628d65
+      state: >
         {% if state_attr("calendar.mondelez_de_vroege", "start_time") %}
           {{ (as_timestamp(state_attr("calendar.mondelez_de_vroege", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) |  float > 1800) and (as_timestamp(state_attr("calendar.mondelez_de_vroege", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 4200) }}
         {% else %}
           False
         {% endif %}
 
-    v_vroege:
-      value_template: >
+    - name: v vroege
+      unique_id: ebcbccd2-d9a7-4a73-befd-0c98d09e2fcf
+      state: >
         {% if state_attr("calendar.mondelez_de_vroege", "start_time") %}
           {{as_timestamp(state_attr("calendar.mondelez_de_vroege", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 21610}}
         {% else %}
           False
         {% endif %}
 
-    v_late:
-      value_template: >
+    - name: v late
+      unique_id: 08d1acc0-d3b3-4c70-991e-650df847bc3a
+      state: >
         {% if state_attr("calendar.mondelez_de_late", "start_time") %}
           {{as_timestamp(state_attr("calendar.mondelez_de_late", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 50410}}
         {% else %}
           False
         {% endif %}
 
-    v_nacht:
-      value_template: >
+    - name: v nacht
+      unique_id: bfc7950d-ac5a-42ee-a5ba-81e8d1e3c36c
+      state: >
         {% if state_attr("calendar.mondelez_de_nacht", "start_time") %}
           {{as_timestamp(state_attr("calendar.mondelez_de_nacht", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 79210}}
         {% else %}
           False
         {% endif %}
 
-    v_w_nacht:
-      value_template: >
+    - name: v w nacht
+      unique_id: 5f4480d4-e782-4b83-a204-191c915975ef
+      state: >
         {% if state_attr("calendar.mondelez_weekend_nacht", "start_time") %}
           {{as_timestamp(state_attr("calendar.mondelez_weekend_nacht", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 64810}}
         {% else %}
           False
         {% endif %}
 
-    v_w_dag:
-      value_template: >
+    - name: v w dag
+      unique_id: 4de3e8ed-e51d-4e5d-82b3-222939a3bcbd
+      state: >
         {% if state_attr("calendar.mondelez_weekend_dag", "start_time") %}
           {{as_timestamp(state_attr("calendar.mondelez_weekend_dag", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 21610}}
         {% else %}
           False
         {% endif %}
-    v_monnikenheide:
-      value_template: >
+    - name: v monnikenheide
+      unique_id: e72ec4a9-629e-4e92-bd45-05269f36fa4e
+      state: >
         {% if state_attr("calendar.monnikenheide_monnikenheide", "start_time") %}
           {{as_timestamp(state_attr("calendar.monnikenheide_monnikenheide", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 28810}}
         {% else %}
           False
         {% endif %}
-    v_werken:
-      value_template: "{{ is_state('binary_sensor.v_late', 'on')
+    - name: v werken
+      unique_id: 3f57fcd7-338e-4f98-8b49-ce85b1bf5c48
+      state: >
+        {{ is_state('binary_sensor.v_late', 'on')
         or is_state('calendar.monnikenheide_monnikenheide', 'on')
         or is_state('calendar.mondelez_de_vroege', 'on')
         or is_state('calendar.mondelez_de_late', 'on')
         or is_state('calendar.mondelez_weekend_dag', 'on')
         or is_state('binary_sensor.v_monnikenheide', 'on')
         or is_state('binary_sensor.v_vroege', 'on')
-        or is_state('binary_sensor.v_w_dag', 'on') }}"
+        or is_state('binary_sensor.v_w_dag', 'on') }}
 
-    schooldag:
-      value_template: "{{ is_state('calendar.belgie_verlof', 'off')
+    - name: schooldag
+      unique_id: 23f1ac2d-f3f2-4ace-ba34-0f2db7e52f50
+      state: >
+        {{ is_state('calendar.belgie_verlof', 'off')
         and now().weekday() != 6
-        and now().weekday() != 5}}"
-      # value_template:
-      #   "{{ is_state('calendar.belgie_verlof', 'off')
-      #   and as_local(states.sensor.time.last_changed).weekday() != 6
-      #   and as_local(states.sensor.time.last_changed).weekday() != 5}}"
+        and now().weekday() != 5}}

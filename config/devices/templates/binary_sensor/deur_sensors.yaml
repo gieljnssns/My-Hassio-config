@@ -1,29 +1,14 @@
-- platform: template
-  sensors:
-    # achterdeur_open:
-    #   friendly_name: Achterdeur
-    #   device_class: door
-    #   value_template: "{{ is_state('input_boolean.achterdeur_open', 'on') }}"
-
-    keuken_achterdeur_last_5_min:
-      value_template: "{{ is_state('binary_sensor.keuken_achterdeur', 'on') }}"
+- binary_sensor:
+    - name: Keuken achterdeur last 5 min
+      unique_id: eeb15e8f-f7b1-40a3-b6e4-e7fd66f5e3fe
+      state: >
+        {{ is_state('binary_sensor.keuken_achterdeur', 'on') }}
       delay_off:
         minutes: 5
 
-    # voordeur_open:
-    #   friendly_name: Voordeur
-    #   device_class: door
-    #   value_template: "{{ is_state('input_boolean.voordeur_open', 'on') }}"
-
-    gang_voordeur_last_5_min:
-      value_template: "{{ is_state('binary_sensor.gang_voordeur', 'on') }}"
+    - name: Gang voordeur last 5 min
+      unique_id: 5ec14906-5210-4f96-9f50-0620305b18f1
+      state: >
+        {{ is_state('binary_sensor.gang_voordeur', 'on') }}
       delay_off:
         minutes: 5
-    # achterdeur_homekit:
-    #   friendly_name: Achterdeur homekit
-    #   device_class: door
-    #   value_template: "{{ is_state('input_boolean.koogeek_achterdeur', 'on') }}"
-    # voordeur_homekit:
-    #   friendly_name: Voordeur homekit
-    #   device_class: door
-    #   value_template: "{{ is_state('input_boolean.koogeek_voordeur', 'on') }}"

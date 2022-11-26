@@ -1,47 +1,48 @@
-  - platform: template
-    sensors:
-      giel_bayesian_on_bluetooth_off:
-        value_template: >
-          {{ is_state('binary_sensor.giel_bayesian', 'on') 
-            and states('sensor.gphone_bt_thuis') | float(default=0)< 43 }}
-        delay_on:
-          seconds: 275
+- binary_sensor:
+    - name: Giel bayesian on bluetooth off
+      unique_id: f1dc47dd-6b41-499b-8de9-26f63f93cee5
+      state: >
+        {{ is_state('binary_sensor.giel_bayesian', 'on') 
+          and states('sensor.gphone_bt_thuis') | float(default=0)< 43 }}
+      delay_on:
+        seconds: 275
 
-      martine_bayesian_on_bluetooth_off:
-        value_template: >
-          {{ is_state('binary_sensor.martine_bayesian', 'on') 
-            and states('sensor.mphone_bt_thuis') | float(default=0)< 43 }}
-        delay_on:
-          seconds: 275
+    - name: Martine bayesian on bluetooth off
+      unique_id: 0a078d41-e8d2-48f0-a4c5-74a3c2d27594
+      state: >
+        {{ is_state('binary_sensor.martine_bayesian', 'on') 
+          and states('sensor.mphone_bt_thuis') | float(default=0)< 43 }}
+      delay_on:
+        seconds: 275
 
-      
-      giel_bayesian_off_bluetooth_on:
-        value_template: >
-          {{ is_state('binary_sensor.giel_bayesian', 'off') 
-            and states('sensor.gphone_bt_thuis') | float(default=0)> 43 }}
-        delay_on:
-          seconds: 275
+    - name: Giel bayesian off bluetooth on
+      unique_id: 0376e923-3286-4cab-abef-9722d95b69a9
+      state: >
+        {{ is_state('binary_sensor.giel_bayesian', 'off') 
+          and states('sensor.gphone_bt_thuis') | float(default=0)> 43 }}
+      delay_on:
+        seconds: 275
 
+    - name: Martine bayesian off bluetooth on
+      unique_id: 2bb14f78-bbf5-41a8-9c7a-f459788e01f5
+      state: >
+        {{ is_state('binary_sensor.martine_bayesian', 'off') 
+          and states('sensor.mphone_bt_thuis') | float(default=0)> 43 }}
+      delay_on:
+        seconds: 275
 
-      martine_bayesian_off_bluetooth_on:
-        value_template: >
-          {{ is_state('binary_sensor.martine_bayesian', 'off') 
-            and states('sensor.mphone_bt_thuis') | float(default=0)> 43 }}
-        delay_on:
-          seconds: 275
+    - name: Noor bayesian off bluetooth on
+      unique_id: 93f5600a-f6e2-4457-8cb5-49ad53f6ee4e
+      state: >
+        {{ is_state('binary_sensor.noor_bayesian', 'off') 
+          and states('sensor.nphone_bt_thuis') | float(default=0)> 43 }}
+      delay_on:
+        seconds: 275
 
-
-      noor_bayesian_off_bluetooth_on:
-        value_template: >
-          {{ is_state('binary_sensor.noor_bayesian', 'off') 
-            and states('sensor.nphone_bt_thuis') | float(default=0)> 43 }}
-        delay_on:
-          seconds: 275
-
-
-      fien_bayesian_off_bluetooth_on:
-        value_template: >
-          {{ is_state('binary_sensor.fien_bayesian', 'off') 
-            and states('sensor.fphone_bt_thuis') | float(default=0)> 43 }}
-        delay_on:
-          seconds: 275
+    - name: Fien bayesian off bluetooth on
+      unique_id: e53fc1a4-64e7-4d5b-9de2-3bfbbf6b63b7
+      state: >
+        {{ is_state('binary_sensor.fien_bayesian', 'off') 
+          and states('sensor.fphone_bt_thuis') | float(default=0)> 43 }}
+      delay_on:
+        seconds: 275
