@@ -1,0 +1,47 @@
+  - platform: template
+    sensors:
+      giel_bayesian_on_bluetooth_off:
+        value_template: >
+          {{ is_state('binary_sensor.giel_bayesian', 'on') 
+            and states('sensor.gphone_bt_thuis') | float(default=0)< 43 }}
+        delay_on:
+          seconds: 275
+
+      martine_bayesian_on_bluetooth_off:
+        value_template: >
+          {{ is_state('binary_sensor.martine_bayesian', 'on') 
+            and states('sensor.mphone_bt_thuis') | float(default=0)< 43 }}
+        delay_on:
+          seconds: 275
+
+      
+      giel_bayesian_off_bluetooth_on:
+        value_template: >
+          {{ is_state('binary_sensor.giel_bayesian', 'off') 
+            and states('sensor.gphone_bt_thuis') | float(default=0)> 43 }}
+        delay_on:
+          seconds: 275
+
+
+      martine_bayesian_off_bluetooth_on:
+        value_template: >
+          {{ is_state('binary_sensor.martine_bayesian', 'off') 
+            and states('sensor.mphone_bt_thuis') | float(default=0)> 43 }}
+        delay_on:
+          seconds: 275
+
+
+      noor_bayesian_off_bluetooth_on:
+        value_template: >
+          {{ is_state('binary_sensor.noor_bayesian', 'off') 
+            and states('sensor.nphone_bt_thuis') | float(default=0)> 43 }}
+        delay_on:
+          seconds: 275
+
+
+      fien_bayesian_off_bluetooth_on:
+        value_template: >
+          {{ is_state('binary_sensor.fien_bayesian', 'off') 
+            and states('sensor.fphone_bt_thuis') | float(default=0)> 43 }}
+        delay_on:
+          seconds: 275

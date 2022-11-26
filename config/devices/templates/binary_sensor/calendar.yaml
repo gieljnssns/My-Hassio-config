@@ -1,0 +1,84 @@
+- platform: template
+  sensors:
+    martine_vertrekt_naart_werk:
+      friendly_name: Martine moet vertrekken
+      value_template: >
+        {% if state_attr("calendar.monnikenheide_monnikenheide", "start_time") %}
+          {{ (as_timestamp(state_attr("calendar.monnikenheide_monnikenheide", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) |  float > 300) and (as_timestamp(state_attr("calendar.monnikenheide_monnikenheide", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 3600) }}
+        {% else %}
+          False
+        {% endif %}
+
+    giel_vertrekt_naart_werk:
+      friendly_name: Giel moet vertrekken
+      value_template: >
+        {% if state_attr("calendar.mondelez_de_vroege", "start_time") %}
+          {{ (as_timestamp(state_attr("calendar.mondelez_de_vroege", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) |  float > 1800) and (as_timestamp(state_attr("calendar.mondelez_de_vroege", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 4200) }}
+        {% else %}
+          False
+        {% endif %}
+
+    v_vroege:
+      value_template: >
+        {% if state_attr("calendar.mondelez_de_vroege", "start_time") %}
+          {{as_timestamp(state_attr("calendar.mondelez_de_vroege", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 21610}}
+        {% else %}
+          False
+        {% endif %}
+
+    v_late:
+      value_template: >
+        {% if state_attr("calendar.mondelez_de_late", "start_time") %}
+          {{as_timestamp(state_attr("calendar.mondelez_de_late", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 50410}}
+        {% else %}
+          False
+        {% endif %}
+
+    v_nacht:
+      value_template: >
+        {% if state_attr("calendar.mondelez_de_nacht", "start_time") %}
+          {{as_timestamp(state_attr("calendar.mondelez_de_nacht", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 79210}}
+        {% else %}
+          False
+        {% endif %}
+
+    v_w_nacht:
+      value_template: >
+        {% if state_attr("calendar.mondelez_weekend_nacht", "start_time") %}
+          {{as_timestamp(state_attr("calendar.mondelez_weekend_nacht", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 64810}}
+        {% else %}
+          False
+        {% endif %}
+
+    v_w_dag:
+      value_template: >
+        {% if state_attr("calendar.mondelez_weekend_dag", "start_time") %}
+          {{as_timestamp(state_attr("calendar.mondelez_weekend_dag", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 21610}}
+        {% else %}
+          False
+        {% endif %}
+    v_monnikenheide:
+      value_template: >
+        {% if state_attr("calendar.monnikenheide_monnikenheide", "start_time") %}
+          {{as_timestamp(state_attr("calendar.monnikenheide_monnikenheide", "start_time")) - as_timestamp(strptime(states("sensor.date_time"), '%Y-%m-%d, %H:%M')) | float < 28810}}
+        {% else %}
+          False
+        {% endif %}
+    v_werken:
+      value_template: "{{ is_state('binary_sensor.v_late', 'on')
+        or is_state('calendar.monnikenheide_monnikenheide', 'on')
+        or is_state('calendar.mondelez_de_vroege', 'on')
+        or is_state('calendar.mondelez_de_late', 'on')
+        or is_state('calendar.mondelez_weekend_dag', 'on')
+        or is_state('binary_sensor.v_monnikenheide', 'on')
+        or is_state('binary_sensor.v_vroege', 'on')
+        or is_state('binary_sensor.v_w_dag', 'on') }}"
+
+    schooldag:
+      value_template: "{{ is_state('calendar.belgie_verlof', 'off')
+        and now().weekday() != 6
+        and now().weekday() != 5}}"
+      # value_template:
+      #   "{{ is_state('calendar.belgie_verlof', 'off')
+      #   and as_local(states.sensor.time.last_changed).weekday() != 6
+      #   and as_local(states.sensor.time.last_changed).weekday() != 5}}"
