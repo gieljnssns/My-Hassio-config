@@ -1,11 +1,10 @@
 input_boolean:
   beweging_danszaal:
 
-binary_sensor:
-  - platform: template
-    sensors:
-      beweging_danszaal_2:
+template:
+  - binary_sensor:
+      - name: Beweging danszaal 2
+        unique_id: cbd28ec8-3934-449b-8661-0700156f9a0f
         device_class: occupancy
-        friendly_name: "Danszaal bevolkt"
-        value_template: >
+        state: >
           {{ is_state('input_boolean.beweging_danszaal', 'on') }}

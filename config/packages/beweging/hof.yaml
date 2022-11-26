@@ -1,11 +1,10 @@
 input_boolean:
   beweging_hof:
 
-binary_sensor:
-  - platform: template
-    sensors:
-      beweging_hof:
+template:
+  - binary_sensor:
+      - name: Beweging hof
+        unique_id: a0560b64-8297-4c10-bdb9-e9122a38cf5e
         device_class: occupancy
-        friendly_name: "Den hof bevolkt"
-        value_template: >
+        state: >
           {{ is_state('input_boolean.beweging_hof', 'on') }}

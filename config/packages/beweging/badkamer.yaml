@@ -1,11 +1,10 @@
 input_boolean:
   beweging_badkamer:
 
-binary_sensor:
-  - platform: template
-    sensors:
-      beweging_badkamer_2:
+template:
+  - binary_sensor:
+      - name: Beweging badkamer 2
+        unique_id: 8b972ba2-b52c-4e0c-8150-400411d80290
         device_class: occupancy
-        friendly_name: "Aanwezigheid"
-        value_template: >-
+        state: >-
           {{ is_state('input_boolean.beweging_badkamer', 'on') }}
