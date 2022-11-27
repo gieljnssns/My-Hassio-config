@@ -9,7 +9,7 @@ homeassistant:
       icon: mdi:weather-snowy-rainy
 
     sensor.notification_time:
-      friendly_name: 'Meldingstijd'
+      friendly_name: "Meldingstijd"
       icon: mdi:alarm
 
     sensor.notification_time_long:
@@ -26,7 +26,6 @@ homeassistant:
 
 input_boolean:
   donker_buiten_lowpass:
-
 
 input_number:
   notification_hour:
@@ -45,21 +44,19 @@ input_number:
     max: 55
     step: 5
 
-
-sensor:
-  - platform: template
-    sensors:
-      dark_outside:
-        friendly_name: 'Donker buiten'
-        value_template: >
+template:
+  - sensor:
+      - name: Dark outside
+        unique_id: 1852429c-19da-465c-a194-47d20774789b
+        state: >
           {% if (states("input_boolean.donker_buiten_lowpass") == 'on') %}
             true
           {% else %}
             false
           {% endif %}
-      bad_weather:
-        friendly_name: 'Slecht weer'
-        value_template: >
+      - name: Bad weather
+        unique_id: f2c4207a-27a0-437e-b41b-b0294568a981
+        state: >
           {% if states("sensor.weatherbit_snow_rate") | int(default=0) > 0 %}
             snow
           {% elif ((state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['templow']  | int(default=0) < 4) and states("sensor.dauwpunt_poort") | int(default=0) < 6 and states("sensor.weatherbit_wind_speed") | int(default=0) < 12 and states("sensor.weatherbit_cloud_coverage") | int(default=0) < 20 and states("sensor.luchtvochtigheid_poort") | int(default=0) > 50) %} 
@@ -70,24 +67,28 @@ sensor:
             clear
           {% endif %}
 
-      notification_hour:
-        value_template: >
+      - name: Notification hour
+        unique_id: 650501d5-c3c8-47ff-bd80-5cc4b660b09d
+        state: >
           {{ states("input_number.notification_hour") | int }}
 
-      notification_minute:
-        value_template: >
+      - name: Notification minute
+        unique_id: ec1fa4c6-0559-4763-b161-d396ee332d01
+        state: >
           {{ states("input_number.notification_minute") | int }}
 
-      notification_time:
-        value_template: >-
+      - name: Notification time
+        unique_id: a6dc694b-10bb-461a-938d-009a015e4d52
+        state: >-
           {{ states("sensor.notification_hour") }}:
           {%- if states("sensor.notification_minute") | length == 1 -%}
             0
           {%- endif -%}
             {{ states("sensor.notification_minute") }}
 
-      notification_time_long:
-        value_template: >-
+      - name: Notification time long
+        unique_id: e20e5d95-80ad-445d-bcf9-42d801eb2cef
+        state: >-
           {% if states("sensor.notification_hour") | length == 1 -%}
             0
           {%- endif -%}
@@ -96,5 +97,3 @@ sensor:
             0
           {%- endif -%}
             {{ states("sensor.notification_minute") }}
-
-

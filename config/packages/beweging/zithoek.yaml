@@ -1,11 +1,10 @@
 input_boolean:
   beweging_zithoek:
 
-binary_sensor:
-  - platform: template
-    sensors:
-      beweging_zithoek_2:
+template:
+  - binary_sensor:
+      - name: Beweging zithoek 2
+        unique_id: fbecfabf-5f78-4249-aea2-0f29cb2c30e7
         device_class: occupancy
-        friendly_name: "Zithoek bevolkt"
-        value_template: >
+        state: >
           {{ is_state('input_boolean.beweging_zithoek', 'on') }}

@@ -1,11 +1,10 @@
 input_boolean:
   beweging_fien:
 
-binary_sensor:
-  - platform: template
-    sensors:
-      beweging_fien_2:
+template:
+  - binary_sensor:
+      - name: beweging Fien 2
+        unique_id: cb075fb0-9f83-46ac-857e-59cdbf6534ad
         device_class: occupancy
-        friendly_name: "Aanwezigheid"
-        value_template: >
+        state: >
           {{ is_state('input_boolean.beweging_fien', 'on') }}

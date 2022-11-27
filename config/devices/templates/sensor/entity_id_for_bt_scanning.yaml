@@ -1,0 +1,19 @@
+- sensor:
+    - name: Entity id for bt scanning
+      unique_id: 930580af-2934-4861-8a70-e7ade393993f
+      state: >-
+        {% if is_state('input_boolean.fotocel_poort_error', 'off')
+            and is_state('binary_sensor.beweging_fotocel', 'on') %}
+          Fotocel poort
+        {% elif is_state('input_boolean.fotocel_poort_error', 'on')
+            and is_state('binary_sensor.gang_voordeur', 'on') %}
+          Voordeur open
+        {% elif is_state('input_boolean.fotocel_poort_error', 'on')
+            and is_state('binary_sensor.netatmo_webhook_trigger', 'on') %}
+          Netatmo webhook
+        {% elif is_state('input_boolean.fotocel_poort_error', 'on')
+            and is_state('binary_sensor.netatmo_component_human', 'on') %}
+          Camera
+        {% else %}
+          Helemaal niets
+        {% endif %}

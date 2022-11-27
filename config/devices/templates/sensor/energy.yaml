@@ -1,25 +1,363 @@
 - sensor:
     - name: "SolarEdge totaal"
-      state: "{{ (states('sensor.solaredge_lifetime_energy') | float / 1000) | round(2) }}"
+      unique_id: 70625593-4660-42d3-ad93-6ce179a96205
+      state: >
+        {{ (states('sensor.solaredge_lifetime_energy') | float / 1000) | round(2) }}
       unit_of_measurement: "kWh"
       state_class: total_increasing
       device_class: energy
-      unique_id: 70625593-4660-42d3-ad93-6ce179a96205
 
     - name: "SolarEdge energy"
-      icon: "mdi:counter"
       unique_id: f7e4ae3b-cb83-4e93-8955-c681d4025ea6
+      icon: "mdi:counter"
       unit_of_measurement: "kWh"
       device_class: energy
       state_class: total_increasing
-      state: "{{ (states('sensor.solaredge_inverter_watthours')|float(0) / 1000) | round(2) }}"
-      availability: "{{ states('sensor.solaredge_inverter_watthours')|float(0) > 1 }}"
+      state: >
+        {{ (states('sensor.solaredge_inverter_watthours')|float(0) / 1000) | round(2) }}
+      availability: >
+        {{ states('sensor.solaredge_inverter_watthours')|float(0) > 1 }}
 
     - name: "Huawei energy"
-      icon: "mdi:counter"
       unique_id: 25ef22b2-ff2f-4d79-88fb-9ab0905cfd65
+      icon: "mdi:counter"
       unit_of_measurement: "kWh"
       device_class: energy
       state_class: total_increasing
-      state: "{{ states('sensor.huawei_accumulated_energy_yield')|float(0) | round(2) }}"
-      availability: "{{ states('sensor.huawei_accumulated_energy_yield')|float(0) > 1 }}"
+      state: >
+        {{ states('sensor.huawei_accumulated_energy_yield')|float(0) | round(2) }}
+      availability: >
+        {{ states('sensor.huawei_accumulated_energy_yield')|float(0) > 1 }}
+
+    - name: Huidige opbrengst
+      unique_id: 6502aec2-df3d-420b-b8f5-2eb09184cbed
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.s1_vermogen") | float(default=0) + states("sensor.s2_vermogen") | float(default=0) + states("sensor.s3_vermogen") | float(default=0)) | round(2) }}
+
+    - name: Huidig verbruik
+      unique_id: ad98e883-b2b4-4ad5-a5c0-9668d1953445
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.v1_vermogen") | float(default=0) + states("sensor.v2_vermogen") | float(default=0) + states("sensor.v3_vermogen") | float(default=0)) | round(2) }}
+
+    - name: Eigen verbruik
+      unique_id: e4bfb06d-169c-4bc6-a269-d4a4d70665d5
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% if (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) >= 0 %}
+            {{ (states("sensor.huidig_verbruik") | float(default=0)) | round(2)  }}
+        {% elif (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) < 0 and states("sensor.huidige_opbrengst") | float(default=0) > 0 %}
+            {{ (states("sensor.huidige_opbrengst") | float(default=0)) | round(2)  }}
+        {% else  %}
+            {{ 0 | float(default=0) }}
+        {% endif %}
+
+    - name: Huidig fluivius
+      unique_id: aa64ea1f-e88f-4126-8e0f-622faa35c8c5
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.l1_vermogen") | float(default=0) + states("sensor.l2_vermogen") | float(default=0) + states("sensor.l3_vermogen") | float(default=0)) | round(2) }}
+
+    - name: Net afname
+      unique_id: dd4adeb0-ffa4-4e52-959f-a8b50d081b4f
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {%- if states("sensor.huidige_opbrengst") | float(default=0) < states("sensor.huidig_verbruik") | float(default=0) %}
+            {{ (states("sensor.huidig_verbruik") | float(default=0) - states("sensor.huidige_opbrengst") | float(default=0)) | round(2) }}
+        {%- elif states("sensor.huidige_opbrengst") | float(default=0) >= states("sensor.huidig_verbruik") | float(default=0) %}
+            {{ 0 | float(default=0) }}
+        {% endif %}
+
+    - name: Net terugsturen
+      unique_id: 328826cf-c7db-4afd-8106-ea865a801093
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {%- if states("sensor.huidige_opbrengst") | float(default=0) <= states("sensor.huidig_verbruik") | float(default=0) %}
+            {{ 0 | float(default=0) }}
+        {%- elif states("sensor.huidige_opbrengst") | float(default=0) > states("sensor.huidig_verbruik") | float(default=0) %}
+            {{ (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) | round(2) }}
+        {% endif %}
+
+    - name: Grid energy consumption
+      unique_id: ff0e2d15-ee8f-4dd2-a979-6f21c0fd4a2b
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state: >
+        {%- if states("sensor.daily_solar") | float(default=0) < states("sensor.daily_energy") | float(default=0) %}
+            {{ (states("sensor.daily_energy") | float(default=0) - states("sensor.daily_solar") | float(default=0))  | round(3)  }}
+        {%- elif states("sensor.daily_solar") | float(default=0) > states("sensor.daily_energy") | float(default=0) %}
+            {{ 0 | float(default=0) }}
+        {% endif %}
+
+    - name: Grid energy production
+      unique_id: 98cc83e2-6945-4d82-859a-7f2791a6adac
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state: >
+        {%- if states("sensor.daily_solar") | float(default=0) <= states("sensor.daily_energy") | float(default=0) %}
+            {{ 0 | float(default=0) }}
+        {%- elif states("sensor.daily_solar") | float(default=0) > states("sensor.daily_energy") | float(default=0) %}
+            {{ (states("sensor.daily_solar") | float(default=0) - states("sensor.daily_energy") | float(default=0))  | round(3) }}
+        {% endif %}
+
+    ###  Combinatie  ###
+    - name: Verlichting vermogen
+      unique_id: 98a0995b-5090-4ff9-be1a-a371a554915f
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.danszaal_luster_vermogen") | float(default=0) + 
+            states("sensor.zithoek_luster_vermogen") | float(default=0) + 
+            states("sensor.gang_boven_vermogen") | float(default=0) + 
+            states("sensor.slaapkamer_hoog_vermogen") | float(default=0) + 
+            states("sensor.keuken_inkom_vermogen") | float(default=0) + 
+            states("sensor.keuken_spots_vermogen") | float(default=0) + 
+            states("sensor.danszaal_spots_vermogen") | float(default=0) + 
+            states("sensor.wc_vermogen") | float(default=0) + 
+            states("sensor.garage_vermogen") | float(default=0) + 
+            states("sensor.garage_werkbank_vermogen") | float(default=0) + 
+            states("sensor.badkamer_hoog_vermogen") | float(default=0) + 
+            states("sensor.badkamer_pombak_vermogen") | float(default=0) + 
+            states("sensor.gang_beneden_vermogen") | float(default=0) + 
+            states("sensor.keuken_luster_vermogen") | float(default=0) + 
+            states("sensor.trap_vermogen") | float(default=0) + 
+            states("sensor.waskot_vermogen") | float(default=0) +
+            
+            states("sensor.garage_1_vermogen") | float(default=0) + 
+            states("sensor.garage_2_vermogen") | float(default=0) + 
+            states("sensor.fien_1_vermogen") | float(default=0) + 
+            states("sensor.fien_2_vermogen") | float(default=0) + 
+            states("sensor.fien_3_vermogen") | float(default=0) + 
+            states("sensor.noor_1_vermogen") | float(default=0) + 
+            states("sensor.noor_2_vermogen") | float(default=0) + 
+            states("sensor.spot_slaapkamer_vermogen") | float(default=0) + 
+            states("sensor.zithoek_links_achter_vermogen") | float(default=0) +
+            states("sensor.zithoek_links_midden_vermogen") | float(default=0) + 
+            states("sensor.zithoek_links_voor_vermogen") | float(default=0) + 
+            states("sensor.zithoek_rechts_achter_vermogen") | float(default=0) + 
+            states("sensor.zithoek_rechts_midden_vermogen") | float(default=0) + 
+            states("sensor.zithoek_rechts_voor_vermogen") | float(default=0) +
+            states("sensor.terras_1_vermogen") | float(default=0) + 
+            states("sensor.terras_2_vermogen") | float(default=0)) | round (3)}}
+
+    - name: Media vermogen
+      unique_id: 39808ac6-7afa-44c0-a42b-b106e1eda067
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.2c_vermogen") | float(default=0) + 
+            states("sensor.badkamer_vermogen") | float(default=0) + 
+            states("sensor.keuken_vermogen") | float(default=0) + 
+            states("sensor.living_2_vermogen") | float(default=0) + 
+            states("sensor.move_vermogen") | float(default=0) + 
+            states("sensor.philips_tv_boven_vermogen") | float(default=0) + 
+            states("sensor.philips_tv_vermogen") | float(default=0) + 
+            states("sensor.tv_der_kinders_vermogen") | float(default=0)) | round (3)}}
+
+    - name: Raspberry vermogen
+      unique_id: 09213cf5-4f62-4aeb-8576-560be82a8102
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.badkamerpi_vermogen") | float(default=0) + 
+            states("sensor.brewpi_vermogen") | float(default=0) + 
+            states("sensor.keukenpi_vermogen") | float(default=0) + 
+            states("sensor.livingpi_vermogen") | float(default=0) + 
+            states("sensor.garagepi_vermogen") | float(default=0) + 
+            states("sensor.poortpi_vermogen") | float(default=0) + 
+            states("sensor.slaapkamerpi_vermogen") | float(default=0) + 
+            states("sensor.verwarmingpi_vermogen") | float(default=0) + 
+            states("sensor.tvpi_vermogen") | float(default=0)) | round (3)}}
+
+    - name: Verluchting vermogen
+      unique_id: fa9b4afd-7d1b-4e6d-a7e7-909919db295c
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.verluchting_masser_vermogen") | float(default=0) + 
+            states("sensor.zolder_verluchting_vermogen") | float(default=0) + 
+            states("sensor.badkamer_verluchting_vermogen") | float(default=0)) | round (3)}}
+
+    - name: Verwarming vermogen
+      unique_id: dd6b7554-e8a3-4b75-84bd-0ce9fd60db1b
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.badkamer_verwarming_vermogen") | float(default=0) + 
+            states("sensor.circulatie_verwarming_vermogen") | float(default=0) + 
+            states("sensor.slaapkamer_noor_verwarming_vermogen") | float(default=0) + 
+            states("sensor.slaapkamer_verwarming_vermogen") | float(default=0) + 
+            states("sensor.warmtepomp_huidig_verbruik") | float(default=0) + 
+            states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) + 
+            states("sensor.wc_verwarming_vermogen") | float(default=0) + 
+            states("sensor.slaapkamer_fien_verwarming_vermogen") | float(default=0)) | round (3)}}
+
+    - name: Toestellen vermogen
+      unique_id: a1e06944-4838-4047-a7b0-484e0ae6bd2a
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.afwasmachien_vermogen") | float(default=0) + 
+            states("sensor.droogkast_vermogen") | float(default=0) + 
+            states("sensor.garage_ijskast_vermogen") | float(default=0) + 
+            states("sensor.garage_oplader_vermogen") | float(default=0) + 
+            states("sensor.keuken_ijskast_vermogen") | float(default=0) + 
+            states("sensor.keuken_microgolf_vermogen") | float(default=0) + 
+            states("sensor.keuken_oven_vermogen") | float(default=0) + 
+            states("sensor.keuken_toestellen_2_vermogen") | float(default=0) + 
+            states("sensor.keuken_toestellen_vermogen") | float(default=0) + 
+            states("sensor.koffiezet_vermogen") | float(default=0) + 
+            states("sensor.regenwaterpomp_vermogen") | float(default=0) + 
+            states("sensor.ventilator_kerstverlichting_vermogen") | float(default=0) + 
+            states("sensor.wasmachien_vermogen") | float(default=0)) | round (3)}}
+
+    - name: Rest vermogen
+      unique_id: afeecd42-5b6b-4765-8119-16a2b81761d2
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% if ( states("sensor.huidig_verbruik") | float(default=0) 
+            - states("sensor.verwarming_vermogen") | float(default=0) 
+            - states("sensor.toestellen_vermogen") | float(default=0) 
+            - states("sensor.verlichting_vermogen") | float(default=0) 
+            - states("sensor.verluchting_vermogen") | float(default=0) 
+            - states("sensor.media_vermogen") | float(default=0)
+            - states("sensor.raspberry_vermogen") | float(default=0)
+            - states("sensor.imac5k_vermogen") | float(default=0)
+            - states("sensor.ps4_vermogen") | float(default=0) )
+            | round (2) > 0
+            %}
+            {{ ( states("sensor.huidig_verbruik") | float(default=0) 
+                - states("sensor.verwarming_vermogen") | float(default=0) 
+                - states("sensor.toestellen_vermogen") | float(default=0) 
+                - states("sensor.verlichting_vermogen") | float(default=0) 
+                - states("sensor.verluchting_vermogen") | float(default=0) 
+                - states("sensor.media_vermogen") | float(default=0)
+                - states("sensor.raspberry_vermogen") | float(default=0)
+                - states("sensor.imac5k_vermogen") | float(default=0)
+                - states("sensor.ps4_vermogen") | float(default=0) )
+                | round (2)
+                }}
+            {% else  %}
+                0
+            {% endif %}
+
+    ###  Percentages  ###
+    - name: Percentage eigen verbruik dagelijks
+      unique_id: f078023e-1b29-47c1-bf23-cc0b91af5363
+      unit_of_measurement: "%"
+      state: >
+        {% if states("sensor.daily_solar") | float(default=0) > 0 and (states("sensor.daily_own_consumption") | float(default=0) - states("sensor.daily_solar") | float(default=0)) <= 0 %}
+          {{ (states("sensor.daily_own_consumption") | float(default=0) / states("sensor.daily_solar") | float(default=0) * 100 ) | round(2) }}
+        {% else  %}
+          {{ 100 | float(default=0) }}
+        {% endif %}
+
+    - name: Percentage eigen verbruik maandelijks
+      unique_id: 4486591c-aa39-4ef2-94dc-531ac34426b4
+      unit_of_measurement: "%"
+      state: >
+        {% if states("sensor.monthly_solar") | float(default=0) > 0 and (states("sensor.monthly_own_consumption") | float(default=0) - states("sensor.monthly_solar") | float(default=0)) <= 0 %}
+          {{ (states("sensor.monthly_own_consumption") | float(default=0) / states("sensor.monthly_solar") | float(default=0) * 100 ) | round(2) }}
+        {% else  %}
+          {{ 100 | float(default=0) }}
+        {% endif %}
+
+    - name: Percentage eigen verbruik jaarlijks
+      unique_id: 1c00db0b-0e4b-4070-8da0-839757f6d355
+      unit_of_measurement: "%"
+      state: >
+        {% if states("sensor.yearly_solar") | float(default=0) > 0 and (states("sensor.yearly_own_consumption") | float(default=0) - states("sensor.yearly_solar") | float(default=0)) <= 0 %}
+          {{ (states("sensor.yearly_own_consumption") | float(default=0) / states("sensor.yearly_solar") | float(default=0) * 100 ) | round(2) }}
+        {% else  %}
+          {{ 100 | float(default=0) }}
+        {% endif %}
+
+    ###  Capaciteitstarief  ###
+    - name: Max peak 2
+      unique_id: 4080cb23-c094-417e-a6ab-a3554bbe1053
+      unit_of_measurement: "kW"
+      device_class: power
+      state: >
+        {% set peak = ((states("sensor.quarter_hourly_grid_consumption") | float(default=0)) * 4) %}
+        {% set max_peak = (states("input_number.max_peak_2") | float(default=0)) %}
+        {% macro max(X, Y) -%} {{X|float if X|float > Y|float else Y|float }} {%- endmacro %}
+        {{ max(max_peak, peak) }}
+
+    - name: Year peak 2
+      unique_id: d4092d00-fc23-41cc-a673-34b7971b3d2d
+      unit_of_measurement: "kW"
+      device_class: power
+      state: >
+        {{ (( states('input_number.january_peak_2') | float(default=0) +
+              states('input_number.february_peak_2') | float(default=0) +
+              states('input_number.march_peak_2') | float(default=0) +
+              states('input_number.april_peak_2') | float(default=0) +
+              states('input_number.may_peak_2') | float(default=0) +
+              states('input_number.june_peak_2') | float(default=0) +
+              states('input_number.july_peak_2') | float(default=0) +
+              states('input_number.august_peak_2') | float(default=0) +
+              states('input_number.september_peak_2') | float(default=0) +
+              states('input_number.october_peak_2') | float(default=0) +
+              states('input_number.november_peak_2') | float(default=0) +
+              states('input_number.december_peak_2') | float(default=0) ) / 12) | round(2)
+        }}
+
+    ###  EMHASS
+
+    - name: Huidig verbruik zonder wp
+      unique_id: 664ab9ff-3875-4a45-b53a-685b7a8f7f96
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.huidig_verbruik") | float(default=0) - 
+            states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
+            states("sensor.wasmachien_vermogen") | float(default=0) - 
+            states("sensor.droogkast_vermogen") | float(default=0) -  
+            states("sensor.afwasmachien_vermogen") | float(default=0) -  
+            states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0)) | round(1)}}
+
+    - name: Solcast 24hrs forecast garage
+      unique_id: 6da67bef-8908-4164-8693-82b9be0aa6ae
+      state: >-
+        {%- set awattar_all_list = state_attr('sensor.solcast_forecast_garage', 'forecasts') | map(attribute='pv_estimate') | list %}
+        {%- set values_all = namespace(all=[]) %}
+        {% for i in range(awattar_all_list | length) %}
+          {%- set v = (awattar_all_list[i] | float |multiply(1000) ) | int(0) %}
+          {%- set values_all.all = values_all.all + [ v ] %}
+        {%- endfor %} {{ (values_all.all)[:48] }}
+
+    - name: Solcast 24hrs forecast huis
+      unique_id: 40a074f6-6405-4824-b278-c67ef7299fcb
+      state: >-
+        {%- set awattar_all_list = state_attr('sensor.solcast_forecast_huis', 'forecasts') | map(attribute='pv_estimate') | list %}
+        {%- set values_all = namespace(all=[]) %}
+        {% for i in range(awattar_all_list | length) %}
+          {%- set v = (awattar_all_list[i] | float |multiply(1000) ) | int(0) %}
+          {%- set values_all.all = values_all.all + [ v ] %}
+        {%- endfor %} {{ (values_all.all)[:48] }}
+
+    - name: Solcast 24hrs forecast
+      unique_id: e4828e2f-d761-496e-b783-4cf583685b5f
+      state: >-
+        {% set a = states("sensor.solcast_24hrs_forecast_garage")[1:-1].split(',') | map('int') | list %}
+        {% set b = states("sensor.solcast_24hrs_forecast_huis")[1:-1].split(',') | map('int') | list %}
+        {% set ns = namespace(items = []) %}
+        {% for i in range(a | length) %}
+          {% set ns.items = ns.items + [ a[i]  + b[i]  ] %}
+        {% endfor %}
+        {{ ns.items }}
+
+    - name: Zonne opbrengst
+      unique_id: 51b5c2c8-6480-4320-8ec2-8bc2d9d00308
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.huawei_active_power") | float(default=0) + states("sensor.solaredge_inverter_watts") | float(default=0)) | round(2) }}

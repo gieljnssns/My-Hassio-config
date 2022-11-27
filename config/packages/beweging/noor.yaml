@@ -1,11 +1,10 @@
 input_boolean:
   beweging_noor:
 
-binary_sensor:
-  - platform: template
-    sensors:
-      beweging_noor_2:
+template:
+  - binary_sensor:
+      - name: Beweging Noor 2
+        unique_id: 7ded542d-30ff-4c37-8a76-93c9f26df38b
         device_class: occupancy
-        friendly_name: "Aanwezigheid"
-        value_template: >
+        state: >
           {{ is_state('input_boolean.beweging_noor', 'on') }}

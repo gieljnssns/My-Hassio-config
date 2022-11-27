@@ -1,11 +1,10 @@
 input_boolean:
   beweging_keuken:
 
-binary_sensor:
-  - platform: template
-    sensors:
-      beweging_keuken:
+template:
+  - binary_sensor:
+      - name: Beweging keuken
+        unique_id: 6fe56526-6049-4bc1-8eea-df50b04c75c6
         device_class: occupancy
-        friendly_name: "Keuken bevolkt"
-        value_template: >
+        state: >
           {{ is_state('input_boolean.beweging_keuken', 'on') }}

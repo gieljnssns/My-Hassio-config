@@ -1,11 +1,10 @@
 input_boolean:
   beweging_living:
 
-binary_sensor:
-  - platform: template
-    sensors:
-      beweging_living:
+template:
+  - binary_sensor:
+      - name: Beweging living
+        unique_id: c76f63f1-f328-4e68-a918-4ccf9b8c90a5
         device_class: occupancy
-        friendly_name: "Living bevolkt"
-        value_template: >
+        state: >
           {{ is_state('input_boolean.beweging_living', 'on') }}

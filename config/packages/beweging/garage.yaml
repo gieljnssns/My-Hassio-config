@@ -1,11 +1,10 @@
 input_boolean:
   beweging_garage:
 
-binary_sensor:
-  - platform: template
-    sensors:
-      beweging_garage:
+template:
+  - binary_sensor:
+      - name: Beweging garage
+        unique_id: c46477fd-a3e0-4dfd-b861-58a84366076a
         device_class: occupancy
-        friendly_name: "Aanwezigheid"
-        value_template: >-
+        state: >-
           {{ is_state('input_boolean.beweging_garage', 'on') }}
