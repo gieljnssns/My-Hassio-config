@@ -18,7 +18,14 @@ action:
           - service: light.turn_on
             target:
               entity_id: light.afdak_verlichting
+          - delay:
+              minutes: 5
+          - service: light.turn_off
+            target:
+              entity_id: light.afdak_verlichting
     default:
+      - delay:
+          minutes: 2
       - service: light.turn_off
         target:
           entity_id: light.afdak_verlichting
