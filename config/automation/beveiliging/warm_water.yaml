@@ -1,0 +1,98 @@
+alias: Warm water beveiliging
+id: 0ccfe28e-ccb5-4186-bb9e-6cd7984ff1aa
+description: ""
+mode: single
+trigger:
+  - platform: state
+    entity_id:
+      - input_boolean.warm_water_1u
+    to: "on"
+    id: 1u
+  - platform: state
+    entity_id:
+      - input_boolean.warm_water_2u
+    to: "on"
+    id: 2u
+  - platform: state
+    entity_id:
+      - input_boolean.warm_water_3u
+    to: "on"
+    id: 3u
+  - platform: state
+    entity_id:
+      - input_boolean.warm_water_4u
+    to: "on"
+    id: 4u
+  - platform: state
+    entity_id:
+      - input_boolean.warm_water_5u
+    to: "on"
+    id: 5u
+condition: []
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: 1u
+        sequence:
+          - delay:
+              minutes: 61
+          - condition: state
+            entity_id: input_boolean.warm_water_1u
+            state: "on"
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.warm_water_1u
+          - service: switch.turn_off
+            entity_id: switch.warm_water
+      - conditions:
+          - condition: trigger
+            id: 2u
+        sequence:
+          - delay:
+              minutes: 121
+          - condition: state
+            entity_id: input_boolean.warm_water_2u
+            state: "on"
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.warm_water_2u
+          - service: switch.turn_off
+            entity_id: switch.warm_water
+      - conditions:
+          - condition: trigger
+            id: 3u
+        sequence:
+          - delay:
+              minutes: 181
+          - condition: state
+            entity_id: input_boolean.warm_water_3u
+            state: "on"
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.warm_water_3u
+          - service: switch.turn_off
+            entity_id: switch.warm_water
+      - conditions:
+          - condition: trigger
+            id: 4u
+        sequence:
+          - delay:
+              minutes: 241
+          - condition: state
+            entity_id: input_boolean.warm_water_4u
+            state: "on"
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.warm_water_4u
+          - service: switch.turn_off
+            entity_id: switch.warm_water
+      - conditions:
+          - condition: trigger
+            id: 5u
+        sequence:
+          - delay:
+              minutes: 301
+          - condition: state
+            entity_id: input_boolean.warm_water_5u
+            state: "on"
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.warm_water_5u
+          - service: switch.turn_off
+            entity_id: switch.warm_water
