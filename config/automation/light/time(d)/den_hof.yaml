@@ -1,0 +1,44 @@
+alias: Licht hof aan
+id: 25632745-3abf-4ae9-a64e-181845b9dec6
+mode: restart
+trigger:
+  - platform: state
+    entity_id: device_tracker.giel_not_so_binary
+    to: "Juist Aangekomen"
+  - platform: state
+    entity_id: device_tracker.martine_not_so_binary
+    to: "Juist Aangekomen"
+  - platform: state
+    entity_id: binary_sensor.keuken_achterdeur
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.garage_deur
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.beweging_hof
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.beweging_fotocel
+    to: "on"
+condition:
+  - condition: state
+    entity_id: sensor.dark_outside
+    state: "true"
+action:
+  - service: light.turn_on
+    target:
+      entity_id: light.alle_tuinverlichting
+  - wait_for_trigger:
+      platform: state
+      entity_id:
+        - binary_sensor.beweging_fotocel
+        - binary_sensor.beweging_hof
+        - binary_sensor.garage_deur
+        - binary_sensor.keuken_achterdeur
+      from: "on"
+      to: "off"
+  - delay:
+      minutes: 10
+  - service: light.turn_off
+    target:
+      entity_id: light.alle_tuinverlichting
