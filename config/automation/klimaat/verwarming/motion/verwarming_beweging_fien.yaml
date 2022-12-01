@@ -1,19 +1,21 @@
-  alias: Verwarming bij aanwezigheid Fien
-  id: c56835b5-85a0-48b1-b41d-781033aa6b04
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.aanwezigheid_fien
-      to: 'on'
-    - platform: state
-      entity_id: binary_sensor.aanwezigheid_fien
-      to: 'off'
-  action:
-    service: climate.set_temperature
-    data_template:
-      entity_id: climate.fien
-      temperature: >
-        {% if is_state('binary_sensor.aanwezigheid_fien', 'on') %}
-          {{states('input_select.setpunt_fien')}}
-        {% elif is_state('binary_sensor.aanwezigheid_fien', 'off') %}
-          10
-        {% endif %}
+alias: Verwarming bij aanwezigheid Fien
+id: c56835b5-85a0-48b1-b41d-781033aa6b04
+trigger:
+  - platform: state
+    entity_id: binary_sensor.aanwezigheid_fien
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.aanwezigheid_fien
+    to: "off"
+action:
+  service: climate.set_temperature
+  data_template:
+    entity_id: climate.fien
+    temperature: >
+      {% if is_state('input_boolean.giel_slaapt_na_nacht', 'on') %}
+        10
+      {% elif is_state('binary_sensor.aanwezigheid_fien', 'on') %}
+        {{states('input_select.setpunt_fien')}}
+      {% elif is_state('binary_sensor.aanwezigheid_fien', 'off') %}
+        10
+      {% endif %}
