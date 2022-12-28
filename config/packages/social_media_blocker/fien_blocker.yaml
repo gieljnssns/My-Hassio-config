@@ -3,6 +3,10 @@ input_boolean:
     name: Fien block
     icon: mdi:link-lock
 
+  fien_blocker_all:
+    name: Fien block
+    icon: mdi:lan-disconnect
+
 switch:
   - platform: template
     switches:
@@ -19,6 +23,19 @@ switch:
             data:
               entity_id: input_boolean.fien_blocker
 
+      fien_block_all:
+        value_template: "{{ is_state('input_boolean.fien_blocker_all', 'on') }}"
+        icon_template: mdi:lan-disconnect
+        friendly_name: Fien block all
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.fien_blocker_all
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.fien_blocker_all
+
 automation:
   - id: fien_block
     alias: Fien block
@@ -32,6 +49,18 @@ automation:
           list_type: "allowlist"
           url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/fien.txt"
 
+  - id: fien_block_all
+    alias: Fien block all
+    trigger:
+      platform: state
+      entity_id: input_boolean.fien_blocker_all
+      to: "on"
+    action:
+      - service: adguard.add_url
+        data:
+          name: Fien all
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/no_internet_fien.txt"
+
   - id: fien_allow
     alias: Fien allow
     trigger:
@@ -44,3 +73,14 @@ automation:
           list_type: "allowlist"
           url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/fien.txt"
           name: Fien
+
+  - id: fien_allow_all
+    alias: Fien allow all
+    trigger:
+      platform: state
+      entity_id: input_boolean.fien_blocker_all
+      to: "off"
+    action:
+      - service: adguard.remove_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/no_internet_fien.txt"
