@@ -1,0 +1,13 @@
+flash_light:
+  mode: restart
+  sequence:
+    - service: light.turn_on
+      data_template:
+        entity_id: "light.{{ light }}"
+    - repeat:
+        count: "{{ count|int * 2 - 1 }}"
+        sequence:
+          - delay: 2
+          - service: light.toggle
+            data_template:
+              entity_id: "light.{{ light }}"
