@@ -1,19 +1,22 @@
-  alias: 'Donker buiten lowpass'
-  id: e80c2c9b-06b3-45f0-b6c2-aac9fb531612
-  trigger:
-    - platform: numeric_state
-      entity_id: sensor.zonne_energie_gefilterd_lowpass
-      below: 80
-    - platform: numeric_state
-      entity_id: sensor.huidige_opbrengst
-      below: 2
-      for:
-        minutes: 5
-    - platform: numeric_state
-      entity_id: sun.sun
-      value_template: "{{ state.attributes.elevation }}"
-      below: 0.0
-  action:
-    - service: input_boolean.turn_on
-      entity_id:
-        - input_boolean.donker_buiten_lowpass
+alias: "Donker buiten lowpass"
+id: e80c2c9b-06b3-45f0-b6c2-aac9fb531612
+trigger:
+  # - platform: numeric_state
+  #   entity_id: sensor.zonne_energie_gefilterd_lowpass
+  #   below: 80
+  # - platform: numeric_state
+  #   entity_id: sensor.huidige_opbrengst
+  #   below: 2
+  #   for:
+  #     minutes: 5
+  - platform: numeric_state
+    entity_id: sensor.estimated_illuminance_normal
+    below: 800
+  - platform: numeric_state
+    entity_id: sun.sun
+    value_template: "{{ state.attributes.elevation }}"
+    below: 0.0
+action:
+  - service: input_boolean.turn_on
+    entity_id:
+      - input_boolean.donker_buiten_lowpass
