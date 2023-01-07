@@ -1,39 +1,39 @@
-  alias: Spots aan schooldag of late
-  id: 463b0a9c-0f70-4ccf-b095-52f8496c4361
-  trigger:
-    platform: state
-    entity_id: binary_sensor.pir_living
-    to: 'on'
-  condition:
-    condition: and
-    conditions:
-      - condition: time
-        after: '06:30:00'
-        before: '11:00:00'
-      - condition: state
-        entity_id: light.spots_tv
-        state: 'off'
-      # - condition: or
-      #   conditions:
-      #     - condition: state
-      #       entity_id: binary_sensor.v_werken
-      #       state: 'off'
-      #     - condition: state
-      #       entity_id: binary_sensor.v_late
-      #       state:  'on'
-      - condition: state
-        entity_id: sensor.dark_outside
-        state: 'true'
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: binary_sensor.schooldag
-            state: 'on'
-          - condition: state
-            entity_id: binary_sensor.v_late
-            state:  'on'
-  action:
-    - service: light.turn_on
+alias: Spots aan schooldag of late
+id: 463b0a9c-0f70-4ccf-b095-52f8496c4361
+trigger:
+  platform: state
+  entity_id: binary_sensor.pir_living
+  to: "on"
+condition:
+  condition: and
+  conditions:
+    - condition: time
+      after: "06:30:00"
+      before: "11:00:00"
+    - condition: state
       entity_id: light.spots_tv
-      data:
-        profile: reading
+      state: "off"
+    # - condition: or
+    #   conditions:
+    #     - condition: state
+    #       entity_id: binary_sensor.v_werken
+    #       state: 'off'
+    #     - condition: state
+    #       entity_id: binary_sensor.v_late
+    #       state:  'on'
+    - condition: state
+      entity_id: sensor.dark_inside
+      state: "true"
+    - condition: or
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.schooldag
+          state: "on"
+        - condition: state
+          entity_id: binary_sensor.v_late
+          state: "on"
+action:
+  - service: light.turn_on
+    entity_id: light.spots_tv
+    data:
+      profile: reading

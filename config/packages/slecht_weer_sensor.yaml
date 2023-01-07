@@ -4,6 +4,10 @@ homeassistant:
       friendly_name: Donker buiten
       icon: mdi:theme-light-dark
 
+    sensor.dark_inside:
+      friendly_name: Donker binnen
+      icon: mdi:theme-light-dark
+
     sensor.bad_weather:
       friendly_name: Slecht weer
       icon: mdi:weather-snowy-rainy
@@ -24,8 +28,12 @@ homeassistant:
     input_boolean.donker_buiten_lowpass:
       hidden: true
 
+    input_boolean.donker_binnen_lowpass:
+      hidden: true
+
 input_boolean:
   donker_buiten_lowpass:
+  donker_binnen_lowpass:
 
 input_number:
   notification_hour:
@@ -50,6 +58,14 @@ template:
         unique_id: 1852429c-19da-465c-a194-47d20774789b
         state: >
           {% if (states("input_boolean.donker_buiten_lowpass") == 'on') %}
+            true
+          {% else %}
+            false
+          {% endif %}
+      - name: Dark inside
+        unique_id: e17d6c9b-d889-4126-b0c7-900962a8d364
+        state: >
+          {% if (states("input_boolean.donker_binnen_lowpass") == 'on') %}
             true
           {% else %}
             false

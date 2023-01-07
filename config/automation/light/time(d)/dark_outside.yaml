@@ -2,10 +2,10 @@ alias: "Verlichting bij schemer"
 id: 378bbd67-0626-492d-b091-7f18ae68b8f6
 trigger:
   - platform: state
-    entity_id: sensor.dark_outside
+    entity_id: sensor.dark_inside
 action:
   - service_template: >
-      {% if is_state('sensor.dark_outside', 'true') %}
+      {% if is_state('sensor.dark_inside', 'true') %}
         light.turn_on
       {% else %}
         light.turn_off

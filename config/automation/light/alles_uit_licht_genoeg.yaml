@@ -1,57 +1,107 @@
 alias: Alles uit licht buiten
 id: 7b1a746e-2004-45b4-8d6f-2a20e3a4e2a8
 trigger:
-  platform: state
-  entity_id: sensor.dark_outside
-  to: "false"
+  - platform: state
+    entity_id: sensor.dark_outside
+    to: "false"
+    id: buiten
+  - platform: state
+    entity_id: sensor.dark_inside
+    to: "false"
+    id: binnen
 action:
-  - service: light.turn_off
-    entity_id: light.spots_tv
-  - delay:
-      seconds: 2
-  - service: light.turn_off
-    entity_id: light.alle_tuinverlichting
-  - delay:
-      seconds: 2
-  - service: light.turn_off
-    entity_id: light.noor
-  - delay:
-      seconds: 2
-  - service: light.turn_off
-    entity_id: light.fien
-  - delay:
-      seconds: 2
-  - service: light.turn_off
-    entity_id: light.spot_slaapkamer
-  - service: light.turn_off
-    entity_id: light.slaapkamer_hoog
-  - service: light.turn_off
-    entity_id: light.badkamer_hoog
-  - service: light.turn_off
-    entity_id: light.badkamer_pombak
-  - service: light.turn_off
-    entity_id: light.danszaal_luster
-  - service: light.turn_off
-    entity_id: light.danszaal_spots
-  - service: light.turn_off
-    entity_id: light.gang_boven
-  - service: light.turn_off
-    entity_id: light.gang_beneden
-  - service: light.turn_off
-    entity_id: light.garage
-  - service: light.turn_off
-    entity_id: light.garage_werkbank
-  - service: light.turn_off
-    entity_id: light.keuken_inkom
-  - service: light.turn_off
-    entity_id: light.keuken_luster
-  - service: light.turn_off
-    entity_id: light.keuken_spots
-  - service: light.turn_off
-    entity_id: light.trap
-  - service: light.turn_off
-    entity_id: light.waskot
-  - service: light.turn_off
-    entity_id: light.wc
-  - service: light.turn_off
-    entity_id: light.afdak_verlichting
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: buiten
+        sequence:
+          - service: light.turn_off
+            entity_id: light.alle_tuinverlichting
+          - delay:
+              seconds: 2
+          - service: light.turn_off
+            entity_id: light.afdak_verlichting
+      - conditions:
+          - condition: trigger
+            id: binnen
+        sequence:
+          - service: light.turn_off
+            entity_id: light.spots_tv
+          - delay:
+              seconds: 2
+          - service: light.turn_off
+            entity_id: light.noor
+          - delay:
+              seconds: 2
+          - service: light.turn_off
+            entity_id: light.fien
+          - delay:
+              seconds: 2
+          - service: light.turn_off
+            entity_id:
+              - light.spot_slaapkamer
+              - light.slaapkamer_hoog
+              - light.badkamer_hoog
+              - light.badkamer_pombak
+              - light.danszaal_luster
+              - light.danszaal_spots
+              - light.gang_boven
+              - light.gang_beneden
+              - light.garage
+              - light.garage_werkbank
+              - light.keuken_inkom
+              - light.keuken_luster
+              - light.keuken_spots
+              - light.trap
+              - light.waskot
+              - light.wc
+  # - service: light.turn_off
+  #   entity_id: light.spots_tv
+  # - delay:
+  #     seconds: 2
+  # - service: light.turn_off
+  #   entity_id: light.alle_tuinverlichting
+  # - delay:
+  #     seconds: 2
+  # - service: light.turn_off
+  #   entity_id: light.noor
+  # - delay:
+  #     seconds: 2
+  # - service: light.turn_off
+  #   entity_id: light.fien
+  # - delay:
+  #     seconds: 2
+  # - service: light.turn_off
+  #   entity_id: light.spot_slaapkamer
+  # - service: light.turn_off
+  #   entity_id: light.slaapkamer_hoog
+  # - service: light.turn_off
+  #   entity_id: light.badkamer_hoog
+  # - service: light.turn_off
+  #   entity_id: light.badkamer_pombak
+  # - service: light.turn_off
+  #   entity_id: light.danszaal_luster
+  # - service: light.turn_off
+  #   entity_id: light.danszaal_spots
+  # - service: light.turn_off
+  #   entity_id: light.gang_boven
+  # - service: light.turn_off
+  #   entity_id: light.gang_beneden
+  # - service: light.turn_off
+  #   entity_id: light.garage
+  # - service: light.turn_off
+  #   entity_id: light.garage_werkbank
+  # - service: light.turn_off
+  #   entity_id: light.keuken_inkom
+  # - service: light.turn_off
+  #   entity_id: light.keuken_luster
+  # - service: light.turn_off
+  #   entity_id: light.keuken_spots
+  # - service: light.turn_off
+  #   entity_id: light.trap
+  # - service: light.turn_off
+  #   entity_id: light.waskot
+  # - service: light.turn_off
+  #   entity_id: light.wc
+  # - service: light.turn_off
+  #   entity_id: light.afdak_verlichting

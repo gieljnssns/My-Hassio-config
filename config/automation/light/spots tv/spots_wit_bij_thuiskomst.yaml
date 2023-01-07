@@ -1,29 +1,29 @@
-  alias: Spots wit bij thuiskomst
-  id: f94efe62-f119-4763-aa2c-50c34edff73e
-  trigger:
-    - platform: state
-      entity_id: alarm_control_panel.ha_alarm
-      to: 'disarmed'
-    # - platform: state
-    #   entity_id: sensor.martine_komt_thuis
-    #   to: arriving
-  condition:
-    condition: and
-    conditions:
-      # - condition: template
-      #   value_template: "{{ states('alarm_control_panel.ha_alarm') != 'disarmed' }}"
-      - condition: state
-        entity_id: light.spots_tv
-        state: 'on'
-      - condition: state
-        entity_id: sensor.dark_outside
-        state: 'true'
-  action:
-    - service: homeassistant.turn_on
-      data:
-        entity_id: light.spots_tv
-        effect: none
-    - service: homeassistant.turn_on
-      data:
-        entity_id: light.spots_tv
-        profile: reading
+alias: Spots wit bij thuiskomst
+id: f94efe62-f119-4763-aa2c-50c34edff73e
+trigger:
+  - platform: state
+    entity_id: alarm_control_panel.ha_alarm
+    to: "disarmed"
+  # - platform: state
+  #   entity_id: sensor.martine_komt_thuis
+  #   to: arriving
+condition:
+  condition: and
+  conditions:
+    # - condition: template
+    #   value_template: "{{ states('alarm_control_panel.ha_alarm') != 'disarmed' }}"
+    - condition: state
+      entity_id: light.spots_tv
+      state: "on"
+    - condition: state
+      entity_id: sensor.dark_inside
+      state: "true"
+action:
+  - service: homeassistant.turn_on
+    data:
+      entity_id: light.spots_tv
+      effect: none
+  - service: homeassistant.turn_on
+    data:
+      entity_id: light.spots_tv
+      profile: reading

@@ -1,16 +1,16 @@
-  alias: Spots tv aan bij schemering
-  id: fc07bb5e-9a2e-4a53-8252-f8ce84560057
-  trigger:
-    - platform: state
-      entity_id: sensor.dark_outside
-      to: 'true'
-  condition:
-    condition: state
-    entity_id: alarm_control_panel.ha_alarm
-    state: disarmed
-  action:
-    - service: light.turn_on
-      entity_id: light.spots_tv
-      data:
-        profile: reading
-        transition: 1800
+alias: Spots tv aan bij schemering
+id: fc07bb5e-9a2e-4a53-8252-f8ce84560057
+trigger:
+  - platform: state
+    entity_id: sensor.dark_inside
+    to: "true"
+condition:
+  condition: state
+  entity_id: alarm_control_panel.ha_alarm
+  state: disarmed
+action:
+  - service: light.turn_on
+    entity_id: light.spots_tv
+    data:
+      profile: reading
+      transition: 1800

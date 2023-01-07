@@ -6,10 +6,12 @@ trigger:
     entity_id: binary_sensor.beweging_fotocel
     to: "on"
     for:
-      minutes: 6
+      minutes: 2
   - platform: state
     entity_id: binary_sensor.nodered_poort_down
     to: "on"
+    for:
+      minutes: 2
 # condition:
 #   condition: and
 #   conditions:
@@ -19,6 +21,9 @@ trigger:
 action:
   - service: input_boolean.turn_on
     entity_id: input_boolean.fotocel_poort_error
+  - service: light.turn_off
+    target:
+      entity_id: light.alle_tuinverlichting
   - service: notify.mobile_app_gphone
     data_template:
       title: "Melding van Home-Assistant"
@@ -27,4 +32,4 @@ action:
         push:
           sound: default
   - delay:
-        seconds: 10
+      seconds: 10
