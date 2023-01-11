@@ -1,31 +1,31 @@
-  alias: Spots tv aan bij schemering niemand thuis
-  id: 5bee2606-cd1d-4c67-9e56-e743dac7f63d
-  trigger:
-    - platform: state
-      entity_id: sensor.dark_outside
-      to: 'true'
-  condition:
-    condition: and
-    conditions:
-      - condition: state
-        entity_id: input_boolean.op_verlof
-        state: "off"
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: alarm_control_panel.ha_alarm
-            state: armed_home
-          - condition: state
-            entity_id: alarm_control_panel.ha_alarm
-            state: armed_away
-  action:
-    - service: light.turn_on
-      entity_id: light.spots_tv
-      data:
-        effect: random
-        brightness: 250
-    - delay: 0:01
-    - service: light.turn_on
-      entity_id: light.spots_tv
-      data:
-        effect: colorloop
+alias: Spots tv aan bij schemering niemand thuis
+id: 5bee2606-cd1d-4c67-9e56-e743dac7f63d
+trigger:
+  - platform: state
+    entity_id: sensor.dark_inside
+    to: "true"
+condition:
+  condition: and
+  conditions:
+    - condition: state
+      entity_id: input_boolean.op_verlof
+      state: "off"
+    - condition: or
+      conditions:
+        - condition: state
+          entity_id: alarm_control_panel.ha_alarm
+          state: armed_home
+        - condition: state
+          entity_id: alarm_control_panel.ha_alarm
+          state: armed_away
+action:
+  - service: light.turn_on
+    entity_id: light.spots_tv
+    data:
+      effect: random
+      brightness: 250
+  - delay: 0:01
+  - service: light.turn_on
+    entity_id: light.spots_tv
+    data:
+      effect: colorloop

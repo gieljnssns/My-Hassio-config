@@ -9,72 +9,67 @@ trigger:
     id: noor
     for:
       minutes: 2
-  # - platform: state
-  #   entity_id: device_tracker.nphone_ping
-  #   id: noor
-  #   to: "off"
-  #   for:
-  #     minutes: 5
-  # - platform: state
-  #   entity_id: device_tracker.nphone_detect
-  #   id: noor
-  #   to: "off"
-  #   for:
-  #     minutes: 5
-  # - platform: state
-  #   entity_id: device_tracker.nphone_nmap
-  #   id: noor
-  #   to: "off"
-  #   for:
-  #     minutes: 5
+  - platform: state
+    entity_id: device_tracker.nphone_detect_2
+    id: noorwifi
+    to: "home"
+
   - platform: state
     entity_id: device_tracker.fien_not_so_binary
     to: "Afwezig"
     id: fien
     for:
       minutes: 2
-  # - platform: state
-  #   entity_id: device_tracker.fphone_ping
-  #   id: fien
-  #   to: "off"
-  #   for:
-  #     minutes: 5
-  # - platform: state
-  #   entity_id: device_tracker.fphone_detect
-  #   id: fien
-  #   to: "off"
-  #   for:
-  #     minutes: 5
-  # - platform: state
-  #   entity_id: device_tracker.fphone_nmap
-  #   id: fien
-  #   to: "off"
-  #   for:
-  #     minutes: 5
+  - platform: state
+    entity_id: device_tracker.fphone_detect_2
+    id: fienwifi
+    to: "home"
 action:
   - choose:
+      - conditions:
+          - condition: trigger
+            id: noorwifi
+        sequence:
+          - service: notify.mobile_app_nphone
+            data:
+              message: Staat privemodus weer aan in uw wifi instellingen?
+              data:
+                push:
+                  sound: default
       - conditions:
           - condition: trigger
             id: noor
           - condition: state
             entity_id: device_tracker.nphone
             state: "home"
-          # - condition: state
-          #   entity_id: device_tracker.nphone_ping
-          #   state: "off"
-          # - condition: state
-          #   entity_id: device_tracker.nphone_detect
-          #   state: "off"
-          # - condition: state
-          #   entity_id: device_tracker.nphone_nmap
-          #   state: "off"
           - condition: numeric_state
             entity_id: sensor.nphone_bt_thuis
             above: 43
         sequence:
+          - service: notify.mobile_app_nphone
+            data:
+              message: Hedde wifi afgezet? Binnen 5 minuten wordt uwe 4G ook afgezet...
+              data:
+                push:
+                  sound: default
+          - delay:
+              minutes: 5
+          - condition: state
+            entity_id: device_tracker.nphone_detect
+            state: "not_home"
           - service: notify.giel_en_martine
             data:
               message: De kans bestaat dat ons Noor haar wifi heeft afgezet om toch TikTok filmpjes te kunnen zien.
+              data:
+                push:
+                  sound: default
+      - conditions:
+          - condition: trigger
+            id: fienwifi
+        sequence:
+          - service: notify.mobile_app_fphone
+            data:
+              message: Staat privemodus weer aan in uw wifi instellingen?
               data:
                 push:
                   sound: default
@@ -84,19 +79,21 @@ action:
           - condition: state
             entity_id: device_tracker.fphone
             state: "home"
-          # - condition: state
-          #   entity_id: device_tracker.fphone_ping
-          #   state: "off"
-          # - condition: state
-          #   entity_id: device_tracker.fphone_detect
-          #   state: "off"
-          # - condition: state
-          #   entity_id: device_tracker.fphone_nmap
-          #   state: "off"
           - condition: numeric_state
             entity_id: sensor.fphone_bt_thuis
             above: 43
         sequence:
+          - service: notify.mobile_app_fphone
+            data:
+              message: Hedde wifi afgezet? Binnen 5 minuten wordt uwe 4G ook afgezet...
+              data:
+                push:
+                  sound: default
+          - delay:
+              minutes: 5
+          - condition: state
+            entity_id: device_tracker.fphone_detect
+            state: "not_home"
           - service: notify.giel_en_martine
             data:
               message: De kans bestaat dat ons Fien haar wifi heeft afgezet om toch met de kampioenen te kunnen lachen.

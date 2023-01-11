@@ -1,12 +1,17 @@
 alias: "Licht buiten_lowpass"
 id: 827c4b46-d0b8-460a-9436-747dee073906
 trigger:
-  - platform: numeric_state
-    entity_id: sensor.huidige_opbrengst
-    above: 30
+  # - platform: numeric_state
+  #   entity_id: sensor.huidige_opbrengst
+  #   above: 30
   - platform: numeric_state
     entity_id: sensor.estimated_illuminance_normal
     above: 800
+    id: binnen
+  - platform: numeric_state
+    entity_id: sensor.estimated_illuminance_normal
+    above: 400
+    id: buiten
   # - platform: numeric_state
   #   entity_id: sun.sun
   #   value_template: "{{ state.attributes.elevation }}"
@@ -14,12 +19,32 @@ trigger:
   # - platform: numeric_state
   #   entity_id: sensor.zonne_energie_omvormers_gefilterd_lowpass
   #   above: 100
-condition:
-  - alias: "Alleen voor de middag"
-    condition: time
-    before: " 13:00:00"
+# condition:
+#   - alias: "Alleen voor de middag"
+#     condition: time
+#     before: " 13:00:00"
 
 action:
-  - service: input_boolean.turn_off
-    entity_id:
-      - input_boolean.donker_buiten_lowpass
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: buiten
+        sequence:
+          - service: input_boolean.turn_off
+            entity_id:
+              - input_boolean.donker_buiten_lowpass
+      - conditions:
+          - condition: trigger
+            id: binnen
+        sequence:
+          - service: input_boolean.turn_off
+            entity_id:
+              - input_boolean.donker_binnen_lowpass
+    default:
+      - service: input_boolean.turn_off
+        entity_id:
+          - input_boolean.donker_buiten_lowpass
+          - input_boolean.donker_binnen_lowpass
+  # - service: input_boolean.turn_off
+  #   entity_id:
+  #     - input_boolean.donker_buiten_lowpass

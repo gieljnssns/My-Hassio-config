@@ -12,11 +12,36 @@ trigger:
   - platform: numeric_state
     entity_id: sensor.estimated_illuminance_normal
     below: 800
+    id: binnen
+  - platform: numeric_state
+    entity_id: sensor.estimated_illuminance_normal
+    below: 400
+    id: buiten
   - platform: numeric_state
     entity_id: sun.sun
     value_template: "{{ state.attributes.elevation }}"
     below: 0.0
 action:
-  - service: input_boolean.turn_on
-    entity_id:
-      - input_boolean.donker_buiten_lowpass
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: buiten
+        sequence:
+          - service: input_boolean.turn_on
+            entity_id:
+              - input_boolean.donker_buiten_lowpass
+      - conditions:
+          - condition: trigger
+            id: binnen
+        sequence:
+          - service: input_boolean.turn_on
+            entity_id:
+              - input_boolean.donker_binnen_lowpass
+    default:
+      - service: input_boolean.turn_on
+        entity_id:
+          - input_boolean.donker_buiten_lowpass
+          - input_boolean.donker_binnen_lowpass
+  # - service: input_boolean.turn_on
+  #   entity_id:
+  #     - input_boolean.donker_buiten_lowpass
