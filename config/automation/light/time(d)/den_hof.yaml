@@ -25,20 +25,65 @@ condition:
     entity_id: sensor.dark_outside
     state: "true"
 action:
-  - service: light.turn_on
-    target:
-      entity_id: light.alle_tuinverlichting
-  - wait_for_trigger:
-      platform: state
-      entity_id:
-        - binary_sensor.beweging_fotocel
-        - binary_sensor.beweging_hof
-        - binary_sensor.garage_deur
-        - binary_sensor.keuken_achterdeur
-      from: "on"
-      to: "off"
-  - delay:
-      minutes: 10
-  - service: light.turn_off
-    target:
-      entity_id: light.alle_tuinverlichting
+  - choose:
+      - conditions:
+          - alias: "Tussen 00u en 7u"
+            condition: time
+            after: "00:00:00"
+            before: "07:00:00"
+
+        sequence:
+          - service: light.turn_on
+            data:
+              brightness_pct: 60
+            target:
+              entity_id: light.alle_tuinverlichting
+          - wait_for_trigger:
+              platform: state
+              entity_id:
+                - binary_sensor.beweging_fotocel
+                - binary_sensor.beweging_hof
+                - binary_sensor.garage_deur
+                - binary_sensor.keuken_achterdeur
+              from: "on"
+              to: "off"
+          - delay:
+              minutes: 3
+          - service: light.turn_off
+            target:
+              entity_id: light.alle_tuinverlichting
+    default:
+      - service: light.turn_on
+        target:
+          entity_id: light.alle_tuinverlichting
+      - wait_for_trigger:
+          platform: state
+          entity_id:
+            - binary_sensor.beweging_fotocel
+            - binary_sensor.beweging_hof
+            - binary_sensor.garage_deur
+            - binary_sensor.keuken_achterdeur
+          from: "on"
+          to: "off"
+      - delay:
+          minutes: 7
+      - service: light.turn_off
+        target:
+          entity_id: light.alle_tuinverlichting
+  # - service: light.turn_on
+  #   target:
+  #     entity_id: light.alle_tuinverlichting
+  # - wait_for_trigger:
+  #     platform: state
+  #     entity_id:
+  #       - binary_sensor.beweging_fotocel
+  #       - binary_sensor.beweging_hof
+  #       - binary_sensor.garage_deur
+  #       - binary_sensor.keuken_achterdeur
+  #     from: "on"
+  #     to: "off"
+  # - delay:
+  #     minutes: 10
+  # - service: light.turn_off
+  #   target:
+  #     entity_id: light.alle_tuinverlichting
