@@ -1,0 +1,44 @@
+input_boolean:
+  allowsnapchat:
+    name: Snapchat
+    icon: mdi:snapchat
+
+switch:
+  - platform: template
+    switches:
+      allowsnapchat:
+        value_template: "{{ is_state('input_boolean.allowsnapchat', 'on') }}"
+        icon_template: mdi:snapchat
+        friendly_name: Snapchat
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.allowsnapchat
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.allowsnapchat
+
+automation:
+  - id: enable_snapchat
+    alias: Enable snapchat
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowsnapchat
+      to: "on"
+    action:
+      - service: adguard.remove_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-snapchat.txt"
+
+  - id: disable_snapchat
+    alias: Disable snapchat
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowsnapchat
+      to: "off"
+    action:
+      - service: adguard.add_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-snapchat.txt"
+          name: Snapchat

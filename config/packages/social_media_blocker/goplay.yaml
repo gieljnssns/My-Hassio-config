@@ -1,0 +1,44 @@
+input_boolean:
+  allowgoplay:
+    name: GoPlay
+    icon: mdi:television-play
+
+switch:
+  - platform: template
+    switches:
+      allowgoplay:
+        value_template: "{{ is_state('input_boolean.allowgoplay', 'on') }}"
+        icon_template: mdi:television-play
+        friendly_name: GoPlay
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.allowgoplay
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.allowgoplay
+
+automation:
+  - id: enable_goplay
+    alias: Enable goplay
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowgoplay
+      to: "on"
+    action:
+      - service: adguard.remove_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-goplay.txt"
+
+  - id: disable_goplay
+    alias: Disable goplay
+    trigger:
+      platform: state
+      entity_id: input_boolean.allowgoplay
+      to: "off"
+    action:
+      - service: adguard.add_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-goplay.txt"
+          name: GoPlay
