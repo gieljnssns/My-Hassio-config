@@ -20,9 +20,11 @@ trigger:
   #   entity_id: sensor.zonne_energie_omvormers_gefilterd_lowpass
   #   above: 100
 # condition:
-#   - alias: "Alleen voor de middag"
-#     condition: time
-#     before: " 13:00:00"
+#   - condition: state
+#     entity_id: input_boolean.donker_binnen_lowpass
+#     state: "off"
+#     for:
+#       hours: 2
 
 action:
   - choose:
@@ -36,15 +38,20 @@ action:
       - conditions:
           - condition: trigger
             id: binnen
+          - condition: state
+            entity_id: input_boolean.donker_binnen_lowpass
+            state: "on"
+            for:
+              hours: 2
         sequence:
           - service: input_boolean.turn_off
             entity_id:
               - input_boolean.donker_binnen_lowpass
-    default:
-      - service: input_boolean.turn_off
-        entity_id:
-          - input_boolean.donker_buiten_lowpass
-          - input_boolean.donker_binnen_lowpass
+    # default:
+    #   - service: input_boolean.turn_off
+    #     entity_id:
+    #       - input_boolean.donker_buiten_lowpass
+    #       - input_boolean.donker_binnen_lowpass
   # - service: input_boolean.turn_off
   #   entity_id:
   #     - input_boolean.donker_buiten_lowpass
