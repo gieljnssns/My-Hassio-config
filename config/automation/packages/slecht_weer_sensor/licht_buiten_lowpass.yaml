@@ -43,9 +43,11 @@ action:
           #   state: "on"
           #   for:
           #     hours: 2
-          - condition: numeric_state
-            entity_id: sensor.sun_elevation
-            above: 8
+          # - condition: numeric_state
+          #   entity_id: sensor.sun_elevation
+          #   above: 8
+          - condition: time
+            before: " 17:00:00"
         sequence:
           - service: input_boolean.turn_off
             entity_id:
