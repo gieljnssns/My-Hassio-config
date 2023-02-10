@@ -38,11 +38,14 @@ action:
       - conditions:
           - condition: trigger
             id: binnen
-          - condition: state
-            entity_id: input_boolean.donker_binnen_lowpass
-            state: "on"
-            for:
-              hours: 2
+          # - condition: state
+          #   entity_id: input_boolean.donker_binnen_lowpass
+          #   state: "on"
+          #   for:
+          #     hours: 2
+          - condition: numeric_state
+            entity_id: sensor.sun_elevation
+            above: 8
         sequence:
           - service: input_boolean.turn_off
             entity_id:
