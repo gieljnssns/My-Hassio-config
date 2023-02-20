@@ -19,14 +19,10 @@ time:
   - platform: homeassistant
     id: homeassistant_time
 
-sensor:
-  - platform: wifi_signal
-    name: "WiFi ${upper_devicename}"
-    update_interval: 300s
-  - platform: uptime
-    id: up
-    internal: true
-    update_interval: 300s
+# sensor:
+#   - platform: wifi_signal
+#     name: "WiFi ${upper_devicename}"
+#     update_interval: 300s
 
 binary_sensor:
   - platform: status
@@ -42,73 +38,27 @@ text_sensor:
 
     bssid:
       name: ${upper_devicename} BSSID
-  - platform: template
-    name: "Template Text Sensor"
-    lambda: |-
-      return {"${ssid}"};
-    id: ssid_must
-    internal: true
-  - platform: template
-    name: "Template Text Sensor2"
-    lambda: |-
-      return {id(ssid).state};
-    id: ssid_present
-    update_interval: 60s
-    internal: true
   # - platform: template
-  #   name: ${upper_devicename} uptime
-  #   id: uptime_human
-  #   icon: mdi:clock-start
+  #   name: "Template Text Sensor"
   #   lambda: |-
-  #     uint32_t dur = id(up).state;
-  #     int dys = 0;
-  #     int hrs = 0;
-  #     int mnts = 0;
-  #     if (dur > 86399) {
-  #       dys = trunc(dur / 86400);
-  #       dur = dur - (dys * 86400);
-  #     }
-  #     if (dur > 3599) {
-  #       hrs = trunc(dur / 3600);
-  #       dur = dur - (hrs * 3600);
-  #     }
-  #     if (dur > 59) {
-  #       mnts = trunc(dur / 60);
-  #       dur = dur - (mnts * 60);
-  #     }
-  #     char buffer[17];
-  #     sprintf(buffer, "%ud %02uh %02um %02us", dys, hrs, mnts, dur);
-  #     return {buffer};
-  #   update_interval: 300s
-  # on_value:
-  #   then:
-  #     - if:
-  #         condition:
-  #           lambda: |-
-  #             return (id(ssid_present).state) != (id(ssid_must).state);
-  #         then:
-  #           - logger.log: WiFi is verkeerd!
-  #           - if:
-  #               condition:
-  #                 - switch.is_on: restart_actief
-  #               then:
-  #                 - homeassistant.service:
-  #                     service: persistent_notification.create
-  #                     data:
-  #                       title: EspHome ${upper_devicename} Wifi
-  #                       message: "Verkeerd wifi netwerk - herstart binnen 5min"
-  #                 - delay: 300s
-  #                 - switch.turn_on: restart_device
+  #     return {"${ssid}"};
+  #   id: ssid_must
+  #   internal: true
+  # - platform: template
+  #   name: "Template Text Sensor2"
+  #   lambda: |-
+  #     return {id(ssid).state};
+  #   id: ssid_present
+  #   update_interval: 60s
+  #   internal: true
 
 switch:
   - platform: restart
     name: ${upper_devicename} herstarten
     id: restart_device
-
-  - platform: template
-    optimistic: true
-    restore_state: false
-    name: ${upper_devicename} verkeerde wifi
-    id: restart_actief
-    icon: mdi:restart-off
-
+  # - platform: template
+  #   optimistic: true
+  #   restore_state: false
+  #   name: ${upper_devicename} verkeerde wifi
+  #   id: restart_actief
+  #   icon: mdi:restart-off
