@@ -33,15 +33,16 @@
 #   - blk_read
 #   - blk_write
 # Addons
-# - platform: rest
-#   resource: http://192.168.79.54:8123/api/hassio/addons/a0d7b954_unifi/stats
-#   name: UniFi Controller
-#   unit_of_measurement: '%'
-#   value_template: '{{ value_json.data.cpu_percent }}'
-#   scan_interval: 59
-#   headers:
-#     Authorization: !secret llt
-#     Content-Type: application/json
+- platform: rest
+  resource: http://192.168.79.54:8123/api/hassio/addons/ccab4aaf_frigate-fa-beta/stats
+  name: Frigate cpu
+  unique_id: 7e206ba4-0e2a-404d-a37c-08177b125a1e
+  unit_of_measurement: "%"
+  value_template: "{{ value_json.data.cpu_percent }}"
+  scan_interval: 59
+  headers:
+    Authorization: !secret llt
+    Content-Type: application/json
 #   json_attributes_path: "$.data"
 #   json_attributes:
 #     - memory_percent

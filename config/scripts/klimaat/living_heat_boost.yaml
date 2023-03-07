@@ -22,7 +22,7 @@ living_heat_boost:
           {{ states('input_number.boost_target') }}
     - service: timer.start
       data_template:
-        entity_id: timer.heating_boost_timer
+        entity_id: timer.boost
         duration: 00:{{ states.input_number.boost_duration.state | int }}:00
     - service: input_boolean.turn_on
       data:
