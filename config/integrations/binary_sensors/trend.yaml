@@ -1,0 +1,23 @@
+- platform: trend
+  sensors:
+    badkamer_trend_up:
+      friendly_name: "Badkamer Trend up"
+      device_class: heat
+      # max_samples: 6
+      max_samples: 3
+      entity_id: sensor.luchtvochtigheid_badkamer
+      sample_duration: 600
+      min_gradient: 0.01666
+      # sample_duration: 20
+      # min_gradient: 0.33
+
+    badkamer_trend_down:
+      friendly_name: "Badkamer Trend down"
+      device_class: cold
+      # max_samples: 120
+      entity_id: sensor.luchtvochtigheid_badkamer
+      # sample_duration: 600
+      # min_gradient: -0.01666
+      max_samples: 2
+      sample_duration: 300
+      min_gradient: -0.016666
