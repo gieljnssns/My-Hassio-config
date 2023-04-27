@@ -1,0 +1,41 @@
+alias: "Stofzuiger beneden"
+id: a0e8b297-6861-4b6a-a901-2a5ccda2d68c
+initial_state: "true"
+trigger:
+  platform: time
+  at: "3:00:00"
+condition:
+  - condition: state
+    entity_id: input_boolean.op_verlof
+    state: "off"
+  - condition: state
+    entity_id: input_boolean.stofzuiger_beneden
+    state: "on"
+action:
+  - choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: counter.stofzuiger
+            above: 1
+        sequence:
+          - service: script.roborock_set_manual_mode
+            target:
+              entity_id: vacuum.cl4p_tp
+            data:
+              vacuum: max
+              mopping: "off"
+          - service: vacuum.start
+            data:
+              entity_id: vacuum.cl4p_tp
+    default:
+      - service: script.roborock_set_manual_mode
+        target:
+          entity_id: vacuum.cl4p_tp
+        data:
+          vacuum: balanced
+          mopping: "off"
+      - service: vacuum.start
+        data:
+          entity_id: vacuum.cl4p_tp
+      - service: counter.increment
+        entity_id: counter.stofzuiger

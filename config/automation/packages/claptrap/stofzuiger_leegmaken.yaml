@@ -1,0 +1,26 @@
+alias: Stofzuiger leegmaken
+id: e1f88cd0-3704-4d86-9b89-4a229e234a06
+initial_state: "true"
+trigger:
+  - platform: time
+    at: "07:00:00"
+condition:
+  - condition: numeric_state
+    entity_id: counter.stofzuiger
+    above: 2
+  - condition: state
+    entity_id: input_boolean.stofzuiger_leegmaken_melding
+    state: "on"
+action:
+  - service: notify.giel_en_martine
+    data:
+      title: "Bitch"
+      message: "De stofzuiger mag weer leeggemaakt worden. Die bitch staat alweer op je te wachten!"
+      data:
+        actions:
+          - action: "RETURN"
+            title: "Leeggemaakt. Terug in uw kot."
+  - service: script.turn_on
+    entity_id: script.bitch_prullenbak
+  - service: counter.reset
+    entity_id: counter.stofzuiger

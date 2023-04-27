@@ -1,0 +1,121 @@
+roborock_set_customize_mode:
+  alias: "Set Roborock to use customized cleaning settings for each room"
+  sequence:
+    - alias: "Set vacuum mode to customized"
+      service: vacuum.send_command
+      target:
+        entity_id: vacuum.cl4p_tp
+      data:
+        command: set_custom_mode
+        params: [106]
+    - alias: "Set mopping mode to customized"
+      service: vacuum.send_command
+      target:
+        entity_id: vacuum.cl4p_tp
+      data:
+        command: set_water_box_custom_mode
+        params: [204]
+
+roborock_set_manual_mode:
+  alias: "Set Roborock manual vacuum and mopping settings"
+  fields:
+    vacuum:
+      description: "Vacuum mode - can be: silent | balanced | turbo | max"
+      example: "max"
+    mopping:
+      description: "Mopping mode - can be: off | low | medium | high"
+      example: "off"
+  sequence:
+    - alias: "Config variables"
+      variables:
+        config_vacuum:
+          silent: 101
+          balanced: 102
+          turbo: 103
+          max: 104
+        config_mopping:
+          "off": 200
+          low: 201
+          medium: 202
+          high: 203
+        vacuum_mode: "{{ config_vacuum[vacuum] }}"
+        mopping_mode: "{{ config_mopping[mopping] }}"
+    - choose:
+        - alias: "Invalid vacuum value"
+          conditions: "{{ vacuum not in config_vacuum|list }}"
+          sequence:
+            - service: system_log.write
+              data:
+                message: "Invalid vacuum value '{{ vacuum }}'. Valid values are {{ config_vacuum|list|join(', ') }}"
+                level: warning
+                logger: roborock
+        - alias: "Invalid mopping value"
+          conditions: "{{ mopping not in config_mopping|list }}"
+          sequence:
+            - service: system_log.write
+              data:
+                message: "Invalid mopping value '{{ lavaggio }}'. Valid values are {{ config_mopping|list|join(', ') }}"
+                level: warning
+                logger: roborock
+      default:
+        - alias: "Set vacuum mode"
+          service: vacuum.send_command
+          target:
+            entity_id: vacuum.cl4p_tp
+          data:
+            command: set_custom_mode
+            params: "[{{ vacuum_mode }}]"
+        - alias: "Set mopping mode"
+          service: vacuum.send_command
+          target:
+            entity_id: vacuum.cl4p_tp
+          data:
+            command: set_water_box_custom_mode
+            params: "[{{ mopping_mode }}]"
+
+roborock_set_mopping_route:
+  alias: Set Roborock mopping route
+  fields:
+    route:
+      description: "Mopping route - can be: standard | deep"
+      example: "standard"
+  sequence:
+    - alias: Config variables
+      variables:
+        config_mopping_route:
+          "standard": 300
+          deep: 301
+        mopping_route: "{{ config_mopping_route[route]}}"
+    - choose:
+        - alias: Invalid mopping route value
+          conditions:
+            - condition: template
+              value_template: "{{ route not in config_mopping_route|list }}"
+          sequence:
+            - service: system_log.write
+              data:
+                message: >-
+                  Invalid mopping_route value '{{ route }}'. Valid values are {{
+                  config_mopping_route|list|join(', ') }}
+                level: warning
+                logger: roborock
+      default:
+        - alias: Set mopping route
+          service: vacuum.send_command
+          target:
+            entity_id: vacuum.cl4p_tp
+          data:
+            command: set_mop_mode
+            params: "[{{ mopping_route }}]"
+  mode: single
+
+bitch_prullenbak:
+  sequence:
+    service: vacuum.send_command
+    data:
+      command: app_goto_target
+      params:
+        - 16050
+        - 24000
+    target:
+      entity_id: vacuum.cl4p_tp

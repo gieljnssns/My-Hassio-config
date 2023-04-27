@@ -1,0 +1,26 @@
+alias: Stofzuiger leegmaken voor dweilen
+id: 3a1e8a85-3c1a-42ae-97c3-83f9b0b32d26
+initial_state: "true"
+trigger:
+  - platform: time
+    at: "16:00:00"
+condition:
+  - condition: numeric_state
+    entity_id: counter.stofzuiger
+    above: 2
+  - condition: state
+    entity_id: input_boolean.stofzuiger_leegmaken_melding
+    state: "on"
+action:
+  - service: notify.iedereen
+    data:
+      title: "Claptrap"
+      message: "Onze Claptrap leegmaken, water en ne nieuwe dweil geven."
+      data:
+        actions:
+          - action: "RETURN"
+            title: "Leeggemaakt. Terug in uw kot."
+  - service: script.turn_on
+    entity_id: script.bitch_prullenbak
+  - service: counter.reset
+    entity_id: counter.stofzuiger
