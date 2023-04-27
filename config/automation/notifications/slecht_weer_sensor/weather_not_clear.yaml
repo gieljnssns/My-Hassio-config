@@ -1,27 +1,68 @@
-  alias: 'Bad weather notification - clear'
-  id: 45a4e1d5-aa55-4c81-b15e-337eed05db82
-  trigger:
-    platform: template
-    value_template: >
-      {{ states("sensor.time") == states("sensor.notification_time_long") }}
-  condition:
-    condition: and
-    conditions:
-      - condition: state
-        entity_id: sensor.bad_weather
-        state: 'clear'
-      - condition: state
-        entity_id: binary_sensor.v_monnikenheide
-        state: 'on'
-  action:
-    - service: notify.mobile_app_mphone
-      data:
-        message: >
-          " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+alias: "Bad weather notification - clear"
+id: 45a4e1d5-aa55-4c81-b15e-337eed05db82
+trigger:
+  platform: template
+  value_template: >
+    {{ states("sensor.time") == states("sensor.notification_time_long") }}
+condition:
+  condition: and
+  conditions:
     - condition: state
-      entity_id: binary_sensor.schooldag
+      entity_id: sensor.bad_weather
+      state: "clear"
+    - condition: state
+      entity_id: binary_sensor.v_monnikenheide
       state: "on"
-    - service: notify.noor_en_fien
-      data:
-        message: >
-          " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.v_monnikenheide
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.schooldag
+            state: "on"
+        sequence:
+          - service: notify.mobile_app_mphone
+            data:
+              message: >
+                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+          - service: notify.noor_en_fien
+            data:
+              message: >
+                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.v_monnikenheide
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.schooldag
+            state: "off"
+        sequence:
+          - service: notify.mobile_app_mphone
+            data:
+              message: >
+                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.v_monnikenheide
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.schooldag
+            state: "on"
+        sequence:
+          - service: notify.noor_en_fien
+            data:
+              message: >
+                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+  # - service: notify.mobile_app_mphone
+  #   data:
+  #     message: >
+  #       " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+  # - condition: state
+  #   entity_id: binary_sensor.schooldag
+  #   state: "on"
+  # - service: notify.noor_en_fien
+  #   data:
+  #     message: >
+  #       " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
