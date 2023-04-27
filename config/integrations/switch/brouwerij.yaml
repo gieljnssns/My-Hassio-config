@@ -1,0 +1,14 @@
+- platform: template
+  switches:
+    my_pc:
+      friendly_name: "Brouwerij"
+      unique_id: eb4b7328-9a3a-4a96-a10a-5db8ced2a44c
+      value_template: "{{ not is_state('button.brouwerij_suspend', 'unavailable') }}"
+      turn_on:
+        service: switch.turn_on
+        data:
+          entity_id: switch.brouwerij
+      turn_off:
+        service: button.press
+        data:
+          entity_id: button.brouwerij_suspend
