@@ -7,7 +7,7 @@ trigger:
 condition:
   - condition: numeric_state
     entity_id: counter.stofzuiger
-    above: 2
+    state: 2
   - condition: state
     entity_id: input_boolean.stofzuiger_leegmaken_melding
     state: "on"
@@ -15,12 +15,12 @@ action:
   - service: notify.iedereen
     data:
       title: "Claptrap"
-      message: "Onze Claptrap leegmaken, water en ne nieuwe dweil geven."
+      message: "Onze Claptrap leegmaken. Proper water en ne nieuwe dweil geven."
       data:
         actions:
           - action: "RETURN"
             title: "Leeggemaakt. Terug in uw kot."
   - service: script.turn_on
     entity_id: script.bitch_prullenbak
-  - service: counter.reset
-    entity_id: counter.stofzuiger
+  # - service: counter.reset
+  #   entity_id: counter.stofzuiger

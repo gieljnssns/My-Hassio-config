@@ -3,7 +3,7 @@ id: 54032012-43dd-44f3-8892-1cccfc462929
 initial_state: "true"
 trigger:
   platform: time
-  at: "4:00:00"
+  at: "3:45:00"
 condition:
   - condition: state
     entity_id: input_boolean.op_verlof
@@ -11,9 +11,9 @@ condition:
   - condition: state
     entity_id: input_boolean.stofzuiger_beneden
     state: "on"
-  - condition: numeric_state
+  - condition: state
     entity_id: counter.stofzuiger
-    above: 1
+    state: 3
 action:
   - service: script.roborock_set_manual_mode
     target:

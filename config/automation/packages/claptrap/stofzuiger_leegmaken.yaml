@@ -5,17 +5,17 @@ trigger:
   - platform: time
     at: "07:00:00"
 condition:
-  - condition: numeric_state
+  - condition: state
     entity_id: counter.stofzuiger
-    above: 2
+    state: 6
   - condition: state
     entity_id: input_boolean.stofzuiger_leegmaken_melding
     state: "on"
 action:
-  - service: notify.giel_en_martine
+  - service: notify.iedereen
     data:
-      title: "Bitch"
-      message: "De stofzuiger mag weer leeggemaakt worden. Die bitch staat alweer op je te wachten!"
+      title: "Claptrap"
+      message: "De stofzuiger mag weer leeggemaakt worden. Water eruit en dweil eraf!"
       data:
         actions:
           - action: "RETURN"
