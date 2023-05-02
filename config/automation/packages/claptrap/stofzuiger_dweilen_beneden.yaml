@@ -6,6 +6,15 @@ trigger:
   at: "3:45:00"
 condition:
   - condition: state
+    entity_id: vacuum.cl4p_tp
+    state: "docked"
+  - condition: state
+    entity_id: binary_sensor.cl4p_tp_mop_attached
+    state: "on"
+  - condition: state
+    entity_id: binary_sensor.cl4p_tp_water_box_attached
+    state: "on"
+  - condition: state
     entity_id: input_boolean.op_verlof
     state: "off"
   - condition: state
@@ -13,7 +22,7 @@ condition:
     state: "on"
   - condition: state
     entity_id: counter.stofzuiger
-    state: 3
+    state: "3"
 action:
   - service: script.roborock_set_manual_mode
     target:
