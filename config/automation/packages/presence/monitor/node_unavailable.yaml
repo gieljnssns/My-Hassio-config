@@ -4,25 +4,17 @@ trigger:
   - platform: state
     entity_id: binary_sensor.garage_echo
     to: "off"
-    # for:
-    #   seconds: 120
   - platform: state
     entity_id: binary_sensor.poortpi_echo
     to: "off"
-    # for:
-    #   seconds: 120
   - platform: state
     entity_id: binary_sensor.slaapkamer_echo
     to: "off"
-    # for:
-    #   seconds: 120
   - platform: state
     entity_id: binary_sensor.tvpi_echo
     to: "off"
-    # for:
-    #   seconds: 120
 action:
-  - service_template: >
+  - service: >
       {% if trigger.entity_id == 'binary_sensor.garage_echo' %}
           script.garage_retain_0
       {% elif trigger.entity_id == 'binary_sensor.brewpi_echo' %}

@@ -20,17 +20,10 @@ condition:
     - condition: template
       value_template: "{{ now().month == 12 or now().month == 1  }}"
 action:
-  - service_template: >
+  - service: >
       {% if now().hour == 23 %}
         switch.turn_off
       {% else %}
         switch.turn_on
       {% endif %}
     entity_id: switch.ventilator_kerstverlichting
-  # - service_template: >
-  #     {% if as_local(states.sensor.time.last_changed).hour == 23 %}
-  #       switch.turn_off
-  #     {% else %}
-  #       switch.turn_on
-  #     {% endif %}
-  #   entity_id: switch.ventilator_kerstverlichting

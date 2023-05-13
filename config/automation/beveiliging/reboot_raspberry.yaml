@@ -1,6 +1,6 @@
 alias: Reboot raspberry
 id: 0ecdc2c9-da09-475b-a348-a850d0e0b5f5
-description: ''
+description: ""
 trigger:
   - platform: time
     at: "3:30:00"
@@ -51,7 +51,7 @@ condition:
       value_template: >
         {{ states('sensor.swap_zero_living') | float(default=0)> 20.00 or states('sensor.uptime_zero_living') | float(default=0)> 170.00 }}
 action:
-  - service_template: >
+  - service: >
       {% if trigger.entity_id == 'sensor.swap_tvpi' %}
         script.tvpi_reboot
       {% elif trigger.entity_id == 'sensor.swap_slaapkamer' %}

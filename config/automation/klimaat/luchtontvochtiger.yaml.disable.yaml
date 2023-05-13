@@ -1,22 +1,22 @@
-  alias: Luchtontvochtiger aan/uit
-  id: 23acfe35-1a13-401b-ad6a-890f8304fcf1
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.should_run_dehumidifier_zolder
-    - platform: state
-      entity_id: binary_sensor.dehumidifier_status
-    - platform: homeassistant
-      event: start
-  condition:
-    condition: state
+alias: Luchtontvochtiger aan/uit
+id: 23acfe35-1a13-401b-ad6a-890f8304fcf1
+trigger:
+  - platform: state
+    entity_id: binary_sensor.should_run_dehumidifier_zolder
+  - platform: state
     entity_id: binary_sensor.dehumidifier_status
-    state: "on"
-  action:
-    - service_template: >
-        {% if is_state('binary_sensor.should_run_dehumidifier_zolder' , 'on') %}
-          switch.turn_on
-        {% else %}
-          switch.turn_off
-        {% endif %}
-      data:
-        entity_id: switch.dehumidifier
+  - platform: homeassistant
+    event: start
+condition:
+  condition: state
+  entity_id: binary_sensor.dehumidifier_status
+  state: "on"
+action:
+  - service: >
+      {% if is_state('binary_sensor.should_run_dehumidifier_zolder' , 'on') %}
+        switch.turn_on
+      {% else %}
+        switch.turn_off
+      {% endif %}
+    data:
+      entity_id: switch.dehumidifier

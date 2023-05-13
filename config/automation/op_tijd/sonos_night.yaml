@@ -6,17 +6,10 @@ trigger:
   - platform: time
     at: "06:00:00"
 action:
-  - service_template: >
+  - service: >
       {% if now().hour == 23 %}
         switch.turn_on
       {% else %}
         switch.turn_off
       {% endif %}
     entity_id: switch.sonos_living_night_sound, switch.sonos_living_speech_enhancement
-  # - service_template: >
-  #     {% if as_local(states.sensor.time.last_changed).hour == 23 %}
-  #       switch.turn_on
-  #     {% else %}
-  #       switch.turn_off
-  #     {% endif %}
-  #   entity_id: switch.sonos_living_night_sound, switch.sonos_living_speech_enhancement

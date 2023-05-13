@@ -4,7 +4,7 @@ trigger:
   - platform: state
     entity_id: sensor.dark_inside
 action:
-  - service_template: >
+  - service: >
       {% if is_state('sensor.dark_inside', 'true') %}
         light.turn_on
       {% else %}

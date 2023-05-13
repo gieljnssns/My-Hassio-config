@@ -6,29 +6,11 @@ trigger:
     above: 600
   - platform: time
     at: "21:03:00"
-  # - platform: template
-  #   value_template: "{{ now().weekday() == 4 and now().hour == 10 }}"
-  # - platform: template
-  #   value_template: "{{ now().weekday() == 6 and now().hour == 18 }}"
 action:
-  - service_template: >
+  - service: >
       {% if now().hour == 21 %}
         switch.turn_off
       {% else %}
         switch.turn_on
       {% endif %}
     entity_id: switch.garage_ijskast
-
-# trigger:
-#   - platform: template
-#     value_template: "{{ now().weekday() == 4 and now().hour == 10 }}"
-#   - platform: template
-#     value_template: "{{ now().weekday() == 6 and now().hour == 18 }}"
-# action:
-#   - service_template: >
-#       {% if now().weekday() == 4 %}
-#         switch.turn_on
-#       {% else %}
-#         switch.turn_off
-#       {% endif %}
-#     entity_id: switch.garage_ijskast

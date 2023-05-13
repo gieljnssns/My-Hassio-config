@@ -1,5 +1,3 @@
-# - {"event": "Badkamer_uit"}
-
 alias: "Verwarming garage Aan/Uit"
 id: ce345a61-9254-48d5-88ce-060b3a5bfcbc
 trigger:
@@ -8,7 +6,7 @@ trigger:
   - platform: template
     value_template: "{{ now().weekday() == 6 and now().hour == 23 }}"
 action:
-  - service_template: >
+  - service: >
       {% if now().weekday() == 4 %}
         automation.turn_on
       {% else %}

@@ -1,5 +1,3 @@
-# - {"event": "Badkamer_uit"}
-
 alias: "Verwarming Badkamer Aan/Uit"
 id: 73b8bdfe-8f03-480b-8827-54599586b3b3
 trigger:
@@ -8,22 +6,15 @@ trigger:
   - platform: time
     at: "00:30"
 action:
-  - service_template: >
+  - service: >
       {% if now().hour == 6 %}
         automation.turn_on
       {% else %}
         automation.turn_off
       {% endif %}
-    # - service_template: >
-    #     {% if as_local(states.sensor.time.last_changed).hour == 6 %}
-    #       automation.turn_on
-    #     {% else %}
-    #       automation.turn_off
-    #     {% endif %}
     entity_id: automation.verwarming_bij_aanwezigheid_badkamer
   - condition: template
     value_template: "{{now().hour != 6}}"
-    # value_template: "{{as_local(states.sensor.time.last_changed).hour != 6}}"
   - service: climate.set_temperature
     entity_id: climate.badkamer
     data:

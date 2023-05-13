@@ -1,5 +1,3 @@
-# - {"event": "Fien_uit"}
-
 alias: "Verwarming Fien Aan/Uit"
 id: 98518b24-44a5-4878-839f-d23dd4e3390f
 trigger:
@@ -8,22 +6,15 @@ trigger:
   - platform: time
     at: "22:00"
 action:
-  - service_template: >
+  - service: >
       {% if now().hour == 6 %}
         automation.turn_on
       {% else %}
         automation.turn_off
       {% endif %}
-    # - service_template: >
-    #     {% if as_local(states.sensor.time.last_changed).hour == 6 %}
-    #       automation.turn_on
-    #     {% else %}
-    #       automation.turn_off
-    #     {% endif %}
     entity_id: automation.verwarming_bij_aanwezigheid_fien
   - condition: template
     value_template: "{{now().hour != 6}}"
-    # value_template: "{{as_local(states.sensor.time.last_changed).hour != 6}}"
   - service: climate.set_temperature
     entity_id: climate.fien
     data:
