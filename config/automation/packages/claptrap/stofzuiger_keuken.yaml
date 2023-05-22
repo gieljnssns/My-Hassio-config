@@ -1,0 +1,72 @@
+alias: "Stofzuiger keuken"
+id: 33d24a7e-0c62-4802-aac4-ffa4bba81d11
+initial_state: "true"
+trigger:
+  - platform: state
+    entity_id: device_tracker.martine_not_so_binary
+    to: "Juist weg"
+  - platform: state
+    entity_id: device_tracker.giel_not_so_binary
+    to: "Juist weg"
+condition:
+  - condition: state
+    entity_id: vacuum.cl4p_tp
+    state: "docked"
+  - condition: state
+    entity_id: input_boolean.op_verlof
+    state: "off"
+  - condition: state
+    entity_id: input_boolean.stofzuiger_beneden
+    state: "on"
+
+action:
+  - choose:
+      - conditions:
+          - condition: time
+            after: " 07:00:00"
+            before: " 09:00:00"
+            weekday:
+              - "mon"
+              - "tue"
+              - "wed"
+              - "thu"
+              - "fri"
+        sequence:
+          - service: script.roborock_set_manual_mode
+            target:
+              entity_id: vacuum.cl4p_tp
+            data:
+              vacuum: max
+              mopping: "off"
+          - service: input_select.select_option
+            target:
+              entity_id: input_select.vacuum_target_room
+            data:
+              option: Keuken
+          - service: script.vacuum_clean_room
+
+    default:
+      - condition: time
+        after: " 10:00:00"
+        before: " 14:00:00"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: device_tracker.martine_not_so_binary
+            state: "Thuis"
+          - condition: state
+            entity_id: device_tracker.giel_not_so_binary
+            state: "Thuis"
+
+      - service: script.roborock_set_manual_mode
+        target:
+          entity_id: vacuum.cl4p_tp
+        data:
+          vacuum: max
+          mopping: "off"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.vacuum_target_room
+        data:
+          option: Keuken
+      - service: script.vacuum_clean_room

@@ -1,0 +1,41 @@
+alias: Stofzuiger error
+id: 6f7dcf00-cbe3-44c5-accf-ef71310d97c2
+description: ""
+mode: single
+trigger:
+  - platform: state
+    entity_id:
+      - vacuum.cl4p_tp
+    to: error
+    from: cleaning
+condition:
+  # - condition: template
+  #   value_template: >
+  #     {{ (as_timestamp(now()) - as_timestamp(states("sensor.cl4p_tp_last_clean_start"))) < 10800 }}
+  - condition: state
+    entity_id: input_boolean.stofzuiger_beneden
+    state: "on"
+  - condition: or
+    conditions:
+      - condition: template
+        value_template: >
+          {{ (as_timestamp(now()) - as_timestamp(state_attr("automation.stofzuiger_beneden", "last_triggered"))) < 10800 }}
+      - condition: template
+        value_template: >
+          {{ (as_timestamp(now()) - as_timestamp(state_attr("automation.stofzuiger_dweilen_beneden", "last_triggered"))) < 10800 }}
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{  states("counter.stofzuiger") is in ["5", "6"] }}
+        sequence:
+          - service: counter.configure
+            data:
+              value: 3
+            target:
+              entity_id: counter.stofzuiger
+    default:
+      - service: counter.decrement
+        target:
+          entity_id: counter.stofzuiger

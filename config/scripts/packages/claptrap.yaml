@@ -119,3 +119,32 @@ bitch_prullenbak:
         - 24000
     target:
       entity_id: vacuum.cl4p_tp
+
+vacuum_clean_room:
+  alias: vacuum_clean_room
+  sequence:
+    - alias: Get room id using input select
+      variables:
+        # get room string from input select
+        target_room_selector: input_select.vacuum_target_room
+        # map each room number with a string with a dictionary
+        room_map:
+          Kies kamer: 0
+          Waskot: 16
+          Keuken: 17
+          Danszaal: 18
+          Zithoek: 19
+          Inkom: 20
+          Gang: 21
+          Wc: 22
+        # get target room to clean
+        target_room: "{{ room_map[states(target_room_selector)] | int}}"
+    # check that one room was selected
+    - condition: template
+      value_template: "{{ target_room != 0 }}"
+    # call service to clean selected room
+    - service: xiaomi_miio.vacuum_clean_segment
+      data:
+        entity_id: vacuum.cl4p_tp
+        # segments should be an array of numbers if more than one room want to be cleaned
+        segments: "{{ target_room }}"

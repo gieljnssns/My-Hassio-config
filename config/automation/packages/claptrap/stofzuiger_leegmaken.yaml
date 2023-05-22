@@ -5,22 +5,49 @@ trigger:
   - platform: time
     at: "07:00:00"
 condition:
-  - condition: state
-    entity_id: counter.stofzuiger
-    state: "6"
+  - condition: or
+    conditions:
+      - condition: state
+        entity_id: counter.stofzuiger
+        state: "1"
+      - condition: state
+        entity_id: counter.stofzuiger
+        state: "7"
   - condition: state
     entity_id: input_boolean.stofzuiger_leegmaken_melding
     state: "on"
+  - condition: state
+    entity_id: vacuum.cl4p_tp
+    state: "docked"
 action:
-  - service: notify.iedereen
-    data:
-      title: "Claptrap"
-      message: "De stofzuiger mag weer leeggemaakt worden. Water eruit en dweil eraf!"
-      data:
-        actions:
-          - action: "RETURN"
-            title: "Leeggemaakt. Terug in uw kot."
-  - service: script.turn_on
-    entity_id: script.bitch_prullenbak
-  - service: counter.reset
-    entity_id: counter.stofzuiger
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: counter.stofzuiger
+            state: "1"
+        sequence:
+          - service: notify.iedereen
+            data:
+              title: "Claptrap"
+              message: "De stofzuiger mag weer leeggemaakt worden."
+              data:
+                actions:
+                  - action: "RETURN"
+                    title: "Leeggemaakt. Terug in uw kot."
+          - service: script.turn_on
+            entity_id: script.bitch_prullenbak
+          - service: counter.increment
+            entity_id: counter.stofzuiger
+    default:
+      - service: notify.iedereen
+        data:
+          title: "Claptrap"
+          message: "De stofzuiger mag weer leeggemaakt worden. Water eruit en dweil eraf!"
+          data:
+            actions:
+              - action: "RETURN"
+                title: "Leeggemaakt. Terug in uw kot."
+      - service: script.turn_on
+        entity_id: script.bitch_prullenbak
+      - service: counter.reset
+        entity_id: counter.stofzuiger
