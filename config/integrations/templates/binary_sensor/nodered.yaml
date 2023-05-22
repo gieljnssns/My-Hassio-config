@@ -46,18 +46,18 @@
             or is_state('binary_sensor.zithoek_aqara_pir', 'on')
             or is_state('binary_sensor.danszaal_aqara_pir', 'on') }}
 
-    - name: Nodered badkamer down
-      unique_id: 272985c9-1b73-471d-896e-742e74774a94
-      device_class: problem
-      state: >
-        {{ states("binary_sensor.beweging_badkamer_pir_klein") == 'unavailable'}}
+    # - name: Nodered badkamer down
+    #   unique_id: 272985c9-1b73-471d-896e-742e74774a94
+    #   device_class: problem
+    #   state: >
+    #     {{ states("binary_sensor.beweging_badkamer_pir_klein") == 'unavailable'}}
 
-    - name: Pir badkamer
-      unique_id: a44eeb01-4b3f-4699-827f-83076b23e33b
-      device_class: motion
-      state: >
-        {{  is_state('binary_sensor.beweging_badkamer_pir_groot', 'on') 
-            or is_state('binary_sensor.beweging_badkamer_pir_klein', 'on') }}
+    # - name: Pir badkamer
+    #   unique_id: a44eeb01-4b3f-4699-827f-83076b23e33b
+    #   device_class: motion
+    #   state: >
+    #     {{  is_state('binary_sensor.beweging_badkamer_pir_groot', 'on')
+    #         or is_state('binary_sensor.beweging_badkamer_pir_klein', 'on') }}
 
     - name: Fotocel poort error
       unique_id: b45e3ce5-2f5f-4747-9a96-0254526cacbf
@@ -87,7 +87,7 @@
       unique_id: 81518fc3-2ba1-48c7-aaf6-cfe2058ce100
       device_class: problem
       state: >
-        {{ states("sensor.temperatuur_cpu_tvpi") == 'unavailable'}}
+        {{ states("sensor.cpu_verwarmingpi") == 'unavailable'}}
 
     - name: Nodered verwarming down
       unique_id: e09c9121-dfa4-49d0-8b97-33bd9ab0e5de

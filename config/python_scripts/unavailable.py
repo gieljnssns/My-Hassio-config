@@ -33,12 +33,12 @@ count_unavailable = 0
 # count_unknown = 0
 count_sensors = 0
 
-list_unfiltered = []
+# list_unfiltered = []
 list_all = []
-list_none = []
-list_unavailable = []
+# list_none = []
+# list_unavailable = []
 # list_unknown = []
-list_sensors = []
+# list_sensors = []
 
 
 attributes = {}
@@ -47,7 +47,7 @@ attributes = {}
 for entity_id in hass.states.entity_ids():
     state = hass.states.get(entity_id).state
     if state in ["none", "unavailable"]:
-        list_unfiltered.append(entity_id)
+        # list_unfiltered.append(entity_id)
         count_unfiltered = count_unfiltered + 1
 
 # add groups entities to exclude_entities list
@@ -65,16 +65,16 @@ for entity_id in hass.states.entity_ids():
             list_all.append(entity_id)
             if state == "none":
                 count_none = count_none + 1
-                list_none.append(entity_id)
+                # list_none.append(entity_id)
             elif state == "unavailable":
                 count_unavailable = count_unavailable + 1
-                list_unavailable.append(entity_id)
+                # list_unavailable.append(entity_id)
             # elif state == "unknown":
             #     count_unknown = count_unknown + 1
             #     list_unknown.append(entity_id)
             if domain == "sensor":
                 count_sensors = count_sensors + 1
-                list_sensors.append(entity_id)
+                # list_sensors.append(entity_id)
 
 # build the attributes
 if count_all > 0:
@@ -87,16 +87,16 @@ else:
     attributes["all_entities"] = "All entities OK!"
 
 attributes["all_count"] = count_all
-if count_none > 0:
-    attributes["none_entities"] = ",\n".join(sorted(list_none))
-else:
-    attributes["none_entities"] = "No None entities"
+# if count_none > 0:
+#     attributes["none_entities"] = ",\n".join(sorted(list_none))
+# else:
+#     attributes["none_entities"] = "No None entities"
 
 attributes["none_count"] = count_none
-if count_unavailable > 0:
-    attributes["unavailable_entities"] = ",\n".join(sorted(list_unavailable))
-else:
-    attributes["unavailable_entities"] = "No Unavailable entities"
+# if count_unavailable > 0:
+#     attributes["unavailable_entities"] = ",\n".join(sorted(list_unavailable))
+# else:
+#     attributes["unavailable_entities"] = "No Unavailable entities"
 
 attributes["unavailable_count"] = count_unavailable
 # if count_unknown > 0:
@@ -105,16 +105,16 @@ attributes["unavailable_count"] = count_unavailable
 #     attributes["unknown_entities"] = "No Unknown entities"
 
 # attributes["unknown_count"] = count_unknown
-if count_sensors > 0:
-    attributes["sensors_entities"] = ",\n".join(sorted(list_sensors))
-else:
-    attributes["sensors_entities"] = "All sensors Ok"
+# if count_sensors > 0:
+#     attributes["sensors_entities"] = ",\n".join(sorted(list_sensors))
+# else:
+#     attributes["sensors_entities"] = "All sensors Ok"
 
 attributes["sensors_count"] = count_sensors
-if count_unfiltered > 0:
-    attributes["unfiltered_entities"] = ",\n".join(sorted(list_unfiltered))
-else:
-    attributes["unfiltered_entities"] = "All and Unfiltered Ok"
+# if count_unfiltered > 0:
+#     attributes["unfiltered_entities"] = ",\n".join(sorted(list_unfiltered))
+# else:
+#     attributes["unfiltered_entities"] = "All and Unfiltered Ok"
 
 
 attributes["unfiltered_count"] = count_unfiltered

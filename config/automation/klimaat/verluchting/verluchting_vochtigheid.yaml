@@ -6,15 +6,9 @@ trigger:
     above: 90
     for:
       seconds: 60
-  # - platform: numeric_state
-  #   entity_id: sensor.luchtvochtigheid_badkamer
-  #   above: 92
   - platform: state
-    entity_id: binary_sensor.bathroom_humidity_rising_template
+    entity_id: binary_sensor.badkamer_trend_up
     to: "on"
-  # - platform: state
-  #   entity_id: binary_sensor.keuken_humidity_rising_template
-  #   to: 'on'
 condition:
   condition: and
   conditions:
@@ -27,7 +21,7 @@ condition:
     - condition: or
       conditions:
         - condition: state
-          entity_id: binary_sensor.bathroom_humidity_falling_template
+          entity_id: binary_sensor.badkamer_trend_down
           state: "off"
           for:
             minutes: 10

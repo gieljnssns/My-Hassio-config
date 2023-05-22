@@ -36,16 +36,6 @@ input_select:
       - Langdurig Afwezig
 
 template:
-  - binary_sensor:
-      - name: Noor juist aangekomen
-        unique_id: 12082b2d-ebd9-4450-abc2-4dbd0ee7eae8
-        state: >
-          {{ is_state("device_tracker.noor_not_so_binary", 'Juist Aangekomen') and states("sensor.count_nphone_detection_last_hour") | int < 3 }}
-      - name: Fien juist aangekomen
-        unique_id: 2ec5665b-ecc0-41ed-ac71-44ad58cb32da
-        state: >
-          {{ is_state("device_tracker.fien_not_so_binary", 'Juist Aangekomen') and states("sensor.count_fphone_detection_last_hour") | int < 3 }}
-
   - sensor:
       - name: Giel status
         unique_id: 84f14658-687a-4768-b412-ac757efc49e8
@@ -73,10 +63,10 @@ template:
           {% if is_state("device_tracker.giel_not_so_binary", "Juist Aangekomen") %}
             {% set count = count + 1 %}
           {% endif %}
-          {% if is_state("binary_sensor.noor_juist_aangekomen", "on") %}
+          {% if is_state("device_tracker.noor_not_so_binary", "Juist Aangekomen") %}
             {% set count = count + 1 %}
           {% endif %}
-          {% if is_state("binary_sensor.fien_juist_aangekomen", "on") %}
+          {% if is_state("device_tracker.fien_not_so_binary", "Juist Aangekomen") %}
             {% set count = count + 1 %}
           {% endif %}
           {{count}}

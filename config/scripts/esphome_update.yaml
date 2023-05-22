@@ -1,0 +1,36 @@
+esphome_update:
+  sequence:
+    - service: notify.mobile_app_gphone
+      data:
+        title: ESPHome Devices
+        # Pick any ESPHome device below to get the version numbers in your message.
+        message: >-
+          Your ESPHome devices will now be updated from {{
+          state_attr("update.badkamer_firmware",
+          "installed_version") }} to {{
+          state_attr("update.badkamer_firmware",
+          "latest_version") }}.
+    - alias: Update all ESPHome devices in sequence
+      repeat:
+        for_each: >-
+          {{ expand(integration_entities("esphome") 
+              | select('match','update.'))
+              | selectattr('attributes.in_progress','eq', false) 
+              | selectattr('state','eq','on')
+              | selectattr('attributes.latest_version','ne','attributes.skipped_version') 
+              | map(attribute='entity_id')
+              | list 
+            }}
+        sequence:
+          - service: update.install
+            target:
+              entity_id: "{{ repeat.item }}"
+          - wait_template: "{{ is_state(repeat.item, 'off') }}"
+
+    - service: notify.mobile_app_gphone
+      data:
+        title: ESPHome Devices
+        message: >-
+          Your ESPHome devices are now all updated to {{
+          state_attr("update.badkamer_firmware",
+          "installed_version") }}.
