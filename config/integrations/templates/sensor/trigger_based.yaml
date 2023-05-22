@@ -1,0 +1,50 @@
+- trigger:
+    - platform: state
+      entity_id: input_boolean.emhass_droogkast
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Droogkast is gestart op…"
+      unique_id: 37bd2a8b-a5eb-4428-aad3-d2571d21065a
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_droogkast.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: input_boolean.emhass_wasmachien
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Wasmachien is gestart op…"
+      unique_id: bbcf11b2-a7e6-4a2e-a45e-00bea49447b0
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_wasmachien.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: input_boolean.emhass_afwasmachien
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Afwasmachien is gestart op…"
+      unique_id: c02023fb-05c4-45c3-a82c-9b69b9424ad7
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_afwasmachien.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: binary_sensor.warmtepomp_aan
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Warmtepomp is gestart op…"
+      unique_id: 80b7a7bd-0a7c-4dd2-bf0a-c277e273cc2f
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepomp_aan.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: switch.warm_water
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Warmtepompboiler is gestart op…"
+      unique_id: 5bc4af6d-8e99-4ee3-9131-66f41132d66f
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepompboiler_aan.last_changed) }}

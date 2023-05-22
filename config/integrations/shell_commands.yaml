@@ -1,33 +1,110 @@
 mount_nas: sudo mount 192.168.79.30:/volume1/video /usr/share/hassio/share/nasvideo
 publish_data: "curl -i -H 'Content-Type:application/json' -X POST -d '{}' http://localhost:5001/action/publish-data"
-# dayahead_optim: !secret emhass_dayahead
-dayahead_optim: curl -i -H 'Content-Type:application/json' -X POST -d '{"set_def_constant":[false, true, true, true, true], "pv_power_forecast":{{states('sensor.solcast_24hrs_forecast')}}}' http://localhost:5001/action/dayahead-optim
+# publish_data_2: "curl -i -H 'Content-Type:application/json' -X POST -d '{}' http://localhost:5001/action/publish-data"
+
+# publish_data: >-
+#   curl -i -H 'Content-Type:application/json' -X POST -d '{
+#     "custom_deferrable_forecast_id": [
+#       {"entity_id": "sensor.emhass_wasmachien","unit_of_measurement": "W", "friendly_name": "Emhass wasmachien"},
+#       {"entity_id": "sensor.emhass_droogkast","unit_of_measurement": "W", "friendly_name": "Emhass droogkast"},
+#       {"entity_id": "sensor.emhass_afwasmachien","unit_of_measurement": "W", "friendly_name": "Emhass afwasmachien"},
+#       {"entity_id": "sensor.emhass_warmtepompboiler","unit_of_measurement": "W", "friendly_name": "Emhass warmtepompboiler"}]
+#   }' http://localhost:5001/action/publish-data
+
+# publish_data: >-
+#   curl -i -H 'Content-Type:application/json' -X POST -d '{
+#   }' http://localhost:5001/action/publish-data
+
+dayahead_optim: >-
+  curl -i -H 'Content-Type:application/json' -X POST -d '{
+    "set_def_constant":[true, true, true, false], 
+    "pv_power_forecast":{{  state_attr("sensor.pv_power_forecast", "list") }}
+    }' http://localhost:5001/action/dayahead-optim
 
 post_mpc_optim: >-
-  curl -i -H 'Content-Type: application/json' -X POST -d '{"def_total_hours":[
-    {% if states("input_boolean.verwarming_starten") == 'on'%}
-      1
-    {% else %}
-      0
-    {% endif %},
-    {% if states("input_boolean.warm_water_starten") == 'on'%}
-      2
-    {% else %}
-      0
-    {% endif %},
-    {% if states("input_boolean.wasmachien_starten") == 'on'%}
-      2
-    {% else %}
-      0
-    {% endif %},
-    {% if states("input_boolean.drookast_starten") == 'on'%}
-      3
-    {% else %}
-      0
-    {% endif %},
-    {% if states("input_boolean.afwasmachien_starten") == 'on'%}
-      1
-    {% else %}
-      0
-    {% endif %}
-    ]}' http://localhost:5001/action/naive-mpc-optim
+  curl -i -H 'Content-Type: application/json' -X POST -d '{
+    "def_total_hours":[
+      {{  states('sensor.wasmachien_uren')  }},
+      {{  states('sensor.droogkast_uren')  }},
+      {{  states('sensor.afwasmachien_uren')  }},
+      {{  states('sensor.warmtepompboiler_uren')  }}],
+    "set_def_constant":[true, true, true, false],
+    "pv_power_forecast":{{  state_attr('sensor.pv_power_forecast_list', 'list')  }},
+    "prediction_horizon":{{  state_attr('sensor.pv_power_forecast_list', 'list')| length }}
+    }' http://localhost:5001/action/naive-mpc-optim
+
+post_perfect_optim: >-
+  curl -i -H 'Content-Type: application/json' -X POST -d '{
+    "def_total_hours":[
+      {{  states('sensor.wasmachien_uren')  }},
+      {{  states('sensor.droogkast_uren')  }},
+      {{  states('sensor.afwasmachien_uren')  }},
+      {{  states('sensor.warmtepompboiler_uren')  }}],
+    "set_def_constant":[true, true, true, false],
+    "pv_power_forecast":{{  state_attr('sensor.pv_power_forecast_list', 'list')  }},
+    "prediction_horizon":{{  states('sensor.pv_power_forecast_list_length') }}
+    }' http://localhost:5001/action/perfect-optim
+
+forecast_model_fit_warmtepompboiler: >-
+  curl -i -H 'Content-Type: application/json' -X POST -d '{
+    "days_to_retrieve": 15,
+    "model_type": "load_forecast",
+    "var_model": "sensor.huidig_verbruik_zonder_wp",
+    "sklearn_model": "KNeighborsRegressor",
+    "num_lags": 48,
+    "split_date_delta": '48h',
+    "perform_backtest": False
+    }' http://localhost:5001/action/forecast-model-fit
+
+forecast_model_predict_warmtepompboiler: >-
+  curl -i -H 'Content-Type: application/json' -X POST -d '{
+    "model_predict_publish": True,
+    "model_predict_entity_id": "sensor.p_warmtepompboiler_custom_model",
+    "model_predict_unit_of_measurement": "W",
+    "model_predict_friendly_name": "Warmtepompboiler custom model"
+    }' http://localhost:5001/action/forecast-model-predict
+
+forecast_model_tune_warmtepompboiler: >-
+  curl -i -H 'Content-Type: application/json' -X POST -d '{
+    "days_to_retrieve": 2,
+    "model_type": "warmtepompboiler",
+    "var_model": "sensor.warmtepompboiler_huidig_verbruik",
+    "sklearn_model": "KNeighborsRegressor",
+    "num_lags": 48,
+    "split_date_delta": '48h',
+    "perform_backtest": False
+    }' http://localhost:5001/action/forecast-model-tune
+
+# post_mpc_optim: >-
+#   curl -i -H 'Content-Type: application/json' -X POST -d '{
+#   "def_total_hours":[
+#     {% if states("input_boolean.wasmachien_starten") == 'on'%}
+#       2
+#     {% else %}
+#       0
+#     {% endif %},
+#     {% if states("input_boolean.drookast_starten") == 'on'%}
+#       2
+#     {% else %}
+#       0
+#     {% endif %},
+#     {% if states("input_boolean.afwasmachien_starten") == 'on'%}
+#       2.5
+#     {% else %}
+#       0
+#     {% endif %}],
+#   "set_def_constant":[true, true, true],
+#   "pv_power_forecast":{{  state_attr('sensor.solcast_forecast_today', 'detailedForecast')
+#       |selectattr('period_start','gt',utcnow())
+#       | map(attribute='pv_estimate')
+#       |map('multiply',2000)
+#       |map('int')
+#       |list
+# + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
+#       |selectattr('period_start','gt',utcnow())
+#       | map(attribute='pv_estimate')
+#       |map('multiply',2000)
+#       |map('int')
+#       |list
+#       }}
+#   }' http://localhost:5001/action/naive-mpc-optim

@@ -72,6 +72,8 @@
             {{ (states("sensor.huidig_verbruik") | float(default=0) - states("sensor.huidige_opbrengst") | float(default=0)) | round(2) }}
         {%- elif states("sensor.huidige_opbrengst") | float(default=0) >= states("sensor.huidig_verbruik") | float(default=0) %}
             {{ 0 | float(default=0) }}
+        {% else  %}
+            {{ 0 | float(default=0) }}
         {% endif %}
 
     - name: Net terugsturen
@@ -83,6 +85,8 @@
             {{ 0 | float(default=0) }}
         {%- elif states("sensor.huidige_opbrengst") | float(default=0) > states("sensor.huidig_verbruik") | float(default=0) %}
             {{ (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) | round(2) }}
+        {% else  %}
+            {{ 0 | float(default=0) }}
         {% endif %}
 
     - name: Grid energy consumption
@@ -93,6 +97,8 @@
         {%- if states("sensor.daily_solar") | float(default=0) < states("sensor.daily_energy") | float(default=0) %}
             {{ (states("sensor.daily_energy") | float(default=0) - states("sensor.daily_solar") | float(default=0))  | round(3)  }}
         {%- elif states("sensor.daily_solar") | float(default=0) > states("sensor.daily_energy") | float(default=0) %}
+            {{ 0 | float(default=0) }}
+        {% else  %}
             {{ 0 | float(default=0) }}
         {% endif %}
 
@@ -105,6 +111,8 @@
             {{ 0 | float(default=0) }}
         {%- elif states("sensor.daily_solar") | float(default=0) > states("sensor.daily_energy") | float(default=0) %}
             {{ (states("sensor.daily_solar") | float(default=0) - states("sensor.daily_energy") | float(default=0))  | round(3) }}
+        {% else  %}
+            {{ 0 | float(default=0) }}
         {% endif %}
 
     ###  Combinatie  ###
@@ -320,43 +328,74 @@
       unit_of_measurement: "W"
       device_class: power
       state: >
-        {{ (states("sensor.huidig_verbruik") | float(default=0) - 
-            states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
+        {% if (states("sensor.huidig_verbruik") | float(default=0) - 
             states("sensor.wasmachien_vermogen") | float(default=0) - 
-            states("sensor.droogkast_vermogen") | float(default=0) -  
-            states("sensor.afwasmachien_vermogen") | float(default=0) -  
-            states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0)) | round(1)}}
+            states("sensor.droogkast_vermogen") | float(default=0) -
+            states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
+            states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) > 0 %}
+            {{ (states("sensor.huidig_verbruik") | float(default=0) - 
+                states("sensor.wasmachien_vermogen") | float(default=0) - 
+                states("sensor.droogkast_vermogen") | float(default=0) -
+                states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
+                states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1)}}
+        {% else  %}
+            {{ 0 | float(default=0) }}
+        {% endif %}
 
-    - name: Solcast 24hrs forecast garage
-      unique_id: 6da67bef-8908-4164-8693-82b9be0aa6ae
-      state: >-
-        {%- set awattar_all_list = state_attr('sensor.solcast_forecast_garage', 'forecasts') | map(attribute='pv_estimate') | list %}
-        {%- set values_all = namespace(all=[]) %}
-        {% for i in range(awattar_all_list | length) %}
-          {%- set v = (awattar_all_list[i] | float |multiply(1000) ) | int(0) %}
-          {%- set values_all.all = values_all.all + [ v ] %}
-        {%- endfor %} {{ (values_all.all)[:48] }}
+    # - trigger:
+    #     - platform: state
+    #       entity_id: sensor.huidig_verbruik
+    #     - platform: state
+    #       entity_id: sensor.wasmachien_vermogen
+    #     - platform: state
+    #       entity_id: sensor.droogkast_vermogen
+    #     - platform: state
+    #       entity_id: sensor.afwasmachien_vermogen
+    #   sensor:
+    #   # Keep track how many days have past since a date
+    #     - name: Huidig verbruik zonder wp
+    #       unique_id: 664ab9ff-3875-4a45-b53a-685b7a8f7f96
+    #       unit_of_measurement: "W"
+    #       device_class: power
+    #       state: >
+    #         {% if states("binary_sensor.afwasmachien_staat_op") %}
+    #           {{ (states("sensor.huidig_verbruik") | float(default=0) -
+    #               states("sensor.wasmachien_vermogen") | float(default=0) -
+    #               states("sensor.droogkast_vermogen") | float(default=0) -
+    #               states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1)}}
+    #         {% else  %}
+    #         {% endif %}
 
-    - name: Solcast 24hrs forecast huis
-      unique_id: 40a074f6-6405-4824-b278-c67ef7299fcb
-      state: >-
-        {%- set awattar_all_list = state_attr('sensor.solcast_forecast_huis', 'forecasts') | map(attribute='pv_estimate') | list %}
-        {%- set values_all = namespace(all=[]) %}
-        {% for i in range(awattar_all_list | length) %}
-          {%- set v = (awattar_all_list[i] | float |multiply(1000) ) | int(0) %}
-          {%- set values_all.all = values_all.all + [ v ] %}
-        {%- endfor %} {{ (values_all.all)[:48] }}
+    # - name: Solcast 24hrs forecast garage
+    #   unique_id: 6da67bef-8908-4164-8693-82b9be0aa6ae
+    #   state: >-
+    #     {%- set awattar_all_list = state_attr('sensor.solcast_forecast_garage', 'forecasts') | map(attribute='pv_estimate') | list %}
+    #     {%- set values_all = namespace(all=[]) %}
+    #     {% for i in range(awattar_all_list | length) %}
+    #       {%- set v = (awattar_all_list[i] | float |multiply(1000) ) | int(0) %}
+    #       {%- set values_all.all = values_all.all + [ v ] %}
+    #     {%- endfor %} {{ (values_all.all)[:48] }}
 
-    - name: Solcast 24hrs forecast
-      unique_id: e4828e2f-d761-496e-b783-4cf583685b5f
-      state: >-
-        {% set a = states("sensor.solcast_24hrs_forecast_garage")[1:-1].split(',') | map('int') | list %}
-        {% set b = states("sensor.solcast_24hrs_forecast_huis")[1:-1].split(',') | map('int') | list %}
-        {% set ns = namespace(items = []) %}
-        {% for i in range(a | length) %}
-          {% set ns.items = ns.items + [ a[i]  + b[i]  ] %}
-        {% endfor %}
-        {{ ns.items }}
+    # - name: Solcast 24hrs forecast huis
+    #   unique_id: 40a074f6-6405-4824-b278-c67ef7299fcb
+    #   state: >-
+    #     {%- set awattar_all_list = state_attr('sensor.solcast_forecast_huis', 'forecasts') | map(attribute='pv_estimate') | list %}
+    #     {%- set values_all = namespace(all=[]) %}
+    #     {% for i in range(awattar_all_list | length) %}
+    #       {%- set v = (awattar_all_list[i] | float |multiply(1000) ) | int(0) %}
+    #       {%- set values_all.all = values_all.all + [ v ] %}
+    #     {%- endfor %} {{ (values_all.all)[:48] }}
+
+    # - name: Solcast 24hrs forecast
+    #   unique_id: e4828e2f-d761-496e-b783-4cf583685b5f
+    #   state: >-
+    #     {% set a = states("sensor.solcast_24hrs_forecast_garage")[1:-1].split(',') | map('int') | list %}
+    #     {% set b = states("sensor.solcast_24hrs_forecast_huis")[1:-1].split(',') | map('int') | list %}
+    #     {% set ns = namespace(items = []) %}
+    #     {% for i in range(a | length) %}
+    #       {% set ns.items = ns.items + [ a[i]  + b[i]  ] %}
+    #     {% endfor %}
+    #     {{ ns.items }}
 
     - name: Zonne opbrengst
       unique_id: 51b5c2c8-6480-4320-8ec2-8bc2d9d00308

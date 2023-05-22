@@ -16,3 +16,30 @@
             state_attr("climate.netatmo_living", "preset_mode") == "Schedule" and 
             state_attr("climate.netatmo_living", "current_temperature") | int(0) < 20 }}
       icon: mdi:heating-coil
+
+    - name: Wasmachien staat op
+      unique_id: 6c5345d8-b4c3-46ca-b3d4-56cf5c5f6534
+      state: >
+        {{ states("sensor.wasmachien_vermogen") | float(0) > 3 }}
+      delay_on:
+        minutes: 5
+      delay_off:
+        minutes: 10
+
+    - name: Droogkast staat op
+      unique_id: 733a97db-050f-46c7-b734-43d20a80a01e
+      state: >
+        {{ states("sensor.droogkast_vermogen") | float(0) > 3 }}
+      delay_on:
+        minutes: 5
+      delay_off:
+        minutes: 10
+
+    - name: Afwasmachien staat op
+      unique_id: bb4b871e-c1a9-4d81-abb6-f89f07bbd6fb
+      state: >
+        {{ states("sensor.afwasmachien_vermogen") | float(0) > 3 }}
+      delay_on:
+        minutes: 5
+      delay_off:
+        minutes: 10
