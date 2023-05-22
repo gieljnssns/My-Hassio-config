@@ -1,0 +1,15 @@
+alias: Afwasmachien optimizer
+id: afwasmachien_optimizer
+description: ""
+use_blueprint:
+  path: pv_excess_control.yaml
+  input:
+    pv_power: sensor.huidige_opbrengst
+    load_power: sensor.net_afname
+    export_power: sensor.net_terugsturen
+    appliance_on_only: true
+    appliance_once_only: false
+    appliance_switch: switch.afwasmachien
+    solar_production_forecast: sensor.solcast_forecast_remaining_today
+    actual_power: sensor.afwasmachien_vermogen
+    automation_id: afwasmachien_optimizer

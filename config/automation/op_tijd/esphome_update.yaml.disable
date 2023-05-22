@@ -1,0 +1,135 @@
+alias: Automatically update ESPHome Devices
+description: >-
+  Automatically update ESPHome Devices at midnight, and notify when they are
+  updated.
+trigger:
+  - platform: time
+    at: "00:00:00"
+    id: update_check
+  - platform: state
+    entity_id:
+      - update.badkamer_firmware
+      - update.garage_knopjes_firmware
+      - update.knop_fien_firmware
+      - update.knop_giel_firmware
+      - update.knop_martine_firmware
+      # - update.knop_noor_firmware
+      - update.leds_drukknoppen_firmware
+      - update.shelly_25_69022d_firmware
+      - update.shelly_25_693e1b_firmware
+      - update.shelly_25_76cbbd_firmware
+      - update.shelly_25_76d562_firmware
+      - update.shelly_25_76d649_firmware
+      - update.shelly_25_b939e5_firmware
+      - update.shelly_25_b94100_firmware
+      - update.shelly_25_b952fa_firmware
+      - update.shelly_plug_s_3cf0de_firmware
+      - update.shelly_plug_s_7ade98_firmware
+      - update.shelly_plug_s_7ae478_firmware
+      - update.shelly_plug_s_7ae974_firmware
+      - update.shelly_warmtepomp_firmware
+      - update.smappee_l1_firmware
+      - update.smappee_l2_firmware
+      - update.smappee_l3_firmware
+      - update.stopcontacten_buiten_garage_firmware
+      - update.verwarming_3_firmware
+      - update.zolder_2_firmware
+    to: "off"
+    id: up-to-date
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.esphome_updates_timer
+    id: esphome_timer_updates_finished
+condition:
+  - condition: state
+    entity_id:
+      - update.badkamer_firmware
+      - update.garage_knopjes_firmware
+      - update.knop_fien_firmware
+      - update.knop_giel_firmware
+      - update.knop_martine_firmware
+      # - update.knop_noor_firmware
+      - update.leds_drukknoppen_firmware
+      - update.shelly_25_69022d_firmware
+      - update.shelly_25_693e1b_firmware
+      - update.shelly_25_76cbbd_firmware
+      - update.shelly_25_76d562_firmware
+      - update.shelly_25_76d649_firmware
+      - update.shelly_25_b939e5_firmware
+      - update.shelly_25_b94100_firmware
+      - update.shelly_25_b952fa_firmware
+      - update.shelly_plug_s_3cf0de_firmware
+      - update.shelly_plug_s_7ade98_firmware
+      - update.shelly_plug_s_7ae478_firmware
+      - update.shelly_plug_s_7ae974_firmware
+      - update.shelly_warmtepomp_firmware
+      - update.smappee_l1_firmware
+      - update.smappee_l2_firmware
+      - update.smappee_l3_firmware
+      - update.stopcontacten_buiten_garage_firmware
+      - update.verwarming_3_firmware
+      - update.zolder_2_firmware
+    match: any
+    state: "on"
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: update_check
+        sequence:
+          # Start a watch-dog timer to make sure things get done.
+          - service: timer.start
+            data:
+              duration: 0
+            target:
+              entity_id: timer.esphome_updates_timer
+          - service: notify.mobile_app_gphone
+            data:
+              title: ESPHome Devices
+              # Pick any ESPHome device below to get the version numbers in your message.
+              message: >-
+                Your ESPHome devices will now be updated from {{
+                state_attr("update.badkamer_firmware",
+                "installed_version") }} to {{
+                state_attr("update.badkamer_firmware",
+                "latest_version") }}.
+          - alias: Update all ESPHome devices in sequence
+            repeat:
+              for_each: >-
+                {{ states.update | selectattr('state', 'eq', 'on') |
+                map(attribute='entity_id') | select('in',
+                integration_entities('esphome')) | list }}
+              sequence:
+                - service: update.install
+                  target:
+                    entity_id: "{{ repeat.item }}"
+                - wait_template: "{{ is_state(repeat.item, 'off') }}"
+      - conditions:
+          - condition: trigger
+            id: up-to-date
+        sequence:
+          - service: timer.cancel
+            data: {}
+            target:
+              entity_id: timer.esphome_updates_timer
+          - service: notify.mobile_app_gphone
+            data:
+              title: ESPHome Devices
+              message: >-
+                Your ESPHome devices are now all updated to {{
+                state_attr("update.badkamer_firmware",
+                "installed_version") }}.
+      - conditions:
+          # In-case the update failed
+          - condition: trigger
+            id: esphome_timer_updates_finished
+        sequence:
+          - service: notify.mobile_app_gphone
+            data:
+              title: ESPHome Devices
+              message: >-
+                There was a problem updating to  {{
+                state_attr("update.badkamer_firmware",
+                "latest_version") }}. Please check your ESPHome Addon.
+mode: single

@@ -1,0 +1,39 @@
+alias: Control excess control droogkast
+id: ca57e527-62bd-4eb2-8a93-0e33fde89bde
+description: ""
+trigger:
+  - platform: state
+    entity_id:
+      - switch.droogkast
+    to: "off"
+    from: "on"
+    id: switch
+  - platform: state
+    entity_id:
+      - binary_sensor.droogkast_staat_op
+    to: "off"
+    id: automation
+condition: []
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: switch.droogkast
+            state: "off"
+          - condition: trigger
+            id: switch
+        sequence:
+          - service: automation.turn_on
+            data: {}
+            target:
+              entity_id: automation.droogkast_optimizer
+      - conditions:
+          - condition: trigger
+            id: automation
+        sequence:
+          - service: automation.turn_off
+            data:
+              stop_actions: false
+            target:
+              entity_id: automation.droogkast_optimizer
+mode: single

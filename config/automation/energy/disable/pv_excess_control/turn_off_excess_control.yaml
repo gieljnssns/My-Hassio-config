@@ -1,0 +1,51 @@
+alias: Turn off pv excess control
+id: 3daca03e-26d2-4665-a060-d655025496df
+description: ""
+trigger:
+  - platform: state
+    entity_id:
+      - binary_sensor.wasmachien_staat_op
+    to: "off"
+    id: wasmachien
+  - platform: state
+    entity_id:
+      - binary_sensor.droogkast_staat_op
+    to: "off"
+    id: droogkast
+  - platform: state
+    entity_id:
+      - binary_sensor.afwasmachien_staat_op
+    to: "off"
+    id: afwasmachien
+condition: []
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: wasmachien
+        sequence:
+          - service: automation.turn_off
+            data:
+              stop_actions: false
+            target:
+              entity_id: automation.wasmachien_optimizer
+      - conditions:
+          - condition: trigger
+            id: afwasmachien
+        sequence:
+          - service: automation.turn_off
+            data:
+              stop_actions: false
+            target:
+              entity_id: automation.afwasmachien_optimizer
+      - conditions:
+          - condition: trigger
+            id: droogkast
+        sequence:
+          - service: automation.turn_off
+            data:
+              stop_actions: false
+            target:
+              entity_id: automation.droogkast_optimizer
+
+mode: single

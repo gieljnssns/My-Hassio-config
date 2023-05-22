@@ -1,0 +1,39 @@
+alias: Control excess control afwasmachien
+id: 2e149c66-0924-4c5a-892b-ebd69e44bed1
+description: ""
+trigger:
+  - platform: state
+    entity_id:
+      - switch.afwasmachien
+    to: "off"
+    from: "on"
+    id: switch
+  - platform: state
+    entity_id:
+      - binary_sensor.afwasmachien_staat_op
+    to: "off"
+    id: automation
+condition: []
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: switch.afwasmachien
+            state: "off"
+          - condition: trigger
+            id: switch
+        sequence:
+          - service: automation.turn_on
+            data: {}
+            target:
+              entity_id: automation.afwasmachien_optimizer
+      - conditions:
+          - condition: trigger
+            id: automation
+        sequence:
+          - service: automation.turn_off
+            data:
+              stop_actions: false
+            target:
+              entity_id: automation.afwasmachien_optimizer
+mode: single

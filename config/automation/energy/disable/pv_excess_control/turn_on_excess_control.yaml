@@ -1,0 +1,48 @@
+alias: Turn on pv excess control
+id: 960f664c-f0c0-4800-881c-06bf2dc945ad
+description: ""
+trigger:
+  - platform: state
+    entity_id: input_button.wasmachien
+    id: wasmachien
+  - platform: state
+    entity_id: input_button.droogkast
+    id: droogkast
+  - platform: state
+    entity_id: input_button.afwasmachien
+    id: afwasmachien
+condition: []
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: wasmachien
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: switch.wasmachien
+          - service: automation.turn_on
+            target:
+              entity_id: automation.wasmachien_optimizer
+      - conditions:
+          - condition: trigger
+            id: afwasmachien
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: switch.afwasmachien
+          - service: automation.turn_on
+            target:
+              entity_id: automation.afwasmachien_optimizer
+      - conditions:
+          - condition: trigger
+            id: droogkast
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: switch.droogkast
+          - service: automation.turn_on
+            target:
+              entity_id: automation.droogkast_optimizer
+
+mode: single
