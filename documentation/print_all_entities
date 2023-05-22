@@ -40,3 +40,27 @@
 {% endfor %}
 {%for state in states.zone%}- {{state.entity_id}}
 {% endfor %}
+
+
+
+
+{%- set units = ["W", "%", "kWh", "°C"] -%}
+
+{%- for state in states.sensor | sort(attribute='last_updated', reverse=true) -%}
+          {%- if state.attributes.unit_of_measurement is defined and state.attributes.unit_of_measurement is not in units  -%}
+              {{ state.attributes.friendly_name }} = {{ state.state_with_unit }}
+          {% endif -%}
+        {% endfor -%}
+
+
+{%- for state in states.sensor | sort(attribute='last_updated', reverse=true) -%}
+          {%- if state.attributes.unit_of_measurement is not defined   -%}
+              {{ state.attributes.friendly_name }} = {{ state.state_with_unit }}
+          {% endif -%}
+        {% endfor -%}
+
+{%- for state in states.binary_sensor | sort(attribute='last_updated', reverse=true) -%}
+          {%- if state.attributes.unit_of_measurement is not defined   -%}
+              {{ state.attributes.friendly_name }} = {{ state.state_with_unit }}
+          {% endif -%}
+        {% endfor -%}
