@@ -154,6 +154,31 @@
                 |map('int')
                 |list)[:36]
                 }}
+    - name: Prod price forecast list
+      unique_id: c081ad21-6e07-4346-82e3-d392b4a251d6
+      state: >
+        {{ states("sensor.solcast_forecast_today")}}
+      attributes:
+        list: >
+          {%- set list =  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')
+               |selectattr('period_start','gt',utcnow())
+               |map(attribute='period_start')
+               |list
+           + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
+               |selectattr('period_start','gt',utcnow())
+               |map(attribute='period_start')
+               |list)[:36]
+               -%}
+          {%- set new_list = namespace(all=[]) %}
+          {%- for i in range (list | length) %}
+            {%- set hour = (list[i].hour) | int%}
+            {%- if hour in [13, 14, 15, 16, 17, 18] %}
+              {%- set new_list.all = new_list.all + [ 0.11 ] %}
+            {%- else %}
+              {%- set new_list.all = new_list.all + [ 0 ] %}
+            {%- endif %}
+          {%- endfor %}
+          {{ (new_list.all)[:36]}}
     # - name: Pv power forecast list length
     #   unique_id: 6eef6afa-9323-4b46-a043-7a11aff86f2d
     #   state: >

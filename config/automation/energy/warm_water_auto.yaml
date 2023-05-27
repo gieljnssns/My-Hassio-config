@@ -3,10 +3,10 @@ id: 8766541b-6bb2-4bc8-87af-f29e0accd997
 description: ""
 mode: single
 trigger:
-  - platform: template
-    id: zon
-    value_template: >
-      {{ states("sensor.l2_net_terugsturen") | float(default=0) > 600 | float(default=0) }}
+  # - platform: template
+  #   id: zon
+  #   value_template: >
+  #     {{ states("sensor.l2_net_terugsturen") | float(default=0) > 600 | float(default=0) }}
   # - platform: state
   #   entity_id: sensor.l2_net_terugsturen
   - platform: state
@@ -23,55 +23,62 @@ condition:
     below: 45
   - condition: template
     value_template: >
-      {{  states("input_boolean.warm_water_5u") == "off" and states("input_boolean.warm_water_2u") == "off" and states("input_boolean.warm_water_1u") == "off" }}
-  - condition: state
-    entity_id: binary_sensor.warmtepompboiler_aan_delay_off
-    state: "off"
-    for:
-      minutes: 60
+      {{  states("input_boolean.warm_water_5u") == "off" and 
+          states("input_boolean.warm_water_2u") == "off" and 
+          states("input_boolean.warm_water_1u") == "off" and
+          states("input_boolean.emhass_warmtepompboiler") == "off"
+          }}
+  # - condition: state
+  #   entity_id: binary_sensor.warmtepompboiler_aan_delay_off
+  #   state: "off"
+  #   for:
+  #     minutes: 60
 action:
-  - choose:
-      - conditions:
-          - alias: "Op verlof"
-            condition: state
-            entity_id: input_boolean.op_verlof
-            state: "on"
-          - condition: trigger
-            id: zon
-        sequence:
-          - service: input_boolean.turn_on
-            target:
-              entity_id: input_boolean.warm_water_1u
-      - conditions:
-          - alias: "Niet op verlof"
-            condition: state
-            entity_id: input_boolean.op_verlof
-            state: "off"
-          - condition: trigger
-            id: zon
-          - condition: template
-            value_template: >-
-              {{ (states("sensor.solcast_forecast_remaining_today") | float(default=0)) | round(2) > 20 | float(default=0)}}
-        sequence:
-          - service: input_boolean.turn_on
-            target:
-              entity_id: input_boolean.warm_water_5u
-      - conditions:
-          - condition: trigger
-            id: douche
-          - condition: time
-            before: "22:00:00"
-          - condition: time
-            after: "08:00:00"
-        sequence:
-          - service: input_boolean.turn_on
-            target:
-              entity_id: input_boolean.warm_water_2u
-    default:
-      - condition: trigger
-        id:
-          - zon
-          - thermostaat
-      - service: input_boolean.turn_on
-        target:
-          entity_id: input_boolean.warm_water_2u
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.warm_water_1u
+  # - choose:
+  #     - conditions:
+  #         - alias: "Op verlof"
+  #           condition: state
+  #           entity_id: input_boolean.op_verlof
+  #           state: "on"
+  #         - condition: trigger
+  #           id: zon
+  #       sequence:
+  #         - service: input_boolean.turn_on
+  #           target:
+  #             entity_id: input_boolean.warm_water_1u
+  #     - conditions:
+  #         - alias: "Niet op verlof"
+  #           condition: state
+  #           entity_id: input_boolean.op_verlof
+  #           state: "off"
+  #         - condition: trigger
+  #           id: zon
+  #         - condition: template
+  #           value_template: >-
+  #             {{ (states("sensor.solcast_forecast_remaining_today") | float(default=0)) | round(2) > 20 | float(default=0)}}
+  #       sequence:
+  #         - service: input_boolean.turn_on
+  #           target:
+  #             entity_id: input_boolean.warm_water_5u
+  #     - conditions:
+  #         - condition: trigger
+  #           id: douche
+  #         - condition: time
+  #           before: "22:00:00"
+  #         - condition: time
+  #           after: "08:00:00"
+  #       sequence:
+  #         - service: input_boolean.turn_on
+  #           target:
+  #             entity_id: input_boolean.warm_water_2u
+  #   default:
+  #     - condition: trigger
+  #       id:
+  #         - zon
+  #         - thermostaat
+  #     - service: input_boolean.turn_on
+  #       target:
+  #         entity_id: input_boolean.warm_water_2u

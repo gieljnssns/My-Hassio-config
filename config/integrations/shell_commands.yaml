@@ -30,6 +30,7 @@ post_mpc_optim: >-
       {{  states('sensor.warmtepompboiler_uren')  }}],
     "set_def_constant":[true, true, true, false],
     "pv_power_forecast":{{  state_attr('sensor.pv_power_forecast_list', 'list')  }},
+    "prod_price_forecast":{{  state_attr('sensor.prod_price_forecast_list', 'list')  }},
     "prediction_horizon":{{  state_attr('sensor.pv_power_forecast_list', 'list')| length }}
     }' http://localhost:5001/action/naive-mpc-optim
 

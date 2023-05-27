@@ -56,12 +56,12 @@
             {{ 0 | float(default=0) }}
         {% endif %}
 
-    - name: Huidig fluivius
+    - name: Huidig fluvius
       unique_id: aa64ea1f-e88f-4126-8e0f-622faa35c8c5
       unit_of_measurement: "W"
       device_class: power
       state: >
-        {{ (states("sensor.l1_vermogen") | float(default=0) + states("sensor.l2_vermogen") | float(default=0) + states("sensor.l3_vermogen") | float(default=0)) | round(2) }}
+        {{ ((states("sensor.l1_vermogen") | float(default=0) + states("sensor.l2_vermogen") | float(default=0) + states("sensor.l3_vermogen") | float(default=0)) | round(2)) * -1 }}
 
     - name: Net afname
       unique_id: dd4adeb0-ffa4-4e52-959f-a8b50d081b4f
