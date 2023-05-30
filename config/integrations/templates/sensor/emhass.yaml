@@ -23,8 +23,14 @@
       unique_id: 59e14f81-ccd8-4099-b08d-d21c53ff3c70
       unit_of_measurement: "uur"
       state: >
-        {% if states("input_boolean.droogkast_starten") == 'on'%}
-          {% if states("switch.droogkast") == 'off'%}
+        {% if states("input_boolean.droogkast_starten") == 'on' %}
+          {% if states("switch.droogkast") == 'off' and states("input_boolean.wasmachien_starten") == 'on' and states("input_boolean.afwasmachien_starten") == 'on' %}
+            6
+          {% elif states("switch.droogkast") == 'off' and states("input_boolean.wasmachien_starten") == 'on' %}
+            4
+          {% elif states("switch.droogkast") == 'off' and states("input_boolean.afwasmachien_starten") == 'on' %}
+            4
+          {% elif states("switch.droogkast") == 'off' %}
             2
           {% elif states("input_boolean.emhass_droogkast") == 'on'%}
             {% if (2 - ((as_timestamp(now()) - states("sensor.droogkast_is_gestart_op") | float(0)) / 3600) | round(1)) | float(0) > 0  %}
@@ -39,6 +45,22 @@
           0
         {% endif %}
 
+      # state: >
+      #   {% if states("input_boolean.droogkast_starten") == 'on'%}
+      #     {% if states("switch.droogkast") == 'off'%}
+      #       2
+      #     {% elif states("input_boolean.emhass_droogkast") == 'on'%}
+      #       {% if (2 - ((as_timestamp(now()) - states("sensor.droogkast_is_gestart_op") | float(0)) / 3600) | round(1)) | float(0) > 0  %}
+      #         {{ 2 - ((as_timestamp(now()) - states("sensor.droogkast_is_gestart_op") | float(0)) / 3600) | round(1) }}
+      #       {% else %}
+      #         0
+      #       {% endif %}
+      #     {% else %}
+      #       0
+      #     {% endif %}
+      #   {% else %}
+      #     0
+      #   {% endif %}
     - name: "Afwasmachien uren"
       unique_id: 062928fa-46a0-407c-9947-085b5278ec96
       unit_of_measurement: "uur"
