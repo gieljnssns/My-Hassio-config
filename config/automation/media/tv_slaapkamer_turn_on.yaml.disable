@@ -1,0 +1,15 @@
+id: 2971df2d-17a5-4102-a1d0-1cd2dc310efd
+alias: Tv slaapkamer op
+description: ""
+mode: single
+trigger:
+  - platform: device
+    device_id: a5f9acee4bcfd6d1fe4816d826696787
+    domain: media_player
+    entity_id: media_player.philips_tv_boven
+    type: turned_on
+condition: []
+action:
+  - service: wake_on_lan.send_magic_packet
+    data:
+      mac: D0:AE:EC:8D:27:EE
