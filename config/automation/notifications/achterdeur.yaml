@@ -79,17 +79,13 @@ action:
           url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
         push:
           sound: "door_creak_closing.wav"
-  - service: >
-      {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
-          script.sonos_pauze_spreek
-      {%  else  %}
-          script.sonos_playing_spreek
-      {%  endif  %}
-    data_template:
-      sonos_entity: media_player.mass_keuken
-      tts_entity: media_player.keuken
-      volume: 0.65
-      speech_message: >
+  - service: tts.speak
+    target:
+      entity_id: tts.piper
+    data:
+      cache: true
+      media_player_entity_id: media_player.keuken
+      message: >
         {{ [
             "Willen we alstublieft de deur dicht doen?",
             "Het is buiten nog te warm!",
@@ -106,17 +102,13 @@ action:
   - condition: state
     entity_id: binary_sensor.keuken_achterdeur
     state: "on"
-  - service: >
-      {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
-          script.sonos_pauze_spreek
-      {%  else  %}
-          script.sonos_playing_spreek
-      {%  endif  %}
-    data_template:
-      sonos_entity: media_player.mass_keuken
-      tts_entity: media_player.keuken
-      volume: 0.65
-      speech_message: >
+  - service: tts.speak
+    target:
+      entity_id: tts.piper
+    data:
+      cache: true
+      media_player_entity_id: media_player.keuken
+      message: >
         {{ [
             "Willen we alstublieft de deur dicht doen?",
             "Het is buiten nog te warm!",
@@ -133,17 +125,13 @@ action:
   - condition: state
     entity_id: binary_sensor.keuken_achterdeur
     state: "on"
-  - service: >
-      {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
-          script.sonos_pauze_spreek
-      {%  else  %}
-          script.sonos_playing_spreek
-      {%  endif  %}
-    data_template:
-      sonos_entity: media_player.mass_keuken
-      tts_entity: media_player.keuken
-      volume: 0.65
-      speech_message: >
+  - service: tts.speak
+    target:
+      entity_id: tts.piper
+    data:
+      cache: true
+      media_player_entity_id: media_player.keuken
+      message: >
         {{ [
             "Willen we alstublieft de deur dicht doen?",
             "Het is buiten nog te warm!",

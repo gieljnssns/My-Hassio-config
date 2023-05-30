@@ -58,39 +58,40 @@ action:
     data_template:
       entity_id: media_player.mass_keuken
       volume_level: 0.12
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: >
-              {% set numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] %}
-              {% set number = numbers | random  %}
-              {{ number % 2 == 0 }}
-        sequence:
-          - service: media_player.play_media
-            data:
-              media_content_id: >
-                {% set playlist_numbers = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
-                                            23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 
-                                            39, 40, 41, 42, 43, 44, 45, 46, 47, 48 ] %}
-                {% set playlist_number = playlist_numbers | random  %}
-
-                media-source://mass/database://playlist/{{playlist_number}}
-              media_content_type: playlist
-              enqueue: replace
-            target:
-              entity_id: media_player.mass_keuken
-    default:
-      - service: media_player.play_media
-        data:
-          media_content_id: >
-            {% set radio_numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] %}
-            {% set radio_number = radio_numbers | random  %}
-
-            media-source://mass/database://radio/{{radio_number}}
-          media_content_type: music
-          enqueue: replace
-        target:
-          entity_id: media_player.mass_keuken
+  - service: script.random_music
+    data:
+      sonos_entity: media_player.mass_keuken
+  # - choose:
+  #     - conditions:
+  #         - condition: template
+  #           value_template: >
+  #             {% set numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] %}
+  #             {% set number = numbers | random  %}
+  #             {{ number % 2 == 0 }}
+  #       sequence:
+  #         - service: media_player.play_media
+  #           data:
+  #             media_content_id: >
+  #               {% set playlist_numbers = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+  #                                           23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38,
+  #                                           39, 40, 41, 42, 43, 44, 45, 46, 47, 48 ] %}
+  #               {% set playlist_number = playlist_numbers | random  %}
+  #               media-source://mass/database://playlist/{{playlist_number}}
+  #             media_content_type: playlist
+  #             enqueue: replace
+  #           target:
+  #             entity_id: media_player.mass_keuken
+  #   default:
+  #     - service: media_player.play_media
+  #       data:
+  #         media_content_id: >
+  #           {% set radio_numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] %}
+  #           {% set radio_number = radio_numbers | random  %}
+  #           media-source://mass/database://radio/{{radio_number}}
+  #         media_content_type: music
+  #         enqueue: replace
+  #       target:
+  #         entity_id: media_player.mass_keuken
   # - service: media_player.select_source
   #   data_template:
   #     entity_id: media_player.keuken

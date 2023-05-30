@@ -4,3 +4,58 @@
       icon: mdi:microphone-variant
       state: >-
         {{ state_attr("media_player.mass_keuken", "media_artist") }}
+
+    - name: Random music
+      unique_id: 7384f8dc-12b3-46cd-be81-871c509b03ca
+      icon: mdi:music-box-multiple
+      state: >-
+        {% set numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] %}
+        {% set number = numbers | random  %}
+        {% if number % 2 == 0 %}
+          {% set playlists = ['Hand-Picked & Heavy', 
+                              'LEVITATION : HEAVY ROTATION', 
+                              'NMTH Bruut Nationaal Product', 
+                              'NMTH Hardhitters', 
+                              'Punk In Drublic', 
+                              'Rauwe Kost', 
+                              'Relapse Records Doom / Sludge / Stoner Metal Mix', 
+                              'Relapse Records New & Notable', 
+                              'Release Radar', 
+                              "The Underground Metal Bands You Might've Missed", 
+                              'Vocal Distortion: Riffs On Repeat', 
+                              'YOUR DAILY METAL | best new metal & core tracks' ] %}
+          {% set playlist = playlists | random  %}
+          {{playlist}}  
+        {% else %}
+          {% set radios = [ "VRT Studio Brussel - Bruut", 
+                            "Pinguin On the Rocks", 
+                            "Pinguin Aardschok", 
+                            "VRT Studio Brussel - Bruut", 
+                            "Pinguin On the Rocks", 
+                            "Pinguin Aardschok",
+                            "Willy", 
+                            "Distorsión FM", 
+                            "Hard radio", 
+                            "NRJ Metal", 
+                            "Tits.FM | The Basement | Rock, Metal, Alternative Rock, Grunge"] %}
+          {% set radio = radios | random  %}
+          {{radio}}
+        {% endif %}
+      attributes:
+        type: >
+          {% set radios = [ "VRT Studio Brussel - Bruut", 
+                            "Pinguin On the Rocks", 
+                            "Pinguin Aardschok", 
+                            "VRT Studio Brussel - Bruut", 
+                            "Pinguin On the Rocks", 
+                            "Pinguin Aardschok",
+                            "Willy", 
+                            "Distorsión FM", 
+                            "Hard radio", 
+                            "NRJ Metal", 
+                            "Tits.FM | The Basement | Rock, Metal, Alternative Rock, Grunge"] %}
+          {% if states("sensor.random_music") is in radios  %}
+            radio
+          {% else %}
+            playlist
+          {% endif %}

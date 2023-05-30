@@ -2,8 +2,8 @@
     - name: "Living grouped not master"
       unique_id: 947a4957-1cbf-43be-9fb9-07e996614dbb
       state: >
-        {{ state_attr('media_player.mass_living', 'group_leader') | string != 'media_player.living'
-          and state_attr('media_player.mass_living', 'is_group') == True }}
+        {{ state_attr('media_player.mass_living_2', 'active_queue') | string != 
+           state_attr('media_player.mass_living_2', 'mass_player_id') | string }}
 
     - name: Living 2 not playing
       unique_id: bdab5606-5315-4fa7-b5e2-3432763f5116
@@ -13,8 +13,8 @@
     - name: "Keuken grouped not master"
       unique_id: 3eba5ed0-61a1-4682-bc9e-8ddabf895198
       state: >
-        {{ state_attr('media_player.mass_keuken', 'group_leader')| string != 'media_player.keuken'
-          and state_attr('media_player.mass_keuken', 'is_group') == True }}
+        {{ state_attr('media_player.mass_keuken', 'active_queue') | string != 
+           state_attr('media_player.mass_keuken', 'mass_player_id') | string }}
 
     - name: Keuken not playing
       unique_id: 073660a3-1e9a-40cf-b0f9-4fae6aa566d9
@@ -24,8 +24,8 @@
     - name: "Badkamer grouped not master"
       unique_id: 5fc66a63-1faf-47c6-baa7-f1c9031c3415
       state: >
-        {{ state_attr('media_player.mass_badkamer', 'group_leader') | string != 'media_player.badkamer'
-          and state_attr('media_player.mass_badkamer', 'is_group') == True }}
+        {{ state_attr('media_player.mass_badkamer', 'active_queue') | string != 
+           state_attr('media_player.mass_badkamer', 'mass_player_id') | string }}
 
     - name: Badkamer not playing
       unique_id: 494b0d57-a8f3-494b-9b61-470cbcd2605f
@@ -35,9 +35,8 @@
     - name: "2C grouped not master"
       unique_id: 4f1e29e5-c949-48e1-bc69-0554fb1e2091
       state: >
-        {{ state_attr('media_player.mass_2c', 'group_leader') | string != 'media_player.2c'
-          and state_attr('media_player.mass_2c', 'is_group') == True }}
-
+        {{ state_attr('media_player.mass_2c', 'active_queue') | string != 
+           state_attr('media_player.mass_2c', 'mass_player_id') | string }}
     - name: 2c not playing
       unique_id: 7d41c0cd-bd85-4830-be17-ce2d2e294abc
       state: >
@@ -46,8 +45,8 @@
     - name: "Move grouped not master"
       unique_id: 437ef410-0390-4ae6-97d6-06663733fa29
       state: >
-        {{ state_attr('media_player.mass_move', 'group_leader') | string != 'media_player.move'
-          and state_attr('media_player.mass_move', 'is_group') == True }}
+        {{ state_attr('media_player.mass_move', 'active_queue') | string != 
+           state_attr('media_player.mass_move', 'mass_player_id') | string }}
 
     - name: Move not playing
       unique_id: 1480d1a8-4800-4f39-af26-6baeb1202b53

@@ -12,14 +12,9 @@ trigger:
     entity_id: light.spot_slaapkamer
     to: "unavailable"
 condition:
-  - condition: not
-    conditions:
-      # - condition: state
-      #   entity_id: media_player.mass_keuken
-      #   state: "playing"
-      - condition: state
-        entity_id: media_player.keuken
-        state: "playing"
+  - condition: state
+    entity_id: binary_sensor.keuken_not_playing
+    state: "on"
   - condition: and
     conditions:
       - condition: time
@@ -70,6 +65,7 @@ action:
   - condition: state
     entity_id: binary_sensor.badkamer_grouped_not_master
     state: "on"
+  # nog aan te passen
   - service: media_player.unjoin
     target:
       entity_id: media_player.2c
