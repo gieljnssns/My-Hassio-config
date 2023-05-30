@@ -1,13 +1,13 @@
-alias: "Stofzuiger keuken"
+alias: "Stofzuiger random"
 id: 33d24a7e-0c62-4802-aac4-ffa4bba81d11
 initial_state: "true"
 trigger:
   - platform: state
     entity_id: device_tracker.martine_not_so_binary
-    to: "Juist weg"
+    to: "Juist Weg"
   - platform: state
     entity_id: device_tracker.giel_not_so_binary
-    to: "Juist weg"
+    to: "Juist Weg"
 condition:
   - condition: state
     entity_id: vacuum.cl4p_tp
@@ -23,8 +23,8 @@ action:
   - choose:
       - conditions:
           - condition: time
-            after: " 07:00:00"
-            before: " 09:00:00"
+            after: "07:00:00"
+            before: "09:00:00"
             weekday:
               - "mon"
               - "tue"
@@ -47,8 +47,8 @@ action:
 
     default:
       - condition: time
-        after: " 10:00:00"
-        before: " 14:00:00"
+        after: "10:00:00"
+        before: "14:00:00"
       - condition: not
         conditions:
           - condition: state
@@ -68,5 +68,11 @@ action:
         target:
           entity_id: input_select.vacuum_target_room
         data:
-          option: Keuken
+          option: >
+            {{ [
+                "Keuken",
+                "Inkom",
+                "Danszaal",
+                "Zithoek"
+                ] | random }}
       - service: script.vacuum_clean_room
