@@ -5,7 +5,7 @@ trigger:
     entity_id: binary_sensor.keuken_achterdeur
     to: "on"
     for:
-      seconds: 60
+      seconds: 90
 condition:
   condition: and
   conditions:
@@ -16,16 +16,15 @@ condition:
       entity_id: sensor.binnen_lowpass
       above: 22
 action:
-  - service: >
-      {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
-          script.sonos_pauze_spreek
-      {%  else  %}
-          script.sonos_playing_spreek
-      {%  endif  %}
-    data_template:
-      sonos_entity: mass_keuken
-      volume: 0.65
-      speech_message: >
+  - service: tts.speak
+    target:
+      entity_id: tts.piper
+    data:
+      cache: true
+      media_player_entity_id: media_player.keuken
+      extra:
+        volume: 0.65
+      message: >
         {{ [
             "Willen we alstublieft de deur dicht doen?",
             "Het is buiten nog te warm!",
@@ -35,11 +34,11 @@ action:
             "Hoeveel keer moet ik het nog zeggen, doe die deur dicht!"
             ] | random }}
   - delay:
-      seconds: 40
+      seconds: 60
   - condition: state
     entity_id: binary_sensor.keuken_achterdeur
     state: "on"
-  - service: notify.mobile_app_gphone
+  - service: notify.iedereen
     data:
       title: Achterdeur - 2de waarschuwing!
       message: Er heeft weer iemand de achterdeur laten openstaan!!
@@ -49,42 +48,44 @@ action:
           url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
         push:
           sound: "door_creak_closing.wav"
-  - service: notify.mobile_app_mphone
-    data:
-      title: Achterdeur - 2de waarschuwing!
-      message: Er heeft weer iemand de achterdeur laten openstaan!!
-      data:
-        attachment:
-          content-type: jpeg
-          url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
-        push:
-          sound: "door_creak_closing.wav"
-  - service: notify.mobile_app_nphone
-    data:
-      title: Achterdeur - 2de waarschuwing!
-      message: Er heeft weer iemand de achterdeur laten openstaan!!
-      data:
-        attachment:
-          content-type: jpeg
-          url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
-        push:
-          sound: "door_creak_closing.wav"
-  - service: notify.mobile_app_fphone
-    data:
-      title: Achterdeur - 2de waarschuwing!
-      message: Er heeft weer iemand de achterdeur laten openstaan!!
-      data:
-        attachment:
-          content-type: jpeg
-          url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
-        push:
-          sound: "door_creak_closing.wav"
+  # - service: notify.mobile_app_mphone
+  #   data:
+  #     title: Achterdeur - 2de waarschuwing!
+  #     message: Er heeft weer iemand de achterdeur laten openstaan!!
+  #     data:
+  #       attachment:
+  #         content-type: jpeg
+  #         url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
+  #       push:
+  #         sound: "door_creak_closing.wav"
+  # - service: notify.mobile_app_nphone
+  #   data:
+  #     title: Achterdeur - 2de waarschuwing!
+  #     message: Er heeft weer iemand de achterdeur laten openstaan!!
+  #     data:
+  #       attachment:
+  #         content-type: jpeg
+  #         url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
+  #       push:
+  #         sound: "door_creak_closing.wav"
+  # - service: notify.mobile_app_fphone
+  #   data:
+  #     title: Achterdeur - 2de waarschuwing!
+  #     message: Er heeft weer iemand de achterdeur laten openstaan!!
+  #     data:
+  #       attachment:
+  #         content-type: jpeg
+  #         url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
+  #       push:
+  #         sound: "door_creak_closing.wav"
   - service: tts.speak
     target:
       entity_id: tts.piper
     data:
       cache: true
       media_player_entity_id: media_player.keuken
+      extra:
+        volume: 0.65
       message: >
         {{ [
             "Willen we alstublieft de deur dicht doen?",
@@ -98,7 +99,7 @@ action:
             "Dit is al de tweede keer, hoeveel keer nog?"
             ] | random }}
   - delay:
-      seconds: 40
+      seconds: 60
   - condition: state
     entity_id: binary_sensor.keuken_achterdeur
     state: "on"
@@ -108,6 +109,8 @@ action:
     data:
       cache: true
       media_player_entity_id: media_player.keuken
+      extra:
+        volume: 0.65
       message: >
         {{ [
             "Willen we alstublieft de deur dicht doen?",
@@ -121,7 +124,7 @@ action:
             "Derde keer, goede keer?"
             ] | random }}
   - delay:
-      seconds: 30
+      seconds: 60
   - condition: state
     entity_id: binary_sensor.keuken_achterdeur
     state: "on"
@@ -131,6 +134,8 @@ action:
     data:
       cache: true
       media_player_entity_id: media_player.keuken
+      extra:
+        volume: 0.65
       message: >
         {{ [
             "Willen we alstublieft de deur dicht doen?",

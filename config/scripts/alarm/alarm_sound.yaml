@@ -1,61 +1,79 @@
 alarm_sound:
   # nog aan te passen
   sequence:
-    - service: mass.queue_command
-      data:
-        command: snapshot_create
-      target:
-        entity_id: media_player.mass_keuken
-    - delay: "00:00:05"
-    - service: media_player.volume_set
-      entity_id:
-        - media_player.mass_keuken
-      data:
-        volume_level: 0.85
+    # - service: mass.queue_command
+    #   data:
+    #     command: snapshot_create
+    #   target:
+    #     entity_id: media_player.mass_keuken
+    # - delay: "00:00:05"
+    # - service: media_player.volume_set
+    #   entity_id:
+    #     - media_player.mass_keuken
+    #   data:
+    #     volume_level: 0.85
     - service: media_player.play_media
       target:
         entity_id: media_player.mass_keuken
       data:
         media_content_id: http://192.168.79.54:8123/local/sounds/Countdown.mp3
-        media_content_type: music
-    - delay: "00:00:14"
+        media_content_type: "music"
+        announce: true
+        extra:
+          volume: 85
+    - delay: "00:00:05"
     - service: media_player.play_media
       target:
         entity_id: media_player.mass_keuken
       data:
         media_content_id: http://192.168.79.54:8123/local/sounds/Siren_Noise.mp3
-        media_content_type: music
-    - delay: "00:00:09"
+        media_content_type: "music"
+        announce: true
+        extra:
+          volume: 85
+    - delay: "00:00:05"
     - service: media_player.play_media
       target:
         entity_id: media_player.mass_keuken
       data:
         media_content_id: http://192.168.79.54:8123/local/sounds/Siren_Noise.mp3
-        media_content_type: music
-    - delay: "00:00:09"
+        media_content_type: "music"
+        announce: true
+        extra:
+          volume: 85
+    - delay: "00:00:05"
     - service: media_player.play_media
       target:
         entity_id: media_player.mass_keuken
       data:
         media_content_id: http://192.168.79.54:8123/local/sounds/Siren_Noise.mp3
-        media_content_type: music
-    - delay: "00:00:09"
+        media_content_type: "music"
+        announce: true
+        extra:
+          volume: 85
+    - delay: "00:00:05"
     - service: media_player.play_media
       target:
         entity_id: media_player.mass_keuken
       data:
         media_content_id: http://192.168.79.54:8123/local/sounds/Siren_Noise.mp3
-        media_content_type: music
-    - delay: "00:00:09"
+        media_content_type: "music"
+        announce: true
+        extra:
+          volume: 85
+    - delay: "00:00:05"
     - service: media_player.play_media
       target:
         entity_id: media_player.mass_keuken
       data:
         media_content_id: http://192.168.79.54:8123/local/sounds/Siren_Noise.mp3
-        media_content_type: music
-    - delay: "00:00:09"
-    - service: mass.queue_command
-      data:
-        command: snapshot_restore
-      target:
-        entity_id: media_player.mass_keuken
+        media_content_type: "music"
+        announce: true
+        extra:
+          volume: 85
+    # - delay: "00:00:09"
+    # - service: mass.queue_command
+    #   data:
+    #     command: snapshot_restore
+    #   target:
+    #     entity_id: media_player.mass_keuken
