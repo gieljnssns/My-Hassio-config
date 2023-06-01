@@ -22,15 +22,15 @@ action:
             entity_id: sensor.l1_net_terugsturen
             above: "1000"
           - condition: state
-            entity_id: climate.netatmo_living
+            entity_id: climate.living
             state: idle
             attribute: hvac_action
           - condition: state
-            entity_id: climate.netatmo_living
+            entity_id: climate.living
             state: Schedule
             attribute: preset_mode
           - condition: numeric_state
-            entity_id: climate.netatmo_living
+            entity_id: climate.living
             attribute: current_temperature
             below: "20"
           - condition: numeric_state
@@ -39,7 +39,7 @@ action:
         sequence:
           - service: climate.set_temperature
             target:
-              entity_id: climate.netatmo_living
+              entity_id: climate.living
             data:
               temperature: 21
     default:
@@ -48,9 +48,9 @@ action:
         above: "2000"
       - condition: template
         value_template: >
-          {{ state_attr("climate.netatmo_living", "preset_mode") != "Schedule" }}
+          {{ state_attr("climate.living", "preset_mode") != "Schedule" }}
       - service: climate.set_preset_mode
         target:
-          entity_id: climate.netatmo_living
+          entity_id: climate.living
         data:
           preset_mode: Schedule

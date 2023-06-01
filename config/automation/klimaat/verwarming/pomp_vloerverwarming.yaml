@@ -11,7 +11,7 @@ trigger:
   #   to: "off"
   - platform: template
     value_template: >
-      {{ states("sensor.vloerverwarming_terug") | float(default=0) < state_attr("climate.netatmo_living", "current_temperature") }}
+      {{ states("sensor.vloerverwarming_terug") | float(default=0) < state_attr("climate.living", "current_temperature") }}
 condition: []
 action:
   - choose:

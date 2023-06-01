@@ -76,8 +76,8 @@
       unique_id: c8bb853c-63ec-4fd1-b18f-05624ee48fde
       state: >
         {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0) > 25 or
-          state_attr('climate.netatmo_living', "hvac_action") == "heating" or 
-          states('climate.netatmo_living') == "heat" }}
+          state_attr('climate.living', "hvac_action") == "heating" or 
+          states('climate.living') == "heat" }}
 
     - name: Warmtepompboiler aan
       device_class: power

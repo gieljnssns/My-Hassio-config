@@ -6,16 +6,16 @@ living_heat_boost:
         entity_id: input_number.previous_target
       data:
         value: >-
-          {{ states.climate.netatmo_living.attributes.temperature }}
+          {{ states.climate.living.attributes.temperature }}
     - service: input_number.set_value
       target:
         entity_id: input_number.boost_target
       data:
         value: >-
-          {{ states.climate.netatmo_living.attributes.current_temperature | float + 2 }}
+          {{ states.climate.living.attributes.current_temperature | float + 2 }}
     - service: climate.set_temperature
       target:
-        entity_id: climate.netatmo_living
+        entity_id: climate.living
       data:
         hvac_mode: heat
         temperature: >-

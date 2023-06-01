@@ -13,8 +13,8 @@
       state: >
         {{  states('sensor.temperatuur_gemiddeld_buiten') | float(0) < 12 and
             states("input_boolean.op_verlof") == "off" and
-            state_attr("climate.netatmo_living", "preset_mode") == "Schedule" and 
-            state_attr("climate.netatmo_living", "current_temperature") | int(0) < 20 }}
+            state_attr("climate.living", "preset_mode") == "Schedule" and 
+            state_attr("climate.living", "current_temperature") | int(0) < 20 }}
       icon: mdi:heating-coil
 
     - name: Wasmachien staat op
