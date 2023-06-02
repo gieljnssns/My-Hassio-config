@@ -14,8 +14,7 @@
       unique_id: 54f0fc98-2bac-4e56-8427-ad0549642afa
       device_class: cold
       state: >
-        {{  (states('sensor.binnen_lowpass') | float(default=0) > states('sensor.buitentemperatuur') | float(default=0))  and
-            (states('sensor.binnen_lowpass') | float(default=0) > states('sensor.temperatuur_poort') | float(default=0))  }}
+        {{  (states('sensor.binnen_lowpass') | float(default=0) > states('sensor.buitentemperatuur_gefilterd') | float(default=0)) }}
 
     - name: Buiten frisser dan binnen old
       unique_id: 56947e08-4306-434e-9064-7e8e99e89b9e

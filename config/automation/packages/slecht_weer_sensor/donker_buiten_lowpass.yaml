@@ -10,13 +10,24 @@ trigger:
   #   below: 2
   #   for:
   #     minutes: 5
+  # - platform: numeric_state
+  #   entity_id: sensor.estimated_illuminance_normal
+  #   below: 1000
+  #   id: binnen
   - platform: numeric_state
-    entity_id: sensor.estimated_illuminance_normal
-    below: 1000
+    entity_id: sensor.buiten_buiten_lichtsterkte
+    below: 650
+    for:
+      minutes: 5
     id: binnen
+  # - platform: numeric_state
+  #   entity_id: sensor.estimated_illuminance_normal
+  #   below: 250
   - platform: numeric_state
-    entity_id: sensor.estimated_illuminance_normal
-    below: 250
+    entity_id: sensor.buiten_buiten_lichtsterkte
+    below: 150
+    for:
+      minutes: 5
     id: buiten
   - platform: numeric_state
     entity_id: sun.sun

@@ -85,34 +85,38 @@
       unique_id: 8225bcd3-62ca-40af-8891-ba06a95eed91
       unit_of_measurement: "uur"
       state: >
-        {% if states("input_boolean.op_verlof") == 'off' %}
-          {% if states("input_boolean.warm_water_starten") == 'on' %}
-            {% if states("switch.warm_water") == 'on' and states("binary_sensor.warmtepompboiler_aan") == 'off' %}
-              {{ ((49 - (states("sensor.thermostaat") | float )) / 2.5) | round(1)  }}
-            {% elif (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestart_op") | float(0)) < 3600 %}
-              {{ ((49 - (states("sensor.thermostaat") | float )) / 2.5) | round(1)  }}
-            {% elif states("binary_sensor.warmtepompboiler_aan") == 'on' %}
-              {{ ((49 - (states("sensor.thermostaat") | float )) / 3) | round(1)  }}
+        {% if as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 30 %}  
+          {% if states("input_boolean.op_verlof") == 'off' %}
+            {% if states("input_boolean.warm_water_starten") == 'on' %}
+              {% if states("switch.warm_water") == 'on' and states("binary_sensor.warmtepompboiler_aan") == 'off' %}
+                {{ ((49 - (states("sensor.thermostaat") | float )) / 2.5) | round(1)  }}
+              {% elif (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestart_op") | float(0)) < 3600 %}
+                {{ ((49 - (states("sensor.thermostaat") | float )) / 2.5) | round(1)  }}
+              {% elif states("binary_sensor.warmtepompboiler_aan") == 'on' %}
+                {{ ((49 - (states("sensor.thermostaat") | float )) / 3) | round(1)  }}
+              {% else %}
+                {{ ((49 - (states("sensor.thermostaat") | float )) / 2.5) | round(1)  }}
+              {% endif %}
             {% else %}
-              {{ ((49 - (states("sensor.thermostaat") | float )) / 2.5) | round(1)  }}
+              0
             {% endif %}
           {% else %}
-            0
+            {% if states("input_boolean.warm_water_starten") == 'on' %}
+              {% if states("switch.warm_water") == 'on' and states("binary_sensor.warmtepompboiler_aan") == 'off' %}
+                {{ ((46 - (states("sensor.thermostaat") | float )) / 2.5) | round(1)  }}
+              {% elif (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestart_op") | float(0)) < 3600 %}
+                {{ ((46 - (states("sensor.thermostaat") | float )) / 2.5) | round(1)  }}
+              {% elif states("binary_sensor.warmtepompboiler_aan") == 'on' %}
+                {{ ((46 - (states("sensor.thermostaat") | float )) / 3) | round(1)  }}
+              {% else %}
+                {{ ((46 - (states("sensor.thermostaat") | float )) / 2.5) | round(1)  }}
+              {% endif %}
+            {% else %}
+              0
+            {% endif %}
           {% endif %}
         {% else %}
-          {% if states("input_boolean.warm_water_starten") == 'on' %}
-            {% if states("switch.warm_water") == 'on' and states("binary_sensor.warmtepompboiler_aan") == 'off' %}
-              {{ ((46 - (states("sensor.thermostaat") | float )) / 2.5) | round(1)  }}
-            {% elif (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestart_op") | float(0)) < 3600 %}
-              {{ ((46 - (states("sensor.thermostaat") | float )) / 2.5) | round(1)  }}
-            {% elif states("binary_sensor.warmtepompboiler_aan") == 'on' %}
-              {{ ((46 - (states("sensor.thermostaat") | float )) / 3) | round(1)  }}
-            {% else %}
-              {{ ((46 - (states("sensor.thermostaat") | float )) / 2.5) | round(1)  }}
-            {% endif %}
-          {% else %}
-            0
-          {% endif %}
+          0
         {% endif %}
 
       # state: >

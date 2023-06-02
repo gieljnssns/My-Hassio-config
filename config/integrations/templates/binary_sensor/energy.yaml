@@ -11,7 +11,7 @@
     - name: Verwarming boost mag op
       unique_id: 9306b37c-4103-4e37-a9e8-91139171dd39
       state: >
-        {{  states('sensor.temperatuur_gemiddeld_buiten') | float(0) < 12 and
+        {{  states('sensor.buiten_buiten_temperatuur') | float(0) < 12 and
             states("input_boolean.op_verlof") == "off" and
             state_attr("climate.living", "preset_mode") == "Schedule" and 
             state_attr("climate.living", "current_temperature") | int(0) < 20 }}
