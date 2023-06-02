@@ -8,6 +8,12 @@ trigger:
     entity_id: light.waskot
   - platform: state
     entity_id: light.badkamer_hoog
+condition:
+  condition: and
+  conditions:
+    - condition: template
+      value_template: >
+        {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 30 }}
 action:
   - service: >
       {% if trigger.to_state.state == 'on' %}

@@ -29,14 +29,14 @@ condition:
         {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
           {{ states("sensor.ba_precipitation_forecast_average") | float < 0.25 }}
         {% else %}
-          {{ states("sensor.openweathermap_forecast_precipitation")  | float < 0.25 }}
+          {{ states("sensor.weatherbit_rain_rate")  | float < 0.25 }}
         {% endif %}
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
           {{ states("sensor.ba_precipitation") | float < 0.25 }}
         {% else %}
-          {{ states("sensor.openweathermap_rain")  | float < 0.25 }}
+          {{ states("sensor.weatherbit_rain_rate")  | float < 0.25 }}
         {% endif %}
     # - condition: or
     #   conditions:
@@ -44,7 +44,7 @@ condition:
     #     entity_id: sensor.ba_precipitation_forecast_average
     #     below: 0.25 # Rain the next 15 min
     #   - condition: numeric_state
-    #     entity_id: sensor.openweathermap_forecast_precipitation
+    #     entity_id: sensor.weatherbit_rain_rate
     #     below: 0.25
     # - condition: or
     #   conditions:
@@ -52,7 +52,7 @@ condition:
     #     entity_id: sensor.ba_precipitation
     #     below: 0.25 # Rain
     #   - condition: numeric_state
-    #     entity_id: sensor.openweathermap_rain
+    #     entity_id: sensor.weatherbit_rain_rate
     #     below: 0.25
     #- condition: numeric_state
     #  entity_id: sensor.ba_precipitation_forecast_average

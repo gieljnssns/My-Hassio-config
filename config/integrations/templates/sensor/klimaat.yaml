@@ -8,7 +8,7 @@
     - name: Binnen vs buiten
       unique_id: dddcfcff-cc55-4bc0-87fc-7285c0a79e97
       state: >
-        {% if (states('sensor.binnen_lowpass')) > (states('sensor.temperatuur_gemiddeld_buiten')) and states('sensor.binnen_lowpass') | float(default=0)> 26 %}
+        {% if (states('sensor.binnen_lowpass')) > (states('sensor.buitentemperatuur_gefilterd')) and states('sensor.binnen_lowpass') | float(default=0)> 26 %}
           Afkoeling
         {% else %}
           Geen afkoeling

@@ -75,7 +75,7 @@ template:
         state: >
           {% if states("sensor.weatherbit_snow_rate") | int(default=0) > 0 %}
             snow
-          {% elif ((state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['templow']  | int(default=0) < 4) and states("sensor.dauwpunt_poort") | int(default=0) < 6 and states("sensor.weatherbit_wind_speed") | int(default=0) < 12 and states("sensor.weatherbit_cloud_coverage") | int(default=0) < 20 and states("sensor.luchtvochtigheid_poort") | int(default=0) > 50) %} 
+          {% elif ((state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['templow']  | int(default=0) < 4) and states("sensor.buiten_buiten_dauwpunt") | int(default=0) < 6 and states("sensor.weatherbit_wind_speed") | int(default=0) < 12 and states("sensor.weatherbit_cloud_coverage") | int(default=0) < 20 and states("sensor.buiten_buiten_luchtvochtigheid") | int(default=0) > 50) %} 
             frost
           {% elif states("sensor.weatherbit_rain_rate") | int(default=0) > 7 %} 
             heavy_rain
