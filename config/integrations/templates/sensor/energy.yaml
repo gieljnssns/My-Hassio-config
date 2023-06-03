@@ -141,51 +141,49 @@
             states("sensor.paddeke_2_vermogen") | float(default=0) +
             states("sensor.garage_buiten_1_vermogen") | float(default=0) + 
             states("sensor.garage_buiten_2_vermogen") | float(default=0) + 
-            states("sensor.fien_1_vermogen") | float(default=0) + 
-            states("sensor.fien_2_vermogen") | float(default=0) + 
-            states("sensor.fien_3_vermogen") | float(default=0) + 
-            states("sensor.noor_1_vermogen") | float(default=0) + 
-            states("sensor.noor_2_vermogen") | float(default=0) + 
+            states("sensor.slaapkamer_fien_1_vermogen") | float(default=0) + 
+            states("sensor.slaapkamer_fien_2_vermogen") | float(default=0) + 
+            states("sensor.slaapkamer_fien_3_vermogen") | float(default=0) + 
+            states("sensor.slaapkamer_noor_1_vermogen") | float(default=0) + 
+            states("sensor.slaapkamer_noor_2_vermogen") | float(default=0) + 
             states("sensor.spot_slaapkamer_vermogen") | float(default=0) + 
             states("sensor.zithoek_links_achter_vermogen") | float(default=0) +
             states("sensor.zithoek_links_midden_vermogen") | float(default=0) + 
             states("sensor.zithoek_links_voor_vermogen") | float(default=0) + 
             states("sensor.zithoek_rechts_achter_vermogen") | float(default=0) + 
             states("sensor.zithoek_rechts_midden_vermogen") | float(default=0) + 
-            states("sensor.zithoek_rechts_voor_vermogen") | float(default=0) +
-            states("sensor.terras_1_vermogen") | float(default=0) + 
-            states("sensor.terras_2_vermogen") | float(default=0)) | round (3)}}
+            states("sensor.zithoek_rechts_voor_vermogen") | float(default=0)) | round (3)}}
 
-    - name: Media vermogen
-      unique_id: 39808ac6-7afa-44c0-a42b-b106e1eda067
-      unit_of_measurement: "W"
-      device_class: power
-      state: >
-        {{ (states("sensor.2c_vermogen") | float(default=0) + 
-            states("sensor.badkamer_vermogen") | float(default=0) + 
-            states("sensor.keuken_vermogen") | float(default=0) + 
-            states("sensor.living_2_vermogen") | float(default=0) + 
-            states("sensor.move_vermogen") | float(default=0) + 
-            states("sensor.philips_tv_boven_vermogen") | float(default=0) + 
-            states("sensor.philips_tv_vermogen") | float(default=0) +
-            states("sensor.slaapkamer_fien_vermogen") | float(default=0) + 
-            states("sensor.slaapkamer_noor_vermogen") | float(default=0) + 
-            states("sensor.tv_der_kinders_vermogen") | float(default=0)) | round (3)}}
+    # - name: Media vermogen
+    #   unique_id: 39808ac6-7afa-44c0-a42b-b106e1eda067
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   state: >
+    #     {{ (states("sensor.2c_vermogen") | float(default=0) +
+    #         states("sensor.badkamer_vermogen") | float(default=0) +
+    #         states("sensor.keuken_vermogen") | float(default=0) +
+    #         states("sensor.living_2_vermogen") | float(default=0) +
+    #         states("sensor.move_vermogen") | float(default=0) +
+    #         states("sensor.philips_tv_boven_vermogen") | float(default=0) +
+    #         states("sensor.philips_tv_vermogen") | float(default=0) +
+    #         states("sensor.slaapkamer_fien_vermogen") | float(default=0) +
+    #         states("sensor.slaapkamer_noor_vermogen") | float(default=0) +
+    #         states("sensor.tv_der_kinders_vermogen") | float(default=0)) | round (3)}}
 
-    - name: Raspberry vermogen
-      unique_id: 09213cf5-4f62-4aeb-8576-560be82a8102
-      unit_of_measurement: "W"
-      device_class: power
-      state: >
-        {{ (states("sensor.badkamerpi_vermogen") | float(default=0) + 
-            states("sensor.brewpi_vermogen") | float(default=0) + 
-            states("sensor.keukenpi_vermogen") | float(default=0) + 
-            states("sensor.livingpi_vermogen") | float(default=0) + 
-            states("sensor.garagepi_vermogen") | float(default=0) + 
-            states("sensor.poortpi_vermogen") | float(default=0) + 
-            states("sensor.slaapkamerpi_vermogen") | float(default=0) + 
-            states("sensor.verwarmingpi_vermogen") | float(default=0) + 
-            states("sensor.tvpi_vermogen") | float(default=0)) | round (3)}}
+    # - name: Raspberry vermogen
+    #   unique_id: 09213cf5-4f62-4aeb-8576-560be82a8102
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   state: >
+    #     {{ (states("sensor.badkamerpi_vermogen") | float(default=0) +
+    #         states("sensor.brewpi_vermogen") | float(default=0) +
+    #         states("sensor.keukenpi_vermogen") | float(default=0) +
+    #         states("sensor.livingpi_vermogen") | float(default=0) +
+    #         states("sensor.garagepi_vermogen") | float(default=0) +
+    #         states("sensor.poortpi_vermogen") | float(default=0) +
+    #         states("sensor.slaapkamerpi_vermogen") | float(default=0) +
+    #         states("sensor.verwarmingpi_vermogen") | float(default=0) +
+    #         states("sensor.tvpi_vermogen") | float(default=0)) | round (3)}}
 
     - name: Verluchting vermogen
       unique_id: fa9b4afd-7d1b-4e6d-a7e7-909919db295c
@@ -239,10 +237,8 @@
             - states("sensor.toestellen_vermogen") | float(default=0) 
             - states("sensor.verlichting_vermogen") | float(default=0) 
             - states("sensor.verluchting_vermogen") | float(default=0) 
-            - states("sensor.media_vermogen") | float(default=0)
-            - states("sensor.raspberry_vermogen") | float(default=0)
-            - states("sensor.imac5k_vermogen") | float(default=0)
-            - states("sensor.ps4_vermogen") | float(default=0) )
+            - states("sensor.media_vermogen_2") | float(default=0)
+            - states("sensor.raspi_vermogen") | float(default=0) )
             | round (2) > 0
             %}
             {{ ( states("sensor.huidig_verbruik") | float(default=0) 
@@ -250,10 +246,8 @@
                 - states("sensor.toestellen_vermogen") | float(default=0) 
                 - states("sensor.verlichting_vermogen") | float(default=0) 
                 - states("sensor.verluchting_vermogen") | float(default=0) 
-                - states("sensor.media_vermogen") | float(default=0)
-                - states("sensor.raspberry_vermogen") | float(default=0)
-                - states("sensor.imac5k_vermogen") | float(default=0)
-                - states("sensor.ps4_vermogen") | float(default=0) )
+                - states("sensor.media_vermogen_2") | float(default=0)
+                - states("sensor.raspi_vermogen") | float(default=0) )
                 | round (2)
                 }}
             {% else  %}
