@@ -37,17 +37,17 @@ sonos_spreek:
       target:
         entity_id: >
           {% if is_state('input_select.welke_sonos', 'Keuken') %}
-            media_player.mass_keuken
+            media_player.keuken
           {% elif is_state('input_select.welke_sonos', 'Badkamer') %}
-            media_player.mass_badkamer
+            media_player.badkamer
           {% elif is_state('input_select.welke_sonos', 'Living') %}
-            media_player.mass_living_2
+            media_player.living_2
           {% elif is_state('input_select.welke_sonos', 'Move') %}
-            media_player.mass_move
+            media_player.move
           {% elif is_state('input_select.welke_sonos', 'Noor') %}
-            media_player.mass_slaapkamer_noor
+            media_player.slaapkamer_noor
           {% elif is_state('input_select.welke_sonos', 'Fien') %}
-            media_player.mass_slaapkamer_fien
+            media_player.slaapkamer_fien
           {% else %}
             False
           {% endif %}
@@ -60,15 +60,15 @@ sonos_spreek:
         extra:
           volume: >
             {% if is_state('input_select.sonos_volume', 'Maximum') %}
-              1
+              100
             {% elif is_state('input_select.sonos_volume', 'Luid') %}
-              0.9
+              90
             {% elif is_state('input_select.sonos_volume', 'Medium') %}
-              0.8
+              80
             {% elif is_state('input_select.sonos_volume', 'Stil') %}
-              0.7
+              70
             {% elif is_state('input_select.sonos_volume', 'Minimum') %}
-              0.6
+              60
             {% else %}
               False
             {% endif %}
