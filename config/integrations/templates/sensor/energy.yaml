@@ -403,3 +403,17 @@
       device_class: power
       state: >
         {{ (states("sensor.huawei_active_power") | float(default=0) + states("sensor.solaredge_inverter_watts") | float(default=0)) | round(2) }}
+
+    - name: Koffiezet vermogen
+      unique_id: 5774b780-4758-40c7-82e1-db6a5f2e0a01
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ states("sensor.koffiezet_vermogen_2") | float(default=0) | round(2) }}
+
+    - name: Garage oplader vermogen
+      unique_id: 3fffa40d-41fd-4aee-a272-79f8cba32497
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ states("sensor.garage_oplader_vermogen_2") | float(default=0) | round(2) }}
