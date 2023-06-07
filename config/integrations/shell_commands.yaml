@@ -49,8 +49,8 @@ post_perfect_optim: >-
 forecast_model_fit_warmtepompboiler: >-
   curl -i -H 'Content-Type: application/json' -X POST -d '{
     "days_to_retrieve": 15,
-    "model_type": "load_forecast",
-    "var_model": "sensor.huidig_verbruik_zonder_wp",
+    "model_type": "warmtepomp_forecast",
+    "var_model": "sensor.warmtepompboiler_huidig_verbruik",
     "sklearn_model": "KNeighborsRegressor",
     "num_lags": 48,
     "split_date_delta": '48h',
@@ -59,6 +59,7 @@ forecast_model_fit_warmtepompboiler: >-
 
 forecast_model_predict_warmtepompboiler: >-
   curl -i -H 'Content-Type: application/json' -X POST -d '{
+    "model_type": "warmtepomp_forecast",
     "model_predict_publish": True,
     "model_predict_entity_id": "sensor.p_warmtepompboiler_custom_model",
     "model_predict_unit_of_measurement": "W",
@@ -66,6 +67,37 @@ forecast_model_predict_warmtepompboiler: >-
     }' http://localhost:5001/action/forecast-model-predict
 
 forecast_model_tune_warmtepompboiler: >-
+  curl -i -H 'Content-Type: application/json' -X POST -d '{
+    "days_to_retrieve": 2,
+    "model_type": "warmtepompboiler",
+    "var_model": "sensor.warmtepompboiler_huidig_verbruik",
+    "sklearn_model": "KNeighborsRegressor",
+    "num_lags": 48,
+    "split_date_delta": '48h',
+    "perform_backtest": False
+    }' http://localhost:5001/action/forecast-model-tune
+
+forecast_model_fit_load_zonder_wp: >-
+  curl -i -H 'Content-Type: application/json' -X POST -d '{
+    "days_to_retrieve": 15,
+    "model_type": "load_zonder_wp_forecast",
+    "var_model": "sensor.huidig_verbruik_zonder_wp",
+    "sklearn_model": "KNeighborsRegressor",
+    "num_lags": 48,
+    "split_date_delta": '48h',
+    "perform_backtest": False
+    }' http://localhost:5001/action/forecast-model-fit
+
+forecast_model_predict_load_zonder_wp: >-
+  curl -i -H 'Content-Type: application/json' -X POST -d '{
+    "model_type": "load_zonder_wp_forecast",
+    "model_predict_publish": True,
+    "model_predict_entity_id": "sensor.p_load_zonder_wp_custom_model",
+    "model_predict_unit_of_measurement": "W",
+    "model_predict_friendly_name": "Warmtepompboiler custom model"
+    }' http://localhost:5001/action/forecast-model-predict
+
+forecast_model_tune_load_zonder_wp: >-
   curl -i -H 'Content-Type: application/json' -X POST -d '{
     "days_to_retrieve": 2,
     "model_type": "warmtepompboiler",
