@@ -1,21 +1,21 @@
 - binary_sensor:
-    - name: Warm water mag op
-      unique_id: 3d3546e3-6a19-4d11-b0db-a5590a9f6f3d
-      state: >
-        {{  states('sensor.thermostaat') | int(0) < 45 and
-            states("input_boolean.warm_water_5u") == "off" and 
-            states("input_boolean.warm_water_2u") == "off" and
-            states("binary_sensor.warmtepompboiler_aan_delay_off") == "off" }}
-      icon: mdi:water-boiler
+    # - name: Warm water mag op
+    #   unique_id: 3d3546e3-6a19-4d11-b0db-a5590a9f6f3d
+    #   state: >
+    #     {{  states('sensor.thermostaat') | int(0) < 45 and
+    #         states("input_boolean.warm_water_5u") == "off" and
+    #         states("input_boolean.warm_water_2u") == "off" and
+    #         states("binary_sensor.warmtepompboiler_aan_delay_off") == "off" }}
+    #   icon: mdi:water-boiler
 
-    - name: Verwarming boost mag op
-      unique_id: 9306b37c-4103-4e37-a9e8-91139171dd39
-      state: >
-        {{  states('sensor.buiten_buiten_temperatuur') | float(0) < 12 and
-            states("input_boolean.op_verlof") == "off" and
-            state_attr("climate.living", "preset_mode") == "Schedule" and 
-            state_attr("climate.living", "current_temperature") | int(0) < 20 }}
-      icon: mdi:heating-coil
+    # - name: Verwarming boost mag op
+    #   unique_id: 9306b37c-4103-4e37-a9e8-91139171dd39
+    #   state: >
+    #     {{  states('sensor.buiten_buiten_temperatuur') | float(0) < 12 and
+    #         states("input_boolean.op_verlof") == "off" and
+    #         state_attr("climate.living", "preset_mode") == "Schedule" and
+    #         state_attr("climate.living", "current_temperature") | int(0) < 20 }}
+    #   icon: mdi:heating-coil
 
     - name: Wasmachien staat op
       unique_id: 6c5345d8-b4c3-46ca-b3d4-56cf5c5f6534

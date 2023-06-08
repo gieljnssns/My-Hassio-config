@@ -267,35 +267,35 @@
             {% endif %}
 
     ###  Percentages  ###
-    - name: Percentage eigen verbruik dagelijks
-      unique_id: f078023e-1b29-47c1-bf23-cc0b91af5363
-      unit_of_measurement: "%"
-      state: >
-        {% if states("sensor.daily_solar") | float(default=0) > 0 and (states("sensor.daily_own_consumption") | float(default=0) - states("sensor.daily_solar") | float(default=0)) <= 0 %}
-          {{ (states("sensor.daily_own_consumption") | float(default=0) / states("sensor.daily_solar") | float(default=0) * 100 ) | round(2) }}
-        {% else  %}
-          {{ 100 | float(default=0) }}
-        {% endif %}
+    # - name: Percentage eigen verbruik dagelijks
+    #   unique_id: f078023e-1b29-47c1-bf23-cc0b91af5363
+    #   unit_of_measurement: "%"
+    #   state: >
+    #     {% if states("sensor.daily_solar") | float(default=0) > 0 and (states("sensor.daily_own_consumption") | float(default=0) - states("sensor.daily_solar") | float(default=0)) <= 0 %}
+    #       {{ (states("sensor.daily_own_consumption") | float(default=0) / states("sensor.daily_solar") | float(default=0) * 100 ) | round(2) }}
+    #     {% else  %}
+    #       {{ 100 | float(default=0) }}
+    #     {% endif %}
 
-    - name: Percentage eigen verbruik maandelijks
-      unique_id: 4486591c-aa39-4ef2-94dc-531ac34426b4
-      unit_of_measurement: "%"
-      state: >
-        {% if states("sensor.monthly_solar") | float(default=0) > 0 and (states("sensor.monthly_own_consumption") | float(default=0) - states("sensor.monthly_solar") | float(default=0)) <= 0 %}
-          {{ (states("sensor.monthly_own_consumption") | float(default=0) / states("sensor.monthly_solar") | float(default=0) * 100 ) | round(2) }}
-        {% else  %}
-          {{ 100 | float(default=0) }}
-        {% endif %}
+    # - name: Percentage eigen verbruik maandelijks
+    #   unique_id: 4486591c-aa39-4ef2-94dc-531ac34426b4
+    #   unit_of_measurement: "%"
+    #   state: >
+    #     {% if states("sensor.monthly_solar") | float(default=0) > 0 and (states("sensor.monthly_own_consumption") | float(default=0) - states("sensor.monthly_solar") | float(default=0)) <= 0 %}
+    #       {{ (states("sensor.monthly_own_consumption") | float(default=0) / states("sensor.monthly_solar") | float(default=0) * 100 ) | round(2) }}
+    #     {% else  %}
+    #       {{ 100 | float(default=0) }}
+    #     {% endif %}
 
-    - name: Percentage eigen verbruik jaarlijks
-      unique_id: 1c00db0b-0e4b-4070-8da0-839757f6d355
-      unit_of_measurement: "%"
-      state: >
-        {% if states("sensor.yearly_solar") | float(default=0) > 0 and (states("sensor.yearly_own_consumption") | float(default=0) - states("sensor.yearly_solar") | float(default=0)) <= 0 %}
-          {{ (states("sensor.yearly_own_consumption") | float(default=0) / states("sensor.yearly_solar") | float(default=0) * 100 ) | round(2) }}
-        {% else  %}
-          {{ 100 | float(default=0) }}
-        {% endif %}
+    # - name: Percentage eigen verbruik jaarlijks
+    #   unique_id: 1c00db0b-0e4b-4070-8da0-839757f6d355
+    #   unit_of_measurement: "%"
+    #   state: >
+    #     {% if states("sensor.yearly_solar") | float(default=0) > 0 and (states("sensor.yearly_own_consumption") | float(default=0) - states("sensor.yearly_solar") | float(default=0)) <= 0 %}
+    #       {{ (states("sensor.yearly_own_consumption") | float(default=0) / states("sensor.yearly_solar") | float(default=0) * 100 ) | round(2) }}
+    #     {% else  %}
+    #       {{ 100 | float(default=0) }}
+    #     {% endif %}
 
     ###  Capaciteitstarief  ###
     - name: Max peak 2
