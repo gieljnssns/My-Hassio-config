@@ -158,27 +158,57 @@
             {%- endif %}
           {%- endfor %}
           {{ (new_list.all)[:36]}}
-    # - name: Pv power forecast list length
-    #   unique_id: 6eef6afa-9323-4b46-a043-7a11aff86f2d
-    #   state: >
-    #     {{  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')
-    #             |selectattr('period_start','gt',utcnow())
-    #             |map(attribute='pv_estimate')
-    #             |map('multiply',2000)
-    #             |map('int')
-    #             |list) | length
-    #             }}
-    # state: >
-    #   {{  ((state_attr('sensor.solcast_forecast_today', 'detailedForecast')
-    #           |selectattr('period_start','gt',utcnow())
-    #           |map(attribute='pv_estimate')
-    #           |map('multiply',2000)
-    #           |map('int')
-    #           |list
-    #       + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
-    #           |selectattr('period_start','gt',utcnow())
-    #           |map(attribute='pv_estimate')
-    #           |map('multiply',2000)
-    #           |map('int')
-    #           |list)[:48]) | length
-    #           }}
+
+#     - name: Pv power forecast list
+#       unique_id: 674ca519-7ca7-43d1-8de7-fa3b56e4227e
+#       state: >
+#         {{ states("sensor.solcast_forecast_today")}}
+#       availability: >-
+#         {{ states("sensor.solcast_forecast_today")
+#           not in ["unknown", "unavailable", "none"] }}
+#       attributes:
+#         list: >
+#           {%- set list =  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')
+#                |selectattr('period_start','gt',utcnow())
+#                |map(attribute='period_start')
+#                |list
+#            + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
+#                |selectattr('period_start','gt',utcnow())
+#                |map(attribute='period_start')
+#                |list)[:36]
+#                -%}
+#           {%- set new_list = namespace(all=[]) %}
+#           {%- for i in range (list | length) %}
+#             {%- set hour = (list[i].hour) | int%}
+#             {%- if hour in [13, 14, 15, 16, 17, 18] %}
+#               {%- set new_list.all = new_list.all + [ 0.11 ] %}
+#             {%- else %}
+#               {%- set new_list.all = new_list.all + [ 0 ] %}
+#             {%- endif %}
+#           {%- endfor %}
+#           {{ (new_list.all)[:36]}}
+
+# post_mpc_optim: "curl -i -H \"Content-Type: application/json\" -X POST -d '{\"load_cost_forecast\":{{(
+#           ([states('sensor.amber_general_price')|float(0)] +
+#           state_attr('sensor.amber_general_forecast', 'forecasts') |map(attribute='per_kwh')|list)[:48])
+#           }}, \"load_power_forecast\":{{
+#           [states('sensor.power_load_no_var_loads')|int] +(states('input_text.fi_fo_buffer').split(', ')|map('multiply',1000)|map('int')|list)[1:]
+#           }}, \"prod_price_forecast\":{{(
+#           ([states('sensor.amber_feed_in_price')|float(0)] +
+#           (state_attr('sensor.amber_feed_in_forecast', 'forecasts')|map(attribute='per_kwh')|list)))
+#           }}, \"pv_power_forecast\":{{[min(15000,(states('sensor.APF_Generation_Entity')|int(0)
+#                                       /(states('sensor.solaredge_i1_active_power_limit')|int(0)
+#                                         +states('sensor.solaredge_i2_active_power_limit')|int(0))*200)|int(0))]
+#             + state_attr('sensor.solcast_forecast_today', 'detailedForecast')|selectattr('period_start','gt',utcnow())
+#               | map(attribute='pv_estimate')|map('multiply',2000)|map('int')|list
+#             + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')|selectattr('period_start','gt',utcnow())
+#               | map(attribute='pv_estimate')|map('multiply',2000)|map('int')|list
+#           }}, \"prediction_horizon\":{{min(48,
+#           (state_attr('sensor.amber_feed_in_forecast', 'forecasts')|map(attribute='per_kwh')|list|length)+1)
+#           }}, \"alpha\":1, \"beta\":0, \"soc_init\":{{(states('sensor.filtered_powerwall_soc')|int(0))/100
+#           }}, \"soc_final\":0.0, \"def_total_hours\":[{{states('sensor.def_total_hours_pool_filter')
+#           }},{{states('sensor.def_total_hours_pool_heatpump')
+#           }},{{states('sensor.def_total_hours_ev')
+#           }},{{states('sensor.def_total_hours_hvac')
+#           }},{{states('sensor.def_total_hours_hws')
+#           }}]}' http://localhost:5000/action/naive-mpc-optim"
