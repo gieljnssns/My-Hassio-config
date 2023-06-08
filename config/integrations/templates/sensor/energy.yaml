@@ -1,13 +1,13 @@
 - sensor:
-    - name: "SolarEdge totaal"
-      unique_id: 70625593-4660-42d3-ad93-6ce179a96205
-      state: >
-        {{ (states('sensor.solaredge_lifetime_energy') | float(0) / 1000) | round(2) }}
-      unit_of_measurement: "kWh"
-      state_class: total_increasing
-      device_class: energy
-      availability: >
-        {{ states('sensor.solaredge_lifetime_energy')|float(0) > 1 }}
+    # - name: "SolarEdge totaal"
+    #   unique_id: 70625593-4660-42d3-ad93-6ce179a96205
+    #   state: >
+    #     {{ (states('sensor.solaredge_lifetime_energy') | float(0) / 1000) | round(2) }}
+    #   unit_of_measurement: "kWh"
+    #   state_class: total_increasing
+    #   device_class: energy
+    #   availability: >
+    #     {{ states('sensor.solaredge_lifetime_energy')|float(0) > 1 }}
 
     - name: "SolarEdge energy"
       unique_id: f7e4ae3b-cb83-4e93-8955-c681d4025ea6
@@ -124,39 +124,39 @@
             {{ 0 | float(default=0) }}
         {% endif %}
 
-    - name: Grid energy consumption
-      unique_id: ff0e2d15-ee8f-4dd2-a979-6f21c0fd4a2b
-      unit_of_measurement: "kWh"
-      device_class: energy
-      availability: >-
-        {{ states("sensor.daily_energy") and 
-          states("sensor.daily_solar")
-          not in ["unknown", "unavailable", "none"] }}
-      state: >
-        {%- if states("sensor.daily_solar") | float(default=0) < states("sensor.daily_energy") | float(default=0) %}
-            {{ (states("sensor.daily_energy") | float(default=0) - states("sensor.daily_solar") | float(default=0))  | round(3)  }}
-        {%- elif states("sensor.daily_solar") | float(default=0) > states("sensor.daily_energy") | float(default=0) %}
-            {{ 0 | float(default=0) }}
-        {% else  %}
-            {{ 0 | float(default=0) }}
-        {% endif %}
+    # - name: Grid energy consumption
+    #   unique_id: ff0e2d15-ee8f-4dd2-a979-6f21c0fd4a2b
+    #   unit_of_measurement: "kWh"
+    #   device_class: energy
+    #   availability: >-
+    #     {{ states("sensor.daily_energy") and
+    #       states("sensor.daily_solar")
+    #       not in ["unknown", "unavailable", "none"] }}
+    #   state: >
+    #     {%- if states("sensor.daily_solar") | float(default=0) < states("sensor.daily_energy") | float(default=0) %}
+    #         {{ (states("sensor.daily_energy") | float(default=0) - states("sensor.daily_solar") | float(default=0))  | round(3)  }}
+    #     {%- elif states("sensor.daily_solar") | float(default=0) > states("sensor.daily_energy") | float(default=0) %}
+    #         {{ 0 | float(default=0) }}
+    #     {% else  %}
+    #         {{ 0 | float(default=0) }}
+    #     {% endif %}
 
-    - name: Grid energy production
-      unique_id: 98cc83e2-6945-4d82-859a-7f2791a6adac
-      unit_of_measurement: "kWh"
-      device_class: energy
-      availability: >-
-        {{ states("sensor.daily_energy") and 
-          states("sensor.daily_solar")
-          not in ["unknown", "unavailable", "none"] }}
-      state: >
-        {%- if states("sensor.daily_solar") | float(default=0) <= states("sensor.daily_energy") | float(default=0) %}
-            {{ 0 | float(default=0) }}
-        {%- elif states("sensor.daily_solar") | float(default=0) > states("sensor.daily_energy") | float(default=0) %}
-            {{ (states("sensor.daily_solar") | float(default=0) - states("sensor.daily_energy") | float(default=0))  | round(3) }}
-        {% else  %}
-            {{ 0 | float(default=0) }}
-        {% endif %}
+    # - name: Grid energy production
+    #   unique_id: 98cc83e2-6945-4d82-859a-7f2791a6adac
+    #   unit_of_measurement: "kWh"
+    #   device_class: energy
+    #   availability: >-
+    #     {{ states("sensor.daily_energy") and
+    #       states("sensor.daily_solar")
+    #       not in ["unknown", "unavailable", "none"] }}
+    #   state: >
+    #     {%- if states("sensor.daily_solar") | float(default=0) <= states("sensor.daily_energy") | float(default=0) %}
+    #         {{ 0 | float(default=0) }}
+    #     {%- elif states("sensor.daily_solar") | float(default=0) > states("sensor.daily_energy") | float(default=0) %}
+    #         {{ (states("sensor.daily_solar") | float(default=0) - states("sensor.daily_energy") | float(default=0))  | round(3) }}
+    #     {% else  %}
+    #         {{ 0 | float(default=0) }}
+    #     {% endif %}
 
     ###  Combinatie  ###
     - name: Verlichting vermogen
