@@ -29,9 +29,10 @@ post_mpc_optim: >-
       {{  states('sensor.afwasmachien_uren')  }},
       {{  states('sensor.warmtepompboiler_uren')  }}],
     "set_def_constant":[true, true, true, true],
-    "pv_power_forecast":{{  state_attr('sensor.pv_power_forecast_list', 'list')  }},
-    "prod_price_forecast":{{  state_attr('sensor.prod_price_forecast_list', 'list')  }},
-    "prediction_horizon":{{  state_attr('sensor.pv_power_forecast_list', 'list')| length }}
+    "pv_power_forecast":{{ state_attr('sensor.pv_power_forecast_list', 'list')  }},
+    "prod_price_forecast":{{ state_attr('sensor.prod_price_forecast_list', 'list')  }},
+    "load_cost_forecast":{{ state_attr('sensor.cost_forecast_list', 'list')  }},
+    "prediction_horizon":{{ state_attr('sensor.pv_power_forecast_list', 'list')| length }}
     }' http://localhost:5001/action/naive-mpc-optim
 
 post_perfect_optim: >-

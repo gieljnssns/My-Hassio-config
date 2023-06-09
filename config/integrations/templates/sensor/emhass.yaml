@@ -149,44 +149,76 @@
                |list)[:36]
                -%}
           {%- set new_list = namespace(all=[]) %}
-          {%- for i in range (list | length) %}
-            {%- set hour = (list[i].hour) | int%}
-            {%- if hour in [13, 14, 15, 16, 17, 18] %}
-              {%- set new_list.all = new_list.all + [ 0.11 ] %}
-            {%- else %}
-              {%- set new_list.all = new_list.all + [ 0 ] %}
-            {%- endif %}
-          {%- endfor %}
+          {%- if states("input_boolean.emhass_fast") == "on" and (
+                 states("input_boolean.wasmachien_starten") == "on" or 
+                 states("input_boolean.droogkast_starten") == "on" or 
+                 states("input_boolean.afwasmachien_starten") == "on")%}
+            {%- set duration = (states("sensor.wasmachien_uren") | int + 
+                                states("sensor.afwasmachien_uren") | int + 
+                                states("sensor.droogkast_uren") | int) * 2 %}
+            {%- for i in range (list | length) %}
+              {%- if i < duration %}
+                {%- set new_list.all = new_list.all + [ 0 ] -%}
+              {%- else %}
+                {%- set new_list.all = new_list.all + [ 0.11 ] %}
+              {%- endif %}
+            {%- endfor %}
+          {% else %}
+            {%- for i in range (list | length) %}
+              {%- set hour = (list[i].hour) | int%}
+              {%- if hour in [13, 14, 15, 16, 17] %}
+                {%- set new_list.all = new_list.all + [ 0.11 ] %}
+              {%- else %}
+                {%- set new_list.all = new_list.all + [ 0 ] %}
+              {%- endif %}
+            {%- endfor %}
+          {% endif -%}
           {{ (new_list.all)[:36]}}
 
-#     - name: Pv power forecast list
-#       unique_id: 674ca519-7ca7-43d1-8de7-fa3b56e4227e
-#       state: >
-#         {{ states("sensor.solcast_forecast_today")}}
-#       availability: >-
-#         {{ states("sensor.solcast_forecast_today")
-#           not in ["unknown", "unavailable", "none"] }}
-#       attributes:
-#         list: >
-#           {%- set list =  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')
-#                |selectattr('period_start','gt',utcnow())
-#                |map(attribute='period_start')
-#                |list
-#            + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
-#                |selectattr('period_start','gt',utcnow())
-#                |map(attribute='period_start')
-#                |list)[:36]
-#                -%}
-#           {%- set new_list = namespace(all=[]) %}
-#           {%- for i in range (list | length) %}
-#             {%- set hour = (list[i].hour) | int%}
-#             {%- if hour in [13, 14, 15, 16, 17, 18] %}
-#               {%- set new_list.all = new_list.all + [ 0.11 ] %}
-#             {%- else %}
-#               {%- set new_list.all = new_list.all + [ 0 ] %}
-#             {%- endif %}
-#           {%- endfor %}
-#           {{ (new_list.all)[:36]}}
+    - name: Cost forecast list
+      unique_id: 1e92ec2a-1886-4322-8cb9-7cef05077dec
+      state: >
+        {{ states("sensor.solcast_forecast_today")}}
+      availability: >-
+        {{ states("sensor.solcast_forecast_today")
+          not in ["unknown", "unavailable", "none"] }}
+      attributes:
+        list: >
+          {%- set list =  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')
+               |selectattr('period_start','gt',utcnow())
+               |map(attribute='period_start')
+               |list
+           + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
+               |selectattr('period_start','gt',utcnow())
+               |map(attribute='period_start')
+               |list)[:36]
+               -%}
+          {%- set new_list = namespace(all=[]) %}
+          {%- if states("input_boolean.emhass_fast") == "on" and (
+                 states("input_boolean.wasmachien_starten") == "on" or 
+                 states("input_boolean.droogkast_starten") == "on" or 
+                 states("input_boolean.afwasmachien_starten") == "on")%}
+            {%- set duration = (states("sensor.wasmachien_uren") | int + 
+                                states("sensor.afwasmachien_uren") | int + 
+                                states("sensor.droogkast_uren") | int) * 2 %}
+            {%- for i in range (list | length) %}
+              {%- if i < duration %}
+                {%- set new_list.all = new_list.all + [ 0.1684 ] -%}
+              {%- else %}
+                {%- set new_list.all = new_list.all + [ 0.1784 ] %}
+              {%- endif %}
+            {%- endfor %}
+          {% else %}
+            {%- for i in range (list | length) %}
+              {%- set hour = (list[i].hour) | int%}
+              {%- if hour in [13, 14, 15, 16, 17] %}
+                {%- set new_list.all = new_list.all + [ 0.1784 ] %}
+              {%- else %}
+                {%- set new_list.all = new_list.all + [ 0.1684 ] %}
+              {%- endif %}
+            {%- endfor %}
+          {% endif -%}
+          {{ (new_list.all)[:36]}}
 
 # post_mpc_optim: "curl -i -H \"Content-Type: application/json\" -X POST -d '{\"load_cost_forecast\":{{(
 #           ([states('sensor.amber_general_price')|float(0)] +
