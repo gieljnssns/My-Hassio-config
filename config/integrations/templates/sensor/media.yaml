@@ -43,6 +43,14 @@
           {{radio}}
         {% endif %}
       attributes:
+        radio_mode: >
+          {% set numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] %}
+          {% set number = numbers | random  %}
+          {% if number % 2 == 0 %}
+            true  
+          {% else %}
+            false
+          {% endif %}
         type: >
           {% set radios = [ "VRT Studio Brussel - Bruut", 
                             "Pinguin On the Rocks", 

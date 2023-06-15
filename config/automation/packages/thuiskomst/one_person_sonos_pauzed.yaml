@@ -76,6 +76,9 @@ action:
               - condition: state
                 entity_id: input_boolean.giel_slaapt_na_nacht
                 state: "off"
-  - service: media_player.media_play
-    data_template:
-      entity_id: media_player.mass_keuken
+  - service: script.random_music
+    data:
+      sonos_entity: media_player.mass_keuken
+  # - service: media_player.media_play
+  #   data_template:
+  #     entity_id: media_player.mass_keuken

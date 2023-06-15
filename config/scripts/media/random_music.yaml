@@ -17,6 +17,8 @@ random_music:
               data:
                 enqueue_mode: replace
                 command: play_media
+                radio_mode: >
+                  {{ state_attr("sensor.random_music", "radio_mode") }}
                 player_id: "{{ sonos_entity }}"
                 uri: >
                   {{ states("sensor.random_music") }}
