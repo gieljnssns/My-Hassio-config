@@ -21,3 +21,19 @@
           states('sensor.buitentemperatuur_gefilterd') and
           states('sensor.binnen_lowpass')
           not in ["unknown", "unavailable", "none"] }}
+
+    - name: Buiten temperatuur
+      unique_id: e04b3353-a23c-41ee-9329-b5d3b2526ca6
+      state: >
+        {{ states("sensor.buiten_buiten_temperatuur") }}
+      unit_of_measurement: "°C"
+      availability: >
+        {{ states("sensor.buiten_buiten_temperatuur") != "unknown" and states("sensor.buiten_buiten_temperatuur") != "unavailable" }}
+
+    - name: Buiten luchtdruk
+      unique_id: 1fdafdec-04fa-46fd-80ad-339db820d294
+      state: >
+        {{ states("sensor.buiten_buiten_luchtdruk") }}
+      unit_of_measurement: "°C"
+      availability: >
+        {{ states("sensor.buiten_buiten_luchtdruk") != "unknown" and states("sensor.buiten_buiten_luchtdruk") != "unavailable" }}
