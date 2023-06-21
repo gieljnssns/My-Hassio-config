@@ -69,14 +69,13 @@
       unique_id: 8225bcd3-62ca-40af-8891-ba06a95eed91
       unit_of_measurement: "uur"
       availability: >-
-        {{ states("switch.warm_water") and 
-          states("input_boolean.warm_water_starten") and
-          states("input_boolean.op_verlof") and
-          states("sensor.thermostaat") and
-          states("binary_sensor.warmtepompboiler_aan") and
-          states("sensor.warmtepompboiler_is_gestart_op")
-          not in ["unknown", "unavailable", "none"] 
-          and states("sensor.thermostaat") is string }}
+        {{ has_value("switch.warm_water") and 
+          has_value("input_boolean.warm_water_starten") and
+          has_value("input_boolean.op_verlof") and
+          has_value("sensor.thermostaat") and
+          has_value("binary_sensor.warmtepompboiler_aan") and
+          has_value("sensor.warmtepompboiler_is_gestart_op") and
+          has_value("sensor.thermostaat") }}
       state: >
         {% if states("input_boolean.op_verlof") == 'off' %}
           {% if states("input_boolean.warm_water_starten") == 'on' %}
@@ -113,8 +112,7 @@
       state: >
         {{ states("sensor.solcast_forecast_today")}}
       availability: >-
-        {{ states("sensor.solcast_forecast_today")
-          not in ["unknown", "unavailable", "none"] }}
+        {{ has_value("sensor.solcast_forecast_today") }}
       attributes:
         list: >
           {{  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')
@@ -135,8 +133,7 @@
       state: >
         {{ states("sensor.solcast_forecast_today")}}
       availability: >-
-        {{ states("sensor.solcast_forecast_today")
-          not in ["unknown", "unavailable", "none"] }}
+        {{ has_value("sensor.solcast_forecast_today") }}
       attributes:
         list: >
           {%- set list =  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')
@@ -180,8 +177,7 @@
       state: >
         {{ states("sensor.solcast_forecast_today")}}
       availability: >-
-        {{ states("sensor.solcast_forecast_today")
-          not in ["unknown", "unavailable", "none"] }}
+        {{ has_value("sensor.solcast_forecast_today") }}
       attributes:
         list: >
           {%- set list =  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')

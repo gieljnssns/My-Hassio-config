@@ -36,10 +36,9 @@
       unit_of_measurement: "W"
       device_class: power
       availability: >-
-        {{ states("sensor.s1_vermogen") and 
-          states("sensor.s2_vermogen") and
-          states("sensor.s3_vermogen")
-          not in ["unknown", "unavailable", "none"] }}
+        {{ has_value("sensor.s1_vermogen") and 
+          has_value("sensor.s2_vermogen") and
+          has_value("sensor.s3_vermogen") }}
       state: >
         {{ (states("sensor.s1_vermogen") | float(default=0) + 
             states("sensor.s2_vermogen") | float(default=0) + 
@@ -50,10 +49,9 @@
       unit_of_measurement: "W"
       device_class: power
       availability: >-
-        {{ states("sensor.v1_vermogen") and 
-          states("sensor.v2_vermogen") and
-          states("sensor.v3_vermogen")
-          not in ["unknown", "unavailable", "none"] }}
+        {{ has_value("sensor.v1_vermogen") and 
+          has_value("sensor.v2_vermogen") and
+          has_value("sensor.v3_vermogen") }}
       state: >
         {{ (states("sensor.v1_vermogen") | float(default=0) + 
             states("sensor.v2_vermogen") | float(default=0) + 
@@ -64,9 +62,8 @@
       unit_of_measurement: "W"
       device_class: power
       availability: >-
-        {{ states("sensor.huidige_opbrengst") and 
-          states("sensor.huidig_verbruik")
-          not in ["unknown", "unavailable", "none"] }}
+        {{ has_value("sensor.huidige_opbrengst") and 
+          has_value("sensor.huidig_verbruik") }}
       state: >
         {% if (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) >= 0 %}
             {{ (states("sensor.huidig_verbruik") | float(default=0)) | round(2)  }}
@@ -81,10 +78,9 @@
       unit_of_measurement: "W"
       device_class: power
       availability: >-
-        {{ states("sensor.l1_vermogen") and 
-          states("sensor.l2_vermogen") and
-          states("sensor.l3_vermogen")
-          not in ["unknown", "unavailable", "none"] }}
+        {{ has_value("sensor.l1_vermogen") and 
+          has_value("sensor.l2_vermogen") and
+          has_value("sensor.l3_vermogen") }}
       state: >
         {{ ((states("sensor.l1_vermogen") | float(default=0) + 
              states("sensor.l2_vermogen") | float(default=0) + 
@@ -95,9 +91,8 @@
       unit_of_measurement: "W"
       device_class: power
       availability: >-
-        {{ states("sensor.huidige_opbrengst") and 
-          states("sensor.huidig_verbruik")
-          not in ["unknown", "unavailable", "none"] }}
+        {{ has_value("sensor.huidige_opbrengst") and 
+          has_value("sensor.huidig_verbruik") }}
       state: >
         {%- if states("sensor.huidige_opbrengst") | float(default=0) < states("sensor.huidig_verbruik") | float(default=0) %}
             {{ (states("sensor.huidig_verbruik") | float(default=0) - states("sensor.huidige_opbrengst") | float(default=0)) | round(2) }}
@@ -112,9 +107,8 @@
       unit_of_measurement: "W"
       device_class: power
       availability: >-
-        {{ states("sensor.huidige_opbrengst") and 
-          states("sensor.huidig_verbruik")
-          not in ["unknown", "unavailable", "none"] }}
+        {{ has_value("sensor.huidige_opbrengst") and 
+          has_value("sensor.huidig_verbruik") }}
       state: >
         {%- if states("sensor.huidige_opbrengst") | float(default=0) <= states("sensor.huidig_verbruik") | float(default=0) %}
             {{ 0 | float(default=0) }}
@@ -308,6 +302,26 @@
         {% macro max(X, Y) -%} {{X|float if X|float > Y|float else Y|float }} {%- endmacro %}
         {{ max(max_peak, peak) }}
 
+    - name: "Kwartierpiek"
+      unique_id: ac4a057e-c062-4954-863d-d1f428a584ce
+      state: >
+        {% set max_value = states.sensor.kwartierpiek.state|float(0) %}
+        {% set current_month = now().strftime('%m') %}
+        {% set last_reset_month = states.sensor.kwartierpiek.attributes.last_reset_month %}
+        {% if last_reset_month is defined and current_month != last_reset_month %}
+          {{ float(states.sensor.quarter_hourly_grid_consumption.state) * 4 }}
+        {% elif max_value is defined and max_value < 4 * float(states.sensor.quarter_hourly_grid_consumption.state) %}
+          {{ float(states.sensor.quarter_hourly_grid_consumption.state) * 4 }}
+        {% else %}
+          {{ max_value }}
+        {% endif %}
+      attributes:
+        last_reset_month: >
+          {{ now().strftime('%m') }}
+      unit_of_measurement: "kW"
+      state_class: measurement
+      device_class: power
+
     - name: Year peak 2
       unique_id: d4092d00-fc23-41cc-a673-34b7971b3d2d
       unit_of_measurement: "kW"
@@ -334,12 +348,11 @@
       unit_of_measurement: "W"
       device_class: power
       availability: >-
-        {{ states("sensor.huidig_verbruik") and 
-          states("sensor.wasmachien_vermogen") and
-          states("sensor.droogkast_vermogen") and
-          states("sensor.warmtepompboiler_huidig_verbruik") and
-          states("sensor.afwasmachien_vermogen")
-          not in ["unknown", "unavailable", "none"] }}
+        {{ has_value("sensor.huidig_verbruik") and 
+          has_value("sensor.wasmachien_vermogen") and
+          has_value("sensor.droogkast_vermogen") and
+          has_value("sensor.warmtepompboiler_huidig_verbruik") and
+          has_value("sensor.afwasmachien_vermogen") }}
       state: >
         {% if (states("sensor.huidig_verbruik") | float(default=0) - 
             states("sensor.wasmachien_vermogen") | float(default=0) - 
