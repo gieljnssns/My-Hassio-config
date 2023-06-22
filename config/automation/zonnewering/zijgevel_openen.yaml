@@ -49,12 +49,18 @@ condition:
     - condition: state
       entity_id: input_boolean.zijgevel_closed
       state: "on"
-    - condition: state
-      entity_id: input_boolean.living_closed
-      state: "on"
-    - condition: state
-      entity_id: input_boolean.slaapkamer_noor_closed
-      state: "on"
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.living", "current_position") < 50 }}
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.slaapkamer_noor", "current_position") < 50 }}
+#     - condition: state
+#       entity_id: input_boolean.living_closed
+#       state: "on"
+#     - condition: state
+#       entity_id: input_boolean.slaapkamer_noor_closed
+#       state: "on"
 
 action:
   - service: script.zijgevel_openen

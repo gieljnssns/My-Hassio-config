@@ -1,76 +1,76 @@
-  achtergevel_openen:
-    sequence:
-      - service: cover.open_cover
-        entity_id: cover.keuken_1_temp
-      - delay:
-          seconds: 10
-      - service: cover.open_cover
-        entity_id: cover.keuken_2_temp
-      - delay:
-          seconds: 10
-      - service: cover.open_cover
-        entity_id: cover.slaapkamer_temp
-      - delay:
-          seconds: 10
-      - service: input_boolean.turn_off
-        entity_id: input_boolean.achtergevel_closed
-      - delay:
-          minutes: 1
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: 'input_boolean.keuken_1_closed'
-            state: 'on'
-          - condition: state
-            entity_id: 'input_boolean.keuken_2_closed'
-            state: 'on'
-          - condition: state
-            entity_id: 'input_boolean.slaapkamer_closed'
-            state: 'on'
-      - service: cover.open_cover
-        entity_id: cover.keuken_1_temp
-      - delay:
-          seconds: 10
-      - service: cover.open_cover
-        entity_id: cover.keuken_2_temp
-      - delay:
-          seconds: 10
-      - service: cover.open_cover
-        entity_id: cover.slaapkamer_temp
-      - delay: '00:01:10'
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: 'input_boolean.keuken_1_closed'
-            state: 'on'
-          - condition: state
-            entity_id: 'input_boolean.keuken_2_closed'
-            state: 'on'
-          - condition: state
-            entity_id: 'input_boolean.slaapkamer_closed'
-            state: 'on'
-      - service: cover.open_cover
-        entity_id: cover.keuken_1_temp
-      - delay:
-          seconds: 10
-      - service: cover.open_cover
-        entity_id: cover.keuken_2_temp
-      - delay:
-          seconds: 10
-      - service: cover.open_cover
-        entity_id: cover.slaapkamer_temp
-      - delay: '00:01:10'
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: 'input_boolean.keuken_1_closed'
-            state: 'on'
-          - condition: state
-            entity_id: 'input_boolean.keuken_2_closed'
-            state: 'on'
-          - condition: state
-            entity_id: 'input_boolean.slaapkamer_closed'
-            state: 'on'
-      - service: notify.mobile_app_gphone
-        data_template:
-          message: "Der is iets mis me die Somfy's van den achtergevel. Fix het maar!! "
+achtergevel_openen:
+  sequence:
+    - service: cover.open_cover
+      entity_id: cover.keuken_1
+    - delay:
+        seconds: 10
+    - service: cover.open_cover
+      entity_id: cover.keuken_2
+    - delay:
+        seconds: 10
+    - service: cover.open_cover
+      entity_id: cover.slaapkamer
+    - delay:
+        seconds: 10
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.achtergevel_closed
+    # - delay:
+    #     minutes: 1
+    # - condition: or
+    #   conditions:
+    #     - condition: state
+    #       entity_id: 'input_boolean.keuken_1_closed'
+    #       state: 'on'
+    #     - condition: state
+    #       entity_id: 'input_boolean.keuken_2_closed'
+    #       state: 'on'
+    #     - condition: state
+    #       entity_id: 'input_boolean.slaapkamer_closed'
+    #       state: 'on'
+    # - service: cover.open_cover
+    #   entity_id: cover.keuken_1_temp
+    # - delay:
+    #     seconds: 10
+    # - service: cover.open_cover
+    #   entity_id: cover.keuken_2_temp
+    # - delay:
+    #     seconds: 10
+    # - service: cover.open_cover
+    #   entity_id: cover.slaapkamer_temp
+    # - delay: '00:01:10'
+    # - condition: or
+    #   conditions:
+    #     - condition: state
+    #       entity_id: 'input_boolean.keuken_1_closed'
+    #       state: 'on'
+    #     - condition: state
+    #       entity_id: 'input_boolean.keuken_2_closed'
+    #       state: 'on'
+    #     - condition: state
+    #       entity_id: 'input_boolean.slaapkamer_closed'
+    #       state: 'on'
+    # - service: cover.open_cover
+    #   entity_id: cover.keuken_1_temp
+    # - delay:
+    #     seconds: 10
+    # - service: cover.open_cover
+    #   entity_id: cover.keuken_2_temp
+    # - delay:
+    #     seconds: 10
+    # - service: cover.open_cover
+    #   entity_id: cover.slaapkamer_temp
+    # - delay: '00:01:10'
+    # - condition: or
+    #   conditions:
+    #     - condition: state
+    #       entity_id: 'input_boolean.keuken_1_closed'
+    #       state: 'on'
+    #     - condition: state
+    #       entity_id: 'input_boolean.keuken_2_closed'
+    #       state: 'on'
+    #     - condition: state
+    #       entity_id: 'input_boolean.slaapkamer_closed'
+    #       state: 'on'
+    # - service: notify.mobile_app_gphone
+    #   data_template:
+    #     message: "Der is iets mis me die Somfy's van den achtergevel. Fix het maar!! "

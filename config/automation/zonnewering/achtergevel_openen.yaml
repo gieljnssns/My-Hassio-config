@@ -48,15 +48,15 @@ condition:
     - condition: state
       entity_id: input_boolean.achtergevel_closed
       state: "on"
-    - condition: state
-      entity_id: input_boolean.keuken_1_closed
-      state: "on"
-    - condition: state
-      entity_id: input_boolean.keuken_2_closed
-      state: "on"
-    - condition: state
-      entity_id: input_boolean.slaapkamer_closed
-      state: "on"
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.keuken_1", "current_position") < 50 }}
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.keuken_2", "current_position") < 50 }}
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.slaapkamer", "current_position") < 50 }}
 
 action:
   - service: script.achtergevel_openen

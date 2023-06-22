@@ -83,13 +83,12 @@ condition:
       value_template: "{{ now().month > 3 }}" # Starting April
     - condition: template
       value_template: "{{ now().month < 10 }}" # Ending October
-    # - condition: template
-    #   value_template: "{{ as_local(states.sensor.time.last_changed).month > 3 }}" # Starting April
-    # - condition: template
-    #   value_template: "{{ as_local(states.sensor.time.last_changed).month < 10 }}" # Ending October
     - condition: template
       value_template: >
-        {{  is_state('input_boolean.zonnetent_my', 'off')  }}
+        {{ state_attr("cover.zonnetent", "current_position") < 50 }}
+    # - condition: template
+    #   value_template: >
+    #     {{  is_state('input_boolean.zonnetent_my', 'off')  }}
 
     # No others screens are closing
     - condition: state
@@ -100,10 +99,13 @@ condition:
       state: "off"
 
 action:
-  - service: script.zonnetent_my ## MY position
+  - service: cover.stop_cover
+    data: {}
+    target:
+      entity_id: cover.zonnetent
   - service: notify.mobile_app_gphone
     data:
       message: "De zonnetent is uitgeschoven"
-  - delay:
-      minutes: 3
-  - service: script.zonnetent_my ## MY position
+  # - delay:
+  #     minutes: 3
+  # - service: script.zonnetent_my ## MY position

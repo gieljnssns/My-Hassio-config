@@ -84,19 +84,31 @@ condition:
     #   value_template: "{{ as_local(states.sensor.time.last_changed).month > 3 }}" # Starting April
     # - condition: template
     #   value_template: "{{ as_local(states.sensor.time.last_changed).month < 10 }}" # Ending October
-    - condition: template
-      value_template: >
-        {{  is_state('input_boolean.keuken_1_closed', 'off') or
-            is_state('input_boolean.keuken_2_closed', 'off') or
-            is_state('input_boolean.slaapkamer_closed', 'off')  }}
+    # - condition: template
+    #   value_template: >
+    #     {{  is_state('input_boolean.keuken_1_closed', 'off') or
+    #         is_state('input_boolean.keuken_2_closed', 'off') or
+    #         is_state('input_boolean.slaapkamer_closed', 'off')  }}
 
     # No others screens are closing
     - condition: state
       entity_id: script.zijgevel_sluiten
       state: "off"
+    # - condition: state
+    #   entity_id: script.zonnetent_my
+    #   state: "off"
     - condition: state
-      entity_id: script.zonnetent_my
+      entity_id: input_boolean.achtergevel_closed
       state: "off"
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.keuken_1", "current_position") > 50 }}
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.keuken_2", "current_position") > 50 }}
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.slaapkamer", "current_position") > 50 }}
 
 action:
   - service: script.achtergevel_sluiten

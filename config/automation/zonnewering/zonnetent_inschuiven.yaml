@@ -46,18 +46,27 @@ trigger:
 condition:
   condition: or
   conditions:
-    - condition: state
-      entity_id: input_boolean.zonnetent_my
-      state: "on"
-    - condition: state
-      entity_id: input_boolean.zonnetent_closed
-      state: "on"
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.zonnetent", "current_position") > 10 }}
+    # - condition: state
+    #   entity_id: input_boolean.zonnetent_my
+    #   state: "on"
+    # - condition: state
+    #   entity_id: input_boolean.zonnetent_closed
+    #   state: "on"
 
 action:
-  - service: script.zonnetent_openen
+  - service: cover.close_cover
+    data: {}
+    target:
+      entity_id: cover.zonnetent
   - service: notify.mobile_app_gphone
     data_template:
       message: "De zonnetent is ingeschoven, reden {{trigger.entity_id}} "
   - delay:
       minutes: 3
-  - service: script.zonnetent_openen
+  - service: cover.close_cover
+    data: {}
+    target:
+      entity_id: cover.zonnetent
