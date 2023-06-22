@@ -2,15 +2,19 @@ alias: "sonos smorgens aan"
 id: 845eafa5-a0f1-4c17-93d0-a7b84d5a5e9a
 trigger:
   - platform: state
-    entity_id: binary_sensor.beweging_keuken_camera
+    entity_id: binary_sensor.beweging_keuken_pir_groot
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.beweging_keuken_pir_klein
     from: "off"
     to: "on"
 condition:
   condition: and
   conditions:
     - condition: time
-      after: "08:00:00"
-      before: "12:30:00"
+      after: "08:30:00"
+      before: "12:15:00"
     - condition: state
       entity_id: binary_sensor.keuken_not_playing
       state: "on"
@@ -19,32 +23,6 @@ condition:
     - condition: state
       entity_id: input_boolean.giel_slaapt_na_nacht
       state: "off"
-    - condition: or
-      conditions:
-        - condition: state
-          entity_id: binary_sensor.schooldag
-          state: "on"
-        - condition: template
-          value_template: >
-            {% if states.calendar.monnikenheide_monnikenheide.attributes.start_time is defined %}
-              {{as_timestamp(states.calendar.monnikenheide_monnikenheide.attributes.start_time) - as_timestamp(now()) | float < 26.640}}
-            {% else %}
-              False
-            {% endif %}
-        - condition: template
-          value_template: >
-            {% if states.calendar.mondelez_de_vroege.attributes.start_time is defined %}
-              {{as_timestamp(states.calendar.mondelez_de_vroege.attributes.start_time) - as_timestamp(now()) | float < 108000}}
-            {% else %}
-              False
-            {% endif %}
-        - condition: template
-          value_template: >
-            {% if states.calendar.mondelez_de_late.attributes.start_time is defined %}
-              True
-            {% else %}
-              False
-            {% endif %}
     - condition: or
       conditions:
         - condition: state
@@ -57,67 +35,7 @@ action:
   - service: media_player.volume_set
     data_template:
       entity_id: media_player.mass_keuken
-      volume_level: 0.12
+      volume_level: 0.20
   - service: script.random_music
     data:
       sonos_entity: media_player.mass_keuken
-  # - choose:
-  #     - conditions:
-  #         - condition: template
-  #           value_template: >
-  #             {% set numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] %}
-  #             {% set number = numbers | random  %}
-  #             {{ number % 2 == 0 }}
-  #       sequence:
-  #         - service: media_player.play_media
-  #           data:
-  #             media_content_id: >
-  #               {% set playlist_numbers = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
-  #                                           23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38,
-  #                                           39, 40, 41, 42, 43, 44, 45, 46, 47, 48 ] %}
-  #               {% set playlist_number = playlist_numbers | random  %}
-  #               media-source://mass/database://playlist/{{playlist_number}}
-  #             media_content_type: playlist
-  #             enqueue: replace
-  #           target:
-  #             entity_id: media_player.mass_keuken
-  #   default:
-  #     - service: media_player.play_media
-  #       data:
-  #         media_content_id: >
-  #           {% set radio_numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] %}
-  #           {% set radio_number = radio_numbers | random  %}
-  #           media-source://mass/database://radio/{{radio_number}}
-  #         media_content_type: music
-  #         enqueue: replace
-  #       target:
-  #         entity_id: media_player.mass_keuken
-  # - service: media_player.select_source
-  #   data_template:
-  #     entity_id: media_player.keuken
-  #     source: >
-  #       {{ [
-  #         'Willy', # media-source://mass/database://radio/11 media_content_type: audio/flac
-  #         'Arrow Classic Rock', # media-source://mass/database://radio/6 media_content_type: audio/flac
-  #         'Black Label Extreme Metal Radio',
-  #         'VRT Studio Brussel Bruut', # media-source://mass/database://radio/1 media_content_type: audio/flac
-  #         'Hard Rock Hell Radio', # media-source://mass/database://radio/9 media_content_type: audio/flac
-  #         'New Lords of Metal',
-  #         'Punk Riot', # media-source://mass/database://radio/10 media_content_type: audio/flac
-  #         'Brutale Belgen 🇧🇪💪🏻☠️', # media-source://mass/database://playlist/8
-  #         'MetalRock.FM', # media-source://mass/database://radio/5 media_content_type: audio/flac
-  #         'VRT Studio Brussel Bruut', # media-source://mass/database://radio/1 media_content_type: audio/flac
-  #         'Hand of Doom Radio', # media-source://mass/database://radio/7 media_content_type: audio/flac
-  #         'Real Punk Radio', # media-source://mass/database://radio/8 media_content_type: audio/flac
-  #         'Het betere genre', # media-source://mass/database://playlist/24
-  #         'Brutale Belgen 🇧🇪💪🏻☠️', # media-source://mass/database://playlist/8
-  #         'Het betere genre +',
-  #         'Punk In Drublic', # media-source://mass/spotify://playlist/5ZK2jPBgXCwUHc0z8gYkMp
-  #         'VRT Studio Brussel Bruut', # media-source://mass/database://radio/1 media_content_type: audio/flac
-  #         'Pinguin Aardschok', # media-source://mass/database://radio/3 media_content_type: audio/flac
-  #         'Pinguin On The Rocks', # media-source://mass/database://radio/4 media_content_type: audio/flac
-  #         'Belgische gitaren�', # media-source://mass/spotify://playlist/0E6oswikdjD7Ym4vPtfNdo
-  #         'GARAGE BANGERS!',
-  #         "PUNK!!! Let's go!!", # media-source://mass/spotify://playlist/7iavwhQt1MEJ4oHOoIVjl4
-  #         'VAN EIGEN BODEM! (Belgische Gitaren)'
-  #       ] | random }}
