@@ -23,19 +23,29 @@
 
     - name: Buiten temperatuur
       unique_id: e04b3353-a23c-41ee-9329-b5d3b2526ca6
+      # state: >
+      #   {{ states("sensor.buiten_buiten_temperatuur") }}
+      # unit_of_measurement: "°C"
+      # availability: >
+      #   {{ has_value("sensor.buiten_buiten_temperatuur") }}
       state: >
-        {{ states("sensor.buiten_buiten_temperatuur") }}
+        {{ states("sensor.temperatuur_poort") }}
       unit_of_measurement: "°C"
       availability: >
-        {{ has_value("sensor.buiten_buiten_temperatuur") }}
+        {{ has_value("sensor.temperatuur_poort") }}
 
     - name: Buiten luchtdruk
       unique_id: 1fdafdec-04fa-46fd-80ad-339db820d294
+      # state: >
+      #   {{ states("sensor.buiten_buiten_luchtdruk") }}
+      # unit_of_measurement: "hPa"
+      # availability: >
+      #   {{ has_value("sensor.buiten_buiten_luchtdruk") }}
       state: >
-        {{ states("sensor.buiten_buiten_luchtdruk") }}
+        {{ states("sensor.luchtdruk_poort") }}
       unit_of_measurement: "hPa"
       availability: >
-        {{ has_value("sensor.buiten_buiten_luchtdruk") }}
+        {{ has_value("sensor.luchtdruk_poort") }}
 
     - name: Buiten lichtsterkte
       unique_id: 2668b502-27ec-4046-a4b7-c52444181fe1

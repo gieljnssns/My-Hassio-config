@@ -21,12 +21,12 @@ trigger:
   - platform: numeric_state
     entity_id: sensor.weatherbit_wind_speed
     above: 26 #If wind force becomes to high, sunscreen needs to go up
-  # - platform: numeric_state
-  #   entity_id: sensor.ba_precipitation_forecast_average
-  #   above: 0.25 # Rain the next 15 min
-  # - platform: numeric_state
-  #   entity_id: sensor.ba_precipitation
-  #   above: 0.20 # Rain
+
+  - platform: template
+    value_template: >
+      {{ states("sensor.buiten_lichtsterkte") | float(0) < 4000 and
+        (states("sensor.solcast_forecast_next_hour") | float(0) < 1000 or
+        states("sensor.solcast_forecast_this_hour") | float(0) < 1000) }}
 
   - platform: template
     value_template: >
