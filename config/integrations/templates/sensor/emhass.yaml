@@ -137,19 +137,19 @@
       attributes:
         list: >
           {%- set list =  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')
-               |selectattr('period_start','gt',utcnow())
-               |map(attribute='period_start')
-               |list
-           + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
-               |selectattr('period_start','gt',utcnow())
-               |map(attribute='period_start')
-               |list)[:36]
-               -%}
+              |selectattr('period_start','gt',utcnow())
+              |map(attribute='period_start')
+              |list
+            + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
+              |selectattr('period_start','gt',utcnow())
+              |map(attribute='period_start')
+              |list)[:36]
+              -%}
           {%- set new_list = namespace(all=[]) %}
           {%- if states("input_boolean.emhass_fast") == "on" and (
-                 states("input_boolean.wasmachien_starten") == "on" or 
-                 states("input_boolean.droogkast_starten") == "on" or 
-                 states("input_boolean.afwasmachien_starten") == "on")%}
+                states("input_boolean.wasmachien_starten") == "on" or 
+                states("input_boolean.droogkast_starten") == "on" or 
+                states("input_boolean.afwasmachien_starten") == "on")%}
             {%- set duration = (states("sensor.wasmachien_uren") | int + 
                                 states("sensor.afwasmachien_uren") | int + 
                                 states("sensor.droogkast_uren") | int) * 2 %}
@@ -171,6 +171,12 @@
             {%- endfor %}
           {% endif -%}
           {{ (new_list.all)[:36]}}
+        extra: >
+          {%- if states("input_boolean.emhass_fast") == "on" %}
+            0
+          {% else %}
+            0.11
+          {% endif %}
 
     - name: Cost forecast list
       unique_id: 1e92ec2a-1886-4322-8cb9-7cef05077dec
@@ -181,19 +187,19 @@
       attributes:
         list: >
           {%- set list =  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')
-               |selectattr('period_start','gt',utcnow())
-               |map(attribute='period_start')
-               |list
-           + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
-               |selectattr('period_start','gt',utcnow())
-               |map(attribute='period_start')
-               |list)[:36]
-               -%}
+              |selectattr('period_start','gt',utcnow())
+              |map(attribute='period_start')
+              |list
+            + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
+              |selectattr('period_start','gt',utcnow())
+              |map(attribute='period_start')
+              |list)[:36]
+              -%}
           {%- set new_list = namespace(all=[]) %}
           {%- if states("input_boolean.emhass_fast") == "on" and (
-                 states("input_boolean.wasmachien_starten") == "on" or 
-                 states("input_boolean.droogkast_starten") == "on" or 
-                 states("input_boolean.afwasmachien_starten") == "on")%}
+                states("input_boolean.wasmachien_starten") == "on" or 
+                states("input_boolean.droogkast_starten") == "on" or 
+                states("input_boolean.afwasmachien_starten") == "on")%}
             {%- set duration = (states("sensor.wasmachien_uren") | int + 
                                 states("sensor.afwasmachien_uren") | int + 
                                 states("sensor.droogkast_uren") | int) * 2 %}
@@ -215,6 +221,53 @@
             {%- endfor %}
           {% endif -%}
           {{ (new_list.all)[:36]}}
+
+    - name: Real cost forecast list
+      unique_id: b826cf88-14b2-4a57-9727-6b74b0e58032
+      state: >
+        {{ states("sensor.nordpool_kwh_be_eur")}}
+      availability: >-
+        {{ has_value("sensor.nordpool_kwh_be_eur") }}
+      attributes:
+        list: >
+          {%- set list = (state_attr('sensor.nordpool_kwh_be_eur', 'raw_today')
+                |selectattr('start','gt',utcnow())
+                |map(attribute='value')
+                |list
+            + state_attr('sensor.nordpool_kwh_be_eur', 'raw_tomorrow')
+                |selectattr('start','gt',utcnow())
+                |map(attribute='value')
+                |list)[:36] -%}
+          {%- set new_list = namespace(all=[]) %}
+          {%- for i in range (list | length) %}
+            {%- if i == 0 %}
+              {%- if now().minute | int < 30 %}
+                {%- set new = [states('sensor.nordpool_kwh_be_eur') | float] %}
+                {%- set new_list.all = new_list.all + new -%}
+              {%- else %}
+                {%- set new = [list[i]] + [list[i]] %}
+                {%- set new_list.all = new_list.all + new -%}
+              {%- endif %}
+            {%- else %}
+              {%- set new = [list[i]] + [list[i]] %}
+              {%- set new_list.all = new_list.all + new -%}
+            {%- endif %}
+          {%- endfor %}
+          {{ (new_list.all)[:36]}}
+        length: >
+          {{ state_attr('sensor.real_cost_forecast_list', 'list') | length }}
+
+    - name: Warm water startuur
+      unique_id: b75dca43-5b19-4859-ba2e-af4a8a8d5252
+      state: >
+        {% set load = (state_attr('sensor.p_deferrable3', 'deferrables_schedule')
+                |map(attribute='p_deferrable3')
+                |list) %}
+        {% set time = (state_attr('sensor.p_deferrable3', 'deferrables_schedule')
+                |map(attribute='p_deferrable3')
+                |list) %}
+      availability: >-
+        {{ has_value("sensor.p_deferrable3") }}
 
 # post_mpc_optim: "curl -i -H \"Content-Type: application/json\" -X POST -d '{\"load_cost_forecast\":{{(
 #           ([states('sensor.amber_general_price')|float(0)] +

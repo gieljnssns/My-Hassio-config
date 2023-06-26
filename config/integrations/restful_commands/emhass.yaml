@@ -1,0 +1,31 @@
+naive_mpc_optim:
+  url: http://localhost:5001/action/naive-mpc-optim
+  method: POST
+  content_type: "application/json"
+  payload: >-
+    {
+      "prod_price_forecast": {{ 
+        [state_attr('sensor.prod_price_forecast_list', 'extra') | float] +
+        state_attr('sensor.prod_price_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')] }},
+      "load_cost_forecast": {{ 
+        [states('sensor.nordpool_kwh_be_eur') | float] +
+        state_attr('sensor.real_cost_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')] }},
+      "pv_power_forecast": {{
+        [states('sensor.huidige_opbrengst')|int(0)] +
+        state_attr('sensor.pv_power_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')] }},
+      "prediction_horizon": {{ state_attr('sensor.real_cost_forecast_list', 'length') + 1 }},
+      "alpha": 1,
+      "beta": 0,
+      "num_def_loads": 4,
+      "def_total_hours": [
+        {{  states('sensor.wasmachien_uren')  }},
+        {{  states('sensor.droogkast_uren')  }},
+        {{  states('sensor.afwasmachien_uren')  }},
+        {{  states('sensor.warmtepompboiler_uren')  }}],
+      "set_def_constant": [true, true, true, true]
+    }
+publish_data:
+  url: http://localhost:5001/action/publish-data
+  method: POST
+  content_type: "application/json"
+  payload: "{}"
