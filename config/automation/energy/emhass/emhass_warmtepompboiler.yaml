@@ -6,7 +6,7 @@ trigger:
     id: update
   # - platform: numeric_state
   #   entity_id: sensor.p_deferrable3
-  #   below: 0.1
+  #   below: 1
   #   for: "00:00:05"
   #   id: turn_off
 action:
@@ -14,7 +14,7 @@ action:
       - conditions:
           - condition: numeric_state
             entity_id: sensor.p_deferrable3
-            above: 0.1
+            above: 1
         sequence:
           - service: homeassistant.turn_on
             target:
@@ -25,7 +25,7 @@ action:
       - conditions:
           - condition: numeric_state
             entity_id: sensor.p_deferrable3
-            below: 0.1
+            below: 1
         sequence:
           - service: homeassistant.turn_off
             target:
