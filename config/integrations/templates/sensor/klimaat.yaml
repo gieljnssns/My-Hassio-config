@@ -102,3 +102,19 @@
       unit_of_measurement: "°C"
       availability: >
         {{ has_value("sensor.temperatuur_slaapkamer_2") }}
+
+    - name: Trend up badkamer gradient
+      unique_id: 750c3689-7105-43e6-a805-46f716c19eb9
+      state: >
+        {{ state_attr("binary_sensor.badkamer_trend_up", "gradient") | round(8) }}
+      unit_of_measurement: "pt"
+      availability: >
+        {{ has_value("binary_sensor.badkamer_trend_up") }}
+
+    - name: Trend down badkamer gradient
+      unique_id: 8179a8ea-262d-4e4e-9fef-c9c3042593e7
+      state: >
+        {{ state_attr("binary_sensor.badkamer_trend_down", "gradient") | round(8) }}
+      unit_of_measurement: "pt"
+      availability: >
+        {{ has_value("binary_sensor.badkamer_trend_down") }}
