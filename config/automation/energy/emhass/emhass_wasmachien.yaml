@@ -1,9 +1,12 @@
 alias: Emhass wasmachien
 id: c5897903-93c6-4ca5-8235-4e7fac626b2e
 trigger:
-  - minutes: /5
-    platform: time_pattern
-    id: update
+  # - minutes: /5
+  #   platform: time_pattern
+  #   id: update
+  - platform: numeric_state
+    entity_id: sensor.p_deferrable0
+    above: 1
   - platform: state
     entity_id: binary_sensor.wasmachien_staat_op
     to: "off"

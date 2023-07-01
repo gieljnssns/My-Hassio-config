@@ -1,8 +1,11 @@
 alias: Emhass afwasmachien
 id: 13c7e741-1dd2-4bd4-9c03-d6060176b9c6
 trigger:
-  - minutes: /5
-    platform: time_pattern
+  # - minutes: /5
+  #   platform: time_pattern
+  - platform: numeric_state
+    entity_id: sensor.p_deferrable2
+    above: 1
   - platform: state
     entity_id: binary_sensor.afwasmachien_staat_op
     to: "off"

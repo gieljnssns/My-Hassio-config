@@ -1,13 +1,16 @@
 alias: Emhass warmtepompboiler
 id: 2dbe7701-5976-4ce8-aaad-0298d80cb019
 trigger:
-  - minutes: /5
-    platform: time_pattern
-    id: update
-  # - platform: numeric_state
-  #   entity_id: sensor.p_deferrable3
-  #   below: 1
-  #   for: "00:00:05"
+  # - minutes: /5
+  #   platform: time_pattern
+  #   id: update
+  - platform: numeric_state
+    entity_id: sensor.p_deferrable3
+    above: 1
+  - platform: numeric_state
+    entity_id: sensor.p_deferrable3
+    below: 1
+    for: "00:00:05"
   #   id: turn_off
 action:
   - choose:
