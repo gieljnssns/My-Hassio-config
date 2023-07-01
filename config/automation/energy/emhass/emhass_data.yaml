@@ -16,7 +16,11 @@ action:
         sequence:
           - service: shell_command.dayahead_optim
     default:
-      - service: shell_command.post_mpc_optim
+      - service: rest_command.naive_mpc_optim
       - delay:
           seconds: 40
-      - service: shell_command.publish_data
+      - service: rest_command.publish_data
+      # - service: shell_command.post_mpc_optim
+      # - delay:
+      #     seconds: 40
+      # - service: shell_command.publish_data

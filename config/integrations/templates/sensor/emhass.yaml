@@ -261,10 +261,10 @@
       unique_id: f4450d07-ad80-4ed5-a96a-852c84fec6ca
       state: >
         {%- from 'easy_time.jinja' import easy_relative_time %}
-        {%- set load = (state_attr('sensor.p_deferrable3', 'deferrables_schedule')
+        {%- set load = (state_attr('sensor.emhass_warmtepompboiler', 'deferrables_schedule')
                 |map(attribute='p_deferrable3')
                 |list) %}
-        {%- set time = (state_attr('sensor.p_deferrable3', 'deferrables_schedule')
+        {%- set time = (state_attr('sensor.emhass_warmtepompboiler', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) %}
         {%- set new_list = namespace(all=[]) %}
@@ -277,16 +277,16 @@
             {%- endif %}
           {%- endfor %}
       availability: >-
-        {{ has_value("sensor.p_deferrable3") }}
+        {{ has_value("sensor.emhass_warmtepompboiler") }}
 
     - name: Wasmachien startuur
       unique_id: 12e7093b-ea97-4f69-a47d-720106331e9f
       state: >
         {%- from 'easy_time.jinja' import easy_relative_time %}
-        {%- set load = (state_attr('sensor.p_deferrable0', 'deferrables_schedule')
+        {%- set load = (state_attr('sensor.emhass_wasmachien', 'deferrables_schedule')
                 |map(attribute='p_deferrable0')
                 |list) %}
-        {%- set time = (state_attr('sensor.p_deferrable0', 'deferrables_schedule')
+        {%- set time = (state_attr('sensor.emhass_wasmachien', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) %}
         {%- set new_list = namespace(all=[]) %}
@@ -299,16 +299,16 @@
             {%- endif %}
           {%- endfor %}
       availability: >-
-        {{ has_value("sensor.p_deferrable0") }}
+        {{ has_value("sensor.emhass_wasmachien") }}
 
     - name: Droogkast startuur
       unique_id: de867de0-7b23-4b42-b646-ab2f00a1c1b2
       state: >
         {%- from 'easy_time.jinja' import easy_relative_time %}
-        {%- set load = (state_attr('sensor.p_deferrable1', 'deferrables_schedule')
+        {%- set load = (state_attr('sensor.emhass_droogkast', 'deferrables_schedule')
                 |map(attribute='p_deferrable1')
                 |list) %}
-        {%- set time = (state_attr('sensor.p_deferrable1', 'deferrables_schedule')
+        {%- set time = (state_attr('sensor.emhass_droogkast', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) %}
         {%- set new_list = namespace(all=[]) %}
@@ -321,16 +321,16 @@
             {%- endif %}
           {%- endfor %}
       availability: >-
-        {{ has_value("sensor.p_deferrable1") }}
+        {{ has_value("sensor.emhass_droogkast") }}
 
     - name: Afwasmachien startuur
       unique_id: c38353a5-d1d8-4f10-a826-dbb2cf432c07
       state: >
         {%- from 'easy_time.jinja' import easy_relative_time %}
-        {%- set load = (state_attr('sensor.p_deferrable2', 'deferrables_schedule')
+        {%- set load = (state_attr('sensor.emhass_afwasmachien', 'deferrables_schedule')
                 |map(attribute='p_deferrable2')
                 |list) %}
-        {%- set time = (state_attr('sensor.p_deferrable2', 'deferrables_schedule')
+        {%- set time = (state_attr('sensor.emhass_afwasmachien', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) %}
         {%- set new_list = namespace(all=[]) %}
@@ -343,7 +343,7 @@
             {%- endif %}
           {%- endfor %}
       availability: >-
-        {{ has_value("sensor.p_deferrable2") }}
+        {{ has_value("sensor.emhass_afwasmachien") }}
 
 # post_mpc_optim: "curl -i -H \"Content-Type: application/json\" -X POST -d '{\"load_cost_forecast\":{{(
 #           ([states('sensor.amber_general_price')|float(0)] +

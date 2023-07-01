@@ -4,7 +4,7 @@ trigger:
   # - minutes: /5
   #   platform: time_pattern
   - platform: numeric_state
-    entity_id: sensor.p_deferrable2
+    entity_id: sensor.emhass_afwasmachien
     above: 1
   - platform: state
     entity_id: binary_sensor.afwasmachien_staat_op
@@ -17,7 +17,7 @@ action:
             entity_id: switch.afwasmachien
             state: "off"
           - condition: numeric_state
-            entity_id: sensor.p_deferrable2
+            entity_id: sensor.emhass_afwasmachien
             above: 1
         sequence:
           - service: homeassistant.turn_on

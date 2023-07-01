@@ -5,10 +5,10 @@ trigger:
   #   platform: time_pattern
   #   id: update
   - platform: numeric_state
-    entity_id: sensor.p_deferrable3
+    entity_id: sensor.emhass_warmtepompboiler
     above: 1
   - platform: numeric_state
-    entity_id: sensor.p_deferrable3
+    entity_id: sensor.emhass_warmtepompboiler
     below: 1
     for: "00:00:05"
   #   id: turn_off
@@ -16,7 +16,7 @@ action:
   - choose:
       - conditions:
           - condition: numeric_state
-            entity_id: sensor.p_deferrable3
+            entity_id: sensor.emhass_warmtepompboiler
             above: 1
         sequence:
           - service: homeassistant.turn_on
@@ -27,7 +27,7 @@ action:
               entity_id: switch.warm_water
       - conditions:
           - condition: numeric_state
-            entity_id: sensor.p_deferrable3
+            entity_id: sensor.emhass_warmtepompboiler
             below: 1
         sequence:
           - service: homeassistant.turn_off
