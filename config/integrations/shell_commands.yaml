@@ -21,6 +21,31 @@ dayahead_optim: >-
     "pv_power_forecast":{{  state_attr("sensor.pv_power_forecast", "list") }}
     }' http://localhost:5001/action/dayahead-optim
 
+naive_mpc_optim: >-
+  curl -i -H 'Content-Type: application/json' -X POST -d '{
+    "def_total_hours":[
+      {{  states('sensor.wasmachien_uren')  }},
+      {{  states('sensor.droogkast_uren')  }},
+      {{  states('sensor.afwasmachien_uren')  }},
+      {{  states('sensor.warmtepompboiler_uren')  }}],
+    "set_def_constant":[true, true, true, true],
+    "pv_power_forecast": {{
+        [states('sensor.huidige_opbrengst')|int(0)] +
+        state_attr('sensor.pv_power_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')]}},
+    "prod_price_forecast": {{ 
+        [state_attr('sensor.prod_price_forecast_list', 'extra') | float] +
+        state_attr('sensor.prod_price_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')]}},
+    "load_cost_forecast": {{ 
+        [states('sensor.nordpool_kwh_be_eur') | float] +
+        state_attr('sensor.real_cost_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')]}},
+    "prediction_horizon": {{ state_attr('sensor.real_cost_forecast_list', 'length') + 1 }},
+    "alpha": 1,
+    "beta": 0,
+    "num_def_loads": 4,
+    "p_deferrable_nom": [2000, 2000, 1700, 1100],
+    "treat_def_as_semi_cont": [1, 1, 1, 1]
+    }' http://localhost:5001/action/naive-mpc-optim
+
 post_mpc_optim: >-
   curl -i -H 'Content-Type: application/json' -X POST -d '{
     "def_total_hours":[

@@ -5,26 +5,30 @@ naive_mpc_optim:
   payload: >-
     {
       "prod_price_forecast": {{ 
-        [state_attr('sensor.prod_price_forecast_list', 'extra') | float] +
-        state_attr('sensor.prod_price_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')] }},
+        ([state_attr('sensor.prod_price_forecast_list', 'extra') | float] +
+        state_attr('sensor.prod_price_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')]) | tojson 
+        }},
       "load_cost_forecast": {{ 
-        [states('sensor.nordpool_kwh_be_eur') | float] +
-        state_attr('sensor.real_cost_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')] }},
+        ([states('sensor.nordpool_kwh_be_eur') | float] +
+        state_attr('sensor.real_cost_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')]) | tojson 
+        }},
       "pv_power_forecast": {{
-        [states('sensor.huidige_opbrengst')|int(0)] +
-        state_attr('sensor.pv_power_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')] }},
-      "prediction_horizon": {{ state_attr('sensor.real_cost_forecast_list', 'length') + 1 }},
+        ([states('sensor.huidige_opbrengst')|int(0)] +
+        state_attr('sensor.pv_power_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')]) | tojson 
+         }},
+      "prediction_horizon": {{ state_attr('sensor.real_cost_forecast_list', 'length') + 1 
+      }},
       "alpha": 1,
       "beta": 0,
-      "num_def_loads": 4
-      "P_deferrable_nom": [2000, 2000, 1700, 1100],
+      "num_def_loads": 4,
+      "p_deferrable_nom": [2000, 2000, 1700, 1100],
       "def_total_hours": [
         {{  states('sensor.wasmachien_uren') | int }},
         {{  states('sensor.droogkast_uren') | int }},
         {{  states('sensor.afwasmachien_uren') | int }},
         {{  states('sensor.warmtepompboiler_uren') | int }}],
       "treat_def_as_semi_cont": [1, 1, 1, 1],
-      "set_def_constant": [True, True, True, True]
+      "set_def_constant": [true, true, true, true]
     }
 
 forecast_model_fit_load_zonder_wp:
