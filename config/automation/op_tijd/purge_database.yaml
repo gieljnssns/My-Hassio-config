@@ -1,0 +1,32 @@
+alias: "Purge database"
+id: ca43a372-7850-436b-94e5-5024377653be
+trigger:
+  - platform: time
+    at: "03:12:00"
+  - platform: time
+    at: "04:12:00"
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ now().hour == 3 }}
+        sequence:
+          - service: recorder.purge_entities
+            data:
+              keep_days: 7
+            target:
+              entity_id: >
+                {% set exclude = state_attr("group.energy_entities", "entity_id") + state_attr("group.power_entities", "entity_id") %}
+
+                {% set purge = states | selectattr('entity_id') 
+                                      | rejectattr('entity_id', 'in', exclude)
+                                      | map(attribute='entity_id')
+                                      | list %}
+
+                {{ purge }}
+    default:
+      - service: recorder.purge
+        data:
+          keep_days: 365
+          repack: true
