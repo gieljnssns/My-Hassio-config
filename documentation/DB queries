@@ -1,24 +1,4 @@
-service: recorder.purge_entities
-data:
-  keep_days: 0
-target:
-  entity_id: |
-    {{state_attr("group.ignored_entities", "entity_id")}}
-
-
-
-- sensor.huidig_fluvius
--	sensor.huidig_verbruik
--	sensor.net_terugsturen
--	sensor.net_afname
--	sensor.eigen_verbruik
--	sensor.verlichting_vermogen
--	sensor.opbrengst_kwh
--	sensor.grid_production_kwh
--	sensor.verbruik_kwh
-
-
-Modified query for states:
+#Modified query for states:
 
 SELECT
   COUNT(*) AS cnt,
@@ -28,7 +8,9 @@ FROM states
 INNER JOIN states_meta ON states.metadata_id=states_meta.metadata_id
 GROUP BY states_meta.entity_id
 ORDER BY cnt DESC
-Modified query for Events:
+
+
+#Modified query for Events:
 
 SELECT
   COUNT(*) as cnt,
