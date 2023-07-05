@@ -64,3 +64,21 @@
               {{ state.attributes.friendly_name }} = {{ state.state_with_unit }}
           {% endif -%}
         {% endfor -%}
+
+{{ states | rejectattr('attributes.state_class', 'defined')
+          | map(attribute='entity_id')
+          | list | count }}
+
+
+
+{{ states | selectattr('attributes.state_class', 'defined')
+          | map(attribute='entity_id')
+          | list | count }}
+
+{{ states | selectattr('attributes.state_class', 'defined')
+          | rejectattr( 'attributes.state_class', 'eq', 'none')
+          | rejectattr( 'entity_id', 'search', '_kwh')
+          | map(attribute='entity_id')
+          | list }}
+
+{{ states | count }}
