@@ -36,17 +36,16 @@ action:
                       seconds: 40
                   - service: rest_command.publish_data
             default:
-              sequence:
-                - service: switch.turn_off
-                  target:
-                    entity_id: switch.wasmachien
-                - service: homeassistant.turn_on
-                  target:
-                    entity_id: input_boolean.wasmachien_starten
-                - service: shell_command.post_mpc_optim
-                - delay:
-                    seconds: 40
-                - service: rest_command.publish_data
+              - service: switch.turn_off
+                target:
+                  entity_id: switch.wasmachien
+              - service: homeassistant.turn_on
+                target:
+                  entity_id: input_boolean.wasmachien_starten
+              - service: shell_command.post_mpc_optim
+              - delay:
+                  seconds: 40
+              - service: rest_command.publish_data
       - conditions:
           - condition: trigger
             id: afwasmachien
