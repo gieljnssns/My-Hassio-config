@@ -1,5 +1,6 @@
 alias: Emhass mag gestart worden
 id: e1b7948d-f045-4c61-8155-8d15b13bdc1a
+mode: restart
 description: ""
 trigger:
   - platform: state
@@ -18,43 +19,93 @@ action:
           - condition: trigger
             id: wasmachien
         sequence:
-          - service: switch.turn_off
-            target:
-              entity_id: switch.wasmachien
-          - service: homeassistant.turn_on
-            target:
-              entity_id: input_boolean.wasmachien_starten
-          - service: shell_command.post_mpc_optim
-          - delay:
-              seconds: 40
-          - service: shell_command.publish_data
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: input_boolean.wasmachien_starten
+                    state: "on"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: switch.wasmachien
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: input_boolean.wasmachien_starten
+                  - service: shell_command.post_mpc_optim
+                  - delay:
+                      seconds: 40
+                  - service: rest_command.publish_data
+            default:
+              sequence:
+                - service: switch.turn_off
+                  target:
+                    entity_id: switch.wasmachien
+                - service: homeassistant.turn_on
+                  target:
+                    entity_id: input_boolean.wasmachien_starten
+                - service: shell_command.post_mpc_optim
+                - delay:
+                    seconds: 40
+                - service: rest_command.publish_data
       - conditions:
           - condition: trigger
             id: afwasmachien
         sequence:
-          - service: switch.turn_off
-            target:
-              entity_id: switch.afwasmachien
-          - service: homeassistant.turn_on
-            target:
-              entity_id: input_boolean.afwasmachien_starten
-          - service: shell_command.post_mpc_optim
-          - delay:
-              seconds: 40
-          - service: shell_command.publish_data
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: input_boolean.afwasmachien_starten
+                    state: "on"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: switch.afwasmachien
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: input_boolean.afwasmachien_starten
+                  - service: shell_command.post_mpc_optim
+                  - delay:
+                      seconds: 40
+                  - service: rest_command.publish_data
+            default:
+              - service: switch.turn_off
+                target:
+                  entity_id: switch.afwasmachien
+              - service: homeassistant.turn_on
+                target:
+                  entity_id: input_boolean.afwasmachien_starten
+              - service: shell_command.post_mpc_optim
+              - delay:
+                  seconds: 40
+              - service: rest_command.publish_data
       - conditions:
           - condition: trigger
             id: droogkast
         sequence:
-          - service: switch.turn_off
-            target:
-              entity_id: switch.droogkast
-          - service: homeassistant.turn_on
-            target:
-              entity_id: input_boolean.droogkast_starten
-          - service: shell_command.post_mpc_optim
-          - delay:
-              seconds: 40
-          - service: shell_command.publish_data
-
-mode: single
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: input_boolean.droogkast_starten
+                    state: "on"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: switch.droogkast
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: input_boolean.droogkast_starten
+                  - service: shell_command.post_mpc_optim
+                  - delay:
+                      seconds: 40
+                  - service: rest_command.publish_data
+            default:
+              - service: switch.turn_off
+                target:
+                  entity_id: switch.droogkast
+              - service: homeassistant.turn_on
+                target:
+                  entity_id: input_boolean.droogkast_starten
+              - service: shell_command.post_mpc_optim
+              - delay:
+                  seconds: 40
+              - service: rest_command.publish_data
