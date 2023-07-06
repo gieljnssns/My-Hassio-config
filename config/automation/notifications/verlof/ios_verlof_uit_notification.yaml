@@ -1,5 +1,7 @@
 alias: "Op verlof uit?"
 id: 9e7e888f-8087-4e62-8fb6-2e7173c48b53
+mode: single
+max_exceeded: silent
 trigger:
   - platform: state
     entity_id: device_tracker.giel_not_so_binary
@@ -24,9 +26,4 @@ action:
             title: "Vakantie-modus aan."
           - action: "VERLOF_UIT"
             title: "Vakantie-modus uit."
-      # data:
-      #   push:
-      #     badge: 0
-      #     category: "verlof"
-      #   action_data:
-      #     entity_id: input_boolean.op_verlof
+  - delay: 300
