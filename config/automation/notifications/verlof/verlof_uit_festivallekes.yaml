@@ -10,10 +10,10 @@ condition:
     - condition: template
       value_template: "{{ is_state('input_boolean.op_verlof', 'on') }}"
 action:
-  - wait_template: "{{ now().hour == 11 }}"
+  - wait_template: "{{ now().hour == 9 }}"
   - service: notify.giel_en_martine
     data_template:
-      message: "Zijn jullie naar huis vertrokken? Zet dan Vakantie-modus uit."
+      message: "Gaan jullie naar huis vertrekken? Zet dan Vakantie-modus uit."
       data:
         actions:
           - action: "VERLOF_AAN"
