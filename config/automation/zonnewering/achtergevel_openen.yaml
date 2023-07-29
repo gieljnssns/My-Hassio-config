@@ -4,7 +4,7 @@ trigger:
   # Sun based triggers
   - platform: numeric_state
     entity_id: sensor.sun_azimut
-    above: 260
+    above: 230
   - platform: state
     entity_id: sensor.dark_outside
     to: "true"
@@ -34,16 +34,16 @@ trigger:
   - platform: template
     value_template: >
       {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
-        {{ states("sensor.ba_precipitation_forecast_average") | float > 0.30 }}
+        {{ states("sensor.ba_precipitation_forecast_average") | float > 0.40 }}
       {% else %}
-        {{ states("sensor.weatherbit_rain_rate")  | float > 0.30 }}
+        {{ states("sensor.weatherbit_rain_rate")  | float > 0.40 }}
       {% endif %}
   - platform: template
     value_template: >
       {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
-        {{ states("sensor.ba_precipitation") | float > 0.30 }}
+        {{ states("sensor.ba_precipitation") | float > 0.40 }}
       {% else %}
-        {{ states("sensor.weatherbit_rain_rate")  | float > 0.30 }}
+        {{ states("sensor.weatherbit_rain_rate")  | float > 0.40 }}
       {% endif %}
 
 condition:
