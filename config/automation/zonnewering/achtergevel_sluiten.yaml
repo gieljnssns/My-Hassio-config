@@ -19,9 +19,9 @@ condition:
     - condition: numeric_state
       entity_id: sensor.zonne_energie_gefilterd_lowpass
       above: 580
-    # - condition: numeric_state
-    #   entity_id: sensor.buiten_lichtsterkte
-    #   above: 7000
+    - condition: numeric_state
+      entity_id: sensor.buiten_lichtsterkte
+      above: 10000
 
     # Weather based conditions
     - condition: numeric_state
@@ -64,7 +64,7 @@ condition:
     # Temperature based conditions
     - condition: numeric_state
       entity_id: sensor.buitentemperatuur_gefilterd
-      above: 15 # only if outdoor temperature is above x then allowed to roll out
+      above: 17 # only if outdoor temperature is above x then allowed to roll out
     - condition: numeric_state
       entity_id: sensor.gemiddelde_temp_beneden
       above: 22 # only if indoor temperature is above x then allowed to roll out
@@ -73,7 +73,7 @@ condition:
     #   above: 22
     - condition: template
       value_template: >
-        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 18 }}
+        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 19 }}
 
     # Time based conditions
     - condition: template
