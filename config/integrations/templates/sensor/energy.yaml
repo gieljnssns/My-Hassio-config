@@ -372,8 +372,11 @@
       unique_id: 51b5c2c8-6480-4320-8ec2-8bc2d9d00308
       unit_of_measurement: "W"
       device_class: power
+      availability: >-
+        {{ has_value("sensor.huawei_active_power") and 
+          has_value("sensor.solaredge_inverter_watts") }}
       state: >
-        {{ (states("sensor.huawei_active_power") | float(default=0) + states("sensor.solaredge_inverter_watts") | float(default=0)) | round(2) }}
+        {{ (states("sensor.huawei_active_power") | float(0) + states("sensor.solaredge_inverter_watts") | float(0)) | round(2) }}
 
     - name: Koffiezet vermogen
       unique_id: 5774b780-4758-40c7-82e1-db6a5f2e0a01
