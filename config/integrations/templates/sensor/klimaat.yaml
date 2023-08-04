@@ -118,3 +118,11 @@
       unit_of_measurement: "pt"
       availability: >
         {{ has_value("binary_sensor.badkamer_trend_down") }}
+
+    - name: Degree day daily
+      unique_id: 92076ed0-9e96-4912-b576-fb3b45dc51bc
+      state: >
+        {{ [0, 18 |float - states('sensor.gemiddelde_buitentemperatuur')|float] | max | round(2) }}
+      unit_of_measurement: "DD"
+      availability: >
+        {{ has_value("sensor.gemiddelde_buitentemperatuur") }}
