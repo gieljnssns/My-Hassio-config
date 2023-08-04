@@ -31,16 +31,16 @@ trigger:
   - platform: template
     value_template: >
       {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
-        {{ states("sensor.ba_precipitation_forecast_average") | float > 0.25 }}
+        {{ states("sensor.ba_precipitation_forecast_average") | float > 0.15 }}
       {% else %}
-        {{ states("sensor.weatherbit_rain_rate")  | float > 0.25 }}
+        {{ states("sensor.weatherbit_rain_rate")  | float > 0.15 }}
       {% endif %}
   - platform: template
     value_template: >
       {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
-        {{ states("sensor.ba_precipitation") | float > 0.20 }}
+        {{ states("sensor.ba_precipitation") | float > 0.15 }}
       {% else %}
-        {{ states("sensor.weatherbit_rain_rate")  | float > 0.20 }}
+        {{ states("sensor.weatherbit_rain_rate")  | float > 0.15 }}
       {% endif %}
 
 condition:

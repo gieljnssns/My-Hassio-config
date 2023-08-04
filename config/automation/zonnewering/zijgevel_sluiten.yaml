@@ -19,9 +19,9 @@ condition:
     - condition: numeric_state
       entity_id: sensor.zonne_energie_gefilterd_lowpass
       above: 650
-    # - condition: numeric_state
-    #   entity_id: sensor.buiten_lichtsterkte
-    #   above: 7000
+    - condition: numeric_state
+      entity_id: sensor.buiten_lichtsterkte
+      above: 12000
 
     # Weather based conditions
     - condition: numeric_state
@@ -30,16 +30,16 @@ condition:
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
-          {{ states("sensor.ba_precipitation_forecast_average") | float < 0.25 }}
+          {{ states("sensor.ba_precipitation_forecast_average") | float < 0.15 }}
         {% else %}
-          {{ states("sensor.weatherbit_rain_rate")  | float < 0.25 }}
+          {{ states("sensor.weatherbit_rain_rate")  | float < 0.15 }}
         {% endif %}
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
-          {{ states("sensor.ba_precipitation") | float < 0.25 }}
+          {{ states("sensor.ba_precipitation") | float < 0.15 }}
         {% else %}
-          {{ states("sensor.weatherbit_rain_rate")  | float < 0.25 }}
+          {{ states("sensor.weatherbit_rain_rate")  | float < 0.15 }}
         {% endif %}
 
     - condition: numeric_state
@@ -49,7 +49,7 @@ condition:
     # Temperature based conditions
     - condition: numeric_state
       entity_id: sensor.buitentemperatuur_gefilterd
-      above: 17 # only if outdoor temperature is above x then allowed to roll out
+      above: 19 # only if outdoor temperature is above x then allowed to roll out
     - condition: numeric_state
       entity_id: sensor.gemiddelde_temp_beneden
       above: 22 # only if indoor temperature is above x then allowed to roll out
@@ -58,7 +58,7 @@ condition:
     #   above: 22
     - condition: template
       value_template: >
-        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 18 }}
+        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 19 }}
 
     # Time based conditions
     - condition: template

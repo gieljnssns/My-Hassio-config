@@ -19,9 +19,9 @@ condition:
     - condition: numeric_state
       entity_id: sensor.zonne_energie_gefilterd_lowpass
       above: 580
-    # - condition: numeric_state
-    #   entity_id: sensor.buiten_lichtsterkte
-    #   above: 7000
+    - condition: numeric_state
+      entity_id: sensor.buiten_lichtsterkte
+      above: 10000
 
     # Weather based conditions
     - condition: numeric_state
@@ -31,32 +31,32 @@ condition:
     #   conditions:
     #   - condition: numeric_state
     #     entity_id: sensor.ba_precipitation_forecast_average
-    #     below: 0.25 # Rain the next 15 min
+    #     below: 0.15 # Rain the next 15 min
     #   - condition: numeric_state
     #     entity_id: sensor.weatherbit_rain_rate
-    #     below: 0.25
+    #     below: 0.15
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
-          {{ states("sensor.ba_precipitation_forecast_average") | float < 0.25 }}
+          {{ states("sensor.ba_precipitation_forecast_average") | float < 0.15 }}
         {% else %}
-          {{ states("sensor.weatherbit_rain_rate")  | float < 0.25 }}
+          {{ states("sensor.weatherbit_rain_rate")  | float < 0.15 }}
         {% endif %}
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
-          {{ states("sensor.ba_precipitation") | float < 0.25 }}
+          {{ states("sensor.ba_precipitation") | float < 0.15 }}
         {% else %}
-          {{ states("sensor.weatherbit_rain_rate")  | float < 0.25 }}
+          {{ states("sensor.weatherbit_rain_rate")  | float < 0.15 }}
         {% endif %}
     # - condition: or
     #   conditions:
     #   - condition: numeric_state
     #     entity_id: sensor.ba_precipitation
-    #     below: 0.25 # Rain
+    #     below: 0.15 # Rain
     #   - condition: numeric_state
     #     entity_id: sensor.weatherbit_rain_rate
-    #     below: 0.25
+    #     below: 0.15
     - condition: numeric_state
       entity_id: sensor.max_uv_index
       above: 3 # This indicates direct sunlight on my location (as in: not cloudy)
@@ -64,7 +64,7 @@ condition:
     # Temperature based conditions
     - condition: numeric_state
       entity_id: sensor.buitentemperatuur_gefilterd
-      above: 15 # only if outdoor temperature is above x then allowed to roll out
+      above: 17 # only if outdoor temperature is above x then allowed to roll out
     - condition: numeric_state
       entity_id: sensor.gemiddelde_temp_beneden
       above: 22 # only if indoor temperature is above x then allowed to roll out
@@ -73,7 +73,7 @@ condition:
     #   above: 22
     - condition: template
       value_template: >
-        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 18 }}
+        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 19 }}
 
     # Time based conditions
     - condition: template

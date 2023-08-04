@@ -48,3 +48,19 @@
       unique_id: 5bc4af6d-8e99-4ee3-9131-66f41132d66f
       state: >
         {{ as_timestamp(states.binary_sensor.warmtepompboiler_aan.last_changed) }}
+- trigger:
+    - platform: time_pattern
+      # This will update every night
+      hours: 23
+      minutes: 59
+      seconds: 58
+  sensors:
+    kwh_per_degree_day_daily:
+      friendly_name: "kWh per degree day daily"
+      unit_of_measurement: "kWh/DD"
+      value_template: >
+        {% if (states('sensor.degree_day_daily')|float <= 1) %}
+          0
+        {% else %}
+          {{ [0, states('sensor.daily_warmtepomp')|float / states('sensor.degree_day_daily')|float] | max | round(2) }}
+        {% endif %}
