@@ -44,22 +44,22 @@
       delay_off:
         minutes: 10
 
-    - name: Huawei not standby
-      unique_id: 21f07c2c-b491-4a2c-ab52-f4b9c248ccc5
-      state: >
-        {{ states("sensor.inverter_device_status") != "Standby: no irradiation"}}
+    # - name: Huawei not standby
+    #   unique_id: 21f07c2c-b491-4a2c-ab52-f4b9c248ccc5
+    #   state: >
+    #     {{ states("sensor.inverter_device_status") != "Standby: no irradiation"}}
 
-    - name: Solaredge not standby
-      unique_id: c037b3b5-7a0c-43b0-910f-1b5d0f4cab56
-      state: >
-        {{ states("sensor.solaredge_inverter_operating_state") != "SLEEPING"}}
+    # - name: Solaredge not standby
+    #   unique_id: c037b3b5-7a0c-43b0-910f-1b5d0f4cab56
+    #   state: >
+    #     {{ states("sensor.solaredge_inverter_operating_state") != "SLEEPING"}}
 
-    - name: Inverters have power
-      unique_id: 4a1a711a-da84-470a-a59d-57bcd6339845
-      availability: >-
-        {{ has_value("sensor.zonne_opbrengst") }}
-      state: >
-        {{ states("sensor.zonne_opbrengst") | float(0) > 0 }}
+    # - name: Inverters have power
+    #   unique_id: 4a1a711a-da84-470a-a59d-57bcd6339845
+    #   availability: >-
+    #     {{ has_value("sensor.zonne_opbrengst") }}
+    #   state: >
+    #     {{ states("sensor.zonne_opbrengst") | float(0) > 0 }}
 
     - name: Huawei has power
       unique_id: 57543201-3292-4817-97ad-3058f1184bf9
@@ -74,18 +74,15 @@
         {{ has_value("sensor.solaredge_inverter_watts") }}
       state: >
         {{ states("sensor.solaredge_inverter_watts") | float(0) > 0 }}
-
-    - name: L1 voltage greater then S1
-      unique_id: e12af89e-e46e-4bf6-a01f-70a22c2fbf2e
-      state: >
-        {{ states("sensor.s1_spanning") | float(0) < states("sensor.l1_spanning") | float(0) }}
-
-    - name: L2 voltage greater then S2
-      unique_id: 23c27ddc-a9c8-4f7f-a7fa-d83287e28f0b
-      state: >
-        {{ states("sensor.s2_spanning") | float(0) < states("sensor.l2_spanning") | float(0) }}
-
-    - name: L3 voltage greater then S3
-      unique_id: 8fdf21d6-e45d-44da-a380-53d82f76ed90
-      state: >
-        {{ states("sensor.s3_spanning") | float(0) < states("sensor.l3_spanning") | float(0) }}
+    # - name: L1 voltage greater then S1
+    #   unique_id: e12af89e-e46e-4bf6-a01f-70a22c2fbf2e
+    #   state: >
+    #     {{ states("sensor.s1_spanning") | float(0) < states("sensor.l1_spanning") | float(0) }}
+    # - name: L2 voltage greater then S2
+    #   unique_id: 23c27ddc-a9c8-4f7f-a7fa-d83287e28f0b
+    #   state: >
+    #     {{ states("sensor.s2_spanning") | float(0) < states("sensor.l2_spanning") | float(0) }}
+    # - name: L3 voltage greater then S3
+    #   unique_id: 8fdf21d6-e45d-44da-a380-53d82f76ed90
+    #   state: >
+    #     {{ states("sensor.s3_spanning") | float(0) < states("sensor.l3_spanning") | float(0) }}
