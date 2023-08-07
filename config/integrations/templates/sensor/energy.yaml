@@ -352,17 +352,20 @@
           has_value("sensor.wasmachien_vermogen") and
           has_value("sensor.droogkast_vermogen") and
           has_value("sensor.warmtepompboiler_huidig_verbruik") and
+          has_value("sensor.warmtepomp_huidig_verbruik") and
           has_value("sensor.afwasmachien_vermogen") }}
       state: >
         {% if (states("sensor.huidig_verbruik") | float(default=0) - 
             states("sensor.wasmachien_vermogen") | float(default=0) - 
             states("sensor.droogkast_vermogen") | float(default=0) -
             states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
+            states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
             states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) > 0 %}
             {{ (states("sensor.huidig_verbruik") | float(default=0) - 
                 states("sensor.wasmachien_vermogen") | float(default=0) - 
                 states("sensor.droogkast_vermogen") | float(default=0) -
                 states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
+                states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
                 states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1)}}
         {% else  %}
             {{ 0 | float(default=0) }}
