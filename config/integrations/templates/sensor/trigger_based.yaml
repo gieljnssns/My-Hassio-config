@@ -86,7 +86,7 @@
         {% if (states('sensor.degree_day_daily')|float <= 1) %}
           0
         {% else %}
-          {{ [0, states('sensor.daily_warmtepomp')|float / states('sensor.degree_day_daily')|float] | max | round(2) }}
+          {{ [0, states('sensor.daily_warmtepomp')|float(0) / states('sensor.degree_day_daily')|float] | max | round(2) }}
         {% endif %}
 
     - name: "Uur per degree day daily"

@@ -65,6 +65,13 @@
           0
         {% endif %}
 
+    - name: "Warmtepomp uren"
+      unique_id: 5c252e9e-ae09-4100-aace-8bb8d4149e8e
+      unit_of_measurement: "uur"
+      state: >
+        {{ states("sensor.uur_per_degree_day_daily") | float(0) *
+            states("sensor.degree_day_prediction") | float(0) }}
+
     - name: Warmtepompboiler uren
       unique_id: 8225bcd3-62ca-40af-8891-ba06a95eed91
       unit_of_measurement: "uur"
