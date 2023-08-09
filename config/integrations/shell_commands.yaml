@@ -43,7 +43,7 @@ naive_mpc_optim: >-
     "alpha": 1,
     "beta": 0,
     "num_def_loads": 5,
-    "p_deferrable_nom": [2000, 2000, 1700, 1100, 2000],
+    "P_deferrable_nom": [2000, 2000, 1700, 1100, 2000],
     "treat_def_as_semi_cont": [1, 1, 1, 1, 1]
     }' http://localhost:5001/action/naive-mpc-optim
 
@@ -56,10 +56,17 @@ post_mpc_optim: >-
       {{  states('sensor.warmtepompboiler_uren')  }},
       {{  states('sensor.warmtepomp_uren')}}],
     "set_def_constant":[true, true, true, true, true],
-    "pv_power_forecast":{{ state_attr('sensor.pv_power_forecast_list', 'list')  }},
-    "prod_price_forecast":{{ state_attr('sensor.prod_price_forecast_list', 'list')  }},
-    "load_cost_forecast":{{ state_attr('sensor.cost_forecast_list', 'list')  }},
-    "prediction_horizon":{{ state_attr('sensor.pv_power_forecast_list', 'list')| length }}
+    "pv_power_forecast": {{
+        [states('sensor.huidige_opbrengst')|int(0)] +
+        state_attr('sensor.pv_power_forecast_list', 'list')[:state_attr('sensor.cost_forecast_list', 'list') | length - 1]}},
+    "prod_price_forecast": {{ 
+        [state_attr('sensor.prod_price_forecast_list', 'extra') | float] +
+        state_attr('sensor.prod_price_forecast_list', 'list')[:state_attr('sensor.cost_forecast_list', 'list') | length - 1]}},
+    "load_cost_forecast": {{ 
+        state_attr('sensor.real_cost_forecast_list', 'list')}},
+    "prediction_horizon": {{ state_attr('sensor.cost_forecast_list', 'list') | length }},
+    "alpha": 1,
+    "beta": 0
     }' http://localhost:5001/action/naive-mpc-optim
 
 post_perfect_optim: >-
@@ -107,7 +114,7 @@ post_perfect_optim: >-
 
 forecast_model_fit_load_zonder_wp: >-
   curl -i -H 'Content-Type: application/json' -X POST -d '{
-    "days_to_retrieve": 10,
+    "days_to_retrieve": 5,
     "model_type": "load_zonder_wp_forecast",
     "var_model": "sensor.huidig_verbruik_zonder_wp",
     "sklearn_model": "KNeighborsRegressor",
@@ -120,50 +127,16 @@ forecast_model_predict_load_zonder_wp: >-
   curl -i -H 'Content-Type: application/json' -X POST -d '{
     "model_type": "load_zonder_wp_forecast",
     "var_model": "sensor.huidig_verbruik_zonder_wp",
-    "days_to_retrieve": 15,
+    "days_to_retrieve": 5,
     "model_predict_publish": "True",
-    "model_predict_entity_id": "sensor.p_load_zonder_wp_custom_model",
+    "model_predict_entity_id": "sensor.emhass_load_zonder_wp_custom_model",
     "model_predict_unit_of_measurement": "W",
-    "model_predict_friendly_name": "Warmtepompboiler custom model"
+    "model_predict_friendly_name": "Load custom model"
     }' http://localhost:5001/action/forecast-model-predict
 
 forecast_model_tune_load_zonder_wp: >-
   curl -i -H 'Content-Type: application/json' -X POST -d '{
     "model_type": "load_zonder_wp_forecast",
     "var_model": "sensor.huidig_verbruik_zonder_wp",
-    "days_to_retrieve": 15
+    "days_to_retrieve": 5
     }' http://192.168.79.54:5001/action/forecast-model-tune
-
-# post_mpc_optim: >-
-#   curl -i -H 'Content-Type: application/json' -X POST -d '{
-#   "def_total_hours":[
-#     {% if states("input_boolean.wasmachien_starten") == 'on'%}
-#       2
-#     {% else %}
-#       0
-#     {% endif %},
-#     {% if states("input_boolean.drookast_starten") == 'on'%}
-#       2
-#     {% else %}
-#       0
-#     {% endif %},
-#     {% if states("input_boolean.afwasmachien_starten") == 'on'%}
-#       2.5
-#     {% else %}
-#       0
-#     {% endif %}],
-#   "set_def_constant":[true, true, true],
-#   "pv_power_forecast":{{  state_attr('sensor.solcast_forecast_today', 'detailedForecast')
-#       |selectattr('period_start','gt',utcnow())
-#       | map(attribute='pv_estimate')
-#       |map('multiply',2000)
-#       |map('int')
-#       |list
-# + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
-#       |selectattr('period_start','gt',utcnow())
-#       | map(attribute='pv_estimate')
-#       |map('multiply',2000)
-#       |map('int')
-#       |list
-#       }}
-#   }' http://localhost:5001/action/naive-mpc-optim
