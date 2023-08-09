@@ -1,65 +1,58 @@
 - binary_sensor:
-    # - name: Warm water mag op
-    #   unique_id: 3d3546e3-6a19-4d11-b0db-a5590a9f6f3d
-    #   state: >
-    #     {{  states('sensor.thermostaat') | int(0) < 45 and
-    #         states("input_boolean.warm_water_5u") == "off" and
-    #         states("input_boolean.warm_water_2u") == "off" and
-    #         states("binary_sensor.warmtepompboiler_aan_delay_off") == "off" }}
-    #   icon: mdi:water-boiler
+    - name: Warmtepomp aan
+      device_class: power
+      unique_id: c8bb853c-63ec-4fd1-b18f-05624ee48fde
+      state: >
+        {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0) > 25 }}
 
-    # - name: Verwarming boost mag op
-    #   unique_id: 9306b37c-4103-4e37-a9e8-91139171dd39
-    #   state: >
-    #     {{  states('sensor.buiten_buiten_temperatuur') | float(0) < 12 and
-    #         states("input_boolean.op_verlof") == "off" and
-    #         state_attr("climate.living", "preset_mode") == "Schedule" and
-    #         state_attr("climate.living", "current_temperature") | int(0) < 20 }}
-    #   icon: mdi:heating-coil
+    - name: Warmtepompboiler aan
+      device_class: power
+      unique_id: 7b3bdc4b-5335-4101-890b-75540ced60e1
+      state: >
+        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float(default=0) > 25 }}
+
+    - name: Warmtepomp aan delay off
+      device_class: power
+      unique_id: befaae46-c7b5-4d6c-80ad-2b93d3eb6b96
+      state: >
+        {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0) > 25 }}
+      delay_off:
+        minutes: 10
+
+    - name: Warmtepompboiler aan delay off
+      device_class: power
+      unique_id: a1ca83c5-df8a-45e5-9845-21e49169a63e
+      state: >
+        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float(default=0) > 25 }}
+      delay_off:
+        minutes: 25
 
     - name: Wasmachien staat op
       unique_id: 6c5345d8-b4c3-46ca-b3d4-56cf5c5f6534
       state: >
-        {{ states("sensor.wasmachien_vermogen") | float(0) > 3 }}
+        {{ states("sensor.wasmachien_vermogen") | float(0) >= 3 }}
       delay_on:
-        minutes: 5
+        minutes: 2
       delay_off:
-        minutes: 10
+        minutes: 5
 
     - name: Droogkast staat op
       unique_id: 733a97db-050f-46c7-b734-43d20a80a01e
       state: >
-        {{ states("sensor.droogkast_vermogen") | float(0) > 3 }}
+        {{ states("sensor.droogkast_vermogen") | float(0) >= 4 }}
       delay_on:
-        minutes: 5
+        minutes: 2
       delay_off:
-        minutes: 10
+        minutes: 5
 
     - name: Afwasmachien staat op
       unique_id: bb4b871e-c1a9-4d81-abb6-f89f07bbd6fb
       state: >
-        {{ states("sensor.afwasmachien_vermogen") | float(0) > 3 }}
+        {{ states("sensor.afwasmachien_vermogen") | float(0) >= 3 }}
       delay_on:
-        minutes: 5
+        minutes: 2
       delay_off:
-        minutes: 10
-
-    # - name: Huawei not standby
-    #   unique_id: 21f07c2c-b491-4a2c-ab52-f4b9c248ccc5
-    #   state: >
-    #     {{ states("sensor.inverter_device_status") != "Standby: no irradiation"}}
-
-    # - name: Solaredge not standby
-    #   unique_id: c037b3b5-7a0c-43b0-910f-1b5d0f4cab56
-    #   state: >
-    #     {{ states("sensor.solaredge_inverter_operating_state") != "SLEEPING"}}
-
-    # - name: Inverters have power
-    #   unique_id: 4a1a711a-da84-470a-a59d-57bcd6339845
-    #   availability: >-
-    #     {{ has_value("sensor.zonne_opbrengst") }}
-    #   state: >
-    #     {{ states("sensor.zonne_opbrengst") | float(0) > 0 }}
+        minutes: 5
 
     - name: Huawei has power
       unique_id: 57543201-3292-4817-97ad-3058f1184bf9
@@ -74,15 +67,3 @@
         {{ has_value("sensor.solaredge_inverter_watts") }}
       state: >
         {{ states("sensor.solaredge_inverter_watts") | float(0) > 0 }}
-    # - name: L1 voltage greater then S1
-    #   unique_id: e12af89e-e46e-4bf6-a01f-70a22c2fbf2e
-    #   state: >
-    #     {{ states("sensor.s1_spanning") | float(0) < states("sensor.l1_spanning") | float(0) }}
-    # - name: L2 voltage greater then S2
-    #   unique_id: 23c27ddc-a9c8-4f7f-a7fa-d83287e28f0b
-    #   state: >
-    #     {{ states("sensor.s2_spanning") | float(0) < states("sensor.l2_spanning") | float(0) }}
-    # - name: L3 voltage greater then S3
-    #   unique_id: 8fdf21d6-e45d-44da-a380-53d82f76ed90
-    #   state: >
-    #     {{ states("sensor.s3_spanning") | float(0) < states("sensor.l3_spanning") | float(0) }}

@@ -1,0 +1,42 @@
+alias: Emhass warmtepomp
+id: c5057565-f78b-478b-b9db-d7659b3caf72
+trigger:
+  - platform: numeric_state
+    entity_id: sensor.emhass_warmtepomp
+    above: 1
+    for:
+      minutes: 5
+      seconds: 30
+  - platform: numeric_state
+    entity_id: sensor.emhass_warmtepomp
+    below: 0.1
+    for:
+      minutes: 5
+      seconds: 30
+action:
+  - choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.emhass_warmtepomp
+            above: 1
+        sequence:
+          - service: homeassistant.turn_on
+            target:
+              entity_id: input_boolean.emhass_warmtepomp
+          - condition: state
+            entity_id: binary_sensor.warmtepomp_aan_delay_off
+            state: "off"
+          - service: homeassistant.turn_on
+            target:
+              entity_id: switch.verwarming
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.emhass_warmtepomp
+            below: 1
+        sequence:
+          - service: homeassistant.turn_off
+            target:
+              entity_id: input_boolean.emhass_warmtepomp
+          - service: homeassistant.turn_off
+            target:
+              entity_id: switch.verwarming
