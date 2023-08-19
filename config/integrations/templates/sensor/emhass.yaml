@@ -433,6 +433,11 @@
       availability: >-
         {{ has_value("sensor.emhass_afwasmachien") }}
 
+    - name: Prediction horizon
+      unique_id: 39144142-06b5-4c2a-897a-d24b0c8fd2e4
+      state: >
+        {{ state_attr('sensor.cost_forecast_list', 'list') | length }}
+
 # post_mpc_optim: "curl -i -H \"Content-Type: application/json\" -X POST -d '{\"load_cost_forecast\":{{(
 #           ([states('sensor.amber_general_price')|float(0)] +
 #           state_attr('sensor.amber_general_forecast', 'forecasts') |map(attribute='per_kwh')|list)[:48])
