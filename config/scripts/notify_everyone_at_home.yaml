@@ -1,0 +1,22 @@
+notify_everyone_at_home:
+  sequence:
+    - repeat:
+        for_each: >-
+          {{ expand("person.giel", "person.martine", "person.noor", "person.fien") 
+                    | selectattr("state", "eq", "home") 
+                    | map(attribute="entity_id") 
+                    | list }}
+        sequence:
+          - service: >
+              {% if repeat.item == "person.giel" %}
+                notify.mobile_app_gphone
+              {% elif repeat.item == "person.martine" %}
+                notify.mobile_app_mphone
+              {% elif repeat.item == "person.noor" %}
+                notify.mobile_app_nphone
+              {% elif repeat.item == "person.fien" %}
+                notify.mobile_app_fphone
+              {% endif %}
+            data:
+              title: "{{ title }}"
+              message: "{{ message }}"

@@ -29,19 +29,28 @@ condition:
         {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 900 }}
 
 action:
-  - service: notify.mobile_app_gphone
-    data_template:
+  - service: script.notify_everyone_at_home
+    data:
+      title: "Ramen en deuren"
       message: >
         {% if states('binary_sensor.buiten_frisser_dan_binnen') == 'on' %}
           Nu kunde alles openzetten, binnen is het {{ states('sensor.binnen_lowpass') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
         {% else %}
           Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.binnen_lowpass') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
         {% endif %}
-  - service: notify.mobile_app_mphone
-    data_template:
-      message: >
-        {% if states('binary_sensor.buiten_frisser_dan_binnen') == 'on' %}
-          Nu kunde alles openzetten, binnen is het {{ states('sensor.binnen_lowpass') }}°Kakbraeckers en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°Kakbraeckers.
-        {% else %}
-          Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.binnen_lowpass') }}°Kakbraeckers en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°Kakbraeckers.
-        {% endif %}
+  # - service: notify.mobile_app_gphone
+  #   data_template:
+  #     message: >
+  #       {% if states('binary_sensor.buiten_frisser_dan_binnen') == 'on' %}
+  #         Nu kunde alles openzetten, binnen is het {{ states('sensor.binnen_lowpass') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
+  #       {% else %}
+  #         Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.binnen_lowpass') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
+  #       {% endif %}
+  # - service: notify.mobile_app_mphone
+  #   data_template:
+  #     message: >
+  #       {% if states('binary_sensor.buiten_frisser_dan_binnen') == 'on' %}
+  #         Nu kunde alles openzetten, binnen is het {{ states('sensor.binnen_lowpass') }}°Kakbraeckers en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°Kakbraeckers.
+  #       {% else %}
+  #         Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.binnen_lowpass') }}°Kakbraeckers en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°Kakbraeckers.
+  #       {% endif %}
