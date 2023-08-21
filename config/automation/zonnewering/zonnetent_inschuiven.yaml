@@ -43,6 +43,10 @@ trigger:
         {{ states("sensor.weatherbit_rain_rate")  | float > 0.15 }}
       {% endif %}
 
+  - platform: state
+    entity_id: binary_sensor.zonnetent_vibratie
+    to: "on"
+
 condition:
   condition: or
   conditions:

@@ -58,13 +58,13 @@ post_mpc_optim: >-
     "set_def_constant":[true, true, true, true, true],
     "pv_power_forecast": {{
         [states('sensor.huidige_opbrengst')|int(0)] +
-        state_attr('sensor.pv_power_forecast_list', 'list')[:state_attr('sensor.cost_forecast_list', 'list') | length - 1]}},
+        state_attr('sensor.pv_power_forecast_list', 'list')[:states('sensor.prediction_horizon') | int - 1]}},
     "prod_price_forecast": {{ 
         [state_attr('sensor.prod_price_forecast_list', 'extra') | float] +
-        state_attr('sensor.prod_price_forecast_list', 'list')[:state_attr('sensor.cost_forecast_list', 'list') | length - 1]}},
+        state_attr('sensor.prod_price_forecast_list', 'list')[:states('sensor.prediction_horizon') | int - 1]}},
     "load_cost_forecast": {{ 
         state_attr('sensor.cost_forecast_list', 'list')}},
-    "prediction_horizon": {{ state_attr('sensor.cost_forecast_list', 'list') | length }},
+    "prediction_horizon": {{ states('sensor.prediction_horizon') | int }},
     "alpha": 1,
     "beta": 0
     }' http://localhost:5001/action/naive-mpc-optim
