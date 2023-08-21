@@ -1,0 +1,18 @@
+- sensor:
+    - name: Purge entites
+      unique_id: 5244c410-7c08-4f38-a199-91f2f41dc374
+      state: >
+        {%- set exclude = state_attr("group.energy_entities", "entity_id") + state_attr("group.power_entities", "entity_id") %}
+        {%- set purge = (states | selectattr('entity_id') 
+                              | rejectattr('entity_id', 'in', exclude)
+                              | map(attribute='entity_id')
+                              | list) | length %}
+        {{ purge }}
+      attributes:
+        list: >
+          {%- set exclude = state_attr("group.energy_entities", "entity_id") + state_attr("group.power_entities", "entity_id") %}
+          {%- set purge = states | selectattr('entity_id') 
+                                | rejectattr('entity_id', 'in', exclude)
+                                | map(attribute='entity_id')
+                                | list %}
+          {{ purge }}
