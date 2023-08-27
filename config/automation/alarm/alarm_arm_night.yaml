@@ -49,6 +49,22 @@ condition:
               - condition: state
                 entity_id: device_tracker.giel_not_so_binary
                 state: "Juist Aangekomen"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: device_tracker.fien_not_so_binary
+                state: "Thuis"
+              - condition: state
+                entity_id: device_tracker.fien_not_so_binary
+                state: "Juist Aangekomen"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: device_tracker.noor_not_so_binary
+                state: "Thuis"
+              - condition: state
+                entity_id: device_tracker.noor_not_so_binary
+                state: "Juist Aangekomen"
 action:
   - service: light.turn_on
     data:
