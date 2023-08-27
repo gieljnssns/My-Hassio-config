@@ -21,9 +21,13 @@ action:
         sequence:
           - choose:
               - conditions:
-                  - condition: state
-                    entity_id: input_boolean.wasmachien_starten
-                    state: "on"
+                  - condition: template
+                    value_template: >
+                      {{ states("input_boolean.wasmachien_starten") == "on" 
+                          and states("input_boolean.emhass_wasmachien") != "on" }}
+                  # - condition: state
+                  #   entity_id: input_boolean.wasmachien_starten
+                  #   state: "on"
                 sequence:
                   - service: switch.turn_on
                     target:
@@ -52,9 +56,13 @@ action:
         sequence:
           - choose:
               - conditions:
-                  - condition: state
-                    entity_id: input_boolean.afwasmachien_starten
-                    state: "on"
+                  - condition: template
+                    value_template: >
+                      {{ states("input_boolean.afwasmachien_starten") == "on" 
+                          and states("input_boolean.emhass_afwasmachien") != "on" }}
+                  # - condition: state
+                  #   entity_id: input_boolean.afwasmachien_starten
+                  #   state: "on"
                 sequence:
                   - service: switch.turn_on
                     target:
@@ -83,9 +91,13 @@ action:
         sequence:
           - choose:
               - conditions:
-                  - condition: state
-                    entity_id: input_boolean.droogkast_starten
-                    state: "on"
+                  - condition: template
+                    value_template: >
+                      {{ states("input_boolean.droogkast_starten") == "on" 
+                          and states("input_boolean.emhass_droogkast") != "on" }}
+                  # - condition: state
+                  #   entity_id: input_boolean.droogkast_starten
+                  #   state: "on"
                 sequence:
                   - service: switch.turn_on
                     target:

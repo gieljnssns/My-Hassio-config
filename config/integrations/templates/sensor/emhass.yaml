@@ -94,7 +94,7 @@
           {% elif (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestart_op") | float(0)) < 3600 %}
             {{ ((49 - (states("sensor.thermostaat") | float(0))) / 2.5) | round(1)  }}
           {% elif states("binary_sensor.warmtepompboiler_aan") == 'on' %}
-            {{ ((49 - (states("sensor.thermostaat") | float(0))) / 3) | round(1)  }}
+            {{ ((49 - (states("sensor.thermostaat") | float(0))) / 2.5) | round(1)  }}
           {% else %}
             {{ ((49 - (states("sensor.thermostaat") | float(0))) / 2.5) | round(1)  }}
           {% endif %}
@@ -328,6 +328,29 @@
         #   {{ (new_list.all)[:36]}}
         # length: >
         #   {{ state_attr('sensor.real_cost_forecast_list', 'list') | length }}
+    - name: Verwarming startuur
+      unique_id: ceff5121-3392-4bac-8fa5-a8cec3e3d331
+      state: >
+        {%- from 'easy_time.jinja' import easy_relative_time %}
+        {%- set load = (state_attr('sensor.emhass_warmtepomp', 'deferrables_schedule')
+                |map(attribute='emhass_warmtepomp')
+                |list) %}
+        {%- set time = (state_attr('sensor.emhass_warmtepomp', 'deferrables_schedule')
+                |map(attribute='date')
+                |list) %}
+        {% if is_state("input_boolean.emhass_warmtepomp", "on") %}
+          "Staat op"
+        {% else %}
+          {%- set new_list = namespace(all=[]) %}
+            {%- for i in range (load | length) %}
+              {%- if load[i] | float > 1 %}
+                {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
+                {%- break -%}
+              {%- endif %}
+            {%- endfor %}
+          {% endif %}
+      availability: >-
+        {{ has_value("sensor.emhass_warmtepomp") }}
 
     - name: Warm water startuur
       unique_id: f4450d07-ad80-4ed5-a96a-852c84fec6ca
@@ -340,15 +363,13 @@
                 |map(attribute='date')
                 |list) %}
         {% if is_state("input_boolean.emhass_warmtepompboiler", "on") %}
-
+          "Staat op"
         {% else %}
           {%- set new_list = namespace(all=[]) %}
             {%- for i in range (load | length) %}
               {%- if load[i] | float > 1 %}
                 {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
                 {%- break -%}
-              {%- else %}
-                
               {%- endif %}
             {%- endfor %}
           {% endif %}
@@ -366,15 +387,13 @@
                 |map(attribute='date')
                 |list) %}
         {% if is_state("input_boolean.emhass_wasmachien", "on") %}
-
+          "Staat op"
         {% else %}
           {%- set new_list = namespace(all=[]) %}
             {%- for i in range (load | length) %}
               {%- if load[i] | float > 1 %}
                 {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
                 {%- break -%}
-              {%- else %}
-              
               {%- endif %}
             {%- endfor %}
         {% endif %}
@@ -392,15 +411,13 @@
                 |map(attribute='date')
                 |list) %}
         {% if is_state("input_boolean.emhass_droogkast", "on") %}
-
+          "Staat op"
         {% else %}
           {%- set new_list = namespace(all=[]) %}
             {%- for i in range (load | length) %}
               {%- if load[i] | float > 1 %}
                 {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
                 {%- break -%}
-              {%- else %}
-                
               {%- endif %}
             {%- endfor %}
           {% endif %}
@@ -418,15 +435,13 @@
                 |map(attribute='date')
                 |list) %}
         {% if is_state("input_boolean.emhass_afwasmachien", "on") %}
-
+          "Staat op"
         {% else %}
           {%- set new_list = namespace(all=[]) %}
             {%- for i in range (load | length) %}
               {%- if load[i] | float > 1 %}
                 {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
                 {%- break -%}
-              {%- else %}
-                
               {%- endif %}
             {%- endfor %}
           {% endif %}
@@ -437,7 +452,20 @@
       unique_id: 39144142-06b5-4c2a-897a-d24b0c8fd2e4
       unit_of_measurement: 1/2u
       state: >
-        {{ state_attr('sensor.cost_forecast_list', 'list') | length }}
+        {% if states("sensor.zonne_energie_gefilterd_lowpass") | int > 2000 %}
+          {% if state_attr('sensor.pv_power_forecast_list', 'list')[-1] == 0 %}
+            {{ state_attr('sensor.pv_power_forecast_list', 'list') | count }}
+          {%- else %}
+            {%- for i in state_attr('sensor.pv_power_forecast_list', 'list') -%}
+              {{ (loop.index + 1 if i == 0 and loop.nextitem != 0) }}
+            {%- endfor %}
+          {%- endif %}
+        {%- else %}
+           {{ state_attr('sensor.cost_forecast_list', 'list') | length }}
+        {%- endif %}
+      # state: >
+      #   {{ state_attr('sensor.cost_forecast_list', 'list') | length }}
+
 
 # post_mpc_optim: "curl -i -H \"Content-Type: application/json\" -X POST -d '{\"load_cost_forecast\":{{(
 #           ([states('sensor.amber_general_price')|float(0)] +
