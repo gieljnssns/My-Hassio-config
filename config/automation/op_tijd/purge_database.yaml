@@ -105,7 +105,7 @@ variables:
     {%- set part = (states("sensor.purge_entites_1") | float / 40) | int %}
     {%- set a = part * 19 %}
     {%- set b = part * 20 %}
-    {{ state_attr("sensor.purge_entites_1", "list")[a:] }}
+    {{ state_attr("sensor.purge_entites_1", "list")[a:b] }}
   aa: >
     {%- set part = (states("sensor.purge_entites_1") | float / 40) | int %}
     {%- set a = part * 20 %}
@@ -205,7 +205,7 @@ variables:
     {%- set part = (states("sensor.purge_entites_1") | float / 40) | int %}
     {%- set a = part * 39 %}
     {%- set b = part * 30 %}
-    {{ state_attr("sensor.purge_entites_1", "list")[a:] }}
+    {{ state_attr("sensor.purge_entites_1", "list")[a:b] }}
   a2: >
     {%- set part = (states("sensor.purge_entites_2") | float / 40) | int %}
     {%- set a = part * 0 %}
@@ -305,7 +305,7 @@ variables:
     {%- set part = (states("sensor.purge_entites_2") | float / 40) | int %}
     {%- set a = part * 19 %}
     {%- set b = part * 20 %}
-    {{ state_attr("sensor.purge_entites_2", "list")[a:] }}
+    {{ state_attr("sensor.purge_entites_2", "list")[a:b] }}
   aa2: >
     {%- set part = (states("sensor.purge_entites_2") | float / 40) | int %}
     {%- set a = part * 20 %}
@@ -405,7 +405,7 @@ variables:
     {%- set part = (states("sensor.purge_entites_2") | float / 40) | int %}
     {%- set a = part * 39 %}
     {%- set b = part * 30 %}
-    {{ state_attr("sensor.purge_entites_2", "list")[a:] }}
+    {{ state_attr("sensor.purge_entites_2", "list")[a:b] }}
 action:
   - choose:
       - conditions:
@@ -731,8 +731,6 @@ action:
             target:
               entity_id: >
                 {{ tt }}
-          - delay:
-              seconds: 60
       - conditions:
           - condition: template
             value_template: >
