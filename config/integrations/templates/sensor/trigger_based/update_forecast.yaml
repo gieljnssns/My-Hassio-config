@@ -1,0 +1,13 @@
+- trigger:
+    - platform: event
+      event_type: openweathermap_forecast_hourly
+  sensor:
+    - name: Gemiddelde temperatuur buiten voorspelling 2
+      unique_id: 9e6ccce8-2acd-4132-98e8-e3e6087b4588
+      unit_of_measurement: "°C"
+      state: >
+        {% set forecast = trigger.event.data.hourly.forecast %}
+        {{ forecast[:8] 
+              | map(attribute='temperature') 
+              | average 
+              | round(1) }}
