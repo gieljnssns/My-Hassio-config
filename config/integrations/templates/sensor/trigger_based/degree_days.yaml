@@ -1,0 +1,50 @@
+- trigger:
+    - platform: time_pattern
+      # This will update every night
+      hours: 23
+      minutes: 59
+      seconds: 58
+  sensor:
+    - name: "Degree day daily"
+      unique_id: 3643a5c6-2fd0-4f4e-b980-cbd8a3181372
+      unit_of_measurement: "DD"
+      state: >
+        {{ states('sensor.degree_day') }}
+
+    - name: "Gemiddelde dagtemperatuur binnen"
+      unique_id: c4f30edb-210a-41a4-b54e-1b2cdd089a8d
+      unit_of_measurement: "°C"
+      state: >
+        {{ states('sensor.gemiddelde_binnentemperatuur') }}
+
+    - name: "Gemiddelde dagtemperatuur buiten"
+      unique_id: 0a1e8fbc-6cba-4d39-880a-5ecd3b974ea9
+      unit_of_measurement: "°C"
+      state: >
+        {{ states('sensor.gemiddelde_buitentemperatuur') }}
+
+    - name: "Branduren warmtepomp vandaag"
+      unique_id: 471b41b7-3226-4156-a7a9-d151debadbf6
+      unit_of_measurement: "uren"
+      state: >
+        {{ states('sensor.branduren_warmtepomp') }}
+
+    - name: "kWh per degree day daily"
+      unique_id: b4663a21-9f17-4cf6-a714-abf47da1f322
+      unit_of_measurement: "kWh/DD"
+      state: >
+        {% if (states('sensor.degree_day_daily')|float <= 1) %}
+          0
+        {% else %}
+          {{ [0, states('sensor.daily_warmtepomp')|float(0) / states('sensor.degree_day_daily')|float] | max | round(2) }}
+        {% endif %}
+
+    - name: "Uur per degree day daily"
+      unique_id: d8ca5454-d71f-4c89-b488-7d6493aebb9c
+      unit_of_measurement: "uur/DD"
+      state: >
+        {% if (states('sensor.degree_day_daily')|float <= 1) %}
+          0
+        {% else %}
+          {{ [0, states('sensor.branduren_warmtepomp')|float / states('sensor.degree_day_daily')|float] | max | round(2) }}
+        {% endif %}
