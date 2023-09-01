@@ -34,6 +34,15 @@ trigger:
     to: "on"
     id: gang
 condition:
+  - condition: template
+    value_template: >
+      {% set person = [
+          states.person.giel,
+          states.person.martine,
+          states.person.noor,
+          states.person.fien
+          ] %}
+      {{ person | selectattr('state','eq','home') | list | count > 0 }}
   - condition: not
     conditions:
       - condition: state
@@ -58,7 +67,7 @@ action:
                     target:
                       entity_id: vacuum.cl4p_tp
             default:
-              - service: vacuum.start_pause
+              - service: vacuum.pause
                 target:
                   entity_id: vacuum.cl4p_tp
               - wait_for_trigger:
@@ -66,7 +75,7 @@ action:
                     entity_id:
                       - binary_sensor.pir_keuken
                     to: "off"
-              - service: vacuum.start_pause
+              - service: vacuum.start
                 target:
                   entity_id: vacuum.cl4p_tp
       - conditions:
@@ -86,7 +95,7 @@ action:
                     target:
                       entity_id: vacuum.cl4p_tp
             default:
-              - service: vacuum.start_pause
+              - service: vacuum.pause
                 target:
                   entity_id: vacuum.cl4p_tp
               - wait_for_trigger:
@@ -94,7 +103,7 @@ action:
                     entity_id:
                       - binary_sensor.danszaal_aqara_pir
                     to: "off"
-              - service: vacuum.start_pause
+              - service: vacuum.start
                 target:
                   entity_id: vacuum.cl4p_tp
       - conditions:
@@ -114,7 +123,7 @@ action:
                     target:
                       entity_id: vacuum.cl4p_tp
             default:
-              - service: vacuum.start_pause
+              - service: vacuum.pause
                 target:
                   entity_id: vacuum.cl4p_tp
               - wait_for_trigger:
@@ -122,7 +131,7 @@ action:
                     entity_id:
                       - binary_sensor.zithoek_aqara_pir
                     to: "off"
-              - service: vacuum.start_pause
+              - service: vacuum.start
                 target:
                   entity_id: vacuum.cl4p_tp
       - conditions:
@@ -142,7 +151,7 @@ action:
                     target:
                       entity_id: vacuum.cl4p_tp
             default:
-              - service: vacuum.start_pause
+              - service: vacuum.pause
                 target:
                   entity_id: vacuum.cl4p_tp
               - wait_for_trigger:
@@ -150,7 +159,7 @@ action:
                     entity_id:
                       - binary_sensor.wc_aqara_pir
                     to: "off"
-              - service: vacuum.start_pause
+              - service: vacuum.start
                 target:
                   entity_id: vacuum.cl4p_tp
       - conditions:
@@ -170,7 +179,7 @@ action:
                     target:
                       entity_id: vacuum.cl4p_tp
             default:
-              - service: vacuum.start_pause
+              - service: vacuum.pause
                 target:
                   entity_id: vacuum.cl4p_tp
               - wait_for_trigger:
@@ -178,7 +187,7 @@ action:
                     entity_id:
                       - binary_sensor.waskot_aqara_pir
                     to: "off"
-              - service: vacuum.start_pause
+              - service: vacuum.start
                 target:
                   entity_id: vacuum.cl4p_tp
       - conditions:
@@ -198,7 +207,7 @@ action:
                     target:
                       entity_id: vacuum.cl4p_tp
             default:
-              - service: vacuum.start_pause
+              - service: vacuum.pause
                 target:
                   entity_id: vacuum.cl4p_tp
               - wait_for_trigger:
@@ -206,7 +215,7 @@ action:
                     entity_id:
                       - binary_sensor.gang_beneden_pir
                     to: "off"
-              - service: vacuum.start_pause
+              - service: vacuum.start
                 target:
                   entity_id: vacuum.cl4p_tp
     default: []
