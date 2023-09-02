@@ -5,7 +5,10 @@ trigger:
     entity_id: input_boolean.noor_huiswerk
     to: "on"
   - platform: state
-    entity_id: input_boolean.noor_viool
+    entity_id: input_boolean.noor_piano
+    to: "on"
+  - platform: state
+    entity_id: input_boolean.noor_uniform
     to: "on"
 condition:
   - condition: and
@@ -14,7 +17,10 @@ condition:
         entity_id: input_boolean.noor_huiswerk
         state: "on"
       - condition: state
-        entity_id: input_boolean.noor_viool
+        entity_id: input_boolean.noor_piano
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.noor_uniform
         state: "on"
 action:
   - service: notify.giel_en_martine

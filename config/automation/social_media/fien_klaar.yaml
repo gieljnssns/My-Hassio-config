@@ -7,6 +7,9 @@ trigger:
   - platform: state
     entity_id: input_boolean.fien_drum
     to: "on"
+  - platform: state
+    entity_id: input_boolean.fien_uniform
+    to: "on"
 condition:
   - condition: and
     conditions:
@@ -15,6 +18,9 @@ condition:
         state: "on"
       - condition: state
         entity_id: input_boolean.fien_drum
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.fien_uniform
         state: "on"
 action:
   - service: notify.giel_en_martine
