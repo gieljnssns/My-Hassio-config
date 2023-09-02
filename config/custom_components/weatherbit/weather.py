@@ -1,49 +1,42 @@
 """Support for the Weatherbit weather service."""
+from __future__ import annotations
+
 import logging
-from typing import Dict, List
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
+    Forecast,
     WeatherEntity,
+    WeatherEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_ID,
-    LENGTH_MILES,
-    LENGTH_KILOMETERS,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    TEMP_CELSIUS,
+    PRECISION_TENTHS,
+    UnitOfLength,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.pressure import convert as convert_pressure
-from homeassistant.util.dt import utc_from_timestamp
+from pyweatherbitdata.data import ForecastDetailDescription
 
-from .const import (
-    DOMAIN,
-    ATTR_WEATHERBIT_ALT_CONDITION,
-    ATTR_WEATHERBIT_AQI,
-    ATTR_WEATHERBIT_CLOUDINESS,
-    ATTR_WEATHERBIT_IS_NIGHT,
-    ATTR_WEATHERBIT_WIND_GUST,
-    ATTR_WEATHERBIT_PRECIPITATION,
-    ATTR_WEATHERBIT_FCST_POP,
-    ATTR_WEATHERBIT_UVI,
-    ATTR_WEATHERBIT_SNOW,
-    ATTR_WEATHERBIT_UPDATED,
-    DEFAULT_ATTRIBUTION,
-    DEVICE_TYPE_WEATHER,
-    CONDITION_CLASSES,
-    ALT_CONDITION_CLASSES,
-    MDI_CONDITION_CLASSES,
-)
+from .const import ATTR_ALT_CONDITION, DOMAIN
 from .entity import WeatherbitEntity
+from .models import WeatherBitEntryData
+
+_WEATHER_DAILY = "weather_daily"
+
+WEATHER_TYPES: tuple[WeatherEntityDescription, ...] = (
+    WeatherEntityDescription(
+        key=_WEATHER_DAILY,
+        name="Weatherbit",
+    ),
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,268 +44,141 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
-    """Add a weather entity from mapped location."""
+    """Add a weather entity from a config_entry."""
+    entry_data: WeatherBitEntryData = hass.data[DOMAIN][entry.entry_id]
+    weatherbitapi = entry_data.weatherbitapi
+    coordinator = entry_data.coordinator
+    forecast_coordinator = entry_data.forecast_coordinator
+    station_data = entry_data.station_data
 
-    fcst_coordinator = hass.data[DOMAIN][entry.entry_id]["fcst_coordinator"]
-    if not fcst_coordinator.data:
-        return
+    entities = []
+    for description in WEATHER_TYPES:
+        entities.append(
+            WeatherbitWeatherEntity(
+                weatherbitapi,
+                coordinator,
+                forecast_coordinator,
+                station_data,
+                description,
+                entry,
+            )
+        )
 
-    cur_coordinator = hass.data[DOMAIN][entry.entry_id]["cur_coordinator"]
-    if not cur_coordinator.data:
-        return
+        _LOGGER.debug(
+            "Adding weather entity %s",
+            description.name,
+        )
 
-    weather_entity = WeatherbitWeather(
-        fcst_coordinator,
-        cur_coordinator,
-        entry.data,
-        hass.config.units.is_metric,
-    )
-
-    async_add_entities([weather_entity], True)
-
-    return True
+    async_add_entities(entities)
 
 
-class WeatherbitWeather(WeatherbitEntity, WeatherEntity):
-    """Representation of a weather entity."""
+class WeatherbitWeatherEntity(WeatherbitEntity, WeatherEntity):
+    """A WeatherBit weather entity."""
 
-    def __init__(self, fcst_coordinator, cur_coordinator, entries, is_metric) -> None:
-        """Initialize the Weatherbit weather entity."""
+    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-arguments
+    # Seven is reasonable in this case.
+
+    def __init__(
+        self,
+        weatherbitapi,
+        coordinator,
+        forecast_coordinator,
+        station_data,
+        description,
+        entries: ConfigEntry,
+    ):
+        """Initialize an WeatherBit Weather Entity."""
         super().__init__(
-            fcst_coordinator, cur_coordinator, None, entries, DEVICE_TYPE_WEATHER
+            weatherbitapi,
+            coordinator,
+            forecast_coordinator,
+            station_data,
+            description,
+            entries,
         )
-        self._name = f"{DOMAIN.capitalize()} {entries[CONF_ID]}"
-        self._is_metric = is_metric
+        self.daily_forecast = self.entity_description.key in _WEATHER_DAILY
+        self._attr_name = self.entity_description.name
+        self._attr_native_precipitation_unit = UnitOfLength.MILLIMETERS
+        self._attr_precision = PRECISION_TENTHS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
+    def condition(self):
+        """Return the current condition."""
+        return getattr(self.forecast_coordinator.data, "condition")
 
     @property
-    def temperature(self) -> int:
+    def native_temperature(self):
         """Return the temperature."""
-        if self._current is not None:
-            return self._current.temp
-        return None
+        return getattr(self.coordinator.data, "temp")
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def humidity(self) -> int:
+    def humidity(self):
         """Return the humidity."""
-        if self._current is not None:
-            return self._current.humidity
-        return None
+        return getattr(self.coordinator.data, "humidity")
 
     @property
-    def wind_speed(self) -> float:
-        """Return the wind speed."""
-        speed_m_s = self._current.wind_spd
-        if self._is_metric or speed_m_s is None:
-            return round(float(speed_m_s) * 3.6, 1)
-
-        return round(float(speed_m_s * 2.23693629), 2)
-
-    @property
-    def wind_gust(self) -> float:
-        """Return the wind Gust."""
-        speed_m_s = self._forecast.wind_gust_spd
-        if self._is_metric or speed_m_s is None:
-            return round(speed_m_s, 1)
-
-        return round(float(speed_m_s * 2.23693629), 2)
-
-    @property
-    def wind_bearing(self) -> int:
-        """Return the wind bearing."""
-        if self._current is not None:
-            return self._current.wind_dir
-        return None
-
-    @property
-    def precipitation(self) -> float:
-        """Return the precipitation."""
-        if self._is_metric or self._current.precip is None:
-            return round(float(self._current.precip), 1)
-
-        return round(float(self._current.precip) / 25.4, 2)
-
-    @property
-    def ozone(self) -> float:
-        """Return the ozone."""
-        if self._forecast is not None:
-            return round(float(self._forecast.ozone), 1)
-        return None
-
-    @property
-    def visibility(self) -> float:
-        """Return the visibility."""
-        visibility_km = self._current.vis
-        if self._is_metric or visibility_km is None:
-            return visibility_km
-
-        visibility_mi = convert_distance(visibility_km, LENGTH_KILOMETERS, LENGTH_MILES)
-        return int(round(visibility_mi))
-
-    @property
-    def pressure(self) -> int:
+    def native_pressure(self):
         """Return the pressure."""
-        pressure_hpa = self._current.pres
-        if self._is_metric or pressure_hpa is None:
-            return pressure_hpa
-
-        return round(convert_pressure(pressure_hpa, PRESSURE_HPA, PRESSURE_INHG), 2)
-
-    @property
-    def cloudiness(self) -> int:
-        """Return the cloudiness."""
-        if self._current is not None:
-            return self._current.clouds
-        return None
-
-    @property
-    def uv(self) -> int:
-        """Return the UV Index."""
-        if self._current is not None:
-            return round(self._current.uv, 1)
-        return None
-
-    @property
-    def aqi(self) -> int:
-        """Return the Air Quality Index."""
-        if self._current is not None:
-            return self._current.aqi
-        return None
-
-    @property
-    def is_night(self) -> bool:
-        """Return True if after Sunset at Location."""
-        if self._current is not None:
-            return self._current.is_night
-        return None
-
-    @property
-    def condition(self) -> str:
-        """Return the weather condition."""
-        if self._current is None:
+        if getattr(self.coordinator.data, "slp") is None:
             return None
 
-        wcode = int(self._current.weather_code)
-
-        # If Night convert to Clear Night
-        if wcode == 800 and self.is_night:
-            wcode = wcode * 10
-
-        return next(
-            (k for k, v in CONDITION_CLASSES.items() if wcode in v),
-            None,
-        )
+        return getattr(self.coordinator.data, "slp")
 
     @property
-    def alt_condition(self) -> str:
-        """Return the alternative weather condition."""
-        if self._current is None:
+    def native_wind_speed(self):
+        """Return the wind speed."""
+        if getattr(self.coordinator.data, "wind_spd") is None:
             return None
 
-        wcode = int(self._current.weather_code)
-
-        # If Night convert to night condition
-        if self.is_night:
-            if wcode in [800, 801, 802]:
-                wcode = wcode * 10
-
-        return next(
-            (k for k, v in ALT_CONDITION_CLASSES.items() if wcode in v),
-            None,
-        )
+        return getattr(self.coordinator.data, "wind_spd")
 
     @property
-    def icon(self):
-        """Return the mdi icon for the current condition."""
-        if self._current is None:
-            return None
-
-        wcode = int(self._current.weather_code)
-
-        # If Night convert to night condition
-        if self.is_night:
-            if wcode in [800, 801, 802]:
-                wcode = wcode * 10
-
-        icon_name = next(
-            (k for k, v in MDI_CONDITION_CLASSES.items() if wcode in v),
-            "radar",
-        )
-
-        return f"mdi:{icon_name}"
+    def wind_bearing(self):
+        """Return the wind bearing."""
+        return getattr(self.coordinator.data, "wind_dir")
 
     @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return DEFAULT_ATTRIBUTION
+    def native_visibility(self):
+        """Return the visibility."""
+        return getattr(self.coordinator.data, "vis")
 
     @property
-    def device_state_attributes(self) -> Dict:
-        """Return Weatherbit specific attributes."""
+    def ozone(self):
+        """Return the ozone."""
+        return getattr(self.forecast_coordinator.data, "ozone")
+
+    @property
+    def extra_state_attributes(self):
+        """Return extra state attributes"""
         return {
-            ATTR_WEATHERBIT_AQI: self.aqi,
-            ATTR_WEATHERBIT_CLOUDINESS: self.cloudiness,
-            ATTR_WEATHERBIT_ALT_CONDITION: self.alt_condition,
-            ATTR_WEATHERBIT_IS_NIGHT: self.is_night,
-            ATTR_WEATHERBIT_PRECIPITATION: self.precipitation,
-            ATTR_WEATHERBIT_WIND_GUST: self.wind_gust,
-            ATTR_WEATHERBIT_UVI: self.uv,
-            ATTR_WEATHERBIT_UPDATED: getattr(self._current, "obs_time_local"),
+            **super().extra_state_attributes,
+            ATTR_ALT_CONDITION: getattr(
+                self.forecast_coordinator.data, "alt_condition"
+            ),
         }
 
     @property
-    def forecast(self) -> List:
-        """Return the forecast."""
-        if self.fcst_coordinator.data is None or len(self.fcst_coordinator.data) < 2:
-            return None
-
-        data = []
-
-        for forecast in self.fcst_coordinator.data:
-            condition = next(
-                (k for k, v in CONDITION_CLASSES.items() if forecast.weather_code in v),
-                None,
+    def forecast(self) -> list[Forecast] | None:
+        """Return the forecast array."""
+        data: list[Forecast] = []
+        if self.daily_forecast:
+            forecast_data: ForecastDetailDescription = (
+                self.forecast_coordinator.data.forecast
             )
-
-            # Convert Wind Speed
-            if self._is_metric or forecast.wind_spd is None:
-                wspeed = round(float(forecast.wind_spd) * 3.6, 1)
-            else:
-                wspeed = round(float(forecast.wind_spd * 2.23693629), 1)
-
-            # Convert Precipitation
-            if self._is_metric or forecast.precip is None:
-                precip = round(forecast.precip, 1)
-            else:
-                precip = round(float(forecast.precip) / 25.4, 2)
-
-            # Convert Snowfall
-            if self._is_metric or forecast.snow is None:
-                snow = round(forecast.snow, 1)
-            else:
-                snow = round(float(forecast.snow) / 25.4, 2)
-
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: utc_from_timestamp(forecast.ts).isoformat(),
-                    ATTR_FORECAST_TEMP: forecast.max_temp,
-                    ATTR_FORECAST_TEMP_LOW: forecast.min_temp,
-                    ATTR_FORECAST_PRECIPITATION: precip,
-                    ATTR_WEATHERBIT_SNOW: snow,
-                    ATTR_WEATHERBIT_FCST_POP: forecast.pop,
-                    ATTR_FORECAST_CONDITION: condition,
-                    ATTR_FORECAST_WIND_SPEED: wspeed,
-                    ATTR_FORECAST_WIND_BEARING: forecast.wind_dir,
-                }
-            )
-
+            for item in forecast_data:
+                data.append(
+                    {
+                        ATTR_FORECAST_TIME: item.utc_time,
+                        ATTR_FORECAST_NATIVE_TEMP: item.max_temp,
+                        ATTR_FORECAST_NATIVE_TEMP_LOW: item.min_temp,
+                        ATTR_FORECAST_NATIVE_PRECIPITATION: item.precip,
+                        ATTR_FORECAST_PRECIPITATION_PROBABILITY: item.pop,
+                        ATTR_FORECAST_CONDITION: item.condition,
+                        ATTR_FORECAST_NATIVE_WIND_SPEED: item.wind_spd,
+                        ATTR_FORECAST_WIND_BEARING: item.wind_dir,
+                    }
+                )
+            return data
         return data

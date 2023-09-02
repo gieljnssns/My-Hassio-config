@@ -5,6 +5,7 @@ import logging
 from typing import Any, Dict, cast
 
 import voluptuous as vol
+from voluptuous.validators import All, Range
 from yarl import URL
 
 from homeassistant import config_entries
@@ -15,10 +16,11 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .api import FrigateApiClient, FrigateApiClientError
 from .const import (
-    CONF_CAMERA_STATIC_IMAGE_HEIGHT,
+    CONF_MEDIA_BROWSER_ENABLE,
     CONF_NOTIFICATION_PROXY_ENABLE,
+    CONF_NOTIFICATION_PROXY_EXPIRE_AFTER_SECONDS,
     CONF_RTMP_URL_TEMPLATE,
-    DEFAULT_CAMERA_STATIC_IMAGE_HEIGHT,
+    CONF_RTSP_URL_TEMPLATE,
     DEFAULT_HOST,
     DOMAIN,
 )
@@ -126,38 +128,54 @@ class FrigateOptionsFlowHandler(config_entries.OptionsFlow):  # type: ignore[mis
                 Dict[str, Any], self.async_create_entry(title="", data=user_input)
             )
 
-        schema: dict[Any, Any] = {
-            vol.Optional(
-                CONF_CAMERA_STATIC_IMAGE_HEIGHT,
-                default=self._config_entry.options.get(
-                    CONF_CAMERA_STATIC_IMAGE_HEIGHT,
-                    DEFAULT_CAMERA_STATIC_IMAGE_HEIGHT,
-                ),
-            ): vol.All(vol.Coerce(int), vol.Range(min=0)),
-        }
-
-        if self.show_advanced_options:
-            schema.update(
-                {
-                    # The input URL is not validated as being a URL to allow for the
-                    # possibility the template input won't be a valid URL until after
-                    # it's rendered.
-                    vol.Optional(
-                        CONF_RTMP_URL_TEMPLATE,
-                        default=self._config_entry.options.get(
-                            CONF_RTMP_URL_TEMPLATE,
-                            "",
-                        ),
-                    ): str,
-                    vol.Optional(
-                        CONF_NOTIFICATION_PROXY_ENABLE,
-                        default=self._config_entry.options.get(
-                            CONF_NOTIFICATION_PROXY_ENABLE,
-                            True,
-                        ),
-                    ): bool,
-                }
+        if not self.show_advanced_options:
+            return cast(
+                Dict[str, Any], self.async_abort(reason="only_advanced_options")
             )
+
+        schema: dict[Any, Any] = {
+            # The input URL is not validated as being a URL to allow for the
+            # possibility the template input won't be a valid URL until after
+            # it's rendered.
+            vol.Optional(
+                CONF_RTMP_URL_TEMPLATE,
+                default=self._config_entry.options.get(
+                    CONF_RTMP_URL_TEMPLATE,
+                    "",
+                ),
+            ): str,
+            # The input URL is not validated as being a URL to allow for the
+            # possibility the template input won't be a valid URL until after
+            # it's rendered.
+            vol.Optional(
+                CONF_RTSP_URL_TEMPLATE,
+                default=self._config_entry.options.get(
+                    CONF_RTSP_URL_TEMPLATE,
+                    "",
+                ),
+            ): str,
+            vol.Optional(
+                CONF_NOTIFICATION_PROXY_ENABLE,
+                default=self._config_entry.options.get(
+                    CONF_NOTIFICATION_PROXY_ENABLE,
+                    True,
+                ),
+            ): bool,
+            vol.Optional(
+                CONF_MEDIA_BROWSER_ENABLE,
+                default=self._config_entry.options.get(
+                    CONF_MEDIA_BROWSER_ENABLE,
+                    True,
+                ),
+            ): bool,
+            vol.Optional(
+                CONF_NOTIFICATION_PROXY_EXPIRE_AFTER_SECONDS,
+                default=self._config_entry.options.get(
+                    CONF_NOTIFICATION_PROXY_EXPIRE_AFTER_SECONDS,
+                    0,
+                ),
+            ): All(int, Range(min=0)),
+        }
 
         return cast(
             Dict[str, Any],

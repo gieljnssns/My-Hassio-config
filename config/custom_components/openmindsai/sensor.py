@@ -11,19 +11,15 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "hassio_mindsdb_response"
 DEFAULT_INPUT_NAME = "gpt_input"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional("input_name", default=DEFAULT_INPUT_NAME): cv.string,
-        vol.Required("session_cookie"): cv.string,
-        vol.Required("model"): cv.string,
-    }
-)
-
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional("input_name", default=DEFAULT_INPUT_NAME): cv.string,
+    vol.Required("session_cookie"): cv.string,
+    vol.Required("model"): cv.string,
+})
 
 def query_message(query, token_budget=4096 - 500):
     return query
-
 
 def ask(session_cookie, model, query, token_budget=4096 - 500):
     message = query_message(query, token_budget=token_budget)
@@ -44,38 +40,13 @@ def ask(session_cookie, model, query, token_budget=4096 - 500):
 
     return response_message
 
-
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     name = config[CONF_NAME]
     input_name = config["input_name"]
     session_cookie = config["session_cookie"]
     model = config["model"]
 
-    async_add_entities(
-        [MindsDBResponseSensor(hass, name, input_name, session_cookie, model)], True
-    )
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the OpenAssist sensor."""
-    _LOGGER.debug("Setting up OpenAssistSensor")
-
-    name = config[CONF_NAME]
-    model = config["model"]
-    mindsdb_email = config["mindsdb_email"]
-    mindsdb_password = config["mindsdb_password"]
-    input_name = config["input_name"]
-    # your_name = config.get('your_name', '')
-
-    add_entities(
-        [
-            MindsDBResponseSensor(
-                hass, name, model, mindsdb_email, mindsdb_password, input_name
-            )
-        ]
-    )
-    _LOGGER.debug("MindsDBResponseSensor added to entities")
-
+    async_add_entities([MindsDBResponseSensor(hass, name, input_name, session_cookie, model)], True)
 
 class MindsDBResponseSensor(SensorEntity):
     def __init__(self, hass, name, input_name, session_cookie, model):
@@ -103,9 +74,7 @@ class MindsDBResponseSensor(SensorEntity):
     async def async_ask(self, entity_id, old_state, new_state):
         new_query = new_state.state
         if new_query:
-            response = await self._hass.async_add_executor_job(
-                ask, self._session_cookie, self._model, new_query
-            )
+            response = await self._hass.async_add_executor_job(ask, self._session_cookie, self._model, new_query)
             self._response_text = response
             self._state = "query_executed"
             self.async_write_ha_state()
