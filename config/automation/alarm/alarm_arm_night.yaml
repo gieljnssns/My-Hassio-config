@@ -83,9 +83,21 @@ action:
     data_template:
       identity: >
         Alarm night {{ now().strftime("%H:%M") }}
-  - condition: state
-    entity_id: binary_sensor.badkamer_grouped_not_master
-    state: "on"
-  - service: media_player.unjoin
-    target:
-      entity_id: media_player.2c
+  - delay:
+      minutes: 20
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ states("button.brouwerij_shutdown") != "unavailable" and 
+                  states("binary_sensor.beweging_garage") != "on" }}
+          - service: button.press
+            target:
+              entity_id: button.brouwerij_shutdown
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.badkamer_grouped_not_master
+            state: "on"
+          - service: media_player.unjoin
+            target:
+              entity_id: media_player.badkamer
