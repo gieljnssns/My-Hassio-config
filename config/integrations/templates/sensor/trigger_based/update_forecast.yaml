@@ -1,12 +1,24 @@
 - trigger:
-    - platform: event
-      event_type: openweathermap_forecast_hourly
+    # - platform: event
+    #   event_type: openweathermap_forecast_hourly
+    - platform: time_pattern
+      minutes: "/20"
+  action:
+    - service: weather.get_forecast
+      data:
+        type: hourly
+      target:
+        entity_id: weather.openweathermap
+      response_variable: hourly
+    # - event: openweathermap_forecast_hourly
+    #   event_data:
+    #     hourly: "{{ hourly}}"
   sensor:
     - name: Gemiddelde temperatuur buiten voorspelling 2
       unique_id: 9e6ccce8-2acd-4132-98e8-e3e6087b4588
       unit_of_measurement: "°C"
       state: >
-        {% set forecast = trigger.event.data.hourly.forecast %}
+        {% set forecast = hourly.forecast %}
         {{ forecast[:8] 
               | map(attribute='temperature') 
               | average 
