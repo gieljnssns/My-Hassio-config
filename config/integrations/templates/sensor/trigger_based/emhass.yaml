@@ -52,6 +52,18 @@
     - platform: time_pattern
       seconds: "/5"
   sensor:
+    - name: "Emhass huidige opbrengst"
+      unique_id: 99153de6-9177-4f4d-8228-f64f2c319162
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ states('sensor.huidige_opbrengst') }}
+    - name: "Emhass huidig verbruik"
+      unique_id: 905759dc-7fa2-4772-9393-60e33d2192cd
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ states('sensor.huidig_verbruik') }}
     - name: Huidig verbruik zonder wp
       unique_id: 664ab9ff-3875-4a45-b53a-685b7a8f7f96
       unit_of_measurement: "W"
