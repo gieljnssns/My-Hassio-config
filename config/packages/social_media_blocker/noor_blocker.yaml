@@ -44,10 +44,21 @@ automation:
       entity_id: input_boolean.noor_blocker
       to: "on"
     action:
+      - service: adguard.add_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/noor.txt"
+          name: Noor
+
+  - id: noor_allow
+    alias: Noor allow
+    trigger:
+      platform: state
+      entity_id: input_boolean.noor_blocker
+      to: "off"
+    action:
       - service: adguard.remove_url
         data:
-          list_type: "allowlist"
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/noor.txt"
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/noor.txt"
 
   - id: noor_block_all
     alias: Noor block all
@@ -59,20 +70,7 @@ automation:
       - service: adguard.add_url
         data:
           name: Noor all
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/no_internet_noor.txt"
-
-  - id: noor_allow
-    alias: Noor allow
-    trigger:
-      platform: state
-      entity_id: input_boolean.noor_blocker
-      to: "off"
-    action:
-      - service: adguard.add_url
-        data:
-          list_type: "allowlist"
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/noor.txt"
-          name: Noor
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/no_internet_noor.txt"
 
   - id: noor_allow_all
     alias: Noor allow all
@@ -83,4 +81,4 @@ automation:
     action:
       - service: adguard.remove_url
         data:
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/no_internet_noor.txt"
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/no_internet_noor.txt"
