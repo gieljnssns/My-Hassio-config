@@ -135,21 +135,21 @@
     - name: Pv power forecast list
       unique_id: 6bc0c511-9c6f-4778-b13e-a20e3646a7e5
       state: >
-        {{ states("sensor.solcast_forecast_today")}}
+        {{ states("sensor.solcast_solaredge_forecast_today")}}
       availability: >-
-        {{ has_value("sensor.solcast_forecast_today") }}
+        {{ has_value("sensor.solcast_solaredge_forecast_today") }}
       attributes:
         list: >
-          {{  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')
+          {{  (state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast')
                 |selectattr('period_start','gt',utcnow())
                 |map(attribute='pv_estimate')
-                |map('multiply',2000)
+                |map('multiply',1000)
                 |map('int')
                 |list
-            + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
+            + state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast')
                 |selectattr('period_start','gt',utcnow())
                 |map(attribute='pv_estimate')
-                |map('multiply',2000)
+                |map('multiply',1000)
                 |map('int')
                 |list)[:36]
                 }}
@@ -157,17 +157,17 @@
     - name: Prod price forecast list
       unique_id: c081ad21-6e07-4346-82e3-d392b4a251d6
       state: >
-        {{ states("sensor.solcast_forecast_today")}}
+        {{ states("sensor.solcast_solaredge_forecast_today")}}
       availability: >-
-        {{ has_value("sensor.solcast_forecast_today") }}
+        {{ has_value("sensor.solcast_solaredge_forecast_today") }}
       unit_of_measurement: "EUR/kWh"
       attributes:
         list: >
-          {%- set list =  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')
+          {%- set list =  (state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast')
               |selectattr('period_start','gt',utcnow())
               |map(attribute='period_start')
               |list
-            + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
+            + state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast')
               |selectattr('period_start','gt',utcnow())
               |map(attribute='period_start')
               |list)[:36]
@@ -208,17 +208,17 @@
     - name: Cost forecast list
       unique_id: 1e92ec2a-1886-4322-8cb9-7cef05077dec
       state: >
-        {{ states("sensor.solcast_forecast_today")}}
+        {{ states("sensor.solcast_solaredge_forecast_today")}}
       availability: >-
-        {{ has_value("sensor.solcast_forecast_today") }}
+        {{ has_value("sensor.solcast_solaredge_forecast_today") }}
       unit_of_measurement: "EUR/kWh"
       attributes:
         list: >
-          {%- set list =  (state_attr('sensor.solcast_forecast_today', 'detailedForecast')
+          {%- set list =  (state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast')
               |selectattr('period_start','gt',utcnow())
               |map(attribute='period_start')
               |list
-            + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')
+            + state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast')
               |selectattr('period_start','gt',utcnow())
               |map(attribute='period_start')
               |list)[:36]
@@ -478,9 +478,9 @@
 #           }}, \"pv_power_forecast\":{{[min(15000,(states('sensor.APF_Generation_Entity')|int(0)
 #                                       /(states('sensor.solaredge_i1_active_power_limit')|int(0)
 #                                         +states('sensor.solaredge_i2_active_power_limit')|int(0))*200)|int(0))]
-#             + state_attr('sensor.solcast_forecast_today', 'detailedForecast')|selectattr('period_start','gt',utcnow())
+#             + state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast')|selectattr('period_start','gt',utcnow())
 #               | map(attribute='pv_estimate')|map('multiply',2000)|map('int')|list
-#             + state_attr('sensor.solcast_forecast_tomorrow', 'detailedForecast')|selectattr('period_start','gt',utcnow())
+#             + state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast')|selectattr('period_start','gt',utcnow())
 #               | map(attribute='pv_estimate')|map('multiply',2000)|map('int')|list
 #           }}, \"prediction_horizon\":{{min(48,
 #           (state_attr('sensor.amber_feed_in_forecast', 'forecasts')|map(attribute='per_kwh')|list|length)+1)
