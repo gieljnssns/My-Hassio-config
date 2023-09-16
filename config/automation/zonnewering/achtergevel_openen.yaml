@@ -24,12 +24,14 @@ trigger:
   - platform: numeric_state
     entity_id: sensor.buiten_lichtsterkte
     below: 1000
+    for:
+      minutes: 5
 
-  - platform: template
-    value_template: >
-      {{ states("sensor.buiten_lichtsterkte") | float(0) < 4000 and
-        (states("sensor.solcast_forecast_next_hour") | float(0) < 1000 or
-        states("sensor.solcast_forecast_this_hour") | float(0) < 1000) }}
+  # - platform: template
+  #   value_template: >
+  #     {{ states("sensor.buiten_lichtsterkte") | float(0) < 4000 and
+  #       (states("sensor.solcast_forecast_next_hour") | float(0) < 1000 or
+  #       states("sensor.solcast_forecast_this_hour") | float(0) < 1000) }}
 
   - platform: template
     value_template: >
