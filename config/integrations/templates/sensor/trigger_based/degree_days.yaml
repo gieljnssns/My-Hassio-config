@@ -48,3 +48,16 @@
         {% else %}
           {{ [0, states('sensor.branduren_warmtepomp')|float / states('sensor.degree_day_daily')|float] | max | round(2) }}
         {% endif %}
+
+- trigger:
+    - platform: state
+      entity_id: sensor.degree_day_daily
+  sensor:
+    - name: "Degree days total"
+      unique_id: ded7706e-e15e-4848-b78a-9b19130e9350
+      unit_of_measurement: "DD"
+      state_class: total_increasing
+      state: >
+        {% set current = states("sensor.degree_days_total") | float(0) %}
+        {% set add = states("sensor.degree_day_daily") | float(0) %}
+        {{ current + add }}

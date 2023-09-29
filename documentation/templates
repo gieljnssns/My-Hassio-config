@@ -82,3 +82,8 @@
           | list }}
 
 {{ states | count }}
+
+{% set id = device_id("binary_sensor.danszaal_presence") %}
+{% for entity in device_entities(id) -%}
+- {{entity}}
+{% endfor %}
