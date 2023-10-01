@@ -44,10 +44,21 @@ automation:
       entity_id: input_boolean.fien_blocker
       to: "on"
     action:
+      - service: adguard.add_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/fien.txt"
+          name: Fien
+
+  - id: fien_allow
+    alias: Fien allow
+    trigger:
+      platform: state
+      entity_id: input_boolean.fien_blocker
+      to: "off"
+    action:
       - service: adguard.remove_url
         data:
-          list_type: "allowlist"
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/fien.txt"
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/fien.txt"
 
   - id: fien_block_all
     alias: Fien block all
@@ -59,20 +70,7 @@ automation:
       - service: adguard.add_url
         data:
           name: Fien all
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/no_internet_fien.txt"
-
-  - id: fien_allow
-    alias: Fien allow
-    trigger:
-      platform: state
-      entity_id: input_boolean.fien_blocker
-      to: "off"
-    action:
-      - service: adguard.add_url
-        data:
-          list_type: "allowlist"
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/fien.txt"
-          name: Fien
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/no_internet_fien.txt"
 
   - id: fien_allow_all
     alias: Fien allow all
@@ -83,4 +81,4 @@ automation:
     action:
       - service: adguard.remove_url
         data:
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/no_internet_fien.txt"
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/no_internet_fien.txt"
