@@ -2,7 +2,9 @@ alias: "Sociale media af"
 id: e123627d-0573-45ab-9f9d-e6232b3f51db
 trigger:
   - platform: time
-    at: "00:01:00"
+    at: "01:00:00"
+  - platform: time
+    at: "02:00:00"
     # id: week
   # - platform: time
   #   at: "02:00:00"
@@ -24,7 +26,16 @@ action:
                     state: "on"
                 sequence:
                   - service: input_boolean.turn_off
-                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz, input_boolean.allowgoplay, input_boolean.fien_uniform, input_boolean.noor_uniform
+                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ now().hour == 1 }}
+                sequence:
+                  - service: input_boolean.turn_off
+                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
                   - service: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
       - conditions:
@@ -39,7 +50,16 @@ action:
                     state: "on"
                 sequence:
                   - service: input_boolean.turn_off
-                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz, input_boolean.allowgoplay, input_boolean.fien_uniform, input_boolean.noor_uniform
+                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ now().hour == 1 }}
+                sequence:
+                  - service: input_boolean.turn_off
+                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
                   - service: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
       - conditions:
@@ -54,7 +74,16 @@ action:
                     state: "on"
                 sequence:
                   - service: input_boolean.turn_off
-                    entity_id: input_boolean.fien_huiswerk, input_boolean.noor_huiswerk, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz, input_boolean.allowgoplay, input_boolean.fien_uniform, input_boolean.noor_uniform
+                    entity_id: input_boolean.fien_huiswerk, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ now().hour == 1 }}
+                sequence:
+                  - service: input_boolean.turn_off
+                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
                   - service: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
       - conditions:
@@ -69,7 +98,16 @@ action:
                     state: "on"
                 sequence:
                   - service: input_boolean.turn_off
-                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz, input_boolean.allowgoplay, input_boolean.fien_uniform, input_boolean.noor_uniform
+                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ now().hour == 1 }}
+                sequence:
+                  - service: input_boolean.turn_off
+                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
                   - service: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
       - conditions:
@@ -84,7 +122,16 @@ action:
                     state: "on"
                 sequence:
                   - service: input_boolean.turn_off
-                    entity_id: input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz, input_boolean.allowgoplay, input_boolean.fien_uniform, input_boolean.noor_uniform
+                    entity_id: input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ now().hour == 1 }}
+                sequence:
+                  - service: input_boolean.turn_off
+                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
                   - service: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
       - conditions:
@@ -96,10 +143,10 @@ action:
               - conditions:
                   - condition: template
                     value_template: >
-                      {{ now().hour == 1 }}
+                      {{ now().hour == 2 }}
                 sequence:
                   - service: input_boolean.turn_off
-                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz, input_boolean.allowgoplay, input_boolean.fien_uniform, input_boolean.noor_uniform
+                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
                   - service: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
       - conditions:
@@ -111,12 +158,21 @@ action:
               - conditions:
                   - condition: template
                     value_template: >
-                      {{ now().hour == 1 }}
+                      {{ now().hour == 2 }}
                 sequence:
                   - service: input_boolean.turn_off
-                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz, input_boolean.allowgoplay, input_boolean.fien_uniform, input_boolean.noor_uniform
+                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
                   - service: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ now().hour == 1 }}
+        sequence:
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+          - service: input_boolean.turn_on
+            entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
 # condition:
 #   - condition: or
 #     conditions:
@@ -144,7 +200,7 @@ action:
 #             state: "off"
 # action:
 #   - service: input_boolean.turn_off
-#     entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz, input_boolean.allowgoplay, input_boolean.fien_uniform, input_boolean.noor_uniform
+#     entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
 #     # entity_id: input_boolean.fien_huiswerk, input_boolean.noor_huiswerk, input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz
 #   - service: input_boolean.turn_on
 #     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
