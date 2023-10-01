@@ -1,6 +1,6 @@
 alias: Welkom allemaal, sonos playing
 id: 943b0e04-920d-4874-a5a2-27798ac7c36a
-mode: restart
+mode: single
 trigger:
   - platform: template
     value_template: >
@@ -44,75 +44,20 @@ condition:
       entity_id: sensor.people_arrive_count
       above: 1
     - condition: template
-      value_template: "{{  as_timestamp(now()) - as_timestamp(state_attr('script.sonos_pauze_spreek', 'last_triggered')) | float > 310 }}"
-    - condition: template
-      value_template: "{{  as_timestamp(now()) - as_timestamp(state_attr('script.sonos_playing_spreek', 'last_triggered')) | float > 310 }}"
+      value_template: >
+        {{ as_timestamp(now()) - as_timestamp(state_attr('automation.welkom_sonos_playing', 'last_triggered')) | float > 310 and
+            as_timestamp(now()) - as_timestamp(state_attr('automation.welkom_allemaal_sonos_paused', 'last_triggered')) | float > 310 and
+            as_timestamp(now()) - as_timestamp(state_attr('automation.welkom_allemaal_sonos_playing', 'last_triggered')) | float > 310 and
+            as_timestamp(now()) - as_timestamp(state_attr('automation.welkom_sonos_paused', 'last_triggered')) | float > 310 }}
 action:
-  - service: script.sonos_pauze_spreek
-    data_template:
-      sonos_entity: media_player.mass_keuken
-      tts_entity: media_player.keuken
-      volume: 0.65
-      delay: "00:00:08"
-      speech_message: >
-        {% if is_state("sensor.people_arrive_count", "2") %}
-          {% if is_state("device_tracker.martine_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.noor_not_so_binary", "Juist Aangekomen") %}
-            {% set person1 = 'Martine' %}
-            {% set person2 = 'Noor' %}
-          {% elif is_state("device_tracker.martine_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.fien_not_so_binary", "Juist Aangekomen") %}
-            {% set person1 = 'Martine' %}
-            {% set person2 = 'Fien' %}
-          {% elif is_state("device_tracker.giel_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.martine_not_so_binary", "Juist Aangekomen") %}
-            {% set person1 = 'Giel' %}
-            {% set person2 = 'Martine' %}
-          {% elif is_state("device_tracker.giel_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.noor_not_so_binary", "Juist Aangekomen") %}
-            {% set person1 = 'Giel' %}
-            {% set person2 = 'Noor' %}
-          {% elif is_state("device_tracker.giel_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.fien_not_so_binary", "Juist Aangekomen") %}
-            {% set person1 = 'Giel' %}
-            {% set person2 = 'Fien' %}
-          {% else %}
-            {% set person1 = 'Noor' %}
-            {% set person2 = 'Fien' %}
-          {% endif %}
-        {% elif is_state("sensor.people_arrive_count", "3") %}
-          {% if is_state("device_tracker.giel_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.martine_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.noor_not_so_binary", "Juist Aangekomen") %}
-            {% set person1 = 'Giel' %}
-            {% set person2 = 'Martine' %}
-            {% set person3 = 'Noor' %}
-          {% elif is_state("device_tracker.giel_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.fien_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.noor_not_so_binary", "Juist Aangekomen") %}
-            {% set person1 = 'Giel' %}
-            {% set person2 = 'Noor' %}
-            {% set person3 = 'Fien' %}
-          {% elif is_state("device_tracker.giel_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.martine_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.fien_not_so_binary", "Juist Aangekomen") %}
-            {% set person1 = 'Giel' %}
-            {% set person2 = 'Martine' %}
-            {% set person3 = 'Fien' %}
-          {% elif is_state("device_tracker.martine_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.noor_not_so_binary", "Juist Aangekomen") and is_state("device_tracker.fien_not_so_binary", "Juist Aangekomen") %}
-            {% set person1 = 'Martine' %}
-            {% set person2 = 'Noor' %}
-            {% set person3 = 'Fien' %}
-          {% endif %}
-        {% else %}
-          {% set person1 = 'Giel' %}
-          {% set person2 = 'Martine' %}
-          {% set person3 = 'Noor' %}
-          {% set person4 = 'Fien' %}
-        {% endif %}
-
-        {% if is_state("sensor.people_arrive_count", "2") %}
-          {{ [
-          "Hallo " + person1 + " en " + person2 + " welkom thuis.",
-          "Hallo " + person1 + " en " + person2 + ", blij dat jullie veilig thuis geraakt zijn."
-          ] | random }}
-        {% elif is_state("sensor.people_arrive_count", "3") %}
-          {{ [
-          "Hallo " + person1 + ", " + person2 + " en " + person3 + ", welkom thuis.",
-          "Hallo " + person1 + ", " + person2 + " en " + person3 + ", blij dat jullie veilig thuis geraakt zijn."
-          ] | random }}
-        {% else %}
-          {{ [
-          "Hallo " + person1 + ", " + person2 + ", " + person3 + " en " + person4 + ", welkom thuis.",
-          "Hallo " + person1 + ", " + person2 + ", " + person3 + " en " + person4 + ", blij dat jullie veilig thuis geraakt zijn."
-          ] | random }}
-        {% endif %}
+  - service: media_player.play_media
+    target:
+      entity_id: media_player.keuken
+    data:
+      announce: true
+      media_content_type: "music"
+      extra:
+        volume: 60
+      media_content_id: >
+        {% set message =  states('sensor.welkom_2') %}
+         media-source://tts/tts.piper?message="{{message}}"
