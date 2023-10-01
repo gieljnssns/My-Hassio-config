@@ -1,0 +1,94 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SolarEdge Modbus-configuratie",
+        "data": {
+          "name": "Sensor prefix",
+          "host": "omvormer IP-adres",
+          "port": "Modbus/TCP Port",
+          "device_id": "Omvormer Modbus-adres (apparaat-ID)",
+          "number_of_inverters": "Aantal aangesloten omvormers"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Apparaat is al geconfigureerd",
+      "max_device_id": "Apparaat-ID moet tussen 1 en 247 liggen.",
+      "min_device_id": "Apparaat-ID moet tussen 1 en 247 liggen.",
+      "max_inverters": "Moet tussen 1 en 32 omvormers zijn.",
+      "min_inverters": "Moet tussen 1 en 32 omvormers zijn.",
+      "too_many_inverters": "Aantal omvormers te hoog voor Device ID.",
+      "invalid_host": "Ongeldig IP-adres.",
+      "invalid_tcp_port": "Geldig poortbereik is 1 tot 65535."
+    },
+    "abort": {
+      "already_configured": "Apparaat is al geconfigureerd"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "SolarEdge Modbus Instellingen",
+        "data": {
+          "scan_interval": "Oproepfrequentie (seconden)",
+          "keep_modbus_open": "Houd Modbus-verbinding open",
+          "detect_meters": "Meters automatisch detecteren",
+          "detect_batteries": "Batterijen automatisch detecteren",
+          "detect_extras": "Automatische detectie van aanvullende entiteiten",
+          "advanced_power_control": "Geavanceerde stroomregeling",
+          "sleep_after_write": "Omvormer commando vertraging (seconden)"
+        }
+      },
+      "adv_pwr_ctl": {
+        "title": "Opties voor stroomregeling",
+        "data": {
+          "adv_storage_control": "Opslagbeheer inschakelen",
+          "adv_site_limit_control": "Beheer van sitelimiet inschakelen"
+        },
+        "description": "Waarschuwing: deze opties kunnen in strijd zijn met nutsvoorzieningen, de facturering van uw nutsbedrijf wijzigen, mogelijk speciale apparatuur vereisen en de voorzieningen door SolarEdge of uw installateur overschrijven. Gebruik op eigen risico!"
+      },
+      "battery_options": {
+        "title": "Batterij opties",
+        "data": {
+          "allow_battery_energy_reset": "Batterij-energie laten resetten",
+          "battery_energy_reset_cycles": "Update cycli om de batterij-energie te resetten",
+          "battery_rating_adjust": "Aanpassing batterijvermogen (%)"
+        }
+      }
+    },
+    "error": {
+      "invalid_scan_interval": "Geldig interval is 1 tot 86400 seconden.",
+      "invalid_sleep_interval": "Geldig interval is 0 tot 60 seconden.",
+      "invalid_percent": "Het geldige bereik is 0 tot 100 procent."
+    }
+  },
+  "issues": {
+    "check_configuration": {
+      "title": "Controleer de Modbus-configuratie",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Controleer de Modbus-configuratie",
+            "description": "Er is een fout opgetreden bij het openen van een Modbus/TCP-verbinding.\n\nBevestig uw configuratie.",
+            "data": {
+              "host": "omvormer IP-adres",
+              "port": "Modbus/TCP Port",
+              "device_id": "Omvormer Modbus-adres (apparaat-ID)",
+              "number_of_inverters": "Aantal aangesloten omvormers"
+            }
+          }
+        },
+        "error": {
+          "max_device_id": "Apparaat-ID moet tussen 1 en 247 liggen.",
+          "min_device_id": "Apparaat-ID moet tussen 1 en 247 liggen.",
+          "max_inverters": "Moet tussen 1 en 32 omvormers zijn.",
+          "min_inverters": "Moet tussen 1 en 32 omvormers zijn.",
+          "too_many_inverters": "Aantal omvormers te hoog voor Device ID.",
+          "invalid_host": "Ongeldig IP-adres.",
+          "invalid_tcp_port": "Geldig poortbereik is 1 tot 65535."
+        }
+      }
+    }
+  }
+}

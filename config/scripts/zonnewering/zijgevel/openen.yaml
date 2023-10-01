@@ -1,55 +1,55 @@
-  zijgevel_openen:
-    sequence:
-      - service: cover.open_cover
-        entity_id: cover.living_temp
-      - delay:
-          seconds: 10
-      - service: cover.open_cover
-        entity_id: cover.slaapkamer_noor_temp
-      - delay:
-          seconds: 10
-      - service: input_boolean.turn_off
-        entity_id: input_boolean.zijgevel_closed
-      - delay:
-          minutes: 1
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: 'input_boolean.living_closed'
-            state: 'on'
-          - condition: state
-            entity_id: 'input_boolean.slaapkamer_noor_closed'
-            state: 'on'
-      - service: cover.open_cover
-        entity_id: cover.living_temp
-      - delay:
-          seconds: 10
-      - service: cover.open_cover
-        entity_id: cover.slaapkamer_noor_temp
-      - delay: '00:01:10'
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: 'input_boolean.living_closed'
-            state: 'on'
-          - condition: state
-            entity_id: 'input_boolean.slaapkamer_noor_closed'
-            state: 'on'
-      - service: cover.open_cover
-        entity_id: cover.living_temp
-      - delay:
-          seconds: 10
-      - service: cover.open_cover
-        entity_id: cover.slaapkamer_noor_temp
-      - delay: '00:01:10'
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: 'input_boolean.living_closed'
-            state: 'on'
-          - condition: state
-            entity_id: 'input_boolean.slaapkamer_noor_closed'
-            state: 'on'
-      - service: notify.mobile_app_gphone
-        data_template:
-          message: "Der is iets mis me die Somfy's van den zijgevel. Fix het maar!! "
+zijgevel_openen:
+  sequence:
+    - service: cover.open_cover
+      entity_id: cover.living
+    - delay:
+        seconds: 10
+    - service: cover.open_cover
+      entity_id: cover.slaapkamer_noor
+    - delay:
+        seconds: 10
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.zijgevel_closed
+    # - delay:
+    #     minutes: 1
+    # - condition: or
+    #   conditions:
+    #     - condition: state
+    #       entity_id: 'input_boolean.living_closed'
+    #       state: 'on'
+    #     - condition: state
+    #       entity_id: 'input_boolean.slaapkamer_noor_closed'
+    #       state: 'on'
+    # - service: cover.open_cover
+    #   entity_id: cover.living_temp
+    # - delay:
+    #     seconds: 10
+    # - service: cover.open_cover
+    #   entity_id: cover.slaapkamer_noor_temp
+    # - delay: '00:01:10'
+    # - condition: or
+    #   conditions:
+    #     - condition: state
+    #       entity_id: 'input_boolean.living_closed'
+    #       state: 'on'
+    #     - condition: state
+    #       entity_id: 'input_boolean.slaapkamer_noor_closed'
+    #       state: 'on'
+    # - service: cover.open_cover
+    #   entity_id: cover.living_temp
+    # - delay:
+    #     seconds: 10
+    # - service: cover.open_cover
+    #   entity_id: cover.slaapkamer_noor_temp
+    # - delay: '00:01:10'
+    # - condition: or
+    #   conditions:
+    #     - condition: state
+    #       entity_id: 'input_boolean.living_closed'
+    #       state: 'on'
+    #     - condition: state
+    #       entity_id: 'input_boolean.slaapkamer_noor_closed'
+    #       state: 'on'
+    # - service: notify.mobile_app_gphone
+    #   data_template:
+    #     message: "Der is iets mis me die Somfy's van den zijgevel. Fix het maar!! "

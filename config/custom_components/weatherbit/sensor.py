@@ -1,86 +1,351 @@
 """Weatherbit Sensors for Home Assistant."""
+from __future__ import annotations
 
 import logging
-from typing import List
+from dataclasses import dataclass
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.util.pressure import convert as convert_pressure
-from homeassistant.util.distance import convert as convert_distance
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    LENGTH_MILES,
-    LENGTH_KILOMETERS,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    TEMP_CELSIUS,
-    SUN_EVENT_SUNSET,
-    SUN_EVENT_SUNRISE,
+    DEGREE,
+    UnitOfLength,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import StateType
+from homeassistant.util.unit_conversion import (
+    SpeedConverter,
+    DistanceConverter,
+    TemperatureConverter,
+)
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
 )
 from homeassistant.components.weather import (
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
 )
+
+# from pyweatherbitdata.data import AlertDescription, ForecastDetailDescription
+from pyweatherbitdata.data import ForecastDetailDescription
 from .const import (
+    # ATTR_ALERTS_CITY_NAME,
+    # ATTR_ALERT_DESCRIPTION_EN,
+    # ATTR_ALERT_DESCRIPTION_LOC,
+    # ATTR_ALERT_EFFECTIVE,
+    # ATTR_ALERT_ENDS,
+    # ATTR_ALERT_EXPIRES,
+    # ATTR_ALERT_ONSET,
+    # ATTR_ALERT_REGIONS,
+    # ATTR_ALERT_SEVERITY,
+    # ATTR_ALERT_TITLE,
+    # ATTR_ALERT_URI,
+    # ATTR_ALERTS,
+    ATTR_AQI_LEVEL,
+    ATTR_FORECAST_CLOUDINESS,
+    ATTR_FORECAST_SNOW,
+    ATTR_FORECAST_WEATHER_TEXT,
     DOMAIN,
-    ATTR_WEATHERBIT_ALERTS,
-    ATTR_WEATHERBIT_CLOUDINESS,
-    ATTR_WEATHERBIT_UPDATED,
-    ATTR_WEATHERBIT_FCST_POP,
-    ATTR_WEATHERBIT_WEATHER_TEXT,
-    ATTR_WEATHERBIT_WEATHER_ICON,
-    ATTR_WEATHERBIT_SNOW,
-    DEFAULT_ATTRIBUTION,
-    DEVICE_TYPE_TEMPERATURE,
-    DEVICE_TYPE_WIND,
-    DEVICE_TYPE_HUMIDITY,
-    DEVICE_TYPE_RAIN,
-    DEVICE_TYPE_SNOW,
-    DEVICE_TYPE_PRESSURE,
-    DEVICE_TYPE_DISTANCE,
-    TYPE_SENSOR,
-    TYPE_FORECAST,
-    TYPE_ALERT,
-    CONDITION_CLASSES,
-    CONF_ADD_SENSORS,
-    UNIT_WIND_KMH,
-    UNIT_WIND_KNOT,
+    TRANSLATION_BEAUFORT,
+    TRANSLATION_CARDINAL,
+    TRANSLATION_UV_DESCRIPTION,
 )
 from .entity import WeatherbitEntity
+from .models import WeatherBitEntryData
+
+# _KEY_ALERTS = "alerts"
+_KEY_AQI = "aqi"
 
 
-SENSORS = {
-    "temp": ["Temperature", DEVICE_TYPE_TEMPERATURE, "thermometer"],
-    "wind_spd": ["Wind Speed", DEVICE_TYPE_WIND, "weather-windy"],
-    "wind_spd_knot": ["Wind Speed Nautical", UNIT_WIND_KNOT, "tailwind"],
-    "app_temp": ["Apparent Temperature", DEVICE_TYPE_TEMPERATURE, "thermometer"],
-    "humidity": ["Humidity", DEVICE_TYPE_HUMIDITY, "water-percent"],
-    "pres": ["Pressure", DEVICE_TYPE_PRESSURE, "gauge"],
-    "slp": ["Sea Level Pressure", DEVICE_TYPE_PRESSURE, "gauge"],
-    "clouds": ["Cloud Coverage", "%", "cloud-outline"],
-    "solar_rad": ["Solar Radiation", "W/m^2", "weather-sunny"],
-    "wind_cdir": ["Wind Direction", "", "compass-outline"],
-    "wind_dir": ["Wind Bearing", "°", "compass-outline"],
-    "dewpt": ["Dewpoint", DEVICE_TYPE_TEMPERATURE, "thermometer"],
-    "vis": ["Visibility", DEVICE_TYPE_DISTANCE, "eye-outline"],
-    "precip": ["Rain Rate", DEVICE_TYPE_RAIN, "weather-rainy"],
-    "uv": ["UV Index", "UVI", "weather-sunny-alert"],
-    "aqi": ["Air Quality", "AQI", "hvac"],
-    "weather_text": ["Description", "", "text-short"],
-    "weather_icon": ["Icon Code", "", "simple-icons"],
-    "beaufort_value": ["Beaufort Value", "", "weather-tornado"],
-    "beaufort_text": ["Beaufort Text", "", "weather-tornado"],
-    "snow": ["Snow Rate", DEVICE_TYPE_SNOW, "weather-snowy-heavy"],
-}
+@dataclass
+class WeatherBitRequiredKeysMixin:
+    """Mixin for required keys."""
 
-ALERTS = {
-    "weather_alerts": ["Weather Alerts", "", "alert"],
-}
+    unit_type: str | None = None
+    extra_attributes: bool | None = None
+    day_index: int | None = None
+    is_forecast_item: bool | None = False
+
+
+#    translation_key: str | None = None
+
+
+@dataclass
+class WeatherBitSensorEntityDescription(
+    WeatherBitRequiredKeysMixin, SensorEntityDescription
+):
+    """Describes WeatherBit Sensor entity."""
+
+
+SENSOR_TYPES: tuple[WeatherBitSensorEntityDescription, ...] = (
+    WeatherBitSensorEntityDescription(
+        key="temp",
+        name="Air Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="app_temp",
+        name="Apparent Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="slp",
+        name="Sea Level Pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="pressure",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="humidity",
+        name="Relative Humidity",
+        native_unit_of_measurement="%",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="pres",
+        name="Station Pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="pressure",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="clouds",
+        name="Cloud Coverage",
+        native_unit_of_measurement="%",
+        icon="mdi:cloud",
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="solar_rad",
+        name="Solar Radiation",
+        icon="mdi:solar-power",
+        native_unit_of_measurement="W/m^2",
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="wind_spd",
+        name="Wind Speed",
+        device_class=SensorDeviceClass.SPEED,
+        icon="mdi:weather-windy-variant",
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="length",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="wind_spd_kmh",
+        name="Wind Speed (km/h)",
+        icon="mdi:weather-windy-variant",
+        device_class=SensorDeviceClass.SPEED,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="wind_spd_knots",
+        name="Wind Speed (knots)",
+        icon="mdi:tailwind",
+        device_class=SensorDeviceClass.SPEED,
+        native_unit_of_measurement=UnitOfSpeed.KNOTS,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="wind_dir",
+        name="Wind Direction",
+        icon="mdi:compass",
+        native_unit_of_measurement=DEGREE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="wind_cdir",
+        name="Wind Cardinal",
+        icon="mdi:compass",
+        translation_key=TRANSLATION_CARDINAL,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="dewpt",
+        name="Dew Point",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="weather_text",
+        name="Weather Description",
+        icon="mdi:text-short",
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="vis",
+        name="Visibility",
+        icon="mdi:eye",
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="distance",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="precip",
+        name="Precipitation",
+        icon="mdi:weather-rainy",
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="precipitation",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="snow",
+        name="Snow",
+        icon="mdi:snowflake",
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="precipitation",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="uv",
+        name="UV Index",
+        icon="mdi:weather-sunny-alert",
+        native_unit_of_measurement="UVI",
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="uv_description",
+        name="UV Description",
+        icon="mdi:weather-sunny-alert",
+        translation_key=TRANSLATION_UV_DESCRIPTION,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="aqi",
+        name="Air Quality Index",
+        device_class=SensorDeviceClass.AQI,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="beaufort_value",
+        name="Beaufort",
+        icon="mdi:windsock",
+        native_unit_of_measurement="Bft",
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="observation_time",
+        name="Observation Time",
+        icon="mdi:clock",
+        unit_type="none",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        extra_attributes=False,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="beaufort_text",
+        name="Beaufort Description",
+        icon="mdi:windsock",
+        translation_key=TRANSLATION_BEAUFORT,
+        unit_type="none",
+        extra_attributes=False,
+    ),
+    # WeatherBitSensorEntityDescription(
+    #     key="alerts",
+    #     name="Weather Alerts",
+    #     icon="mdi:alert",
+    #     unit_type="none",
+    #     extra_attributes=True,
+    # ),
+    WeatherBitSensorEntityDescription(
+        key="forecast_day_1",
+        name="Forecast Day 1",
+        unit_type="none",
+        is_forecast_item=True,
+        day_index=0,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="forecast_day_2",
+        name="Forecast Day 2",
+        unit_type="none",
+        is_forecast_item=True,
+        day_index=1,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="forecast_day_3",
+        name="Forecast Day 3",
+        unit_type="none",
+        is_forecast_item=True,
+        day_index=2,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="forecast_day_4",
+        name="Forecast Day 4",
+        unit_type="none",
+        is_forecast_item=True,
+        day_index=3,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="forecast_day_5",
+        name="Forecast Day 5",
+        unit_type="none",
+        is_forecast_item=True,
+        day_index=4,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="forecast_day_6",
+        name="Forecast Day 6",
+        unit_type="none",
+        is_forecast_item=True,
+        day_index=5,
+    ),
+    WeatherBitSensorEntityDescription(
+        key="forecast_day_7",
+        name="Forecast Day 7",
+        unit_type="none",
+        is_forecast_item=True,
+        day_index=6,
+    ),
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,331 +353,193 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
-    """Setup the Weatherbit sensor platform."""
+    """Set up sensors for WeatherFlow integration."""
+    entry_data: WeatherBitEntryData = hass.data[DOMAIN][entry.entry_id]
+    weatherbitapi = entry_data.weatherbitapi
+    coordinator = entry_data.coordinator
+    forecast_coordinator = entry_data.forecast_coordinator
+    station_data = entry_data.station_data
+    unit_descriptions = entry_data.unit_descriptions
 
-    # Exit if user did deselect sensors and alerts on config
-    if (
-        not entry.data[CONF_ADD_SENSORS]
-        and hass.data[DOMAIN][entry.entry_id]["alert_coordinator"] is None
-    ):
-        return
-
-    # Retrive the Wind Unit (Only Applied if we are in the Metric System)
-    wind_unit_metric = hass.data[DOMAIN][entry.entry_id]["wind_unit_metric"]
-    if not wind_unit_metric:
-        return
-
-    # Get the Data Coordinators used
-    fcst_coordinator = hass.data[DOMAIN][entry.entry_id]["fcst_coordinator"]
-    if not fcst_coordinator.data:
-        return
-
-    cur_coordinator = hass.data[DOMAIN][entry.entry_id]["cur_coordinator"]
-    if not cur_coordinator.data:
-        return
-
-    alert_coordinator = hass.data[DOMAIN][entry.entry_id]["alert_coordinator"]
-
-    sensors = []
-
-    # Add Sensors if selected in Config
-    if entry.data[CONF_ADD_SENSORS]:
-        for sensor in SENSORS:
-            sensors.append(
-                WeatherbitSensor(
-                    fcst_coordinator,
-                    cur_coordinator,
-                    alert_coordinator,
-                    entry.data,
-                    sensor,
-                    hass.config.units.is_metric,
-                    TYPE_SENSOR,
-                    wind_unit_metric,
-                    0,
-                )
+    entities = []
+    for description in SENSOR_TYPES:
+        entities.append(
+            WeatherbitSensor(
+                weatherbitapi,
+                coordinator,
+                forecast_coordinator,
+                station_data,
+                description,
+                entry,
+                unit_descriptions,
             )
-        cnt = 0
+        )
 
-        for forecast in fcst_coordinator.data[:7]:
-            sensors.append(
-                WeatherbitSensor(
-                    fcst_coordinator,
-                    cur_coordinator,
-                    alert_coordinator,
-                    entry.data,
-                    forecast,
-                    hass.config.units.is_metric,
-                    TYPE_FORECAST,
-                    wind_unit_metric,
-                    cnt,
-                )
-            )
-            cnt += 1
+        _LOGGER.debug(
+            "Adding sensor entity %s",
+            description.name,
+        )
 
-    # Add alerts if selected in Config
-    if alert_coordinator is not None:
-        for sensor in ALERTS:
-            sensors.append(
-                WeatherbitSensor(
-                    fcst_coordinator,
-                    cur_coordinator,
-                    alert_coordinator,
-                    entry.data,
-                    sensor,
-                    hass.config.units.is_metric,
-                    TYPE_ALERT,
-                    wind_unit_metric,
-                    0,
-                )
-            )
-    if sensors != []:
-        async_add_entities(sensors, True)
-    else:
-        return
-
-    return True
+    async_add_entities(entities)
 
 
-class WeatherbitSensor(WeatherbitEntity, Entity):
+class WeatherbitSensor(WeatherbitEntity, SensorEntity):
     """Implementation of Weatherbit sensor."""
 
     def __init__(
         self,
-        fcst_coordinator,
-        cur_coordinator,
-        alert_coordinator,
-        entries,
-        sensor,
-        is_metric,
-        sensor_type,
-        wind_unit_metric,
-        index,
+        weatherbitapi,
+        coordinator,
+        forecast_coordinator,
+        station_data,
+        description,
+        entries: ConfigEntry,
+        unit_descriptions,
     ):
-        """Initialize Weatherbit sensor."""
+        """Initialize an WeatherFlow sensor."""
         super().__init__(
-            fcst_coordinator, cur_coordinator, alert_coordinator, entries, sensor
+            weatherbitapi,
+            coordinator,
+            forecast_coordinator,
+            station_data,
+            description,
+            entries,
         )
-        self._sensor = sensor
-        self._sensor_type = sensor_type
-        self._is_metric = is_metric
-        self._index = index
-        self._wind_unit_metric = wind_unit_metric
-
-        if self._sensor_type == TYPE_SENSOR:
-            self._name = f"{DOMAIN.capitalize()} {SENSORS[self._sensor][0]}"
-            self._unique_id = f"{self._device_key}_{self._sensor}"
-            self._device_class = SENSORS[self._sensor][1]
-        elif self._sensor_type == TYPE_ALERT:
-            self._name = f"{DOMAIN.capitalize()} {ALERTS[self._sensor][0]}"
-            self._unique_id = f"{self._device_key}_{self._sensor}"
-            self._device_class = ALERTS[self._sensor][1]
-        else:
-            self._name = f"{DOMAIN.capitalize()} Forecast Day {self._index + 1}"
-            self._unique_id = f"{self._device_key}_forecast_day{self._index + 1}"
-            self._device_class = ""
-            self._condition = next(
-                (
-                    k
-                    for k, v in CONDITION_CLASSES.items()
-                    if getattr(self.fcst_coordinator.data[self._index], "weather_code")
-                    in v
-                ),
-                None,
-            )
-            if self._condition == "partlycloudy":
-                self._weather_icon = "partly-cloudy"
-            else:
-                self._weather_icon = self._condition
+        self.unit_descriptions = unit_descriptions
+        if self.entity_description.is_forecast_item:
+            self.forecast_data = getattr(self.forecast_coordinator.data, "forecast")
+            self.day_data: ForecastDetailDescription = self.forecast_data[
+                description.day_index
+            ]
+        self._attr_name = f"{DOMAIN.capitalize()} {self.entity_description.name}"
+        if self.entity_description.native_unit_of_measurement is None:
+            self._attr_native_unit_of_measurement = unit_descriptions[
+                self.entity_description.unit_type
+            ]
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        if self._sensor_type == TYPE_SENSOR:
-            value = getattr(self._current, self._sensor)
-            if self._device_class == DEVICE_TYPE_WIND:
-                if self._is_metric:
-                    if self._wind_unit_metric == UNIT_WIND_KMH:
-                        return round(value * 3.6, 1)
-                    else:
-                        return round(value, 1)
-                else:
-                    return round(float(value * 2.23693629), 2)
-            elif self._device_class == DEVICE_TYPE_PRESSURE:
-                if self._is_metric:
-                    return value
-                else:
-                    return round(
-                        convert_pressure(value, PRESSURE_HPA, PRESSURE_INHG), 2
-                    )
-            elif (
-                self._device_class == DEVICE_TYPE_RAIN
-                or self._device_class == DEVICE_TYPE_SNOW
-            ):
-                if self._is_metric:
-                    return round(float(value), 1)
-                else:
-                    return round(float(value) / 25.4, 2)
-            elif self._device_class == DEVICE_TYPE_DISTANCE:
-                if self._is_metric:
-                    return value
-                else:
-                    return int(
-                        float(convert_distance(value, LENGTH_KILOMETERS, LENGTH_MILES))
-                    )
-            elif self._device_class == "UVI":
-                return round(float(value), 1)
-            elif self._device_class == UNIT_WIND_KNOT:
-                return round(value, 1)
-            else:
-                return value
-        elif self._sensor_type == TYPE_ALERT:
-            return getattr(self._alerts, "alert_count")
-        else:
-            return self._condition
+
+        # if self.entity_description.key == _KEY_ALERTS:
+        #     return getattr(self.coordinator.data, "alert_count")
+
+        if self.entity_description.is_forecast_item:
+            self.forecast_data = getattr(self.forecast_coordinator.data, "forecast")
+            self.day_data = self.forecast_data[self.entity_description.day_index]
+            return self.day_data.condition
+
+        return (
+            getattr(self.coordinator.data, self.entity_description.key)
+            if self.coordinator.data
+            else None
+        )
 
     @property
     def icon(self):
-        """Return icon for sensor."""
-        if self._sensor_type == TYPE_SENSOR:
-            return f"mdi:{SENSORS[self._sensor][2]}"
-        elif self._sensor_type == TYPE_ALERT:
-            return f"mdi:{ALERTS[self._sensor][2]}"
-        else:
-            return f"mdi:weather-{self._weather_icon}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        if self._sensor_type == TYPE_SENSOR:
-            if self._device_class == DEVICE_TYPE_TEMPERATURE:
-                return TEMP_CELSIUS
-            elif self._device_class == DEVICE_TYPE_WIND:
-                if self._is_metric:
-                    return self._wind_unit_metric
-                else:
-                    return "mph"
-            elif self._device_class == DEVICE_TYPE_PRESSURE:
-                return "hPa" if self._is_metric else "inHg"
-            elif self._device_class == DEVICE_TYPE_HUMIDITY:
-                return "%"
-            elif self._device_class == DEVICE_TYPE_RAIN:
-                return "mm/hr" if self._is_metric else "in/hr"
-            elif self._device_class == DEVICE_TYPE_SNOW:
-                return "mm/hr" if self._is_metric else "in/hr"
-            elif self._device_class == DEVICE_TYPE_DISTANCE:
-                return "km" if self._is_metric else "mi"
-            else:
-                return self._device_class
-
-    @property
-    def alerts(self) -> List:
-        if self._sensor_type != TYPE_ALERT:
-            return None
-
-        if self.alert_coordinator.data is None:
-            return None
-
-        alert_data = []
-        for alert in self.alert_coordinator.data:
-            alert_data.append(
-                {
-                    "city_name": alert.city_name,
-                    "title": alert.title,
-                    "description": alert.description,
-                    "severity": alert.severity,
-                    "effective_local": alert.effective_local,
-                    "expires_local": alert.expires_local,
-                    "uri": alert.uri,
-                    "regions": alert.regions,
-                }
+        """Return icon for the sensor."""
+        if self.entity_description.is_forecast_item:
+            icon = (
+                "partly-cloudy"
+                if self.day_data.condition == "partlycloudy"
+                else self.day_data.condition
             )
-        return alert_data
+            return f"mdi:weather-{icon}"
+        return self.entity_description.icon
 
     @property
-    def device_state_attributes(self):
-        """Return Weatherbit specific attributes."""
-        if self._sensor_type == TYPE_SENSOR:
-            if self._sensor == "solar_rad":
-                return {
-                    ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-                    ATTR_WEATHERBIT_UPDATED: getattr(self._current, "obs_time_local"),
-                    "dhi": getattr(self._current, "dhi"),
-                    "dni": getattr(self._current, "dni"),
-                    "ghi": getattr(self._current, "ghi"),
-                    "elev_angle": getattr(self._current, "elev_angle"),
-                    "h_angle": getattr(self._current, "h_angle"),
-                    SUN_EVENT_SUNRISE: getattr(self._current, "sunrise"),
-                    SUN_EVENT_SUNSET: getattr(self._current, "sunset"),
-                }
-            else:
-                return {
-                    ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-                    ATTR_WEATHERBIT_UPDATED: getattr(self._current, "obs_time_local"),
-                }
-        elif self._sensor_type == TYPE_ALERT:
+    def extra_state_attributes(self):
+        """Return the sensor state attributes."""
+        # if self.entity_description.key == _KEY_ALERTS:
+        #     data = []
+        #     count = 1
+        #     alerts: AlertDescription = getattr(
+        #         self.coordinator.data, self.entity_description.key
+        #     )
+        #     for item in alerts:
+        #         data.append(
+        #             {
+        #                 f"Alert No {count}": "-------------------",
+        #                 ATTR_ALERT_TITLE: item.title,
+        #                 ATTR_ALERT_SEVERITY: item.severity,
+        #                 ATTR_ALERT_EFFECTIVE: item.effective_utc,
+        #                 ATTR_ALERT_ONSET: item.onset_utc,
+        #                 ATTR_ALERT_ENDS: item.ends_utc,
+        #                 ATTR_ALERT_EXPIRES: item.expires_utc,
+        #                 ATTR_ALERT_URI: item.uri,
+        #                 ATTR_ALERTS_CITY_NAME: item.city_name,
+        #                 ATTR_ALERT_REGIONS: item.regions,
+        #                 ATTR_ALERT_DESCRIPTION_EN: item.en_description,
+        #                 ATTR_ALERT_DESCRIPTION_LOC: item.loc_description,
+        #             }
+        #         )
+        #         count += 1
+        #     return {
+        #         **super().extra_state_attributes,
+        #         ATTR_ALERTS: data,
+        #     }
+        if self.entity_description.is_forecast_item:
+            _wind_spd = (
+                SpeedConverter.convert(
+                    self.day_data.wind_spd,
+                    UnitOfSpeed.METERS_PER_SECOND,
+                    UnitOfSpeed.MILES_PER_HOUR,
+                )
+                if not self.hass.config.units is METRIC_SYSTEM
+                else SpeedConverter.convert(
+                    self.day_data.wind_spd,
+                    UnitOfSpeed.METERS_PER_SECOND,
+                    UnitOfSpeed.MILES_PER_HOUR,
+                )
+            )
+            _temp = (
+                self.day_data.max_temp
+                if self.hass.config.units is METRIC_SYSTEM
+                else TemperatureConverter.convert(
+                    self.day_data.max_temp,
+                    UnitOfTemperature.CELSIUS,
+                    UnitOfTemperature.FAHRENHEIT,
+                )
+            )
+            _temp_low = (
+                self.day_data.min_temp
+                if self.hass.config.units is METRIC_SYSTEM
+                else TemperatureConverter.convert(
+                    self.day_data.min_temp,
+                    UnitOfTemperature.CELSIUS,
+                    UnitOfTemperature.FAHRENHEIT,
+                )
+            )
+            _precip = (
+                self.day_data.precip
+                if self.hass.config.units is METRIC_SYSTEM
+                else DistanceConverter.convert(
+                    self.day_data.precip, UnitOfLength.MILLIMETERS, UnitOfLength.INCHES
+                )
+            )
+            _snow = (
+                self.day_data.snow
+                if self.hass.config.units is METRIC_SYSTEM
+                else DistanceConverter.convert(
+                    self.day_data.snow, UnitOfLength.MILLIMETERS, UnitOfLength.INCHES
+                )
+            )
             return {
-                ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-                ATTR_WEATHERBIT_ALERTS: self.alerts,
+                **super().extra_state_attributes,
+                ATTR_FORECAST_TIME: self.day_data.utc_time,
+                ATTR_FORECAST_NATIVE_TEMP: _temp,
+                ATTR_FORECAST_NATIVE_TEMP_LOW: _temp_low,
+                ATTR_FORECAST_NATIVE_PRECIPITATION: round(_precip, 3),
+                ATTR_FORECAST_PRECIPITATION_PROBABILITY: self.day_data.pop,
+                ATTR_FORECAST_SNOW: round(_snow, 3),
+                ATTR_FORECAST_CLOUDINESS: self.day_data.clouds,
+                ATTR_FORECAST_WEATHER_TEXT: self.day_data.weather_text,
+                ATTR_FORECAST_NATIVE_WIND_SPEED: round(_wind_spd, 2),
+                ATTR_FORECAST_WIND_BEARING: self.day_data.wind_dir,
             }
-        else:
-            _temp = getattr(self.fcst_coordinator.data[self._index], "max_temp")
-            if self._is_metric:
-                temp = _temp
-            else:
-                temp = round(float((_temp * 1.8) + 32), 1)
-
-            _tempmin = getattr(self.fcst_coordinator.data[self._index], "min_temp")
-            if self._is_metric:
-                tempmin = _tempmin
-            else:
-                tempmin = round(float((_tempmin * 1.8) + 32), 1)
-
-            _wspeed = getattr(self.fcst_coordinator.data[self._index], "wind_spd")
-            if self._is_metric:
-                wspeed = round(float(_wspeed) * 3.6, 1)
-            else:
-                wspeed = round(float(_wspeed * 2.23693629), 1)
-
-            _precip = getattr(self.fcst_coordinator.data[self._index], "precip")
-            if self._is_metric:
-                precip = round(float(_precip), 1)
-            else:
-                precip = round(float(_precip) / 25.4, 2)
-
-            _snow = getattr(self.fcst_coordinator.data[self._index], "snow")
-            if self._is_metric:
-                snow = round(float(_snow), 1)
-            else:
-                snow = round(float(_snow) / 25.4, 2)
-
+        if self.entity_description.key == _KEY_AQI:
             return {
-                ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-                ATTR_FORECAST_TIME: getattr(
-                    self.fcst_coordinator.data[self._index], "local_time"
-                ),
-                ATTR_FORECAST_TEMP: temp,
-                ATTR_FORECAST_TEMP_LOW: tempmin,
-                ATTR_FORECAST_PRECIPITATION: precip,
-                ATTR_WEATHERBIT_SNOW: snow,
-                ATTR_WEATHERBIT_CLOUDINESS: getattr(
-                    self.fcst_coordinator.data[self._index], "clouds"
-                ),
-                ATTR_WEATHERBIT_FCST_POP: getattr(
-                    self.fcst_coordinator.data[self._index], "pop"
-                ),
-                ATTR_FORECAST_WIND_SPEED: wspeed,
-                ATTR_FORECAST_WIND_BEARING: getattr(
-                    self.fcst_coordinator.data[self._index], "wind_dir"
-                ),
-                ATTR_WEATHERBIT_WEATHER_TEXT: getattr(
-                    self.fcst_coordinator.data[self._index], "weather_text"
-                ),
-                ATTR_WEATHERBIT_WEATHER_ICON: getattr(
-                    self.fcst_coordinator.data[self._index], "weather_icon"
-                ),
+                **super().extra_state_attributes,
+                ATTR_AQI_LEVEL: getattr(self.coordinator.data, "aqi_level"),
             }
+        return super().extra_state_attributes

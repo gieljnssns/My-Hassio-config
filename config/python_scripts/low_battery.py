@@ -44,7 +44,7 @@ def get_battery_entities():
         for entity_id in hass.states.entity_ids("sensor"):
             state = hass.states.get(entity_id)
             if (
-                state.attributes.get("device_class") is "battery"
+                state.attributes.get("device_class") == "battery"
                 and "is_charging" not in state.attributes
                 and "charging" not in state.state
                 and "discharging" not in state.state
@@ -89,7 +89,7 @@ def get_battery_entities():
 
 
 def get_low_battery_entities(battery_entities, threshold):
-    if len(battery_entities) is 0:
+    if len(battery_entities) == 0:
         return None
     return [
         "".join(entity_id + ": " + str(value) + "%")

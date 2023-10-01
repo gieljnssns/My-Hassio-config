@@ -38,16 +38,20 @@ action:
   - condition: state
     entity_id: binary_sensor.keuken_achterdeur
     state: "on"
-  - service: notify.iedereen
+  - service: script.notify_everyone_at_home
     data:
       title: Achterdeur - 2de waarschuwing!
       message: Er heeft weer iemand de achterdeur laten openstaan!!
-      data:
-        attachment:
-          content-type: jpeg
-          url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
-        push:
-          sound: "door_creak_closing.wav"
+  # - service: notify.mobile_app_gphone
+  #   data:
+  #     title: Achterdeur - 2de waarschuwing!
+  #     message: Er heeft weer iemand de achterdeur laten openstaan!!
+  #     data:
+  #       attachment:
+  #         content-type: jpeg
+  #         url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
+  #       push:
+  #         sound: "door_creak_closing.wav"
   # - service: notify.mobile_app_mphone
   #   data:
   #     title: Achterdeur - 2de waarschuwing!
@@ -89,6 +93,7 @@ action:
       media_content_id: >
         {% set message =  states('sensor.achterdeur') %}
           media-source://tts/tts.piper?message="{{message}}"
+
   - delay:
       seconds: 60
   - service: homeassistant.update_entity

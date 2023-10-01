@@ -4,20 +4,16 @@
       icon: mdi:nodejs
       device_class: problem
       state: >-
-        {{  states("binary_sensor.nodered_garage_down") == 'on' or 
-            states("binary_sensor.nodered_keuken_down") == 'on' or
-            states("binary_sensor.nodered_badkamer_down") == 'on' or
+        {{  states("binary_sensor.nodered_keuken_down") == 'on' or
             states("binary_sensor.nodered_poort_down") == 'on' or
-            states("binary_sensor.nodered_slaapkamer_down") == 'on' or
             states("binary_sensor.nodered_verwarming_down") == 'on' or
-            states("binary_sensor.nodered_living_pi3_down") == 'on' or
-            states("binary_sensor.nodered_tvpi_down") == 'on' }}
+            states("binary_sensor.nodered_living_pi3_down") == 'on' }}
 
-    - name: Nodered garage down
-      unique_id: 74cac668-8f77-44ad-93a7-7e403f74b4a1
-      device_class: problem
-      state: >
-        {{ states("sensor.buitentemperatuur") == 'unavailable'}}
+    # - name: Nodered garage down
+    #   unique_id: 74cac668-8f77-44ad-93a7-7e403f74b4a1
+    #   device_class: problem
+    #   state: >
+    #     {{ states("sensor.cpu_garage") == 'unavailable'}}
 
     - name: Nodered keuken down
       unique_id: fb604690-8a6f-4ddc-9336-8949a8fdc7fc
@@ -70,24 +66,24 @@
       state: >
         {{ states("binary_sensor.beweging_fotocel") == 'unavailable'}}
 
-    - name: Nodered slaapkamer down
-      unique_id: 8f96cf40-1636-4f66-9f03-212e29c46086
-      device_class: problem
-      state: >
-        {{ states("binary_sensor.beweging_slaapkamer_pir_klein") == 'unavailable'}}
+    # - name: Nodered slaapkamer down
+    #   unique_id: 8f96cf40-1636-4f66-9f03-212e29c46086
+    #   device_class: problem
+    #   state: >
+    #     {{ states("binary_sensor.beweging_slaapkamer_pir_klein") == 'unavailable'}}
 
-    - name: Pir slaapkamer
-      unique_id: 8d1e539b-bc3c-47ec-9d1d-82003c930ccc
-      device_class: motion
-      state: >
-        {{  is_state('binary_sensor.beweging_slaapkamer_pir_groot', 'on') 
-            or is_state('binary_sensor.beweging_slaapkamer_pir_klein', 'on') }}
+    # - name: Pir slaapkamer
+    #   unique_id: 8d1e539b-bc3c-47ec-9d1d-82003c930ccc
+    #   device_class: motion
+    #   state: >
+    #     {{  is_state('binary_sensor.beweging_slaapkamer_pir_groot', 'on')
+    #         or is_state('binary_sensor.beweging_slaapkamer_pir_klein', 'on') }}
 
-    - name: Nodered tvpi down
-      unique_id: 81518fc3-2ba1-48c7-aaf6-cfe2058ce100
-      device_class: problem
-      state: >
-        {{ states("sensor.cpu_verwarmingpi") == 'unavailable'}}
+    # - name: Nodered tvpi down
+    #   unique_id: 81518fc3-2ba1-48c7-aaf6-cfe2058ce100
+    #   device_class: problem
+    #   state: >
+    #     {{ states("sensor.cpu_verwarmingpi") == 'unavailable'}}
 
     - name: Nodered verwarming down
       unique_id: e09c9121-dfa4-49d0-8b97-33bd9ab0e5de

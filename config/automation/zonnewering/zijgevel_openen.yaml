@@ -9,39 +9,41 @@ trigger:
     entity_id: sensor.sun_elevation
     below: -10
   - platform: state
-    entity_id: sensor.dark_outside
+    entity_id: sensor.dark_inside
     to: "true"
     for:
-      minutes: 10
-  # - platform: numeric_state
-  #   entity_id: sensor.zonne_energie_gefilterd_lowpass
-  #   below: 200
+      minutes: 5
+  - platform: numeric_state
+    entity_id: sensor.buiten_lichtsterkte
+    below: 1000
+    for:
+      minutes: 5
 
   # Weather based triggers
   - platform: numeric_state
     entity_id: sensor.weatherbit_wind_speed
     above: 40 #If wind force becomes to high, sunscreen needs to go up
-  # - platform: numeric_state
-  #   entity_id: sensor.ba_precipitation_forecast_average
-  #   above: 0.30 # Rain the next 15 min
-  # - platform: numeric_state
-  #   entity_id: sensor.ba_precipitation
-  #   above: 0.30 # Rain
-  
+
+  # - platform: template
+  #   value_template: >
+  #     {{ states("sensor.buiten_lichtsterkte") | float(0) < 4000 and
+  #       (states("sensor.solcast_forecast_next_hour") | float(0) < 1000 or
+  #       states("sensor.solcast_forecast_this_hour") | float(0) < 1000) }}
+
   - platform: template
     value_template: >
       {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
-        {{ states("sensor.ba_precipitation_forecast_average") | float > 0.30 }}
+        {{ states("sensor.ba_precipitation_forecast_average") | float > 0.40 }}
       {% else %}
-        {{ states("sensor.openweathermap_forecast_precipitation")  | float > 0.30 }}
+        {{ states("sensor.weatherbit_rain_rate")  | float > 0.40 }}
       {% endif %}
   - platform: template
     value_template: >
       {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
-        {{ states("sensor.ba_precipitation") | float > 0.30 }}
+        {{ states("sensor.ba_precipitation") | float > 0.40 }}
       {% else %}
-        {{ states("sensor.openweathermap_rain")  | float > 0.30 }}
-      {% endif %}  
+        {{ states("sensor.weatherbit_rain_rate")  | float > 0.40 }}
+      {% endif %}
 
 condition:
   condition: or
@@ -49,12 +51,18 @@ condition:
     - condition: state
       entity_id: input_boolean.zijgevel_closed
       state: "on"
-    - condition: state
-      entity_id: input_boolean.living_closed
-      state: "on"
-    - condition: state
-      entity_id: input_boolean.slaapkamer_noor_closed
-      state: "on"
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.living", "current_position") < 50 }}
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.slaapkamer_noor", "current_position") < 50 }}
+#     - condition: state
+#       entity_id: input_boolean.living_closed
+#       state: "on"
+#     - condition: state
+#       entity_id: input_boolean.slaapkamer_noor_closed
+#       state: "on"
 
 action:
   - service: script.zijgevel_openen

@@ -1,0 +1,18 @@
+alias: Fi lo read data
+id: 6f4336a8-d9cb-4d23-bf92-31a3c8b74fe5
+trigger:
+  - platform: time_pattern
+    minutes: /30
+condition: []
+action:
+  - service: input_text.set_value
+    target:
+      entity_id: input_text.fi_fo_buffer
+    data:
+      value: >
+        {{ (states("input_text.fi_fo_buffer").split(', ')[1:48]  + [
+          (states("sensor.huidig_verbruik_zonder_wp") 
+            | float(0)/1000) 
+            | round(1)])
+            | join(', ') }}
+mode: single

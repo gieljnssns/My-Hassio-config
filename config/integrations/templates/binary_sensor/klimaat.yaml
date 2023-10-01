@@ -14,8 +14,7 @@
       unique_id: 54f0fc98-2bac-4e56-8427-ad0549642afa
       device_class: cold
       state: >
-        {{  (states('sensor.binnen_lowpass') | float(default=0) > states('sensor.buitentemperatuur') | float(default=0))  and
-            (states('sensor.binnen_lowpass') | float(default=0) > states('sensor.temperatuur_poort') | float(default=0))  }}
+        {{  (states('sensor.binnen_lowpass') | float(default=0) > states('sensor.buitentemperatuur_gefilterd') | float(default=0)) }}
 
     - name: Buiten frisser dan binnen old
       unique_id: 56947e08-4306-434e-9064-7e8e99e89b9e
@@ -58,45 +57,13 @@
       icon: mdi:water-percent
       state: >
         {{ states("sensor.badkamer_luchtvochtigheid_stats") | float(default=0) <= -5 | float(default=0)}}
-
     # - name: keuken_humidity_rising_template
     #   unique_id: 5b823bf5-57cb-43a2-b98c-5eb8809cc41e
     #   icon: mdi:water-percent
     #   state : >
     #     {{ states("sensor.keuken_luchtvochtigheid_stats") | float(default=0) >= 7 | float(default=0)}}
-
     # - name: keuken_humidity_falling_template
     #   unique_id: 5c1b1e0d-4ed8-4d0f-99c1-04948d78e90e
     #   icon: mdi:water-percent
     #   state : >
     #     {{ states("sensor.keuken_luchtvochtigheid_stats") | float(default=0) <= -5 | float(default=0)}}
-
-    - name: Warmtepomp aan
-      device_class: power
-      unique_id: c8bb853c-63ec-4fd1-b18f-05624ee48fde
-      state: >
-        {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0) > 25 or
-          state_attr('climate.netatmo_living', "hvac_action") == "heating" or 
-          states('climate.netatmo_living') == "heat" }}
-
-    - name: Warmtepompboiler aan
-      device_class: power
-      unique_id: 7b3bdc4b-5335-4101-890b-75540ced60e1
-      state: >
-        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float(default=0) > 25 }}
-
-    - name: Warmtepomp aan delay off
-      device_class: power
-      unique_id: befaae46-c7b5-4d6c-80ad-2b93d3eb6b96
-      state: >
-        {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0) > 25 }}
-      delay_off:
-        minutes: 20
-
-    - name: Warmtepompboiler aan delay off
-      device_class: power
-      unique_id: a1ca83c5-df8a-45e5-9845-21e49169a63e
-      state: >
-        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float(default=0) > 25 }}
-      delay_off:
-        minutes: 30

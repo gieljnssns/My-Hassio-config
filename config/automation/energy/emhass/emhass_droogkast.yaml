@@ -1,9 +1,12 @@
 alias: Emhass droogkast
 id: ca1bfea1-3d3f-4082-a57a-2ad5db0cc6c6
 trigger:
-  - minutes: /5
-    platform: time_pattern
-    id: update
+  # - minutes: /5
+  #   platform: time_pattern
+  #   id: update
+  - platform: numeric_state
+    entity_id: sensor.emhass_droogkast
+    above: 1
   - platform: state
     entity_id: binary_sensor.droogkast_staat_op
     to: "off"
@@ -15,8 +18,8 @@ action:
             entity_id: switch.droogkast
             state: "off"
           - condition: numeric_state
-            entity_id: sensor.p_deferrable1
-            above: 0.1
+            entity_id: sensor.emhass_droogkast
+            above: 1
         sequence:
           - service: homeassistant.turn_on
             target:
@@ -37,3 +40,11 @@ action:
           - service: homeassistant.turn_off
             target:
               entity_id: input_boolean.emhass_droogkast
+          - condition: template
+            value_template: >
+              {{ states("input_boolean.emhass_wasmachien") == "off" and 
+                 states("input_boolean.emhass_droogkast") == "off" and 
+                 states("input_boolean.emhass_afwasmachien") == "off"}}
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.emhass_fast

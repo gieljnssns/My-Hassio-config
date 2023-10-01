@@ -1,0 +1,97 @@
+- trigger:
+    - platform: state
+      entity_id: input_boolean.emhass_droogkast
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Droogkast is gestart op…"
+      unique_id: 37bd2a8b-a5eb-4428-aad3-d2571d21065a
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_droogkast.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: input_boolean.emhass_wasmachien
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Wasmachien is gestart op…"
+      unique_id: bbcf11b2-a7e6-4a2e-a45e-00bea49447b0
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_wasmachien.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: input_boolean.emhass_afwasmachien
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Afwasmachien is gestart op…"
+      unique_id: c02023fb-05c4-45c3-a82c-9b69b9424ad7
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_afwasmachien.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: binary_sensor.warmtepomp_aan
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Warmtepomp is gestart op…"
+      unique_id: 80b7a7bd-0a7c-4dd2-bf0a-c277e273cc2f
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepomp_aan.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: switch.warm_water
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Warmtepompboiler is gestart op…"
+      unique_id: 5bc4af6d-8e99-4ee3-9131-66f41132d66f
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepompboiler_aan.last_changed) }}
+- trigger:
+    - platform: time_pattern
+      seconds: "/5"
+  sensor:
+    - name: "Emhass huidige opbrengst"
+      unique_id: 99153de6-9177-4f4d-8228-f64f2c319162
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ states('sensor.huidige_opbrengst') }}
+    - name: "Emhass huidig verbruik"
+      unique_id: 905759dc-7fa2-4772-9393-60e33d2192cd
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ states('sensor.huidig_verbruik') }}
+    - name: Huidig verbruik zonder wp
+      unique_id: 664ab9ff-3875-4a45-b53a-685b7a8f7f96
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% set wasmachien = states("input_boolean.emhass_wasmachien") == "on" -%}
+        {%- set droogkast = states("input_boolean.emhass_droogkast") == "on" -%}
+        {%- set afwasmachien = states("input_boolean.emhass_afwasmachien") == "on" -%}
+        {%- set warmtepompboiler = states("input_boolean.emhass_warmtepompboiler") == "on" -%}
+        {%- set warmtepomp = states("input_boolean.emhass_warmtepomp") == "on" -%}
+        {%- set deferrable = namespace(all=[]) -%}
+        {%- if wasmachien -%}
+          {%- set deferrable.all = deferrable.all + [states("sensor.wasmachien_vermogen") | float(0)] -%}
+        {% endif %}
+        {%- if droogkast %}
+          {%- set deferrable.all = deferrable.all + [states("sensor.droogkast_vermogen") | float(0)] -%}
+        {% endif %}
+        {%- if afwasmachien %}
+          {%- set deferrable.all = deferrable.all + [states("sensor.afwasmachien_vermogen") | float(0)] -%}
+        {% endif %}
+        {%- if warmtepompboiler %}
+          {%- set deferrable.all = deferrable.all + [states("sensor.warmtepompboiler_huidig_verbruik") | float(0)] -%}
+        {% endif %}
+        {%- if warmtepomp %}
+          {%- set deferrable.all = deferrable.all + [states("sensor.warmtepomp_huidig_verbruik") | float(0)] -%}
+        {% endif %}
+        {%- if states("sensor.huidig_verbruik") | float(0) - ((deferrable.all) | sum ) | round(1) > 0 -%}
+            {{ (states("sensor.huidig_verbruik") | float(0) - ((deferrable.all) | sum )) | round(1) }}
+        {% else %}
+            {{ 0 | float(0) }}
+        {% endif %}

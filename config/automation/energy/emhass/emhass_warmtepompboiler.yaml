@@ -1,20 +1,24 @@
 alias: Emhass warmtepompboiler
 id: 2dbe7701-5976-4ce8-aaad-0298d80cb019
 trigger:
-  - minutes: /5
-    platform: time_pattern
-    id: update
-  # - platform: numeric_state
-  #   entity_id: sensor.p_deferrable3
-  #   below: 0.1
-  #   for: "00:00:05"
-  #   id: turn_off
+  - platform: numeric_state
+    entity_id: sensor.emhass_warmtepompboiler
+    above: 1
+    # for:
+    #   minutes: 5
+    #   seconds: 30
+  - platform: numeric_state
+    entity_id: sensor.emhass_warmtepompboiler
+    below: 0.1
+    for:
+      minutes: 5
+      seconds: 30
 action:
   - choose:
       - conditions:
           - condition: numeric_state
-            entity_id: sensor.p_deferrable3
-            above: 0.1
+            entity_id: sensor.emhass_warmtepompboiler
+            above: 1
         sequence:
           - service: homeassistant.turn_on
             target:
@@ -22,10 +26,16 @@ action:
           - service: homeassistant.turn_on
             target:
               entity_id: switch.warm_water
+          - condition: state
+            entity_id: binary_sensor.warmtepompboiler_aan_delay_off
+            state: "off"
+          - service: homeassistant.turn_on
+            target:
+              entity_id: switch.warm_water_snel
       - conditions:
           - condition: numeric_state
-            entity_id: sensor.p_deferrable3
-            below: 0.1
+            entity_id: sensor.emhass_warmtepompboiler
+            below: 1
         sequence:
           - service: homeassistant.turn_off
             target:

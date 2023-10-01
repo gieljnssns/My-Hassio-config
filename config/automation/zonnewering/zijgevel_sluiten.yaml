@@ -2,7 +2,7 @@ alias: Zijgevel sluiten #Sunscreen down/uitklappen
 id: 609710ab-bc42-47f6-a4bf-b70cce8b88a7
 trigger:
   - platform: time_pattern
-    minutes: "/5"
+    minutes: "/12"
     seconds: 00
 condition:
   condition: and # all conditions need to be TRUE before action is executed.
@@ -18,7 +18,10 @@ condition:
       above: 10
     - condition: numeric_state
       entity_id: sensor.zonne_energie_gefilterd_lowpass
-      above: 750
+      above: 650
+    # - condition: numeric_state
+    #   entity_id: sensor.buiten_lichtsterkte
+    #   above: 12000
 
     # Weather based conditions
     - condition: numeric_state
@@ -27,39 +30,18 @@ condition:
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
-          {{ states("sensor.ba_precipitation_forecast_average") | float < 0.25 }}
+          {{ states("sensor.ba_precipitation_forecast_average") | float < 0.15 }}
         {% else %}
-          {{ states("sensor.openweathermap_forecast_precipitation")  | float < 0.25 }}
+          {{ states("sensor.weatherbit_rain_rate")  | float < 0.15 }}
         {% endif %}
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
-          {{ states("sensor.ba_precipitation") | float < 0.25 }}
+          {{ states("sensor.ba_precipitation") | float < 0.15 }}
         {% else %}
-          {{ states("sensor.openweathermap_rain")  | float < 0.25 }}
+          {{ states("sensor.weatherbit_rain_rate")  | float < 0.15 }}
         {% endif %}
-    # - condition: or
-    #   conditions:
-    #   - condition: numeric_state
-    #     entity_id: sensor.ba_precipitation_forecast_average
-    #     below: 0.25 # Rain the next 15 min
-    #   - condition: numeric_state
-    #     entity_id: sensor.openweathermap_forecast_precipitation
-    #     below: 0.25
-    # - condition: or
-    #   conditions:
-    #   - condition: numeric_state
-    #     entity_id: sensor.ba_precipitation
-    #     below: 0.25 # Rain
-    #   - condition: numeric_state
-    #     entity_id: sensor.openweathermap_rain
-    #     below: 0.25
-    #- condition: numeric_state
-    #  entity_id: sensor.ba_precipitation_forecast_average
-    #  below: 0.25 # Rain the next 15 min
-    #- condition: numeric_state
-    #  entity_id: sensor.ba_precipitation
-    #  below: 0.25 # Rain
+
     - condition: numeric_state
       entity_id: sensor.max_uv_index
       above: 3 # This indicates direct sunlight on my location (as in: not cloudy)
@@ -67,7 +49,7 @@ condition:
     # Temperature based conditions
     - condition: numeric_state
       entity_id: sensor.buitentemperatuur_gefilterd
-      above: 20 # only if outdoor temperature is above x then allowed to roll out
+      above: 19 # only if outdoor temperature is above x then allowed to roll out
     - condition: numeric_state
       entity_id: sensor.gemiddelde_temp_beneden
       above: 22 # only if indoor temperature is above x then allowed to roll out
@@ -76,7 +58,7 @@ condition:
     #   above: 22
     - condition: template
       value_template: >
-        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 21 }}
+        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 19 }}
 
     # Time based conditions
     - condition: template
@@ -87,24 +69,30 @@ condition:
     #   value_template: "{{ as_local(states.sensor.time.last_changed).month > 3 }}" # Starting April
     # - condition: template
     #   value_template: "{{ as_local(states.sensor.time.last_changed).month < 10 }}" # Ending October
-    - condition: template
-      value_template: >
-        {{  is_state('input_boolean.living_closed', 'off') or
-            is_state('input_boolean.slaapkamer_noor_closed', 'off')  }}
+    # - condition: template
+    #   value_template: >
+    #     {{  is_state('input_boolean.living_closed', 'off') or
+    #         is_state('input_boolean.slaapkamer_noor_closed', 'off')  }}
 
     # No others screens are closing
     - condition: state
       entity_id: script.achtergevel_sluiten
       state: "off"
     - condition: state
-      entity_id: script.zonnetent_my
+      entity_id: input_boolean.zijgevel_closed
       state: "off"
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.living", "current_position") > 50 }}
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.slaapkamer_noor", "current_position") > 50 }}
 
 action:
   - service: script.zijgevel_sluiten
-  - service: notify.mobile_app_gphone
-    data:
-      message: "Het zonnescherm zijgevel gesloten"
-  - delay:
-      minutes: 5
-  - service: script.zijgevel_sluiten
+  # - service: notify.mobile_app_gphone
+  #   data:
+  #     message: "Het zonnescherm zijgevel gesloten"
+  # - delay:
+  #     minutes: 5
+  # - service: script.zijgevel_sluiten

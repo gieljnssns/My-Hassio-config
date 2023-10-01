@@ -1,0 +1,33 @@
+living_heat_boost:
+  alias: Heating Boost
+  sequence:
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.previous_target
+      data:
+        value: >-
+          {{ states.climate.living.attributes.temperature }}
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.boost_target
+      data:
+        value: >-
+          {{ states.climate.living.attributes.current_temperature | float + 2 }}
+    - service: climate.set_temperature
+      target:
+        entity_id: climate.living
+      data:
+        hvac_mode: heat
+        temperature: >-
+          {{ states('input_number.boost_target') }}
+    - service: timer.start
+      data_template:
+        entity_id: timer.boost
+        duration: 00:{{ states.input_number.boost_duration.state | int }}:00
+    - service: input_boolean.turn_on
+      data:
+        entity_id: input_boolean.boost_active
+    # - delay:
+    #     minutes: >-
+    #       {{ states('input_number.boost_duration') | int }}
+  mode: single

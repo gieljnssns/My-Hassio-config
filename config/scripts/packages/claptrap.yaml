@@ -120,6 +120,14 @@ bitch_prullenbak:
     target:
       entity_id: vacuum.cl4p_tp
 
+nacht_dweilen:
+  sequence:
+    service: counter.set_value
+    data:
+      value: 5
+    target:
+      entity_id: counter.stofzuiger
+
 vacuum_clean_room:
   alias: vacuum_clean_room
   sequence:
@@ -130,12 +138,12 @@ vacuum_clean_room:
         # map each room number with a string with a dictionary
         room_map:
           Kies kamer: 0
-          Waskot: 16
+          Waskot: 23
           Keuken: 17
           Danszaal: 18
-          Zithoek: 19
-          Inkom: 20
-          Gang: 21
+          Zithoek: 20
+          Inkom: 21
+          Gang: 16
           Wc: 22
         # get target room to clean
         target_room: "{{ room_map[states(target_room_selector)] | int}}"

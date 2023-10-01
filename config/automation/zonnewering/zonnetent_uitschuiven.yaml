@@ -2,7 +2,7 @@ alias: Zonnetent uitschuiven #Sunscreen down/uitklappen
 id: bd69f161-08bf-4d31-aef5-19cef0dee2ab
 trigger:
   - platform: time_pattern
-    minutes: "/4"
+    minutes: "/14"
     seconds: 00
 condition:
   condition: and # all conditions need to be TRUE before action is executed.
@@ -19,7 +19,11 @@ condition:
     - condition: numeric_state
       entity_id: sensor.zonne_energie_gefilterd_lowpass
       above: 1500
+    # - condition: numeric_state
+    #   entity_id: sensor.buiten_lichtsterkte
+    #   above: 12000
 
+    # above: 20000
     # Weather based conditions
     - condition: numeric_state
       entity_id: sensor.weatherbit_wind_speed
@@ -27,33 +31,33 @@ condition:
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
-          {{ states("sensor.ba_precipitation_forecast_average") | float < 0.20 }}
+          {{ states("sensor.ba_precipitation_forecast_average") | float < 0.15 }}
         {% else %}
-          {{ states("sensor.openweathermap_forecast_precipitation")  | float < 0.20 }}
+          {{ states("sensor.weatherbit_rain_rate")  | float < 0.15 }}
         {% endif %}
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
-          {{ states("sensor.ba_precipitation") | float < 0.20 }}
+          {{ states("sensor.ba_precipitation") | float < 0.15 }}
         {% else %}
-          {{ states("sensor.openweathermap_rain")  | float < 0.20 }}
+          {{ states("sensor.weatherbit_rain_rate")  | float < 0.15 }}
         {% endif %}
     # - condition: or
     #   conditions:
     #   - condition: numeric_state
     #     entity_id: sensor.ba_precipitation_forecast_average
-    #     below: 0.20 # Rain the next 15 min
+    #     below: 0.15 # Rain the next 15 min
     #   - condition: numeric_state
-    #     entity_id: sensor.openweathermap_forecast_precipitation
-    #     below: 0.20
+    #     entity_id: sensor.weatherbit_rain_rate
+    #     below: 0.15
     # - condition: or
     #   conditions:
     #   - condition: numeric_state
     #     entity_id: sensor.ba_precipitation
-    #     below: 0.20 # Rain
+    #     below: 0.15 # Rain
     #   - condition: numeric_state
-    #     entity_id: sensor.openweathermap_rain
-    #     below: 0.20
+    #     entity_id: sensor.weatherbit_rain_rate
+    #     below: 0.15
     #- condition: numeric_state
     #  entity_id: sensor.ba_precipitation
     #  below: 0.25 # Rain
@@ -64,7 +68,7 @@ condition:
     # Temperature based conditions
     - condition: numeric_state
       entity_id: sensor.buitentemperatuur_gefilterd
-      above: 21 # only if outdoor temperature is above x then allowed to roll out
+      above: 20 # only if outdoor temperature is above x then allowed to roll out
     - condition: numeric_state
       entity_id: sensor.gemiddelde_temp_beneden
       above: 22 # only if indoor temperature is above x then allowed to roll out
@@ -73,20 +77,19 @@ condition:
     #   above: 22
     - condition: template
       value_template: >
-        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 21 }}
+        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 19 }}
 
     # Time based conditions
     - condition: template
       value_template: "{{ now().month > 3 }}" # Starting April
     - condition: template
       value_template: "{{ now().month < 10 }}" # Ending October
-    # - condition: template
-    #   value_template: "{{ as_local(states.sensor.time.last_changed).month > 3 }}" # Starting April
-    # - condition: template
-    #   value_template: "{{ as_local(states.sensor.time.last_changed).month < 10 }}" # Ending October
     - condition: template
       value_template: >
-        {{  is_state('input_boolean.zonnetent_my', 'off')  }}
+        {{ state_attr("cover.zonnetent", "current_position") < 50 }}
+    # - condition: template
+    #   value_template: >
+    #     {{  is_state('input_boolean.zonnetent_my', 'off')  }}
 
     # No others screens are closing
     - condition: state
@@ -97,10 +100,13 @@ condition:
       state: "off"
 
 action:
-  - service: script.zonnetent_my ## MY position
-  - service: notify.mobile_app_gphone
-    data:
-      message: "De zonnetent is uitgeschoven"
-  - delay:
-      minutes: 3
-  - service: script.zonnetent_my ## MY position
+  - service: cover.stop_cover
+    data: {}
+    target:
+      entity_id: cover.zonnetent
+  # - service: notify.mobile_app_gphone
+  #   data:
+  #     message: "De zonnetent is uitgeschoven"
+  # - delay:
+  #     minutes: 3
+  # - service: script.zonnetent_my ## MY position

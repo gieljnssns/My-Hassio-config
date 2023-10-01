@@ -1,5 +1,6 @@
-db_url: !secret mysql
-purge_keep_days: 15
+purge_keep_days: 365
+auto_purge: false
+auto_repack: false
 exclude:
   domains:
     - camera
@@ -9,67 +10,180 @@ exclude:
     - sun
     - weather
     - zone
-    - updater
-    # - calendar
+    - update
   entities:
-    - script.beveiliging_verwarming_badkamer
-    - script.beveiliging_verwarming_fien
-    - script.beveiliging_verwarming_noor
-    - script.beveiliging_verwarming_slaapkamer
-    - script.beveiliging_verwarming_wc
-    - automation.monitor_echo
-    - automation.beveiliging_verwarming
     - sensor.date
     - sensor.date_time
     - sensor.moon
-    - sensor.next_rising
     - sensor.notification_hour
     - sensor.notification_minute
     - sensor.notification_time
     - sensor.notification_time_long
-    - sensor.since_last_boot
     - sensor.time
     - sensor.time_date
-    - sensor.cert_expiry
-    - sensor.custom_card_tracker
-    - sensor.custom_component_tracker
-    - sensor.custom_python_script_tracker
-    - sensor.dummy
-    - sensor.dummy_badkamer
-    - sensor.dummy_deze_maand
-    - sensor.dummy_slaapkamer
-    - sensor.dummy_slaapkamer_fien
-    - sensor.dummy_slaapkamer_noor
-    - sensor.dummy_vandaag
-    - sensor.dummy_verluchting
-    - sensor.dummy_warmtepomp
     - sensor.last_boot
     - sensor.moon
-    - sensor.notification_hour
-    - sensor.notification_minute
-    - sensor.notification_time
-    - sensor.notification_time_long
-    - sensor.zonne_energie_omvormers_gefilterd_lowpass
-    - sensor.s1_vermogen
-    - sensor.s2_vermogen
-    - sensor.s3_vermogen
-    - sensor.l1_vermogen
-    - sensor.l2_vermogen
-    - sensor.l3_vermogen
-    - sensor.v1_vermogen
-    - sensor.v2_vermogen
-    - sensor.v3_vermogen
-
     - sensor.l1_net_afname
     - sensor.l2_net_afname
     - sensor.l3_net_afname
-
     - sensor.l1_net_terugsturen
     - sensor.l2_net_terugsturen
     - sensor.l3_net_terugsturen
-
     - sensor.buitentemperatuur_gefilterd
     - sensor.binnen_lowpass
+    - sensor.badkamer_still_energy
+    - sensor.zonne_energie_gefilterd_lowpass
+    - sensor.rest_vermogen
+    - sensor.solaredge_inverter_watthours
+    - sensor.huawei_accumulated_energy_yield
+    - sensor.badkamer_still_distance
+    - sensor.verwarming_vermogen
+    - sensor.badkamer_detection_distance
+    - sensor.buiten_buiten_temperatuur
+    - sensor.buiten_buiten_luchtdruk
+    - sensor.buiten_buiten_lichtsterkte
+    - sensor.temperatuur_badkamer_2
+    - sensor.slaapkamer_fien_temperatuur_2
+    - sensor.slaapkamer_noor_temperatuur_2
+    - sensor.temperatuur_slaapkamer_2
+    - sensor.temperatuur_pi3_living_2
+    - sensor.temp_living_2
+    - sensor.temperatuur_poort
+    - sensor.luchtdruk_poort
+    - sensor.shelly_warmtepompboiler_temperature
+    - sensor.shelly_warmtepomp_temperature
+    - sensor.badkamer_g0_move_energy
+    - sensor.badkamer_g0_still_energy
+    - sensor.badkamer_g1_move_energy
+    - sensor.badkamer_g1_still_energy
+    - sensor.badkamer_g2_move_energy
+    - sensor.badkamer_g2_still_energy
+    - sensor.badkamer_g3_move_energy
+    - sensor.badkamer_g3_still_energy
+    - sensor.badkamer_g4_move_energy
+    - sensor.badkamer_g4_still_energy
+    - sensor.badkamer_g5_move_energy
+    - sensor.badkamer_g5_still_energy
+    - sensor.badkamer_g6_move_energy
+    - sensor.badkamer_g6_still_energy
+    - sensor.badkamer_g7_move_energy
+    - sensor.badkamer_g7_still_energy
+    - sensor.badkamer_g8_move_energy
+    - sensor.badkamer_g8_still_energy
+    - sensor.purge_entites_1
+    - sensor.purge_entites_2
+    - sensor.backup_state
+    - sensor.gft
+    - sensor.papier
+    - sensor.pmd
+    - sensor.restafval
+    - sensor.icloud3_event_log
+    - sensor.low_battery
+    - sensor.sonos_favorites
+    - sensor.l2_vermogen
+    - sensor.l1_vermogen
+    - sensor.v1_vermogen
+    - sensor.v2_vermogen
+    - sensor.l3_vermogen
+    - sensor.v3_vermogen
+    - sensor.s1_vermogen
+    - sensor.s3_vermogen
+    - sensor.s2_vermogen
+    - sensor.huidig_fluvius
+    - sensor.brewpi_verbruik
+    - sensor.keukenpi_verbruik
+    - sensor.livingpi_verbruik
+    - sensor.poortpi_verbruik
+    - sensor.verwarmingpi_verbruik
+    - sensor.brewpi_verbruik
+    - sensor.keukenpi_verbruik
+    - sensor.livingpi_verbruik
+    - sensor.poortpi_verbruik
+    - sensor.verwarmingpi_verbruik
+    - sensor.living_luchtvochtigheid
+    - sensor.zithoek_moving_distance
+    - sensor.zithoek_still_distance
+    - sensor.zithoek_move_energy
+    - sensor.zithoek_still_energy
+    - sensor.zithoek_detection_distance
+    - sensor.zithoek_g0_move_energy
+    - sensor.zithoek_g0_still_energy
+    - sensor.zithoek_g1_move_energy
+    - sensor.zithoek_g1_still_energy
+    - sensor.zithoek_g2_move_energy
+    - sensor.zithoek_g2_still_energy
+    - sensor.zithoek_g3_move_energy
+    - sensor.zithoek_g3_still_energy
+    - sensor.zithoek_g4_move_energy
+    - sensor.zithoek_g4_still_energy
+    - sensor.zithoek_g5_move_energy
+    - sensor.zithoek_g5_still_energy
+    - sensor.zithoek_g6_move_energy
+    - sensor.zithoek_g6_still_energy
+    - sensor.zithoek_g7_move_energy
+    - sensor.zithoek_g7_still_energy
+    - sensor.zithoek_g8_move_energy
+    - sensor.zithoek_g8_still_energy
+    - sensor.danszaal_moving_distance
+    - sensor.danszaal_still_distance
+    - sensor.danszaal_move_energy
+    - sensor.danszaal_still_energy
+    - sensor.danszaal_detection_distance
+    - sensor.danszaal_g0_move_energy
+    - sensor.danszaal_g0_still_energy
+    - sensor.danszaal_g1_move_energy
+    - sensor.danszaal_g1_still_energy
+    - sensor.danszaal_g2_move_energy
+    - sensor.danszaal_g2_still_energy
+    - sensor.danszaal_g3_move_energy
+    - sensor.danszaal_g3_still_energy
+    - sensor.danszaal_g4_move_energy
+    - sensor.danszaal_g4_still_energy
+    - sensor.danszaal_g5_move_energy
+    - sensor.danszaal_g5_still_energy
+    - sensor.danszaal_g6_move_energy
+    - sensor.danszaal_g6_still_energy
+    - sensor.danszaal_g7_move_energy
+    - sensor.danszaal_g7_still_energy
+    - sensor.danszaal_g8_move_energy
+    - sensor.danszaal_g8_still_energy
+    - sensor.usw_flex_slaapkamer_uap_nanohd_slaapkamer_poe_power
+    - sensor.usw_flex_slaapkamer_sonos_badkamer_poe_power
+    - sensor.usw_flex_slaapkamer_slaapkamerpi4_poe_power
+    - sensor.usw_flex_slaapkamer_port_2_poe_power
+    - sensor.us_8_60w_garage_dahua_poe_power
+    - sensor.us_8_60w_garage_uap_nanohd_garage_poe_power
+    - sensor.us_8_60w_garage_port_5_poe_power
+    - sensor.us_8_60w_garage_port_6_poe_power
+    - sensor.usw_lite_8_poe_media_iptv_poe_power
+    - sensor.usw_lite_8_poe_media_port_1_poe_power
+    - sensor.usw_lite_8_poe_media_sonos_living_poe_power
+    - sensor.usw_lite_8_poe_media_tv_living_poe_power
+    - sensor.usw_24_poe_waskot_bureau_boven_links_poe_power
+    - sensor.usw_24_poe_waskot_danszaal_rechts_poe_power
+    - sensor.usw_24_poe_waskot_port_10_poe_power
+    - sensor.usw_24_poe_waskot_port_11_poe_power
+    - sensor.usw_24_poe_waskot_port_12_poe_power
+    - sensor.usw_24_poe_waskot_port_9_poe_power
+    - sensor.usw_24_poe_waskot_slaapkamer_fien_poe_power
+    - sensor.usw_24_poe_waskot_slaapkamer_noor_poe_power
+    - sensor.usw_24_poe_waskot_synology_nas_lan1_poe_power
+    - sensor.usw_24_poe_waskot_synology_nas_lan2_poe_power
+    - sensor.usw_24_poe_waskot_uap_nanohd_living_poe_power
+    - sensor.usw_24_poe_waskot_usw_flex_mini_bureau_poe_power
+    - sensor.usw_24_poe_waskot_usw_flex_slaapkamer_poe_power
+    - sensor.usw_24_poe_waskot_verwarmingpi_poe_power
+    - sensor.usw_24_poe_waskot_wifi_waskot_poe_power
+    - sensor.usw_24_poe_waskot_zithoek_2de_van_links_poe_power
+    - sensor.unifi_droommachien_cpu0
+    - sensor.unifi_droommachien_cpu1
+    - sensor.unifi_droommachien_cpu2
+    - sensor.unifi_droommachien_cpu3
+    - sensor.unifi_droommachien_cpu
+    - sensor.unifi_waskot_cpu
+    - sensor.unifi_garage_cpu
+    - sensor.unifi_media_cpu
+
   entity_globs:
     - sensor.*_uptime
     - sensor.uptime_*
@@ -78,3 +192,8 @@ exclude:
     - sensor.ram_*
     - sensor.wifi_*
     - sensor.shelly_*temperatuur
+    - sensor.*_startuur
+    - sensor.quarter_*
+include:
+  entities:
+    - sensor.quarter_hourly_grid_consumption

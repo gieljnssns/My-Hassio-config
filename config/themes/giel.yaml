@@ -1,5 +1,25 @@
 # https://community.home-assistant.io/t/full-list-of-theme-yaml-lines/162199/8
 giel:
+  card-mod-theme: giel
+  card-mod-root-yaml: |
+    .: |
+      {% if user == "Noor" %}
+      .header .toolbar .action-items:not(:has(ha-icon-button[slot="actionItems"])):not(:has(.exit-edit-mode)) ha-button-menu mwc-list-item:nth-of-type(1) {
+        display: none;
+      }
+      .header .toolbar .action-items > ha-icon-button[slot="actionItems"]:nth-child(1) {
+        display: none;
+      }
+      {% endif %}
+      {% if user == "Fien" %}
+      .header .toolbar .action-items:not(:has(ha-icon-button[slot="actionItems"])):not(:has(.exit-edit-mode)) ha-button-menu mwc-list-item:nth-of-type(1) {
+        display: none;
+      }
+      .header .toolbar .action-items > ha-icon-button[slot="actionItems"]:nth-child(1) {
+        display: none;
+      }
+      {% endif %}
+
   primary-color: "#CE1537"
   modes:
     dark:

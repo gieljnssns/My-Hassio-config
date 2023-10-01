@@ -1,0 +1,226 @@
+alias: "Stofzuiger pause/locate"
+id: 85099f39-8613-4f06-a709-6aa69841b719
+description: ""
+mode: single
+trigger:
+  - platform: state
+    entity_id:
+      - binary_sensor.pir_keuken
+    to: "on"
+    id: keuken
+  - platform: state
+    entity_id:
+      - binary_sensor.danszaal_aqara_pir
+    to: "on"
+    id: danszaal
+  - platform: state
+    entity_id:
+      - binary_sensor.zithoek_aqara_pir
+    to: "on"
+    id: zithoek
+  - platform: state
+    entity_id:
+      - binary_sensor.wc_aqara_pir
+    to: "on"
+    id: wc
+  - platform: state
+    entity_id:
+      - binary_sensor.waskot_aqara_pir
+    to: "on"
+    id: waskot
+  - platform: state
+    entity_id:
+      - binary_sensor.gang_beneden_pir
+    to: "on"
+    id: gang
+condition:
+  - condition: template
+    value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('script.bitch_prullenbak', 'last_triggered')) | float > 90 }}"
+  - condition: template
+    value_template: >
+      {% set person = [
+          states.person.giel,
+          states.person.martine,
+          states.person.noor,
+          states.person.fien
+          ] %}
+      {{ person | selectattr('state','eq','home') | list | count > 0 }}
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: vacuum.cl4p_tp
+        state: docked
+      - condition: state
+        entity_id: vacuum.cl4p_tp
+        state: returning
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: keuken
+          - condition: template
+            value_template: >
+              {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 17 }}
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: vacuum.cl4p_tp
+                    state: error
+                sequence:
+                  - service: vacuum.locate
+                    target:
+                      entity_id: vacuum.cl4p_tp
+            # default:
+            #   - service: vacuum.pause
+            #     target:
+            #       entity_id: vacuum.cl4p_tp
+            #   - wait_for_trigger:
+            #       - platform: state
+            #         entity_id:
+            #           - binary_sensor.pir_keuken
+            #         to: "off"
+            #   - service: vacuum.start
+            #     target:
+            #       entity_id: vacuum.cl4p_tp
+      - conditions:
+          - condition: trigger
+            id: danszaal
+          - condition: template
+            value_template: >
+              {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 18 }}
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: vacuum.cl4p_tp
+                    state: error
+                sequence:
+                  - service: vacuum.locate
+                    target:
+                      entity_id: vacuum.cl4p_tp
+            # default:
+            #   - service: vacuum.pause
+            #     target:
+            #       entity_id: vacuum.cl4p_tp
+            #   - wait_for_trigger:
+            #       - platform: state
+            #         entity_id:
+            #           - binary_sensor.danszaal_aqara_pir
+            #         to: "off"
+            #   - service: vacuum.start
+            #     target:
+            #       entity_id: vacuum.cl4p_tp
+      - conditions:
+          - condition: trigger
+            id: zithoek
+          - condition: template
+            value_template: >
+              {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 20 }}
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: vacuum.cl4p_tp
+                    state: error
+                sequence:
+                  - service: vacuum.locate
+                    target:
+                      entity_id: vacuum.cl4p_tp
+            # default:
+            #   - service: vacuum.pause
+            #     target:
+            #       entity_id: vacuum.cl4p_tp
+            #   - wait_for_trigger:
+            #       - platform: state
+            #         entity_id:
+            #           - binary_sensor.zithoek_aqara_pir
+            #         to: "off"
+            #   - service: vacuum.start
+            #     target:
+            #       entity_id: vacuum.cl4p_tp
+      - conditions:
+          - condition: trigger
+            id: wc
+          - condition: template
+            value_template: >
+              {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 22 }}
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: vacuum.cl4p_tp
+                    state: error
+                sequence:
+                  - service: vacuum.locate
+                    target:
+                      entity_id: vacuum.cl4p_tp
+            # default:
+            #   - service: vacuum.pause
+            #     target:
+            #       entity_id: vacuum.cl4p_tp
+            #   - wait_for_trigger:
+            #       - platform: state
+            #         entity_id:
+            #           - binary_sensor.wc_aqara_pir
+            #         to: "off"
+            #   - service: vacuum.start
+            #     target:
+            #       entity_id: vacuum.cl4p_tp
+      - conditions:
+          - condition: trigger
+            id: waskot
+          - condition: template
+            value_template: >
+              {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 23 }}
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: vacuum.cl4p_tp
+                    state: error
+                sequence:
+                  - service: vacuum.locate
+                    target:
+                      entity_id: vacuum.cl4p_tp
+            # default:
+            #   - service: vacuum.pause
+            #     target:
+            #       entity_id: vacuum.cl4p_tp
+            #   - wait_for_trigger:
+            #       - platform: state
+            #         entity_id:
+            #           - binary_sensor.waskot_aqara_pir
+            #         to: "off"
+            #   - service: vacuum.start
+            #     target:
+            #       entity_id: vacuum.cl4p_tp
+      - conditions:
+          - condition: trigger
+            id: gang
+          - condition: template
+            value_template: >
+              {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 16 }}
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: vacuum.cl4p_tp
+                    state: error
+                sequence:
+                  - service: vacuum.locate
+                    target:
+                      entity_id: vacuum.cl4p_tp
+            # default:
+            #   - service: vacuum.pause
+            #     target:
+            #       entity_id: vacuum.cl4p_tp
+            #   - wait_for_trigger:
+            #       - platform: state
+            #         entity_id:
+            #           - binary_sensor.gang_beneden_pir
+            #         to: "off"
+            #   - service: vacuum.start
+            #     target:
+            #       entity_id: vacuum.cl4p_tp
+    default: []

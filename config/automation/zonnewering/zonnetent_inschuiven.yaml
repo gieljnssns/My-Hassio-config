@@ -9,55 +9,70 @@ trigger:
     entity_id: sensor.sun_elevation
     below: -10
   - platform: state
-    entity_id: sensor.dark_outside
+    entity_id: sensor.dark_inside
     to: "true"
     for:
-      minutes: 10
-  # - platform: numeric_state
-  #   entity_id: sensor.zonne_energie_gefilterd_lowpass
-  #   below: 200
+      minutes: 5
+  - platform: numeric_state
+    entity_id: sensor.buiten_lichtsterkte
+    below: 1000
+    for:
+      minutes: 5
 
   # Weather based triggers
   - platform: numeric_state
     entity_id: sensor.weatherbit_wind_speed
     above: 26 #If wind force becomes to high, sunscreen needs to go up
-  # - platform: numeric_state
-  #   entity_id: sensor.ba_precipitation_forecast_average
-  #   above: 0.25 # Rain the next 15 min
-  # - platform: numeric_state
-  #   entity_id: sensor.ba_precipitation
-  #   above: 0.20 # Rain
-  
+
+  # - platform: template
+  #   value_template: >
+  #     {{ states("sensor.buiten_lichtsterkte") | float(0) < 4000 and
+  #       (states("sensor.solcast_forecast_next_hour") | float(0) < 1000 or
+  #       states("sensor.solcast_forecast_this_hour") | float(0) < 1000) }}
+
   - platform: template
     value_template: >
       {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
-        {{ states("sensor.ba_precipitation_forecast_average") | float > 0.25 }}
+        {{ states("sensor.ba_precipitation_forecast_average") | float > 0.15 }}
       {% else %}
-        {{ states("sensor.openweathermap_forecast_precipitation")  | float > 0.25 }}
+        {{ states("sensor.weatherbit_rain_rate")  | float > 0.15 }}
       {% endif %}
   - platform: template
     value_template: >
       {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
-        {{ states("sensor.ba_precipitation") | float > 0.20 }}
+        {{ states("sensor.ba_precipitation") | float > 0.15 }}
       {% else %}
-        {{ states("sensor.openweathermap_rain")  | float > 0.20 }}
+        {{ states("sensor.weatherbit_rain_rate")  | float > 0.15 }}
       {% endif %}
+
+  - platform: state
+    entity_id: binary_sensor.zonnetent_vibratie
+    to: "on"
 
 condition:
   condition: or
   conditions:
-    - condition: state
-      entity_id: input_boolean.zonnetent_my
-      state: "on"
-    - condition: state
-      entity_id: input_boolean.zonnetent_closed
-      state: "on"
+    - condition: template
+      value_template: >
+        {{ state_attr("cover.zonnetent", "current_position") > 10 }}
+    # - condition: state
+    #   entity_id: input_boolean.zonnetent_my
+    #   state: "on"
+    # - condition: state
+    #   entity_id: input_boolean.zonnetent_closed
+    #   state: "on"
 
 action:
-  - service: script.zonnetent_openen
+  - service: cover.close_cover
+    data: {}
+    target:
+      entity_id: cover.zonnetent
   - service: notify.mobile_app_gphone
     data_template:
       message: "De zonnetent is ingeschoven, reden {{trigger.entity_id}} "
   - delay:
       minutes: 3
-  - service: script.zonnetent_openen
+  - service: cover.close_cover
+    data: {}
+    target:
+      entity_id: cover.zonnetent

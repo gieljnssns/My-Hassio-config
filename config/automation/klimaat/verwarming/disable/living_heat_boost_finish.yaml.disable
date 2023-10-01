@@ -1,0 +1,26 @@
+alias: Heating Boost Finish
+id: 32688217-3235-4e07-a11b-6e91e1650c03
+trigger:
+  # - platform: state
+  #   entity_id: script.living_heat_boost
+  #   from: "on"
+  #   to: "off"
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.boost
+condition:
+  - condition: state
+    entity_id: input_boolean.boost_active
+    state: "on"
+action:
+  - service: climate.set_preset_mode
+    data:
+      preset_mode: Schedule
+    target:
+      entity_id: climate.living
+  - delay: "00:00:02"
+  - service: input_boolean.turn_off
+    data:
+      entity_id: input_boolean.boost_active
+mode: single

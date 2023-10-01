@@ -2,14 +2,158 @@
     - name: Temp living
       unique_id: ced4761b-a79b-41e9-9139-e2311d4b112d
       state: >
-        {{ state_attr("climate.netatmo_living", "current_temperature") }}
+        {{ state_attr("climate.living", "current_temperature") | float(0)}}
       unit_of_measurement: "°C"
+      availability: >
+        {{ state_attr("climate.living", "current_temperature") is number }}
 
     - name: Binnen vs buiten
       unique_id: dddcfcff-cc55-4bc0-87fc-7285c0a79e97
       state: >
-        {% if (states('sensor.binnen_lowpass')) > (states('sensor.temperatuur_gemiddeld_buiten')) and states('sensor.binnen_lowpass') | float(default=0)> 26 %}
+        {% if (states('sensor.binnen_lowpass') | float(0)) > (states('sensor.buitentemperatuur_gefilterd') | float(0)) and 
+            states('sensor.binnen_lowpass') | float(0) > 26 %}
           Afkoeling
         {% else %}
           Geen afkoeling
         {% endif %}
+      availability: >-
+        {{ has_value('sensor.binnen_lowpass') and 
+          has_value('sensor.buitentemperatuur_gefilterd') and
+          has_value('sensor.binnen_lowpass') }}
+
+    - name: Buiten temperatuur
+      unique_id: e04b3353-a23c-41ee-9329-b5d3b2526ca6
+      state: >
+        {{ states("sensor.buiten_buiten_temperatuur") }}
+      unit_of_measurement: "°C"
+      availability: >
+        {{ has_value("sensor.buiten_buiten_temperatuur") }}
+
+      # state: >
+      #   {{ states("sensor.temperatuur_poort") }}
+      # unit_of_measurement: "°C"
+      # availability: >
+      #   {{ has_value("sensor.temperatuur_poort") }}
+    - name: Buiten luchtdruk
+      unique_id: 1fdafdec-04fa-46fd-80ad-339db820d294
+      state: >
+        {{ states("sensor.buiten_buiten_luchtdruk") }}
+      unit_of_measurement: "hPa"
+      availability: >
+        {{ has_value("sensor.buiten_buiten_luchtdruk") }}
+
+      # state: >
+      #   {{ states("sensor.luchtdruk_poort") }}
+      # unit_of_measurement: "hPa"
+      # availability: >
+      #   {{ has_value("sensor.luchtdruk_poort") }}
+    - name: Buiten lichtsterkte
+      unique_id: 2668b502-27ec-4046-a4b7-c52444181fe1
+      state: >
+        {{ states("sensor.buiten_buiten_lichtsterkte") }}
+      unit_of_measurement: "lx"
+      availability: >
+        {{ has_value("sensor.buiten_buiten_lichtsterkte") }}
+
+    - name: Temperatuur pi3 living
+      unique_id: 266fbc93-dc19-4e53-942b-51184a92ed4c
+      state: >
+        {{ states("sensor.temperatuur_pi3_living_2") }}
+      unit_of_measurement: "°C"
+      availability: >
+        {{ has_value("sensor.temperatuur_pi3_living_2") }}
+
+    - name: Temp living
+      unique_id: 0e240ca9-5a4d-4218-a01f-1ddd057300a9
+      state: >
+        {{ states("sensor.temp_living_2") }}
+      unit_of_measurement: "°C"
+      availability: >
+        {{ has_value("sensor.temp_living_2") }}
+
+    - name: Temperatuur badkamer
+      unique_id: b0459554-269b-436a-838c-3bfcaf48a0ba
+      state: >
+        {{ states("sensor.temperatuur_badkamer_2") }}
+      unit_of_measurement: "°C"
+      availability: >
+        {{ has_value("sensor.temperatuur_badkamer_2") }}
+
+    - name: Slaapkamer Fien temperatuur
+      unique_id: b42d9257-e8cc-42ef-ac14-d57515db61fe
+      state: >
+        {{ states("sensor.slaapkamer_fien_temperatuur_2") }}
+      unit_of_measurement: "°C"
+      availability: >
+        {{ has_value("sensor.slaapkamer_fien_temperatuur_2") }}
+
+    - name: Slaapkamer Noor temperatuur
+      unique_id: 24a544a6-64e9-48db-990a-580099bc48a3
+      state: >
+        {{ states("sensor.slaapkamer_noor_temperatuur_2") }}
+      unit_of_measurement: "°C"
+      availability: >
+        {{ has_value("sensor.slaapkamer_noor_temperatuur_2") }}
+
+    - name: Temperatuur slaapkamer
+      unique_id: 0dbdbce8-e6f9-4d6b-b1dd-4cd80d96178d
+      state: >
+        {{ states("sensor.temperatuur_slaapkamer_2") }}
+      unit_of_measurement: "°C"
+      availability: >
+        {{ has_value("sensor.temperatuur_slaapkamer_2") }}
+
+    - name: Trend up badkamer gradient
+      unique_id: 750c3689-7105-43e6-a805-46f716c19eb9
+      state: >
+        {{ state_attr("binary_sensor.badkamer_trend_up", "gradient") | round(8) }}
+      unit_of_measurement: "pt"
+      availability: >
+        {{ has_value("binary_sensor.badkamer_trend_up") }}
+
+    - name: Trend down badkamer gradient
+      unique_id: 8179a8ea-262d-4e4e-9fef-c9c3042593e7
+      state: >
+        {{ state_attr("binary_sensor.badkamer_trend_down", "gradient") | round(8) }}
+      unit_of_measurement: "pt"
+      availability: >
+        {{ has_value("binary_sensor.badkamer_trend_down") }}
+
+    - name: Degree day
+      unique_id: 92076ed0-9e96-4912-b576-fb3b45dc51bc
+      state: >
+        {% set month = now().month %}
+        {% if month in [4, 5, 6, 7, 8, 9] %}
+          {{ [0, 0.8 *(18 - states('sensor.gemiddelde_buitentemperatuur')|float)] | max | round(2) }}
+        {% elif month in [3, 10] %}
+          {{ [0, 18 - states('sensor.gemiddelde_buitentemperatuur')|float] | max | round(2) }}
+        {% else %}
+          {{ [0, 1.1 * (18 - states('sensor.gemiddelde_buitentemperatuur')|float)] | max | round(2) }}
+        {% endif %}
+      unit_of_measurement: "DD"
+      availability: >
+        {{ has_value("sensor.gemiddelde_buitentemperatuur") }}
+
+    - name: Gemiddelde temperatuur buiten voorspelling
+      unique_id: a6edabc5-f478-4983-8872-965db57d676c
+      state: >
+        {{ state_attr('weather.openweathermap', 'forecast')[:8]
+                      | map(attribute='temperature') | average | round(1) }}
+      unit_of_measurement: "°C"
+      availability: >
+        {{ has_value("weather.openweathermap") }}
+
+    - name: Degree day prediction
+      unique_id: c57c8b83-5b40-4ee7-817a-6681211a5153
+      state: >
+        {% set month = now().month %}
+        {% if month in [4, 5, 6, 7, 8, 9] %}
+          {{ [0, 0.8 *(18 - states('sensor.gemiddelde_temperatuur_buiten_voorspelling')|float)] | max | round(2) }}
+        {% elif month in [3, 10] %}
+          {{ [0, 18 - states('sensor.gemiddelde_temperatuur_buiten_voorspelling')|float] | max | round(2) }}
+        {% else %}
+          {{ [0, 1.1 * (18 - states('sensor.gemiddelde_temperatuur_buiten_voorspelling')|float)] | max | round(2) }}
+        {% endif %}
+      unit_of_measurement: "DD"
+      availability: >
+        {{ has_value("sensor.gemiddelde_temperatuur_buiten_voorspelling") }}

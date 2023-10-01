@@ -3,20 +3,20 @@ id: 2467cbf3-8621-4925-b41d-3f64cb5f81e7
 trigger:
   - platform: state
     entity_id: binary_sensor.knop_giel_klik
-    to: 'on'
+    to: "on"
 
 action:
   - choose:
-    - conditions:
-        - condition: template
-          value_template: >
-            {{ states("light.spot_slaapkamer") == 'on' }}
-      sequence:
-        - service: light.turn_off
-          entity_id:
-            - light.spot_slaapkamer
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ states("light.spot_slaapkamer") == 'on' }}
+        sequence:
+          - service: light.turn_off
+            entity_id:
+              - light.spot_slaapkamer
     default:
       - service: light.turn_on
         data:
           entity_id: light.spot_slaapkamer
-          brightness: 255        
+          brightness: 255

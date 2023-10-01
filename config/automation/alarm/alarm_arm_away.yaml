@@ -14,6 +14,18 @@ trigger:
   - platform: state
     entity_id: device_tracker.martine_not_so_binary
     to: "Afwezig"
+  - platform: state
+    entity_id: device_tracker.fien_not_so_binary
+    to: "Juist Weg"
+  - platform: state
+    entity_id: device_tracker.fien_not_so_binary
+    to: "Afwezig"
+  - platform: state
+    entity_id: device_tracker.noor_not_so_binary
+    to: "Juist Weg"
+  - platform: state
+    entity_id: device_tracker.noor_not_so_binary
+    to: "Afwezig"
   # - platform: state
   #   entity_id: input_boolean.gielthuis
   #   to: 'off'
@@ -39,6 +51,28 @@ condition:
           state: "Afwezig"
         - condition: state
           entity_id: device_tracker.martine_not_so_binary
+          state: "Langdurig Afwezig"
+    - condition: or
+      conditions:
+        - condition: state
+          entity_id: device_tracker.noor_not_so_binary
+          state: "Juist Weg"
+        - condition: state
+          entity_id: device_tracker.noor_not_so_binary
+          state: "Afwezig"
+        - condition: state
+          entity_id: device_tracker.noor_not_so_binary
+          state: "Langdurig Afwezig"
+    - condition: or
+      conditions:
+        - condition: state
+          entity_id: device_tracker.fien_not_so_binary
+          state: "Juist Weg"
+        - condition: state
+          entity_id: device_tracker.fien_not_so_binary
+          state: "Afwezig"
+        - condition: state
+          entity_id: device_tracker.fien_not_so_binary
           state: "Langdurig Afwezig"
     - condition: or
       conditions:

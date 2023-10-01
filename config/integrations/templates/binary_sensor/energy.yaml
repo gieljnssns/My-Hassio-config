@@ -1,45 +1,69 @@
 - binary_sensor:
-    - name: Warm water mag op
-      unique_id: 3d3546e3-6a19-4d11-b0db-a5590a9f6f3d
+    - name: Warmtepomp aan
+      device_class: power
+      unique_id: c8bb853c-63ec-4fd1-b18f-05624ee48fde
       state: >
-        {{  states('sensor.thermostaat') | int(0) < 45 and
-            states("input_boolean.warm_water_5u") == "off" and 
-            states("input_boolean.warm_water_2u") == "off" and
-            states("binary_sensor.warmtepompboiler_aan_delay_off") == "off" }}
-      icon: mdi:water-boiler
+        {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0) > 25 }}
 
-    - name: Verwarming boost mag op
-      unique_id: 9306b37c-4103-4e37-a9e8-91139171dd39
+    - name: Warmtepompboiler aan
+      device_class: power
+      unique_id: 7b3bdc4b-5335-4101-890b-75540ced60e1
       state: >
-        {{  states('sensor.temperatuur_gemiddeld_buiten') | float(0) < 12 and
-            states("input_boolean.op_verlof") == "off" and
-            state_attr("climate.netatmo_living", "preset_mode") == "Schedule" and 
-            state_attr("climate.netatmo_living", "current_temperature") | int(0) < 20 }}
-      icon: mdi:heating-coil
+        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float(default=0) > 25 }}
+
+    - name: Warmtepomp aan delay off
+      device_class: power
+      unique_id: befaae46-c7b5-4d6c-80ad-2b93d3eb6b96
+      state: >
+        {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0) > 25 }}
+      delay_off:
+        minutes: 10
+
+    - name: Warmtepompboiler aan delay off
+      device_class: power
+      unique_id: a1ca83c5-df8a-45e5-9845-21e49169a63e
+      state: >
+        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float(default=0) > 25 }}
+      delay_off:
+        minutes: 25
 
     - name: Wasmachien staat op
       unique_id: 6c5345d8-b4c3-46ca-b3d4-56cf5c5f6534
       state: >
-        {{ states("sensor.wasmachien_vermogen") | float(0) > 3 }}
+        {{ states("sensor.wasmachien_vermogen") | float(0) >= 3 }}
       delay_on:
-        minutes: 5
+        minutes: 2
       delay_off:
-        minutes: 10
+        minutes: 5
 
     - name: Droogkast staat op
       unique_id: 733a97db-050f-46c7-b734-43d20a80a01e
       state: >
-        {{ states("sensor.droogkast_vermogen") | float(0) > 3 }}
+        {{ states("sensor.droogkast_vermogen") | float(0) >= 4 }}
       delay_on:
-        minutes: 5
+        minutes: 2
       delay_off:
-        minutes: 10
+        minutes: 5
 
     - name: Afwasmachien staat op
       unique_id: bb4b871e-c1a9-4d81-abb6-f89f07bbd6fb
       state: >
-        {{ states("sensor.afwasmachien_vermogen") | float(0) > 3 }}
+        {{ states("sensor.afwasmachien_vermogen") | float(0) >= 3 }}
       delay_on:
-        minutes: 5
+        minutes: 2
       delay_off:
-        minutes: 10
+        minutes: 5
+
+    - name: Huawei has power
+      unique_id: 57543201-3292-4817-97ad-3058f1184bf9
+      availability: >-
+        {{ has_value("sensor.huawei_active_power") }}
+      state: >
+        {{ states("sensor.huawei_active_power") | float(0) > 0 }}
+
+    - name: Solaredge has power
+      unique_id: a32f0b55-9a76-4e4b-b7da-09dff675cf1d
+      availability: >-
+        {{ has_value("sensor.solaredge_inverter_watts") }}
+      state: >
+        {{ states("sensor.solaredge_inverter_watts") | float(0) > 0 }}

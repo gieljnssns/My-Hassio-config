@@ -1,0 +1,19 @@
+alias: Get openweathermap Forecast Hourly
+id: 87749df5-6ead-433d-8290-44f49da99aa7
+trigger:
+  # - platform: time_pattern
+  #   hours: /1
+  - platform: state
+    entity_id: weather.weatherbit_zandhoven
+condition: []
+action:
+  - service: weather.get_forecast
+    data:
+      type: hourly
+    target:
+      entity_id: weather.openweathermap
+    response_variable: hourly
+  - event: openweathermap_forecast_hourly
+    event_data:
+      hourly: "{{ hourly}}"
+mode: single

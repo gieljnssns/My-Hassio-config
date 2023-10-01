@@ -1,0 +1,17 @@
+alarm_netatmo:
+  sequence:
+    - service: notify.giel_en_martine
+      data:
+        message: "Bezoek! -- Alarm opzetten?"
+        data:
+          image: "{{ state_attr('sensor.netatmo_webhook', 'snapshot_url') }}"
+          # attachment:
+          #   url: "{{ state_attr('sensor.netatmo_webhook', 'snapshot_url') }}"
+          actions:
+            - action: "URI"
+              title: "Alle camera's"
+              uri: "/lovelace/camera"
+            - action: "ALARM"
+              title: "Alarm opzetten"
+              destructive: true
+            # entity_id: input_boolean.alarm

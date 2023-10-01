@@ -44,6 +44,22 @@ condition:
               - condition: state
                 entity_id: device_tracker.giel_not_so_binary
                 state: "Juist Aangekomen"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: device_tracker.fien_not_so_binary
+                state: "Thuis"
+              - condition: state
+                entity_id: device_tracker.fien_not_so_binary
+                state: "Juist Aangekomen"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: device_tracker.noor_not_so_binary
+                state: "Thuis"
+              - condition: state
+                entity_id: device_tracker.noor_not_so_binary
+                state: "Juist Aangekomen"
 action:
   - service: light.turn_on
     data:
@@ -62,10 +78,23 @@ action:
     data_template:
       identity: >
         Alarm night {{ now().strftime("%H:%M") }}
-  - condition: state
-    entity_id: binary_sensor.badkamer_grouped_not_master
-    state: "on"
-  # nog aan te passen
-  - service: media_player.unjoin
-    target:
-      entity_id: media_player.2c
+  - delay:
+      minutes: 20
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ states("button.brouwerij_shutdown") != "unavailable" and 
+                  states("binary_sensor.beweging_garage") != "on" }}
+        sequence:
+          - service: button.press
+            target:
+              entity_id: button.brouwerij_shutdown
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.badkamer_grouped_not_master
+            state: "on"
+        sequence:
+          - service: media_player.unjoin
+            target:
+              entity_id: media_player.badkamer

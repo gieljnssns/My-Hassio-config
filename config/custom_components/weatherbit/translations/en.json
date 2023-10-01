@@ -2,23 +2,17 @@
     "config": {
         "error": {
             "name_exists": "Location already setup. Choose other coordinates.",
-            "connection_error": "Could not connect to Weatherbit. Check API Key."
+            "connection_error": "Something went wrong when trying to connect to WeatherBit.",
+            "invalid_api_key": "The WeatherBit API Key is invalid."
         },
         "step": {
             "user": {
                 "data": {
-                    "wind_unit": "Wind Unit (Only applies if Unit System is Metric)",
-                    "add_alerts": "Activate Severe Weather Alerts",
-                    "add_sensors": "Install individual sensors",
-                    "cur_update_interval": "Current Data Update Interval (Minutes)",
-                    "fcs_update_interval": "Forecast Data Update Interval (Minutes)",
-                    "fcst_language": "Forecast Language",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "api_key": "Weatherbit API Key",
-                    "name": "Name"
+                    "api_key": "Weatherbit API Key"
                 },
-                "title": "Location for Weatherbit Data"
+                "title": "Setup a WeatherBit location"
             }
         }
     },
@@ -26,12 +20,60 @@
         "step": {
             "init": {
                 "data": {
-                    "wind_unit": "Wind Unit (Only applies if Unit System is Metric)",
-                    "add_alerts": "Activate Severe Weather Alerts",
-                    "add_sensors": "Install individual sensors",
-                    "fcst_language": "Forecast Language",
-                    "cur_update_interval": "Current Data Update Interval (Minutes)",
-                    "fcs_update_interval": "Forecast Data Update Interval (Minutes)"
+                    "update_interval": "Interval in minutes between sensor updates (Default 60 min)",
+                    "forecast_interval": "Interval between in minutes forecast updates (Default 60 min)",
+                    "forecast_language": "Forecast Language"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "beaufort": {
+                "state": {
+                    "calm": "Calm",
+                    "light_air": "Light Air",
+                    "light_breeze": "Light Breeze",
+                    "gentle_breeze": "Gentle Breeze",
+                    "moderate_breeze": "Moderate Breeze",
+                    "fresh_breeze": "Fresh Breeze",
+                    "strong_breeze": "Strong Breeze",
+                    "moderate_gale": "Moderate Gale",
+                    "fresh_gale": "Fresh Gale",
+                    "strong_gale": "Strong Gale",
+                    "storm": "Storm",
+                    "violent_storm": "Violent Storm",
+                    "hurricane": "Hurricane"
+                }
+            },
+            "wind_cardinal": {
+                "state": {
+                    "n": "N",
+                    "nne": "NNE",
+                    "ne": "NE",
+                    "ene": "ENE",
+                    "e": "E",
+                    "ese": "ESE",
+                    "se": "SE",
+                    "sse": "SSE",
+                    "s": "S",
+                    "ssw": "SSW",
+                    "sw": "SW",
+                    "wsw": "WSW",
+                    "w": "W",
+                    "wnw": "WNW",
+                    "nw": "NW",
+                    "nnw": "NNW"
+                }
+            },
+            "uv_description": {
+                "state": {
+                    "extreme": "Extreme",
+                    "very-high": "Very High",
+                    "high": "High",
+                    "moderate": "Moderate",
+                    "low": "Low",
+                    "none": "No Light"
                 }
             }
         }

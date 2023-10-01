@@ -2,30 +2,33 @@ alias: "Licht buiten_lowpass"
 id: 827c4b46-d0b8-460a-9436-747dee073906
 mode: parallel
 trigger:
-  # - platform: numeric_state
-  #   entity_id: sensor.huidige_opbrengst
-  #   above: 30
-  - platform: numeric_state
-    entity_id: sensor.estimated_illuminance_normal
-    above: 800
+  - platform: template
+    value_template: >
+      {{ states("sensor.huidige_opbrengst") | int(0) > 0 and
+        states("sensor.zonne_opbrengst") | int(0) > 0 }}
     id: binnen
-  - platform: numeric_state
-    entity_id: sensor.estimated_illuminance_normal
-    above: 250
+  - platform: template
+    value_template: >
+      {{ states("sensor.huidige_opbrengst") | int(0) > 0 }}
+    for:
+      minutes: 5
     id: buiten
+  - platform: numeric_state
+    entity_id: sensor.buiten_lichtsterkte
+    above: 650
+    for:
+      minutes: 5
+    id: binnen
   # - platform: numeric_state
-  #   entity_id: sun.sun
-  #   value_template: "{{ state.attributes.elevation }}"
-  #   above: 6.0
-  # - platform: numeric_state
-  #   entity_id: sensor.zonne_energie_omvormers_gefilterd_lowpass
-  #   above: 100
-# condition:
-#   - condition: state
-#     entity_id: input_boolean.donker_binnen_lowpass
-#     state: "off"
-#     for:
-#       hours: 2
+  #   entity_id: sensor.estimated_illuminance_normal
+  #   above: 250
+
+  - platform: numeric_state
+    entity_id: sensor.buiten_lichtsterkte
+    above: 150
+    for:
+      minutes: 5
+    id: buiten
 
 action:
   - choose:
