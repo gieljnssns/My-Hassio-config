@@ -1,13 +1,14 @@
 substitutions:
-  devicename: knop_martine
+  devicename: knop-martine
   platform: ESP8266
   board: nodemcuv2
   upper_devicename: Knop Martine
   ssid: !secret ssid-slaapkamer
-  manual_ip: 192.168.89.104
+  manual_ip: 192.168.79.139
 
 packages:
-  wifi: !include common/wifi-slaapkamer.yaml
+  # wifi: !include common/wifi-slaapkamer.yaml
+  wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
 output:
@@ -15,6 +16,7 @@ output:
     pin: D0
     id: redgpio
 
+     
 light:
   - platform: monochromatic
     name: "Led knop Martine"
@@ -23,6 +25,19 @@ light:
     effects:
       - strobe:
       - flicker:
+        
+sensor:
+  - platform: dht
+    pin: D1
+    model: DHT22
+    temperature:
+      accuracy_decimals: 1
+      name: "Temperatuur slaapkamer 2"
+    humidity:
+      accuracy_decimals: 1
+      name: "Luchtvochtigheid slaapkamer"
+    update_interval: 60s
+
 
 binary_sensor:
   - platform: gpio

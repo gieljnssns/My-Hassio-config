@@ -7,7 +7,7 @@ substitutions:
   max_power: '3600.0'
   max_temp: '80.0'
   ssid: !secret ssid-living
-  manual_ip: 192.168.89.96
+  manual_ip: 192.168.79.132
 
 esphome:
   name: shelly-plus-1pm-warmtepomp
@@ -25,7 +25,8 @@ esp32:
       CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ: "160"
 
 packages:
-  wifi: !include common/wifi-living.yaml
+  # wifi: !include common/wifi-living.yaml
+  wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
 # wifi:
@@ -42,29 +43,29 @@ switch:
     name: "${upper_devicename}"
     output: "relay_output"
     
-binary_sensor:
-  # - platform: gpio
-  #   name: "${upper_devicename} input"
-  #   pin: GPIO4
-  #   on_press:
-  #     then:
-  #       - switch.toggle: "relay"
-  #   filters:
-  #     - delayed_on_off: 50ms
-  - platform: gpio
-    internal: true
-    name: "${upper_devicename} Button"
-    pin:
-      number: GPIO25
-      inverted: yes
-      mode:
-        input: true
-        pullup: true
-    on_press:
-      then:
-        - switch.toggle: "relay"
-    filters:
-      - delayed_on_off: 5ms
+# binary_sensor:
+#   # - platform: gpio
+#   #   name: "${upper_devicename} input"
+#   #   pin: GPIO4
+#   #   on_press:
+#   #     then:
+#   #       - switch.toggle: "relay"
+#   #   filters:
+#   #     - delayed_on_off: 50ms
+#   - platform: gpio
+#     internal: true
+#     name: "${upper_devicename} Button"
+#     pin:
+#       number: GPIO25
+#       inverted: yes
+#       mode:
+#         input: true
+#         pullup: true
+#     on_press:
+#       then:
+#         - switch.toggle: "relay"
+#     filters:
+#       - delayed_on_off: 5ms
 
 sensor:
   - platform: ntc
@@ -91,7 +92,7 @@ sensor:
     sensor: temp_analog_reading
     configuration: DOWNSTREAM
     # resistor: 6kOhm
-    resistor: 7.5kOhm
+    resistor: 10kOhm
     name: "${upper_devicename} resistance"
   - platform: adc
     internal: true
@@ -99,7 +100,7 @@ sensor:
     pin: GPIO32
     attenuation: 11db
     name: "${upper_devicename} analog"
-    update_interval: 10s
+    update_interval: 60s
 
   # - platform: adc
   #   name: "${upper_devicename} Relay Supply Voltage"
@@ -122,11 +123,13 @@ sensor:
       unit_of_measurement: A
       accuracy_decimals: 3
       icon: mdi:flash-outline
+      internal: True
     voltage:
       name: "${upper_devicename} Voltage"
       unit_of_measurement: V
       accuracy_decimals: 1
       icon: mdi:flash-outline
+      internal: True
     power:
       name: "${upper_devicename} Power"
       unit_of_measurement: W
@@ -137,7 +140,7 @@ sensor:
           then:
             - switch.turn_off: "relay"
     change_mode_every: 2
-    update_interval: 10s
+    update_interval: 2s
   - platform: total_daily_energy
     name: "${upper_devicename} Daily energy consumed"
     power_id: power
@@ -145,6 +148,7 @@ sensor:
         - multiply: 0.001
     unit_of_measurement: kWh
     icon: mdi:clock-alert
+    internal: True
 
 status_led:
   pin:

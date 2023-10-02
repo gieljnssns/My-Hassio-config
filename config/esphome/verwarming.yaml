@@ -1,13 +1,14 @@
 substitutions:
-  devicename: verwarming_3
+  devicename: verwarming-3
   platform: ESP8266
   board: nodemcuv2
   upper_devicename: Esp verwarming
   ssid: !secret ssid-living
-  manual_ip: 192.168.89.111
+  manual_ip: 192.168.79.144
 
 packages:
-  wifi: !include common/wifi-living.yaml
+  # wifi: !include common/wifi-living.yaml
+  wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
   
@@ -49,7 +50,7 @@ sensor:
     name: "Thermostaat"
     dallas_id: masser
     on_value_range:
-      above: 48
+      above: 49
       then:
         if:
           condition:
@@ -74,117 +75,7 @@ sensor:
       name: "Kelder luchtvochtigheid"
     update_interval: 60s
 
-binary_sensor:
-  - platform: homeassistant
-    name: "1u"
-    id: u
-    internal: true
-    entity_id: input_boolean.warm_water_1u
-    on_press:
-      then:
-        - switch.turn_on: warm_water
-        # - homeassistant.service:
-        #         service: notify.mobile_app_gphone
-        #         data:
-        #           message: Warmtepompboiler 1u aan
-        - delay: 1h
-        - switch.turn_off: warm_water
-        - homeassistant.service:
-            service: input_boolean.turn_off
-            data:
-              entity_id: input_boolean.warm_water_1u
-        # - homeassistant.service:
-        #         service: notify.mobile_app_gphone
-        #         data:
-        #           message: Warmtepompboiler 1u uit
-  - platform: homeassistant
-    name: "2u"
-    id: uu
-    internal: true
-    entity_id: input_boolean.warm_water_2u
-    on_press:
-      then:
-        - switch.turn_on: warm_water
-        # - homeassistant.service:
-        #         service: notify.mobile_app_gphone
-        #         data:
-        #           message: Warmtepompboiler 2u aan
-        - delay: 2h
-        - switch.turn_off: warm_water
-        - homeassistant.service:
-            service: input_boolean.turn_off
-            data:
-              entity_id: input_boolean.warm_water_2u
-        # - homeassistant.service:
-        #         service: notify.mobile_app_gphone
-        #         data:
-        #           message: Warmtepompboiler 2u uit
-  - platform: homeassistant
-    name: "3u"
-    id: uuu
-    internal: true
-    entity_id: input_boolean.warm_water_3u
-    on_press:
-      then:
-        - switch.turn_on: warm_water
-        # - homeassistant.service:
-        #         service: notify.mobile_app_gphone
-        #         data:
-        #           message: Warmtepompboiler 3u aan
-        - delay: 3h
-        - switch.turn_off: warm_water
-        - homeassistant.service:
-            service: input_boolean.turn_off
-            data:
-              entity_id: input_boolean.warm_water_3u
-        # - homeassistant.service:
-        #         service: notify.mobile_app_gphone
-        #         data:
-        #           message: Warmtepompboiler 3u uit
-  - platform: homeassistant
-    name: "4u"
-    id: uuuu
-    internal: true
-    entity_id: input_boolean.warm_water_4u
-    on_press:
-      then:
-        - switch.turn_on: warm_water
-        # - homeassistant.service:
-        #         service: notify.mobile_app_gphone
-        #         data:
-        #           message: Warmtepompboiler 4u aan
-        - delay: 4h
-        - switch.turn_off: warm_water
-        - homeassistant.service:
-            service: input_boolean.turn_off
-            data:
-              entity_id: input_boolean.warm_water_4u
-        # - homeassistant.service:
-        #         service: notify.mobile_app_gphone
-        #         data:
-        #           message: Warmtepompboiler 4u uit
-  - platform: homeassistant
-    name: "5u"
-    id: uuuuu
-    internal: true
-    entity_id: input_boolean.warm_water_5u
-    on_press:
-      then:
-        - switch.turn_on: warm_water
-        # - homeassistant.service:
-        #         service: notify.mobile_app_gphone
-        #         data:
-        #           message: Warmtepompboiler 5u aan
-        - delay: 5h
-        - switch.turn_off: warm_water
-        - homeassistant.service:
-            service: input_boolean.turn_off
-            data:
-              entity_id: input_boolean.warm_water_5u
-        # - homeassistant.service:
-        #         service: notify.mobile_app_gphone
-        #         data:
-        #           message: Warmtepompboiler 5u uit
+
     
 switch:
   - platform: gpio
@@ -196,14 +87,145 @@ switch:
   
   - platform: gpio
     pin:
+      number: D3
+      # inverted: yes
+    name: "Warm water snel"
+    id: warm_water_snel
+    on_turn_on:
+      - delay: 500ms
+      - switch.turn_off: warm_water_snel
+
+  - platform: gpio
+    pin:
+      number: D7
+      # inverted: yes
+    name: "Verwarming"
+    id: verwarming
+
+  - platform: gpio
+    pin:
       number: D5
       # inverted: yes
     name: "Warm water"
     id: warm_water
-    on_turn_off:
-    - homeassistant.service:
-        service: input_boolean.turn_off
-        data:
-          entity_id: input_boolean.warm_water_2u, input_boolean.warm_water_3u, input_boolean.warm_water_4u, input_boolean.warm_water_5u
+    # on_turn_on:
+    #   - delay: 500ms
+    #   - switch.turn_off: warm_water_snel
+    # on_turn_off:
+    # - homeassistant.service:
+    #     service: input_boolean.turn_off
+    #     data:
+    #       entity_id: input_boolean.warm_water_2u, input_boolean.warm_water_3u, input_boolean.warm_water_4u, input_boolean.warm_water_5u
   
 
+# binary_sensor:
+#   - platform: homeassistant
+#     name: "1u"
+#     id: u
+#     internal: true
+#     entity_id: input_boolean.warm_water_1u
+#     on_press:
+#       then:
+#         - switch.turn_on: warm_water
+#         # - homeassistant.service:
+#         #         service: notify.mobile_app_gphone
+#         #         data:
+#         #           message: Warmtepompboiler 1u aan
+#         - delay: 1h
+#         - switch.turn_off: warm_water
+#         - homeassistant.service:
+#             service: input_boolean.turn_off
+#             data:
+#               entity_id: input_boolean.warm_water_1u
+#         # - homeassistant.service:
+#         #         service: notify.mobile_app_gphone
+#         #         data:
+#         #           message: Warmtepompboiler 1u uit
+#   - platform: homeassistant
+#     name: "2u"
+#     id: uu
+#     internal: true
+#     entity_id: input_boolean.warm_water_2u
+#     on_press:
+#       then:
+#         - switch.turn_on: warm_water
+#         # - homeassistant.service:
+#         #         service: notify.mobile_app_gphone
+#         #         data:
+#         #           message: Warmtepompboiler 2u aan
+#         - delay: 2h
+#         - switch.turn_off: warm_water
+#         - homeassistant.service:
+#             service: input_boolean.turn_off
+#             data:
+#               entity_id: input_boolean.warm_water_2u
+#         # - homeassistant.service:
+#         #         service: notify.mobile_app_gphone
+#         #         data:
+#         #           message: Warmtepompboiler 2u uit
+#   - platform: homeassistant
+#     name: "3u"
+#     id: uuu
+#     internal: true
+#     entity_id: input_boolean.warm_water_3u
+#     on_press:
+#       then:
+#         - switch.turn_on: warm_water
+#         # - homeassistant.service:
+#         #         service: notify.mobile_app_gphone
+#         #         data:
+#         #           message: Warmtepompboiler 3u aan
+#         - delay: 3h
+#         - switch.turn_off: warm_water
+#         - homeassistant.service:
+#             service: input_boolean.turn_off
+#             data:
+#               entity_id: input_boolean.warm_water_3u
+#         # - homeassistant.service:
+#         #         service: notify.mobile_app_gphone
+#         #         data:
+#         #           message: Warmtepompboiler 3u uit
+#   - platform: homeassistant
+#     name: "4u"
+#     id: uuuu
+#     internal: true
+#     entity_id: input_boolean.warm_water_4u
+#     on_press:
+#       then:
+#         - switch.turn_on: warm_water
+#         # - homeassistant.service:
+#         #         service: notify.mobile_app_gphone
+#         #         data:
+#         #           message: Warmtepompboiler 4u aan
+#         - delay: 4h
+#         - switch.turn_off: warm_water
+#         - homeassistant.service:
+#             service: input_boolean.turn_off
+#             data:
+#               entity_id: input_boolean.warm_water_4u
+#         # - homeassistant.service:
+#         #         service: notify.mobile_app_gphone
+#         #         data:
+#         #           message: Warmtepompboiler 4u uit
+#   - platform: homeassistant
+#     name: "5u"
+#     id: uuuuu
+#     internal: true
+#     entity_id: input_boolean.warm_water_5u
+#     on_press:
+#       then:
+#         - switch.turn_on: warm_water
+#         # - homeassistant.service:
+#         #         service: notify.mobile_app_gphone
+#         #         data:
+#         #           message: Warmtepompboiler 5u aan
+#         - delay: 5h
+#         - switch.turn_off: warm_water
+#         - homeassistant.service:
+#             service: input_boolean.turn_off
+#             data:
+#               entity_id: input_boolean.warm_water_5u
+#         # - homeassistant.service:
+#         #         service: notify.mobile_app_gphone
+#         #         data:
+#         #           message: Warmtepompboiler 5u uit

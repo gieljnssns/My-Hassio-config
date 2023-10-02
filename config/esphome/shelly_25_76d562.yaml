@@ -1,5 +1,5 @@
 substitutions:
-  devicename: shelly_25_76d562
+  devicename: shelly-25-76d562
   platform: ESP8266
   board: esp01_1m
   upper_devicename: Shelly Danszaal spots/Wc
@@ -8,10 +8,11 @@ substitutions:
   max_power: '2000.0'
   max_temp: '75.0'
   ssid: !secret ssid-waskot
-  manual_ip: 192.168.89.88
+  manual_ip: 192.168.79.125
 
 packages:
-  wifi: !include common/wifi-waskot.yaml
+  # wifi: !include common/wifi-waskot.yaml
+  wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
 wifi:
@@ -25,6 +26,7 @@ sensor:
   - platform: ade7953
     voltage:
       name: ${upper_devicename} spanning
+      internal: True
     current_a:
       name: ${channel_2} stroom
       internal: true
@@ -63,21 +65,21 @@ sensor:
                   message: Switch turned off because power ${channel_1} exceeded ${max_power}W
     update_interval: 30s
 
-  - platform: total_daily_energy
-    name: ${channel_1} energie
-    power_id: power_channel_1
-    filters:
-        # Multiplication factor from W to kW is 0.001
-        - multiply: 0.001
-    unit_of_measurement: kW
+  # - platform: total_daily_energy
+  #   name: ${channel_1} energie
+  #   power_id: power_channel_1
+  #   filters:
+  #       # Multiplication factor from W to kW is 0.001
+  #       - multiply: 0.001
+  #   unit_of_measurement: kW
   
-  - platform: total_daily_energy
-    name: ${channel_2} energie
-    power_id: power_channel_2
-    filters:
-        # Multiplication factor from W to kW is 0.001
-        - multiply: 0.001
-    unit_of_measurement: kW
+  # - platform: total_daily_energy
+  #   name: ${channel_2} energie
+  #   power_id: power_channel_2
+  #   filters:
+  #       # Multiplication factor from W to kW is 0.001
+  #       - multiply: 0.001
+  #   unit_of_measurement: kW
     
   # NTC Temperature
   - platform: ntc

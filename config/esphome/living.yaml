@@ -1,0 +1,324 @@
+substitutions:
+  devicename: living
+  upper_devicename: Living
+  ssid: !secret ssid
+  zithoek: Zithoek
+  danszaal: Danszaal
+  manual_ip: 192.168.79.154
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+esphome:
+  name: ${devicename}
+
+i2c:
+   - id: bus_a
+     sda: 21
+     scl: 22
+     scan: true
+
+uart:
+  - id: zithoek1
+    tx_pin: 1
+    rx_pin: 3
+    baud_rate: 256000
+    parity: NONE
+    stop_bits: 1
+  - id: danszaal1
+    tx_pin: 17
+    rx_pin: 16
+    baud_rate: 256000
+    parity: NONE
+    stop_bits: 1
+
+
+ld2410:
+  - id: zithoek
+    uart_id: zithoek1
+  - id: danszaal
+    uart_id: danszaal1
+
+number:
+  - platform: ld2410
+    ld2410_id: zithoek
+    timeout:
+      name: ${zithoek} timeout
+    max_move_distance_gate:
+      name: ${zithoek} max_move_distance
+    max_still_distance_gate:
+      name: ${zithoek} max_still_distance
+    g0:
+      move_threshold:
+        name: ${zithoek} g0 move
+      still_threshold:
+        name: ${zithoek} g0 still
+    g1:
+      move_threshold:
+        name: ${zithoek} g1 move
+      still_threshold:
+        name: ${zithoek} g1 still
+    g2:
+      move_threshold:
+        name: ${zithoek} g2 move
+      still_threshold:
+        name: ${zithoek} g2 still
+    g3:
+      move_threshold:
+        name: ${zithoek} g3 move
+      still_threshold:
+        name: ${zithoek} g3 still
+    g4:
+      move_threshold:
+        name: ${zithoek} g4 move
+      still_threshold:
+        name: ${zithoek} g4 still
+    g5:
+      move_threshold:
+        name: ${zithoek} g5 move
+      still_threshold:
+        name: ${zithoek} g5 still
+    g6:
+      move_threshold:
+        name: ${zithoek} g6 move
+      still_threshold:
+        name: ${zithoek} g6 still
+    g7:
+      move_threshold:
+        name: ${zithoek} g7 move
+      still_threshold:
+        name: ${zithoek} g7 still
+    g8:
+      move_threshold:
+        name: ${zithoek} g8 move
+      still_threshold:
+        name: ${zithoek} g8 still
+  
+  - platform: ld2410
+    ld2410_id: danszaal
+    timeout:
+      name: ${danszaal} timeout
+    max_move_distance_gate:
+      name: ${danszaal} max_move_distance
+    max_still_distance_gate:
+      name: ${danszaal} max_still_distance
+    g0:
+      move_threshold:
+        name: ${danszaal} g0 move
+      still_threshold:
+        name: ${danszaal} g0 still
+    g1:
+      move_threshold:
+        name: ${danszaal} g1 move
+      still_threshold:
+        name: ${danszaal} g1 still
+    g2:
+      move_threshold:
+        name: ${danszaal} g2 move
+      still_threshold:
+        name: ${danszaal} g2 still
+    g3:
+      move_threshold:
+        name: ${danszaal} g3 move
+      still_threshold:
+        name: ${danszaal} g3 still
+    g4:
+      move_threshold:
+        name: ${danszaal} g4 move
+      still_threshold:
+        name: ${danszaal} g4 still
+    g5:
+      move_threshold:
+        name: ${danszaal} g5 move
+      still_threshold:
+        name: ${danszaal} g5 still
+    g6:
+      move_threshold:
+        name: ${danszaal} g6 move
+      still_threshold:
+        name: ${danszaal} g6 still
+    g7:
+      move_threshold:
+        name: ${danszaal} g7 move
+      still_threshold:
+        name: ${danszaal} g7 still
+    g8:
+      move_threshold:
+        name: ${danszaal} g8 move
+      still_threshold:
+        name: ${danszaal} g8 still
+
+switch:
+  - platform: ld2410
+    ld2410_id: zithoek
+    engineering_mode:
+      name: ${zithoek} engineering mode
+    bluetooth:
+      name: ${zithoek} bluetooth
+  
+  - platform: ld2410
+    ld2410_id: danszaal
+    engineering_mode:
+      name: ${danszaal} engineering mode
+    bluetooth:
+      name: ${danszaal} bluetooth
+
+sensor:
+  - platform: bme280
+    temperature:
+      name: "${upper_devicename} temperatuur"
+      id: bme280_temperature
+      oversampling: 1x
+    humidity:
+      name: "${upper_devicename} luchtvochtigheid"
+      id: bme280_humidity
+      oversampling: 1x
+    address: 0x76
+    i2c_id: bus_a
+    update_interval: 60s
+
+  - platform: ld2410
+    ld2410_id: zithoek
+    moving_distance:
+      name : ${zithoek} Moving Distance
+    still_distance:
+      name: ${zithoek} Still Distance
+    moving_energy:
+      name: ${zithoek} Move Energy
+    still_energy:
+      name: ${zithoek} Still Energy
+    detection_distance:
+      name: ${zithoek} Detection Distance
+    
+    g0:
+      move_energy:
+        name: ${zithoek} g0 move energy
+      still_energy:
+        name: ${zithoek} g0 still energy
+    g1:
+      move_energy:
+        name: ${zithoek} g1 move energy
+      still_energy:
+        name: ${zithoek} g1 still energy
+    g2:
+      move_energy:
+        name: ${zithoek} g2 move energy
+      still_energy:
+        name: ${zithoek} g2 still energy
+    g3:
+      move_energy:
+        name: ${zithoek} g3 move energy
+      still_energy:
+        name: ${zithoek} g3 still energy
+    g4:
+      move_energy:
+        name: ${zithoek} g4 move energy
+      still_energy:
+        name: ${zithoek} g4 still energy
+    g5:
+      move_energy:
+        name: ${zithoek} g5 move energy
+      still_energy:
+        name: ${zithoek} g5 still energy
+    g6:
+      move_energy:
+        name: ${zithoek} g6 move energy
+      still_energy:
+        name: ${zithoek} g6 still energy
+    g7:
+      move_energy:
+        name: ${zithoek} g7 move energy
+      still_energy:
+        name: ${zithoek} g7 still energy
+    g8:
+      move_energy:
+        name: ${zithoek} g8 move energy
+      still_energy:
+        name: ${zithoek} g8 still energy
+  
+  - platform: ld2410
+    ld2410_id: danszaal
+    moving_distance:
+      name : ${danszaal} Moving Distance
+    still_distance:
+      name: ${danszaal} Still Distance
+    moving_energy:
+      name: ${danszaal} Move Energy
+    still_energy:
+      name: ${danszaal} Still Energy
+    detection_distance:
+      name: ${danszaal} Detection Distance
+    
+    g0:
+      move_energy:
+        name: ${danszaal} g0 move energy
+      still_energy:
+        name: ${danszaal} g0 still energy
+    g1:
+      move_energy:
+        name: ${danszaal} g1 move energy
+      still_energy:
+        name: ${danszaal} g1 still energy
+    g2:
+      move_energy:
+        name: ${danszaal} g2 move energy
+      still_energy:
+        name: ${danszaal} g2 still energy
+    g3:
+      move_energy:
+        name: ${danszaal} g3 move energy
+      still_energy:
+        name: ${danszaal} g3 still energy
+    g4:
+      move_energy:
+        name: ${danszaal} g4 move energy
+      still_energy:
+        name: ${danszaal} g4 still energy
+    g5:
+      move_energy:
+        name: ${danszaal} g5 move energy
+      still_energy:
+        name: ${danszaal} g5 still energy
+    g6:
+      move_energy:
+        name: ${danszaal} g6 move energy
+      still_energy:
+        name: ${danszaal} g6 still energy
+    g7:
+      move_energy:
+        name: ${danszaal} g7 move energy
+      still_energy:
+        name: ${danszaal} g7 still energy
+    g8:
+      move_energy:
+        name: ${danszaal} g8 move energy
+      still_energy:
+        name: ${danszaal} g8 still energy
+  
+
+binary_sensor:
+  - platform: ld2410
+    ld2410_id: zithoek
+    has_target:
+      name: ${zithoek} Presence
+    has_moving_target:
+      name: ${zithoek} Moving Target
+    has_still_target:
+      name: ${zithoek} Still Target
+  
+  - platform: ld2410
+    ld2410_id: danszaal
+    has_target:
+      name: ${danszaal} Presence
+    has_moving_target:
+      name: ${danszaal} Moving Target
+    has_still_target:
+      name: ${danszaal} Still Target
+
+  

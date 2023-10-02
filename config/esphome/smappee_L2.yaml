@@ -1,13 +1,14 @@
 substitutions:
-  devicename: smappee_l2
+  devicename: smappee-l2
   platform: ESP8266
   board: nodemcuv2
   upper_devicename: Smappee L2
   ssid: !secret ssid-waskot
-  manual_ip: 192.168.89.115
+  manual_ip: 192.168.79.148
 
 packages:
-  wifi: !include common/wifi-waskot.yaml
+  # wifi: !include common/wifi-waskot.yaml
+  wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
 uart:
@@ -24,6 +25,16 @@ modbus:
 sun:
   latitude: !secret latitude
   longitude: !secret longitude
+
+binary_sensor:
+  - platform: homeassistant
+    name: ${upper_devicename} huawei has power
+    id: huawei_has_power
+    entity_id: binary_sensor.huawei_has_power
+  - platform: homeassistant
+    name: ${upper_devicename} solaredge has power
+    id: solaredge_has_power
+    entity_id: binary_sensor.solaredge_has_power
   
 sensor:
   - platform: sun
@@ -36,124 +47,123 @@ sensor:
     address: 1
     modbus_id: mbus
     current:
-      #name: "L2 stroom"
+      name: "L2 stroom"
       id: currentL2
+      internal: true
     voltage:
-      #name: "L2 spanning"
+      name: "L2 spanning"
       id: voltageL2
+      internal: true
     energy:
       #name: "L2 energie"
       id: energyL2
+      internal: true
     power:
-      # name: "L2_test"
+      name: "L2 test"
       id: powerL2
+      internal: true
     frequency:
       #name: "L2 frequentie"
       id: L2freq
+      internal: true
     power_factor:
       #name: "L2 cos phi"
       id: L2cosphi
-    update_interval: 4s
+      internal: true
+    update_interval: 2s
   - platform: pzemac
     address: 2
     modbus_id: mbus
     current:
-      #name: "S2 stroom"
+      name: "S2 stroom"
       id: currentS2
+      internal: true
     voltage:
-      #name: "S2 spanning"
+      name: "S2 spanning"
       id: voltageS2
+      internal: true
     energy:
       #name: "S2 energie"
       id: energyS2
+      internal: true
     power:
-      # name: "S2_test"
+      name: "S2 test"
       id: powerS2
+      internal: true
     frequency:
       #name: "S2 frequentie"
       id: S2freq
+      internal: true
     power_factor:
       #name: "S2 cos phi"
       id: S2cosphi
-    update_interval: 4s
+      internal: true
+    update_interval: 2s
   - platform: pzemac
     address: 3
     modbus_id: mbus
     current:
-      #name: "V2 stroom"
+      name: "V2 stroom"
       id: currentV2
+      internal: true
     voltage:
-      #name: "V2 spanning"
+      name: "V2 spanning"
       id: voltageV2
+      internal: true
     energy:
       #name: "V2 energie"
       id: energyV2
+      internal: true
     power:
-      # name: "V2_test"
+      name: "V2 test"
       id: powerV2
+      internal: true
     frequency:
       #name: "V2 frequentie"
       id: V2freq
+      internal: true
     power_factor:
       #name: "V2 cos phi"
       id: V2cosphi
-    update_interval: 4s
+      internal: true
+    update_interval: 2s
+    
   ###  Template sensors  ###
-  # - platform: template
-  #   name: "L2 schijnbaar vermogen"
-  #   id: reactive_power_L2
-  #   update_interval: 2s
-  #   unit_of_measurement: "VA"
-  #   # internal: true
-  #   lambda: |-
-  #     return (id(currentL2).state * id(voltageL2).state);
-  # - platform: template
-  #   name: "S2 schijnbaar vermogen"
-  #   id: reactive_power_S2
-  #   update_interval: 2s
-  #   unit_of_measurement: "VA"
-  #   # internal: true
-  #   lambda: |-
-  #     return (id(currentS2).state * id(voltageS2).state);
-  # - platform: template
-  #   name: "V2 schijnbaar vermogen"
-  #   id: reactive_power_V2
-  #   update_interval: 2s
-  #   unit_of_measurement: "VA"
-  #   # internal: true
-  #   lambda: |-
-  #     return (id(currentV2).state * id(voltageV2).state);
-  
   - platform: template
     name: "V2 vermogen"
     id: powerV2_test2
     update_interval: 2s
     unit_of_measurement: "W"
-    # internal: true
     lambda: !lambda |-
-      if (( -6 < (id(powerL2).state - id(powerS2).state) - id(powerV2).state && (id(powerL2).state - id(powerS2).state) - id(powerV2).state < 6 )  || (id(elevation).state < 0))   {
-        return id(powerL2).state;
-      } else {
+      if (id(huawei_has_power).state || id(solaredge_has_power).state){
         return id(powerV2).state;
+      } else {
+        return id(powerL2).state;
       }
-    on_value:
-      then:
-        - if:
-            condition:
-              # Should return either true or false
-              lambda: |-
-                return x == id(powerL2).state;
-            then:
-              - sensor.template.publish:
-                  id: powerS2_test2
-                  state: 0
-            else:
-              - sensor.template.publish:
-                  id: powerS2_test2
-                  state: !lambda 'return id(powerS2).state;'
-              # - logger.log: 
-              #     format: "(L2 - S2) - V2 = %.1f"
-              #     args: [ '(id(powerL2).state - id(powerS2).state) - id(powerV2).state' ]
+    # lambda: !lambda |-
+    #   if (( -6 < (id(powerL2).state - id(powerS2).state) - id(powerV2).state && (id(powerL2).state - id(powerS2).state) - id(powerV2).state < 6 )  || (id(elevation).state < 0))   {
+    #     return id(powerL2).state;
+    #   } else {
+    #     return id(powerV2).state;
+    #   }
+    # on_value:
+    #   then:
+    #     - if:
+    #         condition:
+    #           # Should return either true or false
+    #           lambda: |-
+    #             return x == id(powerL2).state;
+    #         then:
+    #           - sensor.template.publish:
+    #               id: powerS2_test2
+    #               state: 0
+    #         else:
+    #           - sensor.template.publish:
+    #               id: powerS2_test2
+    #               state: !lambda 'return id(powerS2).state;'
+    #           # - logger.log: 
+    #           #     format: "(L2 - S2) - V2 = %.1f"
+    #           #     args: [ '(id(powerL2).state - id(powerS2).state) - id(powerV2).state' ]
   
   
   - platform: template
@@ -161,6 +171,12 @@ sensor:
     id: powerS2_test2
     update_interval: 2s
     unit_of_measurement: "W"
+    lambda: !lambda |-
+      if (id(huawei_has_power).state || id(solaredge_has_power).state){
+        return id(powerS2).state;
+      } else {
+        return 0;
+      }
   
   - platform: template
     name: "L2 vermogen"
@@ -206,12 +222,3 @@ sensor:
     id: grid_consumption_test2
     update_interval: 2s
     unit_of_measurement: "W"
-    
-  # - platform: template
-  #   name: "L2-S2-V2"
-  #   id: l_s_v
-  #   update_interval: 2s
-  #   unit_of_measurement: "W"
-  #   lambda: !lambda |-
-  #     return (id(powerL2).state - id(powerS2).state) - id(powerV2).state;
-

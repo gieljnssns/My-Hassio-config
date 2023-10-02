@@ -1,13 +1,14 @@
 substitutions:
-  devicename: stopcontacten_buiten_garage
+  devicename: stopcontacten-buiten-garage
   platform: ESP8266
   board: nodemcuv2
   upper_devicename: Esp garage
   ssid: !secret ssid-garage
-  manual_ip: 192.168.89.107
+  manual_ip: 192.168.79.142
 
 packages:
-  wifi: !include common/wifi-garage.yaml
+  # wifi: !include common/wifi-garage.yaml
+  wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
 switch:
@@ -59,3 +60,19 @@ binary_sensor:
     pin: D1
     name: "Beweging in garage"
     device_class: motion
+    
+text_sensor:
+  - platform: wifi_info
+    scan_results:
+      name: "WIFIs in range"
+      icon: "mdi:wifi-marker"
+  # - platform: wifi_info
+  #   scan_results:
+  #     name: ESP Latest Scan Results
+
+api:
+  services:
+    - service: scan_wifi
+      then:
+        - lambda: |-
+            wifi::global_wifi_component->start_scanning();

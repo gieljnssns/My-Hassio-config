@@ -1,0 +1,368 @@
+substitutions:
+  devicename: buitenv2
+  platform: ESP8266
+  board: nodemcuv2
+  upper_devicename: Buiten
+  ssid: !secret ssid
+  manual_ip: 192.168.79.152
+  
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base.yaml
+
+api:
+  encryption:
+    key: "EGwnyXdMI0xumrYcRMZZuK2sT68gO8w82Rp2rL0NAcI="
+
+ota:
+  password: "d188598b530916a19737c4c2efeb52ae"
+
+i2c:
+  sda: D2
+  scl: D1
+  scan: true
+  id: bus_a
+
+#i2c:
+#  sda: 4
+#  scl: 5
+#  scan: true
+#  id: bus_a
+
+uart:
+  tx_pin: 1
+  rx_pin: 3
+  baud_rate: 9600
+
+switch:
+  - platform: gpio
+    pin:
+      number: D5
+    name: "Weerstation fan"
+    # inverted: true
+    id: fan
+
+sensor:
+  - platform: bh1750
+    name: "Buiten lichtsterkte"
+    address: 0x23
+    update_interval: 60s
+    on_value_range:
+      - above: 500
+        then:
+          - switch.turn_on: fan
+      - below: 500
+        then:
+          - switch.turn_off: fan
+
+  - platform: bme280
+    temperature:
+      name: "Buiten temperatuur"
+      id: bme280_temperature
+      oversampling: 1x
+    pressure:
+      name: "Buiten luchtdruk"
+      id: bme280_pressure
+      oversampling: 1x
+    humidity:
+      name: "Buiten luchtvochtigheid"
+      id: bme280_humidity
+      oversampling: 1x
+    address: 0x76
+    i2c_id: bus_a
+    update_interval: 60s
+  
+  - platform: template
+    name: "Buiten dauwpunt"
+    lambda: |-
+      return (243.5*(log(id(bme280_humidity).state/100)+((17.67*id(bme280_temperature).state)/
+      (243.5+id(bme280_temperature).state)))/(17.67-log(id(bme280_humidity).state/100)-
+      ((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state))));
+    unit_of_measurement: °C
+    icon: 'mdi:thermometer-alert'
+
+#   - platform: sds011
+#     pm_2_5:
+#       name: "Particulate Matter <2.5µm Concentration"
+#       id: PM25
+#     pm_10_0:
+#       name: "Particulate Matter <10.0µm Concentration"
+#       id: PM100
+#     update_interval: 5min
+  
+#   - platform: template
+#     name: "Buiten PM <2.5µm 1 Hour Avg"
+#     id: PM251Hour
+#     unit_of_measurement: 'µg/m³'
+#     update_interval: 5min
+#     state_class: measurement
+#     icon: mdi:chemical-weapon
+#     lambda: |-
+#       return (id(PM25).state);
+#     filters:
+#     - filter_out: nan
+#     - sliding_window_moving_average:
+#         window_size: 6
+#         send_every: 1
+#         send_first_at: 1
+
+#   - platform: template
+#     name: "Buiten PM <2.5µm 24 Hour Avg"
+#     id: PM2524Hour
+#     unit_of_measurement: 'µg/m³'
+#     update_interval: 60min
+#     state_class: measurement
+#     icon: mdi:chemical-weapon
+#     lambda: |-
+#       return (id(PM251Hour).state);
+#     filters:
+#     - filter_out: nan
+#     - sliding_window_moving_average:
+#         window_size: 24
+#         send_every: 1
+#         send_first_at: 1
+
+#   - platform: template
+#     name: "Buiten PM <10.0µm 1 Hour Avg"
+#     id: PM1001Hour
+#     unit_of_measurement: 'µg/m³'
+#     update_interval: 5min
+#     state_class: measurement
+#     icon: mdi:chemical-weapon
+#     lambda: |-
+#       return (id(PM100).state);
+#     filters:
+#     - filter_out: nan
+#     - sliding_window_moving_average:
+#         window_size: 6
+#         send_every: 1
+#         send_first_at: 1
+
+#   - platform: template
+#     name: "Buiten PM <10.0µm 24 Hour Avg"
+#     id: PM10024Hour
+#     unit_of_measurement: 'µg/m³'
+#     update_interval: 60min
+#     state_class: measurement
+#     icon: mdi:chemical-weapon
+#     lambda: |-
+#       return (id(PM1001Hour).state);
+#     filters:
+#     - filter_out: nan
+#     - sliding_window_moving_average:
+#         window_size: 24
+#         send_every: 1
+#         send_first_at: 1
+
+#   - platform: template
+#     name: "Buiten PM2.5µm 24 Hour AQI"
+#     id: SDS011_PM25_AQI
+#     unit_of_measurement: 'AQI'
+#     update_interval: 60min
+#     state_class: measurement
+#     icon: mdi:chemical-weapon
+#     accuracy_decimals: 1
+#     lambda: |-
+#       if ((id(PM2524Hour).state) > 300.0)
+#       { return round((((500.0 - 301.0)/(500.4 - 250.5)) * ((id(PM2524Hour).state) - 250.5) + 301.0));
+#       }
+#       else if ((id(PM2524Hour).state) > 200.0 and (id(PM2524Hour).state) <= 300.0)
+#       { return round((((300.0 - 201.0)/(250.4 - 150.5)) * ((id(PM2524Hour).state) - 150.5) + 201.0));
+#       }
+#       else if ((id(PM2524Hour).state) > 150.0 and (id(PM2524Hour).state) <= 200.0)
+#       { return round((((200.0 - 151.0)/(150.4 - 55.5)) * ((id(PM2524Hour).state) - 55.5) + 151.0));
+#       }
+#       else if ((id(PM2524Hour).state) > 100.0 and (id(PM2524Hour).state) <= 150.0)
+#       { return round((((150.0 - 101.0)/(55.4 - 35.5)) * ((id(PM2524Hour).state) - 35.5) + 101.0));
+#       }
+#       else if ((id(PM2524Hour).state) > 50.0 and (id(PM2524Hour).state) <= 100.0)
+#       { return round((((100.0 - 51.0)/(35.4 - 12.1)) * ((id(PM2524Hour).state) - 12.1) + 51.0));
+#       }
+#       else
+#       { return round((((50.0 - 0.0)/(12.0 - 0.0)) * ((id(PM2524Hour).state) - 0.0) + 0.0));
+#       }
+
+#   - platform: template
+#     name: "Buiten PM10.0µm 24 Hour AQI"
+#     id: SDS011_PM100_AQI
+#     unit_of_measurement: 'AQI'
+#     update_interval: 60min
+#     state_class: measurement
+#     icon: mdi:chemical-weapon
+#     accuracy_decimals: 1
+#     lambda: |-
+#       if ((id(PM10024Hour).state) > 300.0)
+#       { return round((((500.0 - 301.0)/(500.4 - 250.5)) * ((id(PM10024Hour).state) - 250.5) + 301.0));
+#       }
+#       else if ((id(PM10024Hour).state) > 200.0 and (id(PM10024Hour).state) <= 300.0)
+#       { return round((((300.0 - 201.0)/(250.4 - 150.5)) * ((id(PM10024Hour).state) - 150.5) + 201.0));
+#       }
+#       else if ((id(PM10024Hour).state) > 150.0 and (id(PM10024Hour).state) <= 200.0)
+#       { return round((((200.0 - 151.0)/(150.4 - 55.5)) * ((id(PM10024Hour).state) - 55.5) + 151.0));
+#       }
+#       else if ((id(PM10024Hour).state) > 100.0 and (id(PM10024Hour).state) <= 150.0)
+#       { return round((((150.0 - 101.0)/(55.4 - 35.5)) * ((id(PM10024Hour).state) - 35.5) + 101.0));
+#       }
+#       else if ((id(PM10024Hour).state) > 50.0 and (id(PM10024Hour).state) <= 100.0)
+#       { return round((((100.0 - 51.0)/(35.4 - 12.1)) * ((id(PM10024Hour).state) - 12.1) + 51.0));
+#       }
+#       else
+#       { return round((((50.0 - 0.0)/(12.0 - 0.0)) * ((id(PM10024Hour).state) - 0.0) + 0.0));
+#       }
+
+#   - platform: template
+#     name: "Buiten PM10.0µm 1 Hour AQI"
+#     id: SDS011_PM100_1Hour_AQI
+#     unit_of_measurement: 'AQI'
+#     update_interval: 5min
+#     state_class: measurement
+#     icon: mdi:chemical-weapon
+#     accuracy_decimals: 1
+#     lambda: |-
+#       if ((id(PM1001Hour).state) > 300.0)
+#       { return round((((500.0 - 301.0)/(500.4 - 250.5)) * ((id(PM1001Hour).state) - 250.5) + 301.0));
+#       }
+#       else if ((id(PM1001Hour).state) > 200.0 and (id(PM1001Hour).state) <= 300.0)
+#       { return round((((300.0 - 201.0)/(250.4 - 150.5)) * ((id(PM1001Hour).state) - 150.5) + 201.0));
+#       }
+#       else if ((id(PM1001Hour).state) > 150.0 and (id(PM1001Hour).state) <= 200.0)
+#       { return round((((200.0 - 151.0)/(150.4 - 55.5)) * ((id(PM1001Hour).state) - 55.5) + 151.0));
+#       }
+#       else if ((id(PM1001Hour).state) > 100.0 and (id(PM1001Hour).state) <= 150.0)
+#       { return round((((150.0 - 101.0)/(55.4 - 35.5)) * ((id(PM1001Hour).state) - 35.5) + 101.0));
+#       }
+#       else if ((id(PM1001Hour).state) > 50.0 and (id(PM1001Hour).state) <= 100.0)
+#       { return round((((100.0 - 51.0)/(35.4 - 12.1)) * ((id(PM1001Hour).state) - 12.1) + 51.0));
+#       }
+#       else
+#       { return round((((50.0 - 0.0)/(12.0 - 0.0)) * ((id(PM1001Hour).state) - 0.0) + 0.0));
+#       }
+
+#   - platform: template
+#     name: "Buiten PM2.5µm 1 Hour AQI"
+#     id: SDS011_PM25_1Hour_AQI
+#     unit_of_measurement: 'AQI'
+#     update_interval: 5min
+#     state_class: measurement
+#     icon: mdi:chemical-weapon
+#     accuracy_decimals: 1
+#     lambda: |-
+#       if ((id(PM251Hour).state) > 300.0)
+#       { return round((((500.0 - 301.0)/(500.4 - 250.5)) * ((id(PM251Hour).state) - 250.5) + 301.0));
+#       }
+#       else if ((id(PM251Hour).state) > 200.0 and (id(PM251Hour).state) <= 300.0)
+#       { return round((((300.0 - 201.0)/(250.4 - 150.5)) * ((id(PM251Hour).state) - 150.5) + 201.0));
+#       }
+#       else if ((id(PM251Hour).state) > 150.0 and (id(PM251Hour).state) <= 200.0)
+#       { return round((((200.0 - 151.0)/(150.4 - 55.5)) * ((id(PM251Hour).state) - 55.5) + 151.0));
+#       }
+#       else if ((id(PM251Hour).state) > 100.0 and (id(PM251Hour).state) <= 150.0)
+#       { return round((((150.0 - 101.0)/(55.4 - 35.5)) * ((id(PM251Hour).state) - 35.5) + 101.0));
+#       }
+#       else if ((id(PM251Hour).state) > 50.0 and (id(PM251Hour).state) <= 100.0)
+#       { return round((((100.0 - 51.0)/(35.4 - 12.1)) * ((id(PM251Hour).state) - 12.1) + 51.0));
+#       }
+#       else
+#       { return round((((50.0 - 0.0)/(12.0 - 0.0)) * ((id(PM251Hour).state) - 0.0) + 0.0));
+#       }
+
+# text_sensor:
+#   - platform: template
+#     name: "Buiten PM2.5µm 1 Hour AQI Index"
+#     id: SDS011_PM25_1Hour_AQI_Index
+#     update_interval: 5min
+#     icon: mdi:chemical-weapon
+#     lambda: |-
+#       if ((id(SDS011_PM25_1Hour_AQI).state) > 300.0)
+#       { return {"Hazardous"};
+#       }
+#       else if ((id(SDS011_PM25_1Hour_AQI).state) > 200.0 and (id(SDS011_PM25_1Hour_AQI).state) <= 300.0)
+#       { return {"Very Unhealthy"};
+#       }
+#       else if ((id(SDS011_PM25_1Hour_AQI).state) > 150.0 and (id(SDS011_PM25_1Hour_AQI).state) <= 200.0)
+#       { return {"Unhealthy"};
+#       }
+#       else if ((id(SDS011_PM25_1Hour_AQI).state) > 100.0 and (id(SDS011_PM25_1Hour_AQI).state) <= 150.0)
+#       { return {"Unhealthy for Sensitive Groups"};
+#       }
+#       else if ((id(SDS011_PM25_1Hour_AQI).state) > 50.0 and (id(SDS011_PM25_1Hour_AQI).state) <= 100.0)
+#       { return {"Moderate"};
+#       }
+#       else
+#       { return {"Good"};
+#       }
+
+#   - platform: template
+#     name: "Buiten PM2.5µm 24 Hour AQI Index"
+#     id: SDS011_PM25_24Hour_AQI_Index
+#     update_interval: 5min
+#     icon: mdi:chemical-weapon
+#     lambda: |-
+#       if ((id(SDS011_PM25_AQI).state) > 300.0)
+#       { return {"Hazardous"};
+#       }
+#       else if ((id(SDS011_PM25_AQI).state) > 200.0 and (id(SDS011_PM25_AQI).state) <= 300.0)
+#       { return {"Very Unhealthy"};
+#       }
+#       else if ((id(SDS011_PM25_AQI).state) > 150.0 and (id(SDS011_PM25_AQI).state) <= 200.0)
+#       { return {"Unhealthy"};
+#       }
+#       else if ((id(SDS011_PM25_AQI).state) > 100.0 and (id(SDS011_PM25_AQI).state) <= 150.0)
+#       { return {"Unhealthy for Sensitive Groups"};
+#       }
+#       else if ((id(SDS011_PM25_AQI).state) > 50.0 and (id(SDS011_PM25_AQI).state) <= 100.0)
+#       { return {"Moderate"};
+#       }
+#       else
+#       { return {"Good"};
+#       }
+
+#   - platform: template
+#     name: "Buiten PM10.0µm 1 Hour AQI Index"
+#     id: SDS011_PM100_1Hour_AQI_Index
+#     update_interval: 60min
+#     icon: mdi:chemical-weapon
+#     lambda: |-
+#       if ((id(SDS011_PM100_1Hour_AQI).state) > 300.0)
+#       { return {"Hazardous"};
+#       }
+#       else if ((id(SDS011_PM100_1Hour_AQI).state) > 200.0 and (id(SDS011_PM100_1Hour_AQI).state) <= 300.0)
+#       { return {"Very Unhealthy"};
+#       }
+#       else if ((id(SDS011_PM100_1Hour_AQI).state) > 150.0 and (id(SDS011_PM100_1Hour_AQI).state) <= 200.0)
+#       { return {"Unhealthy"};
+#       }
+#       else if ((id(SDS011_PM100_1Hour_AQI).state) > 100.0 and (id(SDS011_PM100_1Hour_AQI).state) <= 150.0)
+#       { return {"Unhealthy for Sensitive Groups"};
+#       }
+#       else if ((id(SDS011_PM100_1Hour_AQI).state) > 50.0 and (id(SDS011_PM100_1Hour_AQI).state) <= 100.0)
+#       { return {"Moderate"};
+#       }
+#       else
+#       { return {"Good"};
+#       }
+
+#   - platform: template
+#     name: "Buiten PM10.0µm 24 Hour AQI Index"
+#     id: SDS011_PM100_24Hour_AQI_Index
+#     update_interval: 60min
+#     icon: mdi:chemical-weapon
+#     lambda: |-
+#       if ((id(SDS011_PM100_AQI).state) > 300.0)
+#       { return {"Hazardous"};
+#       }
+#       else if ((id(SDS011_PM100_AQI).state) > 200.0 and (id(SDS011_PM100_AQI).state) <= 300.0)
+#       { return {"Very Unhealthy"};
+#       }
+#       else if ((id(SDS011_PM100_AQI).state) > 150.0 and (id(SDS011_PM100_AQI).state) <= 200.0)
+#       { return {"Unhealthy"};
+#       }
+#       else if ((id(SDS011_PM100_AQI).state) > 100.0 and (id(SDS011_PM100_AQI).state) <= 150.0)
+#       { return {"Unhealthy for Sensitive Groups"};
+#       }
+#       else if ((id(SDS011_PM100_AQI).state) > 50.0 and (id(SDS011_PM100_AQI).state) <= 100.0)
+#       { return {"Moderate"};
+#       }
+#       else
+#       { return {"Good"};
+#       }

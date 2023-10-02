@@ -1,13 +1,14 @@
 substitutions:
-  devicename: knop_noor
+  devicename: knop-noor
   platform: ESP8266
   board: nodemcuv2
   upper_devicename: Knop Noor
   ssid: !secret ssid-waskot
-  manual_ip: 192.168.89.101
+  manual_ip: 192.168.79.136
 
 packages:
-  wifi: !include common/wifi-waskot.yaml
+  wifi: !include common/wifi.yaml
+  # wifi: !include common/wifi-waskot.yaml
   device_base: !include common/device_base.yaml
 
 i2c:
@@ -55,6 +56,46 @@ binary_sensor:
       number: D5
     id: "knop_noor"
     on_multi_click:
+    - timing:
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at most 1s
+      - ON for at most 1s
+      - OFF for at least 0.5s
+      then:
+        - binary_sensor.template.publish:
+            id: noor_5_klik
+            state: ON
+        - if:
+            condition:
+              light.is_on: licht
+            then:
+              - delay: 1s
+              - light.turn_on:
+                  id: licht
+                  effect: strobe
+              - delay: 5s
+              - light.turn_off:
+                  id: licht
+              - light.turn_on:
+                  id: licht
+            else:
+              - delay: 1s
+              - light.turn_on:
+                  id: licht
+                  effect: strobe
+              - delay: 5s
+              - light.turn_off:
+                  id: licht
+        - delay: 2s
+        - binary_sensor.template.publish:
+            id: noor_5_klik
+            state: OFF
     - timing:
       - ON for at most 1s
       - OFF for at most 1s
@@ -244,3 +285,7 @@ binary_sensor:
   - platform: template
     id: noor_4_klik
     name: "Knop Noor 4 klik"
+
+  - platform: template
+    id: noor_5_klik
+    name: "Knop Noor 5 klik"

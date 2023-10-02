@@ -1,0 +1,205 @@
+substitutions:
+  devicename: badkamer
+  upper_devicename: Badkamer
+  ssid: !secret ssid
+  manual_ip: 192.168.79.151
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+esphome:
+  name: ${devicename}
+
+uart:
+  tx_pin: 1
+  rx_pin: 3
+  baud_rate: 256000
+  parity: NONE
+  stop_bits: 1
+
+i2c:
+   - id: bus_a
+     sda: 21
+     scl: 22
+     scan: true
+   - id: bus_b
+     sda: 14
+     scl: 15
+     scan: true
+
+ld2410:
+
+number:
+  - platform: ld2410
+    timeout:
+      name: ${upper_devicename} timeout
+    max_move_distance_gate:
+      name: ${upper_devicename} max_move_distance
+    max_still_distance_gate:
+      name: ${upper_devicename} max_still_distance
+    g0:
+      move_threshold:
+        name: ${upper_devicename} g0 move
+      still_threshold:
+        name: ${upper_devicename} g0 still
+    g1:
+      move_threshold:
+        name: ${upper_devicename} g1 move
+      still_threshold:
+        name: ${upper_devicename} g1 still
+    g2:
+      move_threshold:
+        name: ${upper_devicename} g2 move
+      still_threshold:
+        name: ${upper_devicename} g2 still
+    g3:
+      move_threshold:
+        name: ${upper_devicename} g3 move
+      still_threshold:
+        name: ${upper_devicename} g3 still
+    g4:
+      move_threshold:
+        name: ${upper_devicename} g4 move
+      still_threshold:
+        name: ${upper_devicename} g4 still
+    g5:
+      move_threshold:
+        name: ${upper_devicename} g5 move
+      still_threshold:
+        name: ${upper_devicename} g5 still
+    g6:
+      move_threshold:
+        name: ${upper_devicename} g6 move
+      still_threshold:
+        name: ${upper_devicename} g6 still
+    g7:
+      move_threshold:
+        name: ${upper_devicename} g7 move
+      still_threshold:
+        name: ${upper_devicename} g7 still
+    g8:
+      move_threshold:
+        name: ${upper_devicename} g8 move
+      still_threshold:
+        name: ${upper_devicename} g8 still
+
+  # timeout: 30s
+  # max_move_distance : 6m
+  # max_still_distance: 6m
+  # g0_move_threshold: 50
+  # g0_still_threshold: 10
+  # g1_move_threshold: 50
+  # g1_still_threshold: 10
+  # g2_move_threshold: 30
+  # g2_still_threshold: 20
+  # g3_move_threshold: 30
+  # g3_still_threshold: 10
+  # g4_move_threshold: 30
+  # g4_still_threshold: 10
+  # g5_move_threshold: 30
+  # g5_still_threshold: 10
+  # g6_move_threshold: 30
+  # g6_still_threshold: 15
+  # g7_move_threshold: 30
+  # g7_still_threshold: 20
+  # g8_move_threshold: 30
+  # g8_still_threshold: 20
+switch:
+  - platform: ld2410
+    engineering_mode:
+      name: ${upper_devicename} engineering mode
+    bluetooth:
+      name: ${upper_devicename} bluetooth
+
+sensor:
+  - platform: ld2410
+    moving_distance:
+      name : ${upper_devicename} Moving Distance
+    still_distance:
+      name: ${upper_devicename} Still Distance
+    moving_energy:
+      name: ${upper_devicename} Move Energy
+    still_energy:
+      name: ${upper_devicename} Still Energy
+    detection_distance:
+      name: ${upper_devicename} Detection Distance
+    
+    g0:
+      move_energy:
+        name: ${upper_devicename} g0 move energy
+      still_energy:
+        name: ${upper_devicename} g0 still energy
+    g1:
+      move_energy:
+        name: ${upper_devicename} g1 move energy
+      still_energy:
+        name: ${upper_devicename} g1 still energy
+    g2:
+      move_energy:
+        name: ${upper_devicename} g2 move energy
+      still_energy:
+        name: ${upper_devicename} g2 still energy
+    g3:
+      move_energy:
+        name: ${upper_devicename} g3 move energy
+      still_energy:
+        name: ${upper_devicename} g3 still energy
+    g4:
+      move_energy:
+        name: ${upper_devicename} g4 move energy
+      still_energy:
+        name: ${upper_devicename} g4 still energy
+    g5:
+      move_energy:
+        name: ${upper_devicename} g5 move energy
+      still_energy:
+        name: ${upper_devicename} g5 still energy
+    g6:
+      move_energy:
+        name: ${upper_devicename} g6 move energy
+      still_energy:
+        name: ${upper_devicename} g6 still energy
+    g7:
+      move_energy:
+        name: ${upper_devicename} g7 move energy
+      still_energy:
+        name: ${upper_devicename} g7 still energy
+    g8:
+      move_energy:
+        name: ${upper_devicename} g8 move energy
+      still_energy:
+        name: ${upper_devicename} g8 still energy
+  
+  - platform: bh1750
+    name: "Badkamer lichtsterkte"
+    address: 0x23
+    update_interval: 60s
+    i2c_id: bus_b
+
+  - platform: bme280
+    temperature:
+      name: "${upper_devicename} temperatuur"
+      id: bme280_temperature
+      oversampling: 1x
+    humidity:
+      name: "${upper_devicename} luchtvochtigheid"
+      id: bme280_humidity
+      oversampling: 1x
+    address: 0x76
+    i2c_id: bus_a
+    update_interval: 30s
+
+binary_sensor:
+  - platform: ld2410
+    has_target:
+      name: ${upper_devicename} Presence
+    has_moving_target:
+      name: ${upper_devicename} Moving Target
+    has_still_target:
+      name: ${upper_devicename} Still Target

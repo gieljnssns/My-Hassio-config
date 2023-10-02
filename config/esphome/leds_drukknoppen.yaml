@@ -1,13 +1,14 @@
 substitutions:
-  devicename: leds_drukknoppen
+  devicename: leds-drukknoppen
   platform: ESP8266
   board: nodemcuv2
   upper_devicename: Leds drukknoppen
   ssid: !secret ssid-waskot
-  manual_ip: 192.168.89.102
+  manual_ip: 192.168.79.137
 
 packages:
-  wifi: !include common/wifi-waskot.yaml
+  # wifi: !include common/wifi-waskot.yaml
+  wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
 globals:
@@ -52,7 +53,7 @@ switch:
     id: deurbel
   
   - platform: template
-    restore_state: false
+    restore_mode: DISABLED
     name: "Deurbel actief"
     id: deurbel_actief
     turn_on_action:
