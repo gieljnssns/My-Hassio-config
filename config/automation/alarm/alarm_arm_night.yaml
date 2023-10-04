@@ -12,9 +12,14 @@ trigger:
     entity_id: light.spot_slaapkamer
     to: "unavailable"
 condition:
-  - condition: state
-    entity_id: binary_sensor.keuken_not_playing
-    state: "on"
+  - condition: not
+    conditions:
+      # - condition: state
+      #   entity_id: media_player.mass_keuken
+      #   state: "playing"
+      - condition: state
+        entity_id: media_player.keuken
+        state: "playing"
   - condition: and
     conditions:
       - condition: time
@@ -72,12 +77,12 @@ action:
     entity_id: alarm_control_panel.ha_alarm
     data:
       code: !secret alarm_code
-  - service: homeassistant.turn_off
-    entity_id: script.mqtt_arrive_script, script.mqtt_depart_script
-  - service: script.mqtt_arrive_script
-    data_template:
-      identity: >
-        Alarm night {{ now().strftime("%H:%M") }}
+  # - service: homeassistant.turn_off
+  #   entity_id: script.mqtt_arrive_script, script.mqtt_depart_script
+  # - service: script.mqtt_arrive_script
+  #   data_template:
+  #     identity: >
+  #       Alarm night {{ now().strftime("%H:%M") }}
   - delay:
       minutes: 20
   - choose:

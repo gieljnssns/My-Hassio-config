@@ -1,0 +1,28 @@
+sonos_pauze_spreek_non_nl:
+  sequence:
+    - condition: and
+      conditions:
+        - condition: state
+          entity_id: media_player.philips_tv
+          state: "off"
+        # - condition: state
+        #   entity_id: binary_sensor.philips_tv_online
+        #   state: 'off'
+        - condition: template
+          value_template: "{{states('alarm_control_panel.ha_alarm')  != 'armed_night' }}"
+        - condition: or
+          conditions:
+            - condition: time
+              after: "15:55:00"
+            - condition: and
+              conditions:
+                - condition: state
+                  entity_id: input_boolean.giel_slaapt_na_nacht
+                  state: "off"
+                # - condition: state
+                #   entity_id: binary_sensor.v_nacht
+                #   state: 'off'
+    - delay: "00:00:01"
+    - service: media_player.media_play
+      data_template:
+        entity_id: media_player.mass_keuken

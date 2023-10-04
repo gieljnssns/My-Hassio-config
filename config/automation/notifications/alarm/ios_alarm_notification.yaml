@@ -8,12 +8,8 @@ action:
   - service: script.turn_on
     data_template:
       entity_id: >
-        {% if is_state('input_boolean.bompa_bt_aanwezig', 'on') or is_state('input_boolean.oma_bt_aanwezig', 'on')  %}
+        {% if is_state('device_tracker.bompa', 'home') or is_state('device_tracker.oma_2', 'home')  %}
           script.melding
-        {% elif is_state('binary_sensor.netatmo_component_human', 'on') %}
-          script.alarm_netatmo_component
-        {% elif is_state('binary_sensor.netatmo_webhook_trigger', 'on') %}
-          script.alarm_netatmo
         {% else %}
           script.alarm_frigate
         {% endif %}

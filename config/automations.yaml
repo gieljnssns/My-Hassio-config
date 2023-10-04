@@ -1,1 +1,164 @@
-[]
+- id: '1603382266087'
+  alias: profiler
+  description: profiler
+  trigger:
+  - platform: time
+    at: '17:59'
+  condition: []
+  action:
+  - service: profiler.start
+    data: {}
+  mode: single
+- id: '1617444794333'
+  alias: Shelly herstarten
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: 'switch.shelly_badkamer_verluchting_herstarten '
+    to: 'off'
+    from: unavailable
+  condition:
+  - condition: state
+    entity_id: binary_sensor.shelly_badkamer_verluchting_status
+    state: 'off'
+    for: 00:05:00
+  action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.shelly_badkamer_verluchting_herstarten
+  mode: parallel
+  max: 10
+- id: '1650959980916'
+  alias: Unifi unavailable
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - device_tracker.droommachien
+    from: home
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition: []
+  action:
+  - service: notify.mobile_app_gphone
+    data:
+      message: Unifi nazien!!!
+  mode: single
+- id: '1669170877486'
+  alias: Maximum piek notificatie
+  description: Maximum piek notificatie
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.max_peak_2
+  condition:
+  - condition: numeric_state
+    entity_id: sensor.max_peak_2
+    above: 3.5
+  action:
+  - delay:
+      seconds: 5
+  - service: notify.mobile_app_gphone
+    data:
+      message: De maximum piek is gestegen
+  mode: restart
+- id: '1669175764876'
+  alias: Maximum piek notificatie2
+  description: Maximum piek notificatie2
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.max_peak_2
+  condition:
+  - condition: numeric_state
+    entity_id: sensor.max_peak_2
+    above: 3.5
+  action:
+  - delay:
+      seconds: 5
+  - service: persistent_notification.create
+    data:
+      message: "{% set uitsluiten = ['Verbruik zonder deferrable loads', 'L1 net afname',
+        'L2 net afname', 'L3 net afname',\n                     'V1 vermogen', 'V2
+        vermogen', 'V3 vermogen','S1 vermogen', 'S2 vermogen', 'S3 vermogen',\n                     'Gemiddelde
+        jaarpiek', 'Inverter Day active power peak', 'Sonos living vermogen', 'Move
+        vermogen',\n                     'philips_tv vermogen', 'Verluchting masser
+        vermogen', 'Badkamer verluchting vermogen',\n                     'Zolder
+        verluchting vermogen', 'Huidig verbruik', 'Huidig verbruik zonder wp',\n                     'Zonne
+        energie gefilterd lowpass', 'Zithoek links achter vermogen',\n                     'Zithoek
+        links midden vermogen','Zithoek links voor vermogen','Zithoek rechts achter
+        vermogen',\n                     'Zithoek rechts midden vermogen','Zithoek
+        rechts voor vermogen', 'Sonos 2C vermogen',\n                     'Sonos badkamer
+        vermogen', 'Badkamer hoog vermogen', 'Badkamer pombak vermogen', 'badkamerPi
+        vermogen',\n                     'brewPi vermogen', 'Gang boven vermogen',
+        'Garage 1 vermogen', 'Garage 2 vermogen',\n                     'Danszaal
+        luster vermogen', 'garagePi vermogen', 'Keuken luster vermogen', 'Tv slaapkamer
+        vermogen',\n                     'Sonos keuken vermogen', 'keukenPi vermogen',
+        'livingPi vermogen', 'Slaapkamer Noor 1 vermogen',\n                     'Slaapkamer
+        Noor 2 vermogen', 'poortPi vermogen', 'Slaapkamer Fien 1 vermogen',\n                     'Slaapkamer
+        Fien 2 vermogen', 'Slaapkamer Fien 3 vermogen', 'slaapkamerPi vermogen', 'Slaapkamer
+        spot vermogen',\n                     'Terras 1 vermogen', 'Terras 2 vermogen',
+        'Tv der kinders vermogen', 'tvPi vermogen',\n                     'verwarmingPi
+        vermogen', 'Wc vermogen', 'Danszaal spots vermogen','Eigen verbruik', 'Gang
+        beneden vermogen',\n                     'Garage vermogen', 'Garage werkbank
+        vermogen', 'Inverter Active power', 'Inverter Input power',\n                     'Huidige
+        opbrengst', 'Keuken inkom vermogen', 'Keuken spots vermogen', 'L1 net terugsturen',\n
+        \                    'L2 net terugsturen', 'L3 net terugsturen', 'Net terugsturen',
+        'Solar production forecast Estimated power production - now',\n                     'Slaapkamer
+        hoog vermogen', 'Solaredge inverter DC Watts', 'Solaredge inverter Watts',
+        'Trap vermogen',\n                     'Waskot vermogen', 'Zithoek luster
+        vermogen', 'Zonne opbrengst', 'L1 test', 'L2 test',\n                     'L3
+        test', 'S1 test', 'S2 test', 'S3 test' , 'V1 test', 'V2 test', 'V3 test',
+        'slaapkamer_fien vermogen',\n                     'slaapkamer_noor vermogen',
+        'Garage buiten 1 vermogen', 'Garage buiten 2 vermogen', 'Paddeke 1 vermogen',
+        'Paddeke 2 vermogen'] %}\n\n{%- for state in states.sensor -%}\n  {%- if state.attributes.unit_of_measurement
+        is defined and state.attributes.unit_of_measurement == 'W' and state.state
+        | float(0) > -2 -%}\n    {% if state.attributes.friendly_name is not in uitsluiten
+        -%}\n      {{ state.attributes.friendly_name }} = {{ state.state_with_unit
+        }}\n    {% endif -%}\n  {% endif -%}\n{% endfor -%}"
+  mode: restart
+- id: '1675907714800'
+  alias: Max piek notificatie 3
+  description: ''
+  trigger:
+  - platform: time_pattern
+    minutes: '15'
+  condition:
+  - condition: template
+    value_template: '{{ as_timestamp(now()) - as_timestamp(states.input_number.max_peak_2.last_changed.timestamp()
+      | timestamp_local()) < 900 }}
+
+      '
+  - condition: template
+    value_template: '{{ as_timestamp(now()) - as_timestamp(states("sensor.uptime"))
+      > 900 }}
+
+      '
+  action:
+  - service: persistent_notification.create
+    data:
+      message: "Op kwartierbasis:\n{% for state in states.sensor -%} {%- if \"quarter\"
+        in state.entity_id -%} {%- if state.attributes.last_period | float(0) > 0
+        -%}\n  {{ state.attributes.friendly_name }} = {{ state.attributes.last_period
+        }} kWh\n{% endif -%} {% endif -%} {% endfor %}\nOp uurbasis:\n{% for state
+        in states.sensor -%} {%- if \"quarter\" in state.entity_id -%} {%- if state.attributes.last_period
+        | float(0) > 0 -%}\n  {{ state.attributes.friendly_name | replace(\"kwartierverbruik\",
+        \"uurverbruik\") }} = {{ state.attributes.last_period | float * 4}} kWh\n{%
+        endif -%} {% endif -%} {% endfor -%}"
+  mode: single
+- id: '1685887833753'
+  alias: Beweging poort
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.beweging_fotocel
+    to: 'on'
+  condition: []
+  action:
+  - service: notify.giel_en_martine
+    data:
+      message: Beweging poort
+  mode: single

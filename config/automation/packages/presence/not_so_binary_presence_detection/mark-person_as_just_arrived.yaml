@@ -6,111 +6,195 @@ trigger:
     entity_id: binary_sensor.giel_bayesian
     from: "off"
     to: "on"
+    id: giel
   - platform: state
     entity_id: binary_sensor.martine_bayesian
     from: "off"
     to: "on"
+    id: martine
   - platform: state
     entity_id: binary_sensor.noor_bayesian
     from: "off"
     to: "on"
+    id: noor
   - platform: state
     entity_id: binary_sensor.fien_bayesian
     from: "off"
     to: "on"
-  - platform: template
-    value_template: >
-      {{ is_state("sensor.gphone_bt_thuis", '100.0') }}
-  - platform: template
-    value_template: >
-      {{ is_state("sensor.mphone_bt_thuis", '100.0') }}
-  - platform: template
-    value_template: >
-      {{ is_state("sensor.fphone_bt_thuis", '100.0') }}
-  - platform: template
-    value_template: >
-      {{ is_state("sensor.nphone_bt_thuis", '100.0') }}
+    id: fien
+  - platform: state
+    entity_id: device_tracker.gphone
+    from: "not_home"
+    to: "home"
+    id: giel
+  - platform: state
+    entity_id: device_tracker.mphone
+    from: "not_home"
+    to: "home"
+    id: martine
+  - platform: state
+    entity_id: device_tracker.nphone_2
+    from: "not_home"
+    to: "home"
+    id: noor
+  - platform: state
+    entity_id: device_tracker.fphone_2
+    from: "not_home"
+    to: "home"
+    id: fien
+  - platform: state
+    entity_id: device_tracker.gphone_ping
+    from: "not_home"
+    to: "home"
+    id: giel
+  - platform: state
+    entity_id: device_tracker.mphone_ping
+    from: "not_home"
+    to: "home"
+    id: martine
+  - platform: state
+    entity_id: device_tracker.nphone_ping
+    from: "not_home"
+    to: "home"
+    id: noor
+  - platform: state
+    entity_id: device_tracker.fphone_ping
+    from: "not_home"
+    to: "home"
+    id: fien
+  - platform: state
+    entity_id: device_tracker.gphone_detect
+    from: "not_home"
+    to: "home"
+    id: giel
+  - platform: state
+    entity_id: device_tracker.mphone_detect
+    from: "not_home"
+    to: "home"
+    id: martine
+  - platform: state
+    entity_id: device_tracker.nphone_detect
+    from: "not_home"
+    to: "home"
+    id: noor
+  - platform: state
+    entity_id: device_tracker.fphone_detect
+    from: "not_home"
+    to: "home"
+    id: fien
 condition:
   condition: and
   conditions:
     - condition: template
       value_template: >
         {{ (as_timestamp(now()) - as_timestamp(states("sensor.uptime"))) / 3600 | float > 0.03 | float }}
-    - condition: template
-      value_template: >
-        {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
-          {{ states('input_select.giel_status_dropdown') != 'Thuis' }}
-        {% elif trigger.entity_id == 'sensor.gphone_bt_thuis' %}
-          {{ states('input_select.giel_status_dropdown') != 'Thuis' }}
-        {% elif trigger.entity_id == 'binary_sensor.martine_bayesian' %}
-          {{ states('input_select.martine_status_dropdown') != 'Thuis' }}
-        {% elif trigger.entity_id == 'sensor.mphone_bt_thuis' %}
-          {{ states('input_select.martine_status_dropdown') != 'Thuis' }}
-        {% elif trigger.entity_id == 'binary_sensor.noor_bayesian' %}
-          {{ states('input_select.noor_status_dropdown') != 'Thuis' }}
-        {% elif trigger.entity_id == 'sensor.nphone_bt_thuis' %}
-          {{ states('input_select.noor_status_dropdown') != 'Thuis' }}
-        {% elif trigger.entity_id == 'sensor.fphone_bt_thuis' %}
-          {{ states('input_select.fien_status_dropdown') != 'Thuis' }}
-        {% else %}
-          {{ states('input_select.fien_status_dropdown') != 'Thuis' }}
-        {% endif %}
+    # - condition: template
+    #   value_template: >
+    #     {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+    #       {{ states('input_select.giel_status_dropdown') != 'Thuis' }}
+    #     {% elif trigger.entity_id == 'sensor.gphone_bt_thuis' %}
+    #       {{ states('input_select.giel_status_dropdown') != 'Thuis' }}
+    #     {% elif trigger.entity_id == 'binary_sensor.martine_bayesian' %}
+    #       {{ states('input_select.martine_status_dropdown') != 'Thuis' }}
+    #     {% elif trigger.entity_id == 'sensor.mphone_bt_thuis' %}
+    #       {{ states('input_select.martine_status_dropdown') != 'Thuis' }}
+    #     {% elif trigger.entity_id == 'binary_sensor.noor_bayesian' %}
+    #       {{ states('input_select.noor_status_dropdown') != 'Thuis' }}
+    #     {% elif trigger.entity_id == 'sensor.nphone_bt_thuis' %}
+    #       {{ states('input_select.noor_status_dropdown') != 'Thuis' }}
+    #     {% elif trigger.entity_id == 'sensor.fphone_bt_thuis' %}
+    #       {{ states('input_select.fien_status_dropdown') != 'Thuis' }}
+    #     {% else %}
+    #       {{ states('input_select.fien_status_dropdown') != 'Thuis' }}
+    #     {% endif %}
 action:
   - service: input_select.select_option
     data_template:
       entity_id: >
-        {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+        {% if trigger.id == 'giel' %}
           input_select.giel_status_dropdown
-        {% elif trigger.entity_id == 'sensor.gphone_bt_thuis' %}
-          input_select.giel_status_dropdown
-        {% elif trigger.entity_id == 'binary_sensor.martine_bayesian' %}
+        {% elif trigger.id == 'martine' %}
           input_select.martine_status_dropdown
-        {% elif trigger.entity_id == 'sensor.mphone_bt_thuis' %}
-          input_select.martine_status_dropdown
-        {% elif trigger.entity_id == 'binary_sensor.noor_bayesian' %}
+        {% elif trigger.id == 'noor' %}
           input_select.noor_status_dropdown
-        {% elif trigger.entity_id == 'sensor.nphone_bt_thuis' %}
-          input_select.noor_status_dropdown
-        {% elif trigger.entity_id == 'sensor.fphone_bt_thuis' %}
-          input_select.fien_status_dropdown
-        {% else %}
+        {% elif trigger.id == 'fien' %}
           input_select.fien_status_dropdown
         {% endif %}
       option: Juist Aangekomen
+    # data_template:
+    #   entity_id: >
+    #     {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+    #       input_select.giel_status_dropdown
+    #     {% elif trigger.entity_id == 'sensor.gphone_bt_thuis' %}
+    #       input_select.giel_status_dropdown
+    #     {% elif trigger.entity_id == 'binary_sensor.martine_bayesian' %}
+    #       input_select.martine_status_dropdown
+    #     {% elif trigger.entity_id == 'sensor.mphone_bt_thuis' %}
+    #       input_select.martine_status_dropdown
+    #     {% elif trigger.entity_id == 'binary_sensor.noor_bayesian' %}
+    #       input_select.noor_status_dropdown
+    #     {% elif trigger.entity_id == 'sensor.nphone_bt_thuis' %}
+    #       input_select.noor_status_dropdown
+    #     {% elif trigger.entity_id == 'sensor.fphone_bt_thuis' %}
+    #       input_select.fien_status_dropdown
+    #     {% else %}
+    #       input_select.fien_status_dropdown
+    #     {% endif %}
+    #   option: Juist Aangekomen
   - condition: template
     value_template: >
-      {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+      {% if trigger.id == 'giel' %}
         {{ states("device_tracker.gphone_2") != 'home' }}
-      {% elif trigger.entity_id == 'sensor.gphone_bt_thuis' %}
-        {{ states("device_tracker.gphone_2") != 'home' }}
-      {% elif trigger.entity_id == 'binary_sensor.martine_bayesian' %}
+      {% elif trigger.id == 'martine' %}
         {{ states("device_tracker.mphone_2") != 'home' }}
-      {% elif trigger.entity_id == 'sensor.mphone_bt_thuis' %}
-        {{ states("device_tracker.mphone_2") != 'home' }}
-      {% elif trigger.entity_id == 'binary_sensor.noor_bayesian' %}
+      {% elif trigger.id == 'noor' %}
         {{ states("device_tracker.nphone") != 'home' }}
-      {% elif trigger.entity_id == 'sensor.nphone_bt_thuis' %}
-        {{ states("device_tracker.nphone") != 'home' }}
-      {% elif trigger.entity_id == 'sensor.fphone_bt_thuis' %}
-        {{ states("device_tracker.fphone") != 'home' }}
-      {% else %}
+      {% elif trigger.id == 'fien' %}
         {{ states("device_tracker.fphone") != 'home' }}
       {% endif %}
+    # value_template: >
+    #   {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+    #     {{ states("device_tracker.gphone_2") != 'home' }}
+    #   {% elif trigger.entity_id == 'sensor.gphone_bt_thuis' %}
+    #     {{ states("device_tracker.gphone_2") != 'home' }}
+    #   {% elif trigger.entity_id == 'binary_sensor.martine_bayesian' %}
+    #     {{ states("device_tracker.mphone_2") != 'home' }}
+    #   {% elif trigger.entity_id == 'sensor.mphone_bt_thuis' %}
+    #     {{ states("device_tracker.mphone_2") != 'home' }}
+    #   {% elif trigger.entity_id == 'binary_sensor.noor_bayesian' %}
+    #     {{ states("device_tracker.nphone") != 'home' }}
+    #   {% elif trigger.entity_id == 'sensor.nphone_bt_thuis' %}
+    #     {{ states("device_tracker.nphone") != 'home' }}
+    #   {% elif trigger.entity_id == 'sensor.fphone_bt_thuis' %}
+    #     {{ states("device_tracker.fphone") != 'home' }}
+    #   {% else %}
+    #     {{ states("device_tracker.fphone") != 'home' }}
+    #   {% endif %}
   - service: >
-      {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+      {% if trigger.id == 'giel' %}
         script.request_gphone_update
-      {% elif trigger.entity_id == 'sensor.gphone_bt_thuis' %}
-        script.request_gphone_update
-      {% elif trigger.entity_id == 'binary_sensor.martine_bayesian' %}
+      {% elif trigger.id == 'martine' %}
         script.request_mphone_update
-      {% elif trigger.entity_id == 'sensor.mphone_bt_thuis' %}
-        script.request_mphone_update
-      {% elif trigger.entity_id == 'binary_sensor.noor_bayesian' %}
+      {% elif trigger.id == 'noor' %}
         script.request_nphone_update
-      {% elif trigger.entity_id == 'sensor.nphone_bt_thuis' %}
-        script.request_nphone_update
-      {% elif trigger.entity_id == 'sensor.fphone_bt_thuis' %}
-        script.request_fphone_update
-      {% else %}
+      {% elif trigger.id == 'fien' %}
         script.request_fphone_update
       {% endif %}
+  # - service: >
+  #     {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+  #       script.request_gphone_update
+  #     {% elif trigger.entity_id == 'sensor.gphone_bt_thuis' %}
+  #       script.request_gphone_update
+  #     {% elif trigger.entity_id == 'binary_sensor.martine_bayesian' %}
+  #       script.request_mphone_update
+  #     {% elif trigger.entity_id == 'sensor.mphone_bt_thuis' %}
+  #       script.request_mphone_update
+  #     {% elif trigger.entity_id == 'binary_sensor.noor_bayesian' %}
+  #       script.request_nphone_update
+  #     {% elif trigger.entity_id == 'sensor.nphone_bt_thuis' %}
+  #       script.request_nphone_update
+  #     {% elif trigger.entity_id == 'sensor.fphone_bt_thuis' %}
+  #       script.request_fphone_update
+  #     {% else %}
+  #       script.request_fphone_update
+  #     {% endif %}

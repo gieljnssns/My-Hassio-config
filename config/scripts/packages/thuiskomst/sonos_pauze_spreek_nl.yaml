@@ -1,0 +1,62 @@
+sonos_pauze_spreek_nl:
+  sequence:
+    - condition: and
+      conditions:
+        - condition: state
+          entity_id: media_player.philips_tv
+          state: "off"
+        # - condition: state
+        #   entity_id: binary_sensor.philips_tv_online
+        #   state: "off"
+        - condition: template
+          value_template: "{{states('alarm_control_panel.ha_alarm')  != 'armed_night' }}"
+        - condition: or
+          conditions:
+            - condition: time
+              after: "15:55:00"
+            - condition: and
+              conditions:
+                - condition: state
+                  entity_id: input_boolean.giel_slaapt_na_nacht
+                  state: "off"
+                # - condition: state
+                #   entity_id: binary_sensor.v_nacht
+                #   state: 'off'
+    - delay: "00:00:01"
+    - service: media_player.volume_set
+      data_template:
+        entity_id: media_player.mass_keuken
+        volume_level: 0.3
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >
+                {% set numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] %}
+                {% set number = numbers | random  %}
+                {{ number % 2 == 0 }}
+          sequence:
+            - service: media_player.play_media
+              data:
+                media_content_id: >
+                  {% set playlist_numbers = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+                                              23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 
+                                              39, 40, 41, 42, 43, 44, 45, 46, 47, 48 ] %}
+                  {% set playlist_number = playlist_numbers | random  %}
+
+                  media-source://mass/database://playlist/{{playlist_number}}
+                media_content_type: playlist
+                enqueue: replace
+              target:
+                entity_id: media_player.mass_keuken
+      default:
+        - service: media_player.play_media
+          data:
+            media_content_id: >
+              {% set radio_numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] %}
+              {% set radio_number = radio_numbers | random  %}
+
+              media-source://mass/database://radio/{{radio_number}}
+            media_content_type: music
+            enqueue: replace
+          target:
+            entity_id: media_player.mass_keuken

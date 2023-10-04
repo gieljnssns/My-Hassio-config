@@ -17,25 +17,32 @@ condition: []
 action:
   - choose:
       - conditions:
-        - condition: or
-          conditions:
-            - condition: and
-              conditions:
-                - condition: time
-                  after: "16:00:00"
-                # - condition: state
-                #   entity_id: binary_sensor.v_nacht
-                #   state:  "on"
-            - condition: and
-              conditions:
-                - condition: time
-                  after: "12:00:00"
-                - condition: state
-                  entity_id: binary_sensor.v_nacht
-                  state:  "off"
-                - condition: state
-                  entity_id: binary_sensor.v_w_nacht
-                  state:  "off"
+          - condition: or
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: time
+                    after: "16:00:00"
+                  # - condition: state
+                  #   entity_id: binary_sensor.v_nacht
+                  #   state:  "on"
+              - condition: and
+                conditions:
+                  - condition: time
+                    after: "12:00:00"
+                  - condition: state
+                    entity_id: binary_sensor.v_nacht
+                    state: "off"
+                  - condition: state
+                    entity_id: binary_sensor.v_w_nacht
+                    state: "off"
+              # - condition: and
+              #   conditions:
+              #     - condition: state
+              #       entity_id: calendar.mondelez_de_nacht
+              #       state: "off"
+              #       for:
+              #         hours: 10
         sequence:
           - service: input_boolean.turn_off
             entity_id:
