@@ -88,25 +88,17 @@ condition:
     - condition: template
       value_template: >
         {{ (as_timestamp(now()) - as_timestamp(states("sensor.uptime"))) / 3600 | float > 0.03 | float }}
-    # - condition: template
-    #   value_template: >
-    #     {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
-    #       {{ states('input_select.giel_status_dropdown') != 'Thuis' }}
-    #     {% elif trigger.entity_id == 'sensor.gphone_bt_thuis' %}
-    #       {{ states('input_select.giel_status_dropdown') != 'Thuis' }}
-    #     {% elif trigger.entity_id == 'binary_sensor.martine_bayesian' %}
-    #       {{ states('input_select.martine_status_dropdown') != 'Thuis' }}
-    #     {% elif trigger.entity_id == 'sensor.mphone_bt_thuis' %}
-    #       {{ states('input_select.martine_status_dropdown') != 'Thuis' }}
-    #     {% elif trigger.entity_id == 'binary_sensor.noor_bayesian' %}
-    #       {{ states('input_select.noor_status_dropdown') != 'Thuis' }}
-    #     {% elif trigger.entity_id == 'sensor.nphone_bt_thuis' %}
-    #       {{ states('input_select.noor_status_dropdown') != 'Thuis' }}
-    #     {% elif trigger.entity_id == 'sensor.fphone_bt_thuis' %}
-    #       {{ states('input_select.fien_status_dropdown') != 'Thuis' }}
-    #     {% else %}
-    #       {{ states('input_select.fien_status_dropdown') != 'Thuis' }}
-    #     {% endif %}
+    - condition: template
+      value_template: >
+        {% if trigger.id == 'giel' %}
+          {{ states('input_select.giel_status_dropdown') != 'Thuis' }}
+        {% elif trigger.id == 'martine' %}
+          {{ states('input_select.martine_status_dropdown') != 'Thuis' }}
+        {% elif trigger.id == 'noor' %}
+          {{ states('input_select.noor_status_dropdown') != 'Thuis' }}
+        {% elif trigger.id == 'fien' %}
+          {{ states('input_select.fien_status_dropdown') != 'Thuis' }}
+        {% endif %}
 action:
   - service: input_select.select_option
     data_template:
