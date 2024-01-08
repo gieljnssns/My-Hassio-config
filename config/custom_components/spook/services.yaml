@@ -1,7 +1,7 @@
 boo:
   name: Boo! 👻
   description: >-
-    Calling this service, spookes Home Assistant.
+    Calling this service spooks Home Assistant.
     The service call will always fail.
 
 random_fail:
@@ -330,6 +330,14 @@ homeassistant_restart:
   name: Restart 👻
   description: Restart the Home Assistant service.
   fields:
+    safe_mode:
+      name: Safe mode
+      description: >-
+        If the restart should be done in safe mode. This will disable all
+        custom integrations and frontend modules.
+      required: false
+      selector:
+        boolean:
     force:
       name: Force restart
       description: >-
@@ -546,6 +554,56 @@ input_number_min:
   target:
     entity:
       domain: input_number
+
+person_add_device_tracker:
+  name: Add a device tracker 👻
+  description: >-
+    Add a device tracker to a person.
+  fields:
+    entity_id:
+      name: Person
+      description: >-
+        The person entity ID to add the device tracker to.
+      required: true
+      selector:
+        entity:
+          filter:
+            - domain: person
+    device_tracker:
+      name: Device tracker
+      description: >-
+        The device tracker entity ID to add to the person.
+      required: true
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: device_tracker
+
+person_remove_device_tracker:
+  name: Remove a device tracker 👻
+  description: >-
+    Remove a device tracker from a person.
+  fields:
+    entity_id:
+      name: Person
+      description: >-
+        The person entity ID to remove the device tracker from.
+      required: true
+      selector:
+        entity:
+          filter:
+            - domain: person
+    device_tracker:
+      name: Device tracker
+      description: >-
+        The device tracker entity ID to remove from the person.
+      required: true
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: device_tracker
 
 repairs_create:
   name: Create issue 👻

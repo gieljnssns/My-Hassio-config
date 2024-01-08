@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
+import logging
 from typing import TypedDict, TypeVar
 
-import async_timeout
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -21,23 +20,29 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from huawei_solar import HuaweiSolarBridge, HuaweiSolarException, InvalidCredentials
-from huawei_solar import register_values as rv
+from huawei_solar import (
+    HuaweiSolarBridge,
+    HuaweiSolarException,
+    InvalidCredentials,
+    register_values as rv,
+)
 
 from .const import (
     CONF_ENABLE_PARAMETER_CONFIGURATION,
     CONF_SLAVE_IDS,
     CONFIGURATION_UPDATE_INTERVAL,
+    CONFIGURATION_UPDATE_TIMEOUT,
+    DATA_BRIDGES_WITH_DEVICEINFOS,
     DATA_CONFIGURATION_UPDATE_COORDINATORS,
     DATA_OPTIMIZER_UPDATE_COORDINATORS,
     DATA_UPDATE_COORDINATORS,
     DOMAIN,
     OPTIMIZER_UPDATE_INTERVAL,
-    SERVICES,
+    OPTIMIZER_UPDATE_TIMEOUT,
     UPDATE_INTERVAL,
+    UPDATE_TIMEOUT,
 )
-from .services import async_setup_services
+from .services import async_cleanup_services, async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,6 +185,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     optimizers_device_infos = {}
 
         hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+            DATA_BRIDGES_WITH_DEVICEINFOS: bridges_with_device_infos,
             DATA_UPDATE_COORDINATORS: update_coordinators,
             DATA_CONFIGURATION_UPDATE_COORDINATORS: configuration_update_coordinators,
             DATA_OPTIMIZER_UPDATE_COORDINATORS: optimizer_update_coordinators,
@@ -199,7 +205,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    await async_setup_services(hass, entry, bridges_with_device_infos)
+    await async_setup_services(hass, entry)
 
     return True
 
@@ -213,9 +219,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for update_coordinator in update_coordinators:
             await update_coordinator.bridge.stop()
 
-        for service in SERVICES:
-            if hass.services.has_service(DOMAIN, service):
-                hass.services.async_remove(DOMAIN, service)
+        await async_cleanup_services(hass)
 
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -241,6 +245,7 @@ async def _compute_device_infos(
         name="Inverter",
         manufacturer="Huawei",
         model=bridge.model_name,
+        serial_number=bridge.serial_number,
         via_device=connecting_inverter_device_id,  # type: ignore[typeddict-item]
     )
 
@@ -305,7 +310,7 @@ class HuaweiSolarUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         try:
-            async with async_timeout.timeout(20):
+            async with asyncio.timeout(UPDATE_TIMEOUT.total_seconds()):
                 return await self.bridge.update()
         except HuaweiSolarException as err:
             raise UpdateFailed(
@@ -362,7 +367,7 @@ class HuaweiSolarOptimizerUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Retrieve the latest values from the optimizers."""
         try:
-            async with async_timeout.timeout(20):
+            async with asyncio.timeout(OPTIMIZER_UPDATE_TIMEOUT.total_seconds()):
                 return await self.bridge.get_latest_optimizer_history_data()
         except HuaweiSolarException as err:
             raise UpdateFailed(
@@ -418,7 +423,7 @@ class HuaweiSolarConfigurationUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         try:
-            async with async_timeout.timeout(20):
+            async with asyncio.timeout(CONFIGURATION_UPDATE_TIMEOUT.total_seconds()):
                 return await self.bridge.update_configuration_registers()
         except HuaweiSolarException as err:
             raise UpdateFailed(
@@ -450,7 +455,3 @@ class HuaweiSolarEntity(Entity):
     """Huawei Solar Entity."""
 
     _attr_has_entity_name = True
-
-    def add_name_suffix(self, suffix) -> None:
-        """Add a suffix after the current entity name."""
-        self._attr_name = f"{self.name}{suffix}"

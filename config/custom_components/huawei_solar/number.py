@@ -1,8 +1,8 @@
 """Number entities for Huawei Solar."""
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
+import logging
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -16,10 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from huawei_solar import HuaweiSolarBridge
-from huawei_solar import register_names as rn
-from huawei_solar import register_values as rv
+from huawei_solar import HuaweiSolarBridge, register_names as rn, register_values as rv
 
 from . import HuaweiSolarConfigurationUpdateCoordinator, HuaweiSolarEntity
 from .const import (
@@ -44,13 +41,15 @@ class HuaweiSolarNumberEntityDescription(NumberEntityDescription):
     dynamic_minimum_key: str | None = None
     dynamic_maximum_key: str | None = None
 
+    def __post_init__(self):
+        """Defaults the translation_key to the number key."""
+        self.translation_key = self.translation_key or self.key.replace('#','_').lower()
 
 ENERGY_STORAGE_NUMBER_DESCRIPTIONS: tuple[HuaweiSolarNumberEntityDescription, ...] = (
     HuaweiSolarNumberEntityDescription(
         key=rn.STORAGE_MAXIMUM_CHARGING_POWER,
         native_min_value=0,
         static_maximum_key=rn.STORAGE_MAXIMUM_CHARGE_POWER,
-        name="Maximum charging power",
         icon="mdi:battery-positive",
         native_unit_of_measurement=POWER_WATT,
         entity_category=EntityCategory.CONFIG,
@@ -59,7 +58,6 @@ ENERGY_STORAGE_NUMBER_DESCRIPTIONS: tuple[HuaweiSolarNumberEntityDescription, ..
         key=rn.STORAGE_MAXIMUM_DISCHARGING_POWER,
         native_min_value=0,
         static_maximum_key=rn.STORAGE_MAXIMUM_DISCHARGE_POWER,
-        name="Maximum discharging power",
         icon="mdi:battery-negative",
         native_unit_of_measurement=POWER_WATT,
         entity_category=EntityCategory.CONFIG,
@@ -69,7 +67,6 @@ ENERGY_STORAGE_NUMBER_DESCRIPTIONS: tuple[HuaweiSolarNumberEntityDescription, ..
         native_min_value=90,
         native_max_value=100,
         native_step=0.1,
-        name="End-of-charge SOC",
         icon="mdi:battery-positive",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.CONFIG,
@@ -80,7 +77,6 @@ ENERGY_STORAGE_NUMBER_DESCRIPTIONS: tuple[HuaweiSolarNumberEntityDescription, ..
         native_max_value=20,
         dynamic_maximum_key=rn.STORAGE_CAPACITY_CONTROL_SOC_PEAK_SHAVING,
         native_step=0.1,
-        name="End-of-discharge SOC",
         icon="mdi:battery-negative",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.CONFIG,
@@ -90,7 +86,6 @@ ENERGY_STORAGE_NUMBER_DESCRIPTIONS: tuple[HuaweiSolarNumberEntityDescription, ..
         native_min_value=0,
         native_max_value=100,
         native_step=0.1,
-        name="Backup power SOC",
         icon="mdi:battery-negative",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.CONFIG,
@@ -101,7 +96,6 @@ ENERGY_STORAGE_NUMBER_DESCRIPTIONS: tuple[HuaweiSolarNumberEntityDescription, ..
         native_min_value=20,
         native_max_value=100,
         native_step=0.1,
-        name="Grid charge cutoff SOC",
         icon="mdi:battery-charging-50",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.CONFIG,
@@ -110,7 +104,6 @@ ENERGY_STORAGE_NUMBER_DESCRIPTIONS: tuple[HuaweiSolarNumberEntityDescription, ..
         key=rn.STORAGE_POWER_OF_CHARGE_FROM_GRID,
         native_min_value=0,
         dynamic_maximum_key=rn.STORAGE_MAXIMUM_POWER_OF_CHARGE_FROM_GRID,
-        name="Grid charge maximum power",
         icon="mdi:battery-negative",
         native_unit_of_measurement=POWER_WATT,
         entity_category=EntityCategory.CONFIG,
@@ -122,7 +115,6 @@ CAPACITY_CONTROL_NUMBER_DESCRIPTIONS: tuple[HuaweiSolarNumberEntityDescription, 
         dynamic_minimum_key=rn.STORAGE_DISCHARGING_CUTOFF_CAPACITY,
         native_max_value=100,
         native_step=0.1,
-        name="Peak Shaving SOC",
         icon="mdi:battery-arrow-up",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.CONFIG,
@@ -148,10 +140,6 @@ async def async_setup_entry(
     configuration_update_coordinators = hass.data[DOMAIN][entry.entry_id][
         DATA_CONFIGURATION_UPDATE_COORDINATORS
     ]  # type: list[HuaweiSolarConfigurationUpdateCoordinator]
-
-    # When more than one inverter is present, then we suffix all sensors with '#1', '#2', ...
-    # The order for these suffixes is the order in which the user entered the slave-ids.
-    must_append_inverter_suffix = len(update_coordinators) > 1
 
     entities_to_add: list[NumberEntity] = []
     for idx, (update_coordinator, configuration_update_coordinator) in enumerate(
@@ -190,11 +178,6 @@ async def async_setup_entry(
                 "No battery detected on slave %s. Skipping energy storage number entities",
                 bridge.slave_id,
             )
-
-        # Add suffix if multiple inverters are present
-        if must_append_inverter_suffix:
-            for entity in slave_entities:
-                entity.add_name_suffix(f" #{idx+1}")
 
         entities_to_add.extend(slave_entities)
 

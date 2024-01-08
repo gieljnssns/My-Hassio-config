@@ -1,3 +1,7 @@
 """Constants for ics_calendar platform."""
-PLATFORM = "ics_calendar"
-VERSION = "3.1.8"
+VERSION = "4.1.0"
+DOMAIN = "ics_calendar"
+UPGRADE_URL = (
+    "https://github.com/franc6/ics_calendar/blob/releases/"
+    "UpgradeTo4.0AndLater.md"
+)

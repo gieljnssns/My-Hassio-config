@@ -3,11 +3,10 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional
 
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
+# import homeassistant.helpers.config_validation as cv
+# import voluptuous as vol
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
     CalendarEntity,
     CalendarEvent,
     extract_offset,
@@ -18,72 +17,36 @@ from homeassistant.const import (
     CONF_INCLUDE,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PREFIX,
     CONF_URL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now as hanow
 
+from . import (
+    CONF_ACCEPT_HEADER,
+    CONF_CALENDARS,
+    CONF_DAYS,
+    CONF_DOWNLOAD_INTERVAL,
+    CONF_INCLUDE_ALL_DAY,
+    CONF_OFFSET_HOURS,
+    CONF_PARSER,
+    CONF_USER_AGENT,
+)
 from .calendardata import CalendarData
 from .filter import Filter
 from .icalendarparser import ICalendarParser
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEVICE_ID = "device_id"
-CONF_CALENDARS = "calendars"
-CONF_DAYS = "days"
-CONF_CALENDAR = "calendar"
-CONF_INCLUDE_ALL_DAY = "include_all_day"
-CONF_PARSER = "parser"
-CONF_DOWNLOAD_INTERVAL = "download_interval"
-CONF_USER_AGENT = "user_agent"
-CONF_OFFSET_HOURS = "offset_hours"
 
 OFFSET = "!!"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        # pylint: disable=no-value-for-parameter
-        vol.Optional(CONF_CALENDARS, default=[]): vol.All(
-            cv.ensure_list,
-            vol.Schema(
-                [
-                    vol.Schema(
-                        {
-                            vol.Required(CONF_URL): vol.Url(),
-                            vol.Required(CONF_NAME): cv.string,
-                            vol.Optional(
-                                CONF_INCLUDE_ALL_DAY, default=False
-                            ): cv.boolean,
-                            vol.Optional(CONF_USERNAME, default=""): cv.string,
-                            vol.Optional(CONF_PASSWORD, default=""): cv.string,
-                            vol.Optional(
-                                CONF_PARSER, default="rie"
-                            ): cv.string,
-                            vol.Optional(
-                                CONF_DAYS, default=1
-                            ): cv.positive_int,
-                            vol.Optional(
-                                CONF_DOWNLOAD_INTERVAL, default=15
-                            ): cv.positive_int,
-                            vol.Optional(
-                                CONF_USER_AGENT, default=""
-                            ): cv.string,
-                            vol.Optional(CONF_EXCLUDE, default=""): cv.string,
-                            vol.Optional(CONF_INCLUDE, default=""): cv.string,
-                            vol.Optional(CONF_OFFSET_HOURS, default=0): int,
-                        }
-                    )
-                ]
-            ),
-        )
-    }
-)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
@@ -92,7 +55,7 @@ def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
-    _=None,
+    discovery_info: DiscoveryInfoType | None = None,
 ):
     """Set up ics_calendar platform.
 
@@ -102,12 +65,17 @@ def setup_platform(
     :type config: ConfigType
     :param add_entities: Callback to add entities to HA
     :type add_entities: AddEntitiesCallback
-    :param _: DiscoveryInfo, not used
-    :type _: DiscoveryInfoType | None, optional
+    :param discovery_info: Config information for the platform
+    :type discovery_info: DiscoveryInfoType | None, optional
     """
     _LOGGER.debug("Setting up ics calendars")
+    if discovery_info is not None:
+        calendars: list = discovery_info.get(CONF_CALENDARS)
+    else:
+        calendars: list = config.get(CONF_CALENDARS)
+
     calendar_devices = []
-    for calendar in config.get(CONF_CALENDARS):
+    for calendar in calendars:
         device_data = {
             CONF_NAME: calendar.get(CONF_NAME),
             CONF_URL: calendar.get(CONF_URL),
@@ -115,12 +83,14 @@ def setup_platform(
             CONF_USERNAME: calendar.get(CONF_USERNAME),
             CONF_PASSWORD: calendar.get(CONF_PASSWORD),
             CONF_PARSER: calendar.get(CONF_PARSER),
+            CONF_PREFIX: calendar.get(CONF_PREFIX),
             CONF_DAYS: calendar.get(CONF_DAYS),
             CONF_DOWNLOAD_INTERVAL: calendar.get(CONF_DOWNLOAD_INTERVAL),
             CONF_USER_AGENT: calendar.get(CONF_USER_AGENT),
             CONF_EXCLUDE: calendar.get(CONF_EXCLUDE),
             CONF_INCLUDE: calendar.get(CONF_INCLUDE),
             CONF_OFFSET_HOURS: calendar.get(CONF_OFFSET_HOURS),
+            CONF_ACCEPT_HEADER: calendar.get(CONF_ACCEPT_HEADER),
         }
         device_id = f"{device_data[CONF_NAME]}"
         entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
@@ -153,7 +123,7 @@ class ICSCalendarEntity(CalendarEntity):
 
     @property
     def event(self) -> Optional[CalendarEvent]:
-        """Return the current event for the calendar entity or None.
+        """Return the current or next upcoming event or None.
 
         :return: The current event as a dict
         :rtype: dict
@@ -213,7 +183,7 @@ class ICSCalendarEntity(CalendarEntity):
         }
 
 
-class ICSCalendarData:
+class ICSCalendarData:  # pylint: disable=R0902
     """Class to use the calendar ICS client object to get next event."""
 
     def __init__(self, device_data):
@@ -225,6 +195,7 @@ class ICSCalendarData:
         self._days = device_data[CONF_DAYS]
         self._offset_hours = device_data[CONF_OFFSET_HOURS]
         self.include_all_day = device_data[CONF_INCLUDE_ALL_DAY]
+        self._summary_prefix: str = device_data[CONF_PREFIX]
         self.parser = ICalendarParser.get_instance(device_data[CONF_PARSER])
         self.parser.set_filter(
             Filter(device_data[CONF_EXCLUDE], device_data[CONF_INCLUDE])
@@ -243,6 +214,7 @@ class ICSCalendarData:
             device_data[CONF_USERNAME],
             device_data[CONF_PASSWORD],
             device_data[CONF_USER_AGENT],
+            device_data[CONF_ACCEPT_HEADER],
         )
 
     async def async_get_events(
@@ -278,6 +250,9 @@ class ICSCalendarData:
             )
             event_list = []
 
+        for event in event_list:
+            event.summary = self._summary_prefix + event.summary
+
         return event_list
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -308,7 +283,7 @@ class ICSCalendarData:
                 self.event.all_day,
             )
             (summary, offset) = extract_offset(self.event.summary, OFFSET)
-            self.event.summary = summary
+            self.event.summary = self._summary_prefix + summary
             self.offset = offset
             return True
 

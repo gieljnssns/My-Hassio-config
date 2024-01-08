@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import Any, Generic, TypeVar
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -13,10 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from huawei_solar import HuaweiSolarBridge
-from huawei_solar import register_names as rn
-from huawei_solar import register_values as rv
+from huawei_solar import HuaweiSolarBridge, register_names as rn, register_values as rv
 
 from . import (
     HuaweiSolarConfigurationUpdateCoordinator,
@@ -43,11 +40,13 @@ class HuaweiSolarSwitchEntityDescription(Generic[T], SwitchEntityDescription):
     is_available_key: str | None = None
     check_is_available_func: Callable[[Any], bool] | None = None
 
+    def __post_init__(self):
+        """Defaults the translation_key to the switch key."""
+        self.translation_key = self.translation_key or self.key.replace('#','_').lower()
 
 ENERGY_STORAGE_SWITCH_DESCRIPTIONS: tuple[HuaweiSolarSwitchEntityDescription, ...] = (
     HuaweiSolarSwitchEntityDescription(
         key=rn.STORAGE_CHARGE_FROM_GRID_FUNCTION,
-        name="Charge from grid",
         icon="mdi:battery-charging-50",
         entity_category=EntityCategory.CONFIG,
         is_available_key=rn.STORAGE_CAPACITY_CONTROL_MODE,
@@ -76,11 +75,7 @@ async def async_setup_entry(
     configuration_update_coordinators = hass.data[DOMAIN][entry.entry_id][
         DATA_CONFIGURATION_UPDATE_COORDINATORS
     ]  # type: list[HuaweiSolarConfigurationUpdateCoordinator]
-
-    # When more than one inverter is present, then we suffix all sensors with '#1', '#2', ...
-    # The order for these suffixes is the order in which the user entered the slave-ids.
-    must_append_inverter_suffix = len(update_coordinators) > 1
-
+    
     entities_to_add: list[SwitchEntity] = []
     for idx, (update_coordinator, configuration_update_coordinator) in enumerate(
         zip(update_coordinators, configuration_update_coordinators)
@@ -115,11 +110,6 @@ async def async_setup_entry(
                 "No battery detected on slave %s. Skipping energy storage switch entities",
                 bridge.slave_id,
             )
-
-        # Add suffix if multiple inverters are present
-        if must_append_inverter_suffix:
-            for entity in slave_entities:
-                entity.add_name_suffix(f" #{idx+1}")
 
         entities_to_add.extend(slave_entities)
 
@@ -221,7 +211,6 @@ class HuaweiSolarOnOffSwitchEntity(CoordinatorEntity, HuaweiSolarEntity, SwitchE
         self.bridge = bridge
         self.entity_description = SwitchEntityDescription(
             rn.STARTUP,
-            name="Inverter ON/OFF",
             icon="mdi:power-standby",
             entity_category=EntityCategory.CONFIG,
         )

@@ -1,1 +1,0 @@
-"""OpenMindsAI custom component."""
