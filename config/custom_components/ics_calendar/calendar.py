@@ -1,7 +1,7 @@
 """Support for ICS Calendar."""
 import logging
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Any, Optional
 
 # import homeassistant.helpers.config_validation as cv
 # import voluptuous as vol
@@ -31,6 +31,7 @@ from homeassistant.util.dt import now as hanow
 from . import (
     CONF_ACCEPT_HEADER,
     CONF_CALENDARS,
+    CONF_CONNECTION_TIMEOUT,
     CONF_DAYS,
     CONF_DOWNLOAD_INTERVAL,
     CONF_INCLUDE_ALL_DAY,
@@ -91,6 +92,7 @@ def setup_platform(
             CONF_INCLUDE: calendar.get(CONF_INCLUDE),
             CONF_OFFSET_HOURS: calendar.get(CONF_OFFSET_HOURS),
             CONF_ACCEPT_HEADER: calendar.get(CONF_ACCEPT_HEADER),
+            CONF_CONNECTION_TIMEOUT: calendar.get(CONF_CONNECTION_TIMEOUT),
         }
         device_id = f"{device_data[CONF_NAME]}"
         entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
@@ -182,6 +184,29 @@ class ICSCalendarEntity(CalendarEntity):
             else False
         }
 
+    async def async_create_event(self, **kwargs: Any):
+        """Raise error, this is a read-only calendar."""
+        raise NotImplementedError()
+
+    async def async_delete_event(
+        self,
+        uid: str,
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Raise error, this is a read-only calendar."""
+        raise NotImplementedError()
+
+    async def async_update_event(
+        self,
+        uid: str,
+        event: dict[str, Any],
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Raise error, this is a read-only calendar."""
+        raise NotImplementedError()
+
 
 class ICSCalendarData:  # pylint: disable=R0902
     """Class to use the calendar ICS client object to get next event."""
@@ -216,6 +241,8 @@ class ICSCalendarData:  # pylint: disable=R0902
             device_data[CONF_USER_AGENT],
             device_data[CONF_ACCEPT_HEADER],
         )
+
+        self._calendar_data.set_timeout(device_data[CONF_CONNECTION_TIMEOUT])
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime

@@ -49,6 +49,7 @@ from custom_components.powercalc.const import (
     ATTR_SOURCE_DOMAIN,
     ATTR_SOURCE_ENTITY,
     CONF_CALCULATION_ENABLED_CONDITION,
+    CONF_COMPOSITE,
     CONF_DELAY,
     CONF_DISABLE_EXTENDED_ATTRIBUTES,
     CONF_DISABLE_STANDBY_POWER,
@@ -187,7 +188,7 @@ async def create_virtual_power_sensor(
             DOMAIN
         ][DATA_CALCULATOR_FACTORY]
 
-        standby_power = Decimal(0)
+        standby_power: Template | Decimal = Decimal(0)
         standby_power_on = Decimal(0)
         if not sensor_config.get(CONF_DISABLE_STANDBY_POWER):
             if sensor_config.get(CONF_STANDBY_POWER) is not None:
@@ -280,7 +281,7 @@ def is_manually_configured(sensor_config: ConfigType) -> bool:
     """
     if CONF_MODEL in sensor_config:
         return False
-    return any(key in sensor_config for key in [CONF_LINEAR, CONF_FIXED, CONF_PLAYBOOK])
+    return any(key in sensor_config for key in [CONF_LINEAR, CONF_FIXED, CONF_PLAYBOOK, CONF_COMPOSITE])
 
 
 def is_fully_configured(config: ConfigType) -> bool:
@@ -463,7 +464,7 @@ class VirtualPowerSensor(SensorEntity, PowerSensor):
             self._strategy_instance.set_update_callback(self._update_power_sensor)
 
         @callback
-        def async_update(event_time: datetime | None = None) -> None:
+        def async_update(__: datetime | None = None) -> None:
             """Update the entity."""
             self.async_schedule_update_ha_state(True)
 
@@ -532,10 +533,7 @@ class VirtualPowerSensor(SensorEntity, PowerSensor):
         if self.source_entity == DUMMY_ENTITY_ID:
             return True
 
-        if state.state == STATE_UNKNOWN:
-            return False
-
-        if not self._ignore_unavailable_state and state.state == STATE_UNAVAILABLE:
+        if not self._ignore_unavailable_state and state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             return False
 
         return True

@@ -3,7 +3,6 @@ from typing import Final
 
 from homeassistant.components.weather import (ATTR_CONDITION_CLEAR_NIGHT,
                                               ATTR_CONDITION_CLOUDY,
-                                              ATTR_CONDITION_EXCEPTIONAL,
                                               ATTR_CONDITION_FOG,
                                               ATTR_CONDITION_LIGHTNING_RAINY,
                                               ATTR_CONDITION_PARTLYCLOUDY,
@@ -15,7 +14,7 @@ from homeassistant.components.weather import (ATTR_CONDITION_CLEAR_NIGHT,
 from homeassistant.const import Platform
 
 DOMAIN: Final = 'irm_kmi'
-PLATFORMS: Final = [Platform.WEATHER, Platform.CAMERA]
+PLATFORMS: Final = [Platform.WEATHER, Platform.CAMERA, Platform.BINARY_SENSOR]
 CONFIG_FLOW_VERSION = 3
 
 OUT_OF_BENELUX: Final = ["außerhalb der Benelux (Brussels)",
@@ -56,6 +55,11 @@ CONF_USE_DEPRECATED_FORECAST_OPTIONS: Final = [
     OPTION_DEPRECATED_FORECAST_DAILY,
     OPTION_DEPRECATED_FORECAST_HOURLY
 ]
+
+REPAIR_SOLUTION: Final = "repair_solution"
+REPAIR_OPT_MOVE: Final = "repair_option_move"
+REPAIR_OPT_DELETE: Final = "repair_option_delete"
+REPAIR_OPTIONS: Final = [REPAIR_OPT_MOVE, REPAIR_OPT_DELETE]
 
 # map ('ww', 'dayNight') tuple from IRM KMI to HA conditions
 IRM_KMI_TO_HA_CONDITION_MAP: Final = {
@@ -101,8 +105,8 @@ IRM_KMI_TO_HA_CONDITION_MAP: Final = {
     (19, 'n'): ATTR_CONDITION_POURING,
     (20, 'd'): ATTR_CONDITION_SNOWY_RAINY,
     (20, 'n'): ATTR_CONDITION_SNOWY_RAINY,
-    (21, 'd'): ATTR_CONDITION_EXCEPTIONAL,
-    (21, 'n'): ATTR_CONDITION_EXCEPTIONAL,
+    (21, 'd'): ATTR_CONDITION_RAINY,
+    (21, 'n'): ATTR_CONDITION_RAINY,
     (22, 'd'): ATTR_CONDITION_SNOWY,
     (22, 'n'): ATTR_CONDITION_SNOWY,
     (23, 'd'): ATTR_CONDITION_SNOWY,
@@ -113,6 +117,19 @@ IRM_KMI_TO_HA_CONDITION_MAP: Final = {
     (25, 'n'): ATTR_CONDITION_FOG,
     (26, 'd'): ATTR_CONDITION_FOG,
     (26, 'n'): ATTR_CONDITION_FOG,
-    (27, 'd'): ATTR_CONDITION_EXCEPTIONAL,
-    (27, 'n'): ATTR_CONDITION_EXCEPTIONAL
+    (27, 'd'): ATTR_CONDITION_FOG,
+    (27, 'n'): ATTR_CONDITION_FOG
 }
+
+MAP_WARNING_ID_TO_SLUG: Final = {
+    0: 'wind',
+    1: 'rain',
+    2: 'ice_or_snow',
+    3: 'thunder',
+    7: 'fog',
+    9: 'cold',
+    12: 'thunder_wind_rain',
+    13: 'thunderstorm_strong_gusts',
+    14: 'thunderstorm_large_rainfall',
+    15: 'storm_surge',
+    17: 'coldspell'}

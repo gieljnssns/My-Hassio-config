@@ -86,6 +86,7 @@ OPZET_COLLECTOR_URLS = {
     'middelburg-vlissingen':    'https://afvalwijzer.middelburgvlissingen.nl',
     'mijnafvalzaken':           'https://mijnafvalzaken.nl',
     'montfoort':                'https://afvalkalender.cyclusnv.nl',
+    'offalkalinder':            'https://www.offalkalinder.nl',
     'peelenmaas':               'https://afvalkalender.peelenmaas.nl',
     'prezero':                  'https://inzamelwijzer.prezero.nl',
     'purmerend':                'https://afvalkalender.purmerend.nl',
@@ -113,6 +114,7 @@ XIMMIO_COLLECTOR_IDS = {
     'twentemilieu':     '8d97bb56-5afd-4cbc-a651-b4f7314264b4',
     'waardlanden':      '942abcf6-3775-400d-ae5d-7380d728b23c',
     'westland':         '6fc75608-126a-4a50-9241-a002ce8c8a6c',
+    'woerden':          '06856f74-6826-4c6a-aabf-69bc9d20b5a6',
     'reinis':           '9dc25c8a-175a-4a41-b7a1-83f237a80b77',
 }
 
@@ -128,6 +130,7 @@ DEPRECATED_AND_NEW_WASTECOLLECTORS = {
     'ophaalkalender':   'recycleapp',
     'circulus-berkel':  'circulus',
     'alkmaar':          'hvc',
+    'ôffalkalinder':    'offalkalinder',
 }
 
 WASTE_TYPE_BRANCHES = 'takken'

@@ -92,7 +92,7 @@ class WasteTypeSensor(RestoreEntity, SensorEntity):
 
     @property
     def device_class(self):
-        if self.date_object == True:
+        if self.date_object:
             return SensorDeviceClass.TIMESTAMP
 
     async def async_added_to_hass(self):
@@ -224,7 +224,7 @@ class WasteDateSensor(RestoreEntity, SensorEntity):
         self.__set_state(collections)
 
     def __set_state(self, collections):
-        self._state = ', '.join([x.waste_type for x in collections])
+        self._state = ', '.join(set([x.waste_type for x in collections]))
 
 
 class WasteUpcomingSensor(RestoreEntity, SensorEntity):

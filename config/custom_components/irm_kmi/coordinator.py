@@ -10,18 +10,19 @@ from homeassistant.components.weather import Forecast
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ZONE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import issue_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
                                                       UpdateFailed)
 
 from .api import IrmKmiApiClient, IrmKmiApiError
-from .const import CONF_DARK_MODE, CONF_STYLE
+from .const import CONF_DARK_MODE, CONF_STYLE, DOMAIN
 from .const import IRM_KMI_TO_HA_CONDITION_MAP as CDT_MAP
-from .const import (LANGS, OPTION_STYLE_SATELLITE, OUT_OF_BENELUX,
-                    STYLE_TO_PARAM_MAP)
+from .const import LANGS
+from .const import MAP_WARNING_ID_TO_SLUG as SLUG_MAP
+from .const import OPTION_STYLE_SATELLITE, OUT_OF_BENELUX, STYLE_TO_PARAM_MAP
 from .data import (AnimationFrameData, CurrentWeatherData, IrmKmiForecast,
-                   ProcessedCoordinatorData, RadarAnimationData)
+                   ProcessedCoordinatorData, RadarAnimationData, WarningData)
 from .rain_graph import RainGraph
 from .utils import disable_from_config, get_config_value
 
@@ -65,22 +66,28 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
                      'long': zone.attributes[ATTR_LONGITUDE]}
                 )
                 _LOGGER.debug(f"Observation for {api_data.get('cityName', '')}: {api_data.get('obs', '{}')}")
+                _LOGGER.debug(f"Full data: {api_data}")
 
         except IrmKmiApiError as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
 
         if api_data.get('cityName', None) in OUT_OF_BENELUX:
-            if self.data is None:
-                error_text = f"Zone '{self._zone}' is out of Benelux and forecast is only available in the Benelux"
-                _LOGGER.error(error_text)
-                raise ConfigEntryError(error_text)
-            else:
-                # TODO create a repair when this triggers
-                _LOGGER.error(f"The zone {self._zone} is now out of Benelux and forecast is only available in Benelux."
-                              f"Associated device is now disabled.  Move the zone back in Benelux and re-enable to fix "
-                              f"this")
-                disable_from_config(self.hass, self._config_entry)
-                return ProcessedCoordinatorData()
+            _LOGGER.error(f"The zone {self._zone} is now out of Benelux and forecast is only available in Benelux."
+                          f"Associated device is now disabled.  Move the zone back in Benelux and re-enable to fix "
+                          f"this")
+            disable_from_config(self.hass, self._config_entry)
+
+            issue_registry.async_create_issue(
+                self.hass,
+                DOMAIN,
+                "zone_moved",
+                is_fixable=True,
+                severity=issue_registry.IssueSeverity.ERROR,
+                translation_key='zone_moved',
+                data={'config_entry_id': self._config_entry.entry_id, 'zone': self._zone},
+                translation_placeholders={'zone': self._zone}
+            )
+            return ProcessedCoordinatorData()
 
         return await self.process_api_data(api_data)
 
@@ -122,9 +129,10 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
         """From the API data, create the object that will be used in the entities"""
         return ProcessedCoordinatorData(
             current_weather=IrmKmiCoordinator.current_weather_from_data(api_data),
-            daily_forecast=IrmKmiCoordinator.daily_list_to_forecast(api_data.get('for', {}).get('daily')),
+            daily_forecast=self.daily_list_to_forecast(api_data.get('for', {}).get('daily')),
             hourly_forecast=IrmKmiCoordinator.hourly_list_to_forecast(api_data.get('for', {}).get('hourly')),
-            animation=await self._async_animation_data(api_data=api_data)
+            animation=await self._async_animation_data(api_data=api_data),
+            warnings=self.warnings_from_data(api_data.get('for', {}).get('warning'))
         )
 
     async def download_images_from_api(self,
@@ -248,8 +256,7 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
 
         return forecasts
 
-    @staticmethod
-    def daily_list_to_forecast(data: List[dict] | None) -> List[Forecast] | None:
+    def daily_list_to_forecast(self, data: List[dict] | None) -> List[Forecast] | None:
         """Parse data from the API to create a list of daily forecasts"""
         if data is None or not isinstance(data, list) or len(data) == 0:
             return None
@@ -286,9 +293,15 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
                 precipitation_probability=f.get('precipChance', None),
                 wind_bearing=f.get('wind', {}).get('dirText', {}).get('en'),
                 is_daytime=is_daytime,
-                text_fr=f.get('text', {}).get('fr'),
-                text_nl=f.get('text', {}).get('nl')
+                text=f.get('text', {}).get(self.hass.config.language, ""),
             )
+            # Swap temperature and templow if needed
+            if (forecast['native_templow'] is not None
+                    and forecast['native_temperature'] is not None
+                    and forecast['native_templow'] > forecast['native_temperature']):
+                (forecast['native_templow'], forecast['native_temperature']) = \
+                    (forecast['native_temperature'], forecast['native_templow'])
+
             forecasts.append(forecast)
             if is_daytime or idx == 0:
                 n_days += 1
@@ -301,7 +314,7 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
                           country: str,
                           images_from_api: Tuple[bytes],
                           ) -> RainGraph:
-
+        """Create a RainGraph object that is ready to output animated and still SVG images"""
         sequence: List[AnimationFrameData] = list()
         tz = pytz.timezone(self.hass.config.time_zone)
         current_time = datetime.now(tz=tz)
@@ -337,3 +350,37 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
         return RainGraph(radar_animation, image_path, bg_size,
                          dark_mode=self._dark_mode,
                          tz=self.hass.config.time_zone)
+
+    def warnings_from_data(self, warning_data: list | None) -> List[WarningData]:
+        """Create a list of warning data instances based on the api data"""
+        if warning_data is None or not isinstance(warning_data, list) or len(warning_data) == 0:
+            return []
+
+        result = list()
+        for data in warning_data:
+            try:
+                warning_id = int(data.get('warningType', {}).get('id'))
+                start = datetime.fromisoformat(data.get('fromTimestamp', None))
+                end = datetime.fromisoformat(data.get('toTimestamp', None))
+            except TypeError | ValueError:
+                # Without this data, the warning is useless
+                continue
+
+            try:
+                level = int(data.get('warningLevel'))
+            except TypeError:
+                level = None
+
+            result.append(
+                WarningData(
+                    slug=SLUG_MAP.get(warning_id, 'unknown'),
+                    id=warning_id,
+                    level=level,
+                    friendly_name=data.get('warningType', {}).get('name', {}).get(self.hass.config.language),
+                    text=data.get('text', {}).get(self.hass.config.language),
+                    starts_at=start,
+                    ends_at=end
+                )
+            )
+
+        return result if len(result) > 0 else []

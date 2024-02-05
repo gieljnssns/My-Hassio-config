@@ -134,7 +134,7 @@ class LutStrategy(PowerCalculationStrategyInterface):
                 color_mode,
             )
         except LutFileNotFoundError:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "%s: Lookup table not found (model: %s, color_mode: %s)",
                 entity_state.entity_id,
                 self._profile.model,
@@ -246,7 +246,7 @@ class LutStrategy(PowerCalculationStrategyInterface):
 
         return max(
             (k for k in lookup_dict if int(k) <= int(search_key)),
-            default=[*keys][0],
+            default=next(iter(keys)),
         )
 
     @staticmethod
@@ -255,7 +255,7 @@ class LutStrategy(PowerCalculationStrategyInterface):
         search_key: int,
     ) -> int:
         keys = lookup_dict.keys()
-        first_key = [*keys][0]
+        first_key = next(iter(keys))
         if first_key > search_key:
             return int(first_key)
 
