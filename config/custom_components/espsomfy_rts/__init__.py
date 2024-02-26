@@ -1,29 +1,28 @@
 """The ESPSomfy RTS integration."""
 from __future__ import annotations
+from enum import IntFlag
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DOMAIN
+from .const import DOMAIN, PLATFORMS
 from .controller import ESPSomfyAPI, ESPSomfyController
 
-# For your initial PR, limit it to 1 platform.
-PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
-    Platform.COVER,
-    Platform.SWITCH,
-    Platform.UPDATE
-]
+
+class ESPSomfyRTSEntityFeature(IntFlag):
+    """Supported features of ESPSomfy Entities."""
+    REBOOT = 1
+    BACKUP = 2
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ESPSomfy RTS from a config entry."""
-    api = ESPSomfyAPI(hass, entry.data)
+    api = ESPSomfyAPI(hass, entry.entry_id, entry.data)
     controller = ESPSomfyController(entry.entry_id, hass, api)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = controller
-    await api.get_initial()
+    # await api.get_initial()
 
     async def _async_ws_close(_: Event) -> None:
         await controller.ws_close()
@@ -32,8 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_ws_close)
     )
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    # hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    # This does not occur until the socket connects.
+    # await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await controller.ws_connect()
 
     return True

@@ -7,6 +7,7 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -24,7 +25,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up ESPSomfy RTS update based on a config entry."""
     controller:ESPSomfyController = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([ESPSomfyRTSUpdateEntity(controller)])
+    data = controller.api.get_config()
+    if("serverId" in data):
+        async_add_entities([ESPSomfyRTSUpdateEntity(controller)])
 
 
 class ESPSomfyRTSUpdateEntity(ESPSomfyEntity, UpdateEntity):
@@ -32,19 +35,18 @@ class ESPSomfyRTSUpdateEntity(ESPSomfyEntity, UpdateEntity):
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = UpdateEntityFeature.SPECIFIC_VERSION | UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
-    _attr_title = "ESPSomfy RTS"
-
+    _attr_title = "ESPSomfy RTS Firmware"
 
     def __init__(self, controller: ESPSomfyController) -> None:
         """Initialize the update entity."""
         self._controller = controller
-        self._attr_name = f"ESPSomfy RTS {controller.server_id}"
+        self._attr_name = f"Firmware Update"
         self._attr_unique_id = f"update_{controller.unique_id}"
         self._update_status = 0
         self._fw_progress = 100
         self._app_progress = 100
         self._total_progress = 100
-        if controller.can_update:
+        if controller.check_for_update:
             self._attr_supported_features = (
                 UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION | UpdateEntityFeature.PROGRESS | UpdateEntityFeature.BACKUP
             )
@@ -54,7 +56,7 @@ class ESPSomfyRTSUpdateEntity(ESPSomfyEntity, UpdateEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if(self._controller.data["event"] == EVT_FWSTATUS):
-            if self._controller.can_update:
+            if self._controller.check_for_update and self._controller.internet_available:
                 self._attr_supported_features = (
                     UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION | UpdateEntityFeature.PROGRESS | UpdateEntityFeature.BACKUP
                 )
@@ -87,6 +89,8 @@ class ESPSomfyRTSUpdateEntity(ESPSomfyEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
+        if(self.coordinator.check_for_update is False):
+            return None
         if(latest := self.coordinator.latest_version) is None:
             return None
         return str(latest)

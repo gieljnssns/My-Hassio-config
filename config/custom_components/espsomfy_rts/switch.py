@@ -23,30 +23,30 @@ async def async_setup_entry(
     """Set up shades for the shade controller."""
     controller = hass.data[DOMAIN][config_entry.entry_id]
     new_entities = []
-    for shade in controller.api.shades:
-        try:
-            if "shadeType" in shade and (int(shade["shadeType"]) == 9 or int(shade["shadeType"] == 10):
-                new_entities.append(ESPSomfyBinarySwitch(controller=controller, data=shade))
-            elif "sunSensor" in shade:
-                if shade["sunSensor"] is True:
-                    new_entities.append(ESPSomfySunSwitch(controller=controller, data=shade))
-            elif "shadeType" in shade:
-                match(shade["shadeType"]):
-                    case 3:
+    data = controller.api.get_config()
+    if("serverId" in data):
+        for shade in controller.api.shades:
+            try:
+                if "shadeType" in shade and (int(shade["shadeType"]) == 9 or int(shade["shadeType"] == 10)):
+                    new_entities.append(ESPSomfyBinarySwitch(controller=controller, data=shade))
+                elif "sunSensor" in shade:
+                    if shade["sunSensor"] is True:
                         new_entities.append(ESPSomfySunSwitch(controller=controller, data=shade))
-        except KeyError:
-            pass
+                elif "shadeType" in shade:
+                    match(shade["shadeType"]):
+                        case 3:
+                            new_entities.append(ESPSomfySunSwitch(controller=controller, data=shade))
+            except KeyError:
+                pass
 
-    for group in controller.api.groups:
-        try:
-            if "sunSensor" in group:
-                if group["sunSensor"] is True:
-                    new_entities.append(ESPSomfySunSwitch(controller=controller, data=group))
+        for group in controller.api.groups:
+            try:
+                if "sunSensor" in group:
+                    if group["sunSensor"] is True:
+                        new_entities.append(ESPSomfySunSwitch(controller=controller, data=group))
 
-        except KeyError:
-            pass
-
-
+            except KeyError:
+                pass
     if new_entities:
         async_add_entities(new_entities)
 
@@ -140,6 +140,9 @@ class ESPSomfyBinarySwitch(ESPSomfyEntity, SwitchEntity):
         self._shade_id = data["shadeId"]
         self._available = True
         self._attr_unique_id = f"binaryswitch_{controller.unique_id}_{self._shade_id}"
+        self._flip_commands = False
+        if "flipCommands" in data:
+            self._flip_commands = bool(data["flipCommands"])
         if "position" in data:
             self._attr_is_on = bool((int(data["position"])) > 0)
         else:
@@ -161,8 +164,20 @@ class ESPSomfyBinarySwitch(ESPSomfyEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.coordinator.api.toggle_shade(self._shade_id)
+        if self._binaryswitch_type == 10:
+            if self._flip_commands:
+                await self.coordinator.api.close_shade(self._shade_id)
+            else:
+                await self.coordinator.api.open_shade(self._shade_id)
+        else:
+            await self.coordinator.api.toggle_shade(self._shade_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.coordinator.api.toggle_shade(self._shade_id)
+        if self._binaryswitch_type == 10:
+            if self._flip_commands:
+                await self.coordinator.api.open_shade(self._shade_id)
+            else:
+                await self.coordinator.api.close_shade(self._shade_id)
+        else:
+            await self.coordinator.api.toggle_shade(self._shade_id)

@@ -10,7 +10,6 @@ from datetime import timedelta
 from typing import Any
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 import voluptuous as vol
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -71,6 +70,7 @@ from .const import (
     CONF_HIDE_MEMBERS,
     CONF_IGNORE_UNAVAILABLE_STATE,
     CONF_INCLUDE,
+    CONF_INCLUDE_NON_POWERCALC_SENSORS,
     CONF_LINEAR,
     CONF_MANUFACTURER,
     CONF_MODE,
@@ -122,13 +122,13 @@ from .const import (
     SensorType,
     UnitPrefix,
 )
+from .device_binding import attach_entities_to_source_device, bind_config_entry_to_device
 from .errors import (
     PowercalcSetupError,
     SensorAlreadyConfiguredError,
     SensorConfigurationError,
 )
 from .group_include.include import resolve_include_entities
-from .sensors.abstract import BaseEntity
 from .sensors.daily_energy import (
     DAILY_FIXED_ENERGY_SCHEMA,
     create_daily_fixed_energy_power_sensor,
@@ -216,6 +216,7 @@ SENSOR_CONFIG = {
                     vol.Optional(CONF_AND): vol.All(cv.ensure_list, [FILTER_CONFIG]),
                 },
             ),
+            vol.Optional(CONF_INCLUDE_NON_POWERCALC_SENSORS, default=True): cv.boolean,
         },
     ),
     vol.Optional(CONF_IGNORE_UNAVAILABLE_STATE): cv.boolean,
@@ -321,6 +322,9 @@ async def async_setup_entry(
     """Setup sensors from config entry (GUI config flow)."""
     sensor_config = convert_config_entry_to_sensor_config(entry)
     sensor_type = entry.data.get(CONF_SENSOR_TYPE)
+
+    bind_config_entry_to_device(hass, entry)
+
     if sensor_type == SensorType.GROUP:
         global_config: dict = hass.data[DOMAIN][DOMAIN_CONFIG]
         merged_sensor_config = get_merged_sensor_configuration(
@@ -802,33 +806,6 @@ async def create_individual_sensors(
         used_unique_ids.append(unique_id)
 
     return EntitiesBucket(new=entities_to_add, existing=[])
-
-
-async def attach_entities_to_source_device(
-    config_entry: ConfigEntry | None,
-    entities_to_add: list[Entity],
-    hass: HomeAssistant,
-    source_entity: SourceEntity,
-) -> None:
-    """Set the entity to same device as the source entity, if any available."""
-    if source_entity.entity_entry and source_entity.device_entry:
-        device_id = source_entity.device_entry.id
-        device_registry = dr.async_get(hass)
-        for entity in (
-            entity for entity in entities_to_add if isinstance(entity, BaseEntity)
-        ):
-            try:
-                entity.source_device_id = source_entity.device_entry.id  # type: ignore
-            except AttributeError:  # pragma: no cover
-                _LOGGER.error("%s: Cannot set device id on entity", entity.entity_id)
-        if (
-            config_entry
-            and config_entry.entry_id not in source_entity.device_entry.config_entries
-        ):
-            device_registry.async_update_device(
-                device_id,
-                add_config_entry_id=config_entry.entry_id,
-            )
 
 
 async def check_entity_not_already_configured(

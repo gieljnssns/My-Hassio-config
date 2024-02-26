@@ -39,12 +39,30 @@ SVC_SET_CURRENT_POS = "set_current_position"
 SVC_SET_CURRENT_TILT_POS = "set_current_tilt_position"
 SVC_SET_SUNNY = "set_sunny"
 SVC_SET_WINDY = "set_windy"
+SVC_SEND_COMMAND = "send_command"
 
 KEY_OPEN_CLOSE = "open_close"
 KEY_STOP = "stop"
 KEY_POSITION = "position"
 ATTR_SUNNY = "sunny"
 ATTR_WINDY = "windy"
+ATTR_COMMAND = "command"
+
+ALLOWED_COMMAND = [
+    "Up",
+    "My",
+    "Down",
+    "Toggle",
+    "Prog",
+    "UpDown",
+    "MyUp",
+    "MyDown",
+    "MyUpDown",
+    "StepUp",
+    "StepDown",
+    "Flag",
+    "SunFlag"
+]
 
 POSITION_SERVICE_SCHEMA: Final = make_entity_service_schema(
     {vol.Required(ATTR_POSITION): vol.All(
@@ -62,7 +80,9 @@ SUNNY_SERVICE_SCHEMA: Final = make_entity_service_schema(
 WINDY_SERVICE_SCHEMA: Final = make_entity_service_schema(
     {vol.Required(ATTR_WINDY): vol.All(vol.Coerce(bool))}
 )
-
+SEND_COMMAND_SERVICE_SCHEMA: Final = make_entity_service_schema(
+    {vol.Required(ATTR_COMMAND): vol.In(ALLOWED_COMMAND)}
+)
 
 
 async def async_setup_entry(
@@ -73,49 +93,50 @@ async def async_setup_entry(
     """Set up shades for the shade controller."""
     controller = hass.data[DOMAIN][config_entry.entry_id]
     new_shades = []
+    data = controller.api.get_config()
+    if("serverId" in data):
+        for shade in controller.api.shades:
+            try:
+                # We do not want any of the dry contacts here.
+                if "shadeType" in shade and not (int(shade["shadeType"]) == 9 or int(shade["shadeType"]) == 10):
+                    new_shades.append(ESPSomfyShade(controller, shade))
 
-    for shade in controller.api.shades:
-        try:
-            # We do not want any of the dry contacts here.
-            if "shadeType" in shade and not int(shade["shadeType"]) == 9:
-                new_shades.append(ESPSomfyShade(controller, shade))
+            except KeyError:
+                pass
+        if new_shades:
+            async_add_entities(new_shades)
 
-        except KeyError:
-            pass
-    if new_shades:
-        async_add_entities(new_shades)
-
-    new_groups = []
-    for group in controller.api.groups:
-        try:
-            new_groups.append(ESPSomfyGroup(hass=hass, controller=controller, data=group))
-        except KeyError:
-            pass
-    if new_groups:
-        async_add_entities(new_groups)
+        new_groups = []
+        for group in controller.api.groups:
+            try:
+                new_groups.append(ESPSomfyGroup(hass=hass, controller=controller, data=group))
+            except KeyError:
+                pass
+        if new_groups:
+            async_add_entities(new_groups)
 
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SVC_SET_SHADE_POS,
-        POSITION_SERVICE_SCHEMA,
-        "async_set_cover_position",
-    )
-    platform.async_register_entity_service(
-        SVC_SET_TILT_POS,
-        TILT_POSITION_SERVICE_SCHEMA,
-        "async_set_cover_tilt_position",
-    )
-    platform.async_register_entity_service(SVC_OPEN_SHADE, {}, "async_open_cover")
-    platform.async_register_entity_service(SVC_CLOSE_SHADE, {}, "async_close_cover")
-    platform.async_register_entity_service(SVC_STOP_SHADE, {}, "async_stop_cover")
-    platform.async_register_entity_service(SVC_TILT_OPEN, {}, "async_tilt_open")
-    platform.async_register_entity_service(SVC_TILT_CLOSE, {}, "async_tilt_close")
-    platform.async_register_entity_service(SVC_SET_CURRENT_POS, POSITION_SERVICE_SCHEMA, "async_set_current_position")
-    platform.async_register_entity_service(SVC_SET_CURRENT_TILT_POS, TILT_POSITION_SERVICE_SCHEMA, "async_set_current_tilt_position")
-    platform.async_register_entity_service(SVC_SET_SUNNY, SUNNY_SERVICE_SCHEMA, "async_set_sunny")
-    platform.async_register_entity_service(SVC_SET_WINDY, WINDY_SERVICE_SCHEMA, "async_set_windy")
-
+        platform = entity_platform.async_get_current_platform()
+        platform.async_register_entity_service(
+            SVC_SET_SHADE_POS,
+            POSITION_SERVICE_SCHEMA,
+            "async_set_cover_position",
+        )
+        platform.async_register_entity_service(
+            SVC_SET_TILT_POS,
+            TILT_POSITION_SERVICE_SCHEMA,
+            "async_set_cover_tilt_position",
+        )
+        platform.async_register_entity_service(SVC_OPEN_SHADE, {}, "async_open_cover")
+        platform.async_register_entity_service(SVC_CLOSE_SHADE, {}, "async_close_cover")
+        platform.async_register_entity_service(SVC_STOP_SHADE, {}, "async_stop_cover")
+        platform.async_register_entity_service(SVC_TILT_OPEN, {}, "async_tilt_open")
+        platform.async_register_entity_service(SVC_TILT_CLOSE, {}, "async_tilt_close")
+        platform.async_register_entity_service(SVC_SET_CURRENT_POS, POSITION_SERVICE_SCHEMA, "async_set_current_position")
+        platform.async_register_entity_service(SVC_SET_CURRENT_TILT_POS, TILT_POSITION_SERVICE_SCHEMA, "async_set_current_tilt_position")
+        platform.async_register_entity_service(SVC_SET_SUNNY, SUNNY_SERVICE_SCHEMA, "async_set_sunny")
+        platform.async_register_entity_service(SVC_SET_WINDY, WINDY_SERVICE_SCHEMA, "async_set_windy")
+        platform.async_register_entity_service(SVC_SEND_COMMAND, SEND_COMMAND_SERVICE_SCHEMA, "async_send_command")
 
 
 class ESPSomfyGroup(CoverGroup, ESPSomfyEntity):
@@ -571,3 +592,7 @@ class ESPSomfyShade(ESPSomfyEntity, CoverEntity):
     async def async_set_windy(self, **kwargs:Any) -> None:
         """Sets the sensor value for the device by sending the appropriate frames"""
         await self._controller.api.set_windy(self._shade_id, bool(kwargs[ATTR_WINDY]))
+
+    async def async_send_command(self, **kwargs:Any) -> None:
+        """Sends raw command from SVC"""
+        await self._controller.api.raw_command(self._shade_id, kwargs[ATTR_COMMAND])

@@ -23,6 +23,7 @@ from .const import (
     DOMAIN,
     METER_REG_BASE,
     ModbusDefaults,
+    RetrySettings,
     SolarEdgeTimeouts,
     SunSpecNotImpl,
 )
@@ -148,6 +149,7 @@ class SolarEdgeModbusMultiHub:
 
         self._initalized = False
         self._online = True
+        self._timeout_counter = 0
 
         self._client = None
 
@@ -316,9 +318,10 @@ class SolarEdgeModbusMultiHub:
         if not self.initalized:
             try:
                 async with self._lock:
-                    await self._async_init_solaredge()
+                    async with asyncio.timeout(self.coordinator_timeout):
+                        await self._async_init_solaredge()
 
-            except (ConnectionException, ModbusIOException) as e:
+            except (ConnectionException, ModbusIOException, TimeoutError) as e:
                 self.disconnect()
                 ir.async_create_issue(
                     self._hass,
@@ -330,6 +333,8 @@ class SolarEdgeModbusMultiHub:
                     data={"entry_id": self._entry_id},
                 )
                 raise HubInitFailed(f"Setup failed: {e}")
+
+            ir.async_delete_issue(self._hass, DOMAIN, "check_configuration")
 
             return True
 
@@ -348,13 +353,14 @@ class SolarEdgeModbusMultiHub:
                 f"Modbus/TCP connect to {self.hub_host}:{self.hub_port} failed."
             )
 
-        else:
-            if not self.online:
-                ir.async_delete_issue(self._hass, DOMAIN, "check_configuration")
-            self.online = True
+        if not self.online:
+            ir.async_delete_issue(self._hass, DOMAIN, "check_configuration")
 
-            try:
-                async with self._lock:
+        self.online = True
+
+        try:
+            async with self._lock:
+                async with asyncio.timeout(self.coordinator_timeout):
                     for inverter in self.inverters:
                         await inverter.read_modbus_data()
                     for meter in self.meters:
@@ -362,25 +368,44 @@ class SolarEdgeModbusMultiHub:
                     for battery in self.batteries:
                         await battery.read_modbus_data()
 
-            except ModbusReadError as e:
-                self.disconnect()
-                raise DataUpdateFailed(f"Update failed: {e}")
+        except ModbusReadError as e:
+            self.disconnect()
+            raise DataUpdateFailed(f"Update failed: {e}")
 
-            except DeviceInvalid as e:
-                if not self._keep_modbus_open:
-                    self.disconnect()
-                raise DataUpdateFailed(f"Invalid device: {e}")
+        except DeviceInvalid as e:
+            self.disconnect()
+            raise DataUpdateFailed(f"Invalid device: {e}")
 
-            except ConnectionException as e:
-                self.disconnect()
-                raise DataUpdateFailed(f"Connection failed: {e}")
+        except ConnectionException as e:
+            self.disconnect()
+            raise DataUpdateFailed(f"Connection failed: {e}")
 
-            except ModbusIOException as e:
-                self.disconnect()
-                raise DataUpdateFailed(f"Modbus error: {e}")
+        except ModbusIOException as e:
+            self.disconnect()
+            raise DataUpdateFailed(f"Modbus error: {e}")
+
+        except TimeoutError as e:
+            self.disconnect()
+            self._timeout_counter += 1
+
+            _LOGGER.warning(
+                f"Refresh timeout {self._timeout_counter} limit {RetrySettings.Limit}"
+            )
+
+            if self._timeout_counter >= RetrySettings.Limit:
+                self._timeout_counter = 0
+                raise TimeoutError
+
+            raise DataUpdateFailed(f"Timeout error: {e}")
 
         if not self._keep_modbus_open:
             self.disconnect()
+
+        if self._timeout_counter > 0:
+            _LOGGER.warning(
+                f"Timeout count {self._timeout_counter} limit {RetrySettings.Limit}"
+            )
+            self._timeout_counter = 0
 
         return True
 
@@ -597,6 +622,8 @@ class SolarEdgeModbusMultiHub:
         else:
             self._keep_modbus_open = False
 
+        _LOGGER.debug(f"keep_modbus_open={self._keep_modbus_open}")
+
     @property
     def allow_battery_energy_reset(self) -> bool:
         return self._allow_battery_energy_reset
@@ -620,15 +647,6 @@ class SolarEdgeModbusMultiHub:
     @property
     def number_of_inverters(self) -> int:
         return self._number_of_inverters
-
-    @keep_modbus_open.setter
-    def keep_modbus_open(self, value: bool) -> None:
-        if value is True:
-            self._keep_modbus_open = True
-        else:
-            self._keep_modbus_open = False
-
-        _LOGGER.debug(f"keep_modbus_open={self._keep_modbus_open}")
 
     @property
     def sleep_after_write(self) -> int:
@@ -998,12 +1016,13 @@ class SolarEdgeInverter:
                 )
 
         """ Advanced Power Control """
+        """ Power Control Block """
         if self.hub.option_detect_extras is True and (
             self.advanced_power_control is True or self.advanced_power_control is None
         ):
             try:
                 inverter_data = await self.hub.modbus_read_holding_registers(
-                    unit=self.inverter_unit_id, address=61762, rcount=2
+                    unit=self.inverter_unit_id, address=61696, rcount=86
                 )
 
                 decoder = BinaryPayloadDecoder.fromRegisters(
@@ -1015,10 +1034,125 @@ class SolarEdgeInverter:
                 self.decoded_model.update(
                     OrderedDict(
                         [
-                            ("I_AdvPwrCtrlEn", decoder.decode_32bit_int()),
+                            ("CommitPwrCtlSettings", decoder.decode_16bit_int()),
+                            ("RestorePwrCtlDefaults", decoder.decode_16bit_int()),
+                            ("PwrFrqDeratingConfig", decoder.decode_32bit_int()),
+                            ("ReactivePwrConfig", decoder.decode_32bit_int()),
+                            ("ReactPwrIterTime", decoder.decode_32bit_uint()),
+                            ("ActivePwrGrad", decoder.decode_32bit_int()),
+                            ("FixedCosPhiPhase", decoder.decode_32bit_float()),
+                            ("FixedReactPwr", decoder.decode_32bit_float()),
+                            ("ReactCosPhiVsPX_0", decoder.decode_32bit_float()),
+                            ("ReactCosPhiVsPX_1", decoder.decode_32bit_float()),
+                            ("ReactCosPhiVsPX_2", decoder.decode_32bit_float()),
+                            ("ReactCosPhiVsPX_3", decoder.decode_32bit_float()),
+                            ("ReactCosPhiVsPX_4", decoder.decode_32bit_float()),
+                            ("ReactCosPhiVsPX_5", decoder.decode_32bit_float()),
+                            ("ReactCosPhiVsPY_0", decoder.decode_32bit_float()),
+                            ("ReactCosPhiVsPY_1", decoder.decode_32bit_float()),
+                            ("ReactCosPhiVsPY_2", decoder.decode_32bit_float()),
+                            ("ReactCosPhiVsPY_3", decoder.decode_32bit_float()),
+                            ("ReactCosPhiVsPY_4", decoder.decode_32bit_float()),
+                            ("ReactCosPhiVsPY_5", decoder.decode_32bit_float()),
+                            ("ReactQVsVgX_0", decoder.decode_32bit_float()),
+                            ("ReactQVsVgX_1", decoder.decode_32bit_float()),
+                            ("ReactQVsVgX_2", decoder.decode_32bit_float()),
+                            ("ReactQVsVgX_3", decoder.decode_32bit_float()),
+                            ("ReactQVsVgX_4", decoder.decode_32bit_float()),
+                            ("ReactQVsVgX_5", decoder.decode_32bit_float()),
+                            ("ReactQVsVgY_0", decoder.decode_32bit_float()),
+                            ("ReactQVsVgY_1", decoder.decode_32bit_float()),
+                            ("ReactQVsVgY_2", decoder.decode_32bit_float()),
+                            ("ReactQVsVgY_3", decoder.decode_32bit_float()),
+                            ("ReactQVsVgY_4", decoder.decode_32bit_float()),
+                            ("ReactQVsVgY_5", decoder.decode_32bit_float()),
+                            ("FRT_KFactor", decoder.decode_32bit_float()),
+                            ("PowerReduce", decoder.decode_32bit_float()),
+                            ("AdvPwrCtrlEn", decoder.decode_32bit_int()),
+                            ("FrtEn", decoder.decode_32bit_int()),
+                            ("MaxWakeupFreq", decoder.decode_32bit_float()),
+                            ("MinWakeupFreq", decoder.decode_32bit_float()),
+                            ("MaxWakeupVg", decoder.decode_32bit_float()),
+                            ("MinWakeupVg", decoder.decode_32bit_float()),
+                            ("Vnom", decoder.decode_32bit_float()),
+                            ("Inom", decoder.decode_32bit_float()),
+                            ("PwrVsFreqX_0", decoder.decode_32bit_float()),
+                            ("PwrVsFreqX_1", decoder.decode_32bit_float()),
                         ]
                     )
                 )
+
+                inverter_data = await self.hub.modbus_read_holding_registers(
+                    unit=self.inverter_unit_id, address=61782, rcount=84
+                )
+
+                decoder = BinaryPayloadDecoder.fromRegisters(
+                    inverter_data.registers,
+                    byteorder=Endian.BIG,
+                    wordorder=Endian.LITTLE,
+                )
+
+                self.decoded_model.update(
+                    OrderedDict(
+                        [
+                            ("PwrVsFreqY_0", decoder.decode_32bit_float()),
+                            ("PwrVsFreqY_1", decoder.decode_32bit_float()),
+                            ("ResetFreq", decoder.decode_32bit_float()),
+                            ("MaxFreq", decoder.decode_32bit_float()),
+                            ("ReactQVsPX_0", decoder.decode_32bit_float()),
+                            ("ReactQVsPX_1", decoder.decode_32bit_float()),
+                            ("ReactQVsPX_2", decoder.decode_32bit_float()),
+                            ("ReactQVsPX_3", decoder.decode_32bit_float()),
+                            ("ReactQVsPX_4", decoder.decode_32bit_float()),
+                            ("ReactQVsPX_5", decoder.decode_32bit_float()),
+                            ("ReactQVsPY_0", decoder.decode_32bit_float()),
+                            ("ReactQVsPY_1", decoder.decode_32bit_float()),
+                            ("ReactQVsPY_2", decoder.decode_32bit_float()),
+                            ("ReactQVsPY_3", decoder.decode_32bit_float()),
+                            ("ReactQVsPY_4", decoder.decode_32bit_float()),
+                            ("ReactQVsPY_5", decoder.decode_32bit_float()),
+                            ("PwrFrqDeratingResetTime", decoder.decode_32bit_uint()),
+                            ("PwrFrqDeratingGradTime", decoder.decode_32bit_uint()),
+                            (
+                                "ReactCosPhiVsPVgLockInMax",
+                                decoder.decode_32bit_float(),
+                            ),
+                            (
+                                "ReactCosPhiVsPVgLockInMin",
+                                decoder.decode_32bit_float(),
+                            ),
+                            (
+                                "ReactCosPhiVsPVgLockOutMax",
+                                decoder.decode_32bit_float(),
+                            ),
+                            (
+                                "ReactCosPhiVsPVgLockOutMin",
+                                decoder.decode_32bit_float(),
+                            ),
+                            ("ReactQVsVgPLockInMax", decoder.decode_32bit_float()),
+                            ("ReactQVsVgPLockInMin", decoder.decode_32bit_float()),
+                            ("ReactQVsVgPLockOutMax", decoder.decode_32bit_float()),
+                            ("ReactQVsVgPLockOutMin", decoder.decode_32bit_float()),
+                            ("ReactQVsVgType", decoder.decode_32bit_uint()),
+                            ("PwrSoftStartTime", decoder.decode_32bit_uint()),
+                            ("MaxCurrent", decoder.decode_32bit_float()),
+                            ("PwrVsVgX_0", decoder.decode_32bit_float()),
+                            ("PwrVsVgX_1", decoder.decode_32bit_float()),
+                            ("PwrVsVgX_2", decoder.decode_32bit_float()),
+                            ("PwrVsVgX_3", decoder.decode_32bit_float()),
+                            ("PwrVsVgX_4", decoder.decode_32bit_float()),
+                            ("PwrVsVgX_5", decoder.decode_32bit_float()),
+                            ("PwrVsVgY_0", decoder.decode_32bit_float()),
+                            ("PwrVsVgY_1", decoder.decode_32bit_float()),
+                            ("PwrVsVgY_2", decoder.decode_32bit_float()),
+                            ("PwrVsVgY_3", decoder.decode_32bit_float()),
+                            ("PwrVsVgY_4", decoder.decode_32bit_float()),
+                            ("PwrVsVgY_5", decoder.decode_32bit_float()),
+                            ("DisconnectAtZeroPwrLim", decoder.decode_32bit_float()),
+                        ]
+                    )
+                )
+
                 self.advanced_power_control = True
 
             except ModbusIllegalAddress:

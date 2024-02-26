@@ -24,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .common import SourceEntity, create_source_entity
 from .const import (
@@ -44,6 +44,7 @@ from .const import (
     CONF_GROUP_POWER_ENTITIES,
     CONF_HIDE_MEMBERS,
     CONF_IGNORE_UNAVAILABLE_STATE,
+    CONF_INCLUDE_NON_POWERCALC_SENSORS,
     CONF_LINEAR,
     CONF_MANUFACTURER,
     CONF_MAX_POWER,
@@ -65,6 +66,7 @@ from .const import (
     CONF_SUB_PROFILE,
     CONF_UNAVAILABLE_POWER,
     CONF_UPDATE_FREQUENCY,
+    CONF_UTILITY_METER_TARIFFS,
     CONF_VALUE,
     CONF_VALUE_TEMPLATE,
     CONF_WLED,
@@ -147,6 +149,7 @@ SCHEMA_REAL_POWER_OPTIONS = vol.Schema(
             CONF_CREATE_UTILITY_METERS,
             default=False,
         ): selector.BooleanSelector(),
+        vol.Optional(CONF_DEVICE): selector.DeviceSelector(),
     },
 )
 
@@ -247,15 +250,6 @@ SCHEMA_POWER_ADVANCED = vol.Schema(
         vol.Optional(CONF_UNAVAILABLE_POWER): vol.Coerce(float),
         vol.Optional(CONF_MULTIPLY_FACTOR): vol.Coerce(float),
         vol.Optional(CONF_MULTIPLY_FACTOR_STANDBY): selector.BooleanSelector(),
-        vol.Optional(
-            CONF_ENERGY_INTEGRATION_METHOD,
-            default=ENERGY_INTEGRATION_METHOD_LEFT,
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=ENERGY_INTEGRATION_METHODS,
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            ),
-        ),
     },
 )
 
@@ -275,7 +269,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize options flow."""
-        self.sensor_config: dict[str, Any] = {}
+        self.sensor_config: ConfigType = {}
         self.selected_sensor_type: str | None = None
         self.name: str | None = None
         self.source_entity: SourceEntity | None = None
@@ -456,7 +450,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="group",
-            data_schema=group_schema,
+            data_schema=_fill_schema_defaults(
+                group_schema,
+                _get_global_powercalc_config(self.hass),
+            ),
             errors=errors,
         )
 
@@ -710,7 +707,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="power_advanced",
             data_schema=_fill_schema_defaults(
-                SCHEMA_POWER_ADVANCED,
+                _create_schema_advanced(self.sensor_config),
                 _get_global_powercalc_config(self.hass),
             ),
             errors={},
@@ -985,6 +982,36 @@ def _create_virtual_power_schema(
     return schema.extend(power_options.schema)  # type: ignore
 
 
+def _create_schema_advanced(sensor_config: ConfigType) -> vol.Schema:
+    schema = SCHEMA_POWER_ADVANCED
+
+    if sensor_config.get(CONF_CREATE_ENERGY_SENSOR):
+        schema = schema.extend(
+            {
+                vol.Optional(
+                    CONF_ENERGY_INTEGRATION_METHOD,
+                    default=ENERGY_INTEGRATION_METHOD_LEFT,
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=ENERGY_INTEGRATION_METHODS,
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    ),
+                ),
+            },
+        )
+
+    if sensor_config.get(CONF_CREATE_UTILITY_METERS):
+        schema = schema.extend(
+            {
+                vol.Optional(CONF_UTILITY_METER_TARIFFS, default=[]): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
+                ),
+            },
+        )
+
+    return schema
+
+
 def _create_group_options_schema(
     hass: HomeAssistant,
     config_entry: ConfigEntry | None = None,
@@ -1034,6 +1061,7 @@ def _create_group_options_schema(
                 default=False,
             ): selector.BooleanSelector(),
             vol.Optional(CONF_HIDE_MEMBERS, default=False): selector.BooleanSelector(),
+            vol.Optional(CONF_INCLUDE_NON_POWERCALC_SENSORS, default=True): selector.BooleanSelector(),
         },
     )
 

@@ -43,7 +43,7 @@ from .const import (
     SunSpecAccum,
     SunSpecNotImpl,
 )
-from .helpers import float_to_hex, scale_factor, update_accum
+from .helpers import float_to_hex, update_accum
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,6 +90,15 @@ async def async_setup_entry(
                 SolarEdgeActivePowerLimit(inverter, config_entry, coordinator)
             )
             entities.append(SolarEdgeCosPhi(inverter, config_entry, coordinator))
+
+        """ Power Control Block """
+        if hub.option_detect_extras and inverter.advanced_power_control:
+            entities.append(
+                SolarEdgeCommitControlSettings(inverter, config_entry, coordinator)
+            )
+            entities.append(
+                SolarEdgeDefaultControlSettings(inverter, config_entry, coordinator)
+            )
 
         if inverter.is_mmppt:
             entities.append(SolarEdgeMMPPTEvents(inverter, config_entry, coordinator))
@@ -221,7 +230,8 @@ class SolarEdgeSensorBase(CoordinatorEntity, SensorEntity):
         self._platform = platform
         self._config_entry = config_entry
 
-        self.scale_factor = lambda x, y: x * (10**y)
+    def scale_factor(self, x: int, y: int):
+        return x * (10**y)
 
     @property
     def device_info(self):
@@ -246,10 +256,6 @@ class SolarEdgeSensorBase(CoordinatorEntity, SensorEntity):
 
 class SolarEdgeDevice(SolarEdgeSensorBase):
     entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
 
     @property
     def unique_id(self) -> str:
@@ -330,10 +336,6 @@ class SolarEdgeDevice(SolarEdgeSensorBase):
 class Version(SolarEdgeSensorBase):
     entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
-
     @property
     def unique_id(self) -> str:
         return f"{self._platform.uid_base}_version"
@@ -354,7 +356,7 @@ class ACCurrentSensor(SolarEdgeSensorBase):
 
     def __init__(self, platform, config_entry, coordinator, phase: str = None):
         super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
+
         self._phase = phase
 
         if self._platform.decoded_model["C_SunSpec_DID"] in [101, 102, 103]:
@@ -416,7 +418,7 @@ class ACCurrentSensor(SolarEdgeSensorBase):
                 return None
 
             else:
-                return scale_factor(
+                return self.scale_factor(
                     self._platform.decoded_model[model_key],
                     self._platform.decoded_model["AC_Current_SF"],
                 )
@@ -436,7 +438,7 @@ class VoltageSensor(SolarEdgeSensorBase):
 
     def __init__(self, platform, config_entry, coordinator, phase: str = None):
         super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
+
         self._phase = phase
 
         if self._platform.decoded_model["C_SunSpec_DID"] in [101, 102, 103]:
@@ -503,7 +505,7 @@ class VoltageSensor(SolarEdgeSensorBase):
                 return None
 
             else:
-                return scale_factor(
+                return self.scale_factor(
                     self._platform.decoded_model[model_key],
                     self._platform.decoded_model["AC_Voltage_SF"],
                 )
@@ -524,7 +526,7 @@ class ACPower(SolarEdgeSensorBase):
 
     def __init__(self, platform, config_entry, coordinator, phase: str = None):
         super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
+
         self._phase = phase
 
     @property
@@ -574,7 +576,7 @@ class ACPower(SolarEdgeSensorBase):
                 return None
 
             else:
-                return scale_factor(
+                return self.scale_factor(
                     self._platform.decoded_model[model_key],
                     self._platform.decoded_model["AC_Power_SF"],
                 )
@@ -591,10 +593,6 @@ class ACFrequency(SolarEdgeSensorBase):
     device_class = SensorDeviceClass.FREQUENCY
     state_class = SensorStateClass.MEASUREMENT
     native_unit_of_measurement = UnitOfFrequency.HERTZ
-
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
 
     @property
     def unique_id(self) -> str:
@@ -617,7 +615,7 @@ class ACFrequency(SolarEdgeSensorBase):
                 return None
 
             else:
-                return scale_factor(
+                return self.scale_factor(
                     self._platform.decoded_model["AC_Frequency"],
                     self._platform.decoded_model["AC_Frequency_SF"],
                 )
@@ -637,7 +635,7 @@ class ACVoltAmp(SolarEdgeSensorBase):
 
     def __init__(self, platform, config_entry, coordinator, phase: str = None):
         super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
+
         self._phase = phase
 
     @property
@@ -674,7 +672,7 @@ class ACVoltAmp(SolarEdgeSensorBase):
                 return None
 
             else:
-                return scale_factor(
+                return self.scale_factor(
                     self._platform.decoded_model[model_key],
                     self._platform.decoded_model["AC_VA_SF"],
                 )
@@ -731,7 +729,7 @@ class ACVoltAmpReactive(SolarEdgeSensorBase):
                 return None
 
             else:
-                return scale_factor(
+                return self.scale_factor(
                     self._platform.decoded_model[model_key],
                     self._platform.decoded_model["AC_var_SF"],
                 )
@@ -751,7 +749,7 @@ class ACPowerFactor(SolarEdgeSensorBase):
 
     def __init__(self, platform, config_entry, coordinator, phase: str = None):
         super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
+
         self._phase = phase
 
     @property
@@ -788,7 +786,7 @@ class ACPowerFactor(SolarEdgeSensorBase):
                 return None
 
             else:
-                return scale_factor(
+                return self.scale_factor(
                     self._platform.decoded_model[model_key],
                     self._platform.decoded_model["AC_PF_SF"],
                 )
@@ -928,10 +926,6 @@ class DCCurrent(SolarEdgeSensorBase):
     native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
     icon = "mdi:current-dc"
 
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
-
     @property
     def unique_id(self) -> str:
         return f"{self._platform.uid_base}_dc_current"
@@ -954,7 +948,7 @@ class DCCurrent(SolarEdgeSensorBase):
     @property
     def native_value(self):
         try:
-            return scale_factor(
+            return self.scale_factor(
                 self._platform.decoded_model["I_DC_Current"],
                 self._platform.decoded_model["I_DC_Current_SF"],
             )
@@ -974,10 +968,6 @@ class DCVoltage(SolarEdgeSensorBase):
     device_class = SensorDeviceClass.VOLTAGE
     state_class = SensorStateClass.MEASUREMENT
     native_unit_of_measurement = UnitOfElectricPotential.VOLT
-
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
 
     @property
     def unique_id(self) -> str:
@@ -1000,7 +990,7 @@ class DCVoltage(SolarEdgeSensorBase):
                 return None
 
             else:
-                return scale_factor(
+                return self.scale_factor(
                     self._platform.decoded_model["I_DC_Voltage"],
                     self._platform.decoded_model["I_DC_Voltage_SF"],
                 )
@@ -1018,10 +1008,6 @@ class DCPower(SolarEdgeSensorBase):
     state_class = SensorStateClass.MEASUREMENT
     native_unit_of_measurement = UnitOfPower.WATT
     icon = "mdi:solar-power"
-
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
 
     @property
     def unique_id(self) -> str:
@@ -1042,7 +1028,7 @@ class DCPower(SolarEdgeSensorBase):
                 return None
 
             else:
-                return scale_factor(
+                return self.scale_factor(
                     self._platform.decoded_model["I_DC_Power"],
                     self._platform.decoded_model["I_DC_Power_SF"],
                 )
@@ -1059,10 +1045,6 @@ class HeatSinkTemperature(SolarEdgeSensorBase):
     device_class = SensorDeviceClass.TEMPERATURE
     state_class = SensorStateClass.MEASUREMENT
     native_unit_of_measurement = UnitOfTemperature.CELSIUS
-
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
 
     @property
     def unique_id(self) -> str:
@@ -1084,7 +1066,7 @@ class HeatSinkTemperature(SolarEdgeSensorBase):
                 return None
 
             else:
-                return scale_factor(
+                return self.scale_factor(
                     self._platform.decoded_model["I_Temp_Sink"],
                     self._platform.decoded_model["I_Temp_SF"],
                 )
@@ -1101,10 +1083,6 @@ class SolarEdgeStatusSensor(SolarEdgeSensorBase):
     device_class = SensorDeviceClass.ENUM
     entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
-
     @property
     def unique_id(self) -> str:
         return f"{self._platform.uid_base}_status"
@@ -1116,10 +1094,6 @@ class SolarEdgeStatusSensor(SolarEdgeSensorBase):
 
 class SolarEdgeInverterStatus(SolarEdgeStatusSensor):
     options = list(DEVICE_STATUS.values())
-
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
 
     @property
     def native_value(self):
@@ -1156,10 +1130,6 @@ class SolarEdgeInverterStatus(SolarEdgeStatusSensor):
 class SolarEdgeBatteryStatus(SolarEdgeStatusSensor):
     options = list(BATTERY_STATUS.values())
 
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
-
     @property
     def native_value(self):
         try:
@@ -1193,10 +1163,6 @@ class SolarEdgeBatteryStatus(SolarEdgeStatusSensor):
 
 
 class SolarEdgeGlobalPowerControlBlock(SolarEdgeSensorBase):
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
-
     @property
     def available(self) -> bool:
         return super().available and self._platform.global_power_control
@@ -1204,10 +1170,6 @@ class SolarEdgeGlobalPowerControlBlock(SolarEdgeSensorBase):
 
 class StatusVendor(SolarEdgeSensorBase):
     entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
 
     @property
     def unique_id(self) -> str:
@@ -1247,10 +1209,6 @@ class StatusVendor(SolarEdgeSensorBase):
 
 
 class SolarEdgeRRCR(SolarEdgeGlobalPowerControlBlock):
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
-
     @property
     def unique_id(self) -> str:
         return f"{self._platform.uid_base}_rrcr"
@@ -1311,10 +1269,6 @@ class SolarEdgeActivePowerLimit(SolarEdgeGlobalPowerControlBlock):
     suggested_display_precision = 0
     icon = "mdi:percent"
 
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
-
     @property
     def unique_id(self) -> str:
         return f"{self._platform.uid_base}_active_power_limit"
@@ -1328,7 +1282,7 @@ class SolarEdgeActivePowerLimit(SolarEdgeGlobalPowerControlBlock):
         return self._platform.global_power_control
 
     @property
-    def native_value(self):
+    def native_value(self) -> int:
         try:
             if (
                 self._platform.decoded_model["I_Power_Limit"] == SunSpecNotImpl.UINT16
@@ -1351,10 +1305,6 @@ class SolarEdgeCosPhi(SolarEdgeGlobalPowerControlBlock):
     suggested_display_precision = 1
     icon = "mdi:angle-acute"
 
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
-
     @property
     def unique_id(self) -> str:
         return f"{self._platform.uid_base}_cosphi"
@@ -1368,7 +1318,7 @@ class SolarEdgeCosPhi(SolarEdgeGlobalPowerControlBlock):
         return self._platform.global_power_control
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         try:
             if (
                 float_to_hex(self._platform.decoded_model["I_CosPhi"])
@@ -1379,7 +1329,7 @@ class SolarEdgeCosPhi(SolarEdgeGlobalPowerControlBlock):
                 return None
 
             else:
-                return self._platform.decoded_model["I_CosPhi"]
+                return round(self._platform.decoded_model["I_CosPhi"], 1)
 
         except KeyError:
             return None
@@ -1387,10 +1337,6 @@ class SolarEdgeCosPhi(SolarEdgeGlobalPowerControlBlock):
 
 class MeterEvents(SolarEdgeSensorBase):
     entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
 
     @property
     def unique_id(self) -> str:
@@ -1436,10 +1382,6 @@ class MeterEvents(SolarEdgeSensorBase):
 
 class SolarEdgeMMPPTEvents(SolarEdgeSensorBase):
     entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
 
     @property
     def unique_id(self) -> str:
@@ -1494,7 +1436,7 @@ class MeterVAhIE(SolarEdgeSensorBase):
 
     def __init__(self, platform, config_entry, coordinator, phase: str = None):
         super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
+
         self._phase = phase
         self.last = None
 
@@ -1547,7 +1489,7 @@ class MeterVAhIE(SolarEdgeSensorBase):
                 return None
 
             else:
-                value = scale_factor(
+                value = self.scale_factor(
                     self._platform.decoded_model[model_key],
                     self._platform.decoded_model["M_VAh_SF"],
                 )
@@ -1572,7 +1514,7 @@ class MetervarhIE(SolarEdgeSensorBase):
 
     def __init__(self, platform, config_entry, coordinator, phase: str = None):
         super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
+
         self._phase = phase
         self.last = None
 
@@ -1625,7 +1567,7 @@ class MetervarhIE(SolarEdgeSensorBase):
                 return None
 
             else:
-                value = scale_factor(
+                value = self.scale_factor(
                     self._platform.decoded_model[model_key],
                     self._platform.decoded_model["M_varh_SF"],
                 )
@@ -1736,10 +1678,6 @@ class SolarEdgeBatteryCurrent(SolarEdgeSensorBase):
     suggested_display_precision = 2
     icon = "mdi:current-dc"
 
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
-
     @property
     def unique_id(self) -> str:
         return f"{self._platform.uid_base}_dc_current"
@@ -1808,7 +1746,7 @@ class SolarEdgeBatteryEnergyExport(SolarEdgeSensorBase):
 
     def __init__(self, platform, config_entry, coordinator):
         super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
+
         self._last = None
         self._count = 0
 
@@ -1883,7 +1821,7 @@ class SolarEdgeBatteryEnergyImport(SolarEdgeSensorBase):
 
     def __init__(self, platform, config_entry, coordinator):
         super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
+
         self._last = None
         self._count = 0
 
@@ -1954,10 +1892,6 @@ class SolarEdgeBatteryMaxEnergy(SolarEdgeSensorBase):
     state_class = SensorStateClass.MEASUREMENT
     native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     suggested_display_precision = 3
-
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
 
     @property
     def unique_id(self) -> str:
@@ -2096,10 +2030,6 @@ class SolarEdgeBatteryAvailableEnergy(SolarEdgeSensorBase):
     native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     suggested_display_precision = 3
 
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
-
     @property
     def unique_id(self) -> str:
         return f"{self._platform.uid_base}_avail_energy"
@@ -2133,10 +2063,6 @@ class SolarEdgeBatterySOH(SolarEdgeSensorBase):
     suggested_display_precision = 0
     icon = "mdi:battery-heart-outline"
 
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
-
     @property
     def unique_id(self) -> str:
         return f"{self._platform.uid_base}_battery_soh"
@@ -2164,10 +2090,6 @@ class SolarEdgeBatterySOE(SolarEdgeSensorBase):
     native_unit_of_measurement = PERCENTAGE
     suggested_display_precision = 0
 
-    def __init__(self, platform, config_entry, coordinator):
-        super().__init__(platform, config_entry, coordinator)
-        """Initialize the sensor."""
-
     @property
     def unique_id(self) -> str:
         return f"{self._platform.uid_base}_battery_soe"
@@ -2187,3 +2109,74 @@ class SolarEdgeBatterySOE(SolarEdgeSensorBase):
             return None
         else:
             return self._platform.decoded_model["B_SOE"]
+
+
+class SolarEdgeCommitControlSettings(SolarEdgeSensorBase):
+    """Entity to show the results of Commit Power Control Settings button."""
+
+    entity_category = EntityCategory.DIAGNOSTIC
+    icon = "mdi:content-save-cog-outline"
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._platform.uid_base}_commit_pwr_settings"
+
+    @property
+    def name(self) -> str:
+        return "Commit Power Settings"
+
+    @property
+    def native_value(self):
+        return self._platform.decoded_model["CommitPwrCtlSettings"]
+
+    @property
+    def extra_state_attributes(self):
+        attrs = {}
+
+        attrs["hex_value"] = hex(self._platform.decoded_model["CommitPwrCtlSettings"])
+
+        if self._platform.decoded_model["CommitPwrCtlSettings"] == 0x0:
+            attrs["status"] = "SUCCESS"
+        if self._platform.decoded_model["CommitPwrCtlSettings"] in [0x1, 0x2, 0x3, 0x4]:
+            attrs["status"] = "INTERNAL_ERROR"
+        if self._platform.decoded_model["CommitPwrCtlSettings"] == 0xFFFF:
+            attrs["status"] = "UNKNOWN_ERROR"
+        if (
+            self._platform.decoded_model["CommitPwrCtlSettings"] >= 0xF102
+            and self._platform.decoded_model["CommitPwrCtlSettings"] < 0xFFFF
+        ):
+            attrs["status"] = "VALUE_ERROR"
+
+        return attrs
+
+
+class SolarEdgeDefaultControlSettings(SolarEdgeSensorBase):
+    """Entity to show the results of Restore Power Control Default Settings button."""
+
+    entity_category = EntityCategory.DIAGNOSTIC
+    icon = "mdi:restore-alert"
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._platform.uid_base}_default_pwr_settings"
+
+    @property
+    def name(self) -> str:
+        return "Default Power Settings"
+
+    @property
+    def native_value(self):
+        return self._platform.decoded_model["RestorePwrCtlDefaults"]
+
+    @property
+    def extra_state_attributes(self):
+        attrs = {}
+
+        attrs["hex_value"] = hex(self._platform.decoded_model["RestorePwrCtlDefaults"])
+
+        if self._platform.decoded_model["RestorePwrCtlDefaults"] == 0x0:
+            attrs["status"] = "SUCCESS"
+        if self._platform.decoded_model["RestorePwrCtlDefaults"] == 0xFFFF:
+            attrs["status"] = "ERROR"
+
+        return attrs

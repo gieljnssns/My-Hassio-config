@@ -35,8 +35,8 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry, start
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import start
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -65,6 +65,7 @@ from custom_components.powercalc.const import (
     CONF_GROUP_POWER_ENTITIES,
     CONF_HIDE_MEMBERS,
     CONF_IGNORE_UNAVAILABLE_STATE,
+    CONF_INCLUDE_NON_POWERCALC_SENSORS,
     CONF_POWER_SENSOR_PRECISION,
     CONF_SENSOR_TYPE,
     CONF_SUB_GROUPS,
@@ -175,9 +176,7 @@ async def create_group_sensors_from_config_entry(
     if CONF_UNIQUE_ID not in sensor_config:
         sensor_config[CONF_UNIQUE_ID] = entry.entry_id
 
-    power_sensor_ids: set[str] = set(
-        await resolve_entity_ids_recursively(hass, entry, SensorDeviceClass.POWER),
-    )
+    power_sensor_ids = await resolve_entity_ids_recursively(hass, entry, SensorDeviceClass.POWER)
     if power_sensor_ids:
         power_sensor = create_grouped_power_sensor(
             hass,
@@ -187,9 +186,7 @@ async def create_group_sensors_from_config_entry(
         )
         group_sensors.append(power_sensor)
 
-    energy_sensor_ids: set[str] = set(
-        await resolve_entity_ids_recursively(hass, entry, SensorDeviceClass.ENERGY),
-    )
+    energy_sensor_ids = await resolve_entity_ids_recursively(hass, entry, SensorDeviceClass.ENERGY)
     if energy_sensor_ids:
         energy_sensor = create_grouped_energy_sensor(
             hass,
@@ -207,16 +204,6 @@ async def create_group_sensors_from_config_entry(
                 net_consumption=True,
             ),
         )
-
-    device_id = entry.data.get(CONF_DEVICE)
-    if device_id:
-        device_reg = device_registry.async_get(hass)
-        device_entry = device_reg.async_get(device_id)
-        if device_entry and entry.entry_id not in device_entry.config_entries:
-            device_reg.async_update_device(
-                device_id,
-                add_config_entry_id=entry.entry_id,
-            )
 
     return group_sensors
 
@@ -327,11 +314,11 @@ async def resolve_entity_ids_recursively(
     hass: HomeAssistant,
     entry: ConfigEntry,
     device_class: SensorDeviceClass,
-    resolved_ids: list[str] | None = None,
-) -> list[str]:
+    resolved_ids: set[str] | None = None,
+) -> set[str]:
     """Get all the entity id's for the current group and all the subgroups."""
     if resolved_ids is None:
-        resolved_ids = []
+        resolved_ids = set()
 
     # Include the power/energy sensors for an existing Virtual Power config entry
     member_entry_ids = entry.data.get(CONF_GROUP_MEMBER_SENSORS) or []
@@ -347,7 +334,7 @@ async def resolve_entity_ids_recursively(
         if key not in member_entry.data:  # pragma: no cover
             continue
 
-        resolved_ids.extend([member_entry.data.get(key)])
+        resolved_ids.update([member_entry.data.get(key)])
 
     # Include the additional power/energy sensors the user specified
     conf_key = (
@@ -355,13 +342,16 @@ async def resolve_entity_ids_recursively(
         if device_class == SensorDeviceClass.POWER
         else CONF_GROUP_ENERGY_ENTITIES
     )
-    resolved_ids.extend(entry.data.get(conf_key) or [])
+    resolved_ids.update(entry.data.get(conf_key) or [])
 
     # Include entities from defined areas
     if CONF_AREA in entry.data:
         resolved_area_entities, _ = await resolve_include_entities(
             hass,
-            {CONF_AREA: entry.data[CONF_AREA]},
+            {
+                CONF_AREA: entry.data[CONF_AREA],
+                CONF_INCLUDE_NON_POWERCALC_SENSORS: entry.data.get(CONF_INCLUDE_NON_POWERCALC_SENSORS),
+            },
         )
         area_entities = [
             entity.entity_id
@@ -373,7 +363,7 @@ async def resolve_entity_ids_recursively(
                 else EnergySensor,
             )
         ]
-        resolved_ids.extend(area_entities)
+        resolved_ids.update(area_entities)
 
     # Include the entities from sub groups
     subgroups = entry.data.get(CONF_SUB_GROUPS)
@@ -399,6 +389,7 @@ async def get_entries_having_subgroup(hass: HomeAssistant, subgroup_entry: Confi
         if entry.data.get(CONF_SENSOR_TYPE) == SensorType.GROUP
            and subgroup_entry.entry_id in (entry.data.get(CONF_SUB_GROUPS) or [])
     ]
+
 
 @callback
 def create_grouped_power_sensor(
