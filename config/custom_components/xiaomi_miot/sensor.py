@@ -6,7 +6,16 @@ from typing import cast
 from datetime import datetime, timedelta
 from functools import partial, cmp_to_key
 
-from homeassistant.const import *  # noqa: F401
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TOKEN,
+    PERCENTAGE,
+    STATE_UNKNOWN,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.helpers.entity import (
     Entity,
 )
@@ -505,6 +514,7 @@ class MiotSensorSubEntity(MiotPropertySubEntity, BaseSensorSubEntity):
         super().update(data)
         if not self._available:
             return
+        self.update_with_properties()
         self._miot_property.description_to_dict(self._state_attrs)
 
     @property
@@ -717,7 +727,12 @@ class MihomeMessageSensor(MiCoordinatorEntity, SensorEntity, RestoreEntity):
             break
         if not mls:
             if not self._has_none_message:
-                _LOGGER.warning('Get xiaomi message for %s failed: %s', self.cloud.user_id, res)
+                # Only raise a warning if there was a failure obtaining the xiaomi message
+                # Otherwise, a warning will show anytime that there are simply no messages waiting
+                if res['code'] == 0 and res['message'] == 'ok':
+                    _LOGGER.debug('Get xiaomi message for %s failed: %s', self.cloud.user_id, res)
+                else:
+                    _LOGGER.warning('Get xiaomi message for %s failed: %s', self.cloud.user_id, res)
             self._has_none_message = True
         if msg:
             await self.async_set_message(msg)

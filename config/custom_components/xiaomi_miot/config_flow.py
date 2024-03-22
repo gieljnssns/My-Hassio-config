@@ -6,7 +6,14 @@ import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import *
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback, split_entity_id
 from homeassistant.util import yaml
 from homeassistant.components import persistent_notification
@@ -706,6 +713,7 @@ def get_customize_options(hass, options={}, bool2selects=[], entity_id='', model
         bool2selects.extend(['reverse_state'])
         options.update({
             'descriptions_for_on': cv.string,
+            'descriptions_for_off': cv.string,
             'stat_power_cost_key': cv.string,
             'stat_power_cost_type': cv.string,
         })

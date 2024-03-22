@@ -30,6 +30,7 @@ from .const import (
     CONF_ASSIST_AUTO_EXPOSE_PLAYERS,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_OPENAI_AGENT_ID,
+    CONF_PRE_ANNOUNCE_TTS,
     CONF_USE_ADDON,
     DOMAIN,
     LOGGER,
@@ -264,6 +265,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the Zeroconf component. It will check if the
         host is already configured and delegate to the import step if not.
         """
+        # abort if discovery info is not what we expect
+        if "server_id" not in discovery_info.properties:
+            return None
         # abort if we already have exactly this server_id
         # reload the integration if the host got updated
         server_id = discovery_info.properties["server_id"]
@@ -386,21 +390,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
-        LOGGER.debug(
-            "OptionsFlowHandler:async_step_init user_input [%s] data [%s]",
-            user_input,
-            self.config_entry.data,
-        )
         if user_input is not None:
-            if CONF_USE_ADDON in self.config_entry.data:
-                user_input[CONF_USE_ADDON] = self.config_entry.data[CONF_USE_ADDON]
-            if CONF_INTEGRATION_CREATED_ADDON in self.config_entry.data:
-                user_input[CONF_INTEGRATION_CREATED_ADDON] = self.config_entry.data[
-                    CONF_INTEGRATION_CREATED_ADDON
-                ]
-
             self.hass.config_entries.async_update_entry(
-                self.config_entry, data=user_input, options=self.config_entry.options
+                self.config_entry,
+                # store as data instead of options - adjust this once the reconfigure flow is available
+                data={
+                    CONF_URL: user_input[CONF_URL],
+                    CONF_OPENAI_AGENT_ID: user_input[CONF_OPENAI_AGENT_ID],
+                    CONF_ASSIST_AUTO_EXPOSE_PLAYERS: user_input[
+                        CONF_ASSIST_AUTO_EXPOSE_PLAYERS
+                    ],
+                    CONF_PRE_ANNOUNCE_TTS: user_input[CONF_PRE_ANNOUNCE_TTS],
+                },
             )
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return self.async_create_entry(title="", data={})
@@ -434,6 +435,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     is not None
                     else False
                 ),
+            ): bool,
+            vol.Optional(
+                CONF_PRE_ANNOUNCE_TTS,
+                default=config_entry.data.get(CONF_PRE_ANNOUNCE_TTS, False),
             ): bool,
         }
 

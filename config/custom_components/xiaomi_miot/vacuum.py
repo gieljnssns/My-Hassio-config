@@ -4,7 +4,10 @@ import time
 from datetime import timedelta
 from functools import partial
 
-from homeassistant.const import *  # noqa: F401
+from homeassistant.const import (
+    STATE_IDLE,
+    STATE_PAUSED,
+)
 from homeassistant.components.vacuum import (  # noqa: F401
     DOMAIN as ENTITY_DOMAIN,
     StateVacuumEntity,
@@ -384,7 +387,7 @@ class MiotViomiVacuumEntity(MiotVacuumEntity):
         if not self._available:
             return
         if self._miio2miot:
-            await self.hass.async_add_executor_job(partial(self.update_miio_props, self._miio_props))
+            await self.async_update_miio_props(self._miio_props)
         props = self._state_attrs or {}
         adt = {}
         if 'miio.s_area' in props:
