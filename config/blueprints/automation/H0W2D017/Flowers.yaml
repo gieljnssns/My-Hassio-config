@@ -1,0 +1,424 @@
+blueprint:
+  name: Flowers
+  description:
+    Regularly check all plants for low moisture or conductivity (Needs
+    to be used with Plant Monitor integration)
+  domain: automation
+  input:
+    device:
+      name: Device
+      description: Pick a device to send the notification to
+      selector:
+        device:
+          integration: mobile_app
+          multiple: false
+    time:
+      name: Time to check
+      description: Test is run at configured time
+      default: "20:00:00"
+      selector:
+        time: {}
+    day:
+      name: Weekday to check
+      description: Check is run at configured time either everyday or on a given weekday
+      selector:
+        select:
+          options:
+            - label: Every day
+              value: "0"
+            - label: Monday
+              value: "1"
+            - label: Tuesday
+              value: "2"
+            - label: Wednesday
+              value: "3"
+            - label: Thursday
+              value: "4"
+            - label: Friday
+              value: "5"
+            - label: Saturday
+              value: "6"
+            - label: Sunday
+              value: "7"
+          custom_value: false
+          multiple: false
+          sort: false
+      default: "0"
+    exclude:
+      name: Excluded Sensors
+      description:
+        Plants to exclude from detection. Only entities are supported,
+        devices must be expanded!
+      default:
+        entity_id: []
+      selector:
+        target:
+          entity:
+            - device_class:
+                - plant
+    water_text:
+      name: Water text
+      description: Text to display as title for the sensors with low moisture
+      selector:
+        text:
+          type: text
+          multiline: false
+          multiple: false
+      default: "Needs water:"
+    nutritions_text:
+      name: Nutritions text
+      description: Text to display as title for the sensors with low nutritions
+      selector:
+        text:
+          type: text
+          multiline: false
+          multiple: false
+      default: "Needs nutrition:"
+    both_text:
+      name: Both text
+      description:
+        Text to display as title for the sensors with low nutritions &
+        water
+      selector:
+        text:
+          type: text
+          multiline: false
+          multiple: false
+      default: "Needs water & nutrition:"
+    high_temp_enabled:
+      name: High temp alarm
+      description: Turn on to activate a high temp alarm at the set temperature.
+      selector:
+        boolean: {}
+      default: false
+    low_temp_enabled:
+      name: Low temp alarm
+      description: Turn on to activate a low temp alarm at the set temperature.
+      selector:
+        boolean: {}
+      default: false
+    night_temp_enabled:
+      name: Night temp alarm
+      description:
+        "Turn on to activate an alarm when the temperature in the next
+        12 hours will fall below the low treshold.\nUsefull for when you have plants
+        outside that can't handle cold weather that well. \n\nRemember to turn this
+        off incase you bring your plants inside for the winter"
+      selector:
+        boolean: {}
+      default: false
+    hourly_weather_forcast:
+      name: Weather
+      description:
+        "The hourly weather sensor you want to use for the night notification,
+        \n Requires Met.no (the standard integration in HA) and home houerly sensor
+        needs to be activated"
+      selector:
+        entity:
+          domain:
+            - weather
+          multiple: false
+    temp_sensor:
+      name: Temp sensor
+      description: Choose the temperature sensor to use for the temp alarms.
+      selector:
+        entity:
+          device_class:
+            - temperature
+          domain:
+            - sensor
+          multiple: false
+    high_threshold:
+      name: High temp level threshold
+      description:
+        "Treshhold for high temp alarm, \n if the specified sensor is above
+        this value then you will get a notification."
+      default: 35
+      selector:
+        number:
+          min: 0.0
+          max: 100.0
+          unit_of_measurement: °C
+          mode: slider
+          step: 1.0
+    low_threshold:
+      name: Low temp level threshold
+      description:
+        "Treshhold for low temp alarm, \n if the specified sensor is above
+        this value then you will get a notification."
+      default: 8
+      selector:
+        number:
+          min: 0.0
+          max: 100.0
+          unit_of_measurement: °C
+          mode: slider
+          step: 1.0
+    persistent:
+      name: Persistent & actionable
+      description: turn this on if you want a persistent and actionable notification
+      selector:
+        boolean: {}
+      default: false
+    channel:
+      name: Channel
+      description:
+        "The channel to use for the persistant notification, \nthis is
+        usefull if you want a diffrent notification sound on your mobile device."
+      selector:
+        text:
+          multiline: false
+          multiple: false
+      default: General
+    action_1:
+      name: First action
+      description:
+        "Action to be run when you get the notification. \nAs an example
+        run a script or turn on a lamp"
+      selector:
+        action: {}
+      default: []
+    action_1_status:
+      name: Run First action when the plants have a problem
+      description:
+        turn this on if you want to run First action when the plants have
+        a problem
+      selector:
+        boolean: {}
+      default: false
+    action_1_high:
+      name: Run First action when the temperature high triggers
+      description:
+        turn this on if you want to run First action when the temperature
+        high triggers
+      selector:
+        boolean: {}
+      default: false
+    action_1_low:
+      name: Run First action when the temperature low triggers
+      description:
+        turn this on if you want to run First action when the temperature
+        low triggers
+      selector:
+        boolean: {}
+      default: false
+    action_2:
+      name: Second action
+      description:
+        "Action to be run when you push the button before the notification
+        is cleared. \nAs an example turn on a script or an input_bool."
+      selector:
+        action: {}
+      default: []
+    action_2_active:
+      name: Enable the second action
+      description: Turn this on if you want to activate the Second action
+      selector:
+        boolean: {}
+      default: false
+    action_3:
+      name: Third action
+      description:
+        "Action to be run after the notification is cleared. \nAs an example
+        wait for a script to finish or turn off the input_bool from the Second action"
+      selector:
+        action: {}
+      default: []
+    action_3_active:
+      name: Enable the second action
+      description: Turn this on if you want to activate the Third action
+      selector:
+        boolean: {}
+      default: false
+  source_url: https://github.com/H0W2D017/HA_Flower_Blueprint/blob/main/Flowers.yaml
+variables:
+  day: !input day
+  exclude: !input exclude
+  temp_sensor: !input temp_sensor
+  high_threshold: !input high_threshold
+  low_threshold: !input low_threshold
+  forecast: !input hourly_weather_forcast
+  persistent: !input persistent
+  channel: !input channel
+  action_1: !input action_1
+  night_temp_enabled: !input night_temp_enabled
+  nutritions_text: !input nutritions_text
+  water_text: !input water_text
+  both_text: !input both_text
+  # lowest_night_temp: '{{[states[forecast].attributes.forecast[0]["temperature"], states[forecast].attributes.forecast[1]["temperature"],
+  #   states[forecast].attributes.forecast[2]["temperature"], states[forecast].attributes.forecast[3]["temperature"],
+  #   states[forecast].attributes.forecast[4]["temperature"], states[forecast].attributes.forecast[5]["temperature"],
+  #   states[forecast].attributes.forecast[6]["temperature"], states[forecast].attributes.forecast[7]["temperature"],
+  #   states[forecast].attributes.forecast[9]["temperature"], states[forecast].attributes.forecast[10]["temperature"],
+  #   states[forecast].attributes.forecast[11]["temperature"], states[forecast].attributes.forecast[12]["temperature"],
+  #   states[forecast].attributes.forecast[13]["temperature"], ]| min}}'
+  sensors:
+    '{% set result = namespace(sensors=[]) %} {% for state in states.plant
+    | selectattr("attributes.device_class", "==", "plant") | selectattr("state","==",
+    "problem") | selectattr("attributes.moisture_status","!=", "High") | selectattr("attributes.conductivity_status","!=","High")%}
+    {% set result.sensors = result.sensors + [state.name] %} {% endfor %} {{result.sensors|
+    join(", ")}}'
+  water:
+    '{% set result = namespace(sensors=[]) %} {% for state in states.plant |
+    selectattr("attributes.moisture_status", "defined") | selectattr("attributes.device_class","==",
+    "plant") | selectattr("attributes.moisture_status","==", "Low") | selectattr("attributes.conductivity_status","==",
+    "ok")%} {% set result.sensors = result.sensors + [state.name]%} {% endfor %} {%
+    if result.sensors|join(",") != "" %} {{water_text+"\n"+result.sensors|join (",\n")}}
+    {% endif %}'
+  nutritions:
+    '{% set result = namespace(sensors=[]) %} {% for state in states.plant
+    | selectattr("attributes.moisture_status", "defined") | selectattr("attributes.device_class",
+    "==", "plant") | selectattr("attributes.moisture_status","==", "ok") | selectattr("attributes.conductivity_status","==",
+    "Low")%} {% set result.sensors = result.sensors + [state.name]%} {% endfor %}
+    {% if result.sensors|join(",") != "" %} {{nutritions_text+"\n"+result.sensors|join(",\n")}}
+    {% endif %}'
+  both:
+    '{% set result = namespace(sensors=[]) %} {% for state in states.plant | selectattr("attributes.moisture_status",
+    "defined") | selectattr("attributes.device_class", "==", "plant") | selectattr("attributes.moisture_status","==","Low")
+    | selectattr("attributes.conductivity_status","==", "Low")%} {%set result.sensors
+    = result.sensors + [state.name]%} {% endfor %} {% if result.sensors|join(",")
+    != "" %} {{both_text+"\n"+result.sensors|join(",\n")}} {% endif %}'
+  # night_temp: '{% if lowest_night_temp < low_threshold and night_temp_enabled == true
+  #   %} The temperature will be below {{low_threshold | int}}°C, and at it`s lowest
+  #   point it will be {{lowest_night_temp}}°C {%endif%}'
+trigger:
+  - platform: time
+    at: !input time
+    id: time
+  - platform: numeric_state
+    entity_id: !input temp_sensor
+    above: !input high_threshold
+    for:
+      hours: 1
+      minutes: 0
+      seconds: 0
+    id: temp_high
+  - platform: numeric_state
+    entity_id: !input temp_sensor
+    below: !input low_threshold
+    for:
+      hours: 0
+      minutes: 15
+      seconds: 0
+    id: temp_low
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: time
+          - condition: or
+            conditions:
+              - '{{ sensors != "" and (day | int == 0 or day | int == now().isoweekday())}}'
+            # - '{{lowest_night_temp < low_threshold and night_temp_enabled == true }}'
+        sequence:
+          - parallel:
+              - device_id: !input device
+                domain: mobile_app
+                type: notify
+                message:
+                  '{% if water != "" %} {{water}} {% endif -%} {% if nutritions !=
+                  "" %} \n\n{{nutritions}} {% endif -%} {% if both != "" %} \n\n{{both}} {%
+                  endif -%}'
+                title: "{{sensors}}"
+                data:
+                  tag: "{% if persistent == true %}flowerpower{% endif %}"
+                  persistent: "{{persistent}}"
+                  sticky: "{{persistent}}"
+                  channel: "{{channel}}"
+                  actions:
+                    - action: '{% if persistent == true %}"action_open"{% endif %}'
+                      title: "{% if persistent == true %}ok{% endif %}"
+              - if:
+                  - condition: template
+                    value_template: !input action_1_status
+                then:
+                  - choose: []
+                    default: !input action_1
+      - conditions:
+          - condition: trigger
+            id: temp_high
+          - condition: template
+            value_template: !input high_temp_enabled
+        sequence:
+          - parallel:
+              - device_id: !input device
+                domain: mobile_app
+                type: notify
+                message:
+                  "The temperature have been above {{high_threshold}} for one hour,\n
+                  the temperature is now {{states(temp_sensor)}}"
+                title: High temp alarm!
+                data:
+                  tag: "{% if persistent == true %}flowerpower{% endif %}"
+                  persistent: "{{persistent}}"
+                  sticky: "{{persistent}}"
+                  channel: "{{channel}}"
+                  actions:
+                    - action: '{% if persistent == true %}"action_open"{% endif %}'
+                      title: "{% if persistent == true %}ok{% endif %}"
+              - if:
+                  - condition: template
+                    value_template: !input action_1_high
+                then:
+                  - choose: []
+                    default: !input action_1
+      - conditions:
+          - condition: trigger
+            id: temp_low
+          - condition: template
+            value_template: !input low_temp_enabled
+        sequence:
+          - parallel:
+              - device_id: !input device
+                domain: mobile_app
+                type: notify
+                message:
+                  "The temperature have been below {{low_threshold}} for fifteen minutes,\n
+                  the temperature is now {{states(temp_sensor)}}"
+                title: Low temp alarm!
+                data:
+                  tag: "{% if persistent == true %}flowerpower{% endif %}"
+                  persistent: "{{persistent}}"
+                  sticky: "{{persistent}}"
+                  channel: "{{channel}}"
+                  actions:
+                    - action: '{% if persistent == true %}"action_open"{% endif %}'
+                      title: "{% if persistent == true %}ok{% endif %}"
+              - if:
+                  - condition: template
+                    value_template: !input action_1_low
+                then:
+                  - choose: []
+                    default: !input action_1
+    default:
+      - stop: The plants feel fine
+  - condition: template
+    value_template: "{{persistent == true}}"
+  - wait_for_trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          tag: flowerpower
+          channel: "{{channel}}"
+          action_1_title: ok
+          action_1_key: '"action_open"'
+          action: '"action_open"'
+  - if:
+      - condition: template
+        value_template: !input action_2_active
+    then:
+      - choose: []
+        default: !input action_2
+  - device_id: !input device
+    domain: mobile_app
+    type: notify
+    message: clear_notification
+    data:
+      tag: flowerpower
+  - if:
+      - condition: template
+        value_template: !input action_3_active
+    then:
+      - choose: []
+        default: !input action_3
+mode: single
