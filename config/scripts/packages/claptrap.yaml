@@ -115,10 +115,47 @@ bitch_prullenbak:
     data:
       command: app_goto_target
       params:
-        - 16050
-        - 24000
+        - 16481
+        - 24590
+      # params:
+      #   - 16050
+      #   - 24000
     target:
       entity_id: vacuum.cl4p_tp
+
+nacht_dweilen:
+  sequence:
+    - alias: "choose alias (name)"
+      choose:
+        - conditions:
+            - alias: "voor 16u"
+              condition: time
+              before: " 16:00:00"
+          sequence:
+            - service: counter.set_value
+              data:
+                value: 3
+              target:
+                entity_id: counter.stofzuiger
+        - conditions:
+            - alias: "na 16u"
+              condition: time
+              after: " 16:00:00"
+          sequence:
+            - service: script.bitch_prullenbak
+            - service: counter.set_value
+              data:
+                value: 4
+              target:
+                entity_id: counter.stofzuiger
+    #   default:
+    #       action
+    # - service: script.bitch_prullenbak
+    # - service: counter.set_value
+    #   data:
+    #     value: 4
+    #   target:
+    #     entity_id: counter.stofzuiger
 
 vacuum_clean_room:
   alias: vacuum_clean_room

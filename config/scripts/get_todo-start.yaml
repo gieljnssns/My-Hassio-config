@@ -1,0 +1,51 @@
+get_todo_start:
+  alias: To-do start
+  sequence:
+    - repeat:
+        for_each:
+          - date_old: "{% import 'date.jinja' as dt %} {{ dt.today() }}"
+            date: "{% import 'date.jinja' as dt %} {{ dt.tomorrow() }}"
+            todo: todo.{{ noor_fien }}_tegen_morgen
+          - date_old: "{% import 'date.jinja' as dt %} {{ dt.tomorrow() }}"
+            date: "{% import 'date.jinja' as dt %} {{ dt.twodays() }}"
+            todo: todo.{{ noor_fien }}_tegen_overmorgen
+          - date_old: "{% import 'date.jinja' as dt %} {{ dt.twodays() }}"
+            date: "{% import 'date.jinja' as dt %} {{ dt.threedays() }}"
+            todo: todo.{{ noor_fien }}_binnen_3_dagen
+          - date_old: "{% import 'date.jinja' as dt %} {{ dt.threedays() }}"
+            date: "{% import 'date.jinja' as dt %} {{ dt.fourdays() }}"
+            todo: todo.{{ noor_fien }}_binnen_4_dagen
+          - date_old: "{% import 'date.jinja' as dt %} {{ dt.fourdays() }}"
+            date: "{% import 'date.jinja' as dt %} {{ dt.fivedays() }}"
+            todo: todo.{{ noor_fien }}_binnen_5_dagen
+        sequence:
+          - service: calendar.list_events
+            data:
+              start_date_time: "{{ repeat.item.date_old }}"
+              duration:
+                hours: 24
+                minutes: 0
+                seconds: 0
+            target:
+              entity_id: "{{ calendar }}"
+            response_variable: todos
+          - variables:
+              todo: "{{ repeat.item.todo }}"
+          - repeat:
+              for_each: >-
+                {%- set new_list = namespace(all=[]) %}
+                {% set events = todos["events"] %}
+                {%- for event in events %}
+                  {% set summary = event["summary"] %}
+                  {%- set new_list.all = new_list.all + [summary] -%}
+                {% endfor %}
+                {{ new_list.all }}
+              sequence:
+                - service: todo.add_item
+                  data:
+                    item: "{{ repeat.item }}"
+                  target:
+                    entity_id: "{{ todo }}"
+
+  mode: single
+  icon: mdi:calendar-alert-outline

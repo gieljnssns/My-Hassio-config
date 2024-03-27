@@ -1,143 +1,139 @@
 ###  Slaapkamer  ###
-  vertraagd_uit:
-    sequence:
-      - condition: state
-        entity_id:
-          - light.spot_slaapkamer
-        state: "on"
-      - service: light.turn_off
-        entity_id: light.spot_slaapkamer
-        data:
-          transition: 800
-      - delay:
-          minutes: 2
-  
-  vertraagd_uit_martine:
-    sequence:
-      - condition: state
-        entity_id:
-          - light.spot_slaapkamer
-        state: "on"
-      - service: light.turn_off
-        entity_id: light.spot_slaapkamer
-        data:
-          transition: 400
-      - delay:
-          minutes: 2
-  
-  vertraagd_aan_5_min:
-    sequence:
-      - service: light.turn_on
-        entity_id: light.spot_slaapkamer
-        data:
-          transition: 300
-          brightness: 255
-          # rgb_color: [255, 236, 182]
-      - delay:
-          minutes: 2
+vertraagd_uit:
+  sequence:
+    - condition: state
+      entity_id:
+        - light.slaapkamer_spot
+      state: "on"
+    - service: light.turn_off
+      entity_id: light.slaapkamer_spot
+      data:
+        transition: 800
+    - delay:
+        minutes: 2
 
-###  Slaapkamer Noor  ###  
-  vertraagd_uit_noor_15_min:
-    sequence:
-      - condition: state
-        entity_id:
-          - light.noor
-        state: "on"
-      - service: light.turn_off
-        entity_id: light.noor
-        data:
-          transition: 900
-      - delay:
-          minutes: 2
-  
-  vertraagd_uit_noor_30_min:
-    sequence:
-      - condition: state
-        entity_id:
-          - light.noor
-        state: "on"
-      - service: light.turn_off
-        entity_id: light.noor
-        data:
-          transition: 1800
-      - delay:
-          minutes: 2
-  
-  vertraagd_uit_noor_5_min:
-    sequence:
-      - condition: state
-        entity_id:
-          - light.noor
-        state: "on"
-      - service: light.turn_off
-        entity_id: light.noor
-        data:
-          transition: 300
-      - delay:
-          minutes: 2
-  
-  vertraagd_aan_noor_5_min:
-    sequence:
-      - service: light.turn_on
-        entity_id: light.noor
-        data:
-          transition: 300
-          brightness: 255
-          rgb_color: [255, 236, 182]
-      - delay:
-          minutes: 2
+vertraagd_uit_martine:
+  sequence:
+    - condition: state
+      entity_id:
+        - light.slaapkamer_spot
+      state: "on"
+    - service: light.turn_off
+      entity_id: light.slaapkamer_spot
+      data:
+        transition: 400
+    - delay:
+        minutes: 2
 
-###  Slaapkamer Fien  ###  
-  vertraagd_uit_fien_15_min:
-    sequence:
-      - condition: state
-        entity_id:
-          - light.fien
-        state: "on"
-      - service: light.turn_off
-        entity_id: light.fien
-        data:
-          transition: 900
-      - delay:
-          minutes: 2
-  
-  vertraagd_uit_fien_30_min:
-    sequence:
-      - condition: state
-        entity_id:
-          - light.fien
-        state: "on"
-      - service: light.turn_off
-        entity_id: light.fien
-        data:
-          transition: 1800
-      - delay:
-          minutes: 2
+vertraagd_aan_5_min:
+  sequence:
+    - service: light.turn_on
+      entity_id: light.slaapkamer_spot
+      data:
+        transition: 300
+        brightness: 255
+        # rgb_color: [255, 236, 182]
+    - delay:
+        minutes: 2
 
-  vertraagd_uit_fien_5_min:
-    sequence:
-      - condition: state
-        entity_id:
-          - light.fien
-        state: "on"
-      - service: light.turn_off
-        entity_id: light.fien
-        data:
-          transition: 300
-      - delay:
-          minutes: 2
+###  Slaapkamer Noor  ###
+vertraagd_uit_noor_15_min:
+  sequence:
+    - condition: state
+      entity_id:
+        - light.noor
+      state: "on"
+    - service: light.turn_off
+      entity_id: light.noor
+      data:
+        transition: 900
+    - delay:
+        minutes: 2
 
-  vertraagd_aan_fien_5_min:
-    sequence:
-      - service: light.turn_on
-        entity_id: light.fien
-        data:
-          transition: 300
-          brightness: 255
-          rgb_color: [255, 236, 182]
-      - delay:
-          minutes: 2
-  
-  
-  
-  
+vertraagd_uit_noor_30_min:
+  sequence:
+    - condition: state
+      entity_id:
+        - light.noor
+      state: "on"
+    - service: light.turn_off
+      entity_id: light.noor
+      data:
+        transition: 1800
+    - delay:
+        minutes: 2
+
+vertraagd_uit_noor_5_min:
+  sequence:
+    - condition: state
+      entity_id:
+        - light.noor
+      state: "on"
+    - service: light.turn_off
+      entity_id: light.noor
+      data:
+        transition: 300
+    - delay:
+        minutes: 2
+
+vertraagd_aan_noor_5_min:
+  sequence:
+    - service: light.turn_on
+      entity_id: light.noor
+      data:
+        transition: 300
+        brightness: 255
+        rgb_color: [255, 236, 182]
+    - delay:
+        minutes: 2
+
+###  Slaapkamer Fien  ###
+vertraagd_uit_fien_15_min:
+  sequence:
+    - condition: state
+      entity_id:
+        - light.fien
+      state: "on"
+    - service: light.turn_off
+      entity_id: light.fien
+      data:
+        transition: 900
+    - delay:
+        minutes: 2
+
+vertraagd_uit_fien_30_min:
+  sequence:
+    - condition: state
+      entity_id:
+        - light.fien
+      state: "on"
+    - service: light.turn_off
+      entity_id: light.fien
+      data:
+        transition: 1800
+    - delay:
+        minutes: 2
+
+vertraagd_uit_fien_5_min:
+  sequence:
+    - condition: state
+      entity_id:
+        - light.fien
+      state: "on"
+    - service: light.turn_off
+      entity_id: light.fien
+      data:
+        transition: 300
+    - delay:
+        minutes: 2
+
+vertraagd_aan_fien_5_min:
+  sequence:
+    - service: light.turn_on
+      entity_id: light.fien
+      data:
+        transition: 300
+        brightness: 255
+        rgb_color: [255, 236, 182]
+    - delay:
+        minutes: 2

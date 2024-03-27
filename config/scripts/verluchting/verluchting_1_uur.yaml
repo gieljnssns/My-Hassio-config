@@ -1,11 +1,29 @@
 verluchting_1_uur:
   sequence:
-    - service: switch.turn_on
-      entity_id: switch.verluchting
+    # - service: switch.turn_on
+    #   entity_id: switch.verluchting
     - service: switch.turn_on
       entity_id: switch.badkamer_verluchting
     - service: switch.turn_on
       entity_id: switch.zolder_verluchting
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >
+                {% set buiten = states("sensor.poort_luchtvochtigheid") | float(0) %}
+                {% set binnen = states("sensor.living_luchtvochtigheid") | float(0) %}
+
+                {% set buiten_temp = states("sensor.buiten_buiten_temperatuur") | float(0) %}
+                {% set binnen_temp = states("sensor.living_dauwpunt") | float(0) %}
+
+                {% if buiten > 70 %}
+                  {{ buiten_temp > binnen_temp }}
+                {% else %}
+                  True
+                {% endif %}
+          sequence:
+            - service: switch.turn_on
+              entity_id: switch.verluchting
     - delay:
         minutes: 60
     - service: switch.turn_off

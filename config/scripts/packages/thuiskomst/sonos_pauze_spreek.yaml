@@ -40,8 +40,8 @@ sonos_pauze_spreek:
         entity_id: "{{ sonos_entity }}"
     - delay: "00:00:03"
     - service: >
-        {% if states.media_player.keuken.attributes.media_content_id is defined %}
-          {% if 'http://192.168.79.54:8123/api' in state_attr("media_player.keuken", "media_content_id") %}
+        {% if states.media_player.mass_keuken.attributes.media_content_id is defined %}
+          {% if 'http://192.168.79.54:8123/api' in state_attr("media_player.mass_keuken", "media_content_id") %}
             script.sonos_pauze_spreek_nl
           {% else %}
             script.sonos_pauze_spreek_non_nl
@@ -52,14 +52,14 @@ sonos_pauze_spreek:
       data_template:
         entity_id: "{{ sonos_entity }}"
     # - service: >
-    #     {% if state_attr('media_player.keuken', 'media_artist') == 'nl-nl' or state_attr('media_player.keuken', 'media_artist') == 'nl' or state_attr('media_player.keuken', 'media_artist') == 'nl-be' %}
+    #     {% if state_attr('media_player.mass_keuken', 'media_artist') == 'nl-nl' or state_attr('media_player.mass_keuken', 'media_artist') == 'nl' or state_attr('media_player.mass_keuken', 'media_artist') == 'nl-be' %}
     #       script.sonos_pauze_spreek_nl
     #     {% else %}
     #       script.sonos_pauze_spreek_non_nl
     #     {% endif %}
     # - service: >
-    #     {% if states.media_player.keuken.attributes.media_title is defined %}
-    #       {% if 'nl-nl' in state_attr("media_player.keuken", "media_title") or 'nl' in state_attr("media_player.keuken", "media_title") or 'nl-be' in state_attr("media_player.keuken", "media_title") %}
+    #     {% if states.media_player.mass_keuken.attributes.media_title is defined %}
+    #       {% if 'nl-nl' in state_attr("media_player.mass_keuken", "media_title") or 'nl' in state_attr("media_player.mass_keuken", "media_title") or 'nl-be' in state_attr("media_player.mass_keuken", "media_title") %}
     #         script.sonos_pauze_spreek_nl
     #       {% else %}
     #         script.sonos_pauze_spreek_non_nl

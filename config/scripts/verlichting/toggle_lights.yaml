@@ -1,0 +1,27 @@
+toggle_lights:
+  alias: Toggle lights
+  sequence:
+    - service: light.toggle
+      data: {}
+      target:
+        entity_id:
+          - light.keuken_luster
+          - light.zithoek_luster
+          - light.waskot
+          - light.wc
+          - light.danszaal_luster
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 4
+        milliseconds: 0
+    - service: light.toggle
+      data: {}
+      target:
+        entity_id:
+          - light.keuken_luster
+          - light.zithoek_luster
+          - light.waskot
+          - light.wc
+          - light.danszaal_luster
+  mode: single

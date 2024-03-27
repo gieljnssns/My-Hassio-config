@@ -1,0 +1,61 @@
+random_music:
+  sequence:
+    - variables:
+        number: >
+          {% set numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] %}
+          {% set number = numbers | random  %}
+          {{ number }}
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >
+                {{ number % 2 == 0 }}
+            - condition: template
+              value_template: >
+                {{ states("todo.playlists") | int > 0 }}
+          sequence:
+            - service: script.random_playlist
+              data:
+                sonos_entity: >
+                  {{ sonos_entity }}
+      default:
+        - service: script.random_radio
+          data:
+            sonos_entity: >
+              {{ sonos_entity }}
+    # - service: homeassistant.update_entity
+    #   target:
+    #     entity_id: sensor.random_music
+    # - choose:
+    #     - conditions:
+    #         - condition: template
+    #           value_template: >
+    #             {{ is_state_attr("sensor.random_music", "type", "playlist") }}
+    #       sequence:
+    #         - service: media_player.shuffle_set
+    #           data:
+    #             shuffle: true
+    #           target:
+    #             entity_id: "{{ sonos_entity }}"
+    #         - service: mass.play_media
+    #           data:
+    #             enqueue: replace
+    #             radio_mode: >
+    #               {{ state_attr("sensor.random_music", "radio_mode") }}
+    #             media_id: >
+    #               {{ states("sensor.random_music") }}
+    #           target:
+    #             entity_id: "{{ sonos_entity }}"
+    #   default:
+    #     - service: media_player.shuffle_set
+    #       data:
+    #         shuffle: false
+    #       target:
+    #         entity_id: "{{ sonos_entity }}"
+    #     - service: mass.play_media
+    #       data:
+    #         enqueue: replace
+    #         media_id: >
+    #           {{ states("sensor.random_music") }}
+    #       target:
+    #         entity_id: "{{ sonos_entity }}"

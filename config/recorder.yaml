@@ -5,7 +5,6 @@ exclude:
   domains:
     - camera
     - group
-    - history_graph
     - scene
     - sun
     - weather
@@ -22,7 +21,6 @@ exclude:
     - sensor.time
     - sensor.time_date
     - sensor.last_boot
-    - sensor.moon
     - sensor.l1_net_afname
     - sensor.l2_net_afname
     - sensor.l3_net_afname
@@ -31,15 +29,11 @@ exclude:
     - sensor.l3_net_terugsturen
     - sensor.buitentemperatuur_gefilterd
     - sensor.binnen_lowpass
-    - sensor.badkamer_still_energy
     - sensor.zonne_energie_gefilterd_lowpass
     - sensor.rest_vermogen
     - sensor.solaredge_inverter_watthours
     - sensor.huawei_accumulated_energy_yield
-    - sensor.badkamer_still_distance
     - sensor.verwarming_vermogen
-    - sensor.slaapkamerpi_vermogen
-    - sensor.badkamer_detection_distance
     - sensor.buiten_buiten_temperatuur
     - sensor.buiten_buiten_luchtdruk
     - sensor.buiten_buiten_lichtsterkte
@@ -49,28 +43,6 @@ exclude:
     - sensor.temperatuur_slaapkamer_2
     - sensor.temperatuur_pi3_living_2
     - sensor.temp_living_2
-    - sensor.temperatuur_poort
-    - sensor.luchtdruk_poort
-    - sensor.shelly_warmtepompboiler_temperature
-    - sensor.shelly_warmtepomp_temperature
-    - sensor.badkamer_g0_move_energy
-    - sensor.badkamer_g0_still_energy
-    - sensor.badkamer_g1_move_energy
-    - sensor.badkamer_g1_still_energy
-    - sensor.badkamer_g2_move_energy
-    - sensor.badkamer_g2_still_energy
-    - sensor.badkamer_g3_move_energy
-    - sensor.badkamer_g3_still_energy
-    - sensor.badkamer_g4_move_energy
-    - sensor.badkamer_g4_still_energy
-    - sensor.badkamer_g5_move_energy
-    - sensor.badkamer_g5_still_energy
-    - sensor.badkamer_g6_move_energy
-    - sensor.badkamer_g6_still_energy
-    - sensor.badkamer_g7_move_energy
-    - sensor.badkamer_g7_still_energy
-    - sensor.badkamer_g8_move_energy
-    - sensor.badkamer_g8_still_energy
     - sensor.purge_entites_1
     - sensor.purge_entites_2
     - sensor.backup_state
@@ -78,9 +50,7 @@ exclude:
     - sensor.papier
     - sensor.pmd
     - sensor.restafval
-    - sensor.icloud3_event_log
     - sensor.low_battery
-    - sensor.sonos_favorites
     - sensor.l2_vermogen
     - sensor.l1_vermogen
     - sensor.v1_vermogen
@@ -91,10 +61,37 @@ exclude:
     - sensor.s3_vermogen
     - sensor.s2_vermogen
     - sensor.huidig_fluvius
+    - sensor.brewpi_verbruik
+    - sensor.keukenpi_verbruik
+    - sensor.livingpi_verbruik
+    - sensor.verwarmingpi_verbruik
+    - sensor.brewpi_verbruik
+    - sensor.keukenpi_verbruik
+    - sensor.livingpi_verbruik
+    - sensor.verwarmingpi_verbruik
+    - sensor.living_luchtvochtigheid
+    - sensor.unifi_droommachien_cpu0
+    - sensor.unifi_droommachien_cpu1
+    - sensor.unifi_droommachien_cpu2
+    - sensor.unifi_droommachien_cpu3
+    - sensor.unifi_droommachien_cpu
+    - sensor.unifi_waskot_cpu
+    - sensor.unifi_garage_cpu
+    - sensor.unifi_media_cpu
+    - sensor.badkamer_luchtdruk
+    - sensor.luchtdruk_keuken
+    - sensor.zolder_luchtdruk
+    - sensor.living_luchtdruk
 
   entity_globs:
+    - sensor.*_still_energy
+    - sensor.*_move_energy
+    - sensor.*_detection_distance
+    - sensor.*_still_distance
+    - sensor.*_moving_distance
+    - sensor.*_poe_power
     - sensor.*_uptime
-    - sensor.uptime_*
+    - sensor.uptime*
     - sensor.cpu_*
     - sensor.swap_*
     - sensor.ram_*
@@ -102,6 +99,4 @@ exclude:
     - sensor.shelly_*temperatuur
     - sensor.*_startuur
     - sensor.quarter_*
-include:
-  entities:
-    - sensor.quarter_hourly_grid_consumption
+    - sensor.plant_*

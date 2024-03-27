@@ -73,11 +73,11 @@ template:
       - name: Bad weather
         unique_id: f2c4207a-27a0-437e-b41b-b0294568a981
         state: >
-          {% if states("sensor.weatherbit_snow_rate") | int(default=0) > 0 %}
+          {% if states("sensor.openweathermap_snow") | int(default=0) > 0 %}
             snow
-          {% elif ((state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['templow']  | int(default=0) < 4) and states("sensor.buiten_buiten_dauwpunt") | int(default=0) < 6 and states("sensor.weatherbit_wind_speed") | int(default=0) < 12 and states("sensor.weatherbit_cloud_coverage") | int(default=0) < 20 and states("sensor.buiten_buiten_luchtvochtigheid") | int(default=0) > 50) %} 
+          {% elif ((states("sensor.buiten_buiten_temperatuur") | int(0) < 4) and states("sensor.buiten_buiten_dauwpunt") | int(0) < 6 and states("sensor.openweathermap_wind_speed") | int(0) < 12 and states("sensor.openweathermap_cloud_coverage") | int(0) < 20 and states("sensor.poort_luchtvochtigheid") | int(0) > 50) %} 
             frost
-          {% elif states("sensor.weatherbit_rain_rate") | int(default=0) > 7 %} 
+          {% elif states("sensor.openweathermap_rain") | int(default=0) > 7 %} 
             heavy_rain
           {% else %} 
             clear

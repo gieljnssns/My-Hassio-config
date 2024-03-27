@@ -3,6 +3,10 @@ input_boolean:
     name: Noor block
     icon: mdi:link-lock
 
+  noor_snapchat_blocker:
+    name: Noor block snapchat
+    icon: mdi:snapchat
+
   noor_blocker_all:
     name: Noor block all
     icon: mdi:lan-disconnect
@@ -36,6 +40,19 @@ switch:
             data:
               entity_id: input_boolean.noor_blocker_all
 
+      noor_block_snapchat:
+        value_template: "{{ is_state('input_boolean.noor_snapchat_blocker', 'on') }}"
+        icon_template: mdi:snapchat
+        friendly_name: Noor block snapchat
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.noor_snapchat_blocker
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.noor_snapchat_blocker
+
 automation:
   - id: noor_block
     alias: Noor block
@@ -44,10 +61,21 @@ automation:
       entity_id: input_boolean.noor_blocker
       to: "on"
     action:
+      - service: adguard.add_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/noor.txt"
+          name: Noor
+
+  - id: noor_allow
+    alias: Noor allow
+    trigger:
+      platform: state
+      entity_id: input_boolean.noor_blocker
+      to: "off"
+    action:
       - service: adguard.remove_url
         data:
-          list_type: "allowlist"
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/noor.txt"
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/noor.txt"
 
   - id: noor_block_all
     alias: Noor block all
@@ -59,20 +87,7 @@ automation:
       - service: adguard.add_url
         data:
           name: Noor all
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/no_internet_noor.txt"
-
-  - id: noor_allow
-    alias: Noor allow
-    trigger:
-      platform: state
-      entity_id: input_boolean.noor_blocker
-      to: "off"
-    action:
-      - service: adguard.add_url
-        data:
-          list_type: "allowlist"
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/noor.txt"
-          name: Noor
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/no_internet_noor.txt"
 
   - id: noor_allow_all
     alias: Noor allow all
@@ -83,4 +98,27 @@ automation:
     action:
       - service: adguard.remove_url
         data:
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/no_internet_noor.txt"
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/no_internet_noor.txt"
+
+  - id: noor_block_snapchat
+    alias: Noor block snapchat
+    trigger:
+      platform: state
+      entity_id: input_boolean.noor_snapchat_blocker
+      to: "on"
+    action:
+      - service: adguard.add_url
+        data:
+          name: Noor snapchat
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/noor_snapchat.txt"
+
+  - id: noor_allow_snapchat
+    alias: Noor allow snapchat
+    trigger:
+      platform: state
+      entity_id: input_boolean.noor_snapchat_blocker
+      to: "off"
+    action:
+      - service: adguard.remove_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/noor_snapchat.txt"

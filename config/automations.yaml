@@ -1,1 +1,125 @@
-[]
+- id: "1603382266087"
+  alias: profiler
+  description: profiler
+  trigger:
+    - platform: time
+      at: "17:59"
+  condition: []
+  action:
+    - service: profiler.start
+      data: {}
+  mode: single
+- id: "1617444794333"
+  alias: Shelly herstarten
+  description: ""
+  trigger:
+    - platform: state
+      entity_id: "switch.shelly_badkamer_verluchting_herstarten "
+      to: "off"
+      from: unavailable
+  condition:
+    - condition: state
+      entity_id: binary_sensor.shelly_badkamer_verluchting_status
+      state: "off"
+      for: 00:05:00
+  action:
+    - service: switch.turn_on
+      target:
+        entity_id: switch.shelly_badkamer_verluchting_herstarten
+  mode: parallel
+  max: 10
+- id: "1650959980916"
+  alias: Unifi unavailable
+  description: ""
+  trigger:
+    - platform: state
+      entity_id:
+        - device_tracker.droommachien
+      from: home
+      for:
+        hours: 0
+        minutes: 5
+        seconds: 0
+  condition: []
+  action:
+    - service: notify.mobile_app_gphone
+      data:
+        message: Unifi nazien!!!
+  mode: single
+- id: "1675907714800"
+  alias: Max piek notificatie 3
+  description: ""
+  trigger:
+    - platform: time_pattern
+      minutes: "15"
+  condition:
+    - condition: template
+      value_template:
+        "{{ as_timestamp(now()) - as_timestamp(states.input_number.max_peak_2.last_changed.timestamp()
+        | timestamp_local()) < 900 }}
+
+        "
+    - condition: template
+      value_template:
+        '{{ as_timestamp(now()) - as_timestamp(states("sensor.uptime"))
+        > 900 }}
+
+        '
+  action:
+    - service: persistent_notification.create
+      data:
+        message:
+          "Op kwartierbasis:\n{% for state in states.sensor -%} {%- if \"quarter\"
+          in state.entity_id -%} {%- if state.attributes.last_period | float(0) > 0
+          -%}\n  {{ state.attributes.friendly_name }} = {{ state.attributes.last_period
+          }} kWh\n{% endif -%} {% endif -%} {% endfor %}\nOp uurbasis:\n{% for state
+          in states.sensor -%} {%- if \"quarter\" in state.entity_id -%} {%- if state.attributes.last_period
+          | float(0) > 0 -%}\n  {{ state.attributes.friendly_name | replace(\"kwartierverbruik\",
+          \"uurverbruik\") }} = {{ state.attributes.last_period | float * 4}} kWh\n{%
+          endif -%} {% endif -%} {% endfor -%}"
+  mode: single
+- id: "1685887833753"
+  alias: Beweging poort
+  description: ""
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.poort
+      to: "on"
+  condition: []
+  action:
+    - service: notify.giel_en_martine
+      data:
+        message: Beweging poort
+  mode: single
+- id: "1699040529160"
+  alias: poort gphone
+  description: ""
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.poort
+      to: "on"
+  condition: []
+  action:
+    - service: notify.mobile_app_gphone
+      data:
+        message: Poort
+  mode: single
+- id: "1706796655723"
+  alias: Oerwoud
+  description: ""
+  use_blueprint:
+    path: H0W2D017/Flowers.yaml
+    input:
+      device: 090171ff60b56ff2cb4922cea35e102a
+      time: "19:50:00"
+      exclude:
+        entity_id:
+          - plant.kattenbak
+      water_text: "Geef me alstublieft water: "
+      nutritions_text: "Ik wil extra voeding:"
+      both_text: "Wij willen alles:"
+      persistent: true
+      hourly_weather_forcast: weather.home
+      temp_sensor: sensor.slaapkamer_fien_temperatuur_2

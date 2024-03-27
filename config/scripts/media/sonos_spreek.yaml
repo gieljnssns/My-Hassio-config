@@ -1,8 +1,6 @@
 sonos_spreek:
   sequence:
-    - service: mass.queue_command
-      data:
-        command: snapshot_create
+    - service: media_player.play_media
       target:
         entity_id: >
           {% if is_state('input_select.welke_sonos', 'Keuken') %}
@@ -13,134 +11,31 @@ sonos_spreek:
             media_player.mass_living_2
           {% elif is_state('input_select.welke_sonos', 'Move') %}
             media_player.mass_move
+          {% elif is_state('input_select.welke_sonos', 'Noor') %}
+            media_player.mass_slaapkamer_noor
+          {% elif is_state('input_select.welke_sonos', 'Fien') %}
+            media_player.mass_slaapkamer_fien
           {% else %}
             False
           {% endif %}
-    - delay: "00:00:04"
-    - service: media_player.media_pause
-      data_template:
-        entity_id: >
-          {% if is_state('input_select.welke_sonos', 'Keuken') %}
-            media_player.mass_keuken
-          {% elif is_state('input_select.welke_sonos', 'Badkamer') %}
-            media_player.mass_badkamer
-          {% elif is_state('input_select.welke_sonos', 'Living') %}
-            media_player.mass_living_2
-          {% elif is_state('input_select.welke_sonos', 'Move') %}
-            media_player.mass_move
-          {% else %}
-            False
-          {% endif %}
-    - delay: "00:00:01"
-    - service: media_player.volume_set
-      data_template:
-        entity_id: >
-          {% if is_state('input_select.welke_sonos', 'Keuken') %}
-            media_player.mass_keuken
-          {% elif is_state('input_select.welke_sonos', 'Badkamer') %}
-            media_player.mass_badkamer
-          {% elif is_state('input_select.welke_sonos', 'Living') %}
-            media_player.mass_living_2
-          {% elif is_state('input_select.welke_sonos', 'Move') %}
-            media_player.mass_move
-          {% else %}
-            False
-          {% endif %}
-        volume_level: >
-          {% if is_state('input_select.sonos_volume', 'Maximum') %}
-            1
-          {% elif is_state('input_select.sonos_volume', 'Luid') %}
-            0.9
-          {% elif is_state('input_select.sonos_volume', 'Medium') %}
-            0.8
-          {% elif is_state('input_select.sonos_volume', 'Stil') %}
-            0.7
-          {% elif is_state('input_select.sonos_volume', 'Minimum') %}
-            0.6
-          {% else %}
-            False
-          {% endif %}
-    - service: >
-        {% if is_state('input_select.tts', 'VoiceRSS') %}
-          tts.voicerss_say
-        {% elif is_state('input_select.tts', 'Google') %}
-          tts.google_translate_say
-        {% else %}
-            False
-        {% endif %}
-      data_template:
-        entity_id: >
-          {% if is_state('input_select.welke_sonos', 'Keuken') %}
-            media_player.keuken
-          {% elif is_state('input_select.welke_sonos', 'Badkamer') %}
-            media_player.badkamer
-          {% elif is_state('input_select.welke_sonos', 'Living') %}
-            media_player.living_2
-          {% elif is_state('input_select.welke_sonos', 'Move') %}
-            media_player.move
-          {% else %}
-            False
-          {% endif %}
-        language: >
-          {% if is_state('input_select.tts', 'VoiceRSS') and is_state('input_select.language', 'Engels') %}
-            en-us
-          {% elif is_state('input_select.tts', 'VoiceRSS') and is_state('input_select.language', 'Duits') %}
-            de-de
-          {% elif is_state('input_select.tts', 'VoiceRSS') and is_state('input_select.language', 'Nederlands') %}
-            nl-nl
-          {% elif is_state('input_select.tts', 'VoiceRSS') and is_state('input_select.language', 'Vlaams') %}
-            nl-be
-          {% elif is_state('input_select.tts', 'VoiceRSS') and is_state('input_select.language', 'Italiaans') %}
-            it-it
-          {% elif is_state('input_select.tts', 'VoiceRSS') and is_state('input_select.language', 'Frans') %}
-            fr-fr
-          {% elif is_state('input_select.tts', 'Google') and is_state('input_select.language', 'Engels') %}
-            en
-          {% elif is_state('input_select.tts', 'Google') and is_state('input_select.language', 'Duits') %}
-            de
-          {% elif is_state('input_select.tts', 'Google') and is_state('input_select.language', 'Nederlands') %}
-            nl
-          {% elif is_state('input_select.tts', 'Google') and is_state('input_select.language', 'Italiaans') %}
-            it
-          {% elif is_state('input_select.tts', 'Google') and is_state('input_select.language', 'Frans') %}
-            fr
-          {% elif is_state('input_select.tts', 'Google') and is_state('input_select.language', 'Vlaams') %}
-            nl
-          {% else %}
-            False
-          {% endif %}
-        message: >
-          {% if is_state('input_select.tts', 'Google') and is_state('input_select.language', 'Vlaams') %}
-            Bij Google translate heb je niet de mogelijkheid om een Vlaamse stem te gebruiken
-          {% else %}
-            {{ states('input_text.sonos_spraak') }}
-          {% endif %}
-    - delay: "00:00:02"
-    - wait_template: >-
-        {% if is_state('input_select.welke_sonos', 'Keuken') %}
-          {{ states('binary_sensor.keuken_not_playing') == 'on' }}
-        {% elif is_state('input_select.welke_sonos', 'Badkamer') %}
-          {{ states('binary_sensor.badkamer_not_playing') == 'on' }}
-        {% elif is_state('input_select.welke_sonos', 'Living') %}
-          {{ states('binary_sensor.living_2_not_playing') == 'on' }}
-        {% elif is_state('input_select.welke_sonos', 'Move') %}
-          {{ states('binary_sensor.move_not_playing') == 'on' }}
-        {% else %}
-            False
-        {% endif %}
-    - service: mass.queue_command
       data:
-        command: snapshot_restore
-      target:
-        entity_id: >
-          {% if is_state('input_select.welke_sonos', 'Keuken') %}
-            media_player.mass_keuken
-          {% elif is_state('input_select.welke_sonos', 'Badkamer') %}
-            media_player.mass_badkamer
-          {% elif is_state('input_select.welke_sonos', 'Living') %}
-            media_player.mass_living_2
-          {% elif is_state('input_select.welke_sonos', 'Move') %}
-            media_player.mass_move
-          {% else %}
-            False
-          {% endif %}
+        announce: true
+        media_content_id: >
+          {% set message =  states('input_text.sonos_spraak') %}
+            media-source://tts/tts.piper?message="{{message}}"
+        media_content_type: "music"
+        extra:
+          volume: >
+            {% if is_state('input_select.sonos_volume', 'Maximum') %}
+              100
+            {% elif is_state('input_select.sonos_volume', 'Luid') %}
+              90
+            {% elif is_state('input_select.sonos_volume', 'Medium') %}
+              80
+            {% elif is_state('input_select.sonos_volume', 'Stil') %}
+              70
+            {% elif is_state('input_select.sonos_volume', 'Minimum') %}
+              60
+            {% else %}
+              False
+            {% endif %}

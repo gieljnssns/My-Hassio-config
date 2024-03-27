@@ -3,6 +3,10 @@ input_boolean:
     name: Fien block
     icon: mdi:link-lock
 
+  fien_snapchat_blocker:
+    name: Fien block snapchat
+    icon: mdi:snapchat
+
   fien_blocker_all:
     name: Fien block
     icon: mdi:lan-disconnect
@@ -36,6 +40,19 @@ switch:
             data:
               entity_id: input_boolean.fien_blocker_all
 
+      fien_block_snapchat:
+        value_template: "{{ is_state('input_boolean.fien_snapchat_blocker', 'on') }}"
+        icon_template: mdi:snapchat
+        friendly_name: Fien block snapchat
+        turn_on:
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.fien_snapchat_blocker
+        turn_off:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.fien_snapchat_blocker
+
 automation:
   - id: fien_block
     alias: Fien block
@@ -44,10 +61,21 @@ automation:
       entity_id: input_boolean.fien_blocker
       to: "on"
     action:
+      - service: adguard.add_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/fien.txt"
+          name: Fien
+
+  - id: fien_allow
+    alias: Fien allow
+    trigger:
+      platform: state
+      entity_id: input_boolean.fien_blocker
+      to: "off"
+    action:
       - service: adguard.remove_url
         data:
-          list_type: "allowlist"
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/fien.txt"
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/fien.txt"
 
   - id: fien_block_all
     alias: Fien block all
@@ -59,20 +87,7 @@ automation:
       - service: adguard.add_url
         data:
           name: Fien all
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/no_internet_fien.txt"
-
-  - id: fien_allow
-    alias: Fien allow
-    trigger:
-      platform: state
-      entity_id: input_boolean.fien_blocker
-      to: "off"
-    action:
-      - service: adguard.add_url
-        data:
-          list_type: "allowlist"
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/fien.txt"
-          name: Fien
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/no_internet_fien.txt"
 
   - id: fien_allow_all
     alias: Fien allow all
@@ -83,4 +98,27 @@ automation:
     action:
       - service: adguard.remove_url
         data:
-          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard allowlists/no_internet_fien.txt"
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/no_internet_fien.txt"
+
+  - id: fien_block_snapchat
+    alias: Fien block snapchat
+    trigger:
+      platform: state
+      entity_id: input_boolean.fien_snapchat_blocker
+      to: "on"
+    action:
+      - service: adguard.add_url
+        data:
+          name: Fien snapchat
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/fien_snapchat.txt"
+
+  - id: fien_allow_snapchat
+    alias: Fien allow snapchat
+    trigger:
+      platform: state
+      entity_id: input_boolean.fien_snapchat_blocker
+      to: "off"
+    action:
+      - service: adguard.remove_url
+        data:
+          url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/fien_snapchat.txt"

@@ -1,0 +1,11 @@
+check_todo:
+  sequence:
+    - repeat:
+        for_each: "{{ check }}"
+        sequence:
+          - service: todo.update_item
+            data:
+              status: "{{ action }}"
+              item: "{{ repeat.item }}"
+            target:
+              entity_id: todo.{{ todo }}
