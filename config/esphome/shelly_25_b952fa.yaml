@@ -1,30 +1,32 @@
 substitutions:
-  devicename: shelly_25_b952fa
+  devicename: shelly-25-b952fa
   platform: ESP8266
   board: esp01_1m
   upper_devicename: Shelly Keuken luster/Gang beneden
   channel_1: Keuken luster
   channel_2: Gang beneden
-  max_power: '2000.0'
-  max_temp: '75.0'
+  max_power: "2000.0"
+  max_temp: "75.0"
   ssid: !secret ssid-waskot
-  manual_ip: 192.168.89.92
+  manual_ip: 192.168.79.129
 
 packages:
-  wifi: !include common/wifi-waskot.yaml
+  # wifi: !include common/wifi-waskot.yaml
+  wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
 wifi:
   power_save_mode: HIGH
-  
+
 i2c:
   sda: GPIO12
   scl: GPIO14
 
 sensor:
-  - platform: ade7953
+  - platform: ade7953_i2c
     voltage:
       name: ${upper_devicename} spanning
+      internal: True
     current_a:
       name: ${channel_2} stroom
       internal: true
@@ -63,22 +65,22 @@ sensor:
                   message: Switch turned off because power ${channel_1} exceeded ${max_power}W
     update_interval: 30s
 
-  - platform: total_daily_energy
-    name: ${channel_1} energie
-    power_id: power_channel_1
-    filters:
-        # Multiplication factor from W to kW is 0.001
-        - multiply: 0.001
-    unit_of_measurement: kW
-  
-  - platform: total_daily_energy
-    name: ${channel_2} energie
-    power_id: power_channel_2
-    filters:
-        # Multiplication factor from W to kW is 0.001
-        - multiply: 0.001
-    unit_of_measurement: kW
-    
+  # - platform: total_daily_energy
+  #   name: ${channel_1} energie
+  #   power_id: power_channel_1
+  #   filters:
+  #       # Multiplication factor from W to kW is 0.001
+  #       - multiply: 0.001
+  #   unit_of_measurement: kW
+
+  # - platform: total_daily_energy
+  #   name: ${channel_2} energie
+  #   power_id: power_channel_2
+  #   filters:
+  #       # Multiplication factor from W to kW is 0.001
+  #       - multiply: 0.001
+  #   unit_of_measurement: kW
+
   # NTC Temperature
   - platform: ntc
     sensor: temp_resistance_reading
@@ -91,16 +93,16 @@ sensor:
       reference_resistance: 10kOhm
       reference_temperature: 298.15K
     on_value_range:
-        - above: ${max_temp}
-          then:
-            - light.turn_off: lightid1
-            - light.turn_off: lightid2
-            - homeassistant.service:
-                service: persistent_notification.create
-                data:
-                  title: Message from ${upper_devicename}
-                data_template:
-                  message: Switch turned off because temperature exceeded ${max_temp}°C
+      - above: ${max_temp}
+        then:
+          - light.turn_off: lightid1
+          - light.turn_off: lightid2
+          - homeassistant.service:
+              service: persistent_notification.create
+              data:
+                title: Message from ${upper_devicename}
+              data_template:
+                message: Switch turned off because temperature exceeded ${max_temp}°C
   - platform: resistance
     id: temp_resistance_reading
     sensor: temp_analog_reading
@@ -154,9 +156,9 @@ binary_sensor:
     on_state:
       then:
         - light.toggle: lightid2
-    # internal: true 
+    # internal: true
     id: switchid2
   - platform: gpio
     pin: GPIO16
-    name: "ade7953 IRQ pin"
+    name: "ade7953_i2c IRQ pin"
     internal: true

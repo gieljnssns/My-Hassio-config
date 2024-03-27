@@ -1,0 +1,51 @@
+substitutions:
+  devicename: gang-boven
+  upper_devicename: Gang boven
+  ssid: !secret ssid
+  manual_ip: 192.168.79.159
+  plant: plant_
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+wifi:
+  # ...
+  power_save_mode: light
+
+
+esphome:
+  name: ${devicename}
+
+# improv_serial:
+
+
+esp32_ble_tracker:
+  scan_parameters:
+    # We currently use the defaults to ensure Bluetooth
+    # can co-exist with WiFi In the future we may be able to
+    # enable the built-in coexistence logic in ESP-IDF
+    active: true
+
+bluetooth_proxy:
+  active: true
+
+
+# sensor:
+#   - platform: xiaomi_hhccjcy01
+#     mac_address: 5C:85:7E:B1:09:0B
+#     temperature:
+#       name: "${plant}temperature"
+#     moisture:
+#       name: "${plant}moisture"
+#     illuminance:
+#       name: "${plant}illuminance"
+#     conductivity:
+#       name: "${plant}conductivity"
+#     battery_level:
+#       name: "${plant}battery"

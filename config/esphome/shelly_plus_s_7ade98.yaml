@@ -1,22 +1,29 @@
 substitutions:
-  devicename: shelly_plus_s_7ade98
+  devicename: shelly-plug-s-7ade98
   platform: ESP8266
   board: esp8285
   upper_devicename: Shelly Badkamer verluchting
   channel_1: Badkamer verluchting
   # Higher value gives lower watt readout
-  current_res: '0.00290'
+  current_res: "0.000943"
   # Lower value gives lower voltage readout
-  voltage_div: '940'
+  voltage_div: "2066"
+  # measure a relatively strong load and enter values measured by the device vs the values your reference measurement provided here
+  power_cal_meas: "1710.0"
+  power_cal_real: "1685.0"
   max_power: '2000'
   max_temp: '75.0'
-  ssid: !secret ssid-slaapkamer
-  manual_ip: 192.168.89.81
+  # ssid: !secret ssid-slaapkamer
+  manual_ip: 192.168.79.120
 
 packages:
-  wifi: !include common/wifi-slaapkamer.yaml
+  # wifi: !include common/wifi-covid.yaml
+  wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
-    
+
+wifi:
+  power_save_mode: HIGH
+  
 binary_sensor:
   - platform: gpio
     pin:
@@ -46,6 +53,7 @@ switch:
       - output.turn_on: led
     on_turn_off:
       - output.turn_off: led
+    restore_mode: RESTORE_DEFAULT_OFF
 
 sensor:
   # NTC Temperature
@@ -79,6 +87,7 @@ sensor:
     pin: A0
 
   - platform: hlw8012
+    model: BL0937
     sel_pin:
       number: GPIO12
       inverted: true
@@ -101,6 +110,10 @@ sensor:
       name: '${channel_1} vermogen'
       id: vermogen
       unit_of_measurement: 'W'
+      filters:
+        - calibrate_linear:
+          - 0.0 -> 0.0
+          - ${power_cal_meas} -> ${power_cal_real}
       icon: mdi:flash-outline
       on_value_range:
         - above: ${max_power}
@@ -114,10 +127,10 @@ sensor:
                   message: Switch turned off because power exceeded ${max_power}W
     update_interval: 10s
   
-  - platform: total_daily_energy
-    name: "${channel_1} dagelijks verbruik"
-    power_id: vermogen
-    filters:
-        # Multiplication factor from W to kW is 0.001
-        - multiply: 0.001
-    unit_of_measurement: kWh
+  # - platform: total_daily_energy
+  #   name: "${channel_1} dagelijks verbruik"
+  #   power_id: vermogen
+  #   filters:
+  #       # Multiplication factor from W to kW is 0.001
+  #       - multiply: 0.001
+  #   unit_of_measurement: kWh

@@ -1,0 +1,82 @@
+substitutions:
+  devicename: tester
+  upper_devicename: Tester
+  ssid: !secret ssid
+  manual_ip: 192.168.79.162
+
+esp32:
+  board: esp32dev
+  # framework:
+  #   type: arduino
+  framework:
+    type: esp-idf
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+wifi:
+  # ...
+  power_save_mode: light
+
+esphome:
+  name: ${devicename}
+
+esp32_ble_tracker:
+  scan_parameters:
+    # We currently use the defaults to ensure Bluetooth
+    # can co-exist with WiFi In the future we may be able to
+    # enable the built-in coexistence logic in ESP-IDF
+    active: true
+
+bluetooth_proxy:
+  active: true
+
+uart:
+  tx_pin: 1
+  rx_pin: 3
+  baud_rate: 256000
+  parity: NONE
+  stop_bits: 1
+
+i2c:
+  - id: bus_a
+    sda: 21
+    scl: 22
+    scan: true
+  - id: bus_b
+    sda: 14
+    scl: 15
+    scan: true
+
+
+sensor:
+
+
+  - platform: bme280_i2c
+    temperature:
+      name: "${upper_devicename} temperatuur"
+      id: bme280_temperature
+      oversampling: 1x
+    humidity:
+      name: "${upper_devicename} luchtvochtigheid2"
+      id: bme280_humidity
+      oversampling: 1x
+    # pressure:
+    #   name: "${upper_devicename} luchtdruk"
+    #   id: bme280_pressure
+    #   oversampling: 1x
+    address: 0x76
+    i2c_id: bus_a
+    update_interval: 30s
+
+  - platform: sht3xd
+    temperature:
+      name: ${upper_devicename} temperatuur2
+      internal: true
+    humidity:
+      name: ${upper_devicename} luchtvochtigheid
+    address: 0x44
+    update_interval: 60s
+    i2c_id: bus_b
+    

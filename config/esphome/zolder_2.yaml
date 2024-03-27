@@ -1,13 +1,14 @@
 substitutions:
-  devicename: zolder_2
+  devicename: zolder-2
   platform: ESP8266
   board: nodemcuv2
   upper_devicename: Esp zolder
   ssid: !secret ssid-waskot
-  manual_ip: 192.168.89.112
+  manual_ip: 192.168.79.145
 
 packages:
-  wifi: !include common/wifi-waskot.yaml
+  # wifi: !include common/wifi-waskot.yaml
+  wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
 i2c:
@@ -22,9 +23,10 @@ switch:
       number: D5
       # inverted: yes
     name: "Zolder verluchting"
-  
+    restore_mode: RESTORE_DEFAULT_OFF
+
 sensor:
-  - platform: bme280
+  - platform: bme280_i2c
     temperature:
       name: "Zolder temperatuur"
       id: bme280_temperature
@@ -39,12 +41,13 @@ sensor:
       oversampling: 1x
     address: 0x76
     i2c_id: bus_a
-    update_interval: 30s
-  
+    update_interval: 60s
+
   - platform: template
     name: "Zolder dauwpunt"
-    lambda: return (243.5*(log(id(bme280_humidity).state/100)+((17.67*id(bme280_temperature).state)/
+    lambda:
+      return (243.5*(log(id(bme280_humidity).state/100)+((17.67*id(bme280_temperature).state)/
       (243.5+id(bme280_temperature).state)))/(17.67-log(id(bme280_humidity).state/100)-
       ((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state))));
     unit_of_measurement: °C
-    icon: 'mdi:thermometer-alert'
+    icon: "mdi:thermometer-alert"

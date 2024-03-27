@@ -1,18 +1,45 @@
 substitutions:
   devicename: esp-cam
-  platform: ESP32
-  board: esp32cam
   upper_devicename: Esp cam
-  ssid: !secret ssid-garage
+  ssid: !secret ssid
+  manual_ip: 192.168.79.158
+
+esp32:
+  board: esp32cam
+  # board: esp32dev
+  framework:
+    type: esp-idf
+    # version: latest
 
 packages:
-  wifi: !include common/wifi-garage.yaml
-  device_base: !include common/device_base.yaml
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+wifi:
+  # ...
+  power_save_mode: light
+
+
+esphome:
+  name: ${devicename}
+
+# improv_serial:
+
+
+# esp32_ble_tracker:
+#   scan_parameters:
+#     # We currently use the defaults to ensure Bluetooth
+#     # can co-exist with WiFi In the future we may be able to
+#     # enable the built-in coexistence logic in ESP-IDF
+#     active: true
+
+# bluetooth_proxy:
+#   active: true
 
 
 # ESP32-CAM
 esp32_camera:
-  name: Garage
+  name: ${upper_devicename}
   external_clock:
     pin: GPIO0
     frequency: 20MHz
@@ -23,6 +50,12 @@ esp32_camera:
   vsync_pin: GPIO25
   href_pin: GPIO23
   pixel_clock_pin: GPIO22
-  power_down_pin: GPIO32
-  resolution: 1280x1024
+  # power_down_pin: GPIO32
+  resolution: 640x480
+
+esp32_camera_web_server:
+  - port: 8080
+    mode: stream
+  - port: 8081
+    mode: snapshot
 

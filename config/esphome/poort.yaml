@@ -1,0 +1,76 @@
+substitutions:
+  devicename: poort
+  upper_devicename: Poort
+  ssid: !secret ssid
+  manual_ip: 192.168.79.160
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+wifi:
+  # ...
+  power_save_mode: light
+
+esphome:
+  name: ${devicename}
+
+# esp32_ble_tracker:
+#   scan_parameters:
+#     # We currently use the defaults to ensure Bluetooth
+#     # can co-exist with WiFi In the future we may be able to
+#     # enable the built-in coexistence logic in ESP-IDF
+#     active: true
+
+# bluetooth_proxy:
+#   active: true
+
+i2c:
+  - id: bus_a
+    sda: 21
+    scl: 22
+
+output:
+  - platform: ledc
+    pin: GPIO19
+    id: led_knop
+
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO17
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    name: ${upper_devicename}
+    device_class: motion
+    filters:
+      - delayed_on: 100ms
+      - delayed_off: 3s
+    
+sensor:
+  - platform: sht3xd
+    temperature:
+      name: ${upper_devicename} temperatuur
+      internal: true
+    humidity:
+      name: ${upper_devicename} luchtvochtigheid
+    address: 0x44
+    update_interval: 60s
+    i2c_id: bus_a 
+
+switch:
+  - platform: gpio
+    pin:
+      number: GPIO16
+      # inverted: yes
+    name: "Pries ${devicename}"
+    restore_mode: RESTORE_DEFAULT_OFF
+    device_class: outlet

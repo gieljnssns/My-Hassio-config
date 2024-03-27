@@ -1,0 +1,19 @@
+substitutions:
+  devicename: warm-water-extra
+  platform: ESP8266
+  board: nodemcuv2
+  upper_devicename: Warm water extra
+  ssid: !secret ssid
+  manual_ip: 192.168.79.157
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base.yaml
+
+switch:
+  - platform: gpio
+    pin:
+      number: D5
+      # inverted: yes
+    name: "Warm water extra"
+    restore_mode: RESTORE_DEFAULT_OFF  

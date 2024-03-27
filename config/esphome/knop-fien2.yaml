@@ -1,30 +1,48 @@
 substitutions:
-  devicename: knop_fien
-  platform: ESP8266
-  board: nodemcuv2
+  devicename: knop-fien2
   upper_devicename: Knop Fien
-  ssid: !secret ssid-living
-  manual_ip: 192.168.89.103
-  
+  ssid: !secret ssid
+  manual_ip: 192.168.79.156
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
 packages:
-  wifi: !include common/wifi-living.yaml
-  device_base: !include common/device_base.yaml
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+wifi:
+  # ...
+  power_save_mode: light
+
+esphome:
+  name: ${devicename}
+
+# improv_serial:
+
+esp32_ble_tracker:
+  scan_parameters:
+    # We currently use the defaults to ensure Bluetooth
+    # can co-exist with WiFi In the future we may be able to
+    # enable the built-in coexistence logic in ESP-IDF
+    active: true
+
+bluetooth_proxy:
+  active: true
 
 i2c:
-  sda: 4
-  scl: 5
+  sda: 21
+  scl: 22
   scan: True
   id: bus_a
-  
+
 sensor:
-  - platform: bme280
+  - platform: bme280_i2c
     temperature:
       name: "Slaapkamer Fien temperatuur"
       id: bme280_temperature
-      oversampling: 1x
-    pressure:
-      name: "Slaapkamer Fien luchtdruk"
-      id: bme280_pressure
       oversampling: 1x
     humidity:
       name: "Slaapkamer Fien luchtvochtigheid"
@@ -33,10 +51,10 @@ sensor:
     address: 0x76
     i2c_id: bus_a
     update_interval: 60s
-    
+
 output:
-  - platform: esp8266_pwm
-    pin: D0
+  - platform: ledc
+    pin: GPIO19
     id: led_knop
 
 light:
@@ -51,55 +69,58 @@ light:
 binary_sensor:
   - platform: gpio
     pin:
-      number: D5
+      number: GPIO4
+      # mode:
+      #   input: true
+      #   pullup: true
     id: "knop_fien"
     on_multi_click:
-    - timing:
-      - ON for at most 1s
-      - OFF for at most 1s
-      - ON for at most 1s
-      - OFF for at most 1s
-      - ON for at most 1s
-      - OFF for at most 1s
-      - ON for at most 1s
-      - OFF for at least 0.5s
-      then:
-        - binary_sensor.template.publish:
-            id: fien_4_klik
-            state: ON
-        - if:
-            condition:
-              light.is_on: licht
-            then:
-              - delay: 1s
-              - light.turn_on:
-                  id: licht
-                  effect: strobe
-              - delay: 4s
-              - light.turn_off:
-                  id: licht
-              - light.turn_on:
-                  id: licht
-            else:
-              - delay: 1s
-              - light.turn_on:
-                  id: licht
-                  effect: strobe
-              - delay: 4s
-              - light.turn_off:
-                  id: licht
-        - delay: 2s
-        - binary_sensor.template.publish:
-            id: fien_4_klik
-            state: OFF
-    - timing:
-        - ON for at most 1s
-        - OFF for at most 1s
-        - ON for at most 1s
-        - OFF for at most 1s
-        - ON for at most 1s
-        - OFF for at least 0.5s
-      then:
+      - timing:
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at least 0.5s
+        then:
+          - binary_sensor.template.publish:
+              id: fien_4_klik
+              state: ON
+          - if:
+              condition:
+                light.is_on: licht
+              then:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 4s
+                - light.turn_off:
+                    id: licht
+                - light.turn_on:
+                    id: licht
+              else:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 4s
+                - light.turn_off:
+                    id: licht
+          - delay: 2s
+          - binary_sensor.template.publish:
+              id: fien_4_klik
+              state: OFF
+      - timing:
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at least 0.5s
+        then:
           - binary_sensor.template.publish:
               id: fien_3_klik
               state: ON
@@ -128,12 +149,12 @@ binary_sensor:
           - binary_sensor.template.publish:
               id: fien_3_klik
               state: OFF
-    - timing:
-        - ON for at most 1s
-        - OFF for at most 1s
-        - ON for at most 1s
-        - OFF for at least 0.5s
-      then:
+      - timing:
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at least 0.5s
+        then:
           - binary_sensor.template.publish:
               id: fien_2_klik
               state: ON
@@ -162,10 +183,10 @@ binary_sensor:
           - binary_sensor.template.publish:
               id: fien_2_klik
               state: OFF
-    - timing:
-        - ON for at most 1s
-        - OFF for at least 0.5s
-      then:
+      - timing:
+          - ON for at most 1s
+          - OFF for at least 0.5s
+        then:
           - binary_sensor.template.publish:
               id: fien_klik
               state: ON
@@ -194,13 +215,13 @@ binary_sensor:
           - binary_sensor.template.publish:
               id: fien_klik
               state: OFF
-    - timing:
-      - ON for at least 1.2s
-      then:
-        - binary_sensor.template.publish:
-            id: fien_long_klik
-            state: ON
-        - if:
+      - timing:
+          - ON for at least 1.2s
+        then:
+          - binary_sensor.template.publish:
+              id: fien_long_klik
+              state: ON
+          - if:
               condition:
                 light.is_on: licht
               then:
@@ -220,26 +241,26 @@ binary_sensor:
                 - light.turn_off:
                     id: licht
     on_release:
-          - binary_sensor.template.publish:
-              id: fien_long_klik
-              state: OFF
-  
+      - binary_sensor.template.publish:
+          id: fien_long_klik
+          state: OFF
+
   - platform: template
     id: fien_klik
     name: "Knop Fien klik"
-  
+
   - platform: template
     id: fien_long_klik
     name: "Knop Fien lange klik"
-  
+
   - platform: template
     id: fien_2_klik
     name: "Knop Fien 2 klik"
-    
+
   - platform: template
     id: fien_3_klik
     name: "Knop Fien 3 klik"
-  
+
   - platform: template
     id: fien_4_klik
     name: "Knop Fien 4 klik"

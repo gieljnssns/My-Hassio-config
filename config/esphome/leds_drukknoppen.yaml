@@ -1,21 +1,22 @@
 substitutions:
-  devicename: leds_drukknoppen
+  devicename: leds-drukknoppen
   platform: ESP8266
   board: nodemcuv2
   upper_devicename: Leds drukknoppen
   ssid: !secret ssid-waskot
-  manual_ip: 192.168.89.102
+  manual_ip: 192.168.79.137
 
 packages:
-  wifi: !include common/wifi-waskot.yaml
+  # wifi: !include common/wifi-waskot.yaml
+  wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
 globals:
   - id: chime
     type: bool
     restore_value: true
-    initial_value: 'true'
-    
+    initial_value: "true"
+
 switch:
   - platform: gpio
     pin:
@@ -23,46 +24,47 @@ switch:
       inverted: yes
     name: "Led wc"
     id: wc
+    restore_mode: RESTORE_DEFAULT_OFF
   - platform: gpio
     pin:
       number: D1
       # inverted: yes
     name: "Led waskot"
     id: waskot
-  
+    restore_mode: RESTORE_DEFAULT_OFF
   - platform: gpio
     pin:
       number: D4
       # inverted: yes
     name: "Led badkamer"
     id: badkamer
-  
+    restore_mode: RESTORE_DEFAULT_OFF
   - platform: gpio
     pin:
       number: D3
       # inverted: yes
     name: "Stopcontacten terras"
     id: reserve
-  
+    restore_mode: RESTORE_DEFAULT_OFF
   - platform: gpio
     pin:
       number: D2
       # inverted: yes
     name: "Deurbel"
     id: deurbel
-  
+    restore_mode: RESTORE_DEFAULT_OFF
   - platform: template
-    restore_state: false
+    restore_mode: DISABLED
     name: "Deurbel actief"
     id: deurbel_actief
     turn_on_action:
       - globals.set:
           id: chime
-          value: 'true'
+          value: "true"
     turn_off_action:
       - globals.set:
           id: chime
-          value: 'false'
+          value: "false"
     lambda: |-
       return id(chime);
 
@@ -89,7 +91,7 @@ binary_sensor:
     on_release:
       # On release, turn of the chime.
       - switch.turn_off: deurbel
-  
+
   - platform: gpio
     id: spots_tv_drukknop
     name: Spots tv drukknop
@@ -102,7 +104,7 @@ binary_sensor:
           service: light.toggle
           data:
             entity_id: light.spots_tv
-  
+
   - platform: gpio
     id: spots_slaapkamer_drukknop
     name: Spots slaapkamer drukknop
@@ -111,7 +113,11 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true
     on_press:
+      # - homeassistant.service:
+      #     service: light.toggle
+      #     data:
+      #       entity_id: light.slaapkamer_hoog
       - homeassistant.service:
           service: light.toggle
           data:
-            entity_id: light.spot_slaapkamer
+            entity_id: light.slaapkamer_spot

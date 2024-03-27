@@ -1,13 +1,14 @@
 substitutions:
-  devicename: knop_martine
+  devicename: knop-martine
   platform: ESP8266
   board: nodemcuv2
   upper_devicename: Knop Martine
   ssid: !secret ssid-slaapkamer
-  manual_ip: 192.168.89.104
+  manual_ip: 192.168.79.139
 
 packages:
-  wifi: !include common/wifi-slaapkamer.yaml
+  # wifi: !include common/wifi-slaapkamer.yaml
+  wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
 output:
@@ -24,58 +25,70 @@ light:
       - strobe:
       - flicker:
 
+sensor:
+  - platform: dht
+    pin: D1
+    model: DHT22
+    temperature:
+      accuracy_decimals: 1
+      name: "Temperatuur slaapkamer 2"
+    humidity:
+      accuracy_decimals: 1
+      name: "Luchtvochtigheid slaapkamer"
+    update_interval: 60s
+
 binary_sensor:
   - platform: gpio
     pin:
       number: D5
     id: "knop_martine"
     on_multi_click:
-    - timing:
-      - ON for at most 1s
-      - OFF for at most 1s
-      - ON for at most 1s
-      - OFF for at most 1s
-      - ON for at most 1s
-      - OFF for at most 1s
-      - ON for at most 1s
-      - OFF for at least 0.5s
-      then:
-        - binary_sensor.template.publish:
-            id: martine_4_klik
-            state: ON
-        - if:
-            condition:
-              light.is_on: licht
-            then:
-              - delay: 1s
-              - light.turn_on:
-                  id: licht
-                  effect: strobe
-              - delay: 4s
-              - light.turn_off:
-                  id: licht
-              - light.turn_on:
-                  id: licht
-            else:
-              - delay: 1s
-              - light.turn_on:
-                  id: licht
-                  effect: strobe
-              - delay: 4s
-              - light.turn_off:
-                  id: licht
-        - delay: 2s
-        - binary_sensor.template.publish:
-            id: martine_4_klik
-            state: OFF
-    - timing:
-        - ON for at most 1s
-        - OFF for at most 1s
-        - ON for at most 1s
-        - OFF for at most 1s
-        - ON for at most 1s
-        - OFF for at least 0.5s
-      then:
+      - timing:
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at least 0.5s
+        then:
+          - binary_sensor.template.publish:
+              id: martine_4_klik
+              state: ON
+          - if:
+              condition:
+                light.is_on: licht
+              then:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 4s
+                - light.turn_off:
+                    id: licht
+                - light.turn_on:
+                    id: licht
+              else:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 4s
+                - light.turn_off:
+                    id: licht
+          - delay: 2s
+          - binary_sensor.template.publish:
+              id: martine_4_klik
+              state: OFF
+      - timing:
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at least 0.5s
+        then:
           - binary_sensor.template.publish:
               id: martine_3_klik
               state: ON
@@ -104,12 +117,12 @@ binary_sensor:
           - binary_sensor.template.publish:
               id: martine_3_klik
               state: OFF
-    - timing:
-        - ON for at most 1s
-        - OFF for at most 1s
-        - ON for at most 1s
-        - OFF for at least 0.5s
-      then:
+      - timing:
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at least 0.5s
+        then:
           - binary_sensor.template.publish:
               id: martine_2_klik
               state: ON
@@ -138,10 +151,10 @@ binary_sensor:
           - binary_sensor.template.publish:
               id: martine_2_klik
               state: OFF
-    - timing:
-        - ON for at most 1s
-        - OFF for at least 0.5s
-      then:
+      - timing:
+          - ON for at most 1s
+          - OFF for at least 0.5s
+        then:
           - binary_sensor.template.publish:
               id: martine_klik
               state: ON
@@ -170,13 +183,13 @@ binary_sensor:
           - binary_sensor.template.publish:
               id: martine_klik
               state: OFF
-    - timing:
-      - ON for at least 1.2s
-      then:
-        - binary_sensor.template.publish:
-            id: martine_long_klik
-            state: ON
-        - if:
+      - timing:
+          - ON for at least 1.2s
+        then:
+          - binary_sensor.template.publish:
+              id: martine_long_klik
+              state: ON
+          - if:
               condition:
                 light.is_on: licht
               then:
@@ -196,26 +209,26 @@ binary_sensor:
                 - light.turn_off:
                     id: licht
     on_release:
-          - binary_sensor.template.publish:
-              id: martine_long_klik
-              state: OFF
-  
+      - binary_sensor.template.publish:
+          id: martine_long_klik
+          state: OFF
+
   - platform: template
     id: martine_klik
     name: "Knop Martine klik"
-  
+
   - platform: template
     id: martine_long_klik
     name: "Knop Martine lange klik"
-  
+
   - platform: template
     id: martine_2_klik
     name: "Knop Martine 2 klik"
-    
+
   - platform: template
     id: martine_3_klik
     name: "Knop Martine 3 klik"
-  
+
   - platform: template
     id: martine_4_klik
     name: "Knop Martine 4 klik"

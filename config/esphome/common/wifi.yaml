@@ -1,13 +1,32 @@
 wifi:
-  ssid: !secret ssid
-  id: ssid1
-  password: !secret password
+  networks:
+    - ssid: !secret ssid-esphome
+      id: ssid1_esphome
+      password: !secret password-esphome
+    - ssid: !secret ssid
+      id: ssid1
+      password: !secret password-esphome
+    - ssid: !secret ssid-esphome
+      id: ssid2_esphome
+      password: !secret password-esphome
+    - ssid: !secret ssid
+      id: ssid2
+      password: !secret password
   power_save_mode: none
+  # fast_connect: true
   manual_ip:
     static_ip: ${manual_ip}
-    gateway: 192.168.89.1
+    gateway: 192.168.79.1
     subnet: 255.255.255.0
     dns1: 1.1.1.1
     dns2: 8.8.8.8
+  on_disconnect:
+    then:
+      - delay: 5min
+      - if:
+          condition:
+            binary_sensor.is_off: connected
+          then:
+            - switch.toggle: restart_device
 # mdns:
 #   disabled: true
