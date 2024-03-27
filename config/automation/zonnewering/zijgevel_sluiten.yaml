@@ -25,21 +25,21 @@ condition:
 
     # Weather based conditions
     - condition: numeric_state
-      entity_id: sensor.weatherbit_wind_speed
+      entity_id: sensor.openweathermap_wind_speed
       below: 40 # Wind strenght - I still have to tune this value
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
           {{ states("sensor.ba_precipitation_forecast_average") | float < 0.15 }}
         {% else %}
-          {{ states("sensor.weatherbit_rain_rate")  | float < 0.15 }}
+          {{ states("sensor.openweathermap_rain")  | float < 0.15 }}
         {% endif %}
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
           {{ states("sensor.ba_precipitation") | float < 0.15 }}
         {% else %}
-          {{ states("sensor.weatherbit_rain_rate")  | float < 0.15 }}
+          {{ states("sensor.openweathermap_rain")  | float < 0.15 }}
         {% endif %}
 
     - condition: numeric_state
@@ -58,7 +58,11 @@ condition:
     #   above: 22
     - condition: template
       value_template: >
-        {{  state_attr("weather.weatherbit_zandhoven", 'forecast')[0]['temperature'] > 19 }}
+        {{ ((state_attr("weather.openweathermap", 'forecast')[0]['temperature'] +
+          state_attr("weather.openweathermap", 'forecast')[1]['temperature'] +
+          state_attr("weather.openweathermap", 'forecast')[2]['temperature'] +
+          state_attr("weather.openweathermap", 'forecast')[3]['temperature'] +
+          state_attr("weather.openweathermap", 'forecast')[4]['temperature']) / 5) > 19 }}
 
     # Time based conditions
     - condition: template

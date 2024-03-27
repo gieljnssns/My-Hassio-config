@@ -9,10 +9,10 @@ trigger:
     id: noor
     for:
       minutes: 2
-  - platform: state
-    entity_id: device_tracker.nphone_detect_2
-    id: noorwifi
-    to: "home"
+  # - platform: state
+  #   entity_id: device_tracker.nphone_detect_2
+  #   id: noorwifi
+  #   to: "home"
 
   - platform: state
     entity_id: device_tracker.fien_not_so_binary
@@ -20,31 +20,34 @@ trigger:
     id: fien
     for:
       minutes: 2
-  - platform: state
-    entity_id: device_tracker.fphone_detect_2
-    id: fienwifi
-    to: "home"
+  # - platform: state
+  #   entity_id: device_tracker.fphone_detect_2
+  #   id: fienwifi
+  #   to: "home"
 action:
   - choose:
-      - conditions:
-          - condition: trigger
-            id: noorwifi
-        sequence:
-          - service: notify.mobile_app_nphone
-            data:
-              message: Staat privemodus weer aan in uw wifi instellingen?
-              data:
-                push:
-                  sound: default
+      # - conditions:
+      #     - condition: trigger
+      #       id: noorwifi
+      #   sequence:
+      #     - service: notify.mobile_app_nphone
+      #       data:
+      #         message: Staat privemodus weer aan in uw wifi instellingen?
+      #         data:
+      #           push:
+      #             sound: default
       - conditions:
           - condition: trigger
             id: noor
           - condition: state
             entity_id: device_tracker.nphone
             state: "home"
-          - condition: numeric_state
-            entity_id: sensor.nphone_bt_thuis
-            above: 43
+          - condition: template
+            value_template: >
+              {{ states('sensor.nphone_ssid') != "COVID-19" }}
+          # - condition: numeric_state
+          #   entity_id: sensor.nphone_bt_thuis
+          #   above: 43
         sequence:
           - service: notify.mobile_app_nphone
             data:
@@ -63,25 +66,28 @@ action:
               data:
                 push:
                   sound: default
-      - conditions:
-          - condition: trigger
-            id: fienwifi
-        sequence:
-          - service: notify.mobile_app_fphone
-            data:
-              message: Staat privemodus weer aan in uw wifi instellingen?
-              data:
-                push:
-                  sound: default
+      # - conditions:
+      #     - condition: trigger
+      #       id: fienwifi
+      #   sequence:
+      #     - service: notify.mobile_app_fphone
+      #       data:
+      #         message: Staat privemodus weer aan in uw wifi instellingen?
+      #         data:
+      #           push:
+      #             sound: default
       - conditions:
           - condition: trigger
             id: fien
           - condition: state
             entity_id: device_tracker.fphone
             state: "home"
-          - condition: numeric_state
-            entity_id: sensor.fphone_bt_thuis
-            above: 43
+          - condition: template
+            value_template: >
+              {{ states('sensor.fphone_ssid') != "COVID-19" }}
+          # - condition: numeric_state
+          #   entity_id: sensor.fphone_bt_thuis
+          #   above: 43
         sequence:
           - service: notify.mobile_app_fphone
             data:

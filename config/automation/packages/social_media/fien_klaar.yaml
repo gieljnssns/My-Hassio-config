@@ -1,0 +1,115 @@
+alias: "Fien social media"
+id: dcda6a40-15a2-4779-8a3c-21914df8779f
+mode: restart
+trigger:
+  # - platform: state
+  #   entity_id: input_boolean.fien_huiswerk
+  #   to: "on"
+  #   id: old
+  # - platform: state
+  #   entity_id: input_boolean.fien_drum
+  #   to: "on"
+  #   id: old
+  # - platform: state
+  #   entity_id: input_boolean.fien_uniform
+  #   to: "on"
+  #   id: old
+  # - platform: state
+  #   entity_id: input_boolean.fien_wasmand
+  #   to: "on"
+  #   id: old
+  - platform: template
+    value_template: >
+      {{ states("todo.fien_todo") | int == 0 }}
+    id: todo
+  - platform: template
+    value_template: >
+      {{ states("todo.fien_snapchat") | int == 0 }}
+    id: snapchat
+action:
+  - delay:
+      seconds: 5
+  - choose:
+      # - conditions:
+      #     - condition: and
+      #       conditions:
+      #         - condition: trigger
+      #           id: old
+      #         - condition: state
+      #           entity_id: input_boolean.fien_huiswerk
+      #           state: "on"
+      #         - condition: state
+      #           entity_id: input_boolean.fien_drum
+      #           state: "on"
+      #         - condition: state
+      #           entity_id: input_boolean.fien_uniform
+      #           state: "on"
+      #         - condition: state
+      #           entity_id: input_boolean.fien_wasmand
+      #           state: "on"
+      #   sequence:
+      #     - service: notify.mobile_app_fphone
+      #       data:
+      #         message: "Vanaf nu is't hier te doen."
+      #         data:
+      #           actions:
+      #             - action: "URI"
+      #               title: "To-Do"
+      #               uri: "/lovelace/fien"
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: template
+                value_template: >
+                  {{ states("todo.fien_todo") | int == 0 and
+                      states("todo.fien_snapchat") | int == 0 }}
+        sequence:
+          - service: notify.giel_en_martine
+            data:
+              message: "Ons Fien zou met alles klaar zijn."
+              data:
+                actions:
+                  - action: "ALLES_FIEN"
+                    title: "Ok zet alles maar op."
+                  - action: "NIX_FIEN"
+                    title: "Alles is nog niet klaar."
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: trigger
+                id: snapchat
+        sequence:
+          - service: notify.giel_en_martine
+            data:
+              message: "Ons Fien zou haar uniform uitgedaan hebben."
+              data:
+                actions:
+                  - action: "SNAPCHAT_FIEN"
+                    title: "Ok zet Snapchat maar op."
+                  - action: "GEEN_SNAPCHAT_FIEN"
+                    title: "Nog niet omgekleed."
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: trigger
+                id: todo
+        sequence:
+          - service: notify.giel_en_martine
+            data:
+              message: "Ons Fien heeft haren todo afgewerkt."
+              data:
+                actions:
+                  - action: "ROBLOX"
+                    title: "Ok zet Roblox maar op."
+                  - action: "GEEN_ROBLOX"
+                    title: "Volgens mij is ze nog niet klaar."
+    # default:
+    #   - service: notify.giel_en_martine
+    #     data:
+    #       message: "Ons Fien heeft haren todo afgewerkt."
+    #       data:
+    #         actions:
+    #           - action: "ROBLOX"
+    #             title: "Ok zet Roblox maar op."
+    #           - action: "GEEN_ROBLOX"
+    #             title: "Volgens mij is ze nog niet klaar."

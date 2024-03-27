@@ -13,12 +13,12 @@ trigger:
     to: "on"
   - platform: state
     entity_id: binary_sensor.garage_deur
-    to: "on"
+    # to: "on"
   - platform: state
     entity_id: binary_sensor.beweging_hof
     to: "on"
   - platform: state
-    entity_id: binary_sensor.beweging_fotocel
+    entity_id: binary_sensor.poort
     to: "on"
 condition:
   - condition: state
@@ -41,7 +41,7 @@ action:
           - wait_for_trigger:
               platform: state
               entity_id:
-                - binary_sensor.beweging_fotocel
+                - binary_sensor.poort
                 - binary_sensor.beweging_hof
                 - binary_sensor.garage_deur
                 - binary_sensor.keuken_achterdeur
@@ -61,7 +61,7 @@ action:
       - wait_for_trigger:
           platform: state
           entity_id:
-            - binary_sensor.beweging_fotocel
+            - binary_sensor.poort
             - binary_sensor.beweging_hof
             - binary_sensor.garage_deur
             - binary_sensor.keuken_achterdeur
@@ -78,7 +78,7 @@ action:
   # - wait_for_trigger:
   #     platform: state
   #     entity_id:
-  #       - binary_sensor.beweging_fotocel
+  #       - binary_sensor.poort
   #       - binary_sensor.beweging_hof
   #       - binary_sensor.garage_deur
   #       - binary_sensor.keuken_achterdeur

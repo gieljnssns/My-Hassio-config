@@ -17,7 +17,9 @@ action:
       {% elif is_state('sensor.dark_inside', 'false') %}
         light.turn_off
       {% endif %}
-    entity_id: light.spots_tv
+    target:
+      entity_id:
+        - light.spots_tv
   - condition: and
     conditions:
       - condition: template

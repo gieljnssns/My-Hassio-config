@@ -1,0 +1,38 @@
+alias: Badkamer unjoin
+id: 5d92af17-35b7-4191-b015-99d5644a0b39
+mode: single
+trigger:
+  - platform: state
+    entity_id: binary_sensor.badkamer_presence
+    to: "off"
+    for:
+      minutes: 10
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.badkamer_grouped_not_master
+            state: "on"
+        sequence:
+          - service: media_player.unjoin
+            target:
+              entity_id: media_player.mass_badkamer
+          - delay:
+              seconds: 5
+          - service: media_player.volume_set
+            data:
+              volume_level: 0.14
+            target:
+              entity_id:
+                - media_player.mass_badkamer
+    default:
+      - service: media_player.media_pause
+        entity_id: media_player.mass_badkamer
+      - delay:
+          seconds: 5
+      - service: media_player.volume_set
+        data:
+          volume_level: 0.14
+        target:
+          entity_id:
+            - media_player.mass_badkamer

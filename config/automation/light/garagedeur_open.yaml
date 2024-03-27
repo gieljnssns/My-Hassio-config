@@ -1,43 +1,48 @@
 alias: Light garage garagedeur open
 id: 9b86be0a-0d8e-4605-bfad-27f55017efd7
-description: ''
+description: ""
 trigger:
   - platform: state
     entity_id: binary_sensor.garage_deur
+    from: "on"
+    to: "off"
+  - platform: state
+    entity_id: binary_sensor.garage_deur
+    from: "off"
+    to: "on"
 
 action:
   - choose:
-    - conditions:
-        - condition: template
-          value_template: >
-            {{  states('binary_sensor.garage_deur') == "off" and 
-                states("binary_sensor.beweging_garage") == "off"  }}
-      sequence:
-        - service: light.turn_off
-          data:
-            entity_id: light.garage
-    - conditions:
-        - condition: template
-          value_template: >
-            {{  states('binary_sensor.garage_deur') == "off" and 
-                states("binary_sensor.beweging_garage") == "off" and 
-                states("light.garage") == "off"  }}
-      sequence:
-        - service: light.turn_off
-          data:
-            entity_id: light.garage
-    - conditions:
-        - condition: template
-          value_template: >
-            {{  states('binary_sensor.garage_deur') == "off" and 
-                states("binary_sensor.beweging_garage") == "on" and 
-                states("light.garage") == "off"  }}
-      sequence:
-        - service: light.turn_off
-          data:
-            entity_id: light.garage
+      - conditions:
+          - condition: template
+            value_template: >
+              {{  states('binary_sensor.garage_deur') == "off" and 
+                  states("binary_sensor.beweging_garage") == "off"  }}
+        sequence:
+          - service: light.turn_off
+            data:
+              entity_id: light.garage
+      - conditions:
+          - condition: template
+            value_template: >
+              {{  states('binary_sensor.garage_deur') == "off" and 
+                  states("binary_sensor.beweging_garage") == "off" and 
+                  states("light.garage") == "off"  }}
+        sequence:
+          - service: light.turn_off
+            data:
+              entity_id: light.garage
+      - conditions:
+          - condition: template
+            value_template: >
+              {{  states('binary_sensor.garage_deur') == "off" and 
+                  states("binary_sensor.beweging_garage") == "on" and 
+                  states("light.garage") == "off"  }}
+        sequence:
+          - service: light.turn_off
+            data:
+              entity_id: light.garage
     default:
-        - service: light.turn_on
-          data:
-            entity_id: light.garage
-
+      - service: light.turn_on
+        data:
+          entity_id: light.garage

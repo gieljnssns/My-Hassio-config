@@ -4,37 +4,58 @@ mode: parallel
 trigger:
   - platform: state
     entity_id: binary_sensor.giel_bayesian
+    id: giel
     from: "on"
     to: "off"
     for:
-      seconds: 25
+      seconds: 5
   - platform: state
     entity_id: binary_sensor.martine_bayesian
+    id: martine
     from: "on"
     to: "off"
     for:
-      seconds: 25
+      seconds: 5
   - platform: state
     entity_id: binary_sensor.noor_bayesian
+    id: noor
     from: "on"
     to: "off"
     for:
-      seconds: 25
+      seconds: 5
   - platform: state
     entity_id: binary_sensor.fien_bayesian
+    id: fien
     from: "on"
     to: "off"
     for:
-      seconds: 25
+      seconds: 5
+condition:
+  condition: and
+  conditions:
+    - condition: template
+      value_template: >
+        {{ (as_timestamp(now()) - as_timestamp(states("sensor.uptime"))) / 3600 | float > 0.03 | float }}
+    - condition: template
+      value_template: >
+        {% if trigger.id == 'giel' %}
+          {{ is_state('binary_sensor.giel_thuis_nacht', 'off') }}
+        {% elif trigger.id == 'martine' %}
+          {{ is_state('binary_sensor.martine_thuis_nacht', 'off') }}
+        {% elif trigger.id == 'noor' %}
+          {{ is_state('binary_sensor.noor_thuis_nacht', 'off') }}
+        {% elif trigger.id == 'fien' %}
+          {{ is_state('binary_sensor.fien_thuis_nacht', 'off') }}
+        {% endif %}
 action:
   - service: input_select.select_option
     data_template:
       entity_id: >
-        {% if trigger.entity_id == 'binary_sensor.giel_bayesian' %}
+        {% if trigger.id == 'giel' %}
           input_select.giel_status_dropdown
-        {% elif trigger.entity_id == 'binary_sensor.martine_bayesian' %}
+        {% elif trigger.id == 'martine' %}
           input_select.martine_status_dropdown
-        {% elif trigger.entity_id == 'binary_sensor.noor_bayesian' %}
+        {% elif trigger.id == 'noor' %}
           input_select.noor_status_dropdown
         {% else %}
           input_select.fien_status_dropdown

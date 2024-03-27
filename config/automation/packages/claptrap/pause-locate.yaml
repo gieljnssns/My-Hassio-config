@@ -5,19 +5,14 @@ mode: single
 trigger:
   - platform: state
     entity_id:
-      - binary_sensor.pir_keuken
+      - binary_sensor.keuken_aanwezigheid
     to: "on"
     id: keuken
   - platform: state
     entity_id:
-      - binary_sensor.danszaal_aqara_pir
+      - binary_sensor.living_aanwezigheid
     to: "on"
-    id: danszaal
-  - platform: state
-    entity_id:
-      - binary_sensor.zithoek_aqara_pir
-    to: "on"
-    id: zithoek
+    id: living
   - platform: state
     entity_id:
       - binary_sensor.wc_aqara_pir
@@ -71,18 +66,6 @@ action:
                   - service: vacuum.locate
                     target:
                       entity_id: vacuum.cl4p_tp
-            # default:
-            #   - service: vacuum.pause
-            #     target:
-            #       entity_id: vacuum.cl4p_tp
-            #   - wait_for_trigger:
-            #       - platform: state
-            #         entity_id:
-            #           - binary_sensor.pir_keuken
-            #         to: "off"
-            #   - service: vacuum.start
-            #     target:
-            #       entity_id: vacuum.cl4p_tp
       - conditions:
           - condition: trigger
             id: danszaal
@@ -99,18 +82,6 @@ action:
                   - service: vacuum.locate
                     target:
                       entity_id: vacuum.cl4p_tp
-            # default:
-            #   - service: vacuum.pause
-            #     target:
-            #       entity_id: vacuum.cl4p_tp
-            #   - wait_for_trigger:
-            #       - platform: state
-            #         entity_id:
-            #           - binary_sensor.danszaal_aqara_pir
-            #         to: "off"
-            #   - service: vacuum.start
-            #     target:
-            #       entity_id: vacuum.cl4p_tp
       - conditions:
           - condition: trigger
             id: zithoek
@@ -127,18 +98,6 @@ action:
                   - service: vacuum.locate
                     target:
                       entity_id: vacuum.cl4p_tp
-            # default:
-            #   - service: vacuum.pause
-            #     target:
-            #       entity_id: vacuum.cl4p_tp
-            #   - wait_for_trigger:
-            #       - platform: state
-            #         entity_id:
-            #           - binary_sensor.zithoek_aqara_pir
-            #         to: "off"
-            #   - service: vacuum.start
-            #     target:
-            #       entity_id: vacuum.cl4p_tp
       - conditions:
           - condition: trigger
             id: wc
@@ -155,18 +114,6 @@ action:
                   - service: vacuum.locate
                     target:
                       entity_id: vacuum.cl4p_tp
-            # default:
-            #   - service: vacuum.pause
-            #     target:
-            #       entity_id: vacuum.cl4p_tp
-            #   - wait_for_trigger:
-            #       - platform: state
-            #         entity_id:
-            #           - binary_sensor.wc_aqara_pir
-            #         to: "off"
-            #   - service: vacuum.start
-            #     target:
-            #       entity_id: vacuum.cl4p_tp
       - conditions:
           - condition: trigger
             id: waskot
@@ -183,18 +130,6 @@ action:
                   - service: vacuum.locate
                     target:
                       entity_id: vacuum.cl4p_tp
-            # default:
-            #   - service: vacuum.pause
-            #     target:
-            #       entity_id: vacuum.cl4p_tp
-            #   - wait_for_trigger:
-            #       - platform: state
-            #         entity_id:
-            #           - binary_sensor.waskot_aqara_pir
-            #         to: "off"
-            #   - service: vacuum.start
-            #     target:
-            #       entity_id: vacuum.cl4p_tp
       - conditions:
           - condition: trigger
             id: gang
@@ -211,16 +146,10 @@ action:
                   - service: vacuum.locate
                     target:
                       entity_id: vacuum.cl4p_tp
-            # default:
-            #   - service: vacuum.pause
-            #     target:
-            #       entity_id: vacuum.cl4p_tp
-            #   - wait_for_trigger:
-            #       - platform: state
-            #         entity_id:
-            #           - binary_sensor.gang_beneden_pir
-            #         to: "off"
-            #   - service: vacuum.start
-            #     target:
-            #       entity_id: vacuum.cl4p_tp
-    default: []
+    default:
+      - condition: state
+        entity_id: vacuum.cl4p_tp
+        state: error
+      - service: vacuum.locate
+        target:
+          entity_id: vacuum.cl4p_tp

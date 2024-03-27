@@ -1,0 +1,14 @@
+alias: Solcast_update
+id: a87af4e7-855e-4ed6-81ee-864052d6352c
+description: New API call Solcast
+trigger:
+  - platform: time_pattern
+    minutes: /30
+condition:
+  - condition: sun
+    before: sunset
+    after: sunrise
+action:
+  - service: solcast_solar.update_forecasts
+    data: {}
+mode: single

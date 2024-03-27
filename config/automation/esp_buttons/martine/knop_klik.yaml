@@ -3,20 +3,33 @@ id: 15355d61-2623-4100-a202-d2790ef8db66
 trigger:
   - platform: state
     entity_id: binary_sensor.knop_martine_klik
-    to: 'on'
+    to: "on"
 
 action:
+  # - choose:
+  #     - conditions:
+  #         - condition: template
+  #           value_template: >
+  #             {{ states("light.slaapkamer_hoog") == 'on' }}
+  #       sequence:
+  #         - service: light.turn_off
+  #           entity_id:
+  #             - light.slaapkamer_hoog
+  #   default:
+  #     - service: light.turn_on
+  #       data:
+  #         entity_id: light.slaapkamer_hoog
   - choose:
-    - conditions:
-        - condition: template
-          value_template: >
-            {{ states("light.spot_slaapkamer") == 'on' }}
-      sequence:
-        - service: light.turn_off
-          entity_id:
-            - light.spot_slaapkamer
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ states("light.slaapkamer_spot") == 'on' }}
+        sequence:
+          - service: light.turn_off
+            entity_id:
+              - light.slaapkamer_spot
     default:
       - service: light.turn_on
         data:
-          entity_id: light.spot_slaapkamer
+          entity_id: light.slaapkamer_spot
           brightness: 255

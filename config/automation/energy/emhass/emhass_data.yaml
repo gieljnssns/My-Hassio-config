@@ -1,27 +1,90 @@
 alias: EMHASS data
 id: 684e7c96-7eb8-41fa-b81c-e3c97e234b56
 trigger:
+  - platform: time
+    at: "01:31:00"
+    id: "fit"
+  - platform: time
+    at: "01:36:00"
+    id: "tune"
   # - platform: time
-  #   at: "05:30:00"
-  #   id: "dayahead"
+  #   at: "06:02:00"
+  #   id: "prediction"
   - platform: time_pattern
-    minutes: /5
+    minutes: /10
+    id: day
+  - platform: time_pattern
+    minutes: 29
+    id: night
   - platform: homeassistant
     event: start
+    id: start
 action:
   - choose:
       - conditions:
           - condition: trigger
-            id: "dayahead"
+            id: night
+          - alias: "snachts"
+            condition: template
+            value_template: >
+              {{ now().hour is in [1, 2, 3, 4] }}
         sequence:
-          - service: shell_command.dayahead_optim
-    default:
-      # - service: rest_command.naive_mpc_optim
-      # - delay:
-      #     seconds: 40
-      # - service: rest_command.publish_data
-      - service: shell_command.post_mpc_optim
-      - delay:
-          seconds: 40
-      - service: rest_command.publish_data
-      # - service: shell_command.publish_data
+          - service: rest_command.naive_mpc_optim
+          - delay:
+              seconds: 40
+          - service: rest_command.publish_data
+      - conditions:
+          - condition: trigger
+            id: day
+          - alias: "overdag"
+            condition: template
+            value_template: >
+              {{ now().hour is in [0, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23] }}
+        sequence:
+          - service: rest_command.naive_mpc_optim
+          - delay:
+              seconds: 40
+          - service: rest_command.publish_data
+      - conditions:
+          - condition: trigger
+            id: fit
+          # - alias: "alleen op zondagnacht"
+          #   condition: time
+          #   weekday:
+          #     - mon
+        sequence:
+          - service: rest_command.forecast_model_fit_load_zonder_wp
+          - service: persistent_notification.create
+            data:
+              message: Forecast model fit
+      - conditions:
+          - condition: trigger
+            id: tune
+          # - alias: "alleen op zondagnacht"
+          #   condition: time
+          #   weekday:
+          #     - mon
+        sequence:
+          - service: rest_command.forecast_model_tune_load_zonder_wp
+          - service: persistent_notification.create
+            data:
+              message: Forecast model tune
+      - conditions:
+          - condition: trigger
+            id: start
+        sequence:
+          # - service: rest_command.naive_mpc_optim
+          # - delay:
+          #     seconds: 40
+          - service: rest_command.publish_data
+      # - conditions:
+      #     - condition: trigger
+      #       id: prediction
+      #   sequence:
+      #     - service: rest_command.predict_heating
+      #     - delay:
+      #         seconds: 4
+      #     - service: rest_command.predict_heating_elasticnet
+      #     - delay:
+      #         seconds: 4
+      #     - service: rest_command.predict_heating_kneighborsregressor

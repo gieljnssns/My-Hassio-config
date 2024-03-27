@@ -6,17 +6,30 @@ trigger:
     to: "on"
 
 action:
+  # - choose:
+  #     - conditions:
+  #         - condition: template
+  #           value_template: >
+  #             {{ states("light.slaapkamer_hoog") == 'on' }}
+  #       sequence:
+  #         - service: light.turn_off
+  #           entity_id:
+  #             - light.slaapkamer_hoog
+  #   default:
+  #     - service: light.turn_on
+  #       data:
+  #         entity_id: light.slaapkamer_hoog
   - choose:
       - conditions:
           - condition: template
             value_template: >
-              {{ states("light.spot_slaapkamer") == 'on' }}
+              {{ states("light.slaapkamer_spot") == 'on' }}
         sequence:
           - service: light.turn_off
             entity_id:
-              - light.spot_slaapkamer
+              - light.slaapkamer_spot
     default:
       - service: light.turn_on
         data:
-          entity_id: light.spot_slaapkamer
+          entity_id: light.slaapkamer_spot
           brightness: 255

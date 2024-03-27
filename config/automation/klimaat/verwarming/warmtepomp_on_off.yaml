@@ -1,0 +1,41 @@
+alias: Warmtepomp aan/af
+id: 69a5766a-bde3-4a53-aca6-6ca47a28ce78
+description: >-
+  Shelly afzetten wanneer er geen verwarming nodig is
+trigger:
+  - platform: state
+    entity_id: input_boolean.emhass_warmtepomp
+    to: "on"
+    id: aan
+  - platform: state
+    entity_id: input_boolean.emhass_warmtepomp
+    to: "off"
+    id: uit
+  - platform: state
+    entity_id:
+      - climate.living
+    attribute: hvac_action
+    to: heating
+    id: aan
+  - platform: state
+    entity_id:
+      - climate.living
+    attribute: hvac_action
+    to: idle
+    id: uit
+condition: []
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: aan
+        sequence:
+          - service: switch.turn_on
+            entity_id:
+              - switch.kelder_warmtepomp
+    default:
+      - delay:
+          seconds: 30
+      - service: switch.turn_off
+        entity_id: switch.kelder_warmtepomp
+mode: single

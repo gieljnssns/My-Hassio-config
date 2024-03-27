@@ -1,0 +1,17 @@
+alias: Reload netatmo
+description: "Herladen van netatmo integratie bij unkown of unavailable."
+id: c0d3c232-b89e-4b24-a87b-9d8aeb5e2fea
+mode: parallel
+trigger:
+  - platform: homeassistant
+    event: start
+action:
+  - delay:
+      seconds: 20
+  - condition: template
+    value_template: >
+      {{ states("climate.living") == "unavailable" or
+          states("climate.living") == "unknown" }}
+  - service: homeassistant.reload_config_entry
+    data:
+      entry_id: 5a981e21a0b31d75284b8aad81f97329

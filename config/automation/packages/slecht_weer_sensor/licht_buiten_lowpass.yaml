@@ -6,6 +6,8 @@ trigger:
     value_template: >
       {{ states("sensor.huidige_opbrengst") | int(0) > 0 and
         states("sensor.zonne_opbrengst") | int(0) > 0 }}
+    for:
+      minutes: 5
     id: binnen
   - platform: template
     value_template: >

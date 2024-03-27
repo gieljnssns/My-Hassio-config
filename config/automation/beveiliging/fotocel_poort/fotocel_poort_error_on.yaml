@@ -3,20 +3,20 @@ mode: single
 id: 18e1f3ce-b09b-4133-9cbb-deaf01ce38a4
 trigger:
   - platform: state
-    entity_id: binary_sensor.beweging_fotocel
+    entity_id: binary_sensor.poort
     to: "on"
     for:
       minutes: 2
   - platform: state
-    entity_id: binary_sensor.nodered_poort_down
-    to: "on"
+    entity_id: binary_sensor.poort_status
+    to: "off"
     for:
       minutes: 2
 # condition:
 #   condition: and
 #   conditions:
 #     - condition: state
-#       entity_id: 'binary_sensor.beweging_fotocel'
+#       entity_id: 'binary_sensor.poort'
 #       state: 'on'
 action:
   - service: input_boolean.turn_on

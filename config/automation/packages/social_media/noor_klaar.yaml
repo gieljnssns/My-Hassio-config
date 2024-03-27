@@ -1,0 +1,115 @@
+alias: "Noor social media"
+id: 3b2863b8-b04c-49e8-8ac0-fe9c905e390b
+mode: restart
+trigger:
+  # - platform: state
+  #   entity_id: input_boolean.noor_huiswerk
+  #   to: "on"
+  #   id: old
+  # - platform: state
+  #   entity_id: input_boolean.noor_piano
+  #   to: "on"
+  #   id: old
+  # - platform: state
+  #   entity_id: input_boolean.noor_uniform
+  #   to: "on"
+  #   id: old
+  # - platform: state
+  #   entity_id: input_boolean.noor_wasmand
+  #   to: "on"
+  #   id: old
+  - platform: template
+    value_template: >
+      {{ states("todo.noor_todo") | int == 0 }}
+    id: todo
+  - platform: template
+    value_template: >
+      {{ states("todo.noor_snapchat") | int == 0 }}
+    id: snapchat
+action:
+  - delay:
+      seconds: 5
+  - choose:
+      # - conditions:
+      #     - condition: and
+      #       conditions:
+      #         - condition: trigger
+      #           id: old
+      #         - condition: state
+      #           entity_id: input_boolean.noor_huiswerk
+      #           state: "on"
+      #         - condition: state
+      #           entity_id: input_boolean.noor_piano
+      #           state: "on"
+      #         - condition: state
+      #           entity_id: input_boolean.noor_uniform
+      #           state: "on"
+      #         - condition: state
+      #           entity_id: input_boolean.noor_wasmand
+      #           state: "on"
+      #   sequence:
+      #     - service: notify.mobile_app_nphone
+      #       data:
+      #         message: "Vanaf nu is't hier te doen."
+      #         data:
+      #           actions:
+      #             - action: "URI"
+      #               title: "To-Do"
+      #               uri: "/lovelace/noor"
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: template
+                value_template: >
+                  {{ states("todo.noor_todo") | int == 0 and
+                      states("todo.noor_snapchat") | int == 0 }}
+        sequence:
+          - service: notify.giel_en_martine
+            data:
+              message: "Ons Noor zou met alles klaar zijn."
+              data:
+                actions:
+                  - action: "ALLES_NOOR"
+                    title: "Ok zet alles maar op."
+                  - action: "NIX_NOOR"
+                    title: "Alles is nog niet klaar."
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: trigger
+                id: snapchat
+        sequence:
+          - service: notify.giel_en_martine
+            data:
+              message: "Ons Noor zou haar uniform uitgedaan hebben."
+              data:
+                actions:
+                  - action: "SNAPCHAT_NOOR"
+                    title: "Ok zet Snapchat maar op."
+                  - action: "GEEN_SNAPCHAT_NOOR"
+                    title: "Nog niet omgekleed."
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: trigger
+                id: todo
+        sequence:
+          - service: notify.giel_en_martine
+            data:
+              message: "Ons Noor heeft haren todo afgewerkt."
+              data:
+                actions:
+                  - action: "TIKTOK"
+                    title: "Ok zet TikTok maar op."
+                  - action: "GEEN_TIKTOK"
+                    title: "Volgens mij is ze nog niet klaar."
+    # default:
+    #   - service: notify.giel_en_martine
+    #     data:
+    #       message: "Ons Noor heeft haren todo afgewerkt."
+    #       data:
+    #         actions:
+    #           - action: "TIKTOK"
+    #             title: "Ok zet TikTok maar op."
+    #           - action: "GEEN_TIKTOK"
+    #             title: "Volgens mij is ze nog niet klaar."

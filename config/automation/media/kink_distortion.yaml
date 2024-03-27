@@ -1,0 +1,46 @@
+alias: "Kink distortion"
+id: 893a1783-31af-4dba-9b86-94731c222952
+trigger:
+  - platform: time
+    at: "15:59:59"
+condition:
+  - condition: time
+    weekday:
+      - "mon"
+      - "tue"
+      - "wed"
+      - "thu"
+      - "fri"
+  - condition: or
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.keuken_not_playing
+        state: "off"
+      - condition: and
+        conditions:
+          - condition: state
+            entity_id: media_player.philips_tv
+            state: "off"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: person.giel
+                state: "home"
+              - condition: state
+                entity_id: person.martine
+                state: "home"
+action:
+  - service: media_player.play_media
+    data:
+      media_content_id: KINK DISTORTION
+      media_content_type: radio
+    target:
+      entity_id: media_player.mass_keuken
+  - delay:
+      seconds: 3
+  - service: media_player.play_media
+    data:
+      media_content_id: KINK DISTORTION
+      media_content_type: radio
+    target:
+      entity_id: media_player.mass_keuken

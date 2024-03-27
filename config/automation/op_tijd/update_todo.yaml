@@ -1,0 +1,52 @@
+alias: "Update to-do"
+id: cd3ffa0b-ab70-48c5-aed3-5607b8d3aa71
+trigger:
+  - platform: time
+    at: "16:01:00"
+    id: week
+  - platform: time
+    at: "12:01:00"
+    id: woensdag
+condition: []
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: woensdag
+          - condition: time
+            weekday:
+              - "wed"
+              - "sat"
+              - "sun"
+        sequence:
+          - service: script.get_todo
+            data:
+              calendar: calendar.noor_smartschool
+              noor_fien: noor
+          - delay:
+              seconds: 10
+          - service: script.get_todo
+            data:
+              calendar: calendar.fien_smartschool
+              noor_fien: fien
+      - conditions:
+          - condition: trigger
+            id: week
+          - condition: time
+            weekday:
+              - "mon"
+              - "tue"
+              - "thu"
+              - "fri"
+        sequence:
+          - service: script.get_todo
+            data:
+              calendar: calendar.noor_smartschool
+              noor_fien: noor
+          - delay:
+              seconds: 10
+          - service: script.get_todo
+            data:
+              calendar: calendar.fien_smartschool
+              noor_fien: fien
+mode: single

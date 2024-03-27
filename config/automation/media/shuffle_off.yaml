@@ -1,0 +1,29 @@
+alias: Shuffle off
+id: eb3f7fb4-1b87-457f-b0ce-da040bb7a3e4
+mode: single
+trigger:
+  - platform: state
+    entity_id: binary_sensor.keuken_not_playing
+    to: "on"
+action:
+  - service: media_player.shuffle_set
+    data:
+      shuffle: false
+    target:
+      entity_id: media_player.mass_keuken
+  - condition: state
+    entity_id: binary_sensor.badkamer_grouped_not_master
+    state: "on"
+  - service: media_player.unjoin
+    target:
+      entity_id: media_player.mass_badkamer
+  - service: media_player.volume_set
+    data:
+      volume_level: 0.14
+    target:
+      entity_id:
+        - media_player.mass_badkamer
+  # - service: mass.queue_command
+  #   data:
+  #     command: shuffle_off
+  #     player_id: media_player.mass_keuken

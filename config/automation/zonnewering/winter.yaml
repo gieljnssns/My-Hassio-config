@@ -1,0 +1,75 @@
+alias: Zonnewering winter
+id: 12930512-2ad9-43f8-a711-1538e0d1fb47
+trigger:
+  - platform: state
+    entity_id: sensor.dark_outside
+    to: "true"
+    id: sluiten
+    for:
+      minutes: 5
+  - platform: numeric_state
+    entity_id: sensor.openweathermap_wind_speed
+    above: 40
+    id: openen
+  - platform: template
+    value_template: >
+      {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
+        {{ states("sensor.ba_precipitation_forecast_average") | float > 0 }}
+      {% else %}
+        {{ states("sensor.openweathermap_rain")  | float > 0 }}
+      {% endif %}
+    id: openen
+  - platform: template
+    value_template: >
+      {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
+        {{ states("sensor.ba_precipitation") | float > 0 }}
+      {% else %}
+        {{ states("sensor.openweathermap_rain")  | float > 0 }}
+      {% endif %}
+    id: openen
+  - platform: state
+    entity_id: sensor.dark_inside
+    to: "false"
+    id: openen
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: sluiten
+          - condition: numeric_state
+            entity_id: sensor.buiten_temperatuur
+            below: 7
+          - condition: numeric_state
+            entity_id: sensor.max_neerslag_volgende_12u
+            below: 10
+          - condition: numeric_state
+            entity_id: sensor.openweathermap_wind_speed
+            below: 40
+        sequence:
+          - service: cover.close_cover
+            target:
+              entity_id:
+                - cover.keuken_1
+                - cover.keuken_2
+                - cover.living
+                - cover.slaapkamer
+                - cover.slaapkamer_noor
+      - conditions:
+          - condition: trigger
+            id: openen
+          - condition: template
+            value_template: >
+              {{ states("cover.keuken_1") != "open" or
+                states("cover.keuken_2") != "open" or
+                states("cover.living") != "open" or
+                states("cover.slaapkamer") != "open" or
+                states("cover.slaapkamer_noor") }}
+        sequence:
+          - service: cover.open_cover
+            target:
+              entity_id:
+                - cover.keuken_1
+                - cover.keuken_2
+                - cover.living
+                - cover.slaapkamer
+                - cover.slaapkamer_noor

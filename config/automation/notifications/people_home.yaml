@@ -1,0 +1,13 @@
+alias: People home badge
+id: 58ffbfbe-21b0-417d-a6fc-fa051379a5df
+trigger:
+  - platform: state
+    entity_id: sensor.people_home
+action:
+  - service: notify.mobile_app_gphone
+    data:
+      message: delete_alert
+      data:
+        push:
+          badge: >
+            {{ states("sensor.people_home") }}

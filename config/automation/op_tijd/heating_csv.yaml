@@ -1,0 +1,71 @@
+alias: "Heating csv"
+id: 157b1d57-73d9-4f39-82c6-13ce0cf4288a
+trigger:
+  - platform: time
+    at: "23:59:32"
+action:
+  # - service: notify.heating
+  #   data:
+  #     message: >
+  #       {% set dd = states('sensor.degree_day_daily') |float %}
+  #       {% set inside = states('sensor.gemiddelde_dagtemperatuur_binnen') |float %}
+  #       {% set outside = states('sensor.gemiddelde_dagtemperatuur_buiten') |float %}
+  #       {% set hour = states('sensor.branduren_warmtepomp_vandaag') |float | round(2) %}
+  #       {% set kwhdd = states('sensor.kwh_per_degree_day_daily') |float %}
+  #       {% set hourdd = states('sensor.uur_per_degree_day_daily') |float | round(2) %}
+  #       {% set solar_total = states('sensor.opbrengst_kwh') |float %}
+  #       {% set solar_total_yesterday = states('sensor.solar_csv') |float %}
+  #       {% set solar = (states('sensor.opbrengst_kwh') |float - solar_total_yesterday) | round(3) %}
+
+  #       {% set csv = dd,inside,outside,hour,kwhdd,hourdd,solar_total,solar_total_yesterday,solar %}
+  #         {{csv | replace(" ", "") | replace("(", "") | replace(")", "") }}
+
+  - service: notify.prediction
+    data:
+      message: >
+        {% set dd = states('sensor.degree_day_daily') |float %}
+        {% set inside = states('sensor.gemiddelde_dagtemperatuur_binnen') |float %}
+        {% set outside = states('sensor.gemiddelde_dagtemperatuur_buiten') |float %}
+        {% set hour = states('sensor.branduren_warmtepomp_vandaag') |float | round(2) %}
+        {% set kwhdd = states('sensor.kwh_per_degree_day_daily') |float %}
+        {% set hourdd = states('sensor.uur_per_degree_day_daily') |float | round(2) %}
+        {% set solar_total = states('sensor.opbrengst_kwh') |float %}
+        {% set solar_total_yesterday = states('sensor.solar_csv_2') |float %}
+        {% set solar = (states('sensor.opbrengst_kwh') |float - solar_total_yesterday) | round(3) %}
+        {% set verwarming_total = states('sensor.warmtepomp_kwh') |float %}
+        {% set verwarming_total_yesterday = states('sensor.verwarming_csv') |float %}
+        {% set verwarming = (states('sensor.warmtepomp_kwh') |float - verwarming_total_yesterday) | round(3) %}
+        {% set verbruik_total = states('sensor.verbruik_kwh') |float %}
+        {% set verbruik_total_yesterday = states('sensor.verbruik_csv') |float %}
+        {% set verbruik = (states('sensor.verbruik_kwh') |float - verbruik_total_yesterday) | round(3) %}
+        {% set verbruik_zonder_verwarming = (verbruik - verwarming) | round(3) %}
+        {% set time = now() %}
+
+          {{time}},{{dd}},{{solar}},{{verbruik_zonder_verwarming}},{{hourdd}},{{inside}},{{outside}},{{hour}},{{kwhdd}},{{solar_total}},{{verwarming_total}},{{verwarming}},{{verbruik_total}},{{verbruik}}
+      # {% set csv = dd,solar,verbruik_zonder_verwarming,hourdd,inside,outside,hour,kwhdd,solar_total,verwarming_total,verwarming,verbruik_total,verbruik %}
+      #   ,{{csv | replace(" ", "") | replace("(", "") | replace(")", "") }}
+
+  - service: notify.prediction_share
+    data:
+      message: >
+        {% set dd = states('sensor.degree_day_daily') |float %}
+        {% set inside = states('sensor.gemiddelde_dagtemperatuur_binnen') |float %}
+        {% set outside = states('sensor.gemiddelde_dagtemperatuur_buiten') |float %}
+        {% set hour = states('sensor.branduren_warmtepomp_vandaag') |float | round(2) %}
+        {% set kwhdd = states('sensor.kwh_per_degree_day_daily') |float %}
+        {% set hourdd = states('sensor.uur_per_degree_day_daily') |float | round(2) %}
+        {% set solar_total = states('sensor.opbrengst_kwh') |float %}
+        {% set solar_total_yesterday = states('sensor.solar_csv_2') |float %}
+        {% set solar = (states('sensor.opbrengst_kwh') |float - solar_total_yesterday) | round(3) %}
+        {% set verwarming_total = states('sensor.warmtepomp_kwh') |float %}
+        {% set verwarming_total_yesterday = states('sensor.verwarming_csv') |float %}
+        {% set verwarming = (states('sensor.warmtepomp_kwh') |float - verwarming_total_yesterday) | round(3) %}
+        {% set verbruik_total = states('sensor.verbruik_kwh') |float %}
+        {% set verbruik_total_yesterday = states('sensor.verbruik_csv') |float %}
+        {% set verbruik = (states('sensor.verbruik_kwh') |float - verbruik_total_yesterday) | round(3) %}
+        {% set verbruik_zonder_verwarming = (verbruik - verwarming) | round(3) %}
+        {% set time = now() %}
+
+          {{time}},{{dd}},{{solar}},{{verbruik_zonder_verwarming}},{{hourdd}},{{inside}},{{outside}},{{hour}},{{kwhdd}},{{solar_total}},{{verwarming_total}},{{verwarming}},{{verbruik_total}},{{verbruik}}
+      # {% set csv = dd,solar,verbruik_zonder_verwarming,hourdd,inside,outside,hour,kwhdd,solar_total,verwarming_total,verwarming,verbruik_total,verbruik %}
+      #   ,{{csv | replace(" ", "") | replace("(", "") | replace(")", "") }}

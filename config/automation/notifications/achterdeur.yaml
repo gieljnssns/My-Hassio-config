@@ -5,7 +5,7 @@ trigger:
     entity_id: binary_sensor.keuken_achterdeur
     to: "on"
     for:
-      seconds: 60
+      seconds: 90
 condition:
   condition: and
   conditions:
@@ -16,26 +16,25 @@ condition:
       entity_id: sensor.binnen_lowpass
       above: 22
 action:
-  - service: >
-      {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
-          script.sonos_pauze_spreek
-      {%  else  %}
-          script.sonos_playing_spreek
-      {%  endif  %}
-    data_template:
-      sonos_entity: mass_keuken
-      volume: 0.65
-      speech_message: >
-        {{ [
-            "Willen we alstublieft de deur dicht doen?",
-            "Het is buiten nog te warm!",
-            "Sluiten",
-            "De deur dicht, het is te warm buiten",
-            "Dicht doen!",
-            "Hoeveel keer moet ik het nog zeggen, doe die deur dicht!"
-            ] | random }}
+  - service: homeassistant.update_entity
+    target:
+      entity_id: sensor.achterdeur
+  - service: media_player.play_media
+    target:
+      entity_id: media_player.mass_keuken
+    data:
+      announce: true
+      media_content_type: "music"
+      extra:
+        volume: 65
+      media_content_id: >
+        {% set message =  states('sensor.achterdeur') %}
+          media-source://tts/tts.piper?message="{{message}}"
   - delay:
-      seconds: 40
+      seconds: 60
+  - service: homeassistant.update_entity
+    target:
+      entity_id: sensor.achterdeur
   - condition: state
     entity_id: binary_sensor.keuken_achterdeur
     state: "on"
@@ -83,79 +82,53 @@ action:
   #         url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
   #       push:
   #         sound: "door_creak_closing.wav"
-  - service: >
-      {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
-          script.sonos_pauze_spreek
-      {%  else  %}
-          script.sonos_playing_spreek
-      {%  endif  %}
-    data_template:
-      sonos_entity: media_player.mass_keuken
-      tts_entity: media_player.keuken
-      volume: 0.65
-      speech_message: >
-        {{ [
-            "Willen we alstublieft de deur dicht doen?",
-            "Het is buiten nog te warm!",
-            "Sluiten",
-            "De deur dicht, het is te warm buiten",
-            "Dicht doen!",
-            "Hoeveel keer moet ik het nog zeggen, doe die deur dicht!",
-            "Dit is al de tweede keer, hoeveel keer nog?",
-            "Dit is al de tweede keer, hoeveel keer nog?",
-            "Dit is al de tweede keer, hoeveel keer nog?"
-            ] | random }}
+  - service: media_player.play_media
+    target:
+      entity_id: media_player.mass_keuken
+    data:
+      announce: true
+      media_content_type: "music"
+      extra:
+        volume: 65
+      media_content_id: >
+        {% set message =  states('sensor.achterdeur') %}
+          media-source://tts/tts.piper?message="{{message}}"
+
   - delay:
-      seconds: 40
+      seconds: 60
+  - service: homeassistant.update_entity
+    target:
+      entity_id: sensor.achterdeur
   - condition: state
     entity_id: binary_sensor.keuken_achterdeur
     state: "on"
-  - service: >
-      {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
-          script.sonos_pauze_spreek
-      {%  else  %}
-          script.sonos_playing_spreek
-      {%  endif  %}
-    data_template:
-      sonos_entity: media_player.mass_keuken
-      tts_entity: media_player.keuken
-      volume: 0.65
-      speech_message: >
-        {{ [
-            "Willen we alstublieft de deur dicht doen?",
-            "Het is buiten nog te warm!",
-            "Sluiten",
-            "De deur dicht, het is te warm buiten",
-            "Dicht doen!",
-            "Hoeveel keer moet ik het nog zeggen, doe die deur dicht!",
-            "Derde keer, goede keer?",
-            "Derde keer, goede keer?",
-            "Derde keer, goede keer?"
-            ] | random }}
+  - service: media_player.play_media
+    target:
+      entity_id: media_player.mass_keuken
+    data:
+      announce: true
+      media_content_type: "music"
+      extra:
+        volume: 65
+      media_content_id: >
+        {% set message =  states('sensor.achterdeur') %}
+          media-source://tts/tts.piper?message="{{message}}"
   - delay:
-      seconds: 30
+      seconds: 60
+  - service: homeassistant.update_entity
+    target:
+      entity_id: sensor.achterdeur
   - condition: state
     entity_id: binary_sensor.keuken_achterdeur
     state: "on"
-  - service: >
-      {%  if states('binary_sensor.keuken_not_playing') == 'on'  %}
-          script.sonos_pauze_spreek
-      {%  else  %}
-          script.sonos_playing_spreek
-      {%  endif  %}
-    data_template:
-      sonos_entity: media_player.mass_keuken
-      tts_entity: media_player.keuken
-      volume: 0.65
-      speech_message: >
-        {{ [
-            "Willen we alstublieft de deur dicht doen?",
-            "Het is buiten nog te warm!",
-            "Sluiten",
-            "De deur dicht, het is te warm buiten",
-            "Dicht doen!",
-            "Hoeveel keer moet ik het nog zeggen, doe die deur dicht!",
-            "Trekt er uw plan mee!",
-            "Trekt er uw plan mee!",
-            "Trekt er uw plan mee!"
-            ] | random }}
+  - service: media_player.play_media
+    target:
+      entity_id: media_player.mass_keuken
+    data:
+      announce: true
+      media_content_type: "music"
+      extra:
+        volume: 65
+      media_content_id: >
+        {% set message =  states('sensor.achterdeur') %}
+          media-source://tts/tts.piper?message="{{message}}"

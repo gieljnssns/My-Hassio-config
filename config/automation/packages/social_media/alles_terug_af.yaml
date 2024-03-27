@@ -1,0 +1,368 @@
+alias: "Sociale media af"
+id: e123627d-0573-45ab-9f9d-e6232b3f51db
+trigger:
+  - platform: time
+    at: "01:00:00"
+  - platform: time
+    at: "02:00:00"
+    # id: week
+    # - platform: template
+    #   value_template: >
+    #     {{ now().weekday() == 6 and now().hour == 17 }}
+    id: zondag
+  - platform: time
+    at: "09:00:00"
+    # id: week
+  - platform: state
+    entity_id: calendar.noor_school
+    from: "on"
+    to: "off"
+    id: noor_snapchat
+  - platform: state
+    entity_id: calendar.fien_school
+    from: "on"
+    to: "off"
+    for:
+      minutes: 1
+    id: fien_snapchat
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: noor_snapchat
+        sequence:
+          - service: script.check_todo
+            data:
+              check: ["Uniform"]
+              todo: noor_snapchat
+              action: needs_action
+          - service: input_boolean.turn_on
+            entity_id: input_boolean.noor_snapchat_blocker
+      - conditions:
+          - condition: trigger
+            id: fien_snapchat
+        sequence:
+          - service: script.check_todo
+            data:
+              check: ["Uniform"]
+              todo: fien_snapchat
+              action: needs_action
+          - service: input_boolean.turn_on
+            entity_id: input_boolean.fien_snapchat_blocker
+      - conditions:
+          - condition: time
+            weekday:
+              - "mon"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.schooldag
+                    state: "on"
+                sequence:
+                  # - service: input_boolean.turn_off
+                  #   entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+                  - service: script.check_todo
+                    data:
+                      check: ["Piano"]
+                      todo: noor_todo
+                      action: needs_action
+                  - service: script.check_todo
+                    data:
+                      check: ["Drummen"]
+                      todo: fien_todo
+                      action: needs_action
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ now().hour == 1 }}
+                sequence:
+                  # - service: input_boolean.turn_off
+                  #   entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+                  - service: script.check_todo
+                    data:
+                      check: ["Piano"]
+                      todo: noor_todo
+                      action: needs_action
+                  - service: script.check_todo
+                    data:
+                      check: ["Drummen"]
+                      todo: fien_todo
+                      action: needs_action
+
+      - conditions:
+          - condition: time
+            weekday:
+              - "tue"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.schooldag
+                    state: "on"
+                sequence:
+                  # - service: input_boolean.turn_off
+                  #   entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+                  - service: script.check_todo
+                    data:
+                      check: ["Piano"]
+                      todo: noor_todo
+                      action: needs_action
+                  - service: script.check_todo
+                    data:
+                      check: ["Drummen"]
+                      todo: fien_todo
+                      action: needs_action
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ now().hour == 1 }}
+                sequence:
+                  # - service: input_boolean.turn_off
+                  #   entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+                  - service: script.check_todo
+                    data:
+                      check: ["Piano"]
+                      todo: noor_todo
+                      action: needs_action
+                  - service: script.check_todo
+                    data:
+                      check: ["Drummen"]
+                      todo: fien_todo
+                      action: needs_action
+      - conditions:
+          - condition: time
+            weekday:
+              - "wed"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.schooldag
+                    state: "on"
+                sequence:
+                  # - service: input_boolean.turn_off
+                  #   entity_id: input_boolean.fien_huiswerk, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+                  # - service: script.check_todo
+                  #   data:
+                  #     check: ["Uniform"]
+                  #     todo: noor_todo
+                  #     action: needs_action
+                  # - service: script.check_todo
+                  #   data:
+                  #     check: ["Uniform"]
+                  #     todo: fien_todo
+                  #     action: needs_action
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ now().hour == 1 }}
+                sequence:
+                  # - service: input_boolean.turn_off
+                  #   entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+                  # - service: script.check_todo
+                  #   data:
+                  #     check: ["Piano"]
+                  #     todo: noor_todo
+                  #     action: needs_action
+                  # - service: script.check_todo
+                  #   data:
+                  #     check: ["Drummen"]
+                  #     todo: fien_todo
+                  #     action: needs_action
+      - conditions:
+          - condition: time
+            weekday:
+              - "thu"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.schooldag
+                    state: "on"
+                sequence:
+                  # - service: input_boolean.turn_off
+                  #   entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+                  - service: script.check_todo
+                    data:
+                      check: ["Piano"]
+                      todo: noor_todo
+                      action: needs_action
+                  - service: script.check_todo
+                    data:
+                      check: ["Drummen"]
+                      todo: fien_todo
+                      action: needs_action
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ now().hour == 1 }}
+                sequence:
+                  # - service: input_boolean.turn_off
+                  #   entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+                  - service: script.check_todo
+                    data:
+                      check: ["Piano"]
+                      todo: noor_todo
+                      action: needs_action
+                  - service: script.check_todo
+                    data:
+                      check: ["Drummen"]
+                      todo: fien_todo
+                      action: needs_action
+      - conditions:
+          - condition: time
+            weekday:
+              - "fri"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.schooldag
+                    state: "on"
+                sequence:
+                  # - service: input_boolean.turn_off
+                  #   entity_id: input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.fien_uniform, input_boolean.noor_uniform, input_boolean.noor_wasmand, input_boolean.fien_wasmand
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+                  - service: script.check_todo
+                    data:
+                      check: ["Piano", "Wasmand", "Brooddoos"]
+                      todo: noor_todo
+                      action: needs_action
+                  - service: script.check_todo
+                    data:
+                      check: ["Drummen", "Wasmand", "Brooddoos"]
+                      todo: fien_todo
+                      action: needs_action
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ now().hour == 1 }}
+                sequence:
+                  # - service: input_boolean.turn_off
+                  #   entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+                  - service: script.check_todo
+                    data:
+                      check: ["Piano"]
+                      todo: noor_todo
+                      action: needs_action
+                  - service: script.check_todo
+                    data:
+                      check: ["Drummen"]
+                      todo: fien_todo
+                      action: needs_action
+      - conditions:
+          - condition: time
+            weekday:
+              - "sat"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ now().hour == 2 }}
+                sequence:
+                  # - service: input_boolean.turn_off
+                  #   entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+                  - service: script.check_todo
+                    data:
+                      check: ["Piano"]
+                      todo: noor_todo
+                      action: needs_action
+                  - service: script.check_todo
+                    data:
+                      check: ["Drummen"]
+                      todo: fien_todo
+                      action: needs_action
+              # - conditions:
+              #     - condition: trigger
+              #       id: zondag
+              #   sequence:
+              #     - service: input_boolean.turn_off
+              #       entity_id: input_boolean.fien_huiswerk, input_boolean.noor_huiswerk
+              #     - service: input_boolean.turn_on
+              #       entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+              #     - service: script.check_todo
+              #       data:
+              #         check: ["Piano", "Wasmand"]
+              #         todo: noor_todo
+              #         action: completed
+              #     - service: script.check_todo
+              #       data:
+              #         check: ["Drummen", "Wasmand"]
+              #         todo: fien_todo
+              #         action: completed
+      - conditions:
+          - condition: time
+            weekday:
+              - "sun"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ now().hour == 2 }}
+                sequence:
+                  # - service: input_boolean.turn_off
+                  #   entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+                  - service: script.check_todo
+                    data:
+                      check: ["Piano"]
+                      todo: noor_todo
+                      action: needs_action
+                  - service: script.check_todo
+                    data:
+                      check: ["Drummen"]
+                      todo: fien_todo
+                      action: needs_action
+              - conditions:
+                  - condition: template
+                    value_template: |
+                      {{ now().hour == 17 }}
+                sequence:
+                  - service: input_boolean.turn_off
+                    entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum
+                  - service: input_boolean.turn_on
+                    entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ now().hour == 1 }}
+        sequence:
+          # - service: input_boolean.turn_off
+          #   entity_id: input_boolean.fien_huiswerk, input_boolean.fien_drum, input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.fien_uniform, input_boolean.noor_uniform
+          - service: input_boolean.turn_on
+            entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+          - service: script.check_todo
+            data:
+              check: ["Piano"]
+              todo: noor_todo
+              action: needs_action
+          - service: script.check_todo
+            data:
+              check: ["Drummen"]
+              todo: fien_todo
+              action: needs_action

@@ -10,10 +10,21 @@ condition:
     - condition: state
       entity_id: sensor.bad_weather
       state: "clear"
-    - condition: state
-      entity_id: binary_sensor.v_monnikenheide
-      state: "on"
+
 action:
+  - variables:
+      direction: >
+        {% set directions = [ 'N', 'NNO', 'NO', 'ONO', 'O', 'OZO', 'ZO', 'ZZO', 'Z', 'ZZW', 'ZW', 'WZW', 'W', 'WNW', 'NW', 'NNW', 'N'] -%}
+        {% set idx = (states('sensor.openweathermap_wind_bearing') | int(0) / 22.5) | round(0) | int -%}
+        {{ directions[idx] }}
+      fiets: >
+        {% if direction in ["N", "NNO", "NO", "ONO", "O"] %}
+          , dus wind op kop.
+        {% elif direction in ["Z", "ZZW", "ZW", "WZW", "W"] %}
+          , dus wind in de rug.
+        {% else %}
+          , dus de wind staat niet goed of slecht.
+        {% endif %}
   - choose:
       - conditions:
           - condition: state
@@ -26,11 +37,11 @@ action:
           - service: notify.mobile_app_mphone
             data:
               message: >
-                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.openweathermap_weather") }} en de wind waait {{ states("sensor.openweathermap_wind_speed", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
           - service: notify.noor_en_fien
             data:
               message: >
-                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.openweathermap_weather") }} en de wind waait {{ states("sensor.openweathermap_wind_speed", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
       - conditions:
           - condition: state
             entity_id: binary_sensor.v_monnikenheide
@@ -42,7 +53,7 @@ action:
           - service: notify.mobile_app_mphone
             data:
               message: >
-                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.openweathermap_weather") }} en de wind waait {{ states("sensor.openweathermap_wind_speed", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
       - conditions:
           - condition: state
             entity_id: binary_sensor.v_monnikenheide
@@ -54,15 +65,15 @@ action:
           - service: notify.noor_en_fien
             data:
               message: >
-                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.openweathermap_weather") }} en de wind waait {{ states("sensor.openweathermap_wind_speed", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
   # - service: notify.mobile_app_mphone
   #   data:
   #     message: >
-  #       " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+  #       " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.openweathermap_weather") }} en de wind waait {{ states("sensor.openweathermap_wind_speed", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
   # - condition: state
   #   entity_id: binary_sensor.schooldag
   #   state: "on"
   # - service: notify.noor_en_fien
   #   data:
   #     message: >
-  #       " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.weatherbit_description") }} en de wind waait {{ states("sensor.weatherbit_beaufort_text") }} "
+  #       " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("sensor.openweathermap_weather") }} en de wind waait {{ states("sensor.openweathermap_wind_speed", with_unit=True) }} uit het {{ direction }} {{ fiets }} "

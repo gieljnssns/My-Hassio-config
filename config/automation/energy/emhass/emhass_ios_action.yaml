@@ -1,0 +1,243 @@
+alias: Emhass ios action
+id: f4a344eb-a2df-4d4e-aa33-fbbeec23fa89
+mode: parallel
+trigger:
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "16u"
+    event_data:
+      action: "16U"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "7u"
+    event_data:
+      action: "7U"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "asap"
+    event_data:
+      action: "ASAP"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "nasap"
+    event_data:
+      action: "NASAP"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "choose"
+    event_data:
+      action: "CHOOSE"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "vandaag"
+    event_data:
+      action: "VANDAAG"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "morgen"
+    event_data:
+      action: "MORGEN"
+action:
+  - variables:
+      who: >
+        {% if trigger.event.context.user_id == '14a0b456772941eda81466d1807619b7' %}
+          notify.mobile_app_gphone
+        {% elif trigger.event.context.user_id == 'db0ab875181d4af887c161d094fd9da4' %}
+          notify.mobile_app_mphone
+        {% else %}
+          notify.iedereen
+        {% endif %}
+      datetime: >
+        {% set wasmachien = as_timestamp(states.input_button.wasmachien.last_changed) %}
+        {% set droogkast = as_timestamp(states.input_button.droogkast.last_changed) %}
+        {% set afwasmachien = as_timestamp(states.input_button.afwasmachien.last_changed) %}
+
+        {% set maximum = max(wasmachien, droogkast, afwasmachien) %}
+        {% if maximum == wasmachien %}
+          input_datetime.emhass_wasmachien_end_time
+        {% elif maximum == droogkast %}
+          input_datetime.emhass_droogkast_end_time
+        {% else %}
+          input_datetime.emhass_afwasmachien_end_time
+        {% endif %}
+      boolean: >
+        {% set wasmachien = as_timestamp(states.input_button.wasmachien.last_changed) %}
+        {% set droogkast = as_timestamp(states.input_button.droogkast.last_changed) %}
+        {% set afwasmachien = as_timestamp(states.input_button.afwasmachien.last_changed) %}
+
+        {% set maximum = max(wasmachien, droogkast, afwasmachien) %}
+        {% if maximum == wasmachien %}
+          input_boolean.wasmachien_starten
+        {% elif maximum == droogkast %}
+          input_boolean.droogkast_starten
+        {% else %}
+          input_boolean.afwasmachien_starten
+        {% endif %}
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "16u"
+        sequence:
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: >
+                {{ datetime }}
+            data:
+              datetime: >
+                {% set hour = now().hour %}
+                {% if hour < 14 %}
+                  {% set date = now().strftime('%Y-%m-%d') %}
+                {% else %}
+                  {% set date = ((as_timestamp(now()) + 86400) | as_datetime | as_local).strftime('%Y-%m-%d') %}
+                {% endif %}
+                {{ date + " 16:00:00" }}
+          - service: homeassistant.turn_on
+            target:
+              entity_id: >
+                {{ boolean }}
+
+      - conditions:
+          - condition: trigger
+            id: "7u"
+        sequence:
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: >
+                {{ datetime }}
+            data:
+              datetime: >
+                {% set hour = now().hour %}
+                {% if hour < 5 %}
+                  {% set date = now().strftime('%Y-%m-%d') %}
+                {% else %}
+                  {% set date = ((as_timestamp(now()) + 86400) | as_datetime | as_local).strftime('%Y-%m-%d') %}
+                {% endif %}
+                {{ date + " 07:00:00" }}
+          - service: homeassistant.turn_on
+            target:
+              entity_id: >
+                {{ boolean }}
+      - conditions:
+          - condition: trigger
+            id: "asap"
+        sequence:
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: >
+                {{ datetime }}
+            data:
+              datetime: >
+                {% if datetime == "input_datetime.emhass_afwasmachien_end_time" %}
+                  {% set time = ((as_timestamp(now()) + 9600) | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:00') %}
+                {% else %}
+                  {% set time = ((as_timestamp(now()) + 7800) | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:00') %}
+                {% endif %}
+                {{ time }}
+          - service: homeassistant.turn_on
+            target:
+              entity_id: >
+                {{ boolean }}
+      - conditions:
+          - condition: trigger
+            id: "nasap"
+        sequence:
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: >
+                {{ datetime }}
+            data:
+              datetime: >
+                {% set time = ((as_timestamp(now()) + 77400) | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:00') %}
+                {{ time }}
+          - service: homeassistant.turn_on
+            target:
+              entity_id: >
+                {{ boolean }}
+      - conditions:
+          - condition: trigger
+            id: "choose"
+        sequence:
+          - service: "{{ who }}"
+            data:
+              message: Vandaag/morgen
+              data:
+                actions:
+                  - action: "VANDAAG"
+                    title: "Vandaag nog."
+                  - action: "MORGEN"
+                    title: "Tegen morgen."
+          - delay:
+              seconds: 20
+          - service: homeassistant.turn_on
+            target:
+              entity_id: >
+                {{ boolean }}
+      - conditions:
+          - condition: trigger
+            id: "vandaag"
+        sequence:
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: >
+                {{ datetime }}
+            data:
+              datetime: >
+                {% set time = now().strftime('%Y-%m-%d %H:%M:00') %}
+                {{ time }}
+          - service: "{{ who }}"
+            data:
+              message: Kies het juiste uur.
+              data:
+                url: /lovelace/eindtijden
+      - conditions:
+          - condition: trigger
+            id: "morgen"
+        sequence:
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: >
+                {{ datetime }}
+            data:
+              datetime: >
+                {% set date = ((as_timestamp(now()) + 86400) | as_datetime | as_local).strftime('%Y-%m-%d') %}
+                {{ date + " 06:00:00" }}
+          - service: "{{ who }}"
+            data:
+              message: Kies het juiste uur.
+              data:
+                url: /lovelace/eindtijden
+# {{ trigger.to_state.context.user_id == none }}
+
+# event_type: state_changed
+# data:
+#   entity_id: input_button.test
+#   old_state:
+#     entity_id: input_button.test
+#     state: "2024-02-05T04:09:37.920319+00:00"
+#     attributes:
+#       editable: true
+#       friendly_name: test
+#     last_changed: "2024-02-05T04:09:37.920437+00:00"
+#     last_updated: "2024-02-05T04:09:37.920437+00:00"
+#     context:
+#       id: 01HNVQA4VZZE6C95R7BMSX3Q0E
+#       parent_id: null
+#       user_id: 14a0b456772941eda81466d1807619b7
+#   new_state:
+#     entity_id: input_button.test
+#     state: "2024-02-05T04:10:48.830896+00:00"
+#     attributes:
+#       editable: true
+#       friendly_name: test
+#     last_changed: "2024-02-05T04:10:48.830947+00:00"
+#     last_updated: "2024-02-05T04:10:48.830947+00:00"
+#     context:
+#       id: 01HNVQCA3YDNRKJKM01H9VMBRJ
+#       parent_id: null
+#       user_id: 14a0b456772941eda81466d1807619b7
+# origin: LOCAL
+# time_fired: "2024-02-05T04:10:48.830947+00:00"
+# context:
+#   id: 01HNVQCA3YDNRKJKM01H9VMBRJ
+#   parent_id: null
+#   user_id: 14a0b456772941eda81466d1807619b7

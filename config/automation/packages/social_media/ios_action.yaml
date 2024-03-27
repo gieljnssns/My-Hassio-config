@@ -1,0 +1,254 @@
+alias: ios action social media
+id: cb03dde8-bf4f-43ee-954f-9da7db71bd61
+trigger:
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "tiktok"
+    event_data:
+      action: "TIKTOK"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "geen_tiktok"
+    event_data:
+      action: "GEEN_TIKTOK"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "snapchat_noor"
+    event_data:
+      action: "SNAPCHAT_NOOR"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "geen_snapchat_noor"
+    event_data:
+      action: "GEEN_SNAPCHAT_NOOR"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "roblox"
+    event_data:
+      action: "ROBLOX"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "geen_roblox"
+    event_data:
+      action: "GEEN_ROBLOX"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "snapchat_fien"
+    event_data:
+      action: "SNAPCHAT_FIEN"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "geen_snapchat_fien"
+    event_data:
+      action: "GEEN_SNAPCHAT_FIEN"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "alles_noor"
+    event_data:
+      action: "ALLES_NOOR"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "nix_noor"
+    event_data:
+      action: "NIX_NOOR"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "alles_fien"
+    event_data:
+      action: "ALLES_FIEN"
+  - platform: event
+    event_type: mobile_app_notification_action
+    id: "nix_fien"
+    event_data:
+      action: "NIX_FIEN"
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "tiktok"
+        sequence:
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.noor_blocker
+          - service: notify.mobile_app_nphone
+            data:
+              message: "Alles is terug beschikbaar, laat je gaan. Slechte muziek en rare dansjes staan klaar voor jou."
+      - conditions:
+          - condition: trigger
+            id: "geen_tiktok"
+        sequence:
+          - service: script.check_todo
+            data:
+              check: ["Piano", "Wasmand"]
+              todo: noor_todo
+              action: needs_action
+          - service: notify.mobile_app_nphone
+            data:
+              message: "Zijde zeker da ge me alle klaar zij?"
+              data:
+                actions:
+                  - action: "URI"
+                    title: "To-Do"
+                    uri: "/lovelace/noor"
+      - conditions:
+          - condition: trigger
+            id: "snapchat_noor"
+        sequence:
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.noor_snapchat_blocker
+          - service: notify.mobile_app_nphone
+            data:
+              message: "De wereld gaat voor een klein beetje terug open."
+          - alias: "Woensdag"
+            condition: time
+            weekday:
+              - "wed"
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.noor_blocker
+      - conditions:
+          - condition: trigger
+            id: "geen_snapchat_noor"
+        sequence:
+          - service: script.check_todo
+            data:
+              check: ["Uniform"]
+              todo: noor_snapchat
+              action: needs_action
+          - service: notify.mobile_app_nphone
+            data:
+              message: "Zijde zeker da ge omgekleed zij?"
+              data:
+                actions:
+                  - action: "URI"
+                    title: "To-Do"
+                    uri: "/lovelace/noor"
+
+          # - service: input_boolean.turn_off
+          #   entity_id: input_boolean.noor_piano, input_boolean.noor_huiswerk, input_boolean.noor_uniform, input_boolean.noor_wasmand
+      - conditions:
+          - condition: trigger
+            id: "roblox"
+        sequence:
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.fien_blocker
+          - service: notify.mobile_app_fphone
+            data:
+              message: "Roblox is er klaar voor, en bij de kampioenen is er volgens mij ook weer een misverstand gebeurd."
+      - conditions:
+          - condition: trigger
+            id: "geen_roblox"
+        sequence:
+          - service: script.check_todo
+            data:
+              check: ["Drummen", "Wasmand"]
+              todo: fien_todo
+              action: needs_action
+          - service: notify.mobile_app_fphone
+            data:
+              message: "Zijde zeker da ge me alle klaar zij?"
+              data:
+                actions:
+                  - action: "URI"
+                    title: "To-Do"
+                    uri: "/lovelace/fien"
+          # - service: input_boolean.turn_off
+          #   entity_id: input_boolean.fien_drum, input_boolean.fien_huiswerk, input_boolean.fien_uniform, input_boolean.fien_wasmand
+      - conditions:
+          - condition: trigger
+            id: "snapchat_fien"
+        sequence:
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.fien_snapchat_blocker
+          - service: notify.mobile_app_fphone
+            data:
+              message: "De wereld gaat voor een klein beetje terug open."
+          - alias: "Woensdag"
+            condition: time
+            weekday:
+              - "wed"
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.fien_blocker
+      - conditions:
+          - condition: trigger
+            id: "geen_snapchat_fien"
+        sequence:
+          - service: script.check_todo
+            data:
+              check: ["Uniform"]
+              todo: fien_snapchat
+              action: needs_action
+          - service: notify.mobile_app_fphone
+            data:
+              message: "Zijde zeker da ge omgekleed zij?"
+              data:
+                actions:
+                  - action: "URI"
+                    title: "To-Do"
+                    uri: "/lovelace/fien"
+
+      - conditions:
+          - condition: trigger
+            id: "alles_fien"
+        sequence:
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.fien_snapchat_blocker
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.fien_blocker
+          - service: notify.mobile_app_fphone
+            data:
+              message: "De wereld gaat voor een klein beetje terug open."
+      - conditions:
+          - condition: trigger
+            id: "nix_fien"
+        sequence:
+          - service: script.check_todo
+            data:
+              check: ["Drummen", "Wasmand"]
+              todo: fien_todo
+              action: needs_action
+          - service: script.check_todo
+            data:
+              check: ["Uniform"]
+              todo: fien_snapchat
+              action: needs_action
+          - service: notify.mobile_app_fphone
+            data:
+              message: "Zijde zeker da ge me alles klaar zij?"
+              data:
+                actions:
+                  - action: "URI"
+                    title: "To-Do"
+                    uri: "/lovelace/fien"
+
+      - conditions:
+          - condition: trigger
+            id: "alles_noor"
+        sequence:
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.noor_snapchat_blocker
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.noor_blocker
+          - service: notify.mobile_app_nphone
+            data:
+              message: "De wereld gaat voor een klein beetje terug open."
+      - conditions:
+          - condition: trigger
+            id: "nix_noor"
+        sequence:
+          - service: script.check_todo
+            data:
+              check: ["Piano", "Wasmand"]
+              todo: noor_todo
+              action: needs_action
+          - service: script.check_todo
+            data:
+              check: ["Uniform"]
+              todo: noor_snapchat
+              action: needs_action
+          - service: notify.mobile_app_nphone
+            data:
+              message: "Zijde zeker da ge me alles klaar zij?"
+              data:
+                actions:
+                  - action: "URI"
+                    title: "To-Do"
+                    uri: "/lovelace/noor"

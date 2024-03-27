@@ -1,0 +1,10 @@
+alias: Uncheck media todo
+id: a9254cf1-0d4e-436b-b2d5-23a42b4f71b7
+mode: single
+trigger:
+  - platform: template
+    value_template: >
+      {{ states("todo.playlists") | int == 0 or
+          states("todo.radio_stations") | int == 0 }}
+action:
+  - service: script.uncheck_media_todo

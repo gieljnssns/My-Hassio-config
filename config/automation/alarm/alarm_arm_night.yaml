@@ -6,11 +6,11 @@ trigger:
     from: "on"
     to: "off"
   - platform: state
-    entity_id: light.spot_slaapkamer
+    entity_id: light.slaapkamer_spot
     to: "off"
   - platform: state
-    entity_id: light.spot_slaapkamer
-    to: "unavailable"
+    entity_id: light.slaapkamer_hoog
+    to: "off"
 condition:
   - condition: not
     conditions:
@@ -18,7 +18,7 @@ condition:
       #   entity_id: media_player.mass_keuken
       #   state: "playing"
       - condition: state
-        entity_id: media_player.keuken
+        entity_id: media_player.mass_keuken
         state: "playing"
   - condition: and
     conditions:
@@ -70,19 +70,22 @@ action:
     data:
       brightness: 255
       rgb_color: [255, 236, 182]
-      entity_id: light.spot_slaapkamer
+      entity_id: light.slaapkamer_spot
+  # - service: light.turn_on
+  #   data:
+  #     entity_id: light.slaapkamer_hoog
   - delay:
       seconds: 5
   - service: alarm_control_panel.alarm_arm_night
     entity_id: alarm_control_panel.ha_alarm
     data:
       code: !secret alarm_code
-  - service: homeassistant.turn_off
-    entity_id: script.mqtt_arrive_script, script.mqtt_depart_script
-  - service: script.mqtt_arrive_script
-    data_template:
-      identity: >
-        Alarm night {{ now().strftime("%H:%M") }}
+  # - service: homeassistant.turn_off
+  #   entity_id: script.mqtt_arrive_script, script.mqtt_depart_script
+  # - service: script.mqtt_arrive_script
+  #   data_template:
+  #     identity: >
+  #       Alarm night {{ now().strftime("%H:%M") }}
   - delay:
       minutes: 20
   - choose:
@@ -95,6 +98,7 @@ action:
           - service: button.press
             target:
               entity_id: button.brouwerij_shutdown
+  - choose:
       - conditions:
           - condition: state
             entity_id: binary_sensor.badkamer_grouped_not_master
@@ -102,4 +106,4 @@ action:
         sequence:
           - service: media_player.unjoin
             target:
-              entity_id: media_player.badkamer
+              entity_id: media_player.mass_badkamer
