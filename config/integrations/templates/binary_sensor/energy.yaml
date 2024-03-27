@@ -27,32 +27,32 @@
       delay_off:
         minutes: 25
 
-    - name: Wasmachien staat op
-      unique_id: 6c5345d8-b4c3-46ca-b3d4-56cf5c5f6534
-      state: >
-        {{ states("sensor.wasmachien_vermogen") | float(0) >= 3 }}
-      delay_on:
-        minutes: 2
-      delay_off:
-        minutes: 5
+    # - name: Wasmachien staat op
+    #   unique_id: 6c5345d8-b4c3-46ca-b3d4-56cf5c5f6534
+    #   state: >
+    #     {{ states("sensor.wasmachien_vermogen") | float(0) >= 3 }}
+    #   delay_on:
+    #     minutes: 2
+    #   delay_off:
+    #     minutes: 5
 
-    - name: Droogkast staat op
-      unique_id: 733a97db-050f-46c7-b734-43d20a80a01e
-      state: >
-        {{ states("sensor.droogkast_vermogen") | float(0) >= 4 }}
-      delay_on:
-        minutes: 2
-      delay_off:
-        minutes: 5
+    # - name: Droogkast staat op
+    #   unique_id: 733a97db-050f-46c7-b734-43d20a80a01e
+    #   state: >
+    #     {{ states("sensor.droogkast_vermogen") | float(0) >= 4 }}
+    #   delay_on:
+    #     minutes: 2
+    #   delay_off:
+    #     minutes: 5
 
-    - name: Afwasmachien staat op
-      unique_id: bb4b871e-c1a9-4d81-abb6-f89f07bbd6fb
-      state: >
-        {{ states("sensor.afwasmachien_vermogen") | float(0) >= 3 }}
-      delay_on:
-        minutes: 2
-      delay_off:
-        minutes: 5
+    # - name: Afwasmachien staat op
+    #   unique_id: bb4b871e-c1a9-4d81-abb6-f89f07bbd6fb
+    #   state: >
+    #     {{ states("sensor.afwasmachien_vermogen") | float(0) >= 3 }}
+    #   delay_on:
+    #     minutes: 2
+    #   delay_off:
+    #     minutes: 5
 
     - name: Huawei has power
       unique_id: 57543201-3292-4817-97ad-3058f1184bf9
@@ -67,3 +67,9 @@
         {{ has_value("sensor.solaredge_inverter_watts") }}
       state: >
         {{ states("sensor.solaredge_inverter_watts") | float(0) > 0 }}
+
+    - name: Emhass status
+      unique_id: 2b1b3d6a-2b3e-435f-9582-0d3f4bfddbec
+      device_class: problem
+      state: >
+        {{ states("sensor.optim_status") != "Optimal" }}

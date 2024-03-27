@@ -1,44 +1,97 @@
 naive_mpc_optim:
-  url: http://localhost:5001/action/naive-mpc-optim
+  url: http://localhost:5003/action/naive-mpc-optim
   method: POST
   content_type: "application/json"
   payload: >-
     {
-      "prod_price_forecast": {{ 
+      "prod_price_forecast": {{
         ([state_attr('sensor.prod_price_forecast_list', 'extra') | float] +
-        state_attr('sensor.prod_price_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')]) | tojson 
+        state_attr('sensor.prod_price_forecast_list', 'list')[:states('sensor.prediction_horizon') | int - 1]) | tojson
         }},
-      "load_cost_forecast": {{ 
-        ([states('sensor.nordpool_kwh_be_eur') | float] +
-        state_attr('sensor.real_cost_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')]) | tojson 
+      "load_cost_forecast": {{
+        (state_attr('sensor.cost_forecast_list', 'list')[:states('sensor.prediction_horizon') | int]) | tojson
         }},
       "pv_power_forecast": {{
         ([states('sensor.huidige_opbrengst')|int(0)] +
-        state_attr('sensor.pv_power_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')]) | tojson 
-         }},
-      "prediction_horizon": {{ state_attr('sensor.real_cost_forecast_list', 'length') + 1 
-      }},
+        state_attr('sensor.pv_power_forecast_list', 'list')[:states('sensor.prediction_horizon') | int - 1]) | tojson
+        }},
+      "prediction_horizon": {{ states('sensor.prediction_horizon') | int }},
       "alpha": 1,
       "beta": 0,
-      "num_def_loads": 4,
-      "p_deferrable_nom": [2000, 2000, 1700, 1100],
+      "num_def_loads": 5,
+      "p_deferrable_nom": [2000, 2000, 1700, 1100, 2000],
       "def_total_hours": [
-        {{  states('sensor.wasmachien_uren') | int }},
-        {{  states('sensor.droogkast_uren') | int }},
-        {{  states('sensor.afwasmachien_uren') | int }},
-        {{  states('sensor.warmtepompboiler_uren') | int }}],
-      "treat_def_as_semi_cont": [1, 1, 1, 1],
-      "set_def_constant": [true, true, true, true]
+        {{  states('sensor.wasmachien_uren') | int(0) }},
+        {{  states('sensor.droogkast_uren') | int(0) }},
+        {{  states('sensor.afwasmachien_uren') | int(0) }},
+        {{  states('sensor.warmtepompboiler_uren') | int(0) }},
+        {{  states('sensor.warmtepomp_uren') | int(0) }}],
+      "set_def_constant":[true, true, true, false, false],
+      "def_end_timestep": [
+        {{  states('sensor.wasmachien_end_timesteps') | int(0) }},
+        {{  states('sensor.droogkast_end_timesteps') | int(0) }},
+        {{  states('sensor.afwasmachien_end_timesteps') | int(0) }},
+        {{  states('sensor.warmtepompboiler_end_timesteps') | int(0) }},
+        {{  states('sensor.warmtepomp_end_timesteps') | int(0) }}]
     }
 
-forecast_model_fit_load_zonder_wp:
-  url: http://localhost:5001/action/forecast-model-fit
+predict_heating:
+  url: http://localhost:5001/action/csv-predict
   method: POST
   content_type: "application/json"
   payload: >-
     {
-      "days_to_retrieve": 5,
-      "model_type": "load_zonder_wp_forecast",
+      "csv_file": "prediction.csv",
+      "independent_variables":["dd", "solar"],
+      "dependent_variable": "hour",
+      "sklearn_model": "LinearRegression",
+      "model_type": "csv_predictor",
+      "csv_predict_entity_id": "sensor.voorspelde_uren",
+      "csv_predict_unit_of_measurement": "h",
+      "csv_predict_friendly_name": "Voorspelde uren",
+      "new_values": [{{states("sensor.degree_day_prediction")}}, {{states("sensor.solcast_solaredge_forecast_today")}}]
+    }
+# predict_heating_elasticnet:
+#   url: http://localhost:5001/action/csv-predict
+#   method: POST
+#   content_type: "application/json"
+#   payload: >-
+#     {
+#       "csv_file": "prediction.csv",
+#       "independent_variables":["dd", "solar"],
+#       "dependent_variable": "hour",
+#       "sklearn_model": "ElasticNet",
+#       "model_type": "csv_predictor",
+#       "csv_predict_entity_id": "sensor.voorspelde_uren_elasticnet",
+#       "csv_predict_unit_of_measurement": "h",
+#       "csv_predict_friendly_name": "Voorspelde uren elasticnet",
+#       "new_values": [{{states("sensor.degree_day_prediction")}}, {{states("sensor.solcast_solaredge_forecast_today")}}]
+#     }
+# predict_heating_kneighborsregressor:
+#   url: http://localhost:5001/action/csv-predict
+#   method: POST
+#   content_type: "application/json"
+#   payload: >-
+#     {
+#       "csv_file": "prediction.csv",
+#       "independent_variables":["dd", "solar"],
+#       "dependent_variable": "hour",
+#       "sklearn_model": "KNeighborsRegressor",
+#       "model_type": "csv_predictor",
+#       "csv_predict_entity_id": "sensor.voorspelde_uren_kneighborsregressor",
+#       "csv_predict_unit_of_measurement": "h",
+#       "csv_predict_friendly_name": "Voorspelde uren kneighborsregressor",
+#       "new_values": [{{states("sensor.degree_day_prediction")}}, {{states("sensor.solcast_solaredge_forecast_today")}}]
+#     }
+forecast_model_fit_load_zonder_wp:
+  url: http://localhost:5003/action/forecast-model-fit
+  method: POST
+  content_type: "application/json"
+  timeout: 300
+  payload: >-
+    {
+      "days_to_retrieve": {{ states('sensor.days_to_retrieve') | int(0) }},
+      "model_type": "load_forecast",
       "var_model": "sensor.huidig_verbruik_zonder_wp",
       "sklearn_model": "KNeighborsRegressor",
       "num_lags": 48,
@@ -47,33 +100,33 @@ forecast_model_fit_load_zonder_wp:
     }
 
 forecast_model_predict_load_zonder_wp:
-  url: http://localhost:5001/action/forecast-model-predict
+  url: http://localhost:5003/action/forecast-model-predict
   method: POST
   content_type: "application/json"
   payload: >-
     {
-      "model_type": "load_zonder_wp_forecast",
+      "model_type": "load_forecast",
       "var_model": "sensor.huidig_verbruik_zonder_wp",
-      "days_to_retrieve": 5,
       "model_predict_publish": "True",
       "model_predict_entity_id": "sensor.emhass_load_zonder_wp_custom_model",
       "model_predict_unit_of_measurement": "W",
-      "model_predict_friendly_name": "Load custom model"
+      "model_predict_friendly_name": "Warmtepompboiler custom model"
     }
 
 forecast_model_tune_load_zonder_wp:
-  url: http://localhost:5001/action/forecast-model-tune
+  url: http://localhost:5003/action/forecast-model-tune
   method: POST
   content_type: "application/json"
+  timeout: 1800
   payload: >-
     {
-      "model_type": "load_zonder_wp_forecast",
+      "model_type": "load_forecast",
       "var_model": "sensor.huidig_verbruik_zonder_wp",
-      "days_to_retrieve": 6
+      "days_to_retrieve": {{ states('sensor.days_to_retrieve') | int(0) }}
     }
 
 publish_data:
-  url: http://localhost:5001/action/publish-data
+  url: http://localhost:5003/action/publish-data
   method: POST
   content_type: "application/json"
   payload: >-

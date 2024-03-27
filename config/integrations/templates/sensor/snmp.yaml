@@ -1,0 +1,9 @@
+- sensor:
+    - name: Unifi Droommachien Cpu
+      unique_id: 54752c59-3c0b-4928-a854-d70e3a60ebca
+      unit_of_measurement: "%"
+      state: >-
+        {{ ((states('sensor.unifi_droommachien_cpu0') | int(0) + 
+            states('sensor.unifi_droommachien_cpu1') | int(0) +
+            states('sensor.unifi_droommachien_cpu2') | int(0) +
+            states('sensor.unifi_droommachien_cpu3') | int(0)) / 4) | round(1) }}

@@ -1,51 +1,5 @@
 mount_nas: sudo mount 192.168.79.30:/volume1/video /usr/share/hassio/share/nasvideo
 publish_data: "curl -i -H 'Content-Type:application/json' -X POST -d '{}' http://localhost:5001/action/publish-data"
-# publish_data_2: "curl -i -H 'Content-Type:application/json' -X POST -d '{}' http://localhost:5001/action/publish-data"
-
-# publish_data: >-
-#   curl -i -H 'Content-Type:application/json' -X POST -d '{
-#     "custom_deferrable_forecast_id": [
-#       {"entity_id": "sensor.emhass_wasmachien","unit_of_measurement": "W", "friendly_name": "Emhass wasmachien"},
-#       {"entity_id": "sensor.emhass_droogkast","unit_of_measurement": "W", "friendly_name": "Emhass droogkast"},
-#       {"entity_id": "sensor.emhass_afwasmachien","unit_of_measurement": "W", "friendly_name": "Emhass afwasmachien"},
-#       {"entity_id": "sensor.emhass_warmtepompboiler","unit_of_measurement": "W", "friendly_name": "Emhass warmtepompboiler"}]
-#   }' http://localhost:5001/action/publish-data
-
-# publish_data: >-
-#   curl -i -H 'Content-Type:application/json' -X POST -d '{
-#   }' http://localhost:5001/action/publish-data
-
-dayahead_optim: >-
-  curl -i -H 'Content-Type:application/json' -X POST -d '{
-    "set_def_constant":[true, true, true, true, true], 
-    "pv_power_forecast":{{  state_attr("sensor.pv_power_forecast", "list") }}
-    }' http://localhost:5001/action/dayahead-optim
-
-naive_mpc_optim: >-
-  curl -i -H 'Content-Type: application/json' -X POST -d '{
-    "def_total_hours":[
-      {{  states('sensor.wasmachien_uren')  }},
-      {{  states('sensor.droogkast_uren')  }},
-      {{  states('sensor.afwasmachien_uren')  }},
-      {{  states('sensor.warmtepompboiler_uren')  }},
-      {{  states('sensor.warmtepomp_uren')}}],
-    "set_def_constant":[true, true, true, true, true],
-    "pv_power_forecast": {{
-        [states('sensor.huidige_opbrengst')|int(0)] +
-        state_attr('sensor.pv_power_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')]}},
-    "prod_price_forecast": {{ 
-        [state_attr('sensor.prod_price_forecast_list', 'extra') | float] +
-        state_attr('sensor.prod_price_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')]}},
-    "load_cost_forecast": {{ 
-        [states('sensor.nordpool_kwh_be_eur') | float] +
-        state_attr('sensor.real_cost_forecast_list', 'list')[:state_attr('sensor.real_cost_forecast_list', 'length')]}},
-    "prediction_horizon": {{ state_attr('sensor.real_cost_forecast_list', 'length') + 1 }},
-    "alpha": 1,
-    "beta": 0,
-    "num_def_loads": 5,
-    "P_deferrable_nom": [2000, 2000, 1700, 1100, 2000],
-    "treat_def_as_semi_cont": [1, 1, 1, 1, 1]
-    }' http://localhost:5001/action/naive-mpc-optim
 
 post_mpc_optim: >-
   curl -i -H 'Content-Type: application/json' -X POST -d '{
@@ -63,59 +17,19 @@ post_mpc_optim: >-
         [state_attr('sensor.prod_price_forecast_list', 'extra') | float] +
         state_attr('sensor.prod_price_forecast_list', 'list')[:states('sensor.prediction_horizon') | int - 1]}},
     "load_cost_forecast": {{ 
-        state_attr('sensor.cost_forecast_list', 'list')}},
+        [states('sensor.nordpool_kwh_be_eur') | float] +
+        state_attr('sensor.real_cost_forecast_list', 'list')[:states('sensor.prediction_horizon') | int - 1]}},
     "prediction_horizon": {{ states('sensor.prediction_horizon') | int }},
     "alpha": 1,
     "beta": 0
     }' http://localhost:5001/action/naive-mpc-optim
 
-post_perfect_optim: >-
-  curl -i -H 'Content-Type: application/json' -X POST -d '{
-    "def_total_hours":[
-      {{  states('sensor.wasmachien_uren')  }},
-      {{  states('sensor.droogkast_uren')  }},
-      {{  states('sensor.afwasmachien_uren')  }},
-      {{  states('sensor.warmtepompboiler_uren')  }}],
-    "set_def_constant":[true, true, true, false],
-    "pv_power_forecast":{{  state_attr('sensor.pv_power_forecast_list', 'list')  }},
-    "prediction_horizon":{{  states('sensor.pv_power_forecast_list_length') }}
-    }' http://localhost:5001/action/perfect-optim
-
-# forecast_model_fit_warmtepompboiler: >-
-#   curl -i -H 'Content-Type: application/json' -X POST -d '{
-#     "days_to_retrieve": 15,
-#     "model_type": "warmtepomp_forecast",
-#     "var_model": "sensor.warmtepompboiler_huidig_verbruik",
-#     "sklearn_model": "KNeighborsRegressor",
-#     "num_lags": 48,
-#     "split_date_delta": '48h',
-#     "perform_backtest": False
-#     }' http://localhost:5001/action/forecast-model-fit
-
-# forecast_model_predict_warmtepompboiler: >-
-#   curl -i -H 'Content-Type: application/json' -X POST -d '{
-#     "model_type": "warmtepomp_forecast",
-#     "model_predict_publish": True,
-#     "model_predict_entity_id": "sensor.p_warmtepompboiler_custom_model",
-#     "model_predict_unit_of_measurement": "W",
-#     "model_predict_friendly_name": "Warmtepompboiler custom model"
-#     }' http://localhost:5001/action/forecast-model-predict
-
-# forecast_model_tune_warmtepompboiler: >-
-#   curl -i -H 'Content-Type: application/json' -X POST -d '{
-#     "days_to_retrieve": 2,
-#     "model_type": "warmtepompboiler",
-#     "var_model": "sensor.warmtepompboiler_huidig_verbruik",
-#     "sklearn_model": "KNeighborsRegressor",
-#     "num_lags": 48,
-#     "split_date_delta": '48h',
-#     "perform_backtest": False
-#     }' http://localhost:5001/action/forecast-model-tune
-
+# 1
+# 1 x per dag?
 forecast_model_fit_load_zonder_wp: >-
   curl -i -H 'Content-Type: application/json' -X POST -d '{
-    "days_to_retrieve": 5,
-    "model_type": "load_zonder_wp_forecast",
+    "days_to_retrieve": 45,
+    "model_type": "load_forecast",
     "var_model": "sensor.huidig_verbruik_zonder_wp",
     "sklearn_model": "KNeighborsRegressor",
     "num_lags": 48,
@@ -123,20 +37,21 @@ forecast_model_fit_load_zonder_wp: >-
     "perform_backtest": "True"
     }' http://localhost:5001/action/forecast-model-fit
 
+# 2
+forecast_model_tune_load_zonder_wp: >-
+  curl -i -H 'Content-Type: application/json' -X POST -d '{
+    "model_type": "load_forecast",
+    "var_model": "sensor.huidig_verbruik_zonder_wp",
+    "days_to_retrieve": 100
+    }' http://localhost:5001/action/forecast-model-tune
+
+# 3
 forecast_model_predict_load_zonder_wp: >-
   curl -i -H 'Content-Type: application/json' -X POST -d '{
-    "model_type": "load_zonder_wp_forecast",
+    "model_type": "load_forecast",
     "var_model": "sensor.huidig_verbruik_zonder_wp",
-    "days_to_retrieve": 5,
     "model_predict_publish": "True",
     "model_predict_entity_id": "sensor.emhass_load_zonder_wp_custom_model",
     "model_predict_unit_of_measurement": "W",
     "model_predict_friendly_name": "Load custom model"
     }' http://localhost:5001/action/forecast-model-predict
-
-forecast_model_tune_load_zonder_wp: >-
-  curl -i -H 'Content-Type: application/json' -X POST -d '{
-    "model_type": "load_zonder_wp_forecast",
-    "var_model": "sensor.huidig_verbruik_zonder_wp",
-    "days_to_retrieve": 5
-    }' http://192.168.79.54:5001/action/forecast-model-tune

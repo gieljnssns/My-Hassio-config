@@ -1,0 +1,9 @@
+- sensor:
+    - name: People home
+      unique_id: 8e651710-4133-4790-a780-7ad400573558
+      state: >
+        {{ expand("person.giel", "person.martine", "person.noor", "person.fien") 
+                    | selectattr("state", "eq", "home") 
+                    | map(attribute="entity_id") 
+                    | list
+                    | count }}

@@ -1,0 +1,32 @@
+- binary_sensor:
+    - name: Giel thuis nacht
+      unique_id: a5f7fb80-700e-4883-afa1-39171f29208d
+      delay_on:
+        minutes: 60
+      state: >
+        {{ states('device_tracker.gphone_2') == 'home' and
+          states('alarm_control_panel.ha_alarm') == 'armed_night' }}
+
+    - name: Martine thuis nacht
+      unique_id: 62c3a0c9-3737-45ff-bcae-a038ef985811
+      delay_on:
+        minutes: 60
+      state: >
+        {{ states('device_tracker.mphone_2') == 'home' and
+          states('alarm_control_panel.ha_alarm') == 'armed_night' }}
+
+    - name: Noor thuis nacht
+      unique_id: cd492f22-4546-4a46-b747-bf597257e422
+      delay_on:
+        minutes: 60
+      state: >
+        {{ states('device_tracker.nphone') == 'home' and
+          states('alarm_control_panel.ha_alarm') == 'armed_night' }}
+
+    - name: Fien thuis nacht
+      unique_id: bf89f4d5-1098-4c3f-9bb8-beb0473fc3da
+      delay_on:
+        minutes: 60
+      state: >
+        {{ states('device_tracker.fphone') == 'home' and
+          states('alarm_control_panel.ha_alarm') == 'armed_night' }}

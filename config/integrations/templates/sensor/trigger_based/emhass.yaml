@@ -50,7 +50,7 @@
         {{ as_timestamp(states.binary_sensor.warmtepompboiler_aan.last_changed) }}
 - trigger:
     - platform: time_pattern
-      seconds: "/5"
+      seconds: "/10"
   sensor:
     - name: "Emhass huidige opbrengst"
       unique_id: 99153de6-9177-4f4d-8228-f64f2c319162
@@ -58,40 +58,37 @@
       device_class: power
       state: >
         {{ states('sensor.huidige_opbrengst') }}
+- trigger:
+    - platform: time_pattern
+      seconds: "/10"
+  sensor:
     - name: "Emhass huidig verbruik"
       unique_id: 905759dc-7fa2-4772-9393-60e33d2192cd
       unit_of_measurement: "W"
       device_class: power
       state: >
         {{ states('sensor.huidig_verbruik') }}
+- trigger:
+    - platform: time_pattern
+      seconds: "/10"
+  sensor:
     - name: Huidig verbruik zonder wp
       unique_id: 664ab9ff-3875-4a45-b53a-685b7a8f7f96
       unit_of_measurement: "W"
       device_class: power
       state: >
-        {% set wasmachien = states("input_boolean.emhass_wasmachien") == "on" -%}
-        {%- set droogkast = states("input_boolean.emhass_droogkast") == "on" -%}
-        {%- set afwasmachien = states("input_boolean.emhass_afwasmachien") == "on" -%}
-        {%- set warmtepompboiler = states("input_boolean.emhass_warmtepompboiler") == "on" -%}
-        {%- set warmtepomp = states("input_boolean.emhass_warmtepomp") == "on" -%}
-        {%- set deferrable = namespace(all=[]) -%}
-        {%- if wasmachien -%}
-          {%- set deferrable.all = deferrable.all + [states("sensor.wasmachien_vermogen") | float(0)] -%}
-        {% endif %}
-        {%- if droogkast %}
-          {%- set deferrable.all = deferrable.all + [states("sensor.droogkast_vermogen") | float(0)] -%}
-        {% endif %}
-        {%- if afwasmachien %}
-          {%- set deferrable.all = deferrable.all + [states("sensor.afwasmachien_vermogen") | float(0)] -%}
-        {% endif %}
-        {%- if warmtepompboiler %}
-          {%- set deferrable.all = deferrable.all + [states("sensor.warmtepompboiler_huidig_verbruik") | float(0)] -%}
-        {% endif %}
-        {%- if warmtepomp %}
-          {%- set deferrable.all = deferrable.all + [states("sensor.warmtepomp_huidig_verbruik") | float(0)] -%}
-        {% endif %}
-        {%- if states("sensor.huidig_verbruik") | float(0) - ((deferrable.all) | sum ) | round(1) > 0 -%}
-            {{ (states("sensor.huidig_verbruik") | float(0) - ((deferrable.all) | sum )) | round(1) }}
-        {% else %}
-            {{ 0 | float(0) }}
+        {% if (states("sensor.huidig_verbruik") | float(default=0) -
+            states("sensor.wasmachien_vermogen") | float(default=0) -
+            states("sensor.droogkast_vermogen") | float(default=0) -
+            states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
+            states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
+            states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) > 0 %}
+            {{ (states("sensor.huidig_verbruik") | float(default=0) -
+                states("sensor.wasmachien_vermogen") | float(default=0) -
+                states("sensor.droogkast_vermogen") | float(default=0) -
+                states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
+                states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
+                states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1)}}
+        {% else  %}
+            {{ 0 | float(default=0) }}
         {% endif %}

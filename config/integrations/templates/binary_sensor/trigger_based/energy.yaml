@@ -1,0 +1,98 @@
+- trigger:
+    - platform: template
+      id: aan
+      value_template: >
+        {{ states("sensor.wasmachien_vermogen") | float(0) >= 5 }}
+      for:
+        minutes: 2
+    - platform: template
+      id: uit
+      value_template: >
+        {{ states("sensor.wasmachien_vermogen") | float(0) < 3 }}
+      for:
+        minutes: 5
+    - platform: state
+      entity_id: input_boolean.wasmachien_staat_op
+      to: "off"
+  action:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: aan
+          sequence:
+            - service: input_boolean.turn_on
+              entity_id: input_boolean.wasmachien_staat_op
+      default:
+        - service: input_boolean.turn_off
+          entity_id: input_boolean.wasmachien_staat_op
+  binary_sensor:
+    - name: Wasmachien staat op
+      unique_id: 6c5345d8-b4c3-46ca-b3d4-56cf5c5f6534
+      state: >
+        {{ states("input_boolean.wasmachien_staat_op") }}
+
+- trigger:
+    - platform: template
+      id: aan
+      value_template: >
+        {{ states("sensor.droogkast_vermogen") | float(0) >= 4 }}
+      for:
+        minutes: 2
+    - platform: template
+      id: uit
+      value_template: >
+        {{ states("sensor.droogkast_vermogen") | float(0) < 4 }}
+      for:
+        minutes: 5
+    - platform: state
+      entity_id: input_boolean.droogkast_staat_op
+      to: "off"
+  action:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: aan
+          sequence:
+            - service: input_boolean.turn_on
+              entity_id: input_boolean.droogkast_staat_op
+      default:
+        - service: input_boolean.turn_off
+          entity_id: input_boolean.droogkast_staat_op
+  binary_sensor:
+    - name: Droogkast staat op
+      unique_id: 733a97db-050f-46c7-b734-43d20a80a01e
+      state: >
+        {{ states("input_boolean.droogkast_staat_op") }}
+
+- trigger:
+    - platform: template
+      id: aan
+      value_template: >
+        {{ states("sensor.afwasmachien_vermogen") | float(0) >= 3 }}
+      for:
+        minutes: 2
+    - platform: template
+      id: uit
+      value_template: >
+        {{ states("sensor.afwasmachien_vermogen") | float(0) < 3 }}
+      for:
+        minutes: 5
+    - platform: state
+      entity_id: input_boolean.afwasmachien_staat_op
+      to: "off"
+  action:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: aan
+          sequence:
+            - service: input_boolean.turn_on
+              entity_id: input_boolean.afwasmachien_staat_op
+      default:
+        - service: input_boolean.turn_off
+          entity_id: input_boolean.afwasmachien_staat_op
+  binary_sensor:
+    - name: Afwasmachien staat op
+      unique_id: bb4b871e-c1a9-4d81-abb6-f89f07bbd6fb
+      state: >
+        {{ states("input_boolean.afwasmachien_staat_op") }}

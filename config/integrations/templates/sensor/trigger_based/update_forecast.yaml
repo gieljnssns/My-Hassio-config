@@ -1,25 +1,35 @@
 - trigger:
-    # - platform: event
-    #   event_type: openweathermap_forecast_hourly
-    - platform: time_pattern
-      minutes: "/20"
+    # - platform: time_pattern
+    #   minutes: "/20"
+    - platform: event
+      event_type: refresh_20m
+    - platform: event
+      event_type: event_template_reloaded
   action:
-    - service: weather.get_forecast
+    - service: weather.get_forecasts
       data:
         type: hourly
       target:
         entity_id: weather.openweathermap
       response_variable: hourly
-    # - event: openweathermap_forecast_hourly
-    #   event_data:
-    #     hourly: "{{ hourly}}"
+
   sensor:
     - name: Gemiddelde temperatuur buiten voorspelling 2
       unique_id: 9e6ccce8-2acd-4132-98e8-e3e6087b4588
       unit_of_measurement: "°C"
       state: >
-        {% set forecast = hourly.forecast %}
-        {{ forecast[:8] 
-              | map(attribute='temperature') 
-              | average 
+        {% set forecast = hourly %}
+        {{ forecast["weather.openweathermap"].forecast[:8] 
+            | map(attribute='temperature') 
+            | average 
+            | round(1) }}
+
+    - name: Max neerslag volgende 12u
+      unique_id: 5f39ce6f-f064-4252-8aa2-e23921b90924
+      unit_of_measurement: "%"
+      state: >
+        {% set forecast = hourly %}
+        {{ forecast["weather.openweathermap"].forecast[:4] 
+              | map(attribute='precipitation_probability') 
+              | max
               | round(1) }}
