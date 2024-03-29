@@ -124,26 +124,17 @@
       availability: >
         {{ has_value("sensor.gemiddelde_buitentemperatuur") }}
 
-    - name: Gemiddelde temperatuur buiten voorspelling
-      unique_id: a6edabc5-f478-4983-8872-965db57d676c
-      state: >
-        {{ state_attr('weather.openweathermap', 'forecast')[:8]
-                      | map(attribute='temperature') | average | round(1) }}
-      unit_of_measurement: "°C"
-      availability: >
-        {{ has_value("weather.openweathermap") }}
-
     - name: Degree day prediction
       unique_id: c57c8b83-5b40-4ee7-817a-6681211a5153
       state: >
         {% set month = now().month %}
         {% if month in [4, 5, 6, 7, 8, 9] %}
-          {{ [0, 0.8 *(18 - states('sensor.gemiddelde_temperatuur_buiten_voorspelling')|float)] | max | round(2) }}
+          {{ [0, 0.8 *(18 - states('sensor.gemiddelde_temperatuur_buiten_voorspelling_2')|float)] | max | round(2) }}
         {% elif month in [3, 10] %}
-          {{ [0, 18 - states('sensor.gemiddelde_temperatuur_buiten_voorspelling')|float] | max | round(2) }}
+          {{ [0, 18 - states('sensor.gemiddelde_temperatuur_buiten_voorspelling_2')|float] | max | round(2) }}
         {% else %}
-          {{ [0, 1.1 * (18 - states('sensor.gemiddelde_temperatuur_buiten_voorspelling')|float)] | max | round(2) }}
+          {{ [0, 1.1 * (18 - states('sensor.gemiddelde_temperatuur_buiten_voorspelling_2')|float)] | max | round(2) }}
         {% endif %}
       unit_of_measurement: "DD"
       availability: >
-        {{ has_value("sensor.gemiddelde_temperatuur_buiten_voorspelling") }}
+        {{ has_value("sensor.gemiddelde_temperatuur_buiten_voorspelling_2") }}
