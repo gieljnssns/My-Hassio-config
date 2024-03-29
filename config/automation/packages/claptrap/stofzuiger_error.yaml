@@ -35,11 +35,16 @@ action:
               value: 3
             target:
               entity_id: counter.stofzuiger
-          - service: script.roborock_set_mopping_route
+          - service: select.select_option
             target:
-              entity_id: vacuum.cl4p_tp
+              entity_id: select.claptrap_mop_mode
             data:
-              route: "standard"
+              option: Standard
+          # - service: script.roborock_set_mopping_route
+          #   target:
+          #     entity_id: vacuum.cl4p_tp
+          #   data:
+          #     route: "standard"
     default:
       - service: counter.decrement
         target:

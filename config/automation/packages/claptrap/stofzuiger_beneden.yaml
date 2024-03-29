@@ -6,7 +6,7 @@ trigger:
   at: "2:00:00"
 condition:
   - condition: state
-    entity_id: vacuum.cl4p_tp
+    entity_id: vacuum.claptrap
     state: "docked"
   - condition: state
     entity_id: input_boolean.op_verlof
@@ -26,27 +26,47 @@ action:
                 entity_id: counter.stofzuiger
                 state: "6"
         sequence:
-          - service: script.roborock_set_manual_mode
-            target:
-              entity_id: vacuum.cl4p_tp
+          - service: vacuum.set_fan_speed
             data:
-              vacuum: max
-              mopping: "off"
+              fan_speed: Full Speed
+            target:
+              entity_id: vacuum.claptrap
+          - service: select.select_option
+            data:
+              option: "Off"
+            target:
+              entity_id: select.claptrap_water_level
+          # - service: script.roborock_set_manual_mode
+          #   target:
+          #     entity_id: vacuum.cl4p_tp
+          #   data:
+          #     vacuum: max
+          #     mopping: "off"
           - service: vacuum.start
             data:
-              entity_id: vacuum.cl4p_tp
+              entity_id: vacuum.claptrap
           - service: counter.increment
             entity_id: counter.stofzuiger
 
     default:
-      - service: script.roborock_set_manual_mode
-        target:
-          entity_id: vacuum.cl4p_tp
+      - service: vacuum.set_fan_speed
         data:
-          vacuum: balanced
-          mopping: "off"
+          fan_speed: Basic
+        target:
+          entity_id: vacuum.claptrap
+      - service: select.select_option
+        data:
+          option: "Off"
+        target:
+          entity_id: select.claptrap_water_level
+      # - service: script.roborock_set_manual_mode
+      #   target:
+      #     entity_id: vacuum.cl4p_tp
+      #   data:
+      #     vacuum: balanced
+      #     mopping: "off"
       - service: vacuum.start
         data:
-          entity_id: vacuum.cl4p_tp
+          entity_id: vacuum.claptrap
       - service: counter.increment
         entity_id: counter.stofzuiger

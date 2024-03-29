@@ -15,16 +15,31 @@ condition:
     entity_id: counter.stofzuiger
     state: "6"
 action:
-  - service: script.roborock_set_manual_mode
-    target:
-      entity_id: vacuum.cl4p_tp
+  - service: vacuum.set_fan_speed
     data:
-      vacuum: balanced
-      mopping: "off"
-  - service: script.roborock_set_mopping_route
+      fan_speed: Basic
     target:
-      entity_id: vacuum.cl4p_tp
+      entity_id: vacuum.claptrap
+  - service: select.select_option
     data:
-      route: "standard"
+      option: "Off"
+    target:
+      entity_id: select.claptrap_water_level
+  # - service: script.roborock_set_manual_mode
+  #   target:
+  #     entity_id: vacuum.cl4p_tp
+  #   data:
+  #     vacuum: balanced
+  #     mopping: "off"
+  # - service: script.roborock_set_mopping_route
+  #   target:
+  #     entity_id: vacuum.cl4p_tp
+  #   data:
+  #     route: "standard"
+  - service: select.select_option
+    target:
+      entity_id: select.claptrap_mop_mode
+    data:
+      option: Standard
   - service: counter.increment
     entity_id: counter.stofzuiger

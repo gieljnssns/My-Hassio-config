@@ -16,7 +16,7 @@ trigger:
       minutes: 10
 condition:
   - condition: state
-    entity_id: vacuum.cl4p_tp
+    entity_id: vacuum.claptrap
     state: "docked"
   - condition: state
     entity_id: input_boolean.op_verlof
@@ -38,12 +38,22 @@ action:
               - "thu"
               - "fri"
         sequence:
-          - service: script.roborock_set_manual_mode
-            target:
-              entity_id: vacuum.cl4p_tp
+          - service: vacuum.set_fan_speed
             data:
-              vacuum: max
-              mopping: "off"
+              fan_speed: Strong
+            target:
+              entity_id: vacuum.claptrap
+          - service: select.select_option
+            data:
+              option: "Off"
+            target:
+              entity_id: select.claptrap_water_level
+          # - service: script.roborock_set_manual_mode
+          #   target:
+          #     entity_id: vacuum.cl4p_tp
+          #   data:
+          #     vacuum: max
+          #     mopping: "off"
           - service: input_select.select_option
             target:
               entity_id: input_select.vacuum_target_room
@@ -64,12 +74,22 @@ action:
             entity_id: device_tracker.giel_not_so_binary
             state: "Thuis"
 
-      - service: script.roborock_set_manual_mode
-        target:
-          entity_id: vacuum.cl4p_tp
+      # - service: script.roborock_set_manual_mode
+      #   target:
+      #     entity_id: vacuum.cl4p_tp
+      #   data:
+      #     vacuum: max
+      #     mopping: "off"
+      - service: vacuum.set_fan_speed
         data:
-          vacuum: max
-          mopping: "off"
+          fan_speed: Full Speed
+        target:
+          entity_id: vacuum.claptrap
+      - service: select.select_option
+        data:
+          option: "Off"
+        target:
+          entity_id: select.claptrap_water_level
       - service: input_select.select_option
         target:
           entity_id: input_select.vacuum_target_room

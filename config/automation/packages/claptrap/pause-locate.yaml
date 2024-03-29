@@ -43,113 +43,119 @@ condition:
   - condition: not
     conditions:
       - condition: state
-        entity_id: vacuum.cl4p_tp
+        entity_id: vacuum.claptrap
         state: docked
       - condition: state
-        entity_id: vacuum.cl4p_tp
+        entity_id: vacuum.claptrap
         state: returning
+  - condition: state
+    entity_id: vacuum.claptrap
+    state: error
 action:
-  - choose:
-      - conditions:
-          - condition: trigger
-            id: keuken
-          - condition: template
-            value_template: >
-              {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 17 }}
-        sequence:
-          - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: vacuum.cl4p_tp
-                    state: error
-                sequence:
-                  - service: vacuum.locate
-                    target:
-                      entity_id: vacuum.cl4p_tp
-      - conditions:
-          - condition: trigger
-            id: danszaal
-          - condition: template
-            value_template: >
-              {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 18 }}
-        sequence:
-          - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: vacuum.cl4p_tp
-                    state: error
-                sequence:
-                  - service: vacuum.locate
-                    target:
-                      entity_id: vacuum.cl4p_tp
-      - conditions:
-          - condition: trigger
-            id: zithoek
-          - condition: template
-            value_template: >
-              {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 20 }}
-        sequence:
-          - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: vacuum.cl4p_tp
-                    state: error
-                sequence:
-                  - service: vacuum.locate
-                    target:
-                      entity_id: vacuum.cl4p_tp
-      - conditions:
-          - condition: trigger
-            id: wc
-          - condition: template
-            value_template: >
-              {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 22 }}
-        sequence:
-          - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: vacuum.cl4p_tp
-                    state: error
-                sequence:
-                  - service: vacuum.locate
-                    target:
-                      entity_id: vacuum.cl4p_tp
-      - conditions:
-          - condition: trigger
-            id: waskot
-          - condition: template
-            value_template: >
-              {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 23 }}
-        sequence:
-          - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: vacuum.cl4p_tp
-                    state: error
-                sequence:
-                  - service: vacuum.locate
-                    target:
-                      entity_id: vacuum.cl4p_tp
-      - conditions:
-          - condition: trigger
-            id: gang
-          - condition: template
-            value_template: >
-              {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 16 }}
-        sequence:
-          - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: vacuum.cl4p_tp
-                    state: error
-                sequence:
-                  - service: vacuum.locate
-                    target:
-                      entity_id: vacuum.cl4p_tp
-    default:
-      - condition: state
-        entity_id: vacuum.cl4p_tp
-        state: error
-      - service: vacuum.locate
-        target:
-          entity_id: vacuum.cl4p_tp
+  - service: vacuum.locate
+    target:
+      entity_id: vacuum.claptrap
+  # - choose:
+  # - conditions:
+  #     - condition: trigger
+  #       id: keuken
+  #     - condition: template
+  #       value_template: >
+  #         {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 17 }}
+  #   sequence:
+  #     - choose:
+  #         - conditions:
+  #             - condition: state
+  #               entity_id: vacuum.cl4p_tp
+  #               state: error
+  #           sequence:
+  #             - service: vacuum.locate
+  #               target:
+  #                 entity_id: vacuum.cl4p_tp
+  # - conditions:
+  #     - condition: trigger
+  #       id: danszaal
+  #     - condition: template
+  #       value_template: >
+  #         {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 18 }}
+  #   sequence:
+  #     - choose:
+  #         - conditions:
+  #             - condition: state
+  #               entity_id: vacuum.cl4p_tp
+  #               state: error
+  #           sequence:
+  #             - service: vacuum.locate
+  #               target:
+  #                 entity_id: vacuum.cl4p_tp
+  # - conditions:
+  #     - condition: trigger
+  #       id: zithoek
+  #     - condition: template
+  #       value_template: >
+  #         {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 20 }}
+  #   sequence:
+  #     - choose:
+  #         - conditions:
+  #             - condition: state
+  #               entity_id: vacuum.cl4p_tp
+  #               state: error
+  #           sequence:
+  #             - service: vacuum.locate
+  #               target:
+  #                 entity_id: vacuum.cl4p_tp
+  # - conditions:
+  #     - condition: trigger
+  #       id: wc
+  #     - condition: template
+  #       value_template: >
+  #         {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 22 }}
+  #   sequence:
+  #     - choose:
+  #         - conditions:
+  #             - condition: state
+  #               entity_id: vacuum.cl4p_tp
+  #               state: error
+  #           sequence:
+  #             - service: vacuum.locate
+  #               target:
+  #                 entity_id: vacuum.cl4p_tp
+  # - conditions:
+  #     - condition: trigger
+  #       id: waskot
+  #     - condition: template
+  #       value_template: >
+  #         {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 23 }}
+  #   sequence:
+  #     - choose:
+  #         - conditions:
+  #             - condition: state
+  #               entity_id: vacuum.cl4p_tp
+  #               state: error
+  #           sequence:
+  #             - service: vacuum.locate
+  #               target:
+  #                 entity_id: vacuum.cl4p_tp
+  # - conditions:
+  #     - condition: trigger
+  #       id: gang
+  #     - condition: template
+  #       value_template: >
+  #         {{ state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room') == 16 }}
+  #   sequence:
+  #     - choose:
+  #         - conditions:
+  #             - condition: state
+  #               entity_id: vacuum.cl4p_tp
+  #               state: error
+  #           sequence:
+  #             - service: vacuum.locate
+  #               target:
+  #                 entity_id: vacuum.cl4p_tp
+  # default:
+  #   - condition: state
+  #     entity_id: vacuum.claptrap
+  #     state: error
+  #   - service: vacuum.locate
+  #     target:
+  #       entity_id: vacuum.claptrap

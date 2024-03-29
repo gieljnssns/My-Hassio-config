@@ -6,14 +6,20 @@ trigger:
   at: "3:15:00"
 condition:
   - condition: state
-    entity_id: vacuum.cl4p_tp
+    entity_id: vacuum.claptrap
     state: "docked"
-  - condition: state
-    entity_id: binary_sensor.cl4p_tp_mop_attached
-    state: "on"
-  - condition: state
-    entity_id: binary_sensor.cl4p_tp_water_box_attached
-    state: "on"
+  - condition: template
+    value_template: >
+      {{ state_attr("vacuum.claptrap", "props")["water_box_status"] != 0 }}
+  - condition: template
+    value_template: >
+      {{ state_attr("vacuum.claptrap", "props")["water_box_carriage_status"] != 0 }}
+  # - condition: state
+  #   entity_id: binary_sensor.cl4p_tp_mop_attached
+  #   state: "on"
+  # - condition: state
+  #   entity_id: binary_sensor.cl4p_tp_water_box_attached
+  #   state: "on"
   - condition: state
     entity_id: input_boolean.op_verlof
     state: "off"
@@ -24,19 +30,34 @@ condition:
     entity_id: counter.stofzuiger
     state: "5"
 action:
-  - service: script.roborock_set_manual_mode
-    target:
-      entity_id: vacuum.cl4p_tp
+  - service: vacuum.set_fan_speed
     data:
-      vacuum: silent
-      mopping: high
-  - service: script.roborock_set_mopping_route
+      fan_speed: Silent
     target:
-      entity_id: vacuum.cl4p_tp
+      entity_id: vacuum.claptrap
+  - service: select.select_option
     data:
-      route: deep
+      option: Level3
+    target:
+      entity_id: select.claptrap_water_level
+  # - service: script.roborock_set_manual_mode
+  #   target:
+  #     entity_id: vacuum.cl4p_tp
+  #   data:
+  #     vacuum: silent
+  #     mopping: high
+  # - service: script.roborock_set_mopping_route
+  #   target:
+  #     entity_id: vacuum.cl4p_tp
+  #   data:
+  #     route: deep
+  - service: select.select_option
+    target:
+      entity_id: select.claptrap_mop_mode
+    data:
+      option: Deep
   - service: vacuum.start
     data:
-      entity_id: vacuum.cl4p_tp
+      entity_id: vacuum.claptrap
   - service: counter.increment
     entity_id: counter.stofzuiger

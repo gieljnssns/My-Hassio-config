@@ -1,113 +1,113 @@
-roborock_set_customize_mode:
-  alias: "Set Roborock to use customized cleaning settings for each room"
-  sequence:
-    - alias: "Set vacuum mode to customized"
-      service: vacuum.send_command
-      target:
-        entity_id: vacuum.cl4p_tp
-      data:
-        command: set_custom_mode
-        params: [106]
-    - alias: "Set mopping mode to customized"
-      service: vacuum.send_command
-      target:
-        entity_id: vacuum.cl4p_tp
-      data:
-        command: set_water_box_custom_mode
-        params: [204]
+# roborock_set_customize_mode:
+#   alias: "Set Roborock to use customized cleaning settings for each room"
+#   sequence:
+#     - alias: "Set vacuum mode to customized"
+#       service: vacuum.send_command
+#       target:
+#         entity_id: vacuum.cl4p_tp
+#       data:
+#         command: set_custom_mode
+#         params: [106]
+#     - alias: "Set mopping mode to customized"
+#       service: vacuum.send_command
+#       target:
+#         entity_id: vacuum.cl4p_tp
+#       data:
+#         command: set_water_box_custom_mode
+#         params: [204]
 
-roborock_set_manual_mode:
-  alias: "Set Roborock manual vacuum and mopping settings"
-  fields:
-    vacuum:
-      description: "Vacuum mode - can be: silent | balanced | turbo | max"
-      example: "max"
-    mopping:
-      description: "Mopping mode - can be: off | low | medium | high"
-      example: "off"
-  sequence:
-    - alias: "Config variables"
-      variables:
-        config_vacuum:
-          silent: 101
-          balanced: 102
-          turbo: 103
-          max: 104
-        config_mopping:
-          "off": 200
-          low: 201
-          medium: 202
-          high: 203
-        vacuum_mode: "{{ config_vacuum[vacuum] }}"
-        mopping_mode: "{{ config_mopping[mopping] }}"
-    - choose:
-        - alias: "Invalid vacuum value"
-          conditions: "{{ vacuum not in config_vacuum|list }}"
-          sequence:
-            - service: system_log.write
-              data:
-                message: "Invalid vacuum value '{{ vacuum }}'. Valid values are {{ config_vacuum|list|join(', ') }}"
-                level: warning
-                logger: roborock
-        - alias: "Invalid mopping value"
-          conditions: "{{ mopping not in config_mopping|list }}"
-          sequence:
-            - service: system_log.write
-              data:
-                message: "Invalid mopping value '{{ lavaggio }}'. Valid values are {{ config_mopping|list|join(', ') }}"
-                level: warning
-                logger: roborock
-      default:
-        - alias: "Set vacuum mode"
-          service: vacuum.send_command
-          target:
-            entity_id: vacuum.cl4p_tp
-          data:
-            command: set_custom_mode
-            params: "[{{ vacuum_mode }}]"
-        - alias: "Set mopping mode"
-          service: vacuum.send_command
-          target:
-            entity_id: vacuum.cl4p_tp
-          data:
-            command: set_water_box_custom_mode
-            params: "[{{ mopping_mode }}]"
+# roborock_set_manual_mode:
+#   alias: "Set Roborock manual vacuum and mopping settings"
+#   fields:
+#     vacuum:
+#       description: "Vacuum mode - can be: silent | balanced | turbo | max"
+#       example: "max"
+#     mopping:
+#       description: "Mopping mode - can be: off | low | medium | high"
+#       example: "off"
+#   sequence:
+#     - alias: "Config variables"
+#       variables:
+#         config_vacuum:
+#           silent: 101
+#           balanced: 102
+#           turbo: 103
+#           max: 104
+#         config_mopping:
+#           "off": 200
+#           low: 201
+#           medium: 202
+#           high: 203
+#         vacuum_mode: "{{ config_vacuum[vacuum] }}"
+#         mopping_mode: "{{ config_mopping[mopping] }}"
+#     - choose:
+#         - alias: "Invalid vacuum value"
+#           conditions: "{{ vacuum not in config_vacuum|list }}"
+#           sequence:
+#             - service: system_log.write
+#               data:
+#                 message: "Invalid vacuum value '{{ vacuum }}'. Valid values are {{ config_vacuum|list|join(', ') }}"
+#                 level: warning
+#                 logger: roborock
+#         - alias: "Invalid mopping value"
+#           conditions: "{{ mopping not in config_mopping|list }}"
+#           sequence:
+#             - service: system_log.write
+#               data:
+#                 message: "Invalid mopping value '{{ lavaggio }}'. Valid values are {{ config_mopping|list|join(', ') }}"
+#                 level: warning
+#                 logger: roborock
+#       default:
+#         - alias: "Set vacuum mode"
+#           service: vacuum.send_command
+#           target:
+#             entity_id: vacuum.cl4p_tp
+#           data:
+#             command: set_custom_mode
+#             params: "[{{ vacuum_mode }}]"
+#         - alias: "Set mopping mode"
+#           service: vacuum.send_command
+#           target:
+#             entity_id: vacuum.cl4p_tp
+#           data:
+#             command: set_water_box_custom_mode
+#             params: "[{{ mopping_mode }}]"
 
-roborock_set_mopping_route:
-  alias: Set Roborock mopping route
-  fields:
-    route:
-      description: "Mopping route - can be: standard | deep"
-      example: "standard"
-  sequence:
-    - alias: Config variables
-      variables:
-        config_mopping_route:
-          "standard": 300
-          deep: 301
-        mopping_route: "{{ config_mopping_route[route]}}"
-    - choose:
-        - alias: Invalid mopping route value
-          conditions:
-            - condition: template
-              value_template: "{{ route not in config_mopping_route|list }}"
-          sequence:
-            - service: system_log.write
-              data:
-                message: >-
-                  Invalid mopping_route value '{{ route }}'. Valid values are {{
-                  config_mopping_route|list|join(', ') }}
-                level: warning
-                logger: roborock
-      default:
-        - alias: Set mopping route
-          service: vacuum.send_command
-          target:
-            entity_id: vacuum.cl4p_tp
-          data:
-            command: set_mop_mode
-            params: "[{{ mopping_route }}]"
-  mode: single
+# roborock_set_mopping_route:
+#   alias: Set Roborock mopping route
+#   fields:
+#     route:
+#       description: "Mopping route - can be: standard | deep"
+#       example: "standard"
+#   sequence:
+#     - alias: Config variables
+#       variables:
+#         config_mopping_route:
+#           "standard": 300
+#           deep: 301
+#         mopping_route: "{{ config_mopping_route[route]}}"
+#     - choose:
+#         - alias: Invalid mopping route value
+#           conditions:
+#             - condition: template
+#               value_template: "{{ route not in config_mopping_route|list }}"
+#           sequence:
+#             - service: system_log.write
+#               data:
+#                 message: >-
+#                   Invalid mopping_route value '{{ route }}'. Valid values are {{
+#                   config_mopping_route|list|join(', ') }}
+#                 level: warning
+#                 logger: roborock
+#       default:
+#         - alias: Set mopping route
+#           service: vacuum.send_command
+#           target:
+#             entity_id: vacuum.cl4p_tp
+#           data:
+#             command: set_mop_mode
+#             params: "[{{ mopping_route }}]"
+#   mode: single
 
 bitch_prullenbak:
   sequence:
@@ -121,7 +121,7 @@ bitch_prullenbak:
       #   - 16050
       #   - 24000
     target:
-      entity_id: vacuum.cl4p_tp
+      entity_id: vacuum.claptrap
 
 nacht_dweilen:
   sequence:
@@ -156,32 +156,88 @@ nacht_dweilen:
     #     value: 4
     #   target:
     #     entity_id: counter.stofzuiger
-
 vacuum_clean_room:
   alias: vacuum_clean_room
   sequence:
-    - alias: Get room id using input select
-      variables:
-        # get room string from input select
-        target_room_selector: input_select.vacuum_target_room
-        # map each room number with a string with a dictionary
-        room_map:
-          Kies kamer: 0
-          Waskot: 23
-          Keuken: 17
-          Danszaal: 18
-          Zithoek: 20
-          Inkom: 21
-          Gang: 16
-          Wc: 22
-        # get target room to clean
-        target_room: "{{ room_map[states(target_room_selector)] | int}}"
-    # check that one room was selected
-    - condition: template
-      value_template: "{{ target_room != 0 }}"
-    # call service to clean selected room
-    - service: xiaomi_miio.vacuum_clean_segment
-      data:
-        entity_id: vacuum.cl4p_tp
-        # segments should be an array of numbers if more than one room want to be cleaned
-        segments: "{{ target_room }}"
+    - choose:
+        - conditions:
+            - condition: state
+              entity_id: input_select.vacuum_target_room
+              state: Keuken
+          sequence:
+            - service: button.press
+              target:
+                entity_id: button.claptrap_keuken
+        - conditions:
+            - condition: state
+              entity_id: input_select.vacuum_target_room
+              state: Danszaal
+          sequence:
+            - service: button.press
+              target:
+                entity_id: button.claptrap_danszaal
+        - conditions:
+            - condition: state
+              entity_id: input_select.vacuum_target_room
+              state: Zithoek
+          sequence:
+            - service: button.press
+              target:
+                entity_id: button.claptrap_zithoek
+        - conditions:
+            - condition: state
+              entity_id: input_select.vacuum_target_room
+              state: Gang
+          sequence:
+            - service: button.press
+              target:
+                entity_id: button.claptrap_gang
+        - conditions:
+            - condition: state
+              entity_id: input_select.vacuum_target_room
+              state: Inkom
+          sequence:
+            - service: button.press
+              target:
+                entity_id: button.claptrap_inkom
+        - conditions:
+            - condition: state
+              entity_id: input_select.vacuum_target_room
+              state: Waskot
+          sequence:
+            - service: button.press
+              target:
+                entity_id: button.claptrap_waskot
+        - conditions:
+            - condition: state
+              entity_id: input_select.vacuum_target_room
+              state: Wc
+          sequence:
+            - service: button.press
+              target:
+                entity_id: button.claptrap_wc
+    # - alias: Get room id using input select
+    #   variables:
+    #     # get room string from input select
+    #     target_room_selector: input_select.vacuum_target_room
+    #     # map each room number with a string with a dictionary
+    #     room_map:
+    #       Kies kamer: 0
+    #       Waskot: 23
+    #       Keuken: 17
+    #       Danszaal: 18
+    #       Zithoek: 20
+    #       Inkom: 21
+    #       Gang: 16
+    #       Wc: 22
+    #     # get target room to clean
+    #     target_room: "{{ room_map[states(target_room_selector)] | int}}"
+    # # check that one room was selected
+    # - condition: template
+    #   value_template: "{{ target_room != 0 }}"
+    # # call service to clean selected room
+    # - service: xiaomi_miio.vacuum_clean_segment
+    #   data:
+    #     entity_id: vacuum.cl4p_tp
+    #     # segments should be an array of numbers if more than one room want to be cleaned
+    #     segments: "{{ target_room }}"
