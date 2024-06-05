@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from music_assistant.common.models.enums import EventType
 from music_assistant.common.models.event import MassEvent
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from music_assistant.client import MusicAssistantClient
@@ -25,17 +25,12 @@ class MassBaseEntity(Entity):
         self.mass = mass
         self.player_id = player_id
         self._attr_should_poll = False
-        player = mass.players.get_player(player_id)
-        dev_mod = player.device_info.model or player.name
-        model = (
-            f"{dev_man} {dev_mod}"
-            if (dev_man := player.device_info.manufacturer)
-            else dev_mod
-        )
+        player = mass.players.get(player_id)
+        provider = self.mass.get_provider(player.provider)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, player_id)},
-            manufacturer=DEFAULT_NAME,
-            model=model,
+            manufacturer=player.device_info.manufacturer or provider.name,
+            model=player.device_info.model or player.name,
             name=player.display_name,
             configuration_url=mass.server_url,
         )
@@ -58,7 +53,7 @@ class MassBaseEntity(Entity):
     @property
     def player(self) -> Player:
         """Return the Mass Player attached to this HA entity."""
-        player = self.mass.players.get_player(self.player_id)
+        player = self.mass.players.get(self.player_id)
         assert player is not None
         return player
 

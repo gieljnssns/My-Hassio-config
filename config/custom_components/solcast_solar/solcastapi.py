@@ -50,6 +50,9 @@ class ConnectionOptions:
     file_path: str
     tz: timezone
     dampening: dict
+    customhoursensor: int
+    key_estimate: str
+    hard_limit: int
 
 
 class SolcastApi:
@@ -77,6 +80,10 @@ class SolcastApi:
         self._loaded_data = False
         self._serialize_lock = asyncio.Lock()
         self._damp =options.dampening
+        self._customhoursensor = options.customhoursensor
+        self._use_data_field = f"pv_{options.key_estimate}"
+        self._hardlimit = options.hard_limit
+        #self._weather = ""
         
     async def serialize_data(self):
         """Serialize data to file."""
@@ -153,7 +160,7 @@ class SolcastApi:
             sp = self.options.api_key.split(",")
 
             params = {"api_key": sp[0]}
-            _LOGGER.debug(f"SOLCAST - getting usage data from solcast")
+            _LOGGER.debug(f"SOLCAST - getting API limit and usage from solcast")
             async with async_timeout.timeout(60):
                 resp: ClientResponse = await self.aiohttp_session.get(
                     url=f"https://api.solcast.com.au/json/reply/GetUserUsageAllowance", params=params, ssl=False
@@ -166,11 +173,6 @@ class SolcastApi:
                 _LOGGER.debug(f"SOLCAST - sites_usage returned data: {d}")
                 self._api_limit = d.get("daily_limit", None)
                 self._api_used = d.get("daily_limit_consumed", None)
-                # if "daily_limit" in d:
-                #     self._api_limit = d["daily_limit"]
-                #     self._api_used = d["daily_limit_consumed"]
-                # else:
-                #     raise Exception(f"SOLCAST - sites_usage: gathering site data failed. request returned Status code: {status} - Responce: {resp_json}.")
             else:
                 raise Exception(f"SOLCAST - sites_usage: gathering site data failed. request returned Status code: {status} - Responce: {resp_json}.")
             
@@ -185,6 +187,42 @@ class SolcastApi:
         except Exception as e:
             _LOGGER.error("SOLCAST - sites_usage error: %s", traceback.format_exc())
 
+    # async def sites_weather(self):
+    #     """Request rooftop site weather byline via the Solcast API."""
+        
+    #     try:
+    #         if len(self._sites) > 0:
+    #             sp = self.options.api_key.split(",")
+    #             rid = self._sites[0].get("resource_id", None)
+
+    #             params = {"resourceId": rid, "api_key": sp[0]}
+    #             _LOGGER.debug(f"SOLCAST - get rooftop weather byline from solcast")
+    #             async with async_timeout.timeout(60):
+    #                 resp: ClientResponse = await self.aiohttp_session.get(
+    #                     url=f"https://api.solcast.com.au/json/reply/GetRooftopSiteSparklines", params=params, ssl=False
+    #                 )
+    #                 resp_json = await resp.json(content_type=None)
+    #                 status = resp.status
+
+    #             if status == 200:
+    #                 d = cast(dict, resp_json)
+    #                 _LOGGER.debug(f"SOLCAST - sites_weather returned data: {d}")
+    #                 self._weather = d.get("forecast_descriptor", None).get("description", None)
+    #                 _LOGGER.debug(f"SOLCAST - rooftop weather description: {self._weather}")
+    #             else:
+    #                 raise Exception(f"SOLCAST - sites_weather: gathering rooftop weather description failed. request returned Status code: {status} - Responce: {resp_json}.")
+                
+    #     except json.decoder.JSONDecodeError:
+    #         _LOGGER.error("SOLCAST - sites_weather JSONDecodeError.. The rooftop weather description from Solcast is unknown, Solcast site could be having problems")
+    #     except ConnectionRefusedError as err:
+    #         _LOGGER.error("SOLCAST - sites_weather Error.. %s",err)
+    #     except ClientConnectionError as e:
+    #         _LOGGER.error('SOLCAST - sites_weather Connection Error', str(e))
+    #     except asyncio.TimeoutError:
+    #         _LOGGER.error("SOLCAST - sites_weather Connection Error - Timed out connection to solcast server")
+    #     except Exception as e:
+    #         _LOGGER.error("SOLCAST - sites_weather error: %s", traceback.format_exc())
+
     async def load_saved_data(self):
         try:
             if len(self._sites) > 0:
@@ -192,6 +230,7 @@ class SolcastApi:
                     with open(self._filename) as data_file:
                         jsonData = json.load(data_file, cls=JSONDecoder)
                         json_version = jsonData.get("version", 1)
+                        #self._weather = jsonData.get("weather", "unknown")
                         _LOGGER.debug(f"SOLCAST - load_saved_data file exists.. file type is {type(jsonData)}")
                         if json_version == _JSON_VERSION:
                             self._loaded_data = True
@@ -273,6 +312,10 @@ class SolcastApi:
         except Exception:
             return None
 
+    # def get_weather(self):
+    #     """Return weather description"""
+    #     return self._weather
+    
     def get_last_updated_datetime(self) -> dt:
         """Return date time with the data was last updated"""
         return dt.fromisoformat(self._data["last_updated"])
@@ -361,9 +404,29 @@ class SolcastApi:
                 for d in self._data_forecasts
                 if d["period_start"] >= da and d["period_start"] < da + timedelta(hours=1)
             )
-            m = sum(z["pv_estimate"] for z in g) / len(g)
+            m = sum(z[self._use_data_field] for z in g) / len(g)
 
             return int(m * 1000)
+        except Exception as ex:
+            return 0
+        
+    def get_forecast_custom_hour(self, hourincrement) -> int:
+        """Return Custom Sensor Hours forecast for N hours ahead"""
+        try:
+            danow = dt.now(timezone.utc).replace(
+                minute=0, second=0, microsecond=0
+            )
+            da = dt.now(timezone.utc).replace(
+                minute=0, second=0, microsecond=0
+            ) + timedelta(hours=hourincrement)
+            g=[]
+            for d in self._data_forecasts:
+                if d["period_start"] >= danow and d["period_start"] < da:
+                    g.append(d)
+            
+            m = sum(z[self._use_data_field] for z in g)
+
+            return int(m * 500)
         except Exception as ex:
             return 0
 
@@ -374,7 +437,7 @@ class SolcastApi:
             m = min(
                 (z for z in self._data_forecasts), key=lambda x: abs(x["period_start"] - da)
             )
-            return int(m["pv_estimate"] * 1000)
+            return int(m[self._use_data_field] * 1000)
         except Exception as ex:
             return 0.0
 
@@ -388,7 +451,7 @@ class SolcastApi:
                 for d in self._data_forecasts
                 if d["period_start"].astimezone(tz).date() == da
             )
-            m = max(z["pv_estimate"] for z in g)
+            m = max(z[self._use_data_field] for z in g)
             return int(m * 1000)
         except Exception as ex:
             return 0
@@ -404,7 +467,7 @@ class SolcastApi:
                 if d["period_start"].astimezone(tz).date() == da
             )
             #HA strips any TZ info set and forces UTC tz, so dont need to return with local tz info
-            return max((z for z in g), key=lambda x: x["pv_estimate"])["period_start"]
+            return max((z for z in g), key=lambda x: x[self._use_data_field])["period_start"]
         except Exception as ex:
             return None
 
@@ -425,7 +488,7 @@ class SolcastApi:
                 if d["period_start"].astimezone(tz).date() == da.date() and d["period_start"].astimezone(tz) >= da
             )
 
-            return sum(z["pv_estimate"] for z in g) / 2
+            return sum(z[self._use_data_field] for z in g) / 2
         except Exception as ex:
             return 0.0
 
@@ -448,7 +511,7 @@ class SolcastApi:
 
             delta: timedelta = curr["period_start"] - prev["period_start"]
             diff_hours = delta.total_seconds() / 3600
-            ret += (prev["pv_estimate"] + curr["pv_estimate"]) / 2 * diff_hours
+            ret += (prev[self._use_data_field] + curr[self._use_data_field]) / 2 * diff_hours
             needed_delta -= delta
 
         return ret
@@ -471,8 +534,9 @@ class SolcastApi:
             await self.http_data_call(site['resource_id'], site['apikey'], dopast)
 
         self._data["last_updated"] = dt.now(timezone.utc).isoformat()
-        await self.sites_usage()
-        self._data['version'] = _JSON_VERSION
+        #await self.sites_usage()
+        self._data["version"] = _JSON_VERSION
+        #self._data["weather"] = self._weather
         self._loaded_data = True
         
         await self.buildforcastdata()
@@ -495,7 +559,7 @@ class SolcastApi:
             resp_dict = await self.fetch_data("estimated_actuals", 168, site=r_id, apikey=api, cachedname="actuals")
             if not isinstance(resp_dict, dict):
                 _LOGGER.warning("SOLCAST - No data was returned so this WILL cause errors.. either your limit is up, internet down.. what ever the case is it is NOT a problem with the integration, and all other problems of sensor values being wrong will be a seen")
-                raise TypeError(f"resp_dict must be a dict, not {type(resp_dict)}")
+                raise TypeError(f"Solcast API did not return a json object. Returned {resp_dict}")
             
             ae = resp_dict.get("estimated_actuals", None)
             
@@ -524,7 +588,7 @@ class SolcastApi:
 
         resp_dict = await self.fetch_data("forecasts", 168, site=r_id, apikey=api, cachedname="forecasts")
         if not isinstance(resp_dict, dict):
-            raise TypeError(f"resp_dict must be a dict, not {type(resp_dict)}")
+            raise TypeError(f"Solcast API did not return a json object. Returned {resp_dict}")
         
         af = resp_dict.get("forecasts", None)
         if not isinstance(af, list):
@@ -609,6 +673,7 @@ class SolcastApi:
 
                     if status == 200:
                         _LOGGER.debug(f"SOLCAST - API returned data. API Counter incremented from {self._api_used} to {self._api_used + 1}")
+                        self._api_used = self._api_used + 1
                     else:
                         _LOGGER.warning(f"SOLCAST - API returned status {status}. API data  {self._api_used} to {self._api_used + 1}")
                         _LOGGER.warning("This is an error with the data returned from Solcast, not the integration!")
@@ -656,21 +721,21 @@ class SolcastApi:
             lastk = -1
             for v in self._data_forecasts:
                 d = v['period_start'].isoformat()
-                if v['pv_estimate'] == 0.0:
+                if v[self._use_data_field] == 0.0:
                     if lastv > 0.0:
-                        wh_hours[d] = round(v['pv_estimate'] * 500,0)
+                        wh_hours[d] = round(v[self._use_data_field] * 500,0)
                         wh_hours[lastk] = 0.0
                     lastk = d
-                    lastv = v['pv_estimate']
+                    lastv = v[self._use_data_field]
                 else:
                     if lastv == 0.0:
                         #add the last one
                         wh_hours[lastk] = round(lastv * 500,0)
 
-                    wh_hours[d] = round(v['pv_estimate'] * 500,0)
+                    wh_hours[d] = round(v[self._use_data_field] * 500,0)
                     
                     lastk = d
-                    lastv = v['pv_estimate']
+                    lastv = v[self._use_data_field]
         except Exception as e:
             _LOGGER.error("SOLCAST - makeenergydict: %s", traceback.format_exc())
 
@@ -697,17 +762,17 @@ class SolcastApi:
                     if zz.date() < lastday and zz.date() > yesterday:
                         h = f"{zz.hour}"
                         if zz.date() == today:
-                            tally += x["pv_estimate"] * 0.5 * self._damp[h]
-                            
+                            tally += min(x[self._use_data_field] * 0.5 * self._damp[h], self._hardlimit)
+                        
                         itm = next((item for item in _forecasts if item["period_start"] == z), None)
                         if itm:
-                            itm["pv_estimate"] = round(itm["pv_estimate"] + (x["pv_estimate"] * self._damp[h]),4)
-                            itm["pv_estimate10"] = round(itm["pv_estimate10"] + (x["pv_estimate10"] * self._damp[h]),4)
-                            itm["pv_estimate90"] = round(itm["pv_estimate90"] + (x["pv_estimate90"] * self._damp[h]),4)
+                            itm["pv_estimate"] = min(round(itm["pv_estimate"] + (x["pv_estimate"] * self._damp[h]),4), self._hardlimit)
+                            itm["pv_estimate10"] = min(round(itm["pv_estimate10"] + (x["pv_estimate10"] * self._damp[h]),4), self._hardlimit)
+                            itm["pv_estimate90"] = min(round(itm["pv_estimate90"] + (x["pv_estimate90"] * self._damp[h]),4), self._hardlimit)
                         else:    
-                            _forecasts.append({"period_start": z,"pv_estimate": round((x["pv_estimate"]* self._damp[h]),4),
-                                                                "pv_estimate10": round((x["pv_estimate10"]* self._damp[h]),4),
-                                                                "pv_estimate90": round((x["pv_estimate90"]* self._damp[h]),4)})
+                            _forecasts.append({"period_start": z,"pv_estimate": min(round((x["pv_estimate"]* self._damp[h]),4), self._hardlimit),
+                                                                "pv_estimate10": min(round((x["pv_estimate10"]* self._damp[h]),4), self._hardlimit),
+                                                                "pv_estimate90": min(round((x["pv_estimate90"]* self._damp[h]),4), self._hardlimit)})
                         
                 self._data['siteinfo'][s]['tally'] = round(tally, 4)
                         

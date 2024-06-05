@@ -1,7 +1,7 @@
 """
 Sensor component for waste pickup dates from dutch and belgium waste collectors
 Original Author: Pippijn Stortelder
-Current Version: 5.3.2 20240325
+Current Version: 5.3.4 20240531
 20230705 - Added support for Afval3xBeter
 20230822 - Fix icon for papier-pmd
 20230927 - Fix ZRD API
@@ -21,6 +21,8 @@ Current Version: 5.3.2 20240325
 20240216 - Remove unwanted fractions from upcomming sensor
 20240325 - Added support for DeFryskeMarren
 20240325 - Fix spelling mistake in "Eerstvolgende"
+20240414 - Fix deprecation warning for discovery
+20240531 - Sort output of upcomming sensors
 
 Example config:
 Configuration.yaml:
@@ -51,12 +53,13 @@ from homeassistant.const import Platform
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.discovery import async_load_platform, load_platform
 
 from .const import DOMAIN, PLATFORM_SCHEMA, CONF_ID
 from .API import get_wastedata_from_config
 
 
-__version__ = "5.3.2"
+__version__ = "5.3.4"
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,12 +82,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 
         hass.data.setdefault(DOMAIN, {})[conf[CONF_ID]] = data
 
-        await hass.helpers.discovery.async_load_platform(
-            Platform.SENSOR, DOMAIN, {"config": conf}, conf
+        await async_load_platform(
+            hass, Platform.SENSOR, DOMAIN, {"config": conf}, conf
         )
 
-        hass.helpers.discovery.load_platform(
-            Platform.CALENDAR, DOMAIN, {"config": conf}, conf
+        load_platform(
+            hass, Platform.CALENDAR, DOMAIN, {"config": conf}, conf
         )
 
         await data.schedule_update(timedelta())

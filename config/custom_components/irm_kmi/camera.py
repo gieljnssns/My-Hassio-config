@@ -6,7 +6,6 @@ from aiohttp import web
 from homeassistant.components.camera import Camera, async_get_still_stream
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,6 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class IrmKmiRadar(CoordinatorEntity, Camera):
     """Representation of a radar view camera."""
 
+    _attr_attribution = "Weather data from the Royal Meteorological Institute of Belgium meteo.be"
+
     def __init__(self,
                  coordinator: IrmKmiCoordinator,
                  entry: ConfigEntry,
@@ -36,12 +37,7 @@ class IrmKmiRadar(CoordinatorEntity, Camera):
         self.content_type = 'image/svg+xml'
         self._name = f"Radar {entry.title}"
         self._attr_unique_id = entry.entry_id
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer="IRM KMI",
-            name=f"Radar {entry.title}"
-        )
+        self._attr_device_info = coordinator.shared_device_info
 
         self._image_index = False
 

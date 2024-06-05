@@ -103,6 +103,20 @@ async def async_setup_entry(
         if inverter.is_mmppt:
             entities.append(SolarEdgeMMPPTEvents(inverter, config_entry, coordinator))
 
+            for mmppt_unit in inverter.mmppt_units:
+                entities.append(
+                    SolarEdgeDCCurrentMMPPT(mmppt_unit, config_entry, coordinator)
+                )
+                entities.append(
+                    SolarEdgeDCVoltageMMPPT(mmppt_unit, config_entry, coordinator)
+                )
+                entities.append(
+                    SolarEdgeDCPowerMMPPT(mmppt_unit, config_entry, coordinator)
+                )
+                entities.append(
+                    SolarEdgeTemperatureMMPPT(mmppt_unit, config_entry, coordinator)
+                )
+
     for meter in hub.meters:
         entities.append(SolarEdgeDevice(meter, config_entry, coordinator))
         entities.append(Version(meter, config_entry, coordinator))
@@ -921,6 +935,8 @@ class SolarEdgeACEnergy(SolarEdgeSensorBase):
 
 
 class DCCurrent(SolarEdgeSensorBase):
+    """DC Current for a SolarEdge inverter."""
+
     device_class = SensorDeviceClass.CURRENT
     state_class = SensorStateClass.MEASUREMENT
     native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
@@ -964,7 +980,53 @@ class DCCurrent(SolarEdgeSensorBase):
         return abs(self._platform.decoded_model["I_DC_Current_SF"])
 
 
+class SolarEdgeDCCurrentMMPPT(SolarEdgeSensorBase):
+    """DC Current for Synergy MMPPT units."""
+
+    device_class = SensorDeviceClass.CURRENT
+    state_class = SensorStateClass.MEASUREMENT
+    native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
+    icon = "mdi:current-dc"
+
+    @property
+    def unique_id(self) -> str:
+        return (
+            f"{self._platform.inverter.uid_base}_dc_current_mmppt{self._platform.unit}"
+        )
+
+    @property
+    def name(self) -> str:
+        return "DC Current"
+
+    @property
+    def available(self) -> bool:
+        if (
+            self._platform.inverter.decoded_model[self._platform.mmppt_key]["DCA"]
+            == SunSpecNotImpl.INT16
+            or self._platform.inverter.decoded_model["mmppt_DCA_SF"]
+            == SunSpecNotImpl.INT16
+            or self._platform.inverter.decoded_model["mmppt_DCA_SF"]
+            not in SUNSPEC_SF_RANGE
+        ):
+            return False
+
+        return super().available
+
+    @property
+    def native_value(self):
+        return self.scale_factor(
+            self._platform.inverter.decoded_model[self._platform.mmppt_key]["DCA"],
+            self._platform.inverter.decoded_model["mmppt_DCA_SF"],
+        )
+
+    @property
+    def suggested_display_precision(self) -> int:
+        return abs(self._platform.inverter.decoded_model["mmppt_DCA_SF"])
+
+
 class DCVoltage(SolarEdgeSensorBase):
+    """DC Voltage for a SolarEdge inverter."""
+
     device_class = SensorDeviceClass.VOLTAGE
     state_class = SensorStateClass.MEASUREMENT
     native_unit_of_measurement = UnitOfElectricPotential.VOLT
@@ -1003,7 +1065,52 @@ class DCVoltage(SolarEdgeSensorBase):
         return abs(self._platform.decoded_model["I_DC_Voltage_SF"])
 
 
+class SolarEdgeDCVoltageMMPPT(SolarEdgeSensorBase):
+    """DC Voltage for Synergy MMPPT units."""
+
+    device_class = SensorDeviceClass.VOLTAGE
+    state_class = SensorStateClass.MEASUREMENT
+    native_unit_of_measurement = UnitOfElectricPotential.VOLT
+
+    @property
+    def unique_id(self) -> str:
+        return (
+            f"{self._platform.inverter.uid_base}_dc_voltage_mmppt{self._platform.unit}"
+        )
+
+    @property
+    def name(self) -> str:
+        return "DC Voltage"
+
+    @property
+    def available(self) -> bool:
+        if (
+            self._platform.inverter.decoded_model[self._platform.mmppt_key]["DCV"]
+            == SunSpecNotImpl.INT16
+            or self._platform.inverter.decoded_model["mmppt_DCV_SF"]
+            == SunSpecNotImpl.INT16
+            or self._platform.inverter.decoded_model["mmppt_DCV_SF"]
+            not in SUNSPEC_SF_RANGE
+        ):
+            return False
+
+        return super().available
+
+    @property
+    def native_value(self):
+        return self.scale_factor(
+            self._platform.inverter.decoded_model[self._platform.mmppt_key]["DCV"],
+            self._platform.inverter.decoded_model["mmppt_DCV_SF"],
+        )
+
+    @property
+    def suggested_display_precision(self) -> int:
+        return abs(self._platform.inverter.decoded_model["mmppt_DCV_SF"])
+
+
 class DCPower(SolarEdgeSensorBase):
+    """DC Power for a SolarEdge inverter."""
+
     device_class = SensorDeviceClass.POWER
     state_class = SensorStateClass.MEASUREMENT
     native_unit_of_measurement = UnitOfPower.WATT
@@ -1041,7 +1148,51 @@ class DCPower(SolarEdgeSensorBase):
         return abs(self._platform.decoded_model["I_DC_Power_SF"])
 
 
+class SolarEdgeDCPowerMMPPT(SolarEdgeSensorBase):
+    """DC Power for Synergy MMPPT units."""
+
+    device_class = SensorDeviceClass.POWER
+    state_class = SensorStateClass.MEASUREMENT
+    native_unit_of_measurement = UnitOfPower.WATT
+    icon = "mdi:solar-power"
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._platform.inverter.uid_base}_dc_power_mmppt{self._platform.unit}"
+
+    @property
+    def name(self) -> str:
+        return "DC Power"
+
+    @property
+    def available(self) -> bool:
+        if (
+            self._platform.inverter.decoded_model[self._platform.mmppt_key]["DCW"]
+            == SunSpecNotImpl.INT16
+            or self._platform.inverter.decoded_model["mmppt_DCW_SF"]
+            == SunSpecNotImpl.INT16
+            or self._platform.inverter.decoded_model["mmppt_DCW_SF"]
+            not in SUNSPEC_SF_RANGE
+        ):
+            return False
+
+        return super().available
+
+    @property
+    def native_value(self):
+        return self.scale_factor(
+            self._platform.inverter.decoded_model[self._platform.mmppt_key]["DCW"],
+            self._platform.inverter.decoded_model["mmppt_DCW_SF"],
+        )
+
+    @property
+    def suggested_display_precision(self) -> int:
+        return abs(self._platform.inverter.decoded_model["mmppt_DCW_SF"])
+
+
 class HeatSinkTemperature(SolarEdgeSensorBase):
+    """Heat sink temperature for a SolarEdge inverter."""
+
     device_class = SensorDeviceClass.TEMPERATURE
     state_class = SensorStateClass.MEASUREMENT
     native_unit_of_measurement = UnitOfTemperature.CELSIUS
@@ -1077,6 +1228,37 @@ class HeatSinkTemperature(SolarEdgeSensorBase):
     @property
     def suggested_display_precision(self):
         return abs(self._platform.decoded_model["I_Temp_SF"])
+
+
+class SolarEdgeTemperatureMMPPT(SolarEdgeSensorBase):
+    """Temperature for Synergy MMPPT units."""
+
+    device_class = SensorDeviceClass.TEMPERATURE
+    state_class = SensorStateClass.MEASUREMENT
+    native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    suggested_display_precision = 0
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._platform.inverter.uid_base}_tmp_mmppt{self._platform.unit}"
+
+    @property
+    def name(self) -> str:
+        return "Temperature"
+
+    @property
+    def available(self) -> bool:
+        if (
+            self._platform.inverter.decoded_model[self._platform.mmppt_key]["Tmp"]
+            == SunSpecNotImpl.INT16
+        ):
+            return False
+
+        return super().available
+
+    @property
+    def native_value(self):
+        return self._platform.inverter.decoded_model[self._platform.mmppt_key]["Tmp"]
 
 
 class SolarEdgeStatusSensor(SolarEdgeSensorBase):
@@ -1740,7 +1922,8 @@ class SolarEdgeBatteryPower(DCPower):
 class SolarEdgeBatteryEnergyExport(SolarEdgeSensorBase):
     device_class = SensorDeviceClass.ENERGY
     state_class = SensorStateClass.TOTAL_INCREASING
-    native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
+    suggested_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     suggested_display_precision = 3
     icon = "mdi:battery-charging-20"
 
@@ -1780,9 +1963,7 @@ class SolarEdgeBatteryEnergyExport(SolarEdgeSensorBase):
                         if self._platform.allow_battery_energy_reset:
                             self._count = 0
 
-                        return (
-                            self._platform.decoded_model["B_Export_Energy_WH"] * 0.001
-                        )
+                        return self._platform.decoded_model["B_Export_Energy_WH"]
 
                     else:
                         if self._platform.allow_battery_energy_reset:
@@ -1815,7 +1996,8 @@ class SolarEdgeBatteryEnergyExport(SolarEdgeSensorBase):
 class SolarEdgeBatteryEnergyImport(SolarEdgeSensorBase):
     device_class = SensorDeviceClass.ENERGY
     state_class = SensorStateClass.TOTAL_INCREASING
-    native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
+    suggested_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     suggested_display_precision = 3
     icon = "mdi:battery-charging-100"
 
@@ -1855,9 +2037,7 @@ class SolarEdgeBatteryEnergyImport(SolarEdgeSensorBase):
                         if self._platform.allow_battery_energy_reset:
                             self._count = 0
 
-                        return (
-                            self._platform.decoded_model["B_Import_Energy_WH"] * 0.001
-                        )
+                        return self._platform.decoded_model["B_Import_Energy_WH"]
 
                     else:
                         if self._platform.allow_battery_energy_reset:
@@ -1890,7 +2070,8 @@ class SolarEdgeBatteryEnergyImport(SolarEdgeSensorBase):
 class SolarEdgeBatteryMaxEnergy(SolarEdgeSensorBase):
     device_class = SensorDeviceClass.ENERGY_STORAGE
     state_class = SensorStateClass.MEASUREMENT
-    native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
+    suggested_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     suggested_display_precision = 3
 
     @property
@@ -1913,7 +2094,7 @@ class SolarEdgeBatteryMaxEnergy(SolarEdgeSensorBase):
             return None
 
         else:
-            return self._platform.decoded_model["B_Energy_Max"] * 0.001
+            return self._platform.decoded_model["B_Energy_Max"]
 
 
 class SolarEdgeBatteryPowerBase(SolarEdgeSensorBase):
@@ -2027,7 +2208,8 @@ class SolarEdgeBatteryMaxDischargePeakPower(SolarEdgeBatteryPowerBase):
 class SolarEdgeBatteryAvailableEnergy(SolarEdgeSensorBase):
     device_class = SensorDeviceClass.ENERGY_STORAGE
     state_class = SensorStateClass.MEASUREMENT
-    native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
+    suggested_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     suggested_display_precision = 3
 
     @property
@@ -2053,7 +2235,7 @@ class SolarEdgeBatteryAvailableEnergy(SolarEdgeSensorBase):
             return None
 
         else:
-            return self._platform.decoded_model["B_Energy_Available"] * 0.001
+            return self._platform.decoded_model["B_Energy_Available"]
 
 
 class SolarEdgeBatterySOH(SolarEdgeSensorBase):

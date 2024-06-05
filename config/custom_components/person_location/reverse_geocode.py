@@ -41,6 +41,7 @@ from .const import (
     DEFAULT_API_KEY_NOT_SET,
     DOMAIN,
     INTEGRATION_LOCK,
+    INTEGRATION_NAME,
     METERS_PER_KM,
     METERS_PER_MILE,
     MIN_DISTANCE_TRAVELLED_TO_GEOCODE,
@@ -52,6 +53,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+def is_json(myjson):
+  try:
+    json.loads(myjson)
+  except ValueError as e:
+    return False
+  return True
 
 def setup_reverse_geocode(pli):
     """Initialize reverse_geocode service."""
@@ -96,6 +103,136 @@ def setup_reverse_geocode(pli):
         compass_bearing = (initial_bearing + 360) % 360
 
         return compass_bearing
+
+    def _get_waze_driving_miles_and_minutes(
+            target,
+            new_latitude,
+            new_longitude,
+            ):
+        """
+        Figured it out from:
+            https://github.com/home-assistant/core/blob/dev/homeassistant/components/waze_travel_time/sensor.py
+            https://github.com/kovacsbalu/WazeRouteCalculator
+            https://github.com/home-assistant/core/pull/108613/files
+            https://github.com/home-assistant/home-assistant.io/pull/32062
+
+        Updates target.attributes:
+            ATTR_DRIVING_MILES
+            ATTR_DRIVING_MINUTES
+            ATTR_ATTRIBUTION
+
+        May update pli.attributes:
+            "waze_error_count"
+        """
+
+        entity_id = target.entity_id
+        if not pli.configuration["use_waze"]:
+            return
+        if (
+            target.attributes[ATTR_METERS_FROM_HOME]
+            < WAZE_MIN_METERS_FROM_HOME
+        ):
+            target.attributes[
+                ATTR_DRIVING_MILES
+            ] = target.attributes[ATTR_MILES_FROM_HOME]
+            target.attributes[ATTR_DRIVING_MINUTES] = "0"
+            return
+
+        try:
+            _LOGGER.debug(
+                "(" + entity_id + ") Waze calculation"
+            )
+
+            async def async_get_waze_route(
+                    from_location,
+                    to_location,
+                    waze_region,
+                    ):
+                client = WazeRouteCalculator(
+                    region=waze_region,
+                    client=get_async_client(pli.hass),
+                )
+#               route = await client.calc_route_info(
+                routes = await client.calc_routes(
+                    from_location,
+                    to_location,
+                    avoid_toll_roads=True,
+                )
+                _LOGGER.debug(f"Waze route = {routes}")
+
+                if len(routes) < 1:
+                    return 0, 0
+                
+                route = routes[0]
+                return route.duration, route.distance
+
+            from_location = (
+                str(new_latitude) + "," + str(new_longitude)
+            )
+            to_location = (
+                str(pli.attributes["home_latitude"])
+                + ","
+                + str(pli.attributes["home_longitude"])
+            )
+            route_time, route_distance = asyncio.run_coroutine_threadsafe(
+                async_get_waze_route(
+                    from_location,
+                    to_location,
+                    pli.configuration["waze_region"].upper(),
+                ), pli.hass.loop
+            ).result()
+            _LOGGER.debug(
+                "("
+                + entity_id
+                + ") Waze route_distance "
+                + str(route_distance)
+            )  # km
+            route_distance = (
+                route_distance * METERS_PER_KM / METERS_PER_MILE
+            )  # miles
+            if route_distance <= 0:
+                target.attributes[
+                    ATTR_DRIVING_MILES
+                ] = target.attributes[ATTR_MILES_FROM_HOME]
+            elif route_distance >= 100:
+                target.attributes[ATTR_DRIVING_MILES] = str(
+                    round(route_distance, 0)
+                )
+            elif route_distance >= 10:
+                target.attributes[ATTR_DRIVING_MILES] = str(
+                    round(route_distance, 1)
+                )
+            else:
+                target.attributes[ATTR_DRIVING_MILES] = str(
+                    round(route_distance, 2)
+                )
+            _LOGGER.debug(
+                "("
+                + entity_id
+                + ") Waze route_time "
+                + str(route_time)
+            )  # minutes
+            target.attributes[ATTR_DRIVING_MINUTES] = str(
+                round(route_time, 1)
+            )
+            target.attributes[ATTR_ATTRIBUTION] += (
+                '"Data by Waze App. https://waze.com"; '
+            )
+        except Exception as e:
+            _LOGGER.error(
+                "("
+                + entity_id
+                + ") Waze Exception "
+                + type(e).__name__
+                + ": "
+                + str(e)
+            )
+            _LOGGER.debug(traceback.format_exc())
+            pli.attributes["waze_error_count"] += 1
+
+            target.attributes[
+                ATTR_DRIVING_MILES
+            ] = target.attributes[ATTR_MILES_FROM_HOME]
 
     def handle_reverse_geocode(call):
         """
@@ -203,7 +340,8 @@ def setup_reverse_geocode(pli):
                         _LOGGER.debug("TARGET_LOCK obtained")
 
                         target = PERSON_LOCATION_ENTITY(entity_id, pli)
-                        attribution = ""
+                        target.entity_id = entity_id
+                        target.attributes[ATTR_ATTRIBUTION] = ""
 
                         if ATTR_LATITUDE in target.attributes:
                             new_latitude = target.attributes[ATTR_LATITUDE]
@@ -393,7 +531,9 @@ def setup_reverse_geocode(pli):
                                 distance_from_home / METERS_PER_MILE, 1
                             )
 
-                            if speed_during_interval <= 0.5:
+                            if distance_from_home >= 400:
+                                direction = "far away"
+                            elif speed_during_interval <= 0.5:
                                 direction = "stationary"
                             elif old_distance_from_home > distance_from_home:
                                 direction = "toward home"
@@ -472,7 +612,8 @@ def setup_reverse_geocode(pli):
 
                                 if "licence" in osm_decoded:
                                     osm_attribution = '"' + osm_decoded["licence"] + '"'
-                                    attribution += osm_attribution + "; "
+                                    target.attributes[ATTR_ATTRIBUTION] += osm_attribution + "; "
+
                                 else:
                                     osm_attribution = ""
 
@@ -571,7 +712,7 @@ def setup_reverse_geocode(pli):
                                                 locality = component["long_name"]
 
                                         google_attribution = '"powered by Google"'
-                                        attribution += google_attribution + "; "
+                                        target.attributes[ATTR_ATTRIBUTION] += google_attribution + "; "
 
                                         if (
                                             ATTR_GEOCODED
@@ -619,122 +760,131 @@ def setup_reverse_geocode(pli):
                                 mapquest_decoded = {}
                                 mapquest_response = httpx.get(mapquest_url)
                                 mapquest_json_input = mapquest_response.text
-                                _LOGGER.debug(
-                                    "("
-                                    + entity_id
-                                    + ") response - "
-                                    + mapquest_json_input
-                                )
-                                mapquest_decoded = json.loads(mapquest_json_input)
-
-                                mapquest_statuscode = mapquest_decoded["info"][
-                                    "statuscode"
-                                ]
-                                if mapquest_statuscode != 0:
+                                if not is_json(mapquest_json_input):
                                     _LOGGER.error(
-                                        "("
+                                        INTEGRATION_NAME
+                                        + " ("
                                         + entity_id
-                                        + ") mapquest_statuscode = "
-                                        + str(mapquest_statuscode)
-                                        + " messages = "
-                                        + mapquest_decoded["info"]["messages"]
+                                        + ") mapquest response - "
+                                        + mapquest_json_input
                                     )
                                 else:
-                                    if (
-                                        "results" in mapquest_decoded
-                                        and "locations"
-                                        in mapquest_decoded["results"][0]
-                                    ):
-                                        mapquest_location = mapquest_decoded["results"][
-                                            0
-                                        ]["locations"][0]
+                                    _LOGGER.debug(
+                                        "("
+                                        + entity_id
+                                        + ") mapquest response - "
+                                        + mapquest_json_input
+                                    )
+                                    mapquest_decoded = json.loads(mapquest_json_input)
 
-                                        formatted_address = ""
-                                        if "street" in mapquest_location:
-                                            formatted_address += (
-                                                mapquest_location["street"] + ", "
-                                            )
-                                        if "adminArea5" in mapquest_location:  # city
-                                            locality = mapquest_location["adminArea5"]
-                                            formatted_address += locality + ", "
-                                        elif (
-                                            "adminArea4" in mapquest_location
-                                            and "adminArea4Type" in mapquest_location
-                                        ):  # county
-                                            locality = (
-                                                mapquest_location["adminArea4"]
-                                                + " "
-                                                + mapquest_location["adminArea4Type"]
-                                            )
-                                            formatted_address += locality + ", "
-                                        if "adminArea3" in mapquest_location:  # state
-                                            formatted_address += (
-                                                mapquest_location["adminArea3"] + " "
-                                            )
-                                        if "postalCode" in mapquest_location:  # zip
-                                            formatted_address += (
-                                                mapquest_location["postalCode"] + " "
-                                            )
-                                        if (
-                                            "adminArea1" in mapquest_location
-                                            and mapquest_location["adminArea1"] != "US"
-                                        ):  # country
-                                            formatted_address += mapquest_location[
-                                                "adminArea1"
-                                            ]
-
-                                        _LOGGER.debug(
+                                    mapquest_statuscode = mapquest_decoded["info"][
+                                        "statuscode"
+                                    ]
+                                    if mapquest_statuscode != 0:
+                                        _LOGGER.error(
                                             "("
                                             + entity_id
-                                            + ") mapquest formatted_address = "
-                                            + formatted_address
+                                            + ") mapquest_statuscode = "
+                                            + str(mapquest_statuscode)
+                                            + " messages = "
+                                            + mapquest_decoded["info"]["messages"]
                                         )
-                                        target.attributes[
-                                            "MapQuest"
-                                        ] = formatted_address
-
-                                        _LOGGER.debug(
-                                            "("
-                                            + entity_id
-                                            + ") mapquest locality = "
-                                            + locality
-                                        )
-
-                                        mapquest_attribution = (
-                                            '"'
-                                            + mapquest_decoded["info"]["copyright"][
-                                                "text"
-                                            ]
-                                            + '"'
-                                        )
-                                        attribution += mapquest_attribution + "; "
-
+                                    else:
                                         if (
-                                            ATTR_GEOCODED
-                                            in pli.configuration[CONF_CREATE_SENSORS]
+                                            "results" in mapquest_decoded
+                                            and "locations"
+                                            in mapquest_decoded["results"][0]
                                         ):
-                                            target.make_template_sensor(
-                                                "MapQuest",
-                                                [
-                                                    {
-                                                        ATTR_COMPASS_BEARING: compass_bearing
-                                                    },
-                                                    ATTR_LATITUDE,
-                                                    ATTR_LONGITUDE,
-                                                    ATTR_SOURCE_TYPE,
-                                                    ATTR_GPS_ACCURACY,
-                                                    "icon",
-                                                    {"locality": locality},
-                                                    {
-                                                        "location_time": new_location_time.strftime(
-                                                            "%Y-%m-%d %H:%M:%S"
-                                                        )
-                                                    },
-                                                    {
-                                                        ATTR_ATTRIBUTION: mapquest_attribution
-                                                    },
-                                                ],
+                                            mapquest_location = mapquest_decoded["results"][
+                                                0
+                                            ]["locations"][0]
+
+                                            formatted_address = ""
+                                            if "street" in mapquest_location:
+                                                formatted_address += (
+                                                    mapquest_location["street"] + ", "
+                                                )
+                                            if "adminArea5" in mapquest_location:  # city
+                                                locality = mapquest_location["adminArea5"]
+                                                formatted_address += locality + ", "
+                                            elif (
+                                                "adminArea4" in mapquest_location
+                                                and "adminArea4Type" in mapquest_location
+                                            ):  # county
+                                                locality = (
+                                                    mapquest_location["adminArea4"]
+                                                    + " "
+                                                    + mapquest_location["adminArea4Type"]
+                                                )
+                                                formatted_address += locality + ", "
+                                            if "adminArea3" in mapquest_location:  # state
+                                                formatted_address += (
+                                                    mapquest_location["adminArea3"] + " "
+                                                )
+                                            if "postalCode" in mapquest_location:  # zip
+                                                formatted_address += (
+                                                    mapquest_location["postalCode"] + " "
+                                                )
+                                            if (
+                                                "adminArea1" in mapquest_location
+                                                and mapquest_location["adminArea1"] != "US"
+                                            ):  # country
+                                                formatted_address += mapquest_location[
+                                                    "adminArea1"
+                                                ]
+
+                                            _LOGGER.debug(
+                                                "("
+                                                + entity_id
+                                                + ") mapquest formatted_address = "
+                                                + formatted_address
                                             )
+                                            target.attributes[
+                                                "MapQuest"
+                                            ] = formatted_address
+
+                                            _LOGGER.debug(
+                                                "("
+                                                + entity_id
+                                                + ") mapquest locality = "
+                                                + locality
+                                            )
+
+                                            mapquest_attribution = (
+                                                '"'
+                                                + mapquest_decoded["info"]["copyright"][
+                                                    "text"
+                                                ]
+                                                + '"'
+                                            )
+                                            target.attributes[ATTR_ATTRIBUTION] += mapquest_attribution + "; "
+
+                                            if (
+                                                ATTR_GEOCODED
+                                                in pli.configuration[CONF_CREATE_SENSORS]
+                                            ):
+                                                target.make_template_sensor(
+                                                    "MapQuest",
+                                                    [
+                                                        {
+                                                            ATTR_COMPASS_BEARING: compass_bearing
+                                                        },
+                                                        ATTR_LATITUDE,
+                                                        ATTR_LONGITUDE,
+                                                        ATTR_SOURCE_TYPE,
+                                                        ATTR_GPS_ACCURACY,
+                                                        "icon",
+                                                        {"locality": locality},
+                                                        {
+                                                            "location_time": new_location_time.strftime(
+                                                                "%Y-%m-%d %H:%M:%S"
+                                                            )
+                                                        },
+                                                        {
+                                                            ATTR_ATTRIBUTION: mapquest_attribution
+                                                        },
+                                                    ],
+                                                )
 
                             if template != "NONE":
                                 target.attributes["friendly_name"] = template.replace(
@@ -767,109 +917,11 @@ def setup_reverse_geocode(pli):
                                 target.attributes[ATTR_BREAD_CRUMBS] = newBreadCrumb
 
                             # Call WazeRouteCalculator if not at Home:
-                            if not pli.configuration["use_waze"]:
-                                pass
-                            elif (
-                                target.attributes[ATTR_METERS_FROM_HOME]
-                                < WAZE_MIN_METERS_FROM_HOME
-                            ):
-                                target.attributes[
-                                    ATTR_DRIVING_MILES
-                                ] = target.attributes[ATTR_MILES_FROM_HOME]
-                                target.attributes[ATTR_DRIVING_MINUTES] = "0"
-                            else:
-                                try:
-                                    """
-                                    Figure it out from:
-                                    https://github.com/home-assistant/core/blob/dev/homeassistant/components/waze_travel_time/sensor.py
-                                    https://github.com/kovacsbalu/WazeRouteCalculator
-                                    """
-                                    _LOGGER.debug(
-                                        "(" + entity_id + ") Waze calculation"
-                                    )
-
-                                    async def async_get_waze_route (
-                                            from_location,
-                                            to_location,
-                                            waze_region,
-                                        ):
-                                        client = WazeRouteCalculator(
-                                            region=waze_region, 
-                                            client=get_async_client(pli.hass),
-                                        )
-                                        route = await client.calc_route_info(
-                                            from_location,
-                                            to_location,
-                                            avoid_toll_roads=True,
-                                        )
-                                        return route
-                                        
-                                    from_location = (
-                                        str(new_latitude) + "," + str(new_longitude)
-                                    )
-                                    to_location = (
-                                        str(pli.attributes["home_latitude"])
-                                        + ","
-                                        + str(pli.attributes["home_longitude"])
-                                    )
-                                    routeTime, routeDistance = asyncio.run_coroutine_threadsafe(
-                                        async_get_waze_route(
-                                        from_location,
-                                        to_location,
-                                        pli.configuration["waze_region"].upper(),
-                                #        "US",
-                                        ),pli.hass.loop
-                                    ).result()
-                                    _LOGGER.debug(
-                                        "("
-                                        + entity_id
-                                        + ") Waze routeDistance "
-                                        + str(routeDistance)
-                                    )  # km
-                                    routeDistance = (
-                                        routeDistance * METERS_PER_KM / METERS_PER_MILE
-                                    )  # miles
-                                    if routeDistance >= 100:
-                                        target.attributes[ATTR_DRIVING_MILES] = str(
-                                            round(routeDistance, 0)
-                                        )
-                                    elif routeDistance >= 10:
-                                        target.attributes[ATTR_DRIVING_MILES] = str(
-                                            round(routeDistance, 1)
-                                        )
-                                    else:
-                                        target.attributes[ATTR_DRIVING_MILES] = str(
-                                            round(routeDistance, 2)
-                                        )
-                                    _LOGGER.debug(
-                                        "("
-                                        + entity_id
-                                        + ") Waze routeTime "
-                                        + str(routeTime)
-                                    )  # minutes
-                                    target.attributes[ATTR_DRIVING_MINUTES] = str(
-                                        round(routeTime, 1)
-                                    )
-                                    attribution += (
-                                        '"Data by Waze App. https://waze.com"; '
-                                    )
-                                except Exception as e:
-                                    _LOGGER.error(
-                                        "("
-                                        + entity_id
-                                        + ") Waze Exception "
-                                        + type(e).__name__
-                                        + ": "
-                                        + str(e)
-                                    )
-                                    _LOGGER.debug(traceback.format_exc())
-                                    pli.attributes["waze_error_count"] += 1
-
-                                    target.attributes[
-                                        ATTR_DRIVING_MILES
-                                    ] = target.attributes[ATTR_MILES_FROM_HOME]
-
-                        target.attributes[ATTR_ATTRIBUTION] = attribution
+                            _get_waze_driving_miles_and_minutes(
+                                target,
+                                new_latitude,
+                                new_longitude,
+                                )
 
                         target.set_state()
 

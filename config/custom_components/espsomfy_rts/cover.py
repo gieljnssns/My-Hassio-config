@@ -40,13 +40,17 @@ SVC_SET_CURRENT_TILT_POS = "set_current_tilt_position"
 SVC_SET_SUNNY = "set_sunny"
 SVC_SET_WINDY = "set_windy"
 SVC_SEND_COMMAND = "send_command"
+SVC_SEND_STEP_COMMAND = "send_step_command"
 
 KEY_OPEN_CLOSE = "open_close"
 KEY_STOP = "stop"
 KEY_POSITION = "position"
 ATTR_SUNNY = "sunny"
 ATTR_WINDY = "windy"
+ATTR_STEP_SIZE = "step_size"
 ATTR_COMMAND = "command"
+ATTR_DIRECTION = "direction"
+ATTR_REPEAT = "repeat"
 
 ALLOWED_COMMAND = [
     "Up",
@@ -61,7 +65,9 @@ ALLOWED_COMMAND = [
     "StepUp",
     "StepDown",
     "Flag",
-    "SunFlag"
+    "SunFlag",
+    "Favorite",
+    "Stop"
 ]
 
 POSITION_SERVICE_SCHEMA: Final = make_entity_service_schema(
@@ -81,9 +87,11 @@ WINDY_SERVICE_SCHEMA: Final = make_entity_service_schema(
     {vol.Required(ATTR_WINDY): vol.All(vol.Coerce(bool))}
 )
 SEND_COMMAND_SERVICE_SCHEMA: Final = make_entity_service_schema(
-    {vol.Required(ATTR_COMMAND): vol.In(ALLOWED_COMMAND)}
+    {vol.Required(ATTR_COMMAND): vol.In(ALLOWED_COMMAND), vol.Optional(ATTR_REPEAT): vol.Range(min=0, max=50)}
 )
-
+SEND_STEP_COMMAND_SERVICE_SCHEMA: Final = make_entity_service_schema(
+    {vol.Required(ATTR_DIRECTION): vol.In(["Up", "Down"]), vol.Required(ATTR_STEP_SIZE): vol.Range(min=1, max=127), vol.Optional(ATTR_REPEAT): vol.Range(min=0, max=50)}
+)
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -137,6 +145,7 @@ async def async_setup_entry(
         platform.async_register_entity_service(SVC_SET_SUNNY, SUNNY_SERVICE_SCHEMA, "async_set_sunny")
         platform.async_register_entity_service(SVC_SET_WINDY, WINDY_SERVICE_SCHEMA, "async_set_windy")
         platform.async_register_entity_service(SVC_SEND_COMMAND, SEND_COMMAND_SERVICE_SCHEMA, "async_send_command")
+        platform.async_register_entity_service(SVC_SEND_STEP_COMMAND, SEND_STEP_COMMAND_SERVICE_SCHEMA, "async_send_step_command")
 
 
 class ESPSomfyGroup(CoverGroup, ESPSomfyEntity):
@@ -150,12 +159,24 @@ class ESPSomfyGroup(CoverGroup, ESPSomfyEntity):
         self._group_id = data["groupId"]
         self._attr_device_class = CoverDeviceClass.SHADE
         self._linked_shade_ids = []
-
+        self._flip_position = False
+        self._process_individual = False
+        flipped = 0
+        notflipped = 0
         if "linkedShades" in data:
             for linked_shade in data["linkedShades"]:
+                if("shadeType" in linked_shade and int(linked_shade["shadeType"]) == 3):
+                    flipped = flipped + 1
+                elif("flipPosition" in linked_shade and bool(linked_shade["flipPosition"]) == True):
+                    flipped = flipped + 1
+                else:
+                    notflipped = notflipped + 1
                 self._linked_shade_ids.append(int(linked_shade["shadeId"]))
         uuid = f"{controller.unique_id}_group{self._group_id}"
-
+        if(flipped > 0 and notflipped == 0):
+            self._flip_position = True
+        elif(flipped > 0 and notflipped > 0):
+            self._process_individual = True
         entities = entity_registry.async_get(hass)
         shade_ids:list[str] = []
         for entity in async_entries_for_config_entry(entities, self._controller.config_entry_id):
@@ -213,16 +234,40 @@ class ESPSomfyGroup(CoverGroup, ESPSomfyEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._controller.api.open_group(self._group_id)
+        if(self._process_individual == True):
+            await super().async_open_cover(kwargs = kwargs)
+        elif(self._flip_position == True):
+            await self._controller.api.close_group(self._group_id)
+        else:
+            await self._controller.api.open_group(self._group_id)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._controller.api.close_group(self._group_id)
+        if(self._process_individual == True):
+            await super().async_close_cover(kwargs = kwargs)
+        elif(self._flip_position == True):
+            await self._controller.api.open_group(self._group_id)
+        else:
+            await self._controller.api.close_group(self._group_id)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Hold cover."""
         # print(f"Stopping Cover id#{self._shade_id}")
         await self._controller.api.stop_group(self._group_id)
+
+    async def async_send_command(self, **kwargs:Any) -> None:
+        """Sends raw command from SVC"""
+        cmd = {"groupId": self._group_id, "command": kwargs[ATTR_COMMAND]}
+        if(ATTR_REPEAT in kwargs):
+            cmd[ATTR_REPEAT] = kwargs[ATTR_REPEAT]
+        await self._controller.api.group_command(cmd)
+
+    async def async_send_step_command(self, **kwargs:Any) -> None:
+        """Sends a raw step command from the service"""
+        cmd = {"groupId": self._group_id, "command": f"Step{kwargs[ATTR_DIRECTION]}", "stepSize": kwargs[ATTR_STEP_SIZE]}
+        if(ATTR_REPEAT in kwargs):
+            cmd[ATTR_REPEAT] = kwargs[ATTR_REPEAT]
+        await self._controller.api.group_command(cmd)
 
 class ESPSomfyShade(ESPSomfyEntity, CoverEntity):
     """A shade that is associated with a controller"""
@@ -541,6 +586,7 @@ class ESPSomfyShade(ESPSomfyEntity, CoverEntity):
         # print(f"Opening Cover id#{self._shade_id}")
         # This is ridiculous in that we need to invert these
         # if the type is an awning.
+        #print(f"Opening Cover id#{self._shade_id} {self._attr_device_class}")
         if self._attr_device_class == CoverDeviceClass.AWNING:
             await self._controller.api.close_shade(self._shade_id)
         else:
@@ -548,7 +594,7 @@ class ESPSomfyShade(ESPSomfyEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        # print(f"Closing Cover id#{self._shade_id}")
+        #print(f"Closing Cover id#{self._shade_id} {self._attr_device_class}")
         if self._attr_device_class == CoverDeviceClass.AWNING:
             await self._controller.api.open_shade(self._shade_id)
         else:
@@ -594,4 +640,13 @@ class ESPSomfyShade(ESPSomfyEntity, CoverEntity):
 
     async def async_send_command(self, **kwargs:Any) -> None:
         """Sends raw command from SVC"""
-        await self._controller.api.raw_command(self._shade_id, kwargs[ATTR_COMMAND])
+        cmd = {"shadeId": self._shade_id, "command": kwargs[ATTR_COMMAND]}
+        if(ATTR_REPEAT in kwargs):
+            cmd[ATTR_REPEAT] = kwargs[ATTR_REPEAT]
+        await self._controller.api.shade_command(cmd)
+
+    async def async_send_step_command(self, **kwargs:Any) -> None:
+        cmd = {"shadeId": self._shade_id, "command": f"Step{kwargs[ATTR_DIRECTION]}", "stepSize": kwargs[ATTR_STEP_SIZE]}
+        if(ATTR_REPEAT in kwargs):
+            cmd[ATTR_REPEAT] = kwargs[ATTR_REPEAT]
+        await self._controller.api.shade_command(cmd)

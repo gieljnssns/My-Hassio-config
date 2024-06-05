@@ -4,6 +4,7 @@ Custom integration to integrate SunSpec with Home Assistant.
 For more details about this integration, please refer to
 https://github.com/cjne/ha-sunspec
 """
+
 import asyncio
 import logging
 from datetime import timedelta
@@ -142,6 +143,14 @@ class SunSpecDataUpdateCoordinator(DataUpdateCoordinator):
                 data[model_id] = await self.api.async_get_data(model_id)
             self.api.close()
             if not self.entities_added:
+                # for platform in PLATFORMS:
+                #     ConfigEntry.async_create_task(
+                #         self.hass,
+                #         self.hass.config_entries.async_forward_entry_setup(
+                #             self.entry, platform
+                #         ),
+                #     )
+                # self.entities_added = True
                 for platform in PLATFORMS:
                     self.hass.async_add_job(
                         self.hass.config_entries.async_forward_entry_setup(

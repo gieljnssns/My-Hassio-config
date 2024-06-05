@@ -52,6 +52,7 @@ from .const import (
     EVT_UPDPROGRESS,
     EVT_WIFISTRENGTH,
     EVT_ETHERNET,
+    EVT_MEMSTATUS,
     PLATFORMS,
 
 )
@@ -277,7 +278,7 @@ class ESPSomfyController(DataUpdateCoordinator):
             self.ws_onerror,
         )
         self.ws_listener.set_filter(
-            [EVT_CONNECTED, EVT_SHADEADDED, EVT_SHADEREMOVED, EVT_SHADESTATE, EVT_SHADECOMMAND, EVT_GROUPSTATE, EVT_FWSTATUS, EVT_UPDPROGRESS, EVT_WIFISTRENGTH, EVT_ETHERNET]
+            [EVT_CONNECTED, EVT_SHADEADDED, EVT_SHADEREMOVED, EVT_SHADESTATE, EVT_SHADECOMMAND, EVT_GROUPSTATE, EVT_FWSTATUS, EVT_UPDPROGRESS, EVT_WIFISTRENGTH, EVT_ETHERNET, EVT_MEMSTATUS]
         )
         await self.ws_listener.connect()
     async def create_backup(self) -> bool:
@@ -429,6 +430,7 @@ class ESPSomfyAPI:
         self._host = data[CONF_HOST]
         self._sock_url = f"ws://{self._host}:8080"
         self._api_url = f"http://{self._host}:8081"
+        self._config_url = f"http://{self._host}"
         self._config: Any = {}
         self._session = async_get_clientsession(self.hass, verify_ssl=False)
         self._authType = 0
@@ -455,9 +457,10 @@ class ESPSomfyAPI:
         return []
 
     @property
-    def server_id(self) -> str:
+    def server_id(self) -> str | None:
         """Getter for the server id"""
-        return self._config["serverId"]
+        if "serverId" in self._config:
+            return self._config["serverId"]
 
     @property
     def version(self) -> str:
@@ -523,6 +526,9 @@ class ESPSomfyAPI:
         """Get that url used for api reference"""
         return self._api_url
 
+    def get_config_url(self) -> str:
+        return self._config_url
+
     def get_config(self):
         """Return the initial config"""
         return self._config
@@ -552,7 +558,11 @@ class ESPSomfyAPI:
             self._config["checkForUpdate"] = data["checkForUpdate"]
         if "inetAvailable" in data:
             self._config["inetAvailable"] = data["inetAvailable"]
-
+        if cver != new_ver:
+            # print(f"Version: {cver} to {new_ver}")
+            dev_registry = device_registry.async_get(self.hass)
+            if dev := dev_registry.async_get_device(identifiers={(DOMAIN, f"espsomfy_{self.server_id}")}):
+                dev_registry.async_update_device(dev.id, sw_version=new_ver)
         self._config["version"] = new_ver
         v = version_parse(new_ver)
         if (v.major > 2) or (v.major == 2 and v.minor > 2) or (v.major == 2 and v.minor == 2 and v.micro > 0):
@@ -610,7 +620,6 @@ class ESPSomfyAPI:
         return f
     def apply_data(self, data) -> None:
         """Applies the returned data to the configuration"""
-        self.set_firmware(data)
         self._config["serverId"] = data["serverId"]
         self._config["model"] = data["model"]
         if "chipModel" in data:
@@ -644,10 +653,14 @@ class ESPSomfyAPI:
             self._config["permissions"] = data["permissions"]
         elif "permissions" not in self._config:
             self._config["permissions"] = 1
+        if "memory" in data:
+            self._config["memory"] = data["memory"]
         self._needsKey = False
         if self._config["authType"] > 0:
             if self._config["permissions"] != 1:
                 self._needsKey = True
+        self.set_firmware(data)
+
 
     async def discover(self) -> Any | None:
         """Discover the device on the network"""
@@ -740,9 +753,9 @@ class ESPSomfyAPI:
         #print(f"POS ShadeId:{shade_id} Target:{position}")
         await self.shade_command({"shadeId": shade_id, "target": position})
 
-    async def raw_command(self, shade_id: int, command: str):
+    async def raw_command(self, shade_id: int, command: str, repeat: int):
         """Send the command to the shade"""
-        await self.shade_command({"shadeId": shade_id, "command": command})
+        await self.shade_command({"shadeId": shade_id, "command": command, "repeat": repeat})
 
     async def shade_command(self, data):
         """Send commands to ESPSomfyRTS via PUT request"""
@@ -764,9 +777,9 @@ class ESPSomfyAPI:
         """Set the windy condition for the motor"""
         await self.put_command(API_SETSENSOR, {"shadeId": shade_id, "windy": windy})
 
-
     async def put_command(self, command, data):
         """Sends a put command to the device"""
+        #print(f"Sending: {self._api_url}{command}")
         async with self._session.put(
             f"{self._api_url}{command}", json=data) as resp:
             if resp.status == 200:

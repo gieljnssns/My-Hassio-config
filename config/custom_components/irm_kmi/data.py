@@ -12,6 +12,13 @@ class IrmKmiForecast(Forecast):
     text: str | None
 
 
+class IrmKmiRadarForecast(Forecast):
+    """Forecast class to handle rain forecast from the IRM KMI rain radar"""
+    rain_forecast_max: float
+    rain_forecast_min: float
+    might_rain: bool
+
+
 class CurrentWeatherData(TypedDict, total=False):
     """Class to hold the currently observable weather at a given location"""
     condition: str | None
@@ -60,5 +67,7 @@ class ProcessedCoordinatorData(TypedDict, total=False):
     current_weather: CurrentWeatherData
     hourly_forecast: List[Forecast] | None
     daily_forecast: List[IrmKmiForecast] | None
+    radar_forecast: List[Forecast] | None
     animation: RadarAnimationData
     warnings: List[WarningData]
+    pollen: dict

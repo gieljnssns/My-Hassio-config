@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from typing import Any
 
 import voluptuous as vol
@@ -15,6 +16,7 @@ from homeassistant.components.hassio import (
     AddonState,
     is_hassio,
 )
+from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
@@ -310,7 +312,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         self.use_addon = True
-        await install_repository(self.hass)
+        with suppress(HassioAPIError):
+            # ignore when the repo is already installed
+            await install_repository(self.hass)
         addon_info = await self._async_get_addon_info()
 
         if addon_info.state == AddonState.RUNNING:

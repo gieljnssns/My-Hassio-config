@@ -9,9 +9,11 @@
       "user": {
         "title": "Configuration",
         "data": {
+          "zone": "Zone",
           "style": "Style of the radar",
           "dark_mode": "Radar dark mode",
-          "use_deprecated_forecast_attribute": "Use the deprecated forecat attribute"
+          "use_deprecated_forecast_attribute": "Use the deprecated forecat attribute",
+          "language_override": "Language"
         }
       }
     },
@@ -34,13 +36,23 @@
       "options": {
         "do_not_use_deprecated_forecast": "Do not use (recommended)",
         "daily_in_deprecated_forecast": "Use for daily forecast",
-        "hourly_in_use_deprecated_forecast": "Use for hourly forecast"
+        "twice_daily_in_deprecated_forecast": "Use for twice daily forecast",
+        "hourly_in_deprecated_forecast": "Use for hourly forecast"
       }
     },
     "repair_solution": {
       "options": {
         "repair_option_move": "I moved the zone in Benelux",
         "repair_option_delete": "Delete that config entry"
+      }
+    },
+    "language_override": {
+      "options": {
+        "none": "Follow Home Assistant server language",
+        "fr": "French",
+        "nl": "Dutch",
+        "de": "German",
+        "en": "English"
       }
     }
   },
@@ -51,7 +63,8 @@
         "data": {
           "style": "Style of the radar",
           "dark_mode": "Radar dark mode",
-          "use_deprecated_forecast_attribute": "Use the deprecated forecat attribute"
+          "use_deprecated_forecast_attribute": "Use the deprecated forecat attribute",
+          "language_override": "Language"
         }
       }
     }
@@ -71,6 +84,109 @@
           "api_error": "Could not get data from the API",
           "zone_not_exist": "{zone} does not exist",
           "invalid_choice": "The choice is not valid"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_warning": {
+        "name": "Next warning"
+      },
+      "pollen_alder": {
+        "name": "Alder pollen",
+        "state": {
+          "active": "Active",
+          "green": "Green",
+          "yellow": "Yellow",
+          "orange": "Orange",
+          "red": "Red",
+          "purple": "Purple",
+          "none": "None"
+        }
+      },
+      "pollen_ash": {
+        "name": "Ash pollen",
+        "state": {
+          "active": "Active",
+          "green": "Green",
+          "yellow": "Yellow",
+          "orange": "Orange",
+          "red": "Red",
+          "purple": "Purple",
+          "none": "None"
+        }
+      },
+      "pollen_birch": {
+        "name": "Birch pollen",
+        "state": {
+          "active": "Active",
+          "green": "Green",
+          "yellow": "Yellow",
+          "orange": "Orange",
+          "red": "Red",
+          "purple": "Purple",
+          "none": "None"
+        }
+      },
+      "pollen_grasses": {
+        "name": "Grass pollen",
+        "state": {
+          "active": "Active",
+          "green": "Green",
+          "yellow": "Yellow",
+          "orange": "Orange",
+          "red": "Red",
+          "purple": "Purple",
+          "none": "None"
+        }
+      },
+      "pollen_hazel": {
+        "name": "Hazel pollen",
+        "state": {
+          "active": "Active",
+          "green": "Green",
+          "yellow": "Yellow",
+          "orange": "Orange",
+          "red": "Red",
+          "purple": "Purple",
+          "none": "None"
+        }
+      },
+      "pollen_mugwort": {
+        "name": "Mugwort pollen",
+        "state": {
+          "active": "Active",
+          "green": "Green",
+          "yellow": "Yellow",
+          "orange": "Orange",
+          "red": "Red",
+          "purple": "Purple",
+          "none": "None"
+        }
+      },
+      "pollen_oak": {
+        "name": "Oak pollen",
+        "state": {
+          "active": "Active",
+          "green": "Green",
+          "yellow": "Yellow",
+          "orange": "Orange",
+          "red": "Red",
+          "purple": "Purple",
+          "none": "None"
+        }
+      }
+    }
+  },
+  "services": {
+    "get_forecasts_radar": {
+      "name": "Get forecast from the radar",
+      "description": "Get weather forecast from the radar.  Only precipitation is available.",
+      "fields": {
+        "include_past_forecasts": {
+          "name": "Include past forecasts",
+          "description": "Also return forecasts for that are in the past."
         }
       }
     }

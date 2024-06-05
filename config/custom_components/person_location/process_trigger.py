@@ -5,9 +5,9 @@ import string
 from datetime import datetime, timedelta, timezone
 from functools import partial
 
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.const import (
     ATTR_SOURCE_TYPE,
-    SOURCE_TYPE_GPS,
 )
 from homeassistant.components.mobile_app.const import (
     ATTR_VERTICAL_ACCURACY,
@@ -23,7 +23,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers.event import (
     track_point_in_time,
 )
@@ -51,18 +50,18 @@ def setup_process_trigger(pli):
     def call_rest_command_service(personName, newState):
         """(Optionally) notify HomeSeer of the state change."""
 
-        rest_command = ""
-        rest_command = (
-            "homeseer_" + personName.lower() + "_" + newState.lower().replace(" ", "_")
-        )
-        try:
-            pli.hass.services.call("rest_command", rest_command)
-        except ServiceNotFound as e:
-            _LOGGER.debug(
-                "call_rest_command_service Exception %s = %s",
-                type(e).__name__,
-                str(e),
-            )
+    #    rest_command = ""
+    #    rest_command = (
+    #        "homeseer_" + personName.lower() + "_" + newState.lower().replace(" ", "_")
+    #    )
+    #    try:
+    #        pli.hass.services.call("rest_command", rest_command)
+    #    except Exception as e:
+    #        _LOGGER.debug(
+    #            "call_rest_command_service Exception %s = %s",
+    #            type(e).__name__,
+    #            str(e),
+    #        )
 
     def handle_delayed_state_change(
         now, *, entity_id=None, from_state=None, to_state=None, minutes=3
@@ -304,7 +303,7 @@ def setup_process_trigger(pli):
                             trigger.entity_id,
                             target.entity_id,
                         )
-                    elif triggerSourceType == SOURCE_TYPE_GPS:  # gps device?
+                    elif triggerSourceType == SourceType.GPS:  # gps device?
                         if triggerTo != triggerFrom:  # did it change zones?
                             saveThisUpdate = True  # gps changing zones is assumed to be new, correct info
                             _LOGGER.debug(
@@ -503,8 +502,11 @@ def setup_process_trigger(pli):
                         friendly_name_location == "Away"
                     ):  # "<identity> is in <locality>"; add new locality in geocoding
                         template = f"{friendly_name_identity} is in <locality>"
-                        friendly_name = template.replace(
-                            "<locality>", previous_locality
+                        if previous_locality == "?":
+                            friendly_name = f"{friendly_name_identity} is {friendly_name_location}"
+                        else:
+                            friendly_name = template.replace(
+                                "<locality>", previous_locality
                         )
                     else:  # "<identity> is at <name>"; don't add locality
                         friendly_name = (

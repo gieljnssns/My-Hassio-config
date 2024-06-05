@@ -2,34 +2,38 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
+from statistics import mean
 from typing import Any, List, Tuple
 
 import async_timeout
-import pytz
 from homeassistant.components.weather import Forecast
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
-                                                      UpdateFailed)
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    TimestampDataUpdateCoordinator, UpdateFailed)
+from homeassistant.util import dt
+from homeassistant.util.dt import utcnow
 
 from .api import IrmKmiApiClient, IrmKmiApiError
-from .const import CONF_DARK_MODE, CONF_STYLE, DOMAIN
+from .const import CONF_DARK_MODE, CONF_STYLE, DOMAIN, IRM_KMI_NAME
 from .const import IRM_KMI_TO_HA_CONDITION_MAP as CDT_MAP
-from .const import LANGS
 from .const import MAP_WARNING_ID_TO_SLUG as SLUG_MAP
 from .const import OPTION_STYLE_SATELLITE, OUT_OF_BENELUX, STYLE_TO_PARAM_MAP
 from .data import (AnimationFrameData, CurrentWeatherData, IrmKmiForecast,
-                   ProcessedCoordinatorData, RadarAnimationData, WarningData)
+                   IrmKmiRadarForecast, ProcessedCoordinatorData,
+                   RadarAnimationData, WarningData)
+from .pollen import PollenParser
 from .rain_graph import RainGraph
-from .utils import disable_from_config, get_config_value
+from .utils import disable_from_config, get_config_value, preferred_language
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class IrmKmiCoordinator(DataUpdateCoordinator):
+class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
     """Coordinator to update data from IRM KMI"""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
@@ -47,6 +51,12 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
         self._dark_mode = get_config_value(entry, CONF_DARK_MODE)
         self._style = get_config_value(entry, CONF_STYLE)
         self._config_entry = entry
+        self.shared_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry.entry_id)},
+            manufacturer=IRM_KMI_NAME.get(preferred_language(self.hass, self._config_entry)),
+            name=f"{entry.title}"
+        )
 
     async def _async_update_data(self) -> ProcessedCoordinatorData:
         """Fetch data from API endpoint.
@@ -59,7 +69,7 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(60):
                 api_data = await self._api_client.get_forecasts_coord(
                     {'lat': zone.attributes[ATTR_LATITUDE],
                      'long': zone.attributes[ATTR_LONGITUDE]}
@@ -68,7 +78,13 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug(f"Full data: {api_data}")
 
         except IrmKmiApiError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            if self.last_update_success_time is not None \
+                    and self.last_update_success_time - utcnow() < 2.5 * self.update_interval:
+                _LOGGER.warning(f"Error communicating with API for general forecast: {err}. Keeping the old data.")
+                return self.data
+            else:
+                raise UpdateFailed(f"Error communicating with API for general forecast: {err}. "
+                                   f"Last success time is: {self.last_update_success_time}")
 
         if api_data.get('cityName', None) in OUT_OF_BENELUX:
             _LOGGER.error(f"The zone {self._zone} is now out of Benelux and forecast is only available in Benelux."
@@ -106,32 +122,59 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
 
         try:
             images_from_api = await self.download_images_from_api(animation_data, country, localisation_layer_url)
-        except IrmKmiApiError:
-            _LOGGER.warning(f"Could not get images for weather radar")
-            return RadarAnimationData()
+        except IrmKmiApiError as err:
+            _LOGGER.warning(f"Could not get images for weather radar: {err}.  Keep the existing radar data.")
+            return self.data.get('animation', RadarAnimationData()) if self.data is not None else RadarAnimationData()
 
         localisation = images_from_api[0]
         images_from_api = images_from_api[1:]
 
-        lang = self.hass.config.language if self.hass.config.language in LANGS else 'en'
+        lang = preferred_language(self.hass, self._config_entry)
         radar_animation = RadarAnimationData(
             hint=api_data.get('animation', {}).get('sequenceHint', {}).get(lang),
             unit=api_data.get('animation', {}).get('unit', {}).get(lang),
             location=localisation
         )
-        rain_graph = self.create_rain_graph(radar_animation, animation_data, country, images_from_api)
+        rain_graph = await self.create_rain_graph(radar_animation, animation_data, country, images_from_api)
+        print(rain_graph)
         radar_animation['svg_animated'] = rain_graph.get_svg_string()
         radar_animation['svg_still'] = rain_graph.get_svg_string(still_image=True)
         return radar_animation
 
+    async def _async_pollen_data(self, api_data: dict) -> dict:
+        """Get SVG pollen info from the API, return the pollen data dict"""
+        _LOGGER.debug("Getting pollen data from API")
+        svg_url = None
+        for module in api_data.get('module', []):
+            _LOGGER.debug(f"module: {module}")
+            if module.get('type', None) == 'svg':
+                url = module.get('data', {}).get('url', {}).get('en', '')
+                if 'pollen' in url:
+                    svg_url = url
+                    break
+        if svg_url is None:
+            return PollenParser.get_default_data()
+
+        try:
+            _LOGGER.debug(f"Requesting pollen SVG at url {svg_url}")
+            pollen_svg: str = await self._api_client.get_svg(svg_url)
+        except IrmKmiApiError as err:
+            _LOGGER.warning(f"Could not get pollen data from the API: {err}. Keeping the same data.")
+            return self.data.get('pollen', PollenParser.get_unavailable_data()) \
+                if self.data is not None else PollenParser.get_unavailable_data()
+
+        return PollenParser(pollen_svg).get_pollen_data()
+
     async def process_api_data(self, api_data: dict) -> ProcessedCoordinatorData:
         """From the API data, create the object that will be used in the entities"""
         return ProcessedCoordinatorData(
-            current_weather=IrmKmiCoordinator.current_weather_from_data(api_data),
-            daily_forecast=self.daily_list_to_forecast(api_data.get('for', {}).get('daily')),
-            hourly_forecast=IrmKmiCoordinator.hourly_list_to_forecast(api_data.get('for', {}).get('hourly')),
+            current_weather=await IrmKmiCoordinator.current_weather_from_data(api_data),
+            daily_forecast=await self.daily_list_to_forecast(api_data.get('for', {}).get('daily')),
+            hourly_forecast=await IrmKmiCoordinator.hourly_list_to_forecast(api_data.get('for', {}).get('hourly')),
+            radar_forecast=IrmKmiCoordinator.radar_list_to_forecast(api_data.get('animation', {})),
             animation=await self._async_animation_data(api_data=api_data),
-            warnings=self.warnings_from_data(api_data.get('for', {}).get('warning'))
+            warnings=self.warnings_from_data(api_data.get('for', {}).get('warning')),
+            pollen=await self._async_pollen_data(api_data=api_data)
         )
 
     async def download_images_from_api(self,
@@ -148,24 +191,26 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
             if frame.get('uri', None) is not None:
                 coroutines.append(
                     self._api_client.get_image(frame.get('uri'), params={'rs': STYLE_TO_PARAM_MAP[self._style]}))
-        async with async_timeout.timeout(20):
+        async with async_timeout.timeout(60):
             images_from_api = await asyncio.gather(*coroutines)
 
         _LOGGER.debug(f"Just downloaded {len(images_from_api)} images")
         return images_from_api
 
     @staticmethod
-    def current_weather_from_data(api_data: dict) -> CurrentWeatherData:
+    async def current_weather_from_data(api_data: dict) -> CurrentWeatherData:
         """Parse the API data to build a CurrentWeatherData."""
         # Process data to get current hour forecast
         now_hourly = None
         hourly_forecast_data = api_data.get('for', {}).get('hourly')
+        tz = await dt.async_get_time_zone('Europe/Brussels')
+        now = dt.now(time_zone=tz)
         if not (hourly_forecast_data is None
                 or not isinstance(hourly_forecast_data, list)
                 or len(hourly_forecast_data) == 0):
 
             for current in hourly_forecast_data[:2]:
-                if datetime.now().strftime('%H') == current['hour']:
+                if now.strftime('%H') == current['hour']:
                     now_hourly = current
                     break
         # Get UV index
@@ -178,56 +223,73 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
 
         try:
             pressure = float(now_hourly.get('pressure', None)) if now_hourly is not None else None
-        except TypeError:
+        except (TypeError, ValueError):
             pressure = None
 
         try:
             wind_speed = float(now_hourly.get('windSpeedKm', None)) if now_hourly is not None else None
-        except TypeError:
+        except (TypeError, ValueError):
             wind_speed = None
 
         try:
             wind_gust_speed = float(now_hourly.get('windPeakSpeedKm', None)) if now_hourly is not None else None
-        except TypeError:
+        except (TypeError, ValueError):
             wind_gust_speed = None
 
         try:
             temperature = float(api_data.get('obs', {}).get('temp'))
-        except TypeError:
+        except (TypeError, ValueError):
             temperature = None
+
+        try:
+            dir_cardinal = now_hourly.get('windDirectionText', {}).get('en') if now_hourly is not None else None
+            if dir_cardinal == 'VAR' or now_hourly is None:
+                wind_bearing = None
+            else:
+                wind_bearing = (float(now_hourly.get('windDirection')) + 180) % 360
+        except (TypeError, ValueError):
+            wind_bearing = None
 
         current_weather = CurrentWeatherData(
             condition=CDT_MAP.get((api_data.get('obs', {}).get('ww'), api_data.get('obs', {}).get('dayNight')), None),
             temperature=temperature,
             wind_speed=wind_speed,
             wind_gust_speed=wind_gust_speed,
-            wind_bearing=now_hourly.get('windDirectionText', {}).get('en') if now_hourly is not None else None,
+            wind_bearing=wind_bearing,
             pressure=pressure,
             uv_index=uv_index
         )
 
         if api_data.get('country', '') == 'NL':
             current_weather['wind_speed'] = api_data.get('obs', {}).get('windSpeedKm')
-            current_weather['wind_bearing'] = api_data.get('obs', {}).get('windDirectionText', {}).get('en')
+            if api_data.get('obs', {}).get('windDirectionText', {}).get('en') == 'VAR':
+                current_weather['wind_bearing'] = None
+            else:
+                try:
+                    current_weather['wind_bearing'] = (float(api_data.get('obs', {}).get('windDirection')) + 180) % 360
+                except ValueError:
+                    current_weather['wind_bearing'] = None
 
         return current_weather
 
     @staticmethod
-    def hourly_list_to_forecast(data: List[dict] | None) -> List[Forecast] | None:
+    async def hourly_list_to_forecast(data: List[dict] | None) -> List[Forecast] | None:
         """Parse data from the API to create a list of hourly forecasts"""
         if data is None or not isinstance(data, list) or len(data) == 0:
             return None
 
         forecasts = list()
-        day = datetime.now()
+        tz = await dt.async_get_time_zone('Europe/Brussels')
+        day = dt.now(time_zone=tz).replace(hour=0, minute=0, second=0, microsecond=0)
 
-        for f in data:
-            if 'dateShow' in f:
+        for idx, f in enumerate(data):
+            if 'dateShow' in f and idx > 0:
                 day = day + timedelta(days=1)
 
             hour = f.get('hour', None)
             if hour is None:
                 continue
+            day = day.replace(hour=int(hour))
 
             precipitation_probability = None
             if f.get('precipChance', None) is not None:
@@ -237,8 +299,15 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
             if f.get('ww', None) is not None:
                 ww = int(f.get('ww'))
 
+            wind_bearing = None
+            if f.get('windDirectionText', {}).get('en') != 'VAR':
+                try:
+                    wind_bearing = (float(f.get('windDirection')) + 180) % 360
+                except (TypeError, ValueError):
+                    pass
+
             forecast = Forecast(
-                datetime=day.strftime(f'%Y-%m-%dT{hour}:00:00'),
+                datetime=day.isoformat(),
                 condition=CDT_MAP.get((ww, f.get('dayNight', None)), None),
                 native_precipitation=f.get('precipQuantity', None),
                 native_temperature=f.get('temp', None),
@@ -246,7 +315,7 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
                 native_wind_gust_speed=f.get('windPeakSpeedKm', None),
                 native_wind_speed=f.get('windSpeedKm', None),
                 precipitation_probability=precipitation_probability,
-                wind_bearing=f.get('windDirectionText', {}).get('en'),
+                wind_bearing=wind_bearing,
                 native_pressure=f.get('pressure', None),
                 is_daytime=f.get('dayNight', None) == 'd'
             )
@@ -255,34 +324,69 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
 
         return forecasts
 
-    def daily_list_to_forecast(self, data: List[dict] | None) -> List[Forecast] | None:
+    @staticmethod
+    def radar_list_to_forecast(data: dict | None) -> List[IrmKmiRadarForecast] | None:
+        """Create a list of short term forecasts for rain based on the data provided by the rain radar"""
+        if data is None:
+            return None
+        sequence = data.get("sequence", [])
+        ratios = [f['value'] / f['position'] for f in sequence if f['position'] > 0]
+
+        if len(ratios) > 0:
+            ratio = mean(ratios)
+        else:
+            ratio = 0
+
+        forecast = list()
+        for f in sequence:
+            forecast.append(
+                IrmKmiRadarForecast(
+                    datetime=f.get("time"),
+                    native_precipitation=f.get('value'),
+                    rain_forecast_max=round(f.get('positionHigher')*ratio, 2),
+                    rain_forecast_min=round(f.get('positionLower')*ratio, 2),
+                    might_rain=f.get('positionHigher') > 0
+                )
+            )
+        return forecast
+
+    async def daily_list_to_forecast(self, data: List[dict] | None) -> List[Forecast] | None:
         """Parse data from the API to create a list of daily forecasts"""
         if data is None or not isinstance(data, list) or len(data) == 0:
             return None
 
         forecasts = list()
         n_days = 0
+        lang = preferred_language(self.hass, self._config_entry)
+        tz = await dt.async_get_time_zone('Europe/Brussels')
+        now = dt.now(tz)
 
         for (idx, f) in enumerate(data):
             precipitation = None
             if f.get('precipQuantity', None) is not None:
                 try:
                     precipitation = float(f.get('precipQuantity'))
-                except TypeError:
+                except (TypeError, ValueError):
                     pass
 
             native_wind_gust_speed = None
             if f.get('wind', {}).get('peakSpeed') is not None:
                 try:
                     native_wind_gust_speed = int(f.get('wind', {}).get('peakSpeed'))
-                except TypeError:
+                except (TypeError, ValueError):
+                    pass
+
+            wind_bearing = None
+            if f.get('wind', {}).get('dirText', {}).get('en') != 'VAR':
+                try:
+                    wind_bearing = (float(f.get('wind', {}).get('dir')) + 180) % 360
+                except (TypeError, ValueError):
                     pass
 
             is_daytime = f.get('dayNight', None) == 'd'
-
             forecast = IrmKmiForecast(
-                datetime=(datetime.now() + timedelta(days=n_days)).strftime('%Y-%m-%d')
-                if is_daytime else datetime.now().strftime('%Y-%m-%d'),
+                datetime=(now + timedelta(days=n_days)).strftime('%Y-%m-%d') if is_daytime else now.strftime(
+                    '%Y-%m-%d'),
                 condition=CDT_MAP.get((f.get('ww1', None), f.get('dayNight', None)), None),
                 native_precipitation=precipitation,
                 native_temperature=f.get('tempMax', None),
@@ -290,9 +394,9 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
                 native_wind_gust_speed=native_wind_gust_speed,
                 native_wind_speed=f.get('wind', {}).get('speed'),
                 precipitation_probability=f.get('precipChance', None),
-                wind_bearing=f.get('wind', {}).get('dirText', {}).get('en'),
+                wind_bearing=wind_bearing,
                 is_daytime=is_daytime,
-                text=f.get('text', {}).get(self.hass.config.language, ""),
+                text=f.get('text', {}).get(lang, ""),
             )
             # Swap temperature and templow if needed
             if (forecast['native_templow'] is not None
@@ -307,16 +411,17 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
 
         return forecasts
 
-    def create_rain_graph(self,
-                          radar_animation: RadarAnimationData,
-                          api_animation_data: List[dict],
-                          country: str,
-                          images_from_api: Tuple[bytes],
-                          ) -> RainGraph:
+    async def create_rain_graph(self,
+                                radar_animation: RadarAnimationData,
+                                api_animation_data: List[dict],
+                                country: str,
+                                images_from_api: Tuple[bytes],
+                                ) -> RainGraph:
         """Create a RainGraph object that is ready to output animated and still SVG images"""
         sequence: List[AnimationFrameData] = list()
-        tz = pytz.timezone(self.hass.config.time_zone)
-        current_time = datetime.now(tz=tz)
+
+        tz = await dt.async_get_time_zone(self.hass.config.time_zone)
+        current_time = dt.now(time_zone=tz)
         most_recent_frame = None
 
         for idx, item in enumerate(api_animation_data):
@@ -346,22 +451,22 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
                           f"{'satellite' if satellite_mode else 'black' if self._dark_mode else 'white'}.png")
             bg_size = (640, 490)
 
-        return RainGraph(radar_animation, image_path, bg_size,
-                         dark_mode=self._dark_mode,
-                         tz=self.hass.config.time_zone)
+        return await RainGraph(radar_animation, image_path, bg_size, tz=tz, config_dir=self.hass.config.config_dir,
+                               dark_mode=self._dark_mode).build()
 
     def warnings_from_data(self, warning_data: list | None) -> List[WarningData]:
         """Create a list of warning data instances based on the api data"""
         if warning_data is None or not isinstance(warning_data, list) or len(warning_data) == 0:
             return []
 
+        lang = preferred_language(self.hass, self._config_entry)
         result = list()
         for data in warning_data:
             try:
                 warning_id = int(data.get('warningType', {}).get('id'))
                 start = datetime.fromisoformat(data.get('fromTimestamp', None))
                 end = datetime.fromisoformat(data.get('toTimestamp', None))
-            except TypeError | ValueError:
+            except (TypeError, ValueError):
                 # Without this data, the warning is useless
                 continue
 
@@ -370,7 +475,6 @@ class IrmKmiCoordinator(DataUpdateCoordinator):
             except TypeError:
                 level = None
 
-            lang = self.hass.config.language if self.hass.config.language in LANGS else 'en'
             result.append(
                 WarningData(
                     slug=SLUG_MAP.get(warning_id, 'unknown'),

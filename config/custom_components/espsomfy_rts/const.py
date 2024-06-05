@@ -3,7 +3,7 @@
 from homeassistant.const import Platform
 
 
-VERSION = "v2.4.2"
+VERSION = "v2.4.4"
 DOMAIN = "espsomfy_rts"
 MANUFACTURER = "rstrouse"
 API_CONTROLLER = "/controller"
@@ -30,8 +30,10 @@ EVT_FWSTATUS = "fwStatus"
 EVT_UPDPROGRESS = "updateProgress"
 EVT_WIFISTRENGTH = "wifiStrength"
 EVT_ETHERNET = "ethernet"
+EVT_MEMSTATUS = "memStatus"
 
 ATTR_RESTOREFILE = "Restore File"
+ATTR_AVAILABLE_MODES = "???"
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,

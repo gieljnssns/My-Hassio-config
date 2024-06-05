@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import homeassistant.helpers.config_validation as cv
@@ -26,9 +27,11 @@ from homeassistant.helpers.typing import ConfigType
 from .common import validate_name_pattern
 from .const import (
     CONF_CREATE_DOMAIN_GROUPS,
+    CONF_CREATE_ENERGY_SENSOR,
     CONF_CREATE_ENERGY_SENSORS,
     CONF_CREATE_UTILITY_METERS,
     CONF_DISABLE_EXTENDED_ATTRIBUTES,
+    CONF_DISABLE_LIBRARY_DOWNLOAD,
     CONF_ENABLE_AUTODISCOVERY,
     CONF_ENERGY_INTEGRATION_METHOD,
     CONF_ENERGY_SENSOR_CATEGORY,
@@ -128,6 +131,10 @@ CONFIG_SCHEMA = vol.Schema(
                     ): vol.In(ENTITY_CATEGORIES),
                     vol.Optional(
                         CONF_DISABLE_EXTENDED_ATTRIBUTES,
+                        default=False,
+                    ): cv.boolean,
+                    vol.Optional(
+                        CONF_DISABLE_LIBRARY_DOWNLOAD,
                         default=False,
                     ): cv.boolean,
                     vol.Optional(CONF_ENABLE_AUTODISCOVERY, default=True): cv.boolean,
@@ -315,22 +322,42 @@ async def setup_yaml_sensors(
     domain_config: ConfigType,
 ) -> None:
     sensors: list = domain_config.get(CONF_SENSORS, [])
-    sorted_sensors = sorted(
-        sensors,
-        key=lambda item: 1 if CONF_INCLUDE in item else 0,
-    )
-    for sensor_config in sorted_sensors:
+    primary_sensors = []
+    secondary_sensors = []
+
+    for sensor_config in sensors:
         sensor_config.update({DISCOVERY_TYPE: PowercalcDiscoveryType.USER_YAML})
-        hass.async_create_task(
-            async_load_platform(
+
+        if CONF_INCLUDE in sensor_config:
+            secondary_sensors.append(sensor_config)
+        else:
+            primary_sensors.append(sensor_config)
+
+    async def _load_secondary_sensors(_: None) -> None:
+        """Load secondary sensors after primary sensors."""
+        await asyncio.gather(*(
+            hass.async_create_task(async_load_platform(
                 hass,
                 Platform.SENSOR,
                 DOMAIN,
                 sensor_config,
                 config,
-            ),
-        )
+            ))
+            for sensor_config in secondary_sensors
+        ))
 
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _load_secondary_sensors)
+
+    await asyncio.gather(*(
+        hass.async_create_task(async_load_platform(
+            hass,
+            Platform.SENSOR,
+            DOMAIN,
+            sensor_config,
+            config,
+        ))
+        for sensor_config in primary_sensors
+    ))
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Powercalc integration from a config entry."""
@@ -397,6 +424,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         ):
             data[CONF_FIXED].pop(CONF_POWER, None)
         hass.config_entries.async_update_entry(config_entry, data=data, version=2)
+
+    if version == 2:
+        data = {**config_entry.data}
+        if data.get(CONF_SENSOR_TYPE) and CONF_CREATE_ENERGY_SENSOR not in data:
+            data[CONF_CREATE_ENERGY_SENSOR] = True
+        hass.config_entries.async_update_entry(config_entry, data=data, version=3)
 
     return True
 

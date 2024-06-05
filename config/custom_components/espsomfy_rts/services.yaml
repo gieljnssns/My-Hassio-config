@@ -169,8 +169,51 @@ send_command:
               - "StepDown"
               - "Flag"
               - "SunFlag"
+              - "Favorite"
+              - "Stop"
           mode: dropdown
-
+    repeat:
+      required: false
+      name: Repeat
+      description: Number of times the command will be repeated
+      selector:
+        number:
+          min: 0
+          max: 50
+send_step_command:
+  name: Send Step command
+  description: Send a step command with a step size
+  target:
+    entity:
+      integration: espsomfy_rts
+      domain: cover
+  fields:
+    direction:
+      required: true
+      name: Direction
+      description: The direction that the motor will step
+      selector:
+        select:
+          options:
+            - "Up"
+            - "Down"
+    step_size:
+      required: true
+      name: Step Size
+      description: The size of the step with 127 being the largest step
+      selector:
+        number:
+          min: 1
+          max: 127
+      default: 1
+    repeat:
+      required: false
+      name: Repeat
+      description: Number of times the command will be repeated
+      selector:
+        number:
+          min: 0
+          max: 50
 reboot:
   name: Reboot
   description: Reboot the ESPSomfy Device

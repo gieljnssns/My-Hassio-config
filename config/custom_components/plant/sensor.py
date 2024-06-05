@@ -57,9 +57,11 @@ from .const import (
     FLOW_SENSOR_MOISTURE,
     FLOW_SENSOR_TEMPERATURE,
     ICON_CONDUCTIVITY,
+    ICON_DLI,
     ICON_HUMIDITY,
     ICON_ILLUMINANCE,
     ICON_MOISTURE,
+    ICON_PPFD,
     ICON_TEMPERATURE,
     READING_CONDUCTIVITY,
     READING_DLI,
@@ -219,7 +221,8 @@ class PlantCurrentStatus(RestoreSensor):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
 
-        # We do not restore the state for these they are read from the external sensor anyway
+        # We do not restore the state for these.
+        # They are read from the external sensor anyway
         self._attr_native_value = None
         if state:
             if "external_sensor" in state.attributes:
@@ -300,8 +303,8 @@ class PlantCurrentStatus(RestoreSensor):
         if (
             self.external_sensor
             and new_state
-            and new_state is not STATE_UNKNOWN
-            and new_state is not STATE_UNAVAILABLE
+            and new_state.state != STATE_UNKNOWN
+            and new_state.state != STATE_UNAVAILABLE
         ):
             self._attr_native_value = new_state.state
             if ATTR_UNIT_OF_MEASUREMENT in new_state.attributes:
@@ -326,9 +329,6 @@ class PlantCurrentIlluminance(PlantCurrentStatus):
         self._attr_icon = ICON_ILLUMINANCE
         self._external_sensor = config.data[FLOW_PLANT_INFO].get(
             FLOW_SENSOR_ILLUMINANCE
-        )
-        _LOGGER.info(
-            "Added external sensor for %s %s", self.entity_id, self._external_sensor
         )
         self._attr_native_unit_of_measurement = LIGHT_LUX
         super().__init__(hass, config, plantdevice)
@@ -449,7 +449,7 @@ class PlantCurrentPpfd(PlantCurrentStatus):
         self._plant = plantdevice
 
         self._external_sensor = self._plant.sensor_illuminance.entity_id
-        self._attr_icon = "mdi:white-balance-sunny"
+        self._attr_icon = ICON_PPFD
         super().__init__(hass, config, plantdevice)
         self._follow_unit = False
         self.entity_id = async_generate_entity_id(
@@ -538,6 +538,7 @@ class PlantTotalLightIntegral(IntegrationSensor):
             unit_time=UnitOfTime.SECONDS,
         )
         self._unit_of_measurement = UNIT_DLI
+        self._attr_icon = ICON_DLI
         self.entity_id = async_generate_entity_id(
             f"{DOMAIN_SENSOR}.{{}}", self.name, current_ids={}
         )
@@ -597,6 +598,7 @@ class PlantDailyLightIntegral(UtilityMeterSensor):
         )
 
         self._unit_of_measurement = UNIT_DLI
+        self._attr_icon = ICON_DLI
         self._plant = plantdevice
 
     @property

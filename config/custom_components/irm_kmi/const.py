@@ -14,8 +14,8 @@ from homeassistant.components.weather import (ATTR_CONDITION_CLEAR_NIGHT,
 from homeassistant.const import Platform
 
 DOMAIN: Final = 'irm_kmi'
-PLATFORMS: Final = [Platform.WEATHER, Platform.CAMERA, Platform.BINARY_SENSOR]
-CONFIG_FLOW_VERSION = 3
+PLATFORMS: Final = [Platform.WEATHER, Platform.CAMERA, Platform.BINARY_SENSOR, Platform.SENSOR]
+CONFIG_FLOW_VERSION = 5
 
 OUT_OF_BENELUX: Final = ["außerhalb der Benelux (Brussels)",
                          "Hors de Belgique (Bxl)",
@@ -48,12 +48,20 @@ STYLE_TO_PARAM_MAP: Final = {
 CONF_USE_DEPRECATED_FORECAST: Final = 'use_deprecated_forecast_attribute'
 OPTION_DEPRECATED_FORECAST_NOT_USED: Final = 'do_not_use_deprecated_forecast'
 OPTION_DEPRECATED_FORECAST_DAILY: Final = 'daily_in_deprecated_forecast'
-OPTION_DEPRECATED_FORECAST_HOURLY: Final = 'hourly_in_use_deprecated_forecast'
+OPTION_DEPRECATED_FORECAST_TWICE_DAILY: Final = 'twice_daily_in_deprecated_forecast'
+OPTION_DEPRECATED_FORECAST_HOURLY: Final = 'hourly_in_deprecated_forecast'
 
 CONF_USE_DEPRECATED_FORECAST_OPTIONS: Final = [
     OPTION_DEPRECATED_FORECAST_NOT_USED,
     OPTION_DEPRECATED_FORECAST_DAILY,
+    OPTION_DEPRECATED_FORECAST_TWICE_DAILY,
     OPTION_DEPRECATED_FORECAST_HOURLY
+]
+
+CONF_LANGUAGE_OVERRIDE: Final = 'language_override'
+
+CONF_LANGUAGE_OVERRIDE_OPTIONS: Final = [
+    'none', "fr", "nl", "de", "en"
 ]
 
 REPAIR_SOLUTION: Final = "repair_solution"
@@ -133,3 +141,17 @@ MAP_WARNING_ID_TO_SLUG: Final = {
     14: 'thunderstorm_large_rainfall',
     15: 'storm_surge',
     17: 'coldspell'}
+
+POLLEN_NAMES: Final = {'Alder', 'Ash', 'Birch', 'Grasses', 'Hazel', 'Mugwort', 'Oak'}
+
+POLLEN_TO_ICON_MAP: Final = {
+    'alder': 'mdi:tree', 'ash': 'mdi:tree', 'birch': 'mdi:tree', 'grasses': 'mdi:grass', 'hazel': 'mdi:tree',
+    'mugwort': 'mdi:sprout', 'oak': 'mdi:tree'
+}
+
+IRM_KMI_NAME: Final = {
+    'fr': 'Institut Royal Météorologique de Belgique',
+    'nl': 'Koninklijk Meteorologisch Instituut van België',
+    'de': 'Königliche Meteorologische Institut von Belgien',
+    'en': 'Royal Meteorological Institute of Belgium'
+}

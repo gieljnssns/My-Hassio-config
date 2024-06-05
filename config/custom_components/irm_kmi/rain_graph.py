@@ -2,14 +2,21 @@
 
 import base64
 import copy
-from typing import List
+import datetime
+import logging
+import os
+from typing import List, Self
 
-import pytz
+from aiofile import async_open
+from homeassistant.util import dt
 from svgwrite import Drawing
 from svgwrite.animate import Animate
+from svgwrite.utils import font_mimetype
 
 from custom_components.irm_kmi.data import (AnimationFrameData,
                                             RadarAnimationData)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class RainGraph:
@@ -17,8 +24,9 @@ class RainGraph:
                  animation_data: RadarAnimationData,
                  background_image_path: str,
                  background_size: (int, int),
+                 config_dir: str = '.',
                  dark_mode: bool = False,
-                 tz: str = 'UTC',
+                 tz: datetime.tzinfo = dt.get_default_time_zone(),
                  svg_width: float = 640,
                  inset: float = 20,
                  graph_height: float = 150,
@@ -26,14 +34,14 @@ class RainGraph:
                  top_text_y_pos: float = 20,
                  bottom_text_space: float = 50,
                  bottom_text_y_pos: float = 218,
-                 auto=True
                  ):
 
         self._animation_data: RadarAnimationData = animation_data
         self._background_image_path: str = background_image_path
         self._background_size: (int, int) = background_size
+        self._config_dir: str = config_dir
         self._dark_mode: bool = dark_mode
-        self._tz = pytz.timezone(tz)
+        self._tz = tz
         self._svg_width: float = svg_width
         self._inset: float = inset
         self._graph_height: float = graph_height
@@ -56,36 +64,46 @@ class RainGraph:
             raise ValueError("bottom_text_y_pos must be below the graph")
 
         self._dwg: Drawing = Drawing(size=(self._svg_width, self._svg_height), profile='full')
-        self._dwg_save: Drawing
-        self._dwg_animated: Drawing
-        self._dwg_still: Drawing
+        self._dwg_save: Drawing = Drawing()
+        self._dwg_animated: Drawing = Drawing()
+        self._dwg_still: Drawing = Drawing()
 
-        if auto:
-            self.draw_svg_frame()
-            self.draw_hour_bars()
-            self.draw_chances_path()
-            self.draw_data_line()
-            self.write_hint()
-            self.insert_background()
-            self._dwg_save = copy.deepcopy(self._dwg)
+    async def build(self) -> Self:
+        """Build the rain graph by calling all the method in the right order.  Returns self when done"""
+        await self.draw_svg_frame()
+        self.draw_hour_bars()
+        self.draw_chances_path()
+        self.draw_data_line()
+        self.write_hint()
+        await self.insert_background()
+        self._dwg_save = copy.deepcopy(self._dwg)
 
-            self.draw_current_fame_line()
-            self.draw_description_text()
-            self.insert_cloud_layer()
-            self.draw_location()
-            self._dwg_animated = self._dwg
+        self.draw_current_fame_line()
+        self.draw_description_text()
+        self.insert_cloud_layer()
+        self.draw_location()
+        self._dwg_animated = self._dwg
 
-            self._dwg = self._dwg_save
-            idx = self._animation_data['most_recent_image_idx']
-            self.draw_current_fame_line(idx)
-            self.draw_description_text(idx)
-            self.insert_cloud_layer(idx)
-            self.draw_location()
-            self._dwg_still = self._dwg
+        self._dwg = self._dwg_save
+        idx = self._animation_data['most_recent_image_idx']
+        self.draw_current_fame_line(idx)
+        self.draw_description_text(idx)
+        self.insert_cloud_layer(idx)
+        self.draw_location()
+        self._dwg_still = self._dwg
+        return self
 
-    def draw_svg_frame(self):
+    async def draw_svg_frame(self):
         """Create the global area to draw the other items"""
-        self._dwg.embed_font(name="Roboto Medium", filename='custom_components/irm_kmi/resources/roboto_medium.ttf')
+        font_file = os.path.join(self._config_dir, 'custom_components/irm_kmi/resources/roboto_medium.ttf')
+        _LOGGER.debug(f"Opening font file at {font_file}")
+
+        async with async_open(font_file, 'rb') as font:
+            data = await font.read()
+
+        # Need to use the private class method as the public one does not offer an async call
+        # As this is run in the main loop, we cannot afford a blocking open() call
+        self._dwg._embed_font_data("Roboto Medium", data, font_mimetype(font_file))
         self._dwg.embed_stylesheet("""
             .roboto {
                 font-family: "Roboto Medium";
@@ -291,9 +309,10 @@ class RainGraph:
     def get_svg_string(self, still_image: bool = False) -> bytes:
         return self._dwg_still.tostring().encode() if still_image else self._dwg_animated.tostring().encode()
 
-    def insert_background(self):
-        with open(self._background_image_path, 'rb') as f:
-            png_data = base64.b64encode(f.read()).decode('utf-8')
+    async def insert_background(self):
+        bg_image_path = os.path.join(self._config_dir, self._background_image_path)
+        async with async_open(bg_image_path, 'rb') as f:
+            png_data = base64.b64encode(await f.read()).decode('utf-8')
         image = self._dwg.image("data:image/png;base64," + png_data, insert=(0, 0), size=self._background_size)
         self._dwg.add(image)
 

@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
+from croniter import croniter
 from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -53,17 +54,19 @@ DAY_OPTIONS = [
 DEFAULT_DAYS = ["0", "1", "2", "3", "4", "5", "6"]
 
 
-def make_unique_name(name, existing_names):
+def make_unique_name(period, existing_names):
     """Create a unique name with a suffix in case of duplicates."""
-    if name not in existing_names:
-        return name
+    if period not in PREDEFINED_PERIODS:
+        period = "custom"
+    if period not in existing_names:
+        return period
 
     # Find a unique suffix
     suffix = 1
-    while f"{name}_{suffix}" in existing_names:
+    while f"{period}_{suffix}" in existing_names:
         suffix += 1
 
-    return f"{name}_{suffix}"
+    return f"{period}_{suffix}"
 
 
 async def validate_sensor_setup(
@@ -76,17 +79,34 @@ async def validate_sensor_setup(
     sensors: list[dict[str, Any]] = handler.options.setdefault(SENSOR_DOMAIN, [])
     for period in user_input[CONF_PERIODS]:
         sensor = dict(user_input)
+
+        if not validate_period(period):
+            raise SchemaFlowError("invalid_cron")
+
+        sensor[CONF_CRON] = get_cron_expression(period)
+        sensor[CONF_PERIOD] = period
+        del sensor[CONF_PERIODS]
+
         sensor[CONF_UNIQUE_ID] = str(uuid.uuid1())
 
         sensor[CONF_SENSOR_NAME] = make_unique_name(
             period, [item.get(CONF_SENSOR_NAME) for item in sensors]
         )
-        sensor[CONF_CRON] = PREDEFINED_PERIODS[period]
-        sensor[CONF_PERIOD] = period
-        del sensor[CONF_PERIODS]
         sensors.append(sensor)
 
     return {}
+
+def get_cron_expression(period: str) -> str:
+    """Get cron expression ."""
+    if period in PREDEFINED_PERIODS:
+        return PREDEFINED_PERIODS[period]
+    return period
+
+def validate_period(period: str) -> str:
+    """Validate period input."""
+    if period in PREDEFINED_PERIODS:
+        return True
+    return croniter.is_valid(period)
 
 
 async def validate_edit_main_config(
@@ -236,8 +256,8 @@ async def validate_sensor_edit(
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     idx: int = handler.flow_state["_idx"]
-    if handler.options[SENSOR_DOMAIN][idx][CONF_UNIT_OF_MEASUREMENT] != user_input.get(CONF_UNIT_OF_MEASUREMENT):
-        if handler.options[SENSOR_DOMAIN][idx][CONF_DEVICE_CLASS] and user_input.get(CONF_DEVICE_CLASS) is not None:
+    if handler.options[SENSOR_DOMAIN][idx].get(CONF_UNIT_OF_MEASUREMENT) != user_input.get(CONF_UNIT_OF_MEASUREMENT):
+        if handler.options[SENSOR_DOMAIN][idx].get(CONF_DEVICE_CLASS) and user_input.get(CONF_DEVICE_CLASS) is not None:
             raise SchemaFlowError("uom_with_device_class_update")
     handler.options[SENSOR_DOMAIN][idx].update(user_input)
     for key in DATA_SCHEMA_EDIT_SENSOR.schema:
@@ -288,8 +308,7 @@ SENSORS_CONFIG = {
             translation_key="period_selector",
             options=PERIOD_OPTIONS,
             multiple=True,
-            custom_value=False,
-            mode=selector.SelectSelectorMode.LIST,
+            custom_value=True
         )
     ),
     **SENSOR_CONFIG,

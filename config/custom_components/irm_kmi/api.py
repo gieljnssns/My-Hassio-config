@@ -54,6 +54,11 @@ class IrmKmiApiClient:
         r: ClientResponse = await self._api_wrapper(base_url=url, params={} if params is None else params)
         return await r.read()
 
+    async def get_svg(self, url, params: dict | None = None) -> str:
+        """Get SVG as str at the specified url with the parameters"""
+        r: ClientResponse = await self._api_wrapper(base_url=url, params={} if params is None else params)
+        return await r.text()
+
     async def _api_wrapper(
             self,
             params: dict,
@@ -64,9 +69,13 @@ class IrmKmiApiClient:
             headers: dict | None = None,
     ) -> any:
         """Get information from the API."""
+        if headers is None:
+            headers = {'User-Agent': 'github.com/jdejaegh/irm-kmi-ha'}
+        else:
+            headers['User-Agent'] = 'github.com/jdejaegh/irm-kmi-ha'
 
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(60):
                 response = await self._session.request(
                     method=method,
                     url=f"{self._base_url if base_url is None else base_url}{path}",

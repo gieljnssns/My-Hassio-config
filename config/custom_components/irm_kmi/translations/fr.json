@@ -9,9 +9,11 @@
       "user": {
         "title": "Configuration",
         "data": {
+          "zone": "Zone",
           "style": "Style du radar",
           "dark_mode": "Radar en mode sombre",
-          "use_deprecated_forecast_attribute": "Utiliser l'attribut forecat (déprécié)"
+          "use_deprecated_forecast_attribute": "Utiliser l'attribut forecat (déprécié)",
+          "language_override": "Langue"
         }
       }
     },
@@ -34,13 +36,23 @@
       "options": {
         "do_not_use_deprecated_forecast": "Ne pas utiliser (recommandé)",
         "daily_in_deprecated_forecast": "Utiliser pour les prévisions quotidiennes",
-        "hourly_in_use_deprecated_forecast": "Utiliser pour les prévisions horaires"
+        "twice_daily_in_deprecated_forecast": "Utiliser pour les prévisions biquotidiennes",
+        "hourly_in_deprecated_forecast": "Utiliser pour les prévisions horaires"
       }
     },
     "repair_solution": {
       "options": {
         "repair_option_move": "J'ai déplacé la zone dans le Benelux",
         "repair_option_delete": "Supprimer cette configuration"
+      }
+    },
+    "language_override": {
+      "options": {
+        "none": "Langue du serveur Home Assistant",
+        "fr": "Français",
+        "nl": "Néerlandais",
+        "de": "Allemand",
+        "en": "Anglais"
       }
     }
   },
@@ -51,7 +63,8 @@
         "data": {
           "style": "Style du radar",
           "dark_mode": "Radar en mode sombre",
-          "use_deprecated_forecast_attribute": "Utiliser l'attribut forecat (déprécié)"
+          "use_deprecated_forecast_attribute": "Utiliser l'attribut forecat (déprécié)",
+          "language_override": "Langue"
         }
       }
     }
@@ -71,6 +84,109 @@
           "api_error": "Impossible d'obtenir les données depuis l'API",
           "zone_not_exist": "{zone} n'existe pas",
           "invalid_choice": "Choix non valide"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_warning": {
+        "name": "Prochain avertissement"
+      },
+      "pollen_alder": {
+        "name": "Pollen d'aulne",
+        "state": {
+          "active": "Actif",
+          "green": "Vert",
+          "yellow": "Jaune",
+          "orange": "Orange",
+          "red": "Rouge",
+          "purple": "Violet",
+          "none": "Aucun"
+        }
+      },
+      "pollen_ash": {
+        "name": "Pollen de frêne",
+        "state": {
+          "active": "Actif",
+          "green": "Vert",
+          "yellow": "Jaune",
+          "orange": "Orange",
+          "red": "Rouge",
+          "purple": "Violet",
+          "none": "Aucun"
+        }
+      },
+      "pollen_birch": {
+        "name": "Pollen de bouleau",
+        "state": {
+          "active": "Actif",
+          "green": "Vert",
+          "yellow": "Jaune",
+          "orange": "Orange",
+          "red": "Rouge",
+          "purple": "Violet",
+          "none": "Aucun"
+        }
+      },
+      "pollen_grasses": {
+        "name": "Pollen de graminées",
+        "state": {
+          "active": "Actif",
+          "green": "Vert",
+          "yellow": "Jaune",
+          "orange": "Orange",
+          "red": "Rouge",
+          "purple": "Violet",
+          "none": "Aucun"
+        }
+      },
+      "pollen_hazel": {
+        "name": "Pollen de noisetier",
+        "state": {
+          "active": "Actif",
+          "green": "Vert",
+          "yellow": "Jaune",
+          "orange": "Orange",
+          "red": "Rouge",
+          "purple": "Violet",
+          "none": "Aucun"
+        }
+      },
+      "pollen_mugwort": {
+        "name": "Pollen d'armoise",
+        "state": {
+          "active": "Actif",
+          "green": "Vert",
+          "yellow": "Jaune",
+          "orange": "Orange",
+          "red": "Rouge",
+          "purple": "Violet",
+          "none": "Aucun"
+        }
+      },
+      "pollen_oak": {
+        "name": "Pollen de chêne",
+        "state": {
+          "active": "Actif",
+          "green": "Vert",
+          "yellow": "Jaune",
+          "orange": "Orange",
+          "red": "Rouge",
+          "purple": "Violet",
+          "none": "Aucun"
+        }
+      }
+    }
+  },
+  "services": {
+    "get_forecasts_radar": {
+      "name": "Obtenir les prévisions du radar",
+      "description": "Obtenez les prévisions météorologiques depuis le radar. Seules les précipitations sont disponibles.",
+      "fields": {
+        "include_past_forecasts": {
+          "name": "Inclure les prévisions passées",
+          "description": "Retourne également les prévisions qui sont dans le passé."
         }
       }
     }
