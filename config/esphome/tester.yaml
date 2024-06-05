@@ -22,31 +22,173 @@ wifi:
 esphome:
   name: ${devicename}
 
-esp32_ble_tracker:
-  scan_parameters:
-    # We currently use the defaults to ensure Bluetooth
-    # can co-exist with WiFi In the future we may be able to
-    # enable the built-in coexistence logic in ESP-IDF
-    active: true
+# esp32_ble_tracker:
+#   scan_parameters:
+#     # We currently use the defaults to ensure Bluetooth
+#     # can co-exist with WiFi In the future we may be able to
+#     # enable the built-in coexistence logic in ESP-IDF
+#     active: true
 
-bluetooth_proxy:
-  active: true
+# bluetooth_proxy:
+#   active: true
 
-output:
-  - platform: ledc
-    id: motor_forward_pin
-    pin: GPIO5
-    frequency: "1000Hz"
-  - platform: ledc
-    id: motor_reverse_pin
-    pin: GPIO4
-    frequency: "100000Hz"
+i2c:
+  - id: bus_a
+    sda: 21
+    scl: 22
+    scan: true
+    # frequency: 800kHz
 
-fan:
-  - platform: hbridge
-    id: my_fan
-    name: "Living Room Fan"
-    pin_a: motor_forward_pin
-    pin_b: motor_reverse_pin
-    # enable_pin: motor_enable
-    decay_mode: slow   # slow decay mode (coasting) or fast decay (braking).
+mcp23017:
+  - id: 'mcp23017_hub'
+    address: 0x20
+    open_drain_interrupt: true
+
+# Individual outputs
+switch:
+  - platform: gpio
+    name: "MCP23017 Pin A0"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 0
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin A1"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 1
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin A2"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 2
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin A3"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 3
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin A4"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 4
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin A5"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 5
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin A6"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 6
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin A7"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 7
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin B0"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 8
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin B1"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 9
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin B2"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 10
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin B3"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 11
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin B4"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 12
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin B5"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 13
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin B6"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 14
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin B7"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 15
+      mode:
+        output: true
+      inverted: true
+# output:
+#   - platform: ledc
+#     id: motor_forward_pin
+#     pin: GPIO5
+#     frequency: "1000Hz"
+#   - platform: ledc
+#     id: motor_reverse_pin
+#     pin: GPIO4
+#     frequency: "100000Hz"
+
+# fan:
+#   - platform: hbridge
+#     id: my_fan
+#     name: "Living Room Fan"
+#     pin_a: motor_forward_pin
+#     pin_b: motor_reverse_pin
+#     # enable_pin: motor_enable
+#     decay_mode: slow   # slow decay mode (coasting) or fast decay (braking).
