@@ -7,6 +7,15 @@ trigger:
     to: "off"
     for:
       minutes: 10
+condition:
+  - condition: or
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.badkamer_grouped_not_master
+        state: "on"
+      - condition: state
+        entity_id: media_player.mass_badkamer
+        state: "playing"
 action:
   - choose:
       - conditions:

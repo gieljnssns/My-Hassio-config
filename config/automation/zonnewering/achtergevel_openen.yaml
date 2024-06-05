@@ -17,15 +17,20 @@ trigger:
       minutes: 5
 
     # Weather based triggers
-  - platform: numeric_state
-    entity_id: sensor.openweathermap_wind_speed
-    above: 40 #If wind force becomes to high, sunscreen needs to go up
-
+  - platform: template
+    value_template: >
+      {{ states("sensor.windsnelheid") | int(0) > 40 }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.windvlaag") | int(0) > 50 }}
   - platform: numeric_state
     entity_id: sensor.buiten_lichtsterkte
     below: 1000
     for:
       minutes: 5
+
+  - platform: template
+    value_template: >
 
   # - platform: template
   #   value_template: >
@@ -38,14 +43,14 @@ trigger:
       {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
         {{ states("sensor.ba_precipitation_forecast_average") | float > 0.40 }}
       {% else %}
-        {{ states("sensor.openweathermap_rain")  | float > 0.40 }}
+        {{ states("sensor.neerslagverwachting_gemiddeld")  | float > 0.40 }}
       {% endif %}
   - platform: template
     value_template: >
       {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
         {{ states("sensor.ba_precipitation") | float > 0.40 }}
       {% else %}
-        {{ states("sensor.openweathermap_rain")  | float > 0.40 }}
+        {{ states("sensor.neerslagintensiteit")  | float > 0.40 }}
       {% endif %}
 
 condition:

@@ -45,14 +45,12 @@
     #   delay_off:
     #     minutes: 5
 
-    # - name: Afwasmachien staat op
-    #   unique_id: bb4b871e-c1a9-4d81-abb6-f89f07bbd6fb
+    # - name: Boiler temperatuur laag
+    #   unique_id: 59a5bc48-8fe3-478d-87ad-80c0d85b8ff5
     #   state: >
-    #     {{ states("sensor.afwasmachien_vermogen") | float(0) >= 3 }}
-    #   delay_on:
-    #     minutes: 2
+    #     {{ states("sensor.thermostaat") | float(0) <= 42.5 }}
     #   delay_off:
-    #     minutes: 5
+    #     minutes: 50
 
     - name: Huawei has power
       unique_id: 57543201-3292-4817-97ad-3058f1184bf9

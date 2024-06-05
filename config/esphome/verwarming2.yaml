@@ -1,0 +1,166 @@
+substitutions:
+  devicename: verwarming2
+  upper_devicename: verwarming
+  ssid: !secret ssid
+  manual_ip: 192.168.79.162
+
+esp32:
+  board: esp32dev
+  # framework:
+  #   type: arduino
+  framework:
+    type: esp-idf
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+wifi:
+  # ...
+  power_save_mode: light
+
+esphome:
+  name: ${devicename}
+
+# esp32_ble_tracker:
+#   scan_parameters:
+#     # We currently use the defaults to ensure Bluetooth
+#     # can co-exist with WiFi In the future we may be able to
+#     # enable the built-in coexistence logic in ESP-IDF
+#     active: true
+
+# bluetooth_proxy:
+#   active: true
+
+# ethernet:
+#   type: W5500
+#   clk_pin: GPIO14
+#   mosi_pin: GPIO13
+#   miso_pin: GPIO12
+#   cs_pin: GPIO15
+#   interrupt_pin: GPIO35
+#   reset_pin: GPIO16
+  # manual_ip:
+  #   static_ip: ${manual_ip}
+  #   gateway: 192.168.79.1
+  #   subnet: 255.255.255.0
+  #   dns1: 1.1.1.1
+  #   dns2: 8.8.8.8
+  # on_disconnect:
+  #   then:
+  #     - delay: 5min
+  #     - if:
+  #         condition:
+  #           binary_sensor.is_off: connected
+  #         then:
+  #           - switch.toggle: restart_device
+
+i2c:
+  - sda: 21
+    scl: 22
+    scan: true
+    id: bus_a
+  # - id: bus_b
+  #   sda: 14
+  #   scl: 15
+  #   scan: true
+
+sensor:
+  - platform: dht
+    pin: 32
+    model: DHT22
+    temperature:
+      accuracy_decimals: 1
+      name: "Waskot temperatuur"
+    humidity:
+      accuracy_decimals: 1
+      name: "Waskot luchtvochtigheid"
+    update_interval: 60s
+
+pcf8574:
+  - id: 'pcf8575_hub'
+    address: 0x20
+    pcf8575: true
+    i2c_id: bus_a
+
+# Individual outputs
+switch:
+  - platform: gpio
+    pin:
+      pcf8574: pcf8575_hub
+      number: 0
+      mode:
+        output: true
+      inverted: true
+    name: "Reserve"
+    restore_mode: RESTORE_DEFAULT_OFF
+  
+  - platform: gpio
+    pin:
+      pcf8574: pcf8575_hub
+      number: 1
+      mode:
+        output: true
+      inverted: true
+    name: "Slaapkamer ${upper_devicename}"
+    restore_mode: RESTORE_DEFAULT_OFF
+  
+  - platform: gpio
+    pin:
+      pcf8574: pcf8575_hub
+      number: 2
+      mode:
+        output: true
+      inverted: true
+    name: "Badkamer ${upper_devicename}"
+    restore_mode: RESTORE_DEFAULT_OFF
+  
+  - platform: gpio
+    pin:
+      pcf8574: pcf8575_hub
+      number: 3
+      mode:
+        output: true
+      inverted: true
+    name: "Verluchting"
+    restore_mode: RESTORE_DEFAULT_OFF
+  
+  - platform: gpio
+    pin:
+      pcf8574: pcf8575_hub
+      number: 4
+      mode:
+        output: true
+      inverted: true
+    name: "Bureau ${upper_devicename}"
+    restore_mode: RESTORE_DEFAULT_OFF
+  
+  - platform: gpio
+    pin:
+      pcf8574: pcf8575_hub
+      number: 5
+      mode:
+        output: true
+      inverted: true
+    name: "Slaapkamer Noor ${upper_devicename}"
+    restore_mode: RESTORE_DEFAULT_OFF
+  
+  - platform: gpio
+    pin:
+      pcf8574: pcf8575_hub
+      number: 6
+      mode:
+        output: true
+      inverted: true
+    name: "Wc ${upper_devicename}"
+    restore_mode: RESTORE_DEFAULT_OFF
+  
+  - platform: gpio
+    pin:
+      pcf8574: pcf8575_hub
+      number: 7
+      mode:
+        output: true
+      inverted: true
+    name: "Slaapkamer Fien ${upper_devicename}"
+    restore_mode: RESTORE_DEFAULT_OFF

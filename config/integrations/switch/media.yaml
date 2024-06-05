@@ -27,6 +27,57 @@
           target:
             entity_id: media_player.mass_badkamer
       icon_template: mdi:music-box-multiple
+    living2keuken:
+      unique_id: 58adb0f2-d645-40a3-9544-5211bedcfaed
+      value_template: >
+        {{ state_attr('media_player.mass_living_2', 'group_leader') | string == 
+          "RINCON_5CAAFD0F5D3C01400" | string }}
+      turn_on:
+        - service: media_player.join
+          data:
+            group_members:
+              - media_player.mass_living_2
+          target:
+            entity_id: media_player.mass_keuken
+      turn_off:
+        - service: media_player.unjoin
+          target:
+            entity_id: media_player.mass_living_2
+      icon_template: mdi:music-box-multiple
+    2c2keuken:
+      unique_id: 3f7394eb-6b95-4e89-9b04-7bdcd88b090d
+      value_template: >
+        {{ state_attr('media_player.mass_2c', 'group_leader') | string == 
+          "RINCON_5CAAFD0F5D3C01400" | string }}
+      turn_on:
+        - service: media_player.join
+          data:
+            group_members:
+              - media_player.mass_2c
+          target:
+            entity_id: media_player.mass_keuken
+      turn_off:
+        - service: media_player.unjoin
+          target:
+            entity_id: media_player.mass_2c
+      icon_template: mdi:music-box-multiple
+    move2keuken:
+      unique_id: 13326cd4-33f1-40d4-9192-865bea3544ce
+      value_template: >
+        {{ state_attr('media_player.mass_move', 'group_leader') | string == 
+          "RINCON_5CAAFD0F5D3C01400" | string }}
+      turn_on:
+        - service: media_player.join
+          data:
+            group_members:
+              - media_player.mass_move
+          target:
+            entity_id: media_player.mass_keuken
+      turn_off:
+        - service: media_player.unjoin
+          target:
+            entity_id: media_player.mass_move
+      icon_template: mdi:music-box-multiple
     incognito:
       unique_id: 5a6ddcd0-8510-48bb-85c9-97900d867c70
       turn_on:

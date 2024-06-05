@@ -7,9 +7,9 @@ trigger:
   - platform: time
     at: "01:36:00"
     id: "tune"
-  # - platform: time
-  #   at: "06:02:00"
-  #   id: "prediction"
+  - platform: time
+    at: "06:02:00"
+    id: "prediction"
   - platform: time_pattern
     minutes: /10
     id: day
@@ -54,9 +54,9 @@ action:
           #     - mon
         sequence:
           - service: rest_command.forecast_model_fit_load_zonder_wp
-          - service: persistent_notification.create
-            data:
-              message: Forecast model fit
+          # - service: persistent_notification.create
+          #   data:
+          #     message: Forecast model fit
       - conditions:
           - condition: trigger
             id: tune
@@ -66,9 +66,9 @@ action:
           #     - mon
         sequence:
           - service: rest_command.forecast_model_tune_load_zonder_wp
-          - service: persistent_notification.create
-            data:
-              message: Forecast model tune
+          # - service: persistent_notification.create
+          #   data:
+          #     message: Forecast model tune
       - conditions:
           - condition: trigger
             id: start
@@ -77,14 +77,23 @@ action:
           # - delay:
           #     seconds: 40
           - service: rest_command.publish_data
-      # - conditions:
-      #     - condition: trigger
-      #       id: prediction
-      #   sequence:
-      #     - service: rest_command.predict_heating
-      #     - delay:
-      #         seconds: 4
-      #     - service: rest_command.predict_heating_elasticnet
-      #     - delay:
-      #         seconds: 4
-      #     - service: rest_command.predict_heating_kneighborsregressor
+      - conditions:
+          - condition: trigger
+            id: prediction
+        sequence:
+          - service: rest_command.fit_heating_hours
+          - delay:
+              seconds: 14
+          - service: rest_command.predict_heating_hours
+          - delay:
+              seconds: 4
+          - service: rest_command.fit_heating_hours_gradientboosting
+          - delay:
+              seconds: 14
+          - service: rest_command.predict_heating_hours_gradientboosting
+          - delay:
+              seconds: 4
+          - service: rest_command.fit_heating_hours_adaboost
+          - delay:
+              seconds: 14
+          - service: rest_command.predict_heating_hours_adaboost

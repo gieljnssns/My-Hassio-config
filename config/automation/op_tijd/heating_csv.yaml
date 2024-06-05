@@ -20,7 +20,10 @@ action:
   #       {% set csv = dd,inside,outside,hour,kwhdd,hourdd,solar_total,solar_total_yesterday,solar %}
   #         {{csv | replace(" ", "") | replace("(", "") | replace(")", "") }}
 
-  - service: notify.prediction
+  - service: notify.send_message
+    # - service: notify.prediction
+    target:
+      entity_id: notify.prediction
     data:
       message: >
         {% set dd = states('sensor.degree_day_daily') |float %}
@@ -45,7 +48,10 @@ action:
       # {% set csv = dd,solar,verbruik_zonder_verwarming,hourdd,inside,outside,hour,kwhdd,solar_total,verwarming_total,verwarming,verbruik_total,verbruik %}
       #   ,{{csv | replace(" ", "") | replace("(", "") | replace(")", "") }}
 
-  - service: notify.prediction_share
+  - service: notify.send_message
+    # - service: notify.prediction_share
+    target:
+      entity_id: notify.prediction_share
     data:
       message: >
         {% set dd = states('sensor.degree_day_daily') |float %}

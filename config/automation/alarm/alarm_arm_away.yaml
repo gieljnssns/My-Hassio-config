@@ -90,13 +90,35 @@ action:
     entity_id: alarm_control_panel.ha_alarm
     data:
       code: !secret alarm_code
-  - service: media_player.media_pause
-    entity_id: media_player.mass_keuken
-  - delay:
-      seconds: 5
-  - service: media_player.media_pause
-    entity_id: media_player.mass_badkamer
-  - delay:
-      seconds: 5
-  - service: media_player.media_pause
-    entity_id: media_player.mass_living_2
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: media_player.mass_keuken
+            state: playing
+        sequence:
+          - service: media_player.media_pause
+            entity_id: media_player.mass_keuken
+      - conditions:
+          - condition: state
+            entity_id: media_player.mass_badkamer
+            state: playing
+        sequence:
+          - service: media_player.media_pause
+            entity_id: media_player.mass_badkamer
+      - conditions:
+          - condition: state
+            entity_id: media_player.mass_living_2
+            state: playing
+        sequence:
+          - service: media_player.media_pause
+            entity_id: media_player.mass_living_2
+  # - service: media_player.media_pause
+  #   entity_id: media_player.mass_keuken
+  # - delay:
+  #     seconds: 5
+  # - service: media_player.media_pause
+  #   entity_id: media_player.mass_badkamer
+  # - delay:
+  #     seconds: 5
+  # - service: media_player.media_pause
+  #   entity_id: media_player.mass_living_2

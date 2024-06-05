@@ -184,7 +184,7 @@ sensor:
       oversampling: 1x
     address: 0x76
     i2c_id: bus_a
-    update_interval: 30s
+    update_interval: 60s
 
 binary_sensor:
   - platform: ld2410
@@ -194,4 +194,21 @@ binary_sensor:
       name: ${upper_devicename} Moving Target
     has_still_target:
       name: ${upper_devicename} Still Target
-    
+  
+  - platform: template
+    name: ${upper_devicename} pir delay
+    device_class: motion
+    lambda: |-
+      if (id(pir).state) {
+        return true;
+      } else {
+        return false;
+      }
+    filters:
+      - delayed_off: 60s
+
+  - platform: gpio
+    pin: GPIO19
+    name: ${upper_devicename} pir
+    id: pir
+    device_class: motion

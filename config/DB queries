@@ -1,4 +1,4 @@
--- #Modified query for states:
+#Modified query for states:
 
 SELECT
   COUNT(*) AS cnt,
@@ -10,7 +10,7 @@ GROUP BY states_meta.entity_id
 ORDER BY cnt DESC
 
 
--- #Modified query for Events:
+#Modified query for Events:
 
 SELECT
   COUNT(*) as cnt,
@@ -21,7 +21,7 @@ INNER JOIN event_types ON events.event_type_id = event_types.event_type_id
 GROUP BY event_types.event_type
 ORDER BY cnt DESC
 
--- # Statistcs
+# Statistcs
 SELECT
   statistics_meta.statistic_id,
   count(*) cnt
@@ -35,39 +35,7 @@ GROUP BY
 ORDER BY
   cnt DESC;
 
--- # events in bytes met attr
-SELECT 
-  COUNT(event_id) AS cnt, 
-  COUNT(event_id) * 100 / (
-    SELECT 
-      COUNT(event_id) 
-    FROM 
-      events
-  ) AS cnt_pct, 
-  SUM(
-    LENGTH(event_data.shared_data)
-  ) AS bytes, 
-  SUM(
-    LENGTH(event_data.shared_data)
-  ) * 100 / (
-    SELECT 
-      SUM(
-        LENGTH(event_data.shared_data)
-      ) 
-    FROM 
-      events
-  ) AS bytes_pct, 
-  event_types.event_type 
-FROM 
-  events 
-LEFT JOIN event_data ON (events.data_id=event_data.data_id)
-LEFT JOIN event_types ON (events.event_type_id=event_types.event_type_id)
-GROUP BY 
-  events.event_type_id
-ORDER BY 
-  cnt DESC
-
--- # states in bytes met attr
+# in bytes met attr
 SELECT 
   COUNT(state_id) AS cnt, 
   COUNT(state_id) * 100 / (
@@ -99,7 +67,7 @@ GROUP BY
 ORDER BY 
   cnt DESC
 
--- # in MB met attr
+# in MB met attr
 SELECT
     ROUND(SUM(LENGTH(shared_attrs) / (1024.0 * 1024.0)), 2) AS attrs_size_mb,
     ROUND((SUM(LENGTH(shared_attrs) / (1024.0 * 1024.0)) * 100) / (SELECT SUM(LENGTH(shared_attrs) / (1024.0 * 1024.0)) FROM state_attributes), 2) AS size_pct,    
@@ -116,20 +84,3 @@ GROUP BY
     states_meta.entity_id
 ORDER BY 
     attrs_size_mb DESC;
-
--- # events older then 10 days
-SELECT COUNT(*)
-FROM events
-WHERE time_fired_ts < strftime('%s', 'now', '-10 days');
-
--- # delete events older then 10 days
-DELETE FROM event_data
-WHERE EXISTS (
-    SELECT 1
-    FROM events
-    WHERE event_data.data_id = events.event_id
-    AND events.time_fired_ts < strftime('%s', 'now', '-10 days')
-);
-
-DELETE FROM events
-WHERE time_fired_ts < strftime('%s', 'now', '-10 days');

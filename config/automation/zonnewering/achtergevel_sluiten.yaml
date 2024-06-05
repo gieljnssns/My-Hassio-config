@@ -24,39 +24,27 @@ condition:
     #   above: 10000
 
     # Weather based conditions
-    - condition: numeric_state
-      entity_id: sensor.openweathermap_wind_speed
-      below: 40 # Wind strenght - I still have to tune this value
-    # - condition: or
-    #   conditions:
-    #   - condition: numeric_state
-    #     entity_id: sensor.ba_precipitation_forecast_average
-    #     below: 0.15 # Rain the next 15 min
-    #   - condition: numeric_state
-    #     entity_id: sensor.openweathermap_rain
-    #     below: 0.15
+    - condition: template
+      value_template: >
+        {{ states("sensor.windsnelheid") | int(0) < 40 }}
+    - condition: template
+      value_template: >
+        {{ states("sensor.windvlaag") | int(0) < 50 }}
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
           {{ states("sensor.ba_precipitation_forecast_average") | float < 0.15 }}
         {% else %}
-          {{ states("sensor.openweathermap_rain")  | float < 0.15 }}
+          {{ states("sensor.neerslagverwachting_gemiddeld")  | float < 0.15 }}
         {% endif %}
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
           {{ states("sensor.ba_precipitation") | float < 0.15 }}
         {% else %}
-          {{ states("sensor.openweathermap_rain")  | float < 0.15 }}
+          {{ states("sensor.neerslagintensiteit")  | float < 0.15 }}
         {% endif %}
-    # - condition: or
-    #   conditions:
-    #   - condition: numeric_state
-    #     entity_id: sensor.ba_precipitation
-    #     below: 0.15 # Rain
-    #   - condition: numeric_state
-    #     entity_id: sensor.openweathermap_rain
-    #     below: 0.15
+
     - condition: numeric_state
       entity_id: sensor.max_uv_index
       above: 3 # This indicates direct sunlight on my location (as in: not cloudy)
@@ -68,39 +56,22 @@ condition:
     - condition: numeric_state
       entity_id: sensor.gemiddelde_temp_beneden
       above: 22 # only if indoor temperature is above x then allowed to roll out
-    # - condition: numeric_state
-    #   entity_id: sensor.dark_sky_daytime_high_temperature_0d
-    #   above: 22
+
     - condition: template
       value_template: >
-        {{ ((state_attr("weather.openweathermap", 'forecast')[0]['temperature'] +
-          state_attr("weather.openweathermap", 'forecast')[1]['temperature'] +
-          state_attr("weather.openweathermap", 'forecast')[2]['temperature'] +
-          state_attr("weather.openweathermap", 'forecast')[3]['temperature'] +
-          state_attr("weather.openweathermap", 'forecast')[4]['temperature']) / 5) > 19 }}
+        {{ states("sensor.max_temperatuur_buiten_voorspelling_12u") | float(0) > 21 }}
 
     # Time based conditions
     - condition: template
       value_template: "{{ now().month > 3 }}" # Starting April
     - condition: template
       value_template: "{{ now().month < 10 }}" # Ending October
-    # - condition: template
-    #   value_template: "{{ as_local(states.sensor.time.last_changed).month > 3 }}" # Starting April
-    # - condition: template
-    #   value_template: "{{ as_local(states.sensor.time.last_changed).month < 10 }}" # Ending October
-    # - condition: template
-    #   value_template: >
-    #     {{  is_state('input_boolean.keuken_1_closed', 'off') or
-    #         is_state('input_boolean.keuken_2_closed', 'off') or
-    #         is_state('input_boolean.slaapkamer_closed', 'off')  }}
 
     # No others screens are closing
     - condition: state
       entity_id: script.zijgevel_sluiten
       state: "off"
-    # - condition: state
-    #   entity_id: script.zonnetent_my
-    #   state: "off"
+
     - condition: state
       entity_id: input_boolean.achtergevel_closed
       state: "off"
@@ -116,9 +87,3 @@ condition:
 
 action:
   - service: script.achtergevel_sluiten
-  # - service: notify.mobile_app_gphone
-  #   data:
-  #     message: "Het zonnescherm achtergevel gesloten"
-  # - delay:
-  #     minutes: 5
-  # - service: script.achtergevel_sluiten

@@ -4,8 +4,8 @@ trigger:
   - platform: numeric_state
     entity_id: sensor.emhass_warmtepompboiler
     above: 1
-    for:
-      minutes: 2
+    # for:
+    #   minutes: 2
     #   seconds: 30
   - platform: numeric_state
     entity_id: sensor.emhass_warmtepompboiler
@@ -13,6 +13,11 @@ trigger:
     for:
       minutes: 5
       seconds: 30
+  - platform: template
+    value_template: >
+      {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 60 }}
+  - platform: event
+    event_type: automation_reloaded
 action:
   - choose:
       - conditions:
@@ -39,7 +44,9 @@ action:
         sequence:
           - service: homeassistant.turn_off
             target:
-              entity_id: input_boolean.emhass_warmtepompboiler
+              entity_id:
+                - input_boolean.emhass_warmtepompboiler
+                - switch.warm_water
           - service: homeassistant.turn_off
             target:
               entity_id: switch.warm_water

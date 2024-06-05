@@ -1,10 +1,15 @@
 alias: "sonos smorgens aan"
 id: 845eafa5-a0f1-4c17-93d0-a7b84d5a5e9a
 trigger:
-  - platform: state
-    entity_id: binary_sensor.keuken_aqara_pir
-    from: "off"
-    to: "on"
+  # - platform: state
+  #   entity_id: binary_sensor.keuken_aqara_pir
+  #   from: "off"
+  #   to: "on"
+  - platform: template
+    value_template: >
+      {{  is_state('binary_sensor.keuken_aqara_pir', 'on') 
+          or is_state('binary_sensor.keuken_presence', 'on')
+          or is_state('binary_sensor.keuken_pir', 'on') }}
 condition:
   condition: and
   conditions:

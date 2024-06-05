@@ -19,70 +19,109 @@ naive_mpc_optim:
       "alpha": 1,
       "beta": 0,
       "num_def_loads": 5,
-      "p_deferrable_nom": [2000, 2000, 1700, 1100, 2000],
+      "p_deferrable_nom": [2000, 2000, 1700, 900, 2000],
       "def_total_hours": [
-        {{  states('sensor.wasmachien_uren') | int(0) }},
-        {{  states('sensor.droogkast_uren') | int(0) }},
-        {{  states('sensor.afwasmachien_uren') | int(0) }},
-        {{  states('sensor.warmtepompboiler_uren') | int(0) }},
-        {{  states('sensor.warmtepomp_uren') | int(0) }}],
+        {{  states('sensor.wasmachien_uren') | float(0) }},
+        {{  states('sensor.droogkast_uren') | float(0) }},
+        {{  states('sensor.afwasmachien_uren') | float(0) }},
+        {{  states('sensor.warmtepompboiler_uren') | float(0) }},
+        {{  states('sensor.warmtepomp_uren') | float(0) }}],
       "set_def_constant":[true, true, true, false, false],
       "def_end_timestep": [
         {{  states('sensor.wasmachien_end_timesteps') | int(0) }},
         {{  states('sensor.droogkast_end_timesteps') | int(0) }},
         {{  states('sensor.afwasmachien_end_timesteps') | int(0) }},
         {{  states('sensor.warmtepompboiler_end_timesteps') | int(0) }},
-        {{  states('sensor.warmtepomp_end_timesteps') | int(0) }}]
+        {{  states('sensor.warmtepomp_end_timesteps') | int(0) }}],
+      "def_current_state": [
+        {{  "true" if is_state('input_boolean.emhass_wasmachien', "on") else "false" }}, 
+        {{  "true" if is_state('input_boolean.emhass_droogkast', "on") else "false" }}, 
+        {{  "true" if is_state('input_boolean.emhass_afwasmachien', "on") else "false" }}, 
+        {{  "true" if is_state('input_boolean.emhass_warmtepompboiler', "on") else "false" }}, 
+        {{  "true" if is_state('input_boolean.emhass_warmtepomp', "on") else "false" }}]
     }
 
-predict_heating:
-  url: http://localhost:5001/action/csv-predict
+fit_heating_hours:
+  url: http://localhost:5003/action/regressor-model-fit
   method: POST
   content_type: "application/json"
   payload: >-
     {
-      "csv_file": "prediction.csv",
-      "independent_variables":["dd", "solar"],
-      "dependent_variable": "hour",
-      "sklearn_model": "LinearRegression",
-      "model_type": "csv_predictor",
-      "csv_predict_entity_id": "sensor.voorspelde_uren",
-      "csv_predict_unit_of_measurement": "h",
-      "csv_predict_friendly_name": "Voorspelde uren",
-      "new_values": [{{states("sensor.degree_day_prediction")}}, {{states("sensor.solcast_solaredge_forecast_today")}}]
+    "csv_file": "prediction.csv",
+    "features":["dd", "solar"],
+    "target": "hour",
+    "regression_model": "RandomForestRegression",
+    "model_type": "heating_dd",
+    "timestamp": "timestamp",
+    "date_features": ["month", "day_of_week"]
     }
-# predict_heating_elasticnet:
-#   url: http://localhost:5001/action/csv-predict
-#   method: POST
-#   content_type: "application/json"
-#   payload: >-
-#     {
-#       "csv_file": "prediction.csv",
-#       "independent_variables":["dd", "solar"],
-#       "dependent_variable": "hour",
-#       "sklearn_model": "ElasticNet",
-#       "model_type": "csv_predictor",
-#       "csv_predict_entity_id": "sensor.voorspelde_uren_elasticnet",
-#       "csv_predict_unit_of_measurement": "h",
-#       "csv_predict_friendly_name": "Voorspelde uren elasticnet",
-#       "new_values": [{{states("sensor.degree_day_prediction")}}, {{states("sensor.solcast_solaredge_forecast_today")}}]
-#     }
-# predict_heating_kneighborsregressor:
-#   url: http://localhost:5001/action/csv-predict
-#   method: POST
-#   content_type: "application/json"
-#   payload: >-
-#     {
-#       "csv_file": "prediction.csv",
-#       "independent_variables":["dd", "solar"],
-#       "dependent_variable": "hour",
-#       "sklearn_model": "KNeighborsRegressor",
-#       "model_type": "csv_predictor",
-#       "csv_predict_entity_id": "sensor.voorspelde_uren_kneighborsregressor",
-#       "csv_predict_unit_of_measurement": "h",
-#       "csv_predict_friendly_name": "Voorspelde uren kneighborsregressor",
-#       "new_values": [{{states("sensor.degree_day_prediction")}}, {{states("sensor.solcast_solaredge_forecast_today")}}]
-#     }
+predict_heating_hours:
+  url: http://localhost:5003/action/regressor-model-predict
+  method: POST
+  content_type: "application/json"
+  payload: >-
+    {
+      "model_type": "heating_dd",
+      "mlr_predict_entity_id": "sensor.voorspelde_uren",
+      "mlr_predict_unit_of_measurement": "h",
+      "mlr_predict_friendly_name": "Voorspelde uren",
+      "new_values": [{{states("sensor.degree_day_prediction")}}, {{states("sensor.solcast_solaredge_forecast_tomorrow")}}, {{now().month}}, {{now().weekday()}}]
+    }
+
+fit_heating_hours_gradientboosting:
+  url: http://localhost:5003/action/regressor-model-fit
+  method: POST
+  content_type: "application/json"
+  payload: >-
+    {
+    "csv_file": "prediction.csv",
+    "features":["dd", "solar"],
+    "target": "hour",
+    "regression_model": "GradientBoostingRegression",
+    "model_type": "heating_dd_gradientboosting",
+    "timestamp": "timestamp",
+    "date_features": ["month", "day_of_week"]
+    }
+predict_heating_hours_gradientboosting:
+  url: http://localhost:5003/action/regressor-model-predict
+  method: POST
+  content_type: "application/json"
+  payload: >-
+    {
+      "model_type": "heating_dd_gradientboosting",
+      "mlr_predict_entity_id": "sensor.voorspelde_uren_gradientboosting",
+      "mlr_predict_unit_of_measurement": "h",
+      "mlr_predict_friendly_name": "Voorspelde uren GradientBoosting",
+      "new_values": [{{states("sensor.degree_day_prediction")}}, {{states("sensor.solcast_solaredge_forecast_tomorrow")}}, {{now().month}}, {{now().weekday()}}]
+    }
+
+fit_heating_hours_adaboost:
+  url: http://localhost:5003/action/regressor-model-fit
+  method: POST
+  content_type: "application/json"
+  payload: >-
+    {
+    "csv_file": "prediction.csv",
+    "features":["dd", "solar"],
+    "target": "hour",
+    "regression_model": "AdaBoostRegression",
+    "model_type": "heating_dd_adaboost",
+    "timestamp": "timestamp",
+    "date_features": ["month", "day_of_week"]
+    }
+predict_heating_hours_adaboost:
+  url: http://localhost:5003/action/regressor-model-predict
+  method: POST
+  content_type: "application/json"
+  payload: >-
+    {
+      "model_type": "heating_dd_adaboost",
+      "mlr_predict_entity_id": "sensor.voorspelde_uren_adaboost",
+      "mlr_predict_unit_of_measurement": "h",
+      "mlr_predict_friendly_name": "Voorspelde uren AdaBoost",
+      "new_values": [{{states("sensor.degree_day_prediction")}}, {{states("sensor.solcast_solaredge_forecast_tomorrow")}}, {{now().month}}, {{now().weekday()}}]
+    }
+
 forecast_model_fit_load_zonder_wp:
   url: http://localhost:5003/action/forecast-model-fit
   method: POST
@@ -166,5 +205,9 @@ publish_data:
       "custom_unit_prod_price_id": {
         "entity_id": "sensor.emhass_prod_price",
         "unit_of_measurement": "€/kWh",
-        "friendly_name": "Emhass production price"}
+        "friendly_name": "Emhass production price"},
+      "custom_pv_curtailment_id": {
+        "entity_id": "sensor.emhass_curtailment",
+        "unit_of_measurement": "W",
+        "friendly_name": "Emhass curtailment"}
     }

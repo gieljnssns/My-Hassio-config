@@ -73,16 +73,20 @@ template:
       - name: Bad weather
         unique_id: f2c4207a-27a0-437e-b41b-b0294568a981
         state: >
-          {% if states("sensor.openweathermap_snow") | int(default=0) > 0 %}
+          {% if states("sensor.gedetailleerde_staat") is in ["light-snow", "partlycloudy-light-snow", "partlycloudy-snow", "snowy", "snowy-rainy"] %}
+            {% set type = snow %}
+          {% elif states("sensor.gedetailleerde_staat") is in ["partlycloudy-light-rain", "partlycloudy-rain", "rainy", "light-rain"] %}
+            {% set type = rain %}
+          {% endif %}
+          {% if type == snow and states("sensor.neerslagintensiteit") | int(default=0) > 0 %}
             snow
-          {% elif ((states("sensor.buiten_buiten_temperatuur") | int(0) < 4) and states("sensor.buiten_buiten_dauwpunt") | int(0) < 6 and states("sensor.openweathermap_wind_speed") | int(0) < 12 and states("sensor.openweathermap_cloud_coverage") | int(0) < 20 and states("sensor.poort_luchtvochtigheid") | int(0) > 50) %} 
+          {% elif ((states("sensor.buiten_buiten_temperatuur") | int(0) < 4) and states("sensor.buiten_buiten_dauwpunt") | int(0) < 6 and states("sensor.windsnelheid") | int(0) < 12 and states("sensor.tomorrow_io_home_cloud_cover") | int(0) < 20 and states("sensor.poort_luchtvochtigheid") | int(0) > 50) %} 
             frost
-          {% elif states("sensor.openweathermap_rain") | int(default=0) > 7 %} 
+          {% elif type == rain and states("sensor.neerslagintensiteit") | int(default=0) > 7 %} 
             heavy_rain
           {% else %} 
             clear
           {% endif %}
-
       - name: Notification hour
         unique_id: 650501d5-c3c8-47ff-bd80-5cc4b660b09d
         state: >

@@ -4,15 +4,20 @@ trigger:
   - platform: numeric_state
     entity_id: sensor.emhass_warmtepomp
     above: 1
-    for:
-      minutes: 5
-      seconds: 30
+    # for:
+    #   minutes: 5
+    #   seconds: 30
   - platform: numeric_state
     entity_id: sensor.emhass_warmtepomp
     below: 0.1
     for:
       minutes: 5
       seconds: 30
+  - platform: template
+    value_template: >
+      {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 60 }}
+  - platform: event
+    event_type: automation_reloaded
 action:
   - choose:
       - conditions:

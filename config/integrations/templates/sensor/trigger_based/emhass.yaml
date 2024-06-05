@@ -58,6 +58,7 @@
       device_class: power
       state: >
         {{ states('sensor.huidige_opbrengst') }}
+      availability: "{{ is_number(states('sensor.huidige_opbrengst')) }}"
 - trigger:
     - platform: time_pattern
       seconds: "/10"
@@ -68,6 +69,7 @@
       device_class: power
       state: >
         {{ states('sensor.huidig_verbruik') }}
+      availability: "{{ is_number(states('sensor.huidig_verbruik')) }}"
 - trigger:
     - platform: time_pattern
       seconds: "/10"
@@ -92,3 +94,5 @@
         {% else  %}
             {{ 0 | float(default=0) }}
         {% endif %}
+      availability: >
+        {{ is_number(states('sensor.huidig_verbruik')) }}

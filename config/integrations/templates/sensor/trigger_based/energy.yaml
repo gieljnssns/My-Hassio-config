@@ -1,0 +1,23 @@
+- trigger:
+    - platform: state
+      entity_id: sensor.huidige_opbrengst
+    - platform: state
+      entity_id: sensor.solcast_solaredge_power_now
+  sensor:
+    - name: Pv estimate
+      unique_id: 3509ef1a-89c5-4d3f-ba51-0c78cea0dfb2
+      state: >
+        {%- set real = states('sensor.huidige_opbrengst') | float(0) %}
+        {%- set percent = real / 3.3 %}
+        {%- set solcast = states('sensor.solcast_solaredge_power_now') | float(0) %}
+        {% if real and solcast > 0 %}
+          {% if real > solcast + percent %}
+            pv_estimate90(more)
+          {% elif real < solcast - percent %}
+            pv_estimate10(less)
+          {% else %}
+            pv_estimate
+          {% endif %}
+        {% else %}
+          pv_estimate
+        {% endif %}

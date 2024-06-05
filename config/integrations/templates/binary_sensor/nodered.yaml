@@ -5,7 +5,6 @@
       device_class: problem
       state: >-
         {{  states("binary_sensor.nodered_keuken_down") == 'on' or
-            states("binary_sensor.nodered_verwarming_down") == 'on' or
             states("binary_sensor.nodered_living_pi3_down") == 'on' }}
 
     - name: Nodered keuken down
@@ -24,9 +23,3 @@
       unique_id: b45e3ce5-2f5f-4747-9a96-0254526cacbf
       icon: mdi:alert-circle-outline
       state: "{{ is_state('input_boolean.fotocel_poort_error', 'on') }}"
-
-    - name: Nodered verwarming down
-      unique_id: e09c9121-dfa4-49d0-8b97-33bd9ab0e5de
-      device_class: problem
-      state: >
-        {{ states("switch.reserve_mqtt") == 'unavailable'}}

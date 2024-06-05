@@ -4,6 +4,9 @@ trigger:
   - platform: time
     at: "15:59:59"
 condition:
+  - condition: template
+    value_template: >
+      {{  state_attr("media_player.mass_keuken", "media_title") != "KINK DISTORTION" }}
   - condition: time
     weekday:
       - "mon"

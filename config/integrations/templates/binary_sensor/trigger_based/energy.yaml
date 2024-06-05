@@ -96,3 +96,29 @@
       unique_id: bb4b871e-c1a9-4d81-abb6-f89f07bbd6fb
       state: >
         {{ states("input_boolean.afwasmachien_staat_op") }}
+
+- trigger:
+    - platform: template
+      id: aan
+      value_template: >
+        {{ states("sensor.thermostaat") | float(0) <= 42.5 }}
+    - platform: template
+      id: uit
+      value_template: >
+        {{ states("sensor.thermostaat") | float(0) > 45 }}
+  action:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: aan
+          sequence:
+            - service: input_boolean.turn_on
+              entity_id: input_boolean.boiler_temperatuur_laag
+      default:
+        - service: input_boolean.turn_off
+          entity_id: input_boolean.boiler_temperatuur_laag
+  binary_sensor:
+    - name: Boiler temperatuur laag
+      unique_id: 59a5bc48-8fe3-478d-87ad-80c0d85b8ff5
+      state: >
+        {{ states("input_boolean.boiler_temperatuur_laag") }}

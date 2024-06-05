@@ -7,16 +7,20 @@ trigger:
     id: sluiten
     for:
       minutes: 5
-  - platform: numeric_state
-    entity_id: sensor.openweathermap_wind_speed
-    above: 40
+  - platform: template
     id: openen
+    value_template: >
+      {{ states("sensor.windsnelheid") | int(0) > 40 }}
+  - platform: template
+    id: openen
+    value_template: >
+      {{ states("sensor.windvlaag") | int(0) > 50 }}
   - platform: template
     value_template: >
       {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
         {{ states("sensor.ba_precipitation_forecast_average") | float > 0 }}
       {% else %}
-        {{ states("sensor.openweathermap_rain")  | float > 0 }}
+        {{ states("sensor.neerslagverwachting_gemiddeld")  | float > 0 }}
       {% endif %}
     id: openen
   - platform: template
@@ -24,7 +28,7 @@ trigger:
       {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
         {{ states("sensor.ba_precipitation") | float > 0 }}
       {% else %}
-        {{ states("sensor.openweathermap_rain")  | float > 0 }}
+        {{ states("sensor.neerslagintensiteit")  | float > 0 }}
       {% endif %}
     id: openen
   - platform: state
@@ -42,9 +46,12 @@ action:
           - condition: numeric_state
             entity_id: sensor.max_neerslag_volgende_12u
             below: 10
-          - condition: numeric_state
-            entity_id: sensor.openweathermap_wind_speed
-            below: 40
+          - condition: template
+            value_template: >
+              {{ states("sensor.windsnelheid") | int(0) < 40 }}
+          - condition: template
+            value_template: >
+              {{ states("sensor.windvlaag") | int(0) < 50 }}
         sequence:
           - service: cover.close_cover
             target:

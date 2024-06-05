@@ -48,6 +48,12 @@
         {%- set plant = states.sensor | selectattr('entity_id', 'match', 'sensor.plant_') 
                                       | map(attribute='entity_id')
                                       | list %}
+        {%- set cpu2 = states.sensor | selectattr('entity_id', 'match', 'sensor.*_cpu_utilization') 
+                                        | map(attribute='entity_id')
+                                        | list %}
+        {%- set memory = states.sensor | selectattr('entity_id', 'match', 'sensor.*_memory_utilization') 
+                                        | map(attribute='entity_id')
+                                        | list %}
         {%- set camera = states.camera | map(attribute='entity_id') | list %}
         {%- set group = states.group | map(attribute='entity_id') | list %}
         {%- set scene = states.scene | map(attribute='entity_id') | list %}
@@ -55,7 +61,10 @@
         {%- set weather = states.weather | map(attribute='entity_id') | list %}
         {%- set zone = states.zone | map(attribute='entity_id') | list %}
         {%- set update = states.update | map(attribute='entity_id') | list %}
-        {%- set all = update + zone + weather + sun + scene + group + camera + plant + quarter + wifi + ram + swap + cpu + still_energy + move_energy + detection_distance + still_distance + moving_distance + poe + start + uptime + shelly%}
+        {%- set image = states.image | map(attribute='entity_id') | list %}
+        {%- set tts = states.tts | map(attribute='entity_id') | list %}
+        {%- set event = states.event | map(attribute='entity_id') | list %}
+        {%- set all = cpu2 + memory + update + zone + weather + sun + scene + group + camera + plant + quarter + wifi + ram + swap + cpu + still_energy + move_energy + detection_distance + still_distance + moving_distance + poe + start + uptime + shelly + image + tts + event%}
 
         {{ all | length }}
       attributes:
@@ -106,6 +115,12 @@
           {%- set plant = states.sensor | selectattr('entity_id', 'match', 'sensor.plant_') 
                                         | map(attribute='entity_id')
                                         | list %}
+          {%- set cpu2 = states.sensor | selectattr('entity_id', 'match', 'sensor.*_cpu_utilization') 
+                                        | map(attribute='entity_id')
+                                        | list %}
+          {%- set memory = states.sensor | selectattr('entity_id', 'match', 'sensor.*_memory_utilization') 
+                                        | map(attribute='entity_id')
+                                        | list %}
           {%- set camera = states.camera | map(attribute='entity_id') | list %}
           {%- set group = states.group | map(attribute='entity_id') | list %}
           {%- set scene = states.scene | map(attribute='entity_id') | list %}
@@ -113,7 +128,10 @@
           {%- set weather = states.weather | map(attribute='entity_id') | list %}
           {%- set zone = states.zone | map(attribute='entity_id') | list %}
           {%- set update = states.update | map(attribute='entity_id') | list %}
-          {%- set all = update + zone + weather + sun + scene + group + camera + plant + quarter + wifi + ram + swap + cpu + still_energy + move_energy + detection_distance + still_distance + moving_distance + poe + start + uptime + shelly%}
+          {%- set image = states.image | map(attribute='entity_id') | list %}
+          {%- set tts = states.tts | map(attribute='entity_id') | list %}
+          {%- set event = states.event | map(attribute='entity_id') | list %}
+          {%- set all = cpu2 + memory + update + zone + weather + sun + scene + group + camera + plant + quarter + wifi + ram + swap + cpu + still_energy + move_energy + detection_distance + still_distance + moving_distance + poe + start + uptime + shelly + image + tts + event%}
 
           {{ all }}
 

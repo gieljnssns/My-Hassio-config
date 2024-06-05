@@ -28,10 +28,12 @@ trigger:
       minutes: 5
 
   # Weather based triggers
-  - platform: numeric_state
-    entity_id: sensor.openweathermap_wind_speed
-    above: 40 #If wind force becomes to high, sunscreen needs to go up
-
+  - platform: template
+    value_template: >
+      {{ states("sensor.windsnelheid") | int(0) > 40 }}
+  - platform: template
+    value_template: >
+      {{ states("sensor.windvlaag") | int(0) > 50 }}
   # - platform: template
   #   value_template: >
   #     {{ states("sensor.buiten_lichtsterkte") | float(0) < 4000 and
@@ -43,14 +45,14 @@ trigger:
       {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
         {{ states("sensor.ba_precipitation_forecast_average") | float > 0.40 }}
       {% else %}
-        {{ states("sensor.openweathermap_rain")  | float > 0.40 }}
+        {{ states("sensor.neerslagverwachting_gemiddeld")  | float > 0.40 }}
       {% endif %}
   - platform: template
     value_template: >
       {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
         {{ states("sensor.ba_precipitation") | float > 0.40 }}
       {% else %}
-        {{ states("sensor.openweathermap_rain")  | float > 0.40 }}
+        {{ states("sensor.neerslagintensiteit")  | float > 0.40 }}
       {% endif %}
 
 condition:
@@ -65,12 +67,6 @@ condition:
     - condition: template
       value_template: >
         {{ state_attr("cover.slaapkamer_noor", "current_position") < 50 }}
-#     - condition: state
-#       entity_id: input_boolean.living_closed
-#       state: "on"
-#     - condition: state
-#       entity_id: input_boolean.slaapkamer_noor_closed
-#       state: "on"
 
 action:
   - service: script.zijgevel_openen

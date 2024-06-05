@@ -87,9 +87,20 @@
           has_value("sensor.warmtepompboiler_is_gestart_op") and
           has_value("sensor.thermostaat") }}
       state: >
+        {%- set real = states('sensor.huidige_opbrengst') | float %}
+        {%- set percent = real / 3.3 %}
+        {%- set solcast = states('sensor.solcast_solaredge_power_now') | float %}
+        {% if real > solcast + percent %}
+          {% set estimate = 1.33 %}
+        {% elif real < solcast - percent %}
+          {% set estimate = 0.67 %}
+        {% else %}
+          {% set estimate = 1 %}
+        {% endif %}
         {% macro max(X, Y) -%} {{X|float if X|float > Y|float else Y|float }} {%- endmacro %}
+
         {% if states("input_boolean.op_verlof") == 'off' %}
-          {% if states("sensor.solcast_solaredge_forecast_remaining_today") | float(0) > 2 %}
+          {% if (states("sensor.solcast_solaredge_forecast_remaining_today") | float(0) * estimate) > 2 %}
             {% if states("input_boolean.warm_water_starten") == 'on' %}
               {% if states("switch.warm_water") == 'on' and states("binary_sensor.warmtepompboiler_aan") == 'off' %}
                 {{  max(0, ((51 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
@@ -133,6 +144,7 @@
             0
           {% endif %}
         {% endif %}
+
     - name: Pv power forecast list
       unique_id: 6bc0c511-9c6f-4778-b13e-a20e3646a7e5
       state: >
@@ -141,15 +153,25 @@
         {{ has_value("sensor.solcast_solaredge_forecast_today") }}
       attributes:
         list: >
+          {%- set real = states('sensor.huidige_opbrengst') | float %}
+          {%- set percent = real / 3.3 %}
+          {%- set solcast = states('sensor.solcast_solaredge_power_now') | float %}
+          {% if real > solcast + percent %}
+            {% set estimate = 'pv_estimate90' %}
+          {% elif real < solcast - percent %}
+            {% set estimate = 'pv_estimate10' %}
+          {% else %}
+            {% set estimate = 'pv_estimate' %}
+          {% endif %}
           {{  (state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast')
                 |selectattr('period_start','gt',utcnow())
-                |map(attribute='pv_estimate')
+                |map(attribute=estimate)
                 |map('multiply',1000)
                 |map('int')
                 |list
             + state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast')
                 |selectattr('period_start','gt',utcnow())
-                |map(attribute='pv_estimate')
+                |map(attribute=estimate)
                 |map('multiply',1000)
                 |map('int')
                 |list)[:48]
@@ -158,7 +180,7 @@
     - name: Prod price forecast list
       unique_id: c081ad21-6e07-4346-82e3-d392b4a251d6
       state: >
-        {{ states("sensor.solcast_solaredge_forecast_today")}}
+        -0.11
       availability: >-
         {{ has_value("sensor.solcast_solaredge_forecast_today") }}
       unit_of_measurement: "EUR/kWh"
@@ -189,7 +211,12 @@
     - name: Cost forecast list
       unique_id: 1e92ec2a-1886-4322-8cb9-7cef05077dec
       state: >
-        {{ states("sensor.solcast_solaredge_forecast_today")}}
+        {%- set hour = now().hour | int%}
+        {%- if hour in [7, 8, 9, 16, 17, 18] %}
+            0.174497535 
+        {%- else %}
+            0.164497535
+        {%- endif %}
       availability: >-
         {{ has_value("sensor.solcast_solaredge_forecast_today") }}
       unit_of_measurement: "EUR/kWh"
@@ -472,32 +499,36 @@
         {% set hour = now().hour %}
         {% set minutes = now().minute %}
         {% macro min(X, Y) -%} {{X|int if X|int < Y|int else Y|int }} {%- endmacro %}
-        {% if hour == 8 %}
-          {{ min(solar, 32) if minutes < 30 else min(solar, 31) }}
-        {% elif hour == 9 %}
-          {{ min(solar, 30) if minutes < 30 else min(solar, 29) }}
-        {% elif hour == 10 %}
-          {{ min(solar, 28) if minutes < 30 else min(solar, 27) }}
-        {% elif hour == 11 %}
-          {{ min(solar, 26) if minutes < 30 else min(solar, 25) }}
-        {% elif hour == 12 %}
-          {{ min(solar, 24) if minutes < 30 else min(solar, 23) }}
-        {% elif hour == 13 %}
-          {{ min(solar, 22) if minutes < 30 else min(solar, 21) }}
-        {% elif hour == 14 %}
-          {{ min(solar, 20) if minutes < 30 else min(solar, 19) }}
-        {% elif hour == 15 %}
-          {{ min(solar, 18) if minutes < 30 else min(solar, 17) }}
-        {% elif hour == 16 %}
-          {{ min(solar, 16) if minutes < 30 else min(solar, 15) }}
-        {% elif hour == 17 %}
-          {{ min(solar, 14) if minutes < 30 else min(solar, 13) }}
-        {% elif hour == 18 %}
-          {{ min(solar, 12) if minutes < 30 else min(solar, 11) }}
-        {% elif hour == 19 %}
-          {{ min(solar, 10) if minutes < 30 else min(solar, 9) }}
+        {% if states("binary_sensor.boiler_temperatuur_laag") == "on" %}
+          {{ (states("sensor.warmtepompboiler_uren") | float(0) * 2) | int }}
         {% else %}
-          {{ solar }}
+          {% if hour == 8 %}
+            {{ min(solar, 32) if minutes < 30 else min(solar, 31) }}
+          {% elif hour == 9 %}
+            {{ min(solar, 30) if minutes < 30 else min(solar, 29) }}
+          {% elif hour == 10 %}
+            {{ min(solar, 28) if minutes < 30 else min(solar, 27) }}
+          {% elif hour == 11 %}
+            {{ min(solar, 26) if minutes < 30 else min(solar, 25) }}
+          {% elif hour == 12 %}
+            {{ min(solar, 24) if minutes < 30 else min(solar, 23) }}
+          {% elif hour == 13 %}
+            {{ min(solar, 22) if minutes < 30 else min(solar, 21) }}
+          {% elif hour == 14 %}
+            {{ min(solar, 20) if minutes < 30 else min(solar, 19) }}
+          {% elif hour == 15 %}
+            {{ min(solar, 18) if minutes < 30 else min(solar, 17) }}
+          {% elif hour == 16 %}
+            {{ min(solar, 16) if minutes < 30 else min(solar, 15) }}
+          {% elif hour == 17 %}
+            {{ min(solar, 14) if minutes < 30 else min(solar, 13) }}
+          {% elif hour == 18 %}
+            {{ min(solar, 12) if minutes < 30 else min(solar, 11) }}
+          {% elif hour == 19 %}
+            {{ min(solar, 10) if minutes < 30 else min(solar, 9) }}
+          {% else %}
+            {{ solar }}
+          {% endif %}
         {% endif %}
 
     - name: Warmtepomp end timesteps
@@ -541,5 +572,5 @@
       unit_of_measurement: days
       state: >
         {% from 'easy_time.jinja' import count_the_days %}
-        {% set days = count_the_days("2024-03-03 00:00:00") | int %}
+        {% set days = count_the_days("2024-04-01 00:00:00") | int %}
         {{ (days * -1) - 1 }}

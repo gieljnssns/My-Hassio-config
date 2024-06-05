@@ -1,14 +1,4 @@
 - sensor:
-    # - name: "SolarEdge totaal"
-    #   unique_id: 70625593-4660-42d3-ad93-6ce179a96205
-    #   state: >
-    #     {{ (states('sensor.solaredge_lifetime_energy') | float(0) / 1000) | round(2) }}
-    #   unit_of_measurement: "kWh"
-    #   state_class: total_increasing
-    #   device_class: energy
-    #   availability: >
-    #     {{ states('sensor.solaredge_lifetime_energy')|float(0) > 1 }}
-
     - name: "SolarEdge energy"
       unique_id: f7e4ae3b-cb83-4e93-8955-c681d4025ea6
       icon: "mdi:counter"
@@ -118,40 +108,6 @@
             {{ 0 | float(default=0) }}
         {% endif %}
 
-    # - name: Grid energy consumption
-    #   unique_id: ff0e2d15-ee8f-4dd2-a979-6f21c0fd4a2b
-    #   unit_of_measurement: "kWh"
-    #   device_class: energy
-    #   availability: >-
-    #     {{ states("sensor.daily_energy") and
-    #       states("sensor.daily_solar")
-    #       not in ["unknown", "unavailable", "none"] }}
-    #   state: >
-    #     {%- if states("sensor.daily_solar") | float(default=0) < states("sensor.daily_energy") | float(default=0) %}
-    #         {{ (states("sensor.daily_energy") | float(default=0) - states("sensor.daily_solar") | float(default=0))  | round(3)  }}
-    #     {%- elif states("sensor.daily_solar") | float(default=0) > states("sensor.daily_energy") | float(default=0) %}
-    #         {{ 0 | float(default=0) }}
-    #     {% else  %}
-    #         {{ 0 | float(default=0) }}
-    #     {% endif %}
-
-    # - name: Grid energy production
-    #   unique_id: 98cc83e2-6945-4d82-859a-7f2791a6adac
-    #   unit_of_measurement: "kWh"
-    #   device_class: energy
-    #   availability: >-
-    #     {{ states("sensor.daily_energy") and
-    #       states("sensor.daily_solar")
-    #       not in ["unknown", "unavailable", "none"] }}
-    #   state: >
-    #     {%- if states("sensor.daily_solar") | float(default=0) <= states("sensor.daily_energy") | float(default=0) %}
-    #         {{ 0 | float(default=0) }}
-    #     {%- elif states("sensor.daily_solar") | float(default=0) > states("sensor.daily_energy") | float(default=0) %}
-    #         {{ (states("sensor.daily_solar") | float(default=0) - states("sensor.daily_energy") | float(default=0))  | round(3) }}
-    #     {% else  %}
-    #         {{ 0 | float(default=0) }}
-    #     {% endif %}
-
     ###  Combinatie  ###
     - name: Verlichting vermogen
       unique_id: 98a0995b-5090-4ff9-be1a-a371a554915f
@@ -183,7 +139,7 @@
             states("sensor.slaapkamer_fien_3_vermogen") | float(default=0) + 
             states("sensor.slaapkamer_noor_1_vermogen") | float(default=0) + 
             states("sensor.slaapkamer_noor_2_vermogen") | float(default=0) + 
-            states("sensor.spot_slaapkamer_vermogen") | float(default=0) + 
+            states("sensor.slaapkamer_spot_vermogen") | float(default=0) + 
             states("sensor.zithoek_links_achter_vermogen") | float(default=0) +
             states("sensor.zithoek_links_midden_vermogen") | float(default=0) + 
             states("sensor.zithoek_links_voor_vermogen") | float(default=0) + 
@@ -264,37 +220,6 @@
                 0
             {% endif %}
 
-    ###  Percentages  ###
-    # - name: Percentage eigen verbruik dagelijks
-    #   unique_id: f078023e-1b29-47c1-bf23-cc0b91af5363
-    #   unit_of_measurement: "%"
-    #   state: >
-    #     {% if states("sensor.daily_solar") | float(default=0) > 0 and (states("sensor.daily_own_consumption") | float(default=0) - states("sensor.daily_solar") | float(default=0)) <= 0 %}
-    #       {{ (states("sensor.daily_own_consumption") | float(default=0) / states("sensor.daily_solar") | float(default=0) * 100 ) | round(2) }}
-    #     {% else  %}
-    #       {{ 100 | float(default=0) }}
-    #     {% endif %}
-
-    # - name: Percentage eigen verbruik maandelijks
-    #   unique_id: 4486591c-aa39-4ef2-94dc-531ac34426b4
-    #   unit_of_measurement: "%"
-    #   state: >
-    #     {% if states("sensor.monthly_solar") | float(default=0) > 0 and (states("sensor.monthly_own_consumption") | float(default=0) - states("sensor.monthly_solar") | float(default=0)) <= 0 %}
-    #       {{ (states("sensor.monthly_own_consumption") | float(default=0) / states("sensor.monthly_solar") | float(default=0) * 100 ) | round(2) }}
-    #     {% else  %}
-    #       {{ 100 | float(default=0) }}
-    #     {% endif %}
-
-    # - name: Percentage eigen verbruik jaarlijks
-    #   unique_id: 1c00db0b-0e4b-4070-8da0-839757f6d355
-    #   unit_of_measurement: "%"
-    #   state: >
-    #     {% if states("sensor.yearly_solar") | float(default=0) > 0 and (states("sensor.yearly_own_consumption") | float(default=0) - states("sensor.yearly_solar") | float(default=0)) <= 0 %}
-    #       {{ (states("sensor.yearly_own_consumption") | float(default=0) / states("sensor.yearly_solar") | float(default=0) * 100 ) | round(2) }}
-    #     {% else  %}
-    #       {{ 100 | float(default=0) }}
-    #     {% endif %}
-
     ###  Capaciteitstarief  ###
     - name: Max peak 2
       unique_id: 4080cb23-c094-417e-a6ab-a3554bbe1053
@@ -345,64 +270,6 @@
               states('input_number.december_peak_2') | float(default=0) ) / 12) | round(2)
         }}
 
-    ###  EMHASS
-
-    # - name: Huidig verbruik zonder wp
-    #   unique_id: 664ab9ff-3875-4a45-b53a-685b7a8f7f96
-    #   unit_of_measurement: "W"
-    #   device_class: power
-    #   # state_class: measurement
-    #   # availability: >-
-    #   #   {{ has_value("sensor.huidig_verbruik") and
-    #   #     has_value("sensor.wasmachien_vermogen") and
-    #   #     has_value("sensor.droogkast_vermogen") and
-    #   #     has_value("sensor.warmtepompboiler_huidig_verbruik") and
-    #   #     has_value("sensor.warmtepomp_huidig_verbruik") and
-    #   #     has_value("sensor.afwasmachien_vermogen") }}
-    #   state: >
-    #     {% set wasmachien = states("input_boolean.emhass_wasmachien") == "on" -%}
-    #     {%- set droogkast = states("input_boolean.emhass_droogkast") == "on" -%}
-    #     {%- set afwasmachien = states("input_boolean.emhass_afwasmachien") == "on" -%}
-    #     {%- set warmtepompboiler = states("input_boolean.emhass_warmtepompboiler") == "on" -%}
-    #     {%- set warmtepomp = states("input_boolean.emhass_warmtepomp") == "on" -%}
-    #     {%- set deferrable = namespace(all=[]) -%}
-    #     {%- if wasmachien -%}
-    #       {%- set deferrable.all = deferrable.all + [states("sensor.wasmachien_vermogen") | float(0)] -%}
-    #     {% endif %}
-    #     {%- if droogkast %}
-    #       {%- set deferrable.all = deferrable.all + [states("sensor.droogkast_vermogen") | float(0)] -%}
-    #     {% endif %}
-    #     {%- if afwasmachien %}
-    #       {%- set deferrable.all = deferrable.all + [states("sensor.afwasmachien_vermogen") | float(0)] -%}
-    #     {% endif %}
-    #     {%- if warmtepompboiler %}
-    #       {%- set deferrable.all = deferrable.all + [states("sensor.warmtepompboiler_huidig_verbruik") | float(0)] -%}
-    #     {% endif %}
-    #     {%- if warmtepomp %}
-    #       {%- set deferrable.all = deferrable.all + [states("sensor.warmtepomp_huidig_verbruik") | float(0)] -%}
-    #     {% endif %}
-    #     {%- if states("sensor.huidig_verbruik") | float(0) - ((deferrable.all) | sum ) | round(1) > 0 -%}
-    #         {{ (states("sensor.huidig_verbruik") | float(0) - ((deferrable.all) | sum )) | round(1) }}
-    #     {% else %}
-    #         {{ 0 | float(0) }}
-    #     {% endif %}
-
-    # state: >
-    #   {% if (states("sensor.huidig_verbruik") | float(default=0) -
-    #       states("sensor.wasmachien_vermogen") | float(default=0) -
-    #       states("sensor.droogkast_vermogen") | float(default=0) -
-    #       states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
-    #       states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
-    #       states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) > 0 %}
-    #       {{ (states("sensor.huidig_verbruik") | float(default=0) -
-    #           states("sensor.wasmachien_vermogen") | float(default=0) -
-    #           states("sensor.droogkast_vermogen") | float(default=0) -
-    #           states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
-    #           states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
-    #           states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1)}}
-    #   {% else  %}
-    #       {{ 0 | float(default=0) }}
-    #   {% endif %}
     - name: Zonne opbrengst
       unique_id: 51b5c2c8-6480-4320-8ec2-8bc2d9d00308
       unit_of_measurement: "W"

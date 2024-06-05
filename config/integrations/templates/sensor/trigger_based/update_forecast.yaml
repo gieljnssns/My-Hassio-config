@@ -1,6 +1,4 @@
 - trigger:
-    # - platform: time_pattern
-    #   minutes: "/20"
     - platform: event
       event_type: refresh_20m
     - platform: event
@@ -10,7 +8,7 @@
       data:
         type: hourly
       target:
-        entity_id: weather.openweathermap
+        entity_id: weather.home
       response_variable: hourly
 
   sensor:
@@ -19,7 +17,7 @@
       unit_of_measurement: "°C"
       state: >
         {% set forecast = hourly %}
-        {{ forecast["weather.openweathermap"].forecast[:8] 
+        {{ forecast["weather.home"].forecast[:24] 
             | map(attribute='temperature') 
             | average 
             | round(1) }}
@@ -29,7 +27,17 @@
       unit_of_measurement: "%"
       state: >
         {% set forecast = hourly %}
-        {{ forecast["weather.openweathermap"].forecast[:4] 
+        {{ forecast["weather.home"].forecast[:12] 
               | map(attribute='precipitation_probability') 
               | max
               | round(1) }}
+
+    - name: Max temperatuur buiten voorspelling 12u
+      unique_id: 0db3033c-4643-428e-a38d-8be6d0139c80
+      unit_of_measurement: "°C"
+      state: >
+        {% set forecast = hourly %}
+        {{ forecast["weather.home"].forecast[:12] 
+            | map(attribute='temperature') 
+            | max
+            | round(1) }}
