@@ -1,0 +1,25 @@
+alias: Scan for arrive and depart
+id: cc0f635b-613f-4a6e-b5d7-c2673faf52df
+description: ""
+trigger:
+  - platform: homeassistant
+    event: start
+  - platform: state
+    entity_id: binary_sensor.entity_id_for_bt_scanning
+    to: "on"
+condition:
+  condition: and
+  conditions:
+    - condition: template
+      value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('automation.scan_for_arrive_and_depart', 'last_triggered')) | float > 60 }}"
+action:
+  - service: script.turn_on
+    entity_id: script.mqtt_arrive_depart_script
+    data:
+      variables:
+        identity: >
+          {% if trigger.platform == 'state' %}  
+            {{ states("sensor.entity_id_for_bt_scanning") }} {{ now().strftime("%H:%M") }}
+          {% else %}
+            HA-start {{ now().strftime("%H:%M") }}
+          {% endif %}

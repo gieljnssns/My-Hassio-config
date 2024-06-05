@@ -1,0 +1,14 @@
+  mqtt_arrive_trigger:
+    mode: restart
+    sequence:
+      - condition: state
+        entity_id: input_boolean.bluetooth_trigger_blok
+        state: 'off'
+      - service: mqtt.publish
+        data_template:
+          topic: monitor/scan/arrive
+          payload: '{{ identity }}'
+          # payload: '{"identity":"HA"}'
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.bluetooth_trigger_blok
+      # - service: script.mqtt_trigger_blok

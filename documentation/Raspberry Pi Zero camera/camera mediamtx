@@ -1,0 +1,7 @@
+https://www.youtube.com/watch?v=kfHVxvMZMnw
+
+https://phazertech.com/tutorials/rtsp.html
+
+sudo /usr/local/bin/mediamtx &
+v4l2-ctl --set-ctrl video_bitrate=10000000 &
+ffmpeg -input_format h264 -f video4linux2 -video_size 1640x922 -framerate 15 -i /dev/video0 -c:v copy -an -f rtsp rtsp://localhost:8554/Keuken -rtsp_transport tcp

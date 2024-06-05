@@ -1,0 +1,29 @@
+alias: Scan for arrive on ios update
+id: fb791843-9438-49a7-9c57-cc096ca0522b
+description: ""
+mode: restart
+trigger:
+  - platform: state
+    entity_id: device_tracker.gphone_2
+    to: "home"
+  - platform: state
+    entity_id: device_tracker.mphone_2
+    to: "home"
+  - platform: state
+    entity_id: device_tracker.nphone
+    to: "home"
+  - platform: state
+    entity_id: device_tracker.fphone
+    to: "home"
+condition:
+  condition: and
+  conditions:
+    - condition: template
+      value_template: "{{as_timestamp(now()) - as_timestamp(state_attr('automation.scan_for_arrive_on_ios_update', 'last_triggered')) | float > 45 }}"
+action:
+  - service: script.turn_on
+    entity_id: script.mqtt_arrive_script
+    data:
+      variables:
+        identity: >
+          {{ trigger.entity_id.split(".")[1] }} {{ now().strftime("%H:%M") }}

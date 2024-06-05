@@ -13,7 +13,8 @@
     - name: Living 2 not playing
       unique_id: bdab5606-5315-4fa7-b5e2-3432763f5116
       state: >
-        {{ states('media_player.mass_living_2') != 'playing' }}
+        {{ states('media_player.mass_living_2') != 'playing' or
+          states('media_player.living_2') != 'playing' }}
 
     - name: "Keuken grouped not master"
       unique_id: 3eba5ed0-61a1-4682-bc9e-8ddabf895198
@@ -29,7 +30,8 @@
     - name: Keuken not playing
       unique_id: 073660a3-1e9a-40cf-b0f9-4fae6aa566d9
       state: >
-        {{ states('media_player.mass_keuken') != 'playing' }}
+        {{ states('media_player.mass_keuken') != 'playing' or
+          states('media_player.keuken') != 'playing' }}
 
     - name: "Badkamer grouped not master"
       unique_id: 5fc66a63-1faf-47c6-baa7-f1c9031c3415
@@ -45,7 +47,8 @@
     - name: Badkamer not playing
       unique_id: 494b0d57-a8f3-494b-9b61-470cbcd2605f
       state: >
-        {{ states('media_player.mass_badkamer') != 'playing' }}
+        {{ states('media_player.mass_badkamer') != 'playing' or
+          states('media_player.badkamer') != 'playing' }}
 
     - name: "2C grouped not master"
       unique_id: 4f1e29e5-c949-48e1-bc69-0554fb1e2091
@@ -61,7 +64,8 @@
     - name: 2c not playing
       unique_id: 7d41c0cd-bd85-4830-be17-ce2d2e294abc
       state: >
-        {{ states('media_player.mass_2c') != 'playing' }}
+        {{ states('media_player.mass_2c') != 'playing' or
+          states('media_player.2c') != 'playing' }}
 
     - name: "Move grouped not master"
       unique_id: 437ef410-0390-4ae6-97d6-06663733fa29
@@ -77,7 +81,8 @@
     - name: Move not playing
       unique_id: 1480d1a8-4800-4f39-af26-6baeb1202b53
       state: >
-        {{ states('media_player.mass_move') != 'playing' }}
+        {{ states('media_player.mass_move') != 'playing' or
+          states('media_player.mass_move') != 'playing' }}
 
     - name: "Noor grouped not master"
       unique_id: 8cceebf2-4538-42a4-9846-0fede7f6a6a0

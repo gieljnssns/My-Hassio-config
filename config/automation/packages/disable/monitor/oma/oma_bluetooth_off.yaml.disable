@@ -1,0 +1,10 @@
+  alias: Oma bluetooth off
+  id: 69c5f7bf-2b92-4943-8c35-38e6c7298ea4
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.oma_bt_aanwezig
+      below: 43
+      for:
+        seconds: 5
+  action:
+    - service: script.oma_bt_niet_aanwezig
