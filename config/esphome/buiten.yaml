@@ -10,24 +10,12 @@ packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
-api:
-  encryption:
-    key: "EGwnyXdMI0xumrYcRMZZuK2sT68gO8w82Rp2rL0NAcI="
-
-ota:
-  password: "d188598b530916a19737c4c2efeb52ae"
 
 i2c:
   sda: D2
   scl: D1
   scan: true
   id: bus_a
-
-#i2c:
-#  sda: 4
-#  scl: 5
-#  scan: true
-#  id: bus_a
 
 uart:
   tx_pin: 1
@@ -55,7 +43,7 @@ sensor:
       - below: 500
         then:
           - switch.turn_off: fan
-  
+
   - platform: homeassistant
     entity_id: sensor.poort_luchtvochtigheid
     id: ha_humidity

@@ -1,0 +1,60 @@
+substitutions:
+  devicename: luchtdroger
+  platform: ESP8266
+  board: nodemcuv2
+  upper_devicename: Luchtdroger
+  manual_ip: 192.168.79.165
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base.yaml
+
+i2c:
+  - sda: 4
+    scl: 5
+    scan: True
+    id: bus_a
+  # - sda: 4
+  #   scl: 5
+  #   scan: True
+  #   id: bus_b
+
+wifi:
+  ap:
+    password: !secret password
+
+switch:
+  - platform: gpio
+    pin:
+      number: D6
+      inverted: yes
+    name: ${upper_devicename}
+    id: luchtdroger
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    pin:
+      number: D5
+      inverted: yes
+    name: ${upper_devicename} reserve
+    id: reserve
+    restore_mode: RESTORE_DEFAULT_OFF
+  
+sensor:
+  - platform: sht3xd
+    temperature:
+      name: ${upper_devicename} ingaande temperatuur
+      # internal: true
+    humidity:
+      name: ${upper_devicename} ingaande luchtvochtigheid
+    address: 0x44
+    update_interval: 60s
+    i2c_id: bus_a
+  - platform: sht3xd
+    temperature:
+      name: ${upper_devicename} uitgaande temperatuur
+      # internal: true
+    humidity:
+      name: ${upper_devicename} uitgaande luchtvochtigheid
+    address: 0x45
+    update_interval: 60s
+    i2c_id: bus_a

@@ -3,7 +3,7 @@ substitutions:
 
   ssid: !secret ssid
   password: !secret password
-  
+
 esphome:
   name: ${devicename}
   platform: ESP8266
@@ -27,7 +27,7 @@ wifi:
   ap:
     ssid: ${devicename}
     password: ${password}
-    manual_ip: 
+    manual_ip:
       static_ip: 192.168.100.2
       gateway: 192.168.100.1
       subnet: 255.255.255.0
@@ -47,6 +47,7 @@ api:
   password: ${password}
 
 ota:
+  platform: esphome
   password: ${password}
 
 text_sensor:
@@ -55,7 +56,7 @@ text_sensor:
       auto my_sensor = new KeypadTextSensor();
       App.register_component(my_sensor);
       return {my_sensor};
-    
+
     text_sensors:
       name: "Keypad TextSensor"
 

@@ -22,6 +22,86 @@ wifi:
 esphome:
   name: ${devicename}
 
+switch:
+  - platform: gpio
+    name: "MCP23017 Pin A0"
+    pin:
+      number: 14
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "MCP23017 Pin A1"
+    pin:
+      number: 27
+      mode:
+        output: true
+      inverted: true
+# uart:
+#     tx_pin: 1
+#     rx_pin: 3
+#     baud_rate: 115200
+#     # baud_rate: 256000
+#     parity: NONE
+#     stop_bits: 1
+# uart:
+#   id: ld2420_uart
+#   tx_pin: 17 
+#   rx_pin: 16
+#   baud_rate: 115200
+#   parity: NONE
+#   stop_bits: 1
+#   # debug:
+#   #   direction: BOTH
+
+# ld2420:
+
+# text_sensor:
+#   - platform: ld2420
+#     fw_version:
+#       name: LD2420 Firmware
+
+# sensor:
+#   - platform: ld2420
+#     moving_distance:
+#       name : Moving Distance
+
+# binary_sensor:
+#   - platform: ld2420
+#     has_target:
+#       name: Presence
+
+# select:
+#   - platform: ld2420
+#     operating_mode:
+#       name: Operating Mode
+
+# number:
+#   - platform: ld2420
+#     presence_timeout:
+#       name: Detection Presence Timeout
+#     min_gate_distance:
+#       name: Detection Gate Minimum
+#     max_gate_distance:
+#       name: Detection Gate Maximum
+#     # See "Number" section below for detail
+#     gate_select:
+#       name: Select Gate to Set
+#     still_threshold:
+#       name: Set Still Threshold Value
+#     move_threshold:
+#       name: Set Move Threshold Value
+
+# button:
+#   - platform: ld2420
+#     apply_config:
+#       name: Apply Config
+#     factory_reset:
+#       name: Factory Reset
+#     restart_module:
+#       name: Restart Module
+#     revert_config:
+#       name: Undo Edits
 # esp32_ble_tracker:
 #   scan_parameters:
 #     # We currently use the defaults to ensure Bluetooth
@@ -32,148 +112,148 @@ esphome:
 # bluetooth_proxy:
 #   active: true
 
-i2c:
-  - id: bus_a
-    sda: 21
-    scl: 22
-    scan: true
-    # frequency: 800kHz
+# i2c:
+#   - id: bus_a
+#     sda: 21
+#     scl: 22
+#     scan: true
+#     frequency: 800kHz
 
-mcp23017:
-  - id: 'mcp23017_hub'
-    address: 0x20
-    open_drain_interrupt: true
+# mcp23017:
+#   - id: 'mcp23017_hub'
+#     address: 0x20
+#     i2c_id: bus_a
+#     open_drain_interrupt: true
 
-# Individual outputs
-switch:
-  - platform: gpio
-    name: "MCP23017 Pin A0"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 0
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin A1"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 1
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin A2"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 2
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin A3"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 3
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin A4"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 4
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin A5"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 5
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin A6"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 6
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin A7"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 7
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin B0"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 8
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin B1"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 9
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin B2"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 10
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin B3"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 11
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin B4"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 12
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin B5"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 13
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin B6"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 14
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin B7"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 15
-      mode:
-        output: true
-      inverted: true
+# # Individual outputs
+# switch:
+#   - platform: gpio
+#     name: "MCP23017 Pin A0"
+#     pin:
+#       number: GPIO16
+#       mode:
+#         output: true
+#       inverted: true
+#   - platform: gpio
+#     name: "MCP23017 Pin A1"
+#     pin:
+#       mcp23xxx: mcp23017_hub
+#       number: 1
+#       mode:
+#         output: true
+#       inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin A2"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 2
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin A3"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 3
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin A4"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 4
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin A5"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 5
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin A6"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 6
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin A7"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 7
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin B0"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 8
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin B1"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 9
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin B2"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 10
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin B3"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 11
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin B4"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 12
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin B5"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 13
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin B6"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 14
+  #     mode:
+  #       output: true
+  #     inverted: true
+  # - platform: gpio
+  #   name: "MCP23017 Pin B7"
+  #   pin:
+  #     mcp23xxx: mcp23017_hub
+  #     number: 15
+  #     mode:
+  #       output: true
+  #     inverted: true
 # output:
 #   - platform: ledc
 #     id: motor_forward_pin
