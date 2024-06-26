@@ -3,15 +3,19 @@ from __future__ import annotations
 
 import asyncio
 from enum import IntFlag
+from datetime import timedelta
 import json
 import logging
 import threading
 import os
 from datetime import datetime
+from homeassistant.util import dt as dt_util
+
 from threading import Timer
 from typing import Any
 
 import aiohttp
+import aiofiles
 import websocket
 import re
 from packaging.version import Version, parse as version_parse
@@ -156,7 +160,7 @@ class SocketListener(threading.Thread):
 
     def ws_begin(self) -> None:
         """Begin running the thread"""
-        self.running_future = self.ws_app.run_forever(ping_interval=25, ping_timeout=20)
+        self.running_future = self.ws_app.run_forever(ping_interval=10, ping_timeout=7)
         # print("Fell out of run_runforever")
         if not self._should_stop:
             self.hass.loop.call_soon_threadsafe(self.reconnect)
@@ -210,6 +214,8 @@ class ESPSomfyController(DataUpdateCoordinator):
             _LOGGER,
             # Name of the data. For logging purposes.
             name=DOMAIN,
+            # The setting below is only for polling.
+            # update_interval=timedelta(seconds=5),
         )
         self.config_entry_id = config_entry_id
         self.api = api
@@ -281,11 +287,21 @@ class ESPSomfyController(DataUpdateCoordinator):
             [EVT_CONNECTED, EVT_SHADEADDED, EVT_SHADEREMOVED, EVT_SHADESTATE, EVT_SHADECOMMAND, EVT_GROUPSTATE, EVT_FWSTATUS, EVT_UPDPROGRESS, EVT_WIFISTRENGTH, EVT_ETHERNET, EVT_MEMSTATUS]
         )
         await self.ws_listener.connect()
+
     async def create_backup(self) -> bool:
+        """Creates a backup of the configuration and stores it in HA"""
         return await self.api.create_backup()
 
     async def update_firmware(self, version) -> bool:
+        """Starts the firmware update process"""
         return await self.api.update_firmware(version)
+
+    async def set_host(self, host) -> None:
+        """Sets a host name and reloads the sockets if the host has changed"""
+        if self.api._host != host:
+            # Tear down the socket
+            self.api.set_host(host)
+            self.ws_connect()
 
     def ensure_group_configured(self, data):
         """Ensures the group exists on Home Assistant"""
@@ -427,10 +443,7 @@ class ESPSomfyAPI:
     def __init__(self, hass: HomeAssistant, config_entry_id, data) -> None:
         self.hass = hass
         self.data = data
-        self._host = data[CONF_HOST]
-        self._sock_url = f"ws://{self._host}:8080"
-        self._api_url = f"http://{self._host}:8081"
-        self._config_url = f"http://{self._host}"
+        self.set_host(data[CONF_HOST])
         self._config: Any = {}
         self._session = async_get_clientsession(self.hass, verify_ssl=False)
         self._authType = 0
@@ -518,6 +531,13 @@ class ESPSomfyAPI:
         """Indicates whether the integration has been configured"""
         return self._configured
 
+    def set_host(self, host) -> None:
+        """Sets the host for the integration"""
+        self._host = host
+        self._sock_url = f"ws://{self._host}:8080"
+        self._api_url = f"http://{self._host}:8081"
+        self._config_url = f"http://{self._host}"
+
     def get_sock_url(self):
         """Get the socket interface url"""
         return self._sock_url
@@ -570,6 +590,8 @@ class ESPSomfyAPI:
         else:
             self._can_update = False
 
+
+
     async def check_address(self, url) -> bool:
         """Sends a head to a url to check if it exists"""
         try:
@@ -591,21 +613,23 @@ class ESPSomfyAPI:
 
     async def create_backup(self) -> bool:
         """Creates a backup"""
-        url = f"{self._api_url}/backup?attach=true"
-        async with self._session.get(url, headers=self._headers) as resp:
-            if  resp.status == 200:
-                if not os.path.exists(self.backup_dir):
-                    os.mkdir(self.backup_dir)
+        try:
+            url = f"{self._api_url}/backup?attach=true"
+            async with self._session.get(url, headers=self._headers) as resp:
+                if resp.status != 200:
+                    return False
+
+                os.makedirs(self.backup_dir, exist_ok=True)
+
                 data = await resp.text(encoding=None)
-                fpath = self.hass.config.path(f"{self.backup_dir}/{datetime.now().strftime('%Y-%m-%dT%H_%M_%S')}.backup")
-                with open(file=fpath, mode="wb+") as f:
-                    if f is not None:
-                        f.write(data.encode())
-                        f.close()
-                    else:
-                        return False
-                    return True
-        return False
+                local_dt = dt_util.as_local(datetime.now(dt_util.UTC))
+                fpath = self.hass.config.path(f"{self.backup_dir}/{local_dt.strftime('%Y-%m-%dT%H_%M_%S')}.backup")
+            async with aiofiles.open(fpath, mode='wb+') as f:
+                await f.write(data.encode())
+                return True
+        except Exception as e:
+            _LOGGER.error(f"An error occurred while creating backup: {e}")
+            return False
 
     def get_backups(self) -> list[str] | None:
         """Gets a list of all the available backups"""

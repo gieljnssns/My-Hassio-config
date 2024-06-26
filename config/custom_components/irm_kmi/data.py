@@ -10,6 +10,8 @@ class IrmKmiForecast(Forecast):
 
     # TODO: add condition_2 as well and evolution to match data from the API?
     text: str | None
+    sunrise: str | None
+    sunset: str | None
 
 
 class IrmKmiRadarForecast(Forecast):
@@ -71,3 +73,4 @@ class ProcessedCoordinatorData(TypedDict, total=False):
     animation: RadarAnimationData
     warnings: List[WarningData]
     pollen: dict
+    country: str

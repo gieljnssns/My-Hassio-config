@@ -1,4 +1,5 @@
 """Constants for the Huawei Solar integration."""
+
 from datetime import timedelta
 
 DOMAIN = "huawei_solar"
@@ -11,13 +12,11 @@ DEFAULT_PASSWORD = "00000a"
 CONF_SLAVE_IDS = "slave_ids"
 CONF_ENABLE_PARAMETER_CONFIGURATION = "enable_parameter_configuration"
 
-
-DATA_BRIDGES_WITH_DEVICEINFOS = "bridges"
 DATA_UPDATE_COORDINATORS = "update_coordinators"
-DATA_CONFIGURATION_UPDATE_COORDINATORS = "configuration_update_coordinators"
-DATA_OPTIMIZER_UPDATE_COORDINATORS = "optimizer_update_coordinators"
 
-UPDATE_INTERVAL = timedelta(seconds=30)
+INVERTER_UPDATE_INTERVAL = timedelta(seconds=30)
+POWER_METER_UPDATE_INTERVAL = timedelta(seconds=30)
+ENERGY_STORAGE_UPDATE_INTERVAL = timedelta(seconds=30)
 UPDATE_TIMEOUT = timedelta(seconds=29)
 # configuration can only change when edited through FusionSolar web or app
 CONFIGURATION_UPDATE_INTERVAL = timedelta(minutes=15)

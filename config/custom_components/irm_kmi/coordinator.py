@@ -22,13 +22,15 @@ from .api import IrmKmiApiClient, IrmKmiApiError
 from .const import CONF_DARK_MODE, CONF_STYLE, DOMAIN, IRM_KMI_NAME
 from .const import IRM_KMI_TO_HA_CONDITION_MAP as CDT_MAP
 from .const import MAP_WARNING_ID_TO_SLUG as SLUG_MAP
-from .const import OPTION_STYLE_SATELLITE, OUT_OF_BENELUX, STYLE_TO_PARAM_MAP
+from .const import (OPTION_STYLE_SATELLITE, OUT_OF_BENELUX, STYLE_TO_PARAM_MAP,
+                    WEEKDAYS)
 from .data import (AnimationFrameData, CurrentWeatherData, IrmKmiForecast,
                    IrmKmiRadarForecast, ProcessedCoordinatorData,
                    RadarAnimationData, WarningData)
 from .pollen import PollenParser
 from .rain_graph import RainGraph
-from .utils import disable_from_config, get_config_value, preferred_language
+from .utils import (disable_from_config, get_config_value, next_weekday,
+                    preferred_language)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,7 +176,8 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
             radar_forecast=IrmKmiCoordinator.radar_list_to_forecast(api_data.get('animation', {})),
             animation=await self._async_animation_data(api_data=api_data),
             warnings=self.warnings_from_data(api_data.get('for', {}).get('warning')),
-            pollen=await self._async_pollen_data(api_data=api_data)
+            pollen=await self._async_pollen_data(api_data=api_data),
+            country=api_data.get('country')
         )
 
     async def download_images_from_api(self,
@@ -209,7 +212,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
                 or not isinstance(hourly_forecast_data, list)
                 or len(hourly_forecast_data) == 0):
 
-            for current in hourly_forecast_data[:2]:
+            for current in hourly_forecast_data[:4]:
                 if now.strftime('%H') == current['hour']:
                     now_hourly = current
                     break
@@ -269,6 +272,14 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
                     current_weather['wind_bearing'] = (float(api_data.get('obs', {}).get('windDirection')) + 180) % 360
                 except ValueError:
                     current_weather['wind_bearing'] = None
+
+        # Since June 2024, the NL weather does not include the condition in the 'ww' key, so we get it from the current
+        # hourly forecast instead if it is missing
+        if current_weather['condition'] is None:
+            try:
+                current_weather['condition'] = CDT_MAP.get((int(now_hourly.get('ww')), now_hourly.get('dayNight')))
+            except (TypeError, ValueError, AttributeError):
+                current_weather['condition'] = None
 
         return current_weather
 
@@ -343,23 +354,22 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
                 IrmKmiRadarForecast(
                     datetime=f.get("time"),
                     native_precipitation=f.get('value'),
-                    rain_forecast_max=round(f.get('positionHigher')*ratio, 2),
-                    rain_forecast_min=round(f.get('positionLower')*ratio, 2),
+                    rain_forecast_max=round(f.get('positionHigher') * ratio, 2),
+                    rain_forecast_min=round(f.get('positionLower') * ratio, 2),
                     might_rain=f.get('positionHigher') > 0
                 )
             )
         return forecast
 
-    async def daily_list_to_forecast(self, data: List[dict] | None) -> List[Forecast] | None:
+    async def daily_list_to_forecast(self, data: List[dict] | None) -> List[IrmKmiForecast] | None:
         """Parse data from the API to create a list of daily forecasts"""
         if data is None or not isinstance(data, list) or len(data) == 0:
             return None
 
         forecasts = list()
-        n_days = 0
         lang = preferred_language(self.hass, self._config_entry)
         tz = await dt.async_get_time_zone('Europe/Brussels')
-        now = dt.now(tz)
+        forecast_day = dt.now(tz)
 
         for (idx, f) in enumerate(data):
             precipitation = None
@@ -384,9 +394,42 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
                     pass
 
             is_daytime = f.get('dayNight', None) == 'd'
+
+            day_name = f.get('dayName', {}).get('en', None)
+            timestamp = f.get('timestamp', None)
+            if timestamp is not None:
+                forecast_day = datetime.fromisoformat(timestamp)
+            elif day_name in WEEKDAYS:
+                forecast_day = next_weekday(forecast_day, WEEKDAYS.index(day_name))
+            elif day_name in ['Today', 'Tonight']:
+                forecast_day = dt.now(tz)
+            elif day_name == 'Tomorrow':
+                forecast_day = dt.now(tz) + timedelta(days=1)
+
+            sunrise_sec = f.get('dawnRiseSeconds', None)
+            if sunrise_sec is None:
+                sunrise_sec = f.get('sunRise', None)
+            sunrise = None
+            if sunrise_sec is not None:
+                try:
+                    sunrise = (forecast_day.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=tz)
+                               + timedelta(seconds=float(sunrise_sec)))
+                except (TypeError, ValueError):
+                    pass
+
+            sunset_sec = f.get('dawnSetSeconds', None)
+            if sunset_sec is None:
+                sunset_sec = f.get('sunSet', None)
+            sunset = None
+            if sunset_sec is not None:
+                try:
+                    sunset = (forecast_day.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=tz)
+                              + timedelta(seconds=float(sunset_sec)))
+                except (TypeError, ValueError):
+                    pass
+
             forecast = IrmKmiForecast(
-                datetime=(now + timedelta(days=n_days)).strftime('%Y-%m-%d') if is_daytime else now.strftime(
-                    '%Y-%m-%d'),
+                datetime=(forecast_day.strftime('%Y-%m-%d')),
                 condition=CDT_MAP.get((f.get('ww1', None), f.get('dayNight', None)), None),
                 native_precipitation=precipitation,
                 native_temperature=f.get('tempMax', None),
@@ -397,6 +440,8 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
                 wind_bearing=wind_bearing,
                 is_daytime=is_daytime,
                 text=f.get('text', {}).get(lang, ""),
+                sunrise=sunrise.isoformat() if sunrise is not None else None,
+                sunset=sunset.isoformat() if sunset is not None else None
             )
             # Swap temperature and templow if needed
             if (forecast['native_templow'] is not None
@@ -406,8 +451,6 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
                     (forecast['native_temperature'], forecast['native_templow'])
 
             forecasts.append(forecast)
-            if is_daytime or idx == 0:
-                n_days += 1
 
         return forecasts
 

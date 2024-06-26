@@ -1,7 +1,8 @@
-"""Diagnostics support for Velbus."""
+"""Diagnostics support for Huawei Solar."""
+
 from __future__ import annotations
 
-from itertools import zip_longest
+from importlib.metadata import version
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -10,17 +11,8 @@ from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from huawei_solar import HuaweiSolarBridge
 
-from . import (
-    HuaweiSolarConfigurationUpdateCoordinator,
-    HuaweiSolarOptimizerUpdateCoordinator,
-    HuaweiSolarUpdateCoordinator,
-)
-from .const import (
-    DATA_CONFIGURATION_UPDATE_COORDINATORS,
-    DATA_OPTIMIZER_UPDATE_COORDINATORS,
-    DATA_UPDATE_COORDINATORS,
-    DOMAIN,
-)
+from . import HuaweiSolarUpdateCoordinators
+from .const import DATA_UPDATE_COORDINATORS, DOMAIN
 
 TO_REDACT = {CONF_PASSWORD}
 
@@ -29,39 +21,42 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinators: list[HuaweiSolarUpdateCoordinator] = hass.data[DOMAIN][
+    coordinators: list[HuaweiSolarUpdateCoordinators] = hass.data[DOMAIN][
         entry.entry_id
     ][DATA_UPDATE_COORDINATORS]
 
-    config_coordinators: list[HuaweiSolarConfigurationUpdateCoordinator] = hass.data[
-        DOMAIN
-    ][entry.entry_id][DATA_CONFIGURATION_UPDATE_COORDINATORS]
-
-    optimizer_coordinators: list[HuaweiSolarOptimizerUpdateCoordinator] = hass.data[
-        DOMAIN
-    ][entry.entry_id][DATA_OPTIMIZER_UPDATE_COORDINATORS]
-
     diagnostics_data = {
-        "config_entry_data": async_redact_data(dict(entry.data), TO_REDACT)
+        "config_entry_data": async_redact_data(dict(entry.data), TO_REDACT),
+        "pymodbus_version": version("pymodbus"),
     }
-    for coordinator, config_coordinator, optimizer_coordinator in zip_longest(
-        coordinators, config_coordinators, optimizer_coordinators
-    ):
+    for ucs in coordinators:
         diagnostics_data[
-            f"slave_{coordinator.bridge.slave_id}"
-        ] = await _build_bridge_diagnostics_info(coordinator.bridge)
+            f"slave_{ucs.bridge.slave_id}"
+        ] = await _build_bridge_diagnostics_info(ucs.bridge)
 
-        diagnostics_data[f"slave_{coordinator.bridge.slave_id}_data"] = coordinator.data
+        diagnostics_data[f"slave_{ucs.bridge.slave_id}_inverter_data"] = (
+            ucs.inverter_update_coordinator.data
+        )
 
-        if config_coordinator:
-            diagnostics_data[
-                f"slave_{coordinator.bridge.slave_id}_config_data"
-            ] = config_coordinator.data
+        if ucs.power_meter_update_coordinator:
+            diagnostics_data[f"slave_{ucs.bridge.slave_id}_power_meter_data"] = (
+                ucs.power_meter_update_coordinator.data
+            )
 
-        if optimizer_coordinator:
-            diagnostics_data[
-                f"slave_{coordinator.bridge.slave_id}_optimizer_data"
-            ] = optimizer_coordinator.data
+        if ucs.energy_storage_update_coordinator:
+            diagnostics_data[f"slave_{ucs.bridge.slave_id}_battery_data"] = (
+                ucs.energy_storage_update_coordinator.data
+            )
+
+        if ucs.configuration_update_coordinator:
+            diagnostics_data[f"slave_{ucs.bridge.slave_id}_config_data"] = (
+                ucs.configuration_update_coordinator.data
+            )
+
+        if ucs.optimizer_update_coordinator:
+            diagnostics_data[f"slave_{ucs.bridge.slave_id}_optimizer_data"] = (
+                ucs.optimizer_update_coordinator.data
+            )
 
     return diagnostics_data
 
@@ -69,6 +64,8 @@ async def async_get_config_entry_diagnostics(
 async def _build_bridge_diagnostics_info(bridge: HuaweiSolarBridge) -> dict[str, Any]:
     diagnostics_data = {
         "model_name": bridge.model_name,
+        "firmware_version": bridge.firmware_version,
+        "software_version": bridge.software_version,
         "pv_string_count": bridge.pv_string_count,
         "has_optimizers": bridge.has_optimizers,
         "battery_type": bridge.battery_type,

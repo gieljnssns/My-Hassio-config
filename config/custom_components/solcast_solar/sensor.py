@@ -44,7 +44,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         name="Forecast Today",
         icon="mdi:solar-power",
         suggested_display_precision=2,
-        #state_class= SensorStateClass.MEASUREMENT,
+        state_class= SensorStateClass.TOTAL,
     ),
     "peak_w_today": SensorEntityDescription(
         key="peak_w_today",
@@ -257,16 +257,15 @@ async def async_setup_entry(
                 suggested_display_precision=2,
                 rooftop_id=site["resource_id"],
             )
-        
         sen = RooftopSensor(
             key="site_data",
             coordinator=coordinator,
             entity_description=k,
             entry=entry,
         )
-        
+
         entities.append(sen)
-    
+
     async_add_entities(entities)
 
 class SolcastSensor(CoordinatorEntity, SensorEntity):
@@ -302,11 +301,16 @@ class SolcastSensor(CoordinatorEntity, SensorEntity):
                 f"SOLCAST - unable to get sensor value {ex} %s", traceback.format_exc()
             )
             self._sensor_data = None
-        
+
+        if self._sensor_data is None:
+            self._attr_available = False
+        else:
+            self._attr_available = True
+
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, entry.entry_id)},
             ATTR_NAME: "Solcast PV Forecast", #entry.title,
-            ATTR_MANUFACTURER: "Oziee",
+            ATTR_MANUFACTURER: "BJReplay",
             ATTR_MODEL: "Solcast PV Forecast",
             ATTR_ENTRY_TYPE: DeviceEntryType.SERVICE,
             ATTR_SW_VERSION: coordinator._version,
@@ -349,12 +353,18 @@ class SolcastSensor(CoordinatorEntity, SensorEntity):
                 f"SOLCAST - unable to get sensor value {ex} %s", traceback.format_exc()
             )
             self._sensor_data = None
+
+        if self._sensor_data is None:
+            self._attr_available = False
+        else:
+            self._attr_available = True
+
         self.async_write_ha_state()
 
 @dataclass
 class RooftopSensorEntityDescription(SensorEntityDescription):
     rooftop_id: str | None = None
-    
+
 class RooftopSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Solcast Sensor device."""
 
@@ -387,11 +397,11 @@ class RooftopSensor(CoordinatorEntity, SensorEntity):
                 f"SOLCAST - unable to get sensor value {ex} %s", traceback.format_exc()
             )
             self._sensor_data = None
-        
+
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, entry.entry_id)},
             ATTR_NAME: "Solcast PV Forecast", #entry.title,
-            ATTR_MANUFACTURER: "Oziee",
+            ATTR_MANUFACTURER: "BJReplay",
             ATTR_MODEL: "Solcast PV Forecast",
             ATTR_ENTRY_TYPE: DeviceEntryType.SERVICE,
             ATTR_SW_VERSION: coordinator._version,
@@ -420,7 +430,7 @@ class RooftopSensor(CoordinatorEntity, SensorEntity):
         """Return the state extra attributes of the sensor."""
         try:
             return self.coordinator.get_site_sensor_extra_attributes(
-                self.rooftop_id, 
+                self.rooftop_id,
                 self.key,
             )
         except Exception as ex:
@@ -451,7 +461,7 @@ class RooftopSensor(CoordinatorEntity, SensorEntity):
         """Handle updated data from the coordinator."""
         try:
             self._sensor_data = self.coordinator.get_site_sensor_value(
-                self.rooftop_id, 
+                self.rooftop_id,
                 self.key,
             )
         except Exception as ex:
