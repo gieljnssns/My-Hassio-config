@@ -1,0 +1,18 @@
+- sensor:
+    name: NUC CPU Temperatuur
+    unique_id: 509b24d9-32bc-4d0e-b2db-b88d2e3100b5
+    command: "cat /sys/class/thermal/thermal_zone2/temp"
+    unit_of_measurement: "°C"
+    value_template: "{{ value | multiply(0.001) | round(2) }}"
+- sensor:
+    name: "PS5"
+    command: 'echo -n ''SRCH * HTTP/1.1 device-discovery-protocol-version:0003001'' | nc -u -w1 192.168.79.112 9302 | awk ''/HTTP\/1.1/ {print $2}'''
+    scan_interval: 65
+    value_template: >
+      {% if value == '200' %}
+        on
+      {% elif value == '620'%}
+        rest
+      {% else %}
+        off
+      {% endif %}

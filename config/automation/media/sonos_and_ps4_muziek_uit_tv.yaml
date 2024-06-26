@@ -9,15 +9,21 @@ trigger:
   - platform: state
     entity_id: media_player.mass_living_2
     attribute: app_id
-    to: "x-sonos-htastream"
+    to: "TV"
   - platform: template
     value_template: >
       {{ state_attr("media_player.mass_living_2","app_id") == "x-sonos-htastream" }}
 action:
-  # - service: media_player.volume_set
-  #   data:
-  #     entity_id: media_player.philips_tv
-  #     volume_level: 0.0
+  - service: homeassistant.update_entity
+    data: {}
+    target:
+      entity_id: sensor.ps5
+  - service: media_player.volume_set
+    data:
+      entity_id: media_player.philips_tv
+      volume_level: 0.0
+  - delay:
+      seconds: 5
   - condition: and
     conditions:
       - condition: time
@@ -25,6 +31,10 @@ action:
         before: "23:00:00"
       - condition: state
         entity_id: media_player.mass_keuken
-        state: playing
+        state: "on"
+      - not:
+          - condition: state
+            entity_id: sensor.ps5
+            state: playing
   - service: media_player.media_pause
     entity_id: media_player.mass_keuken

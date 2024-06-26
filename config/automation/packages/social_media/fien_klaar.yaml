@@ -2,22 +2,6 @@ alias: "Fien social media"
 id: dcda6a40-15a2-4779-8a3c-21914df8779f
 mode: restart
 trigger:
-  # - platform: state
-  #   entity_id: input_boolean.fien_huiswerk
-  #   to: "on"
-  #   id: old
-  # - platform: state
-  #   entity_id: input_boolean.fien_drum
-  #   to: "on"
-  #   id: old
-  # - platform: state
-  #   entity_id: input_boolean.fien_uniform
-  #   to: "on"
-  #   id: old
-  # - platform: state
-  #   entity_id: input_boolean.fien_wasmand
-  #   to: "on"
-  #   id: old
   - platform: template
     value_template: >
       {{ states("todo.fien_todo") | int == 0 }}
@@ -30,32 +14,6 @@ action:
   - delay:
       seconds: 5
   - choose:
-      # - conditions:
-      #     - condition: and
-      #       conditions:
-      #         - condition: trigger
-      #           id: old
-      #         - condition: state
-      #           entity_id: input_boolean.fien_huiswerk
-      #           state: "on"
-      #         - condition: state
-      #           entity_id: input_boolean.fien_drum
-      #           state: "on"
-      #         - condition: state
-      #           entity_id: input_boolean.fien_uniform
-      #           state: "on"
-      #         - condition: state
-      #           entity_id: input_boolean.fien_wasmand
-      #           state: "on"
-      #   sequence:
-      #     - service: notify.mobile_app_fphone
-      #       data:
-      #         message: "Vanaf nu is't hier te doen."
-      #         data:
-      #           actions:
-      #             - action: "URI"
-      #               title: "To-Do"
-      #               uri: "/lovelace/fien"
       - conditions:
           - condition: and
             conditions:
