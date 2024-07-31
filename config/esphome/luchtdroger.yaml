@@ -5,40 +5,156 @@ substitutions:
   upper_devicename: Luchtdroger
   manual_ip: 192.168.79.165
 
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
 packages:
   wifi: !include common/wifi.yaml
-  device_base: !include common/device_base.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+esphome:
+  name: ${devicename}
+
+# esp32_ble_tracker:
+#   scan_parameters:
+#     # We currently use the defaults to ensure Bluetooth
+#     # can co-exist with WiFi In the future we may be able to
+#     # enable the built-in coexistence logic in ESP-IDF
+#     active: true
+
+# bluetooth_proxy:
+#   active: true
 
 i2c:
-  - sda: 4
-    scl: 5
-    scan: True
-    id: bus_a
-  # - sda: 4
-  #   scl: 5
-  #   scan: True
-  #   id: bus_b
+  - id: bus_a
+    sda: 21
+    scl: 22
+    scan: true
+  - id: bus_b
+    sda: 14
+    scl: 15
+    scan: true
 
-wifi:
-  ap:
-    password: !secret password
+# Interlock ssd relay
+# fan:
+#   - platform: speed
+#     name: "Ventilatie"
+#     id: ventilatie
+#     restore_mode: RESTORE_DEFAULT_OFF
+#     output: fan_output
+#     speed_count: 2
+#     on_turn_off:
+#       - switch.turn_off: low
+#       - switch.turn_off: high
+
+# output:
+#   - platform: template
+#     type: float
+#     id: fan_output   
+#     write_action:
+#       - if:
+#           condition:
+#             lambda: return ((state = 0));
+#           then:
+#             - switch.turn_off: low
+#             - switch.turn_off: high
+#       - if: 
+#           condition: 
+#             lambda: return ((state > 0.1) && (state < 0.6));
+#           then:
+#             - switch.turn_off: high
+#             - switch.turn_on: low
+#       - if:
+#           condition:
+#             lambda: return ((state > 0.7));
+#           then: 
+#             - switch.turn_off: low
+#             - switch.turn_on: high
+      
+# switch:
+#   - platform: gpio
+#     pin:
+#       number: 16
+#       inverted: yes
+#     name: ${upper_devicename}
+#     id: luchtdroger
+#     restore_mode: RESTORE_DEFAULT_OFF
+#   - platform: gpio
+#     pin:
+#       number: 17
+#       inverted: yes
+#     internal: true
+#     name: high
+#     id: high
+#     interlock: &interlock_group [low, high]
+#     interlock_wait_time: 1s
+#     restore_mode: RESTORE_DEFAULT_OFF
+#   - platform: gpio
+#     pin:
+#       number: 18
+#       inverted: yes
+#     internal: true
+#     name: low
+#     id: low
+#     interlock: *interlock_group
+#     interlock_wait_time: 1s
+#     restore_mode: RESTORE_DEFAULT_OFF
+fan:
+  - platform: template
+    name: "Ventilatie"
+    id: ventilatie
+    speed_count: 2
+    on_speed_set:
+      - lambda: |-
+          if (id(ventilatie).speed == 2) {
+            id(high).turn_on();
+          } else {
+            id(high).turn_off();
+          }
+    on_turn_on:
+      - lambda: |-
+          id(ventilator).turn_on();
+    on_turn_off:
+      - lambda: |-
+          id(ventilator).turn_off();
+    # on_state:
+    #   - do something
 
 switch:
   - platform: gpio
     pin:
-      number: D6
+      number: 16
       inverted: yes
     name: ${upper_devicename}
     id: luchtdroger
     restore_mode: RESTORE_DEFAULT_OFF
   - platform: gpio
     pin:
-      number: D5
+      number: 17
       inverted: yes
-    name: ${upper_devicename} reserve
+    internal: true
+    name: high
+    id: high
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    pin:
+      number: 18
+      inverted: yes
+    internal: true
+    name: Ventilator
+    id: ventilator
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    pin:
+      number: 19
+      inverted: yes
+    internal: true
     id: reserve
     restore_mode: RESTORE_DEFAULT_OFF
   
+
 sensor:
   - platform: sht3xd
     temperature:
@@ -46,7 +162,7 @@ sensor:
       # internal: true
     humidity:
       name: ${upper_devicename} ingaande luchtvochtigheid
-    address: 0x44
+    # address: 0x44
     update_interval: 60s
     i2c_id: bus_a
   - platform: sht3xd
@@ -55,6 +171,6 @@ sensor:
       # internal: true
     humidity:
       name: ${upper_devicename} uitgaande luchtvochtigheid
-    address: 0x45
+    address: 0x44
     update_interval: 60s
-    i2c_id: bus_a
+    i2c_id: bus_b

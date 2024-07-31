@@ -10,7 +10,6 @@ packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
-
 i2c:
   sda: D2
   scl: D1
@@ -37,16 +36,22 @@ sensor:
     address: 0x23
     update_interval: 60s
     on_value_range:
-      - above: 500
+      - above: 1
         then:
           - switch.turn_on: fan
-      - below: 500
+      - below: 1
         then:
+          - delay: 4h
           - switch.turn_off: fan
 
   - platform: homeassistant
     entity_id: sensor.poort_luchtvochtigheid
     id: ha_humidity
+    internal: true
+  
+  - platform: homeassistant
+    entity_id: sensor.buiten_temperatuur
+    id: ha_temp
     internal: true
 
   - platform: bme280_i2c
@@ -69,9 +74,9 @@ sensor:
   - platform: template
     name: "Buiten dauwpunt"
     lambda: |-
-      return (243.5*(log(id(ha_humidity).state/100)+((17.67*id(bme280_temperature).state)/
-      (243.5+id(bme280_temperature).state)))/(17.67-log(id(ha_humidity).state/100)-
-      ((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state))));
+      return (243.5*(log(id(ha_humidity).state/100)+((17.67*id(ha_temp).state)/
+      (243.5+id(ha_temp).state)))/(17.67-log(id(ha_humidity).state/100)-
+      ((17.67*id(ha_temp).state)/(243.5+id(ha_temp).state))));
     unit_of_measurement: °C
     icon: "mdi:thermometer-alert"
 #   - platform: sds011

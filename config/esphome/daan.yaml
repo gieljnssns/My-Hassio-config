@@ -21,9 +21,9 @@ wifi:
   ssid: !secret ssid-covid
   password: !secret password
   power_save_mode: none
-  ap:
-    ssid: "Daan Fallback Hotspot"
-    password: !secret password
+  # ap:
+  #   ssid: "Daan Fallback Hotspot"
+  #   password: !secret password
 
 captive_portal:
 
@@ -41,7 +41,7 @@ switch:
       inverted: yes
     name: "Verluchting"
     id: verluchting
-    
+
 one_wire:
   - platform: gpio
     pin: D2
@@ -51,81 +51,80 @@ one_wire:
 # 0x893C01D607F4DC28
 # 0xEF3C01D607099F28
 sensor:
-  
   - platform: dallas_temp
     address: 0xEF3C01D607099F28
     name: Buiten
     id: buiten
     on_value:
-          - if:
-              condition:
-                - sensor.in_range:
-                    id: buiten
-                    above: 10.0
-                - sensor.in_range:
-                    id: zolder
-                    above: 25.0
-                - lambda: |-
-                    return id(zolder).state > id(buiten).state;
-              then:
-                - switch.turn_on: verluchting
-          - if:
-              condition:
-                - sensor.in_range:
-                    id: buiten
-                    below: 10.0
-              then:
-                - switch.turn_off: verluchting
-          - if:
-              condition:
-                - sensor.in_range:
-                    id: zolder
-                    below: 24.0
-              then:
-                - switch.turn_off: verluchting
-          - if:
-              condition:
-                - lambda: |-
-                    return id(zolder).state < id(buiten).state;
-              then:
-                - switch.turn_off: verluchting
+      - if:
+          condition:
+            - sensor.in_range:
+                id: buiten
+                above: 10.0
+            - sensor.in_range:
+                id: zolder
+                above: 25.0
+            - lambda: |-
+                return id(zolder).state > id(buiten).state;
+          then:
+            - switch.turn_on: verluchting
+      - if:
+          condition:
+            - sensor.in_range:
+                id: buiten
+                below: 10.0
+          then:
+            - switch.turn_off: verluchting
+      - if:
+          condition:
+            - sensor.in_range:
+                id: zolder
+                below: 24.0
+          then:
+            - switch.turn_off: verluchting
+      - if:
+          condition:
+            - lambda: |-
+                return id(zolder).state < id(buiten).state;
+          then:
+            - switch.turn_off: verluchting
   - platform: dallas_temp
     address: 0x893C01D607F4DC28
     name: Zolder
     id: zolder
     on_value:
-          - if:
-              condition:
-                - sensor.in_range:
-                    id: buiten
-                    above: 10.0
-                - sensor.in_range:
-                    id: zolder
-                    above: 25.0
-                - lambda: |-
-                    return id(zolder).state > id(buiten).state;
-              then:
-                - switch.turn_on: verluchting
-          - if:
-              condition:
-                - sensor.in_range:
-                    id: buiten
-                    below: 10.0
-              then:
-                - switch.turn_off: verluchting
-          - if:
-              condition:
-                - sensor.in_range:
-                    id: zolder
-                    below: 24.0
-              then:
-                - switch.turn_off: verluchting
-          - if:
-              condition:
-                - lambda: |-
-                    return id(zolder).state < id(buiten).state;
-              then:
-                - switch.turn_off: verluchting
+      - if:
+          condition:
+            - sensor.in_range:
+                id: buiten
+                above: 10.0
+            - sensor.in_range:
+                id: zolder
+                above: 25.0
+            - lambda: |-
+                return id(zolder).state > id(buiten).state;
+          then:
+            - switch.turn_on: verluchting
+      - if:
+          condition:
+            - sensor.in_range:
+                id: buiten
+                below: 10.0
+          then:
+            - switch.turn_off: verluchting
+      - if:
+          condition:
+            - sensor.in_range:
+                id: zolder
+                below: 24.0
+          then:
+            - switch.turn_off: verluchting
+      - if:
+          condition:
+            - lambda: |-
+                return id(zolder).state < id(buiten).state;
+          then:
+            - switch.turn_off: verluchting
 # binary_sensor:
 #   - platform: homeassistant
 #     name: "Pomp"

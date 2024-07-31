@@ -193,23 +193,24 @@ sensor:
     humidity:
       name: "${upper_devicename} luchtvochtigheid"
       id: bme280_humidity
-      oversampling: 1x
+      # oversampling: 1x
     pressure:
       name: "${upper_devicename} luchtdruk"
       id: bme280_pressure
+      internal: true
       oversampling: 1x
     address: 0x76
     i2c_id: bus_a
     update_interval: 60s
 
-  - platform: template
-    name: "${upper_devicename} dauwpunt"
-    lambda:
-      return (243.5*(log(id(bme280_humidity).state/100)+((17.67*id(bme280_temperature).state)/
-      (243.5+id(bme280_temperature).state)))/(17.67-log(id(bme280_humidity).state/100)-
-      ((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state))));
-    unit_of_measurement: °C
-    icon: "mdi:thermometer-alert"
+  # - platform: template
+  #   name: "${upper_devicename} dauwpunt"
+  #   lambda:
+  #     return (243.5*(log(id(bme280_humidity).state/100)+((17.67*id(bme280_temperature).state)/
+  #     (243.5+id(bme280_temperature).state)))/(17.67-log(id(bme280_humidity).state/100)-
+  #     ((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state))));
+  #   unit_of_measurement: °C
+  #   icon: "mdi:thermometer-alert"
 
   - platform: ld2410
     ld2410_id: zithoek
