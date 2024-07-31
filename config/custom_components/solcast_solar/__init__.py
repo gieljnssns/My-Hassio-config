@@ -2,6 +2,7 @@
 
 import logging
 import random
+import asyncio
 
 from homeassistant import loader
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +27,13 @@ from .const import (
     SERVICE_REMOVE_HARD_LIMIT,
     SOLCAST_URL,
     CUSTOM_HOUR_SENSOR,
-    KEY_ESTIMATE
+    KEY_ESTIMATE,
+    BRK_ESTIMATE,
+    BRK_ESTIMATE10,
+    BRK_ESTIMATE90,
+    BRK_SITE,
+    BRK_HALFHOURLY,
+    BRK_HOURLY,
 )
 
 from .coordinator import SolcastUpdateCoordinator
@@ -69,15 +76,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     random.seed()
 
-    #new in v4.0.16 for the selector of which field to use from the data
-    if entry.options.get(KEY_ESTIMATE,None) is None:
-        new = {**entry.options}
-        new[KEY_ESTIMATE] = "estimate"
-        hass.config_entries.async_update_entry(entry, options=new, version=7)
+    _VERSION = ""
+    try:
+        integration = await loader.async_get_integration(hass, DOMAIN)
+        _VERSION = str(integration.version)
+        _LOGGER.info(
+            f"\n{'-'*67}\n"
+            f"Solcast integration version: {_VERSION}\n\n"
+            f"This is a custom integration. When troubleshooting a problem, after\n"
+            f"reviewing open and closed issues, and the discussions, check the\n"
+            f"required automation is functioning correctly and try enabling debug\n"
+            f"logging to see more. Troubleshooting tips available at:\n"
+            f"https://github.com/BJReplay/ha-solcast-solar/discussions/38\n\n"
+            f"Beta versions may also have addressed some issues so look at those.\n\n"
+            f"If all else fails, then open an issue and our community will try to\n"
+            f"help: https://github.com/BJReplay/ha-solcast-solar/issues\n"
+            f"{'-'*67}")
+    except loader.IntegrationNotFound:
+        pass
 
     optdamp = {}
     try:
-        #if something goes wrong ever with the damp factors just create a blank 1.0
+        #if something ever goes wrong with the damp factors just create a blank 1.0
         for a in range(0,24):
             optdamp[str(a)] = entry.options[f"damp{str(a).zfill(2)}"]
     except Exception as ex:
@@ -88,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for a in range(0,24):
             optdamp[str(a)] = 1.0
 
-    # Introduced in 2024.6.0: async_get_time_zone
+    # Introduced in core 2024.6.0: async_get_time_zone
     try:
         dt_util.async_get_time_zone
         asynctz = True
@@ -98,15 +118,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         tz = await dt_util.async_get_time_zone(hass.config.time_zone)
     else:
         tz = dt_util.get_time_zone(hass.config.time_zone)
+
     options = ConnectionOptions(
         entry.options[CONF_API_KEY],
         SOLCAST_URL,
-        hass.config.path('solcast.json'),
+        hass.config.path('/config/solcast.json'),
         tz,
         optdamp,
-        entry.options[CUSTOM_HOUR_SENSOR],
-        entry.options.get(KEY_ESTIMATE,"estimate"),
-        (entry.options.get(HARD_LIMIT,100000)/1000),
+        entry.options.get(CUSTOM_HOUR_SENSOR, 1),
+        entry.options.get(KEY_ESTIMATE, "estimate"),
+        (entry.options.get(HARD_LIMIT,100000) / 1000),
+        entry.options.get(BRK_ESTIMATE, True),
+        entry.options.get(BRK_ESTIMATE10, True),
+        entry.options.get(BRK_ESTIMATE90, True),
+        entry.options.get(BRK_SITE, True),
+        entry.options.get(BRK_HALFHOURLY, True),
+        entry.options.get(BRK_HOURLY, True),
     )
 
     solcast = SolcastApi(aiohttp_client.async_get_clientsession(hass), options)
@@ -117,15 +144,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except Exception as ex:
         raise ConfigEntryNotReady(f"Getting sites data failed: {ex}") from ex
 
-    await solcast.load_saved_data()
-
-    _VERSION = ""
-    try:
-        integration = await loader.async_get_integration(hass, DOMAIN)
-        _VERSION = str(integration.version)
-        _LOGGER.info(f"Solcast Integration version number: {_VERSION}")
-    except loader.IntegrationNotFound:
-        pass
+    retry = 3
+    while retry >= 0:
+        if await solcast.load_saved_data(): break
+        retry -= 1
+        if retry >= 0:
+            _LOGGER.warning("Failed to load initial data from cache or Solcast, retrying after 10 seconds")
+            await asyncio.sleep(10)
 
     coordinator = SolcastUpdateCoordinator(hass, solcast, _VERSION)
 
@@ -139,28 +164,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    _LOGGER.info(f"SOLCAST - Solcast API data UTC times are converted to {hass.config.time_zone}")
+    _LOGGER.info(f"Solcast API data UTC times are converted to {hass.config.time_zone}")
 
     if options.hard_limit < 100:
         _LOGGER.info(
-            f"SOLCAST - Inverter hard limit value has been set. If the forecasts and graphs are not as you expect, try running the service 'solcast_solar.remove_hard_limit' to remove this setting. "
+            f"Solcast inverter hard limit value has been set. If the forecasts and graphs are not as you expect, try running the service 'solcast_solar.remove_hard_limit' to remove this setting. "
             f"This setting is really only for advanced quirky solar setups."
         )
 
     async def handle_service_update_forecast(call: ServiceCall):
         """Handle service call"""
-        _LOGGER.info(f"SOLCAST - Service call: {SERVICE_UPDATE}")
+        _LOGGER.info(f"Service call: {SERVICE_UPDATE}")
         await coordinator.service_event_update()
 
     async def handle_service_clear_solcast_data(call: ServiceCall):
         """Handle service call"""
-        _LOGGER.info(f"SOLCAST - Service call: {SERVICE_CLEAR_DATA}")
+        _LOGGER.info(f"Service call: {SERVICE_CLEAR_DATA}")
         await coordinator.service_event_delete_old_solcast_json_file()
 
     async def handle_service_get_solcast_data(call: ServiceCall) -> ServiceResponse:
         """Handle service call"""
         try:
-            _LOGGER.info(f"SOLCAST - Service call: {SERVICE_QUERY_FORECAST_DATA}")
+            _LOGGER.info(f"Service call: {SERVICE_QUERY_FORECAST_DATA}")
 
             start = call.data.get(EVENT_START_DATETIME, dt_util.now())
             end = call.data.get(EVENT_END_DATETIME, dt_util.now())
@@ -177,7 +202,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def handle_service_set_dampening(call: ServiceCall):
         """Handle service call"""
         try:
-            _LOGGER.info(f"SOLCAST - Service call: {SERVICE_SET_DAMPENING}")
+            _LOGGER.info(f"Service call: {SERVICE_SET_DAMPENING}")
 
             factors = call.data.get(DAMP_FACTOR, None)
 
@@ -213,7 +238,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def handle_service_set_hard_limit(call: ServiceCall):
         """Handle service call"""
         try:
-            _LOGGER.info(f"SOLCAST - Service call: {SERVICE_SET_HARD_LIMIT}")
+            _LOGGER.info(f"Service call: {SERVICE_SET_HARD_LIMIT}")
 
             hl = call.data.get(HARD_LIMIT, 100000)
 
@@ -238,7 +263,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def handle_service_remove_hard_limit(call: ServiceCall):
         """Handle service call"""
         try:
-            _LOGGER.info(f"SOLCAST - Service call: {SERVICE_REMOVE_HARD_LIMIT}")
+            _LOGGER.info(f"Service call: {SERVICE_REMOVE_HARD_LIMIT}")
 
             opt = {**entry.options}
             opt[HARD_LIMIT] = 100000
@@ -293,48 +318,101 @@ async def async_remove_config_entry_device(hass: HomeAssistant, entry: ConfigEnt
     return True
 
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
-    """Handle options update. Only reload if any item was changed"""
-    if any(
-        entry.data.get(attrib) != entry.options.get(attrib)
-        for attrib in (DAMP_FACTOR, HARD_LIMIT,KEY_ESTIMATE, CUSTOM_HOUR_SENSOR, CONF_API_KEY)
-    ):
-        # update entry replacing data with new options
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, **entry.options}
-        )
-        await hass.config_entries.async_reload(entry.entry_id)
+    """Reload..."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Solcast Migrating from version %s", config_entry.version)
+    def upgraded():
+        _LOGGER.debug("Upgraded to options version %s", config_entry.version)
+
+    try:
+        _LOGGER.debug("Options version %s", config_entry.version)
+    except:
+        pass
 
     if config_entry.version < 4:
         new_options = {**config_entry.options}
         new_options.pop("const_disableautopoll", None)
-        hass.config_entries.async_update_entry(config_entry, options=new_options, version=4)
+        try:
+            hass.config_entries.async_update_entry(config_entry, options=new_options, version=4)
+            upgraded()
+        except Exception as e:
+            if "unexpected keyword argument 'version'" in e:
+                config_entry.version = 4
+                hass.config_entries.async_update_entry(config_entry, options=new_options)
+                upgraded()
+            else:
+                raise
 
     #new 4.0.8
-    #power factor for each hour
-    if config_entry.version == 4:
+    #dampening factor for each hour
+    if config_entry.version < 5:
         new = {**config_entry.options}
         for a in range(0,24):
             new[f"damp{str(a).zfill(2)}"] = 1.0
-        hass.config_entries.async_update_entry(config_entry, options=new, version=5)
+        try:
+            hass.config_entries.async_update_entry(config_entry, options=new, version=5)
+            upgraded()
+        except Exception as e:
+            if "unexpected keyword argument 'version'" in e:
+                config_entry.version = 5
+                hass.config_entries.async_update_entry(config_entry, options=new_options)
+                upgraded()
+            else:
+                raise
 
     #new 4.0.15
     #custom sensor for 'next x hours'
-    if config_entry.version == 5:
+    if config_entry.version < 6:
         new = {**config_entry.options}
         new[CUSTOM_HOUR_SENSOR] = 1
-        hass.config_entries.async_update_entry(config_entry, options=new, version=6)
+        try:
+            hass.config_entries.async_update_entry(config_entry, options=new, version=6)
+            upgraded()
+        except Exception as e:
+            if "unexpected keyword argument 'version'" in e:
+                config_entry.version = 6
+                hass.config_entries.async_update_entry(config_entry, options=new_options)
+                upgraded()
+            else:
+                raise
 
     #new 4.0.16
     #which estimate value to use for data calcs est,est10,est90
-    if config_entry.version == 6:
+    if config_entry.version < 7:
         new = {**config_entry.options}
         new[KEY_ESTIMATE] = "estimate"
-        hass.config_entries.async_update_entry(config_entry, options=new, version=7)
+        try:
+            hass.config_entries.async_update_entry(config_entry, options=new, version=7)
+            upgraded()
+        except Exception as e:
+            if "unexpected keyword argument 'version'" in e:
+                config_entry.version = 7
+                hass.config_entries.async_update_entry(config_entry, options=new_options)
+                upgraded()
+            else:
+                raise
 
-    _LOGGER.debug("Solcast Migration to version %s successful", config_entry.version)
+    #new 4.0.39
+    #attributes to include
+    if config_entry.version < 8:
+        new = {**config_entry.options}
+        if new.get(BRK_ESTIMATE) is None: new[BRK_ESTIMATE] = True
+        if new.get(BRK_ESTIMATE10) is None: new[BRK_ESTIMATE10] = True
+        if new.get(BRK_ESTIMATE90) is None: new[BRK_ESTIMATE90] = True
+        if new.get(BRK_SITE) is None: new[BRK_SITE] = True
+        if new.get(BRK_HALFHOURLY)is None: new[BRK_HALFHOURLY] = True
+        if new.get(BRK_HOURLY) is None: new[BRK_HOURLY] = True
+        try:
+            hass.config_entries.async_update_entry(config_entry, options=new, version=8)
+            upgraded()
+        except Exception as e:
+            if "unexpected keyword argument 'version'" in e:
+                config_entry.version = 8
+                hass.config_entries.async_update_entry(config_entry, options=new_options)
+                upgraded()
+            else:
+                raise
 
     return True

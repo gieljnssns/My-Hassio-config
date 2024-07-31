@@ -2,8 +2,7 @@
 
 from homeassistant.const import Platform
 
-
-VERSION = "v2.4.5"
+VERSION = "v2.4.7"
 DOMAIN = "espsomfy_rts"
 MANUFACTURER = "rstrouse"
 API_CONTROLLER = "/controller"
@@ -37,9 +36,9 @@ ATTR_AVAILABLE_MODES = "???"
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.COVER,
+    Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
-    Platform.SENSOR,
-    Platform.BUTTON
 ]
