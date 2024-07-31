@@ -26,13 +26,13 @@ naive_mpc_optim:
         {{  states('sensor.afwasmachien_uren') | int(0) }},
         {{  states('sensor.warmtepompboiler_uren') | int(0) }},
         {{  states('sensor.warmtepomp_uren') | int(0) }}],
-      "set_def_constant":[true, true, true, false, false],
+      "set_def_constant":[true, true, true, true, true],
       "def_end_timestep": [
         {{  states('sensor.wasmachien_end_timesteps') | int(0) }},
         {{  states('sensor.droogkast_end_timesteps') | int(0) }},
         {{  states('sensor.afwasmachien_end_timesteps') | int(0) }},
         {{  states('sensor.warmtepompboiler_end_timesteps') | int(0) }},
-        {{  states('sensor.warmtepomp_end_timesteps') | int(0) }}],
+        0],
       "def_current_state": [
         {{  "true" if is_state('input_boolean.emhass_wasmachien', "on") else "false" }}, 
         {{  "true" if is_state('input_boolean.emhass_droogkast', "on") else "false" }}, 

@@ -2,12 +2,14 @@
     - name: Afkoeling gewenst
       unique_id: 61efbf71-ab3f-4e70-8d0f-81eff1e49d46
       state: >
-        {{ is_state('sensor.binnen_vs_buiten', 'Afkoeling') }}
+        {{ (states('sensor.binnen_lowpass') | float(0)) > (states('sensor.buitentemperatuur_gefilterd') | float(0)) and 
+            states('sensor.binnen_lowpass') | float(0) > 23.5 }}
       icon: >
-        {% if is_state('sensor.binnen_vs_buiten', 'Afkoeling') %}
-        mdi:fan
+        {% if (states('sensor.binnen_lowpass') | float(0)) > (states('sensor.buitentemperatuur_gefilterd') | float(0)) and 
+            states('sensor.binnen_lowpass') | float(0) > 23.5 %}
+          mdi:fan
         {% else %}
-        mdi:fan-off
+          mdi:fan-off
         {% endif %}
 
     - name: Buiten frisser dan binnen

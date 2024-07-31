@@ -2,8 +2,8 @@
     - name: People home
       unique_id: 8e651710-4133-4790-a780-7ad400573558
       state: >
-        {{ expand("person.giel", "person.martine", "person.noor", "person.fien") 
-                    | selectattr("state", "eq", "home") 
+        {{ expand("binary_sensor.fien_bayesian", "binary_sensor.martine_bayesian", "binary_sensor.noor_bayesian", "binary_sensor.giel_bayesian") 
+                    | selectattr("state", "eq", "on") 
                     | map(attribute="entity_id") 
                     | list
                     | count }}

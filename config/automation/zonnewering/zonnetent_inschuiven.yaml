@@ -15,7 +15,7 @@ trigger:
       minutes: 5
   - platform: numeric_state
     entity_id: sensor.buiten_lichtsterkte
-    below: 1000
+    below: 2000
     for:
       minutes: 5
 
@@ -25,7 +25,7 @@ trigger:
       {{ states("sensor.windsnelheid") | int(0) > 26 }}
   - platform: template
     value_template: >
-      {{ states("sensor.windvlaag") | int(0) > 30 }}
+      {{ states("sensor.windvlaag") | int(0) > 40 }}
   # - platform: template
   #   value_template: >
   #     {{ states("sensor.buiten_lichtsterkte") | float(0) < 4000 and

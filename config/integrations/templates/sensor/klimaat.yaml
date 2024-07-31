@@ -7,19 +7,19 @@
       availability: >
         {{ state_attr("climate.living", "current_temperature") is number }}
 
-    - name: Binnen vs buiten
-      unique_id: dddcfcff-cc55-4bc0-87fc-7285c0a79e97
-      state: >
-        {% if (states('sensor.binnen_lowpass') | float(0)) > (states('sensor.buitentemperatuur_gefilterd') | float(0)) and 
-            states('sensor.binnen_lowpass') | float(0) > 23.5 %}
-          Afkoeling
-        {% else %}
-          Geen afkoeling
-        {% endif %}
-      availability: >-
-        {{ has_value('sensor.binnen_lowpass') and 
-          has_value('sensor.buitentemperatuur_gefilterd') and
-          has_value('sensor.binnen_lowpass') }}
+    # - name: Binnen vs buiten
+    #   unique_id: dddcfcff-cc55-4bc0-87fc-7285c0a79e97
+    #   state: >
+    #     {% if (states('sensor.binnen_lowpass') | float(0)) > (states('sensor.buitentemperatuur_gefilterd') | float(0)) and
+    #         states('sensor.binnen_lowpass') | float(0) > 23.5 %}
+    #       Afkoeling
+    #     {% else %}
+    #       Geen afkoeling
+    #     {% endif %}
+    #   availability: >-
+    #     {{ has_value('sensor.binnen_lowpass') and
+    #       has_value('sensor.buitentemperatuur_gefilterd') and
+    #       has_value('sensor.binnen_lowpass') }}
 
     # - name: Buiten temperatuur
     #   unique_id: e04b3353-a23c-41ee-9329-b5d3b2526ca6

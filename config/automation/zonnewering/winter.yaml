@@ -14,7 +14,7 @@ trigger:
   - platform: template
     id: openen
     value_template: >
-      {{ states("sensor.windvlaag") | int(0) > 50 }}
+      {{ states("sensor.windvlaag") | int(0) > 60 }}
   - platform: template
     value_template: >
       {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
@@ -51,7 +51,7 @@ action:
               {{ states("sensor.windsnelheid") | int(0) < 40 }}
           - condition: template
             value_template: >
-              {{ states("sensor.windvlaag") | int(0) < 50 }}
+              {{ states("sensor.windvlaag") | int(0) < 60 }}
         sequence:
           - service: cover.close_cover
             target:

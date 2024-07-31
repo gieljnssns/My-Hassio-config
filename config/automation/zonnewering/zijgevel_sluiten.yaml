@@ -29,7 +29,7 @@ condition:
         {{ states("sensor.windsnelheid") | int(0) < 40 }}
     - condition: template
       value_template: >
-        {{ states("sensor.windvlaag") | int(0) < 50 }}
+        {{ states("sensor.windvlaag") | int(0) < 60 }}
     - condition: template
       value_template: >
         {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
@@ -59,7 +59,7 @@ condition:
 
     - condition: template
       value_template: >
-        {{ states("sensor.max_temperatuur_buiten_voorspelling_12u") | float(0) > 21 }}
+        {{ states("sensor.max_temperatuur_buiten_voorspelling_12u") | float(0) > 20 }}
 
     # Time based conditions
     - condition: template

@@ -4,9 +4,9 @@ trigger:
   - platform: time
     at: "01:31:00"
     id: "fit"
-  - platform: time
-    at: "01:36:00"
-    id: "tune"
+  # - platform: time
+  #   at: "01:36:00"
+  #   id: "tune"
   - platform: time
     at: "06:02:00"
     id: "prediction"
@@ -57,18 +57,18 @@ action:
           # - service: persistent_notification.create
           #   data:
           #     message: Forecast model fit
-      - conditions:
-          - condition: trigger
-            id: tune
-          # - alias: "alleen op zondagnacht"
-          #   condition: time
-          #   weekday:
-          #     - mon
-        sequence:
-          - service: rest_command.forecast_model_tune_load_zonder_wp
-          # - service: persistent_notification.create
-          #   data:
-          #     message: Forecast model tune
+      # - conditions:
+      #     - condition: trigger
+      #       id: tune
+      #     # - alias: "alleen op zondagnacht"
+      #     #   condition: time
+      #     #   weekday:
+      #     #     - mon
+      #   sequence:
+      #     - service: rest_command.forecast_model_tune_load_zonder_wp
+      #     # - service: persistent_notification.create
+      #     #   data:
+      #     #     message: Forecast model tune
       - conditions:
           - condition: trigger
             id: start
