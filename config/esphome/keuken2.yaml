@@ -1,0 +1,37 @@
+substitutions:
+  devicename: keuken-2
+  platform: ESP8266
+  board: nodemcuv2
+  upper_devicename: Keuken
+  ssid: !secret ssid-waskot
+  manual_ip: 192.168.79.166
+
+packages:
+  # wifi: !include common/wifi-waskot.yaml
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base.yaml
+
+i2c:
+  sda: 4
+  scl: 5
+  scan: True
+  id: bus_a
+
+sensor:
+  - platform: bme280_i2c
+    temperature:
+      name: ${upper_devicename} temperatuur
+      id: bme280_temperature
+      oversampling: 1x
+    pressure:
+      name: ${upper_devicename} luchtdruk
+      id: bme280_pressure
+      oversampling: 1x
+      internal: true
+    humidity:
+      name: ${upper_devicename} luchtvochtigheid
+      id: bme280_humidity
+      oversampling: 1x
+    address: 0x76
+    i2c_id: bus_a
+    update_interval: 60s

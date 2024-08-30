@@ -79,6 +79,11 @@ sensor:
       ((17.67*id(ha_temp).state)/(243.5+id(ha_temp).state))));
     unit_of_measurement: °C
     icon: "mdi:thermometer-alert"
+  
+  - platform: absolute_humidity
+    name: "${upper_devicename} absolute luchtvochtigheid"
+    temperature: ha_temp
+    humidity: ha_humidity
 #   - platform: sds011
 #     pm_2_5:
 #       name: "Particulate Matter <2.5µm Concentration"

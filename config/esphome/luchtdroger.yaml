@@ -37,6 +37,133 @@ i2c:
     scl: 15
     scan: true
 
+fan:
+  - platform: template
+    name: "Ventilatie"
+    id: ventilatie
+    restore_mode: RESTORE_DEFAULT_OFF
+    speed_count: 2
+    on_speed_set:
+      - lambda: |-
+          if (id(ventilatie).speed == 2) {
+            id(high).turn_on();
+          } else {
+            id(high).turn_off();
+          }
+    on_turn_on:
+      - lambda: |-
+          id(ventilator).turn_on();
+    on_turn_off:
+      - lambda: |-
+          id(ventilator).turn_off();
+    # on_state:
+    #   - do something
+
+switch:
+  - platform: gpio
+    pin:
+      number: 16
+      inverted: yes
+    name: ${upper_devicename}
+    id: luchtdroger
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    pin:
+      number: 17
+      inverted: yes
+    internal: true
+    name: high
+    id: high
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    pin:
+      number: 18
+      inverted: yes
+    internal: true
+    name: Ventilator
+    id: ventilator
+    restore_mode: RESTORE_DEFAULT_OFF
+    on_turn_on: 
+      then:
+        - lambda: |-
+            if ((id(living_luchtvochtigheid).state > 59) && (id(living_temperatuur).state < 21)) {
+              id(luchtdroger).turn_on();
+            }
+            if ((id(ha_temp).state > 1) && (id(ha_temp).state < 32) && (id(living_absolute_luchtvochtigheid).state > id(buiten_absolute_luchtvochtigheid).state) && (id(living_temperatuur).state < 21)) {
+              id(luchtdroger).turn_on();
+            } 
+    
+    on_turn_off: 
+      then:
+        - switch.turn_off: luchtdroger
+
+  - platform: gpio
+    pin:
+      number: 19
+      inverted: yes
+    internal: true
+    id: reserve
+    restore_mode: RESTORE_DEFAULT_OFF
+  
+sensor:
+  - platform: dht
+    pin: 32
+    model: DHT22
+    temperature:
+      accuracy_decimals: 1
+      name: "Waskot temperatuur"
+    humidity:
+      accuracy_decimals: 1
+      name: "Waskot luchtvochtigheid"
+    update_interval: 60s
+    
+  - platform: sht3xd
+    temperature:
+      name: ${upper_devicename} uitgaande temperatuur
+      # internal: true
+    humidity:
+      name: ${upper_devicename} uitgaande luchtvochtigheid
+    # address: 0x44
+    update_interval: 60s
+    i2c_id: bus_a
+
+  - platform: sht3xd
+    temperature:
+      name: ${upper_devicename} ingaande temperatuur
+      # internal: true
+    humidity:
+      name: ${upper_devicename} ingaande luchtvochtigheid
+    address: 0x44
+    update_interval: 60s
+    i2c_id: bus_b
+  
+  - platform: homeassistant
+    entity_id: sensor.living_absolute_luchtvochtigheid
+    id: living_absolute_luchtvochtigheid
+    internal: true
+  
+  - platform: homeassistant
+    entity_id: sensor.buiten_absolute_luchtvochtigheid
+    id: buiten_absolute_luchtvochtigheid
+    internal: true
+  
+  - platform: homeassistant
+    entity_id: sensor.buiten_temperatuur
+    id: ha_temp
+    internal: true
+  
+  - platform: homeassistant
+    entity_id: sensor.living_luchtvochtigheid
+    id: living_luchtvochtigheid
+    internal: true
+
+  - platform: homeassistant
+    entity_id: sensor.temperatuur_living
+    id: living_temperatuur
+    internal: true
+
 # Interlock ssd relay
 # fan:
 #   - platform: speed
@@ -48,7 +175,6 @@ i2c:
 #     on_turn_off:
 #       - switch.turn_off: low
 #       - switch.turn_off: high
-
 # output:
 #   - platform: template
 #     type: float
@@ -71,8 +197,7 @@ i2c:
 #             lambda: return ((state > 0.7));
 #           then: 
 #             - switch.turn_off: low
-#             - switch.turn_on: high
-      
+#             - switch.turn_on: high     
 # switch:
 #   - platform: gpio
 #     pin:
@@ -101,76 +226,3 @@ i2c:
 #     interlock: *interlock_group
 #     interlock_wait_time: 1s
 #     restore_mode: RESTORE_DEFAULT_OFF
-fan:
-  - platform: template
-    name: "Ventilatie"
-    id: ventilatie
-    speed_count: 2
-    on_speed_set:
-      - lambda: |-
-          if (id(ventilatie).speed == 2) {
-            id(high).turn_on();
-          } else {
-            id(high).turn_off();
-          }
-    on_turn_on:
-      - lambda: |-
-          id(ventilator).turn_on();
-    on_turn_off:
-      - lambda: |-
-          id(ventilator).turn_off();
-    # on_state:
-    #   - do something
-
-switch:
-  - platform: gpio
-    pin:
-      number: 16
-      inverted: yes
-    name: ${upper_devicename}
-    id: luchtdroger
-    restore_mode: RESTORE_DEFAULT_OFF
-  - platform: gpio
-    pin:
-      number: 17
-      inverted: yes
-    internal: true
-    name: high
-    id: high
-    restore_mode: RESTORE_DEFAULT_OFF
-  - platform: gpio
-    pin:
-      number: 18
-      inverted: yes
-    internal: true
-    name: Ventilator
-    id: ventilator
-    restore_mode: RESTORE_DEFAULT_OFF
-  - platform: gpio
-    pin:
-      number: 19
-      inverted: yes
-    internal: true
-    id: reserve
-    restore_mode: RESTORE_DEFAULT_OFF
-  
-
-sensor:
-  - platform: sht3xd
-    temperature:
-      name: ${upper_devicename} ingaande temperatuur
-      # internal: true
-    humidity:
-      name: ${upper_devicename} ingaande luchtvochtigheid
-    # address: 0x44
-    update_interval: 60s
-    i2c_id: bus_a
-  - platform: sht3xd
-    temperature:
-      name: ${upper_devicename} uitgaande temperatuur
-      # internal: true
-    humidity:
-      name: ${upper_devicename} uitgaande luchtvochtigheid
-    address: 0x44
-    update_interval: 60s
-    i2c_id: bus_b

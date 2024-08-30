@@ -32,28 +32,6 @@ esphome:
 # bluetooth_proxy:
 #   active: true
 
-# ethernet:
-#   type: W5500
-#   clk_pin: GPIO14
-#   mosi_pin: GPIO13
-#   miso_pin: GPIO12
-#   cs_pin: GPIO15
-#   interrupt_pin: GPIO35
-#   reset_pin: GPIO16
-  # manual_ip:
-  #   static_ip: ${manual_ip}
-  #   gateway: 192.168.79.1
-  #   subnet: 255.255.255.0
-  #   dns1: 1.1.1.1
-  #   dns2: 8.8.8.8
-  # on_disconnect:
-  #   then:
-  #     - delay: 5min
-  #     - if:
-  #         condition:
-  #           binary_sensor.is_off: connected
-  #         then:
-  #           - switch.toggle: restart_device
 
 i2c:
   - sda: 21
@@ -65,17 +43,17 @@ i2c:
   #   scl: 15
   #   scan: true
 
-sensor:
-  - platform: dht
-    pin: 32
-    model: DHT22
-    temperature:
-      accuracy_decimals: 1
-      name: "Waskot temperatuur"
-    humidity:
-      accuracy_decimals: 1
-      name: "Waskot luchtvochtigheid"
-    update_interval: 60s
+# sensor:
+#   - platform: dht
+#     pin: 32
+#     model: DHT22
+#     temperature:
+#       accuracy_decimals: 1
+#       name: "Waskot temperatuur"
+#     humidity:
+#       accuracy_decimals: 1
+#       name: "Waskot luchtvochtigheid"
+#     update_interval: 60s
 
 pcf8574:
   - id: 'pcf8575_hub'

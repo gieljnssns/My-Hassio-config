@@ -57,8 +57,10 @@ uart:
 ld2410:
   - id: zithoek
     uart_id: zithoek1
+    # throttle: 1500ms
   - id: danszaal
     uart_id: danszaal1
+    # throttle: 1500ms
 
 number:
   - platform: ld2410
@@ -202,6 +204,11 @@ sensor:
     address: 0x76
     i2c_id: bus_a
     update_interval: 60s
+
+  - platform: absolute_humidity
+    name: "${upper_devicename} absolute luchtvochtigheid"
+    temperature: bme280_temperature
+    humidity: bme280_humidity
 
   # - platform: template
   #   name: "${upper_devicename} dauwpunt"
