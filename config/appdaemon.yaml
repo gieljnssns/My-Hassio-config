@@ -1,0 +1,18 @@
+---
+secrets: /config/secrets.yaml
+appdaemon:
+  latitude: !secret latitude
+  longitude: !secret longitude
+  elevation: !secret elevation
+  time_zone: Europe/Brussels
+  plugins:
+    HASS:
+      type: hass
+      ha_url: !secret internal_url
+      token: !secret appdaemon_token
+      app_init_delay: 90
+http:
+  url: http://127.0.0.1:5050
+admin:
+api:
+hadashboard:

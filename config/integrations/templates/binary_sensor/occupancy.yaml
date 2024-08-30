@@ -2,6 +2,8 @@
     - name: Keuken aanwezigheid
       unique_id: 27214cea-6fd7-4d8d-8cf1-74b0f8db727e
       device_class: occupancy
+      delay_off:
+        seconds: 20
       state: >
         {{  is_state('binary_sensor.keuken_aqara_pir', 'on') 
             or is_state('binary_sensor.keuken_presence', 'on')
@@ -10,6 +12,8 @@
     - name: Living aanwezigheid
       unique_id: 56c9c80f-0221-40c2-9141-126ce2f0a0dc
       device_class: occupancy
+      delay_off:
+        seconds: 10
       state: >
         {{  is_state('binary_sensor.zithoek_aanwezigheid', 'on') 
             or is_state('binary_sensor.danszaal_aanwezigheid', 'on') }}
@@ -17,6 +21,8 @@
     - name: Danszaal aanwezigheid
       unique_id: 6f35d220-b64b-49e9-9196-d10f40bbe712
       device_class: occupancy
+      delay_off:
+        seconds: 20
       state: >
         {{ is_state('binary_sensor.danszaal_aqara_pir', 'on') or
             is_state('binary_sensor.danszaal_presence', 'on') }}
@@ -24,6 +30,8 @@
     - name: Zithoek aanwezigheid
       unique_id: 0afbb70b-4e63-4c51-a76e-9c3888013668
       device_class: occupancy
+      delay_off:
+        seconds: 20
       state: >
         {{ is_state('binary_sensor.zithoek_aqara_pir', 'on') or
             is_state('binary_sensor.zithoek_presence', 'on') }}

@@ -25,7 +25,7 @@ trigger:
       {{ states("sensor.windvlaag") | int(0) > 60 }}
   - platform: numeric_state
     entity_id: sensor.buiten_lichtsterkte
-    below: 2000
+    below: 10000
     for:
       minutes: 5
 
@@ -71,9 +71,9 @@ condition:
 
 action:
   - service: script.achtergevel_openen
-  - service: notify.mobile_app_gphone
-    data_template:
-      message: "Het zonnescherm achtergevel geopend, reden {{trigger.entity_id}} "
+  # - service: notify.mobile_app_gphone
+  #   data_template:
+  #     message: "Het zonnescherm achtergevel geopend, reden {{trigger.entity_id}} "
   - delay:
       minutes: 5
   - service: script.achtergevel_openen

@@ -3,34 +3,37 @@ verluchting_1_uur:
     - condition: state
       entity_id: binary_sensor.afkoeling_gewenst
       state: "off"
-    # - service: switch.turn_on
-    #   entity_id: switch.verluchting
+    - service: fan.set_percentage
+      target:
+        entity_id: fan.ventilatie
+      data:
+        percentage: 100
     - service: switch.turn_on
       entity_id: switch.badkamer_verluchting
     - service: switch.turn_on
       entity_id: switch.zolder_verluchting
-    - choose:
-        - conditions:
-            - condition: template
-              value_template: >
-                {% set buiten = states("sensor.poort_luchtvochtigheid") | float(0) %}
-                {% set binnen = states("sensor.living_luchtvochtigheid") | float(0) %}
+    # - choose:
+    #     - conditions:
+    #         - condition: template
+    #           value_template: >
+    #             {% set buiten = states("sensor.poort_luchtvochtigheid") | float(0) %}
+    #             {% set binnen = states("sensor.living_luchtvochtigheid") | float(0) %}
 
-                {% set buiten_temp = states("sensor.buiten_buiten_temperatuur") | float(0) %}
-                {% set binnen_temp = states("sensor.living_dauwpunt") | float(0) %}
+    #             {% set buiten_temp = states("sensor.buiten_buiten_temperatuur") | float(0) %}
+    #             {% set binnen_temp = states("sensor.living_dauwpunt") | float(0) %}
 
-                {% if buiten > 70 %}
-                  {{ buiten_temp > binnen_temp }}
-                {% else %}
-                  True
-                {% endif %}
-          sequence:
-            - service: switch.turn_on
-              entity_id: switch.verluchting
+    #             {% if buiten > 70 %}
+    #               {{ buiten_temp > binnen_temp }}
+    #             {% else %}
+    #               True
+    #             {% endif %}
+    #       sequence:
+    #         - service: switch.turn_on
+    #           entity_id: switch.verluchting
     - delay:
         minutes: 60
-    - service: switch.turn_off
-      entity_id: switch.verluchting
+    - service: fan.turn_off
+      entity_id: fan.ventilatie
     - service: switch.turn_off
       entity_id: switch.badkamer_verluchting
     - service: switch.turn_off

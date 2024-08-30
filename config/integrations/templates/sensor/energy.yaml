@@ -152,7 +152,8 @@
       unit_of_measurement: "W"
       device_class: power
       state: >
-        {{ (states("sensor.verluchting_masser_vermogen") | float(default=0) + 
+        {{ (states("sensor.luchtdroger_vermogen") | float(default=0) + 
+            states("sensor.ventilatie_vermogen") | float(default=0) + 
             states("sensor.zolder_verluchting_vermogen") | float(default=0) + 
             states("sensor.badkamer_verluchting_vermogen") | float(default=0)) | round (3)}}
 

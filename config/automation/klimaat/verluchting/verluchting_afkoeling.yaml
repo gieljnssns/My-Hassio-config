@@ -17,8 +17,11 @@ action:
     entity_id: script.verluchting_1_uur
   - service: script.turn_off
     entity_id: script.verluchting_2_uur
-  - service: switch.turn_on
-    entity_id: switch.verluchting
+  - service: fan.set_percentage
+    target:
+      entity_id: fan.ventilatie
+    data:
+      percentage: 100
   - service: switch.turn_on
     entity_id: switch.badkamer_verluchting
   - service: switch.turn_on

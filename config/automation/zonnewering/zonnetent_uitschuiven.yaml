@@ -4,6 +4,11 @@ trigger:
   - platform: time_pattern
     minutes: "/14"
     seconds: 00
+  - platform: numeric_state
+    entity_id: sensor.buiten_lichtsterkte
+    for:
+      minutes: 5
+    above: 17000
 condition:
   condition: and # all conditions need to be TRUE before action is executed.
   conditions:
@@ -19,9 +24,9 @@ condition:
     - condition: numeric_state
       entity_id: sensor.zonne_energie_gefilterd_lowpass
       above: 1500
-    # - condition: numeric_state
-    #   entity_id: sensor.buiten_lichtsterkte
-    #   above: 12000
+    - condition: numeric_state
+      entity_id: sensor.buiten_lichtsterkte
+      above: 17000
 
     # above: 20000
     # Weather based conditions

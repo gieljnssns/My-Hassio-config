@@ -1,17 +1,17 @@
-  alias: 'Rookmelder alarm'
-  id: 2e8185f1-1dda-4a1d-96af-06e61fa7dfb3
-  mode: parallel
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.gang_rookmelder
-      to: 'on'
-    - platform: state
-      entity_id: binary_sensor.living_rookmelder
-      to: 'on'
-    - platform: state
-      entity_id: binary_sensor.waskot_rookmelder
-      to: 'on'
-  action:
+alias: "Rookmelder alarm"
+id: 2e8185f1-1dda-4a1d-96af-06e61fa7dfb3
+mode: parallel
+trigger:
+  - platform: state
+    entity_id: binary_sensor.gang_rookmelder
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.living_rookmelder
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.waskot_rookmelder
+    to: "on"
+action:
   - service: notify.iedereen
     data_template:
       title: "Alarm Home-Assistant."
@@ -27,9 +27,9 @@
         push:
           sound:
             name: "default"
-            critical: 1
+            # critical: 1
             volume: 1.0
   - service: script.turn_on
-    entity_id: 
+    entity_id:
       - script.alarm_lights1
       - script.alarm_sound

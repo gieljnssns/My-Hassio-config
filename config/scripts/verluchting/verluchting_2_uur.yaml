@@ -3,14 +3,15 @@ verluchting_2_uur:
     - condition: state
       entity_id: binary_sensor.afkoeling_gewenst
       state: "off"
-    # - service: switch.turn_on
-    #   entity_id: switch.verluchting
     - service: switch.turn_on
       entity_id: switch.badkamer_verluchting
     - service: switch.turn_on
       entity_id: switch.zolder_verluchting
-    - service: switch.turn_on
-      entity_id: switch.verluchting
+    - service: fan.set_percentage
+      target:
+        entity_id: fan.ventilatie
+      data:
+        percentage: 100
     # - choose:
     #     - conditions:
     #         - condition: template
@@ -31,8 +32,8 @@ verluchting_2_uur:
     #           entity_id: switch.verluchting
     - delay:
         minutes: 120
-    - service: switch.turn_off
-      entity_id: switch.verluchting
+    - service: fan.turn_off
+      entity_id: fan.ventilatie
     - service: switch.turn_off
       entity_id: switch.badkamer_verluchting
     - service: switch.turn_off

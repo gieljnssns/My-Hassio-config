@@ -15,7 +15,7 @@ trigger:
       minutes: 5
   - platform: numeric_state
     entity_id: sensor.buiten_lichtsterkte
-    below: 2000
+    below: 10000
     for:
       minutes: 5
 
@@ -63,9 +63,9 @@ action:
     data: {}
     target:
       entity_id: cover.zonnetent
-  - service: notify.mobile_app_gphone
-    data_template:
-      message: "De zonnetent is ingeschoven, reden {{trigger.entity_id}} "
+  # - service: notify.mobile_app_gphone
+  #   data_template:
+  #     message: "De zonnetent is ingeschoven, reden {{trigger.entity_id}} "
   - delay:
       minutes: 3
   - service: cover.close_cover

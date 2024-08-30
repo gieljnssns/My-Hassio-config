@@ -23,7 +23,7 @@ trigger:
       minutes: 5
   - platform: numeric_state
     entity_id: sensor.buiten_lichtsterkte
-    below: 2000
+    below: 10000
     for:
       minutes: 5
 
@@ -70,9 +70,9 @@ condition:
 
 action:
   - service: script.zijgevel_openen
-  - service: notify.mobile_app_gphone
-    data_template:
-      message: "Het zonnescherm zijgevel geopend, reden {{trigger.entity_id}} "
+  # - service: notify.mobile_app_gphone
+  #   data_template:
+  #     message: "Het zonnescherm zijgevel geopend, reden {{trigger.entity_id}} "
   - delay:
       minutes: 5
   - service: script.zijgevel_openen

@@ -40,11 +40,18 @@
       not_to:
         - unknown
         - unavailable
+    - platform: state
+      entity_id: sensor.achtergevel_lichtsterkte
+      not_to:
+        - unknown
+        - unavailable
   sensor:
     - name: Buiten lichtsterkte
       unique_id: 2668b502-27ec-4046-a4b7-c52444181fe1
       state: >
-        {{ trigger.to_state.state }}
+        {% macro max(X, Y) -%} {{X|float(0)if X|float(0)> Y|float(0)else Y|float(0)}} {%- endmacro %}
+
+        {{  max(states("sensor.achtergevel_lichtsterkte"), states("sensor.buiten_buiten_lichtsterkte") )  }}
       unit_of_measurement: "lx"
 
 # - trigger:

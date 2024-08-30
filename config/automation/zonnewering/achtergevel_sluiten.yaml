@@ -1,6 +1,11 @@
 alias: Achtergevel sluiten #Sunscreen down/uitklappen
 id: 9d85fbd0-a081-4afa-8c56-d9216ea52a37
 trigger:
+  - platform: numeric_state
+    entity_id: sensor.buiten_lichtsterkte
+    for:
+      minutes: 5
+    above: 15000
   - platform: time_pattern
     minutes: "/10"
     seconds: 00
@@ -19,9 +24,9 @@ condition:
     - condition: numeric_state
       entity_id: sensor.zonne_energie_gefilterd_lowpass
       above: 580
-    # - condition: numeric_state
-    #   entity_id: sensor.buiten_lichtsterkte
-    #   above: 10000
+    - condition: numeric_state
+      entity_id: sensor.buiten_lichtsterkte
+      above: 15000
 
     # Weather based conditions
     - condition: template
