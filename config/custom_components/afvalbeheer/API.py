@@ -114,7 +114,7 @@ class WasteData(object):
     def __select_collector(self):
         if self.waste_collector in XIMMIO_COLLECTOR_IDS.keys():
             self.collector = XimmioCollector(self.hass, self.waste_collector, self.postcode, self.street_number, self.suffix, self.address_id, self.customer_id)
-        elif self.waste_collector in ["mijnafvalwijzer", "afvalstoffendienstkalender", "rova"]:
+        elif self.waste_collector in ["mijnafvalwijzer", "afvalstoffendienstkalender"]:
             self.collector = AfvalwijzerCollector(self.hass, self.waste_collector, self.postcode, self.street_number, self.suffix)
         elif self.waste_collector == "afvalalert":
             self.collector = AfvalAlertCollector(self.hass, self.waste_collector, self.postcode, self.street_number, self.suffix)
@@ -132,6 +132,10 @@ class WasteData(object):
             self.collector = RecycleApp(self.hass, self.waste_collector, self.postcode, self.street_name, self.street_number, self.suffix)
         elif self.waste_collector == "rd4":
             self.collector = RD4Collector(self.hass, self.waste_collector, self.postcode, self.street_number, self.suffix)
+        elif self.waste_collector == "cleanprofs":
+            self.collector = CleanprofsCollector(self.hass, self.waste_collector, self.postcode, self.street_number, self.suffix)
+        elif self.waste_collector == "rova":
+            self.collector = ROVACollector(self.hass, self.waste_collector, self.postcode, self.street_number, self.suffix)
         elif self.waste_collector in BURGERPORTAAL_COLLECTOR_IDS.keys():
             self.collector = BurgerportaalCollector(self.hass, self.waste_collector, self.postcode, self.street_number, self.suffix)
         elif self.waste_collector in OPZET_COLLECTOR_URLS.keys():
@@ -149,7 +153,7 @@ class WasteData(object):
 
     async def async_update(self, *_):
         await self.collector.update()
-        if self.update_interval != 0:
+        if self.update_interval is not None and self.update_interval != 0:
             await self.schedule_update(timedelta(hours=self.update_interval))
         else:
             await self.schedule_update(SCHEDULE_UPDATE_INTERVAL)
@@ -271,10 +275,7 @@ class AfvalwijzerCollector(WasteCollector):
     def __init__(self, hass, waste_collector, postcode, street_number, suffix):
         super().__init__(hass, waste_collector, postcode, street_number, suffix)
         self.apikey = '5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca'
-        if self.waste_collector == "rova":
-            self.waste_collector_url = "inzamelkalender." + self.waste_collector
-        else:
-            self.waste_collector_url = self.waste_collector
+        self.waste_collector_url = self.waste_collector
 
     def __get_data(self):
         get_url = 'https://api.{}.nl/webservices/appsinput/?apikey={}&method=postcodecheck&postcode={}&street=&huisnummer={}&toevoeging={}&app_name=afvalwijzer&platform=web&afvaldata={}&langs=nl'.format(
@@ -534,6 +535,54 @@ class CirculusCollector(WasteCollector):
                         )
                     if collection not in self.collections:
                         self.collections.add(collection)
+
+        except requests.exceptions.RequestException as exc:
+            _LOGGER.error('Error occurred while fetching data: %r', exc)
+            return False
+
+
+class CleanprofsCollector(WasteCollector):
+    WASTE_TYPE_MAPPING = {
+        'GFT': WASTE_TYPE_GREEN,
+        'RST': WASTE_TYPE_GREY,
+    }
+
+    def __init__(self, hass, waste_collector, postcode, street_number, suffix):
+        super().__init__(hass, waste_collector, postcode, street_number, suffix)
+        self.main_url = "https://cleanprofs.jmsdev.nl/"
+
+    def __get_data(self):
+        get_url = '{}api/get-plannings-address?zipcode={}&house_number={}'.format(
+                self.main_url, self.postcode, self.street_number)
+        return requests.get(get_url)
+
+    async def update(self):
+        _LOGGER.debug('Updating Waste collection dates using Rest API')
+
+        self.collections.remove_all()
+
+        try:
+            r = await self.hass.async_add_executor_job(self.__get_data)
+            response = r.json()
+
+            if not response:
+                _LOGGER.error('No Waste data found!')
+                return
+
+            for item in response:
+                if not item['full_date']:
+                    continue
+
+                waste_type = self.map_waste_type(item['product_name'])
+                if not waste_type:
+                    continue
+
+                collection = WasteCollection.create(
+                    date=datetime.strptime(item['full_date'], '%Y-%m-%d').replace(tzinfo=None),
+                    waste_type=waste_type
+                )
+                if collection not in self.collections:
+                    self.collections.add(collection)
 
         except requests.exceptions.RequestException as exc:
             _LOGGER.error('Error occurred while fetching data: %r', exc)
@@ -1000,6 +1049,57 @@ class RD4Collector(WasteCollector):
 
                 collection = WasteCollection.create(
                     date=datetime.strptime(date, "%Y-%m-%d"),
+                    waste_type=waste_type
+                )
+                if collection not in self.collections:
+                    self.collections.add(collection)
+
+        except requests.exceptions.RequestException as exc:
+            _LOGGER.error('Error occurred while fetching data: %r', exc)
+            return False
+
+
+class ROVACollector(WasteCollector):
+    WASTE_TYPE_MAPPING = {
+        'gft': WASTE_TYPE_GREEN,
+        'papier': WASTE_TYPE_PAPER,
+        'pmd': WASTE_TYPE_PACKAGES,
+    }
+
+    def __init__(self, hass, waste_collector, postcode, street_number, suffix):
+        super().__init__(hass, waste_collector, postcode, street_number, suffix)
+        self.main_url = 'https://www.rova.nl'
+
+    def __get_data(self):
+        self.today = datetime.today()
+        self.year = self.today.year
+        response = requests.get(
+            '{}/api/waste-calendar/upcoming?houseNumber={}&addition={}&postalcode={}&take=10'.format(self.main_url, self.street_number, self.suffix, self.postcode)
+        )
+        return response
+
+    async def update(self):
+        _LOGGER.debug('Updating Waste collection dates using Rest API')
+
+        self.collections.remove_all()
+
+        try:
+            r = await self.hass.async_add_executor_job(self.__get_data)
+            response = r.json()
+
+            if not response:
+                _LOGGER.error('No Waste data found!')
+                return
+
+            for item in response:
+                waste_type = self.map_waste_type(item["wasteType"]["title"])
+                date = item["date"]
+                
+                if not waste_type or not date:
+                    continue
+
+                collection = WasteCollection.create(
+                    date=datetime.strptime(date, '%Y-%m-%dT%H:%M:%S%z').replace(tzinfo=None),
                     waste_type=waste_type
                 )
                 if collection not in self.collections:

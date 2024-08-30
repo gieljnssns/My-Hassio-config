@@ -25,9 +25,9 @@ from .const import (
     METER_REG_BASE,
     ConfDefaultFlag,
     ConfDefaultInt,
+    ConfDefaultStr,
     ConfName,
     ModbusDefaults,
-    ModbusFlags,
     RetrySettings,
     SolarEdgeTimeouts,
     SunSpecNotImpl,
@@ -118,11 +118,8 @@ class SolarEdgeModbusMultiHub:
         self._host = entry_data[CONF_HOST]
         self._port = entry_data[CONF_PORT]
         self._entry_id = entry_id
-        self._number_of_inverters = entry_data.get(
-            ConfName.NUMBER_INVERTERS, ConfDefaultInt.NUMBER_INVERTERS
-        )
-        self._start_device_id = entry_data.get(
-            ConfName.DEVICE_ID, ConfDefaultInt.DEVICE_ID
+        self._inverter_list = entry_data.get(
+            ConfName.DEVICE_LIST, [ConfDefaultStr.DEVICE_LIST]
         )
         self._detect_meters = entry_options.get(
             ConfName.DETECT_METERS, bool(ConfDefaultFlag.DETECT_METERS)
@@ -166,9 +163,6 @@ class SolarEdgeModbusMultiHub:
         self._mb_reconnect_delay_max = self._yaml_config.get("modbus", {}).get(
             "reconnect_delay_max", ModbusDefaults.ReconnectDelayMax
         )
-        self._mb_retry_on_empty = self._yaml_config.get("modbus", {}).get(
-            "retry_on_empty", bool(ModbusFlags.RetryOnEmpty)
-        )
         self._mb_timeout = self._yaml_config.get("modbus", {}).get(
             "timeout", ModbusDefaults.Timeout
         )
@@ -190,8 +184,7 @@ class SolarEdgeModbusMultiHub:
         _LOGGER.debug(
             (
                 f"{DOMAIN} configuration: "
-                f"number_of_inverters={self._number_of_inverters}, "
-                f"start_device_id={self._start_device_id}, "
+                f"inverter_list={self._inverter_list}, "
                 f"detect_meters={self._detect_meters}, "
                 f"detect_batteries={self._detect_batteries}, "
                 f"detect_extras={self._detect_extras}, "
@@ -237,8 +230,7 @@ class SolarEdgeModbusMultiHub:
                 ),
             )
 
-        for inverter_index in range(self._number_of_inverters):
-            inverter_unit_id = inverter_index + self._start_device_id
+        for inverter_unit_id in self._inverter_list:
 
             try:
                 _LOGGER.debug(
@@ -383,6 +375,9 @@ class SolarEdgeModbusMultiHub:
 
                 ir.async_delete_issue(self._hass, DOMAIN, "check_configuration")
 
+                if not self.keep_modbus_open:
+                    self.disconnect()
+
                 return True
 
             if not self.is_connected:
@@ -445,14 +440,14 @@ class SolarEdgeModbusMultiHub:
 
                 raise DataUpdateFailed(f"Timeout error: {e}")
 
-            if not self._keep_modbus_open:
-                self.disconnect()
-
             if self._timeout_counter > 0:
                 _LOGGER.debug(
                     f"Timeout count {self._timeout_counter} limit {self._retry_limit}"
                 )
                 self._timeout_counter = 0
+
+            if not self.keep_modbus_open:
+                self.disconnect()
 
             return True
 
@@ -460,11 +455,10 @@ class SolarEdgeModbusMultiHub:
         """Connect to inverter."""
 
         if self._client is None:
-            _LOGGER.debug(f"New client object for {self._host}:{self._port}")
             _LOGGER.debug(
+                "New AsyncModbusTcpClient: "
                 f"reconnect_delay={self._mb_reconnect_delay} "
                 f"reconnect_delay_max={self._mb_reconnect_delay_max} "
-                f"retry_on_empty={self._mb_retry_on_empty} "
                 f"timeout={self._mb_timeout}"
             )
             self._client = AsyncModbusTcpClient(
@@ -472,16 +466,22 @@ class SolarEdgeModbusMultiHub:
                 port=self._port,
                 reconnect_delay=self._mb_reconnect_delay,
                 reconnect_delay_max=self._mb_reconnect_delay_max,
-                retry_on_empty=self._mb_retry_on_empty,
                 timeout=self._mb_timeout,
             )
 
+        _LOGGER.debug((f"Connecting to {self._host}:{self._port} ..."))
         await self._client.connect()
 
     def disconnect(self, clear_client: bool = False) -> None:
         """Disconnect from inverter."""
 
         if self._client is not None:
+            _LOGGER.debug(
+                (
+                    f"Disconnectng from {self._host}:{self._port} "
+                    f"(clear_client={clear_client})."
+                )
+            )
             self._client.close()
 
             if clear_client:
@@ -704,7 +704,7 @@ class SolarEdgeModbusMultiHub:
 
     @property
     def number_of_inverters(self) -> int:
-        return self._number_of_inverters
+        return len(self._inverter_list)
 
     @property
     def sleep_after_write(self) -> int:
@@ -1302,7 +1302,7 @@ class SolarEdgeInverter:
                 )
 
         """ Grid On/Off Status """
-        if self.hub.option_detect_extras is True and self._grid_status is not False:
+        if self._grid_status is not False:
             try:
                 inverter_data = await self.hub.modbus_read_holding_registers(
                     unit=self.inverter_unit_id, address=40113, rcount=2
@@ -1323,7 +1323,14 @@ class SolarEdgeInverter:
                 )
                 self._grid_status = True
 
-            except ModbusIllegalAddress:
+            except (ModbusIllegalAddress, ModbusIOException) as e:
+
+                if (
+                    type(e) is ModbusIOException
+                    and "No response recieved after" not in e
+                ):
+                    raise
+
                 try:
                     del self.decoded_model["I_Grid_Status"]
                 except KeyError:
@@ -1332,8 +1339,11 @@ class SolarEdgeInverter:
                 self._grid_status = False
 
                 _LOGGER.debug(
-                    (f"I{self.inverter_unit_id}: " "Grid On/Off NOT available")
+                    (f"I{self.inverter_unit_id}: Grid On/Off NOT available: {e}")
                 )
+
+                if not self.hub.is_connected:
+                    await self.hub.connect()
 
             except ModbusIOError:
                 raise ModbusReadError(

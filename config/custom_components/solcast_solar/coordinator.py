@@ -1,4 +1,4 @@
-"""The Solcast Solar integration."""
+"""The Solcast Solar coordinator"""
 from __future__ import annotations
 from datetime import datetime as dt
 
@@ -6,6 +6,7 @@ import logging
 import traceback
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.event import async_track_utc_time_change
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -16,7 +17,7 @@ from .solcastapi import SolcastApi
 _LOGGER = logging.getLogger(__name__)
 
 class SolcastUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching data from Solcast Solar API."""
+    """Class to manage fetching data"""
 
     def __init__(self, hass: HomeAssistant, solcast: SolcastApi, version: str) -> None:
         """Initialize."""
@@ -36,7 +37,7 @@ class SolcastUpdateCoordinator(DataUpdateCoordinator):
 
 
     async def _async_update_data(self):
-        """Update data via library."""
+        """Update data via library"""
         return self.solcast._data
 
     async def setup(self):
@@ -57,6 +58,8 @@ class SolcastUpdateCoordinator(DataUpdateCoordinator):
             self._dateChanged = (crtDay != self._lastDay)
             if self._dateChanged:
                 self._lastDay = crtDay
+                #4.0.41 - recalculate splines at midnight local
+                await self.update_midnight_spline_recalc()
 
             self.async_update_listeners()
         except Exception:
@@ -68,6 +71,15 @@ class SolcastUpdateCoordinator(DataUpdateCoordinator):
             await self.solcast.reset_api_usage()
         except Exception:
             #_LOGGER.error("Exception in update_utcmidnight_usage_sensor_data(): %s", traceback.format_exc())
+            pass
+
+    async def update_midnight_spline_recalc(self, *args):
+        try:
+            _LOGGER.debug('Recalculating splines')
+            await self.solcast.spline_moments()
+            await self.solcast.spline_remaining()
+        except Exception:
+            _LOGGER.error("Exception in update_midnight_spline_recalc(): %s", traceback.format_exc())
             pass
 
     async def service_event_update(self, *args):

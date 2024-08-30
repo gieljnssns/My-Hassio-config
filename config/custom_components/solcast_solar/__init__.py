@@ -1,8 +1,13 @@
 """Support for Solcast PV forecast."""
 
 import logging
+import traceback
 import random
-import asyncio
+import os
+import json
+import aiofiles
+import os.path as path
+from datetime import timedelta
 
 from homeassistant import loader
 from homeassistant.config_entries import ConfigEntry
@@ -26,6 +31,7 @@ from .const import (
     SERVICE_SET_HARD_LIMIT,
     SERVICE_REMOVE_HARD_LIMIT,
     SOLCAST_URL,
+    API_QUOTA,
     CUSTOM_HOUR_SENSOR,
     KEY_ESTIMATE,
     BRK_ESTIMATE,
@@ -76,31 +82,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     random.seed()
 
-    _VERSION = ""
-    try:
-        integration = await loader.async_get_integration(hass, DOMAIN)
-        _VERSION = str(integration.version)
-        _LOGGER.info(
-            f"\n{'-'*67}\n"
-            f"Solcast integration version: {_VERSION}\n\n"
-            f"This is a custom integration. When troubleshooting a problem, after\n"
-            f"reviewing open and closed issues, and the discussions, check the\n"
-            f"required automation is functioning correctly and try enabling debug\n"
-            f"logging to see more. Troubleshooting tips available at:\n"
-            f"https://github.com/BJReplay/ha-solcast-solar/discussions/38\n\n"
-            f"Beta versions may also have addressed some issues so look at those.\n\n"
-            f"If all else fails, then open an issue and our community will try to\n"
-            f"help: https://github.com/BJReplay/ha-solcast-solar/issues\n"
-            f"{'-'*67}")
-    except loader.IntegrationNotFound:
-        pass
-
     optdamp = {}
     try:
         #if something ever goes wrong with the damp factors just create a blank 1.0
         for a in range(0,24):
             optdamp[str(a)] = entry.options[f"damp{str(a).zfill(2)}"]
-    except Exception as ex:
+    except:
         new = {**entry.options}
         for a in range(0,24):
             new[f"damp{str(a).zfill(2)}"] = 1.0
@@ -121,8 +108,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     options = ConnectionOptions(
         entry.options[CONF_API_KEY],
+        entry.options[API_QUOTA],
         SOLCAST_URL,
-        hass.config.path('/config/solcast.json'),
+        hass.config.path('%s/solcast.json' % os.path.abspath(os.path.join(os.path.dirname(__file__) ,"../.."))),
         tz,
         optdamp,
         entry.options.get(CUSTOM_HOUR_SENSOR, 1),
@@ -140,17 +128,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await solcast.sites_data()
-        await solcast.sites_usage()
+        if solcast._sites_loaded: await solcast.sites_usage()
     except Exception as ex:
         raise ConfigEntryNotReady(f"Getting sites data failed: {ex}") from ex
 
-    retry = 3
-    while retry >= 0:
-        if await solcast.load_saved_data(): break
-        retry -= 1
-        if retry >= 0:
-            _LOGGER.warning("Failed to load initial data from cache or Solcast, retrying after 10 seconds")
-            await asyncio.sleep(10)
+    if not solcast._sites_loaded:
+        raise ConfigEntryNotReady(f"Sites data could not be retrieved")
+
+    if not await solcast.load_saved_data():
+        raise ConfigEntryNotReady(f"Failed to load initial data from cache or the Solcast API")
+
+    _VERSION = ""
+    try:
+        integration = await loader.async_get_integration(hass, DOMAIN)
+        _VERSION = str(integration.version)
+        _LOGGER.info(
+            f"\n{'-'*67}\n"
+            f"Solcast integration version: {_VERSION}\n\n"
+            f"This is a custom integration. When troubleshooting a problem, after\n"
+            f"reviewing open and closed issues, and the discussions, check the\n"
+            f"required automation is functioning correctly and try enabling debug\n"
+            f"logging to see more. Troubleshooting tips available at:\n"
+            f"https://github.com/BJReplay/ha-solcast-solar/discussions/38\n\n"
+            f"Beta versions may also have addressed some issues so look at those.\n\n"
+            f"If all else fails, then open an issue and our community will try to\n"
+            f"help: https://github.com/BJReplay/ha-solcast-solar/issues\n"
+            f"{'-'*67}")
+    except loader.IntegrationNotFound:
+        pass
 
     coordinator = SolcastUpdateCoordinator(hass, solcast, _VERSION)
 
@@ -164,13 +169,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    _LOGGER.info(f"Solcast API data UTC times are converted to {hass.config.time_zone}")
+    _LOGGER.debug(f"UTC times are converted to {hass.config.time_zone}")
 
     if options.hard_limit < 100:
         _LOGGER.info(
             f"Solcast inverter hard limit value has been set. If the forecasts and graphs are not as you expect, try running the service 'solcast_solar.remove_hard_limit' to remove this setting. "
             f"This setting is really only for advanced quirky solar setups."
         )
+
+    # If the integration has failed for some time and then is restarted retrieve forecasts
+    if solcast.get_api_used_count() == 0 and solcast.get_last_updated_datetime() < solcast.get_day_start_utc() - timedelta(days=1):
+        try:
+            _LOGGER.info('Integration has been failed for some time, or your update automation has not been running (see readme). Retrieving forecasts.')
+            #await solcast.sites_weather()
+            await solcast.http_data(dopast=False)
+            coordinator._dataUpdated = True
+            await coordinator.update_integration_listeners()
+            coordinator._dataUpdated = False
+        except Exception as ex:
+            _LOGGER.error("Exception force fetching data on stale start: %s", ex)
+            _LOGGER.error(traceback.format_exc())
 
     async def handle_service_update_forecast(call: ServiceCall):
         """Handle service call"""
@@ -229,9 +247,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
                         solcast._damp = d
                         hass.config_entries.async_update_entry(entry, options=opt)
-
-            #why is this here?? why did i make it delete the file when changing the damp factors??
-            #await coordinator.service_event_delete_old_solcast_json_file()
         except intent.IntentHandleError as err:
             raise HomeAssistantError(f"Error processing {SERVICE_SET_DAMPENING}: {err}") from err
 
@@ -410,6 +425,34 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         except Exception as e:
             if "unexpected keyword argument 'version'" in e:
                 config_entry.version = 8
+                hass.config_entries.async_update_entry(config_entry, options=new_options)
+                upgraded()
+            else:
+                raise
+
+    #new 4.1.3
+    #API quota
+    if config_entry.version < 9:
+        new = {**config_entry.options}
+        try:
+            default = []
+            configDir = path.abspath(path.join(path.dirname(__file__) ,"../.."))
+            for spl in new[CONF_API_KEY].split(','):
+                apiCacheFileName = "%s/solcast-usage%s.json" % (configDir, "" if len(new[CONF_API_KEY].split(',')) < 2 else "-" + spl.strip())
+                async with aiofiles.open(apiCacheFileName) as f:
+                    usage = json.loads(await f.read())
+                default.append(str(usage['daily_limit']))
+            default = ','.join(default)
+        except Exception as e:
+            _LOGGER.warning('Could not load API usage cache quota while upgrading config, using default: %s', e)
+            default = '10'
+        if new.get(API_QUOTA) is None: new[API_QUOTA] = default
+        try:
+            hass.config_entries.async_update_entry(config_entry, options=new, version=9)
+            upgraded()
+        except Exception as e:
+            if "unexpected keyword argument 'version'" in e:
+                config_entry.version = 9
                 hass.config_entries.async_update_entry(config_entry, options=new_options)
                 upgraded()
             else:

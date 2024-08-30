@@ -141,14 +141,14 @@ class MiotVacuumEntity(MiotEntity, StateVacuumEntity):
             if val is None:
                 pass
             elif val in self._prop_status.list_search(
-                'Cleaning', 'Sweeping', 'Mopping', 'Sweeping and Mopping',
+                'Cleaning', 'Sweeping', 'Mopping', 'Sweeping And Mopping', 'Washing', 'Go Washing',
                 'Part Sweeping', 'Zone Sweeping', 'Select Sweeping', 'Spot Sweeping', 'Goto Target',
-                'Starting', 'Working', 'Busy',
+                'Starting', 'Working', 'Busy', 'DustCollecting'
             ):
                 return STATE_CLEANING
             elif val in self._prop_status.list_search('Idle', 'Sleep'):
                 return STATE_IDLE
-            elif val in self._prop_status.list_search('Charging', 'Charging Completed', 'Fullcharge'):
+            elif val in self._prop_status.list_search('Charging', 'Charging Completed', 'Fullcharge', 'Charge Done', 'Drying'):
                 return STATE_DOCKED
             elif val in self._prop_status.list_search('Go Charging'):
                 return STATE_RETURNING

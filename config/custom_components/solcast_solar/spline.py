@@ -78,9 +78,12 @@ def cubic_interp(x0, x, y):
 
     f0 = [0] * len(hi1)
     for j in range(len(f0)):
-        f0[j] = zi0[j] / (6 * hi1[j]) * (xi1[j] - x0[j]) ** 3 + \
-                zi1[j] / (6 * hi1[j]) * (x0[j] - xi0[j]) ** 3 + \
-                (yi1[j] / hi1[j] - zi1[j] * hi1[j] / 6) * (x0[j] - xi0[j]) + \
-                (yi0[j] / hi1[j] - zi0[j] * hi1[j] / 6) * (xi1[j] - x0[j])        
+        f0[j] = round(
+            zi0[j] / (6 * hi1[j]) * (xi1[j] - x0[j]) ** 3 + \
+            zi1[j] / (6 * hi1[j]) * (x0[j] - xi0[j]) ** 3 + \
+            (yi1[j] / hi1[j] - zi1[j] * hi1[j] / 6) * (x0[j] - xi0[j]) + \
+            (yi0[j] / hi1[j] - zi0[j] * hi1[j] / 6) * (xi1[j] - x0[j])        
+            ,4
+        )
     
     return f0

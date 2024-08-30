@@ -1,16 +1,18 @@
 """Sample API Client."""
+
 import logging
+import socket
+import threading
 import time
 from types import SimpleNamespace
 
-import sunspec2.modbus.client as modbus_client
 from homeassistant.core import HomeAssistant
+import sunspec2.modbus.client as modbus_client
 from sunspec2.modbus.client import SunSpecModbusClientException
 from sunspec2.modbus.client import SunSpecModbusClientTimeout
 from sunspec2.modbus.modbus import ModbusClientError
 
 TIMEOUT = 120
-
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -42,9 +44,19 @@ class SunSpecModelWrapper:
     def getKeys(self):
         keys = list(filter(self.isValidPoint, self._models[0].points.keys()))
         for group_name in self._models[0].groups:
-            for idx, group in enumerate(self._models[0].groups[group_name]):
-                key_prefix = f"{group_name}:{idx}"
-                group_keys = map(lambda gp: f"{key_prefix}:{gp}", group.points.keys())
+            model_group = self._models[0].groups[group_name]
+            if type(model_group) is list:
+                for idx, group in enumerate(model_group):
+                    key_prefix = f"{group_name}:{idx}"
+                    group_keys = map(
+                        lambda gp: f"{key_prefix}:{gp}", group.points.keys()
+                    )
+                    keys.extend(filter(self.isValidPoint, group_keys))
+            else:
+                key_prefix = f"{group_name}:0"
+                group_keys = map(
+                    lambda gp: f"{key_prefix}:{gp}", model_group.points.keys()
+                )
                 keys.extend(filter(self.isValidPoint, group_keys))
         return keys
 
@@ -62,11 +74,18 @@ class SunSpecModelWrapper:
         point_path = point_name.split(":")
         if len(point_path) == 1:
             return self._models[model_index].points[point_name]
-        return (
-            self._models[model_index]
-            .groups[point_path[0]][int(point_path[1])]
-            .points[point_path[2]]
-        )
+
+        group = self._models[model_index].groups[point_path[0]]
+        if type(group) is list:
+            return group[int(point_path[1])].points[point_path[2]]
+        else:
+            if len(point_path) > 2:
+                return group.points[
+                    point_path[2]
+                ]  # Access to the specific point within the group
+            return group.points[
+                point_name
+            ]  # Generic access if no specific subgrouping is specified
 
 
 # pragma: not covered
@@ -89,6 +108,8 @@ class SunSpecApiClient:
         self._hass = hass
         self._slave_id = slave_id
         self._client_key = f"{host}:{port}:{slave_id}"
+        self._lock = threading.Lock()
+        self._reconnect = False
 
     def get_client(self, config=None):
         cached = SunSpecApiClient.CLIENT_CACHE.get(self._client_key, None)
@@ -96,6 +117,10 @@ class SunSpecApiClient:
             _LOGGER.debug("Not using cached connection")
             cached = self.modbus_connect(config)
             SunSpecApiClient.CLIENT_CACHE[self._client_key] = cached
+        if self._reconnect:
+            if self.check_port():
+                cached.connect()
+                self._reconnect = False
         return cached
 
     def async_get_client(self, config=None):
@@ -124,14 +149,35 @@ class SunSpecApiClient:
         model_ids = sorted(list(filter(lambda m: type(m) is int, client.models.keys())))
         return model_ids
 
+    def reconnect_next(self):
+        self._reconnect = True
+
     def close(self):
         client = self.get_client()
         client.close()
 
-    def reconnect(self):
-        _LOGGER.debug("Client reconnecting")
-        client = self.get_client()
-        client.connect()
+    def check_port(self) -> bool:
+        """Check if port is available"""
+        with self._lock:
+            sock_timeout = float(3)
+            _LOGGER.debug(
+                f"Check_Port: opening socket on {self._host}:{self._port} with a {sock_timeout}s timeout."
+            )
+            socket.setdefaulttimeout(sock_timeout)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock_res = sock.connect_ex((self._host, self._port))
+            is_open = sock_res == 0  # True if open, False if not
+            if is_open:
+                sock.shutdown(socket.SHUT_RDWR)
+                _LOGGER.debug(
+                    f"Check_Port (SUCCESS): port open on {self._host}:{self._port}"
+                )
+            else:
+                _LOGGER.debug(
+                    f"Check_Port (ERROR): port not available on {self._host}:{self._port} - error: {sock_res}"
+                )
+            sock.close()
+        return is_open
 
     def modbus_connect(self, config=None):
         use_config = SimpleNamespace(
@@ -149,21 +195,27 @@ class SunSpecApiClient:
             ipport=use_config.port,
             timeout=TIMEOUT,
         )
-        try:
-            client.connect()
-            if not client.is_connected():
-                raise ConnectionError(
-                    f"Failed to connect to {self._host}:{self._port} slave id {self._slave_id}"
+        if self.check_port():
+            _LOGGER.debug("Inverter ready for Modbus TCP connection")
+            try:
+                with self._lock:
+                    client.connect()
+                if not client.is_connected():
+                    raise ConnectionError(
+                        f"Failed to connect to {self._host}:{self._port} slave id {self._slave_id}"
+                    )
+                _LOGGER.debug("Client connected, perform initial scan")
+                client.scan(
+                    connect=False, progress=progress, full_model_read=False, delay=0.5
                 )
-            _LOGGER.debug("Client connected, perform initial scan")
-            client.scan(
-                connect=False, progress=progress, full_model_read=False, delay=0.5
-            )
-            return client
-        except ModbusClientError:
-            raise ConnectionError(
-                f"Failed to connect to {use_config.host}:{use_config.port} slave id {use_config.slave_id}"
-            )
+                return client
+            except ModbusClientError:
+                raise ConnectionError(
+                    f"Failed to connect to {use_config.host}:{use_config.port} slave id {use_config.slave_id}"
+                )
+        else:
+            _LOGGER.debug("Inverter not ready for Modbus TCP connection")
+            raise ConnectionError(f"Inverter not active on {self._host}:{self._port}")
 
     def read_model(self, model_id) -> dict:
         client = self.get_client()

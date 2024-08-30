@@ -39,7 +39,9 @@ DEVICE_CUSTOMIZES = {
     'ainice.sensor_occupy.3b': {
         'main_miot_services': 'occupancy_sensor',
         'state_property': 'occupancy_sensor.current_occupied',
-        'interval_seconds': 10,
+        'interval_seconds': 30,
+        'chunk_properties': 7,
+        'parallel_updates': 1,
         'binary_sensor_properties': 'current_occupied,a_occupied,b_occupied,c_occupied,d_occupied,e_occupied',
         'sensor_properties': 'total_occupied,illumination',
         'switch_properties': 'radar_switch,count_switch',
@@ -224,6 +226,20 @@ DEVICE_CUSTOMIZES = {
     },
     'cuco.acpartner.cp6': {
         'switch_properties': 'air_conditioner.on',
+        'sensor_attributes': 'power_cost_today,power_cost_month',
+        'stat_power_cost_key': '7.1',
+    },
+    'cuco.acpartner.cp6:power_cost_today': {
+        'value_ratio': 1,
+        'state_class': 'total_increasing',
+        'device_class': 'energy',
+        'unit_of_measurement': 'kWh',
+    },
+    'cuco.acpartner.cp6:power_cost_month': {
+        'value_ratio': 1,
+        'state_class': 'total_increasing',
+        'device_class': 'energy',
+        'unit_of_measurement': 'kWh',
     },
     'cuco.light.sl4': {
         'switch_properties': 'swich',
@@ -665,6 +681,7 @@ DEVICE_CUSTOMIZES = {
         'switch_properties': 'alarm_shielding,silent_mode,line_exchange',
     },
     'hyd.airer.lyjpro': {
+        'position_reverse': True,
         'cover_position_mapping': {},
     },
     'hyd.airer.*': {
@@ -674,6 +691,7 @@ DEVICE_CUSTOMIZES = {
         'number_properties': 'drying_time',
         'exclude_miot_properties': 'motor_control',
         'disable_target_position': True,
+        'position_reverse': False,
         'cover_position_mapping': {
             0: 50,
             1: 100,
@@ -1004,10 +1022,22 @@ DEVICE_CUSTOMIZES = {
     'mmgg.feeder.fi1': {
         'chunk_properties': 1,
         'state_property': 'pet_food_left_level',
-        'button_actions': 'reset_desiccant_life,resetclean,pet_food_out',
-        'sensor_properties': 'desiccant_left_time,cleantime,fault,outletstatus,doorstatus',
+        'button_actions': 'pet_food_out,resetclean,reset_desiccant_life',
+        'binary_sensor_properties': 'outletstatus,doorstatus',
+        'sensor_properties': 'fault,outfood_num,cleantime,desiccant_left_time',
         'number_properties': 'key_stat,indicator_light.on',
-        'exclude_miot_properties': 'outfood_num,outfood_id,contrycode,feddplan_string,factory_result',
+        'exclude_miot_properties': 'outfood_id,contrycode,feddplan_string,factory_result,phon_time_zone'
+                                   'feedplan_hour,feedplan_min,feedplan_unit,feedplan_stat,feedplan_id,getfeedplan_num',
+    },
+    'mmgg.feeder.inland': {
+        'chunk_properties': 1,
+        'state_property': 'pet_food_left_level',
+        'button_actions': 'pet_food_out,resetclean,reset_desiccant_life',
+        'binary_sensor_properties': 'outletstatus,doorstatus',
+        'sensor_properties': 'outfood_num,foodstatus,desiccant_left_time,cleantime',
+        'switch_properties': 'key_stat,indicator_light.on',
+        'exclude_miot_properties': 'fault,outfood_id,contrycode,feddplan_string,factory_result,phon_time_zone,'
+                                   'feedplan_hour,feedplan_min,feedplan_unit,feedplan_stat,feedplan_id,getfeedplan_num',
     },
     'mmgg.feeder.petfeeder': {
         'state_property': 'pet_food_left_level',
@@ -1455,6 +1485,13 @@ DEVICE_CUSTOMIZES = {
         'number_properties': 'target_temperature,target_time,reservation_left_time,keep_warm_time',
         'button_actions': 'start_cook,pause,cancel_cooking,resume_cook',
     },
+    'xiaomi.fan.p51': {
+        'button_actions': 'turn_left,turn_right,toggle,toggle_mode,loop_gear',
+        'switch_properties': 'delay',
+        'select_properties': 'horizontal_swing_included_angle',
+        'number_properties': 'delay_time',
+        'percentage_property': 'prop.2.6',
+    },
     'xiaomi.heater.ma8': {
         'button_actions': 'toggle',
     },
@@ -1499,7 +1536,7 @@ DEVICE_CUSTOMIZES = {
         'switch_properties': 'status_seatheat,status_led,auto_led,switch_bubble,status_seat,status_cover,'
                              'auto_seat_close,auto_cover_close,status_selfclean',
         'select_properties': 'seat_temp',
-        'button_actions': 'stop_working',
+        'button_actions': 'stop_working,flush_work,start_foam,clean_work',
     },
     'xwhzp.diffuser.xwxfj': {
         'sensor_properties': 'fragrance_liquid_left_level',
@@ -1668,6 +1705,41 @@ DEVICE_CUSTOMIZES = {
     'zhimi.airpurifier.za2': {
         'brightness_for_on': 0,
         'brightness_for_off': 2,
+    },
+    'zhimi.fan.fb1': {
+        'extend_miot_specs': [
+            {
+                'iid': 2,
+                'properties': [
+                    {'iid': 5, 'value-range': [30, 120, 30]},
+                    {'iid': 6, 'value-range': [30, 90, 30]},
+                ],
+            },
+            {
+                'iid': 5,
+                'properties': [
+                    {
+                        'iid': 6,
+                        'value-list': [
+                            {'value': 'left', 'description': 'Turn Left'},
+                            {'value': 'right', 'description': 'Turn Right'},
+                        ],
+                    },
+                    {
+                        'iid': 7,
+                        'value-list': [
+                            {'value': 'up', 'description': 'Turn Up'},
+                            {'value': 'down', 'description': 'Turn Down'},
+                        ],
+                    },
+                ],
+            },
+        ],
+        'switch_properties': 'alarm,horizontal_swing,vertical_swing,oscillating,h_swing_back,v_swing_back',
+        'number_properties': 'timing',
+        'percentage_property': 'stepless_fan_level',
+        'select_properties': 'mode,horizontal_angle,vertical_angle',
+        'button_properties': 'h_swing_step_move,v_swing_step_move'
     },
     'zhimi.fan.za3': {
         'miot_type': 'urn:miot-spec-v2:device:fan:0000A005:zhimi-za3:3',
@@ -1856,6 +1928,7 @@ DEVICE_CUSTOMIZES = {
         'number_select_properties': 'wash_mode,wash_time,target_water_level,water_level',
     },
     '*.fan.*': {
+        'button_actions': 'turn_left,turn_right',
         'number_properties': 'off_delay_time',
         'switch_properties': 'fan_init_power_opt',
     },
@@ -1913,6 +1986,9 @@ DEVICE_CUSTOMIZES = {
     },
     '*.motion.*:trigger_at': {
         'device_class': 'timestamp',
+    },
+    '*.sensor_occupy.*': {
+        'sensor_properties': 'illumination,has_someone_duration,no_one_duration',
     },
     '*.oven.*': {
         'sensor_properties': 'temperature,left_time,cook_time,working_time',

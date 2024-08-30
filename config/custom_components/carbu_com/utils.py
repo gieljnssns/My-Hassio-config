@@ -5,12 +5,13 @@ import uuid
 import re
 import math
 from bs4 import BeautifulSoup
-from ratelimit import limits, sleep_and_retry
 from datetime import date, datetime, timedelta
 import urllib.parse
 from enum import Enum
 from .spain_gas_stations_api import GasStationApi
+# from spain_gas_stations_api import GasStationApi
 import urllib3
+from ratelimit import limits, sleep_and_retry
 
 import voluptuous as vol
 
@@ -52,8 +53,8 @@ class FuelType(Enum):
     DIESEL_OFFICIAL_B7 = "diesel/b7",0,"","Diesel B7"
     DIESEL_OFFICIAL_B10 = "diesel/b10",0,"","Diesel B10"
     DIESEL_OFFICIAL_XTL = "diesel/xtl",0,"","Diesel XTL"
-    OILSTD = "7",0
-    OILSTD_PREDICTION = "mazout50s",0
+    OILSTD = "10",0
+    OILSTD_PREDICTION = "mazoutH0H7",0
     OILEXTRA = "2",0
     OILEXTRA_PREDICTION = "extra",0
     LPG = "GPL", 1, "gpl","lpg","17"
@@ -84,9 +85,14 @@ class FuelType(Enum):
         return self.name.lower()
 
 class ComponentSession(object):
-    def __init__(self):
+    def __init__(self, GEO_API_KEY):
         self.s = requests.Session()
-        self.s.headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+        self.s.headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
+        self.s.headers["Referer"] = "https://homeassistant.io"
+        # self.API_KEY_GEOCODIFY = GEO_API_KEY
+        # self.GEOCODIFY_BASE_URL = "https://api.geocodify.com/v2/"
+        self.API_KEY_GEOAPIFY = GEO_API_KEY
+        self.GEOAPIFY_BASE_URL = "https://api.geoapify.com/v1/geocode"
         
     # Country = country code: BE/FR/LU/DE/IT
     
@@ -163,7 +169,7 @@ class ComponentSession(object):
             country_name = "Spain"
         if country.lower() == 'us':
             country_name = "United States of America"
-        orig_location = self.searchGeocodeOSM(postalcode, town, country_name)
+        orig_location = self.searchGeocode(postalcode, town, country_name)
         _LOGGER.debug(f"searchGeocodeOSM({postalcode}, {town}, {country_name}): {orig_location}")
         if orig_location is None:
             return []
@@ -445,7 +451,7 @@ class ComponentSession(object):
         all_stations = dict()
         curr_dist = 0
         for boundingbox in locationinfo.get('boundingbox'):
-            response = self.s.get(f"https://api3.prezzibenzina.it/?do=pb_get_prices&output=json&os=android&appname=AndroidFuel&sdk=33&platform=SM-S906B&udid=dlwHryfCRXy-zJWX6mMN22&appversion=3.22.08.14&loc_perm=foreground&network=mobile&limit=5000&offset=1&min_lat={boundingbox[0]}&max_lat={boundingbox[1]}&min_long={boundingbox[2]}&max_long={boundingbox[3]}",headers=header,timeout=50)
+            response = self.s.get(f"https://api3.prezzibenzina.it/?do=pb_get_prices&output=json&os=android&appname=AndroidFuel&sdk=33&platform=SM-S906B&udid=dlwHryfCRXy-zJWX6mMN22&appversion=3.22.08.14&loc_perm=foreground&network=mobile&limit=5000&offset=1&min_lat={boundingbox[0]}&max_lat={boundingbox[2]}&min_long={boundingbox[1]}&max_long={boundingbox[3]}",headers=header,timeout=50)
             if response.status_code != 200:
                 _LOGGER.error(f"ERROR: {response.text}")
             assert response.status_code == 200
@@ -455,15 +461,18 @@ class ComponentSession(object):
             pb_get_prices_price = pb_get_prices.get('prices').get('price')
 
             # Filter the list to keep only items containing "diesel" in the "fuel" value
-            diesel_items = [item for item in pb_get_prices_price if fueltype.it_name in item["fuel"].lower()]
+            fuel_type_items = [item for item in pb_get_prices_price if fueltype.it_name in item["fuel"].lower()]
 
             # Sort the filtered list by the "price" key in ascending order
-            sorted_diesel_items = sorted(diesel_items, key=lambda x: float(x["price"]))
+            sorted_fuel_type_items = sorted(fuel_type_items, key=lambda x: float(x["price"]))
 
             # Extract all the station IDs into a list
-            sorted_diesel_items_dict = {item.get('station'): item for item in sorted_diesel_items}
+            sorted_fuel_type_items_dict = {item.get('station'): item for item in sorted_fuel_type_items}
+            if len(sorted_fuel_type_items_dict) == 0:
+                continue
+
             # station_ids = [item["station"] for item in sorted_diesel_items]
-            comma_separated_station_ids = ",".join(sorted_diesel_items_dict.keys())
+            comma_separated_station_ids = ",".join(sorted_fuel_type_items_dict.keys())
             
             response = self.s.get(f"https://api3.prezzibenzina.it/?do=pb_get_stations&output=json&appname=PrezziBenzinaWidget&ids={comma_separated_station_ids}&prices=on&minprice=1&fuels=d&apiversion=3.1",headers=header,timeout=50)
             if response.status_code != 200:
@@ -474,8 +483,8 @@ class ComponentSession(object):
             stationdetails_prezzibenzina = stationdetails_prezzibenzina.get('pb_get_stations')
             stationdetails_prezzibenzina_stations = stationdetails_prezzibenzina.get("stations").get("station")
             for station_details in stationdetails_prezzibenzina_stations:
-                station_details['price'] = (sorted_diesel_items_dict.get(station_details.get('id'))).get('price')
-                station_details['date'] = (sorted_diesel_items_dict.get(station_details.get('id'))).get('date')
+                station_details['price'] = (sorted_fuel_type_items_dict.get(station_details.get('id'))).get('price')
+                station_details['date'] = (sorted_fuel_type_items_dict.get(station_details.get('id'))).get('date')
             all_stations[str(curr_dist)] = stationdetails_prezzibenzina_stations
             curr_dist = curr_dist + 5
 
@@ -541,21 +550,22 @@ class ComponentSession(object):
         #                  "lon": "lon", 
         #                  "boundingbox": [["lat","lon"], ["lat", "lon", "lat", "lon"], ["lat", "lon", "lat", "lon"]]}
         
-        boundingBoxReversed = self.reverseGeocodeOSM(locationinfo.get('lon'), locationinfo.get('lat'))
+        knownProvinces = GasStationApi.get_provinces()
+        boundingBoxReversed = self.reverseGeocode(locationinfo.get('lon'), locationinfo.get('lat'))
 
-        requiredProv = boundingBoxReversed[3].get('state', None).lower()
+        # requiredProv = boundingBoxReversed[3].get('state', None).lower()
+        requiredProv = boundingBoxReversed.get('region').lower()
 
         #_LOGGER.debug(f"requiredProv: {requiredProv}")
 
         
-        knownProvinces = GasStationApi.get_provinces()
         prov_id = next(filter(lambda p: p.name.lower() in requiredProv, knownProvinces), None).id
         #_LOGGER.debug(f"prov_id: {prov_id}")
 
 
         sp_stations = GasStationApi.get_gas_stations_provincia(prov_id, fueltype.sp_code)
         # Sort the list first by "price" and then by "distance"
-        self.add_station_distance(sp_stations.get('ListaEESSPrecio'), float(locationinfo.get('lat').replace(',','.')), float(locationinfo.get('lon').replace(',','.')))
+        self.add_station_distance(sp_stations.get('ListaEESSPrecio'), 'Latitud', 'Longitud (WGS84)', float(str(locationinfo.get('lat')).replace(',','.')), float(str(locationinfo.get('lon')).replace(',','.')))
         #_LOGGER.debug(f"sp_stations: {sp_stations}")
         sorted_stations = sorted(sp_stations.get('ListaEESSPrecio'), key=lambda x: (x['distance'], x['PrecioProducto']))
         # sorted_stations =  sp_stations.get('ListaEESSPrecio').sort(key=lambda item: (
@@ -623,9 +633,10 @@ class ComponentSession(object):
         #                  "lon": "<lon>", 
         #                  "boundingbox": [["<lat>","<lon>"], ["<lat>", "<lon>", "<lat>", "<lon>"], ["<lat>", "<lon>", "<lat>", "<lon>"]]}
         
-        boundingBoxReversed = self.reverseGeocodeOSM(locationinfo.get('lon'), locationinfo.get('lat'))
+        boundingBoxReversed = self.reverseGeocode(locationinfo.get('lon'), locationinfo.get('lat'))
 
-        requiredState = boundingBoxReversed[3].get('state', None).lower()
+        # requiredState = boundingBoxReversed[3].get('state', None).lower()
+        requiredState = boundingBoxReversed.get("region").lower()
 
 
         _LOGGER.debug(f"requiredProv: {requiredState}")
@@ -651,7 +662,7 @@ class ComponentSession(object):
 
         response = self.s.get(url=CONST_GASBUDDY_STATIONS_FMT, headers=GASBUDDY_HEADERS)
         stations = response.json().get('stations')
-        self.add_station_distance(stations, "info.latitude", "info.longitude", float(locationinfo.get('lat').replace(',','.')), float(locationinfo.get('lon').replace(',','.')))
+        self.add_station_distance(stations, "info.latitude", "info.longitude", float(str(locationinfo.get('lat')).replace(',','.')), float(str(locationinfo.get('lon')).replace(',','.')))
         
         _LOGGER.debug(f"stations: {stations}")
 
@@ -676,7 +687,7 @@ class ComponentSession(object):
         for block in sorted_stations:
             # Find the fuel product matching the predefined fuel type
             matching_fuel_product = next((product for product in block["fuel_products"] if product["fuel_product"] == fueltype.us_code), None)
-            
+            _LOGGER.debug(f"matching_fuel_product: {matching_fuel_product}")
             # Check if matching fuel product is found
             if matching_fuel_product:
                 # Get the price for the predefined fuel type
@@ -843,7 +854,7 @@ class ComponentSession(object):
         # https://mazout.com/config.378173423.json
         # https://api.carbu.com/mazout/v1/offers?api_key=elPb39PWhWJj9K2t73tlxyRL0cxEcTCr0cgceQ8q&areaCode=BE_bf_223&productId=7&quantity=1000&sk=T211ck5hWEtySXFMRTlXRys5KzVydz09
 
-        response = self.s.get(f"https://mazout.com/config.378173423.json",headers=header,timeout=30)
+        response = self.s.get(f"https://mazout.com/config.204135307.json",headers=header,timeout=30)
         if response.status_code != 200:
             _LOGGER.error(f"ERROR: {response.text}")
         assert response.status_code == 200
@@ -873,7 +884,7 @@ class ComponentSession(object):
         # https://mazout.com/config.378173423.json
         # https://api.carbu.com/mazout/v1/price-summary?api_key=elPb39PWhWJj9K2t73tlxyRL0cxEcTCr0cgceQ8q&sk=T211ck5hWEtySXFMRTlXRys5KzVydz09
 
-        response = self.s.get(f"https://mazout.com/config.378173423.json",headers=header,timeout=30)
+        response = self.s.get(f"https://mazout.com/config.204135307.json",headers=header,timeout=30)
         if response.status_code != 200:
             _LOGGER.error(f"ERROR: {response.text}")
         assert response.status_code == 200
@@ -920,27 +931,26 @@ class ComponentSession(object):
     @sleep_and_retry
     @limits(calls=1, period=1)
     def getStationInfoLatLon(self,latitude, longitude, fuel_type: FuelType, max_distance=0, filter=""):
-        postal_code_country = self.reverseGeocodeOSM(longitude, latitude)
+        postal_code_country = self.reverseGeocode(longitude, latitude)
         town = None
         locationinfo = None
-        if postal_code_country[1].lower() in ["be","fr","lu"]:        
-            carbuLocationInfo = self.convertPostalCode(postal_code_country[0], postal_code_country[1])
+        if postal_code_country.get('country_code').lower() in ["be","fr","lu"]:        
+            carbuLocationInfo = self.convertPostalCode(postal_code_country.get('postal_code'), postal_code_country.get('country_code'))
             if not carbuLocationInfo:
-                raise Exception(f"Location not found country: {postal_code_country[1]}, postalcode: {postal_code_country[0]}")
+                raise Exception(f"Location not found country: {postal_code_country.get('country_code')}, postalcode: {postal_code_country.get('postal_code')}")
             town = carbuLocationInfo.get("n")
             city = carbuLocationInfo.get("pn")
             countryname = carbuLocationInfo.get("cn")
             locationinfo = carbuLocationInfo.get("id")
-            _LOGGER.debug(f"convertPostalCode postalcode: {postal_code_country[0]}, town: {town}, city: {city}, countryname: {countryname}, locationinfo: {locationinfo}")
-        if postal_code_country[1].lower() in ["it","nl","es"]: 
+            _LOGGER.debug(f"convertPostalCode postalcode: {postal_code_country.get('postal_code')}, town: {town}, city: {city}, countryname: {countryname}, locationinfo: {locationinfo}")
+        if postal_code_country.get('country_code').lower() in ["it","nl","es"]: 
             #TODO calc boudingboxes for known lat lon
-            postal_code_country = self.reverseGeocodeOSM(longitude, latitude)
-            town = postal_code_country[2]
-            itLocationInfo = self.convertLocationBoundingBox(postal_code_country[0], postal_code_country[1], town)
+            town = postal_code_country.get('town')
+            itLocationInfo = self.convertLocationBoundingBox(postal_code_country.get('postal_code'), postal_code_country.get('country_code'), town)
             locationinfo = itLocationInfo
-        price_info = self.getFuelPrices(postal_code_country[0], postal_code_country[1], town, locationinfo, fuel_type, False)
+        price_info = self.getFuelPrices(postal_code_country.get('postal_code'), postal_code_country.get('country_code'), town, locationinfo, fuel_type, False)
         # _LOGGER.debug(f"price_info {fuel_type.name} {price_info}")
-        return self.getStationInfoFromPriceInfo(price_info, postal_code_country[0], fuel_type, max_distance, filter)
+        return self.getStationInfoFromPriceInfo(price_info, postal_code_country.get('postal_code'), fuel_type, max_distance, filter)
         
 
     def getStationInfoFromPriceInfo(self,price_info, postalcode, fuel_type: FuelType, max_distance=0, filter="", individual_station=""):
@@ -998,6 +1008,8 @@ class ComponentSession(object):
                 currPrice = float(station.get("price"))
             except ValueError:
                 continue
+            _LOGGER.debug(f"getStationInfoFromPriceInfo maxDistance: {max_distance}, currDistance: {currDistance}, postalcode: {station.get("postalcode")}, currPrice: {currPrice} new price: {data.get("price")}")
+            
             # _LOGGER.debug(f'if (({max_distance} == 0 and ({currDistance} <= 5 or {postalcode} == {station.get("postalcode")})) or {currDistance} <= {max_distance}) and ({data.get("price")} is None or {currPrice} < {float(data.get("price"))})')
             if ((max_distance == 0 and (currDistance <= 5 or postalcode == station.get("postalcode"))) or currDistance <= max_distance) and (data.get("price") is None or currPrice < float(data.get("price"))):
                 data["distance"] = float(station.get("distance"))
@@ -1086,11 +1098,11 @@ class ComponentSession(object):
     @sleep_and_retry
     @limits(calls=1, period=1)
     def getPriceOnRoute(self, country, fuel_type: FuelType, from_postalcode, to_postalcode, to_country = "", filter = ""):
-        from_location = self.geocodeOSM(country, from_postalcode)
+        from_location = self.geocode(country, from_postalcode)
         assert from_location is not None
         if to_country == "":
             to_country = country
-        to_location = self.geocodeOSM(to_country, to_postalcode)
+        to_location = self.geocode(to_country, to_postalcode)
         assert to_location is not None
         return self.getPriceOnRouteLatLon(fuel_type, from_location[0], from_location[1], to_location[0], to_location[1], filter)
 
@@ -1122,10 +1134,10 @@ class ComponentSession(object):
 
         for i in range(0, len(route), step_size):
             _LOGGER.debug(f"point: {route[i]}, step_size {step_size} of len(route): {len(route)}")
-            postal_code_country = self.reverseGeocodeOSM(route[i]['maneuver']['location'][0], route[i]['maneuver']['location'][1])
-            if postal_code_country[0] is not None and postal_code_country[0] not in processedPostalCodes:
-                _LOGGER.debug(f"Get route postalcode {postal_code_country[0]}, processedPostalCodes {processedPostalCodes}")
-                bestAroundPostalCode = self.getStationInfo(postal_code_country[0], postal_code_country[1], fuel_type, postal_code_country[2], 3, filter)
+            postal_code_country = self.reverseGeocode(route[i]['maneuver']['location'][0], route[i]['maneuver']['location'][1])
+            if postal_code_country.get('postal_code') is not None and postal_code_country.get('postal_code') not in processedPostalCodes:
+                _LOGGER.debug(f"Get route postalcode {postal_code_country.get('postal_code')}, processedPostalCodes {processedPostalCodes}")
+                bestAroundPostalCode = self.getStationInfo(postal_code_country.get('postal_code'), postal_code_country.get('country_code'), fuel_type, postal_code_country.get('town'), 3, filter)
                 if bestAroundPostalCode is None:
                     continue
                 processedPostalCodes.extend(bestAroundPostalCode.get('postalcodes'))                    
@@ -1133,7 +1145,7 @@ class ComponentSession(object):
                     bestStationOnRoute = bestAroundPostalCode
                     bestPriceOnRoute = bestAroundPostalCode.get('price',999)
             else:
-                _LOGGER.debug(f"skipped route postalcode {postal_code_country[0]}, processedPostalCodes {processedPostalCodes}")
+                _LOGGER.debug(f"skipped route postalcode {postal_code_country.get('postal_code')}, processedPostalCodes {processedPostalCodes}")
 
         _LOGGER.debug(f"handle_get_lowest_fuel_price_on_route info found: {processedPostalCodes}")
         return bestStationOnRoute
@@ -1149,6 +1161,7 @@ class ComponentSession(object):
         else:
             return response
     
+    # NOT USED
     @sleep_and_retry
     @limits(calls=100, period=60)
     def geocodeORS(self, country_code, postalcode, ors_api_key):
@@ -1176,16 +1189,65 @@ class ComponentSession(object):
             _LOGGER.debug(f"geocodeORS response no features found: {response_json}")
             return
     
+    # USED by services on route
     @sleep_and_retry
     @limits(calls=1, period=1)
-    def geocodeOSM(self, country_code, postal_code):
+    def geocode(self, country_code, postal_code):
+        _LOGGER.debug(f"geocode request: country_code: {country_code}, postalcode: {postal_code}")
+        try:
+            # header = {"Content-Type": "application/x-www-form-urlencoded"}
+            # header = {"Accept-Language": "nl-BE"}
+            address = f"{postal_code}, {country_code}"
+
+            
+            # GEOCODIFY
+        #     response = self.s.get(f"{self.GEOCODIFY_BASE_URL}geocode?api_key={self.API_KEY_GEOCODIFY}&q={address}")
+        #     response = response.json()
+        #     status = response.get('meta').get('code')
+        #     if response and status == 200:
+        #         # print(response)
+        #         location = response.get('response').get('features')[0].get('geometry').get('coordinates') # extract the latitude and longitude coordinates from the response
+        #         _LOGGER.debug(f"geocode lat: {location[1]}, lon {location[0]}")
+        #         return location
+        #     else:
+        #         _LOGGER.error(f"ERROR: {location}, country_code: {country_code}, postalcode: {postal_code}")
+        #         return None
+        # except:
+        #     _LOGGER.error(f"ERROR: {response.text}")
+        #     return None
+
+            response = self.s.get(f"{self.GEOAPIFY_BASE_URL}/search?text={address}&api_key={self.API_KEY_GEOAPIFY}&format=json")
+
+            # Check if the request was successful
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Extract the first result's coordinates
+                if data['results'] and len(data['results']) > 0:
+                    location = [data['results'][0]['lon'],data['results'][0]['lat']] # extract the latitude and longitude coordinates from the response
+                    _LOGGER.debug(f"geocode lat: {location[1]}, lon {location[0]}")
+                    return location
+                else:
+                    return None
+            else:
+                return None, f"Error searching: {address}: {response.status_code}: {response.text}"
+        except Exception as e:
+            _LOGGER.error(f"ERROR: geocode : {e}")
+            return None
+        
+    
+     
+    # NOT USED by services on route
+    @sleep_and_retry
+    @limits(calls=1, period=1)
+    def geocodeOSMNominatim(self, country_code, postal_code):
         _LOGGER.debug(f"geocodeOSM request: country_code: {country_code}, postalcode: {postal_code}")
         # header = {"Content-Type": "application/x-www-form-urlencoded"}
         # header = {"Accept-Language": "nl-BE"}
 
         geocode_url = 'https://nominatim.openstreetmap.org/search'
         params = {'format': 'json', 'postalcode': postal_code, 'country': country_code, 'limit': 1}
-        response = requests.get(geocode_url, params=params)
+        response = self.s.get(geocode_url, params=params)
         geocode_data = response.json()
         if geocode_data:
             location = (geocode_data[0]['lat'], geocode_data[0]['lon'])
@@ -1193,9 +1255,9 @@ class ComponentSession(object):
             return location
         else:
             _LOGGER.error(f"ERROR: {response.text}")
-            return None
-        
+            return None       
     
+    # NOT USED
     @sleep_and_retry
     @limits(calls=100, period=60)
     def reverseGeocodeORS(self, location, ors_api_key):
@@ -1213,15 +1275,54 @@ class ComponentSession(object):
         else:
             return
     
-    
+    #USED for different countries to create a bounding box
     @sleep_and_retry
     @limits(calls=1, period=2)
-    def searchGeocodeOSM(self, postalcode, city, country):
+    def searchGeocode(self, postalcode, city, country):
+        try:
+            address = f"{postalcode}, {city}, {country}"
+
+            # GEOCODIFY
+            # response = self.s.get(f"{self.GEOCODIFY_BASE_URL}geocode?api_key={self.API_KEY_GEOCODIFY}&q={address}")
+            
+            # response = response.json()
+            # status = response.get('meta').get('code')
+            # if response and status == 200:
+            #     # print(response)
+            #     location = response.get('response').get('features')[0].get('geometry').get('coordinates') # extract the latitude and longitude coordinates from the response
+            #     _LOGGER.debug(f"geocode lat: {location[1]}, lon {location[0]}")
+            #     bbox = response.get('response').get('bbox')
+            #     return {"lat": location[1], "lon": location[0], "boundingbox": [bbox[1],bbox[0],bbox[3],bbox[2]]}
+
+
+            # GEOAPIFY
+            response = self.s.get(f"{self.GEOAPIFY_BASE_URL}/search?text={address}&api_key={self.API_KEY_GEOAPIFY}&format=json")
+
+            # Check if the request was successful
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Extract the first result's coordinates
+                if data['results'] and len(data['results']) > 0:
+                    location = [data['results'][0]['lon'],data['results'][0]['lat']] # extract the latitude and longitude coordinates from the response
+                    bbox = data['results'][0]['bbox']
+                    return {"lat": location[1], "lon": location[0], "boundingbox": [bbox['lat1'],bbox['lon1'],bbox['lat2'],bbox['lon2']]}
+                else:
+                    return None
+            else:
+                return None, f"Error searching: {address}: {response.status_code}: {response.text}"
+        except Exception as e:
+            _LOGGER.error(f"ERROR: searchGeocode : {e}")
+    
+    #NOT USED for different countries to create a bounding box
+    @sleep_and_retry
+    @limits(calls=1, period=2)
+    def searchGeocodeOSMNominatim(self, postalcode, city, country):
 
         # https://nominatim.openstreetmap.org/search?postalcode=1212VG&city=Hilversum&country=Netherlands&format=json
         # [{"place_id":351015506,"licence":"Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright","osm_type":"relation","osm_id":271108,"boundingbox":["52.1776807","52.2855452","5.1020133","5.2189603"],"lat":"52.2241375","lon":"5.1719396","display_name":"Hilversum, North Holland, Netherlands","class":"boundary","type":"administrative","importance":0.7750020206490176,"icon":"https://nominatim.openstreetmap.org/ui/mapicons/poi_boundary_administrative.p.20.png"},{"place_id":351015507,"licence":"Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright","osm_type":"relation","osm_id":419190,"boundingbox":["52.1776807","52.2855452","5.1020133","5.2189603"],"lat":"52.23158695","lon":"5.173493524521531","display_name":"Hilversum, North Holland, Netherlands","class":"boundary","type":"administrative","importance":0.7750020206490176,"icon":"https://nominatim.openstreetmap.org/ui/mapicons/poi_boundary_administrative.p.20.png"}]
         nominatim_url = f"https://nominatim.openstreetmap.org/search?postalcode={postalcode}&city={city}&country={country}&format=json"
-        nominatim_response = requests.get(nominatim_url)
+        nominatim_response = self.s.get(nominatim_url)
         nominatim_data = nominatim_response.json()
         # _LOGGER.debug(f"nominatim_data {nominatim_data}")
         location = []
@@ -1236,11 +1337,12 @@ class ComponentSession(object):
             # max_lon = boundingbox[3]
             return location
     
+    # NOT USED for converting lat lon to postal code
     @sleep_and_retry
     @limits(calls=1, period=2)
-    def reverseGeocodeOSM(self, longitude, latitude):
+    def reverseGeocodeOSMNominatim(self, longitude, latitude):
         nominatim_url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={latitude}&lon={longitude}"
-        nominatim_response = requests.get(nominatim_url)
+        nominatim_response = self.s.get(nominatim_url)
         nominatim_data = nominatim_response.json()
         # _LOGGER.debug(f"nominatim_data {nominatim_data}")
 
@@ -1253,7 +1355,74 @@ class ComponentSession(object):
 
         return (postal_code, country_code, town, address)
     
-    
+    # USED for converting lat lon to postal code
+    @sleep_and_retry
+    @limits(calls=1, period=2)
+    def reverseGeocode(self, longitude, latitude):
+        try:
+            # GECODIFY
+            # response = self.s.get(f"{self.GEOCODIFY_BASE_URL}reverse?api_key={self.API_KEY_GEOCODIFY}&lat={latitude}&lng={longitude}")
+            
+            # response = response.json()
+            # status = response.get('meta').get('code')
+            # if response and status == 200:
+            #     # print(response)
+
+            #     # Extract the postal code from the response
+            #     extracted_response = {
+            #         "postal_code": response.get('response').get('features')[0].get('properties').get('postalcode'),
+            #         "country_code": response.get('response').get('features')[0].get('properties').get('country_code'),
+            #         "town": response.get('response').get('features')[0].get('properties').get('locality'),
+            #         "address": f"{response.get('response').get('features')[0].get('properties').get('street')} {response.get('response').get('features')[0].get('properties').get('housenumber')}, {response.get('response').get('features')[0].get('properties').get('postalcode')} {response.get('response').get('features')[0].get('properties').get('locality')}, {response.get('response').get('features')[0].get('properties').get('country')}",
+            #         "region": response.get('response').get('features')[0].get('properties').get('region')
+            #     }
+            #     _LOGGER.debug(f"geodata extracted_response {extracted_response}")
+
+            #     return extracted_response
+
+            # GEOAPIFY
+            response = self.s.get(f"{self.GEOAPIFY_BASE_URL}/reverse?lat={latitude}&lon={longitude}&api_key={self.API_KEY_GEOAPIFY}&format=json")
+
+            # Check if the request was successful
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Extract the first result's coordinates
+                if data['results'] and len(data['results']) > 0:
+                    # Extract the postal code from the response
+                    extracted_response = {
+                        "postal_code": data['results'][0].get('postcode',''),
+                        "country_code": data['results'][0].get('country_code',''),
+                        "town": data['results'][0].get('city',''),
+                        "address": data['results'][0].get('formatted',''),
+                        "region": data['results'][0].get('state','')
+                    }
+                    return extracted_response
+                else:
+                    return None
+        except Exception as e:
+            _LOGGER.error(f"ERROR: reverseGeocode: {e}")
+
+
+    # NOT USED for converting lat lon to postal code
+    @sleep_and_retry
+    @limits(calls=1, period=2)
+    def reverseGeocodeNominatim(self, longitude, latitude):
+        nominatim_url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={latitude}&lon={longitude}"
+        nominatim_response = self.s.get(nominatim_url)
+        nominatim_data = nominatim_response.json()
+        # _LOGGER.debug(f"nominatim_data {nominatim_data}")
+
+        # Extract the postal code from the Nominatim response
+        postal_code = nominatim_data['address'].get('postcode', None)
+        country_code = nominatim_data['address'].get('country_code', None)
+        town = nominatim_data['address'].get('town', None)
+        address = nominatim_data['address']
+        # _LOGGER.debug(f"nominatim_data postal_code {postal_code}, country_code {country_code}, town {town}")
+
+        return (postal_code, country_code, town, address)
+
+    # NOT USED
     @sleep_and_retry
     @limits(calls=1, period=15)
     def getOrsRoute(self, from_location, to_location, ors_api_key):
@@ -1287,6 +1456,7 @@ class ComponentSession(object):
         geometry = response_json["features"][0]["geometry"]["coordinates"]
         return geometry
 
+    #  USED by services on route 
     @sleep_and_retry
     @limits(calls=1, period=15)
     def getOSMRoute(self, from_location, to_location):
@@ -1296,7 +1466,7 @@ class ComponentSession(object):
         # Request the route from OpenStreetMap API
         # 'https://router.project-osrm.org/route/v1/driving/<from_lon>,<from_lat>;<to_lon>,<to_lat>?steps=true
         url = f'https://router.project-osrm.org/route/v1/driving/{from_location[1]},{from_location[0]};{to_location[1]},{to_location[0]}?steps=true'
-        response = requests.get(url)
+        response = self.s.get(url)
         route_data = response.json()
         _LOGGER.debug(f"route_data {route_data}")
         
@@ -1342,7 +1512,7 @@ class ComponentSession(object):
         for station in stations:
             latitude = str(self.get_nested_element(station, stationLatName))
             longitude = str(self.get_nested_element(station, stationLonName))
-            distance = self.haversine_distance(float(latitude.replace(',','.')), float(longitude.replace(',','.')), lat, lon)
+            distance = self.haversine_distance(float(str(latitude).replace(',','.')), float(str(longitude).replace(',','.')), lat, lon)
             station["distance"] = distance
     def get_nested_element(self, json_obj, key_string):
         keys = key_string.split('.')
@@ -1354,8 +1524,14 @@ class ComponentSession(object):
         except (KeyError, TypeError):
             return None
     
+
 #test
-# session = ComponentSession()
+
+
+# Example usage
+
+# session = ComponentSession("GEO_API_KEY")
+# session.geocode("BE", "1000")
 
 #test US
 # ZIP Code 10001 - New York, New York
@@ -1369,15 +1545,7 @@ class ComponentSession(object):
 
 
 #test SP
-#TODO:
-#add prov and city calls in 
-#get bounding box for search city
-#search all stations in province
-#add disstance for each location to search city
-#sort by distance and price
-# prov = GasStationApi.get_provinces()
-# city = GasStationApi.get_municipalities(prov[8].id)
-# print(session.getFuelPrices("3300", "SP", "Bost", city[20].id, FuelType.DIESEL, False))
+
 
 # locationinfo= session.convertLocationBoundingBox("28500", "ES", "Madrid")
 # print(session.getFuelPrices("28500", "ES", "Madrid", locationinfo, FuelType.DIESEL, False))
