@@ -11,7 +11,7 @@ trigger:
     at: "06:02:00"
     id: "prediction"
   - platform: time_pattern
-    minutes: /10
+    minutes: /5
     id: day
   - platform: time_pattern
     minutes: 29
@@ -19,8 +19,16 @@ trigger:
   - platform: homeassistant
     event: start
     id: start
+  - platform: time
+    at: input_datetime.emhass_data
+    id: data
 action:
   - choose:
+      - conditions:
+          - condition: trigger
+            id: data
+        sequence:
+          - service: rest_command.publish_data
       - conditions:
           - condition: trigger
             id: night
@@ -30,9 +38,12 @@ action:
               {{ now().hour is in [1, 2, 3, 4] }}
         sequence:
           - service: rest_command.naive_mpc_optim
-          - delay:
-              seconds: 40
-          - service: rest_command.publish_data
+          - service: input_datetime.set_datetime
+            data:
+              datetime: >
+                {{ now() + timedelta(seconds=40) }}
+            target:
+              entity_id: input_datetime.emhass_data
       - conditions:
           - condition: trigger
             id: day
@@ -42,9 +53,12 @@ action:
               {{ now().hour is in [0, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23] }}
         sequence:
           - service: rest_command.naive_mpc_optim
-          - delay:
-              seconds: 40
-          - service: rest_command.publish_data
+          - service: input_datetime.set_datetime
+            data:
+              datetime: >
+                {{ now() + timedelta(seconds=40) }}
+            target:
+              entity_id: input_datetime.emhass_data
       - conditions:
           - condition: trigger
             id: fit

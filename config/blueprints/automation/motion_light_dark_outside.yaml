@@ -2,11 +2,18 @@ blueprint:
   name: Motion-activated Light dark outside
   domain: automation
   source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/automation/blueprints/motion_light.yaml
+  
   input:
     entity:
       name: Entity
       selector:
         entity:
+    
+    input_datetime_target:
+      name: Entity
+      selector:
+        entity:
+          domain: input_datetime
 
     light_target:
       name: Light
@@ -17,40 +24,108 @@ blueprint:
     no_motion_wait:
       name: Wait time
       description: Time to wait until the light should be turned off.
-      default: 120
+      default: 210
       selector:
-        number:
-          min: 0
-          max: 3600
-          unit_of_measurement: seconds
+        text:
+        # number:
+        #   min: 0
+        #   max: 3600
+        #   unit_of_measurement: seconds
 
 # If motion is detected within the delay,
 # we restart the script.
 mode: restart
 max_exceeded: silent
+variables:
+  no_motion_wait: !input no_motion_wait
 
 trigger:
   - platform: state
     entity_id: !input entity
     from: "off"
     to: "on"
-  - platform: state
-    entity_id: !input entity
-    to: "Juist Aangekomen"
-
+    id: aan
+  
+  - platform: time
+    at: !input input_datetime_target
+    id: uit
 condition:
   - condition: state
     entity_id: sensor.dark_inside
     state: "true"
-
 action:
-  - service: light.turn_on
-    target: !input light_target
-  - wait_for_trigger:
-      platform: state
-      entity_id: !input entity
-      from: "on"
-      to: "off"
-  - delay: !input no_motion_wait
-  - service: light.turn_off
-    target: !input light_target
+  - choose:
+    - conditions:
+        - condition: trigger
+          id: aan
+      sequence:
+        - service: light.turn_on
+          target: !input light_target
+        - service: input_datetime.set_datetime
+          data:
+            datetime: >
+              {% set wait = no_motion_wait|int(210) %}
+              {{ now() + timedelta(seconds=wait) }}
+          target:
+            entity_id: !input input_datetime_target
+    - conditions:
+        - condition: trigger
+          id: uit
+      sequence:
+        - service: light.turn_off
+          target: !input light_target
+  
+  
+  
+#   input:
+#     entity:
+#       name: Entity
+#       selector:
+#         entity:
+
+#     light_target:
+#       name: Light
+#       selector:
+#         target:
+#           entity:
+#             domain: light
+#     no_motion_wait:
+#       name: Wait time
+#       description: Time to wait until the light should be turned off.
+#       default: 120
+#       selector:
+#         number:
+#           min: 0
+#           max: 3600
+#           unit_of_measurement: seconds
+
+# # If motion is detected within the delay,
+# # we restart the script.
+# mode: restart
+# max_exceeded: silent
+
+# trigger:
+#   - platform: state
+#     entity_id: !input entity
+#     from: "off"
+#     to: "on"
+#   - platform: state
+#     entity_id: !input entity
+#     to: "Juist Aangekomen"
+
+# condition:
+#   - condition: state
+#     entity_id: sensor.dark_inside
+#     state: "true"
+
+# action:
+#   - service: light.turn_on
+#     target: !input light_target
+#   - wait_for_trigger:
+#       platform: state
+#       entity_id: !input entity
+#       from: "on"
+#       to: "off"
+#   - delay: !input no_motion_wait
+#   - service: light.turn_off
+#     target: !input light_target

@@ -7,7 +7,37 @@ trigger:
     event: start
 action:
   - delay:
-      seconds: 20
+      seconds: 60
+  - if:
+      - condition: template
+        value_template: >
+          {{ states("climate.living") == "unavailable" or
+              states("climate.living") == "unknown" }}
+    then:
+      - service: homeassistant.reload_config_entry
+        data:
+          entry_id: 5a981e21a0b31d75284b8aad81f97329
+  - if:
+      - condition: template
+        value_template: >
+          {{ states("sensor.unifi_garage_vermogen") == "unavailable" or
+              states("sensor.unifi_garage_vermogen") == "unknown" or
+              states("sensor.unifi_media_vermogen") == "unavailable" or
+              states("sensor.unifi_media_vermogen") == "unknown" or
+              states("sensor.unifi_waskot_vermogen") == "unavailable" or
+              states("sensor.unifi_waskot_vermogen") == "unknown" }}
+    then:
+      - service: homeassistant.enable_entity
+        data:
+          entity_id:
+            - sensor.usw_24_poe_waskot_cpu_utilization
+            - sensor.usw_lite_8_poe_media_cpu_utilization
+            - sensor.us_8_60w_garage_cpu_utilization
+
+
+
+
+
   - condition: template
     value_template: >
       {{ states("climate.living") == "unavailable" or

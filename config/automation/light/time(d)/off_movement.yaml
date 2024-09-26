@@ -2,34 +2,41 @@ alias: "Uit na aanwezigheid"
 id: 862d6268-71cb-472b-b6fd-dcebe484af14
 mode: parallel
 trigger:
-  - platform: state
-    entity_id: binary_sensor.aanwezigheid_waskot
-    to: "off"
-    for:
-      minutes: 3
-  - platform: state
-    entity_id: binary_sensor.aanwezigheid_wc
-    to: "off"
-    for:
-      minutes: 3
+  # - platform: state
+  #   entity_id: binary_sensor.aanwezigheid_waskot
+  #   to: "off"
+  #   for:
+  #     minutes: 3
+  # - platform: state
+  #   entity_id: binary_sensor.aanwezigheid_wc
+  #   to: "off"
+  #   for:
+  #     minutes: 3
   - platform: state
     entity_id: binary_sensor.zithoek_aanwezigheid
     to: "off"
+    for:
+      minutes: 3
   - platform: state
     entity_id: binary_sensor.danszaal_aanwezigheid
     to: "off"
-  - platform: state
-    entity_id: binary_sensor.keuken_aanwezigheid
-    to: "off"
+    for:
+      minutes: 3
   - platform: state
     entity_id: binary_sensor.aanwezigheid_slaapkamer
     to: "off"
+    for:
+      minutes: 2
   - platform: state
     entity_id: binary_sensor.aanwezigheid_noor
     to: "off"
+    for:
+      minutes: 2
   - platform: state
     entity_id: binary_sensor.aanwezigheid_fien
     to: "off"
+    for:
+      minutes: 2
   - platform: state
     entity_id: binary_sensor.beweging_garage
     to: "off"
@@ -40,11 +47,7 @@ action:
   - service: light.turn_off
     data_template:
       entity_id: >
-        {% if trigger.entity_id == 'binary_sensor.badkamer_presence' %}
-          light.badkamer_pombak
-        {% elif trigger.entity_id == 'binary_sensor.keuken_aanwezigheid' %}
-          light.keuken_spots, light.keuken_inkom, light.keuken_luster
-        {% elif trigger.entity_id == 'binary_sensor.zithoek_aanwezigheid' %}
+        {% if trigger.entity_id == 'binary_sensor.zithoek_aanwezigheid' %}
           light.zithoek_luster
         {% elif trigger.entity_id == 'binary_sensor.danszaal_aanwezigheid' %}
           light.danszaal_luster, light.danszaal_spots
@@ -52,10 +55,6 @@ action:
           light.noor
         {% elif trigger.entity_id == 'binary_sensor.aanwezigheid_fien' %}
           light.fien
-        {% elif trigger.entity_id == 'binary_sensor.aanwezigheid_waskot' %}
-          light.waskot
-        {% elif trigger.entity_id == 'binary_sensor.aanwezigheid_wc' %}
-          light.wc
         {% elif trigger.entity_id == 'binary_sensor.beweging_garage' %}
           light.garage, light.garage_werkbank, light.vogelpik, light.garage_sjotterbak, light.garage_sfeerverlichting
         {% else %}

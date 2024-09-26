@@ -12,6 +12,11 @@ verluchting_1_uur:
       entity_id: switch.badkamer_verluchting
     - service: switch.turn_on
       entity_id: switch.zolder_verluchting
+    - service: input_datetime.set_datetime
+      data:
+        datetime: "{{ now() + timedelta(hours=1) }}" # 1 hour from now
+      target:
+        entity_id: input_datetime.verluchting_end_time # the entity used in the off time trigger
     # - choose:
     #     - conditions:
     #         - condition: template
@@ -30,11 +35,11 @@ verluchting_1_uur:
     #       sequence:
     #         - service: switch.turn_on
     #           entity_id: switch.verluchting
-    - delay:
-        minutes: 60
-    - service: fan.turn_off
-      entity_id: fan.ventilatie
-    - service: switch.turn_off
-      entity_id: switch.badkamer_verluchting
-    - service: switch.turn_off
-      entity_id: switch.zolder_verluchting
+    # - delay:
+    #     minutes: 60
+    # - service: fan.turn_off
+    #   entity_id: fan.ventilatie
+    # - service: switch.turn_off
+    #   entity_id: switch.badkamer_verluchting
+    # - service: switch.turn_off
+    #   entity_id: switch.zolder_verluchting

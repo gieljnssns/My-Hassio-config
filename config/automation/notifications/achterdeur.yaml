@@ -9,11 +9,14 @@ trigger:
 condition:
   condition: and
   conditions:
-    - condition: state
-      entity_id: binary_sensor.buiten_frisser_dan_binnen
-      state: "off"
+    # - condition: state
+    #   entity_id: binary_sensor.buiten_frisser_dan_binnen
+    #   state: "off"
+    - condition: template
+      value_template: >
+        {{ (states('sensor.gemiddelde_temp_beneden') | float(default=0) < (states('sensor.buiten_temperatuur') | float(default=0)) + 1 ) }}
     - condition: numeric_state
-      entity_id: sensor.binnen_lowpass
+      entity_id: sensor.gemiddelde_temp_beneden
       above: 22
 action:
   - service: homeassistant.update_entity
@@ -42,66 +45,17 @@ action:
     data:
       title: Achterdeur - 2de waarschuwing!
       message: Er heeft weer iemand de achterdeur laten openstaan!!
+      data:
+        attachment:
+          content-type: jpeg
+          url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
+        push:
+          sound: "door_creak_closing.wav"
   # - service: notify.mobile_app_gphone
   #   data:
   #     title: Achterdeur - 2de waarschuwing!
   #     message: Er heeft weer iemand de achterdeur laten openstaan!!
-  #     data:
-  #       attachment:
-  #         content-type: jpeg
-  #         url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
-  #       push:
-  #         sound: "door_creak_closing.wav"
-  # - service: notify.mobile_app_mphone
-  #   data:
-  #     title: Achterdeur - 2de waarschuwing!
-  #     message: Er heeft weer iemand de achterdeur laten openstaan!!
-  #     data:
-  #       attachment:
-  #         content-type: jpeg
-  #         url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
-  #       push:
-  #         sound: "door_creak_closing.wav"
-  # - service: notify.mobile_app_nphone
-  #   data:
-  #     title: Achterdeur - 2de waarschuwing!
-  #     message: Er heeft weer iemand de achterdeur laten openstaan!!
-  #     data:
-  #       attachment:
-  #         content-type: jpeg
-  #         url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
-  #       push:
-  #         sound: "door_creak_closing.wav"
-  # - service: notify.mobile_app_fphone
-  #   data:
-  #     title: Achterdeur - 2de waarschuwing!
-  #     message: Er heeft weer iemand de achterdeur laten openstaan!!
-  #     data:
-  #       attachment:
-  #         content-type: jpeg
-  #         url: https://i.pinimg.com/564x/15/05/b6/1505b62ff8865779be85192fed6027e1.jpg
-  #       push:
-  #         sound: "door_creak_closing.wav"
-  - service: media_player.play_media
-    target:
-      entity_id: media_player.mass_keuken
-    data:
-      announce: true
-      media_content_type: "music"
-      extra:
-        volume: 65
-      media_content_id: >
-        {% set message =  states('sensor.achterdeur') %}
-          media-source://tts/tts.piper?message="{{message}}"
 
-  - delay:
-      seconds: 60
-  - service: homeassistant.update_entity
-    target:
-      entity_id: sensor.achterdeur
-  - condition: state
-    entity_id: binary_sensor.keuken_achterdeur
-    state: "on"
   - service: media_player.play_media
     target:
       entity_id: media_player.mass_keuken
@@ -113,22 +67,41 @@ action:
       media_content_id: >
         {% set message =  states('sensor.achterdeur') %}
           media-source://tts/tts.piper?message="{{message}}"
-  - delay:
-      seconds: 60
-  - service: homeassistant.update_entity
-    target:
-      entity_id: sensor.achterdeur
-  - condition: state
-    entity_id: binary_sensor.keuken_achterdeur
-    state: "on"
-  - service: media_player.play_media
-    target:
-      entity_id: media_player.mass_keuken
-    data:
-      announce: true
-      media_content_type: "music"
-      extra:
-        volume: 65
-      media_content_id: >
-        {% set message =  states('sensor.achterdeur') %}
-          media-source://tts/tts.piper?message="{{message}}"
+  # - delay:
+  #     seconds: 60
+  # - service: homeassistant.update_entity
+  #   target:
+  #     entity_id: sensor.achterdeur
+  # - condition: state
+  #   entity_id: binary_sensor.keuken_achterdeur
+  #   state: "on"
+  # - service: media_player.play_media
+  #   target:
+  #     entity_id: media_player.mass_keuken
+  #   data:
+  #     announce: true
+  #     media_content_type: "music"
+  #     extra:
+  #       volume: 65
+  #     media_content_id: >
+  #       {% set message =  states('sensor.achterdeur') %}
+  #         media-source://tts/tts.piper?message="{{message}}"
+  # - delay:
+  #     seconds: 60
+  # - service: homeassistant.update_entity
+  #   target:
+  #     entity_id: sensor.achterdeur
+  # - condition: state
+  #   entity_id: binary_sensor.keuken_achterdeur
+  #   state: "on"
+  # - service: media_player.play_media
+  #   target:
+  #     entity_id: media_player.mass_keuken
+  #   data:
+  #     announce: true
+  #     media_content_type: "music"
+  #     extra:
+  #       volume: 65
+  #     media_content_id: >
+  #       {% set message =  states('sensor.achterdeur') %}
+  #         media-source://tts/tts.piper?message="{{message}}"

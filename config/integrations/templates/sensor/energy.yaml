@@ -190,38 +190,38 @@
             states("sensor.ventilator_kerstverlichting_vermogen") | float(default=0) + 
             states("sensor.wasmachien_vermogen") | float(default=0)) | round (3)}}
 
-    - name: Rest vermogen
-      unique_id: afeecd42-5b6b-4765-8119-16a2b81761d2
-      unit_of_measurement: "W"
-      device_class: power
-      state: >
-        {% if ( states("sensor.huidig_verbruik") | float(default=0) 
-            - states("sensor.verwarming_vermogen") | float(default=0) 
-            - states("sensor.toestellen_vermogen") | float(default=0) 
-            - states("sensor.verlichting_vermogen") | float(default=0) 
-            - states("sensor.verluchting_vermogen") | float(default=0) 
-            - states("sensor.media_vermogen_2") | float(default=0)
-            - states("sensor.unifi_vermogen") | float(default=0)
-            - states("sensor.nuc_vermogen") | float(default=0)
-            - states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0)
-            - states("sensor.raspi_vermogen") | float(default=0) )
-            | round (2) > 0
-            %}
-            {{ ( states("sensor.huidig_verbruik") | float(default=0) 
-                - states("sensor.verwarming_vermogen") | float(default=0) 
-                - states("sensor.toestellen_vermogen") | float(default=0) 
-                - states("sensor.verlichting_vermogen") | float(default=0) 
-                - states("sensor.verluchting_vermogen") | float(default=0) 
-                - states("sensor.media_vermogen_2") | float(default=0)
-                - states("sensor.unifi_vermogen") | float(default=0)
-                - states("sensor.nuc_vermogen") | float(default=0)
-                - states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0)
-                - states("sensor.raspi_vermogen") | float(default=0) )
-                | round (2)
-                }}
-            {% else  %}
-                0
-            {% endif %}
+    # - name: Rest vermogen
+    #   unique_id: afeecd42-5b6b-4765-8119-16a2b81761d2
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   state: >
+    #     {% if ( states("sensor.huidig_verbruik") | float(default=0)
+    #         - states("sensor.verwarming_vermogen") | float(default=0)
+    #         - states("sensor.toestellen_vermogen") | float(default=0)
+    #         - states("sensor.verlichting_vermogen") | float(default=0)
+    #         - states("sensor.verluchting_vermogen") | float(default=0)
+    #         - states("sensor.media_vermogen_2") | float(default=0)
+    #         - states("sensor.unifi_vermogen") | float(default=0)
+    #         - states("sensor.nuc_vermogen") | float(default=0)
+    #         - states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0)
+    #         - states("sensor.raspi_vermogen") | float(default=0) )
+    #         | round (2) > 0
+    #         %}
+    #         {{ ( states("sensor.huidig_verbruik") | float(default=0)
+    #             - states("sensor.verwarming_vermogen") | float(default=0)
+    #             - states("sensor.toestellen_vermogen") | float(default=0)
+    #             - states("sensor.verlichting_vermogen") | float(default=0)
+    #             - states("sensor.verluchting_vermogen") | float(default=0)
+    #             - states("sensor.media_vermogen_2") | float(default=0)
+    #             - states("sensor.unifi_vermogen") | float(default=0)
+    #             - states("sensor.nuc_vermogen") | float(default=0)
+    #             - states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0)
+    #             - states("sensor.raspi_vermogen") | float(default=0) )
+    #             | round (2)
+    #             }}
+    #         {% else  %}
+    #             0
+    #         {% endif %}
 
     ###  Capaciteitstarief  ###
     - name: Max peak 2

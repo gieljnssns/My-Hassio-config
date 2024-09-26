@@ -8,8 +8,12 @@ blueprint:
       selector:
         entity:
           domain: binary_sensor
-          device_class: motion
-
+          device_class: motion   
+    input_datetime_target:
+      name: Entity
+      selector:
+        entity:
+          domain: input_datetime
     input_boolean_target:
       name: Bool
       selector:
@@ -31,21 +35,42 @@ blueprint:
 # we restart the script.
 mode: restart
 max_exceeded: silent
-
+variables:
+  no_motion_wait: !input no_motion_wait
 trigger:
   - platform: state
     entity_id: !input motion_entity
     from: "off"
     to: "on"
+    id: aan
+  
+  - platform: time
+    at: !input input_datetime_target
+    id: uit
 
 action:
-  - service: input_boolean.turn_on
-    target: !input input_boolean_target
-  - wait_for_trigger:
-      platform: state
-      entity_id: !input motion_entity
-      from: "on"
-      to: "off"
-  - delay: !input no_motion_wait
-  - service: input_boolean.turn_off
-    target: !input input_boolean_target
+  - choose:
+    - conditions:
+        - condition: trigger
+          id: aan
+      sequence:
+        - service: input_boolean.turn_on
+          target: !input input_boolean_target
+        - wait_for_trigger:
+            platform: state
+            entity_id: !input motion_entity
+            from: "on"
+            to: "off"
+        - service: input_datetime.set_datetime
+          data:
+            datetime: >
+              {% set wait = no_motion_wait|int(300) %}
+              {{ now() + timedelta(seconds=wait) }}
+          target:
+            entity_id: !input input_datetime_target
+    - conditions:
+        - condition: trigger
+          id: uit
+      sequence:
+        - service: input_boolean.turn_off
+          target: !input input_boolean_target

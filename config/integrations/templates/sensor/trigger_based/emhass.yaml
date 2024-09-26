@@ -40,12 +40,32 @@
         {{ as_timestamp(states.binary_sensor.warmtepomp_aan.last_changed) }}
 - trigger:
     - platform: state
-      entity_id: switch.warm_water
+      entity_id: binary_sensor.warmtepompboiler_aan
       from: "off"
       to: "on"
   sensor:
     - name: "Warmtepompboiler is gestart op…"
       unique_id: 5bc4af6d-8e99-4ee3-9131-66f41132d66f
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepompboiler_aan.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: input_boolean.emhass_warmtepompboiler
+      from: "on"
+      to: "off"
+  sensor:
+    - name: "Warmtepompboiler is uitgezet op…"
+      unique_id: 9ddf6b51-d728-4264-b1ec-7ed93afd5185
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_warmtepompboiler.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: binary_sensor.warmtepompboiler_aan
+      from: "on"
+      to: "off"
+  sensor:
+    - name: "Warmtepompboiler is gestopt op…"
+      unique_id: 1a5fb0a2-f6ca-4abb-b838-6aac508bd4e6
       state: >
         {{ as_timestamp(states.binary_sensor.warmtepompboiler_aan.last_changed) }}
 - trigger:
@@ -96,3 +116,26 @@
         {% endif %}
       availability: >
         {{ is_number(states('sensor.huidig_verbruik')) }}
+- trigger:
+    - platform: state
+      entity_id: sensor.emhass_load_forecast
+  sensor:
+    - name: "Emhass load forecast 2"
+      unique_id: 3ec4ef1c-166b-4551-b5f3-a5f7191e4ca9
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {%- set load = (state_attr('sensor.emhass_load_forecast', 'forecasts')
+            |map(attribute='emhass_load_forecast')
+            |map('int')
+            |list) %}
+        {{load[0]}}
+      attributes:
+        load: >
+          {%- set load = (state_attr('sensor.emhass_load_forecast', 'forecasts')
+              |map(attribute='emhass_load_forecast')
+              |map('int')
+              |list) %}
+          {{load[1:]}}
+      availability: >
+        {{ is_number(states('sensor.emhass_load_forecast')) }}

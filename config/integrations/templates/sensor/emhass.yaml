@@ -69,9 +69,13 @@
       unique_id: 5c252e9e-ae09-4100-aace-8bb8d4149e8e
       unit_of_measurement: "uur"
       state: >
+        {% set hours = states('input_number.voorspelde_uren')|float - states('sensor.branduren_warmtepomp')|float %}
         {% if states("input_boolean.verwarming_starten") == 'on' %}
-          {{ (states("sensor.uur_per_degree_day_daily") | float(0) *
-              states("sensor.degree_day_prediction") | float(0)) | round(1) }}
+          {% if hours > 1 -%} 
+            {{ hours }} 
+          {%- else %} 
+            0 
+          {% endif %}
         {% else %}
           0
         {% endif %}
@@ -90,7 +94,9 @@
         {%- set real = states('sensor.huidige_opbrengst') | float(0)%}
         {%- set percent = real / 3.3 %}
         {%- set solcast = states('sensor.solcast_solaredge_power_now') | float(0)%}
-        {% if real > solcast + percent %}
+        {% if states('sensor.solcast_solaredge_power_now') | float(0) == 0 %}
+          {% set estimate = 0 %}
+        {% elif real > solcast + percent %}
           {% set estimate = 1.33 %}
         {% elif real < solcast - percent %}
           {% set estimate = 0.67 %}
@@ -98,53 +104,63 @@
           {% set estimate = 1 %}
         {% endif %}
         {% macro max(X, Y) -%} {{X|float(0)if X|float(0)> Y|float(0)else Y|float(0)}} {%- endmacro %}
-
         {% if states("input_boolean.op_verlof") == 'off' %}
           {% if (states("sensor.solcast_solaredge_forecast_remaining_today") | float(0) * estimate) > 2 %}
-            {% if states("input_boolean.warm_water_starten") == 'on' %}
-              {% if states("switch.warm_water") == 'on' and states("binary_sensor.warmtepompboiler_aan") == 'off' %}
-                {{  max(0, ((51 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
-              {% elif (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestart_op") | float(0)) < 3600 %}
-                {{  max(0, ((51 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
-              {% elif states("binary_sensor.warmtepompboiler_aan") == 'on' %}
-                {{  max(0, ((51 - (states("sensor.thermostaat") | float(0))) / 4.5) | round(1))  }}
-              {% else %}
-                {{  max(0, ((51 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
-              {% endif %}
-            {% else %}
-              0
-            {% endif %}
+            {{  max(0, (51 - (states("sensor.thermostaat") | float(0))) | round(1))  }}
           {% else %}
-            {% if states("input_boolean.warm_water_starten") == 'on' %}
-              {% if states("switch.warm_water") == 'on' and states("binary_sensor.warmtepompboiler_aan") == 'off' %}
-                {{  max(0, ((49 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
-              {% elif (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestart_op") | float(0)) < 3600 %}
-                {{  max(0, ((49 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
-              {% elif states("binary_sensor.warmtepompboiler_aan") == 'on' %}
-                {{  max(0, ((49 - (states("sensor.thermostaat") | float(0))) / 4.5) | round(1))  }}
-              {% else %}
-                {{ max(0, ((49 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
-              {% endif %}
-            {% else %}
-              0
-            {% endif %}
+            {{  max(0, (49 - (states("sensor.thermostaat") | float(0))) | round(1))  }}
           {% endif %}
         {% else %}
-          {% if states("input_boolean.warm_water_starten") == 'on' %}
-            {% if states("switch.warm_water") == 'on' and states("binary_sensor.warmtepompboiler_aan") == 'off' %}
-              {{  max(0, ((46 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
-            {% elif (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestart_op") | float(0)) < 3600 %}
-              {{  max(0, ((46 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
-            {% elif states("binary_sensor.warmtepompboiler_aan") == 'on' %}
-              {{  max(0, ((46 - (states("sensor.thermostaat") | float(0))) / 4.5) | round(1))  }}
-            {% else %}
-              {{  max(0, ((46 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
-            {% endif %}
-          {% else %}
-            0
-          {% endif %}
+          {{  max(0, (46 - (states("sensor.thermostaat") | float(0))) | round(1))  }}
         {% endif %}
 
+
+      # state: >
+      # {% if states("input_boolean.op_verlof") == 'off' %}
+      #   {% if (states("sensor.solcast_solaredge_forecast_remaining_today") | float(0) * estimate) > 2 %}
+      #     {% if states("input_boolean.warm_water_starten") == 'on' %}
+      #       {% if states("switch.warm_water") == 'on' and states("binary_sensor.warmtepompboiler_aan") == 'off' %}
+      #         {{  max(0, ((51 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
+      #       {% elif (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestart_op") | float(0)) < 3600 %}
+      #         {{  max(0, ((51 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
+      #       {% elif states("binary_sensor.warmtepompboiler_aan") == 'on' %}
+      #         {{  max(0, ((51 - (states("sensor.thermostaat") | float(0))) / 4.5) | round(1))  }}
+      #       {% else %}
+      #         {{  max(0, ((51 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
+      #       {% endif %}
+      #     {% else %}
+      #       0
+      #     {% endif %}
+      #   {% else %}
+      #     {% if states("input_boolean.warm_water_starten") == 'on' %}
+      #       {% if states("switch.warm_water") == 'on' and states("binary_sensor.warmtepompboiler_aan") == 'off' %}
+      #         {{  max(0, ((49 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
+      #       {% elif (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestart_op") | float(0)) < 3600 %}
+      #         {{  max(0, ((49 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
+      #       {% elif states("binary_sensor.warmtepompboiler_aan") == 'on' %}
+      #         {{  max(0, ((49 - (states("sensor.thermostaat") | float(0))) / 4.5) | round(1))  }}
+      #       {% else %}
+      #         {{  max(0, ((49 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
+      #       {% endif %}
+      #     {% else %}
+      #       0
+      #     {% endif %}
+      #   {% endif %}
+      # {% else %}
+      #   {% if states("input_boolean.warm_water_starten") == 'on' %}
+      #     {% if states("switch.warm_water") == 'on' and states("binary_sensor.warmtepompboiler_aan") == 'off' %}
+      #       {{  max(0, ((46 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
+      #     {% elif (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestart_op") | float(0)) < 3600 %}
+      #       {{  max(0, ((46 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
+      #     {% elif states("binary_sensor.warmtepompboiler_aan") == 'on' %}
+      #       {{  max(0, ((46 - (states("sensor.thermostaat") | float(0))) / 4.5) | round(1))  }}
+      #     {% else %}
+      #       {{  max(0, ((46 - (states("sensor.thermostaat") | float(0))) / 4) | round(1))  }}
+      #     {% endif %}
+      #   {% else %}
+      #     0
+      #   {% endif %}
+      # {% endif %}
     - name: Pv power forecast list
       unique_id: 6bc0c511-9c6f-4778-b13e-a20e3646a7e5
       state: >

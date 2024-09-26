@@ -43,18 +43,30 @@ homeassistant:
 #                                                  #
 ####################################################
 
-### Automation ###
-automation old: !include_dir_list automation
-automation: !include automations.yaml
+###  Default config  ###
+default_config:
 
-###  Config  ###
-config:
+###  Logbook  ###
+logbook: !include logbook.yaml
 
-###  DHCP Discovery  ###
-# dhcp:
 
-###  Energy  ###
-energy:
+####################################################
+#                                                  #
+#                     Enables                      #
+#                                                  #
+####################################################
+
+###  Browser  ###
+browser:
+
+###  Conversation  ###
+conversation:
+
+### DebugPy  ###
+# debugpy:
+
+###  ffmpeg  ###
+# ffmpeg:
 
 ###  Frontend  ###
 frontend:
@@ -64,26 +76,8 @@ frontend:
     - /local/community/lovelace-card-mod/card-mod.js
     - /local/custom.js
 
-###  History  ###
-history:
-
-###  Image  ###
-image_upload:
-
-###  Logbook  ###
-logbook: !include logbook.yaml
-
-# ###  Map  ###
-# map:
-
-###  Media Source  ###
-media_source:
-
-###  Mobile app  ###
-mobile_app:
-
-###  My Home Assistant  ###
-my:
+###  Hassio  ###
+hassio:
 
 ###  Network  ###
 network:
@@ -91,67 +85,20 @@ network:
 ###  Person  ###
 person:
 
-###  Scenes  ###
-scene: !include scenes.yaml
+###  Python scripts  ###
+python_script:
 
 ###  Schedule  ###
 schedule:
 
-### Scripts ###
-script: !include_dir_merge_named scripts
-
-###  Simple Service Discovery Protocol  ###
-# ssdp:
-
-###  Sun  ###
-sun:
+###  Stream  ###
+stream:
 
 ###  System Health  ###
 system_health:
 
 ###  Tag  ###
 tag:
-
-###  USB Discovery  ###
-usb:
-
-###  Zeroconf/Avahi/Bonjour  ###
-zeroconf:
-
-###  Zones  ###
-zone: !include zones.yaml
-
-####################################################
-#                                                  #
-#                     Enables                      #
-#                                                  #
-####################################################
-
-###  Browser  ###
-# browser:
-
-###  Conversation  ###
-conversation:
-
-###  Discovery  ###
-# discovery:
-#   ignore:
-#     - apple_tv
-
-### DebugPy  ###
-# debugpy:
-
-###  ffmpeg  ###
-# ffmpeg:
-
-###  Hassio  ###
-hassio:
-
-###  Python scripts  ###
-python_script:
-
-###  Stream  ###
-stream:
 
 ###  Wake on Lan  ###
 wake_on_lan:
@@ -161,6 +108,10 @@ wake_on_lan:
 #                     Includes                     #
 #                                                  #
 ####################################################
+
+### Automation ###
+automation old: !include_dir_list automation
+automation: !include automations.yaml
 
 ###  Groups  ###
 group: !include_dir_merge_named groups/
@@ -183,9 +134,18 @@ notify: !include notify.yaml
 ###  Recorder  ###
 recorder: !include recorder.yaml
 
+###  Scenes  ###
+scene: !include scenes.yaml
+
+### Scripts ###
+script: !include_dir_merge_named scripts
+
 ###  Panels  ###
 # panel_iframe: !include panels/iframe.yaml
 panel_custom: !include panels/custom.yaml
+
+###  Zones  ###
+zone: !include zones.yaml
 
 ####################################################
 #                                                  #
@@ -230,7 +190,7 @@ weather: !include_dir_merge_list integrations/weather
 ####################################################
 
 ###  ICS calendar  ###
-ics_calendar: !include integrations/calendar/ics.yaml
+# ics_calendar: !include integrations/calendar/ics.yaml
 
 ###  PowerCalc  ###
 powercalc: !include integrations/hubs/powercalc.yaml

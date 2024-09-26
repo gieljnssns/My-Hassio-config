@@ -17,6 +17,20 @@ packages:
 esphome:
   name: ${devicename}
 
+wifi:
+  on_disconnect:
+    then:
+      - delay: 3min
+      - if:
+          # condition:
+          #   binary_sensor.is_off: connected
+          condition:
+            not:
+              wifi.connected:
+          # Should return either true or false
+          then:
+            - switch.turn_off: luchtdroger
+            - fan.turn_off: ventilatie
 # esp32_ble_tracker:
 #   scan_parameters:
 #     # We currently use the defaults to ensure Bluetooth
@@ -106,18 +120,39 @@ switch:
     internal: true
     id: reserve
     restore_mode: RESTORE_DEFAULT_OFF
-  
+
+binary_sensor:
+  - platform: homeassistant
+    id: u
+    internal: true
+    entity_id: script.verluchting_1_uur
+    on_press:
+      then:
+        - delay: 1h
+        - fan.turn_off: ventilatie
+
+
+  - platform: homeassistant
+    id: uu
+    internal: true
+    entity_id: script.verluchting_2_uur
+    on_press:
+      then:
+        - delay: 2h
+        - fan.turn_off: ventilatie
+
+
 sensor:
-  - platform: dht
-    pin: 32
-    model: DHT22
-    temperature:
-      accuracy_decimals: 1
-      name: "Waskot temperatuur"
-    humidity:
-      accuracy_decimals: 1
-      name: "Waskot luchtvochtigheid"
-    update_interval: 60s
+  # - platform: dht
+  #   pin: 32
+  #   model: DHT22
+  #   temperature:
+  #     accuracy_decimals: 1
+  #     name: "Waskot temperatuur"
+  #   humidity:
+  #     accuracy_decimals: 1
+  #     name: "Waskot luchtvochtigheid"
+  #   update_interval: 60s
     
   - platform: sht3xd
     temperature:

@@ -13,24 +13,42 @@
   entity_id: sensor.buiten_temperatuur
   filters:
     - filter: outlier
-      window_size: 4
+      window_size: 5
       radius: 2.0
-    - filter: lowpass
-      time_constant: 10
+    # - filter: lowpass
+    #   time_constant: 10
     - filter: time_simple_moving_average
       window_size: 00:05
       precision: 2
 
 - platform: filter
-  name: "Binnen lowpass"
-  unique_id: 90d882c6-3cd0-45ff-9d57-ccd526cf29ef
-  entity_id: sensor.gemiddelde_temp_binnen
+  name: "Benedentemperatuur gefilterd"
+  unique_id: d8baf4b8-4039-46bd-b537-dd3425c65a7a
+  entity_id: sensor.gemiddelde_temp_beneden
   filters:
     - filter: outlier
-      window_size: 4
+      window_size: 5
       radius: 2.0
-    - filter: lowpass
-      time_constant: 10
+    # - filter: lowpass
+    #   time_constant: 10
+    - filter: time_simple_moving_average
+      window_size: 00:05
+      precision: 2
+
+- platform: filter
+  name: Huidig verbruik zonder wp gefilterd
+  unique_id: 661f7009-bdd6-43f4-904a-68c5f899ecbe
+  entity_id: sensor.huidig_verbruik_zonder_wp
+  filters:
+    - filter: time_simple_moving_average
+      window_size: 00:05
+      precision: 2
+
+- platform: filter
+  name: Huidige opbrengst gefilterd
+  unique_id: b58189e3-de67-4589-8fc0-98b4a0d16147
+  entity_id: sensor.emhass_huidige_opbrengst
+  filters:
     - filter: time_simple_moving_average
       window_size: 00:05
       precision: 2

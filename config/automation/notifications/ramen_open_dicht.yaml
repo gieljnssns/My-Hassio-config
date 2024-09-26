@@ -1,16 +1,29 @@
 alias: "Ramen openen/sluiten"
 id: 10a371eb-8dfd-44c3-90cd-46519ae531de
+mode: restart
 trigger:
-  - platform: state
-    entity_id: binary_sensor.buiten_frisser_dan_binnen_old
-    to: "on"
-    # for:
-    #   minutes: 5
-  - platform: state
-    entity_id: binary_sensor.buiten_frisser_dan_binnen_old
-    to: "off"
+  # - platform: state
+  #   entity_id: binary_sensor.buiten_frisser_dan_binnen_old
+  #   to: "on"
+  #   # for:
+  #   #   minutes: 5
+  - platform: template
+    id: open
+    value_template: >
+      {{ (states('sensor.gemiddelde_temp_beneden') | float(default=0) > (states('sensor.buiten_temperatuur') | float(default=0)) - 1 ) }}
     for:
       minutes: 5
+  - platform: template
+    id: close
+    value_template: >
+      {{ (states('sensor.gemiddelde_temp_beneden') | float(default=0) < (states('sensor.buiten_temperatuur') | float(default=0)) ) }}
+    for:
+      minutes: 5
+  # - platform: state
+  #   entity_id: binary_sensor.buiten_frisser_dan_binnen_old
+  #   to: "off"
+  #   for:
+  #     minutes: 5
 
 condition:
   condition: and
@@ -29,15 +42,49 @@ condition:
         {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 900 }}
 
 action:
-  - service: script.notify_everyone_at_home
-    data:
-      title: "Ramen en deuren"
-      message: >
-        {% if states('binary_sensor.buiten_frisser_dan_binnen') == 'on' %}
-          Nu kunde alles openzetten, binnen is het {{ states('sensor.binnen_lowpass') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
-        {% else %}
-          Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.binnen_lowpass') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
-        {% endif %}
+  - wait_template: >
+      {{ states('sensor.people_home')|int(0) > 0 }}
+  # - choose:
+  #   - conditions:
+  #       - condition: state
+  #         entity_id: sensor.people_home
+  #       state: "state"
+  #   sequence:
+  #     action
+  # - conditions:
+  #     condition
+  #   sequence:
+  #     action
+  # default:
+  #     action
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: open
+        sequence:
+          - action: script.notify_everyone_at_home
+            data:
+              title: "Verluchten kan."
+              message: >
+                Nu kunde alles openzetten, binnen is het {{ states('sensor.gemiddelde_temp_beneden') }}°C en buiten {{ states('sensor.buiten_temperatuur') }}°C.
+      - conditions:
+          - condition: trigger
+            id: close
+        sequence:
+          - action: script.notify_everyone_at_home
+            data:
+              title: "Gelieve de warmte buiten te houden."
+              message: >
+                Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.gemiddelde_temp_beneden') }}°C en buiten {{ states('sensor.buiten_temperatuur') }}°C.
+  # - service: script.notify_everyone_at_home
+  #   data:
+  #     title: "Ramen en deuren"
+  #     message: >
+  #       {% if states('binary_sensor.buiten_frisser_dan_binnen') == 'on' %}
+  #         Nu kunde alles openzetten, binnen is het {{ states('sensor.binnen_lowpass') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
+  #       {% else %}
+  #         Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.binnen_lowpass') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
+  #       {% endif %}
   # - service: notify.mobile_app_gphone
   #   data_template:
   #     message: >

@@ -7,7 +7,11 @@ blueprint:
       name: Entity
       selector:
         entity:
-
+    input_datetime_target:
+      name: Entity
+      selector:
+        entity:
+          domain: input_datetime
     light_target:
       name: Light
       selector:
@@ -28,24 +32,78 @@ blueprint:
 # we restart the script.
 mode: restart
 max_exceeded: silent
-
+variables:
+  no_motion_wait: !input no_motion_wait
 trigger:
   - platform: state
     entity_id: !input entity
     from: "off"
     to: "on"
-
+    id: aan
+  
+  # - platform: state
+  #   entity_id: !input entity
+  #   from: "on"
+  #   to: "off"
+  #   id: time
+  
+  - platform: time
+    at: !input input_datetime_target
+    id: uit
+    
 action:
-  - service: light.turn_on
-    target: !input light_target
-  - wait_for_trigger:
-      platform: state
-      entity_id: !input entity
-      from: "on"
-      to: "off"
-  - delay: !input no_motion_wait
-  # - condition: state
-  #   entity_id: binary_sensor.douchen
-  #   state: "off"
-  - service: light.turn_off
-    target: !input light_target
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: aan
+        sequence:
+          - service: light.turn_on
+            target: !input light_target
+          - wait_for_trigger:
+            - platform: state
+              entity_id: !input entity
+              from: "on"
+              to: "off"
+          - service: input_datetime.set_datetime
+            data:
+              datetime: >
+                {% set wait = no_motion_wait|int(210) %}
+                {{ now() + timedelta(seconds=wait) }}
+            target:
+              entity_id: !input input_datetime_target
+    # - conditions:
+    #     - condition: trigger
+    #       id: time
+    #   sequence:
+    #     - service: input_datetime.set_datetime
+    #       data:
+    #         datetime: >
+    #           {% set wait = no_motion_wait|int(210) %}
+    #           {{ now() + timedelta(seconds=wait) }}
+    #       target:
+    #         entity_id: !input input_datetime_target
+      - conditions:
+          - condition: trigger
+            id: uit
+        sequence:
+          - service: light.turn_off
+            target: !input light_target
+          - service: light.turn_off
+            entity_id: light.badkamer_pombak
+  # - service: light.turn_on
+  #   target: !input light_target
+  # - wait_for_trigger:
+  #     platform: state
+  #     entity_id: !input entity
+  #     from: "on"
+  #     to: "off"
+  # - service: input_datetime.set_datetime
+  #   data:
+  #     datetime: >
+  #       {% set wait = no_motion_wait|int(210) %}
+  #       {{ now() + timedelta(seconds=wait) }}
+  #   target:
+  #     entity_id: !input input_datetime_target
+  # - delay: !input no_motion_wait
+  # - service: light.turn_off
+  #   target: !input light_target

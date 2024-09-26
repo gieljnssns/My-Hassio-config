@@ -15,6 +15,10 @@ naive_mpc_optim:
         ([states('sensor.huidige_opbrengst')|int(0)] +
         state_attr('sensor.pv_power_forecast_list', 'list')[:states('sensor.prediction_horizon') | int(0) - 1]) | tojson
         }},
+      "load_power_forecast": {{
+        ([states('sensor.huidig_verbruik_zonder_wp')|int(0)] +
+        state_attr('sensor.emhass_load_forecast_2', 'load')[:states('sensor.prediction_horizon') | int(0) - 1]) | tojson
+        }},
       "prediction_horizon": {{ states('sensor.prediction_horizon') | int(0) }},
       "alpha": 1,
       "beta": 0,
@@ -25,8 +29,20 @@ naive_mpc_optim:
         {{  states('sensor.droogkast_uren') | int(0) }},
         {{  states('sensor.afwasmachien_uren') | int(0) }},
         {{  states('sensor.warmtepompboiler_uren') | int(0) }},
-        {{  states('sensor.warmtepomp_uren') | int(0) }}],
+        {{  0 | int(0) }}],
       "set_def_constant":[true, true, true, true, true],
+      "def_start_timestep": [
+        0,
+        0,
+        0,
+        {% if (as_timestamp(now()) - states("sensor.warmtepompboiler_is_uitgezet_op")|float(0)) < 1500 %}
+          1
+        {% elif (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestopt_op")|float(0)) < 1500 %}
+          1
+        {% else %}
+          0
+        {% endif %},
+        0],
       "def_end_timestep": [
         {{  states('sensor.wasmachien_end_timesteps') | int(0) }},
         {{  states('sensor.droogkast_end_timesteps') | int(0) }},
@@ -37,7 +53,7 @@ naive_mpc_optim:
         {{  "true" if is_state('input_boolean.emhass_wasmachien', "on") else "false" }}, 
         {{  "true" if is_state('input_boolean.emhass_droogkast', "on") else "false" }}, 
         {{  "true" if is_state('input_boolean.emhass_afwasmachien', "on") else "false" }}, 
-        {{  "true" if is_state('input_boolean.emhass_warmtepompboiler', "on") else "false" }}, 
+        {{  "true" if is_state('binary_sensor.warmtepompboiler_aan', "on") else "false" }}, 
         {{  "true" if is_state('input_boolean.emhass_warmtepomp', "on") else "false" }}]
     }
 

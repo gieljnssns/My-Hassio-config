@@ -12,6 +12,11 @@ verluchting_2_uur:
         entity_id: fan.ventilatie
       data:
         percentage: 100
+    - service: input_datetime.set_datetime
+      data:
+        datetime: "{{ now() + timedelta(hours=2) }}"
+      target:
+        entity_id: input_datetime.verluchting_end_time 
     # - choose:
     #     - conditions:
     #         - condition: template
@@ -30,11 +35,11 @@ verluchting_2_uur:
     #       sequence:
     #         - service: switch.turn_on
     #           entity_id: switch.verluchting
-    - delay:
-        minutes: 120
-    - service: fan.turn_off
-      entity_id: fan.ventilatie
-    - service: switch.turn_off
-      entity_id: switch.badkamer_verluchting
-    - service: switch.turn_off
-      entity_id: switch.zolder_verluchting
+    # - delay:
+    #     minutes: 120
+    # - service: fan.turn_off
+    #   entity_id: fan.ventilatie
+    # - service: switch.turn_off
+    #   entity_id: switch.badkamer_verluchting
+    # - service: switch.turn_off
+    #   entity_id: switch.zolder_verluchting

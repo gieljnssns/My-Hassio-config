@@ -1,10 +1,16 @@
 alias: Verlichting afdak
 id: 960aa9bb-f469-49fd-8128-4c2e14b84563
-mode: single
+mode: restart
 trigger:
   - platform: state
     entity_id: binary_sensor.afdak_deur
-condition: []
+condition:
+  - condition: template
+    value_template: >
+      {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 60 }}
+  - condition: state
+    entity_id: sensor.dark_outside
+    state: "true"
 action:
   - choose:
       - conditions:
@@ -18,14 +24,25 @@ action:
           - service: light.turn_on
             target:
               entity_id: light.afdak_verlichting
-          - delay:
-              minutes: 5
-          - service: light.turn_off
+          - service: input_datetime.set_datetime
+            data:
+              datetime: >
+                {{ now() + timedelta(seconds=300) }}
             target:
-              entity_id: light.afdak_verlichting
+              entity_id: input_datetime.afdak_verlichting_end_time
+          # - service: light.turn_off
+          #   target:
+          #     entity_id: light.afdak_verlichting
     default:
-      - delay:
-          minutes: 2
-      - service: light.turn_off
+      - service: light.turn_on
         target:
           entity_id: light.afdak_verlichting
+      - service: input_datetime.set_datetime
+        data:
+          datetime: >
+            {{ now() + timedelta(seconds=120) }}
+        target:
+          entity_id: input_datetime.afdak_verlichting_end_time
+      # - service: light.turn_off
+      #   target:
+      #     entity_id: light.afdak_verlichting

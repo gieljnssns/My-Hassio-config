@@ -24,14 +24,15 @@ wifi:
     subnet: 255.255.255.0
     dns1: 1.1.1.1
     dns2: 8.8.8.8
-  on_disconnect:
-    then:
-      - delay: 5min
-      - if:
-          condition:
-            binary_sensor.is_off: connected
-          then:
-            - switch.toggle: restart_device
+  reboot_timeout: 5min
+  # on_disconnect:
+  #   then:
+  #     - delay: 5min
+  #     - if:
+  #         condition:
+  #           binary_sensor.is_off: connected
+  #         then:
+  #           - switch.toggle: restart_device
 # mdns:
 #   disabled: true
 text_sensor:

@@ -1,0 +1,138 @@
+alias: Keuken licht
+id: c2162024-4f52-40f8-b703-150ff505bc2c
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.keuken_aqara_pir
+    from: "off"
+    to: "on"
+    id: presence
+  - platform: state
+    entity_id: binary_sensor.keuken_pir
+    from: "off"
+    to: "on"
+    id: presence
+  - platform: state
+    entity_id: binary_sensor.keuken_presence
+    from: "off"
+    to: "on"
+    id: presence
+  
+  - platform: state
+    entity_id: light.keuken_inkom
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id: light.keuken_luster
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id: light.keuken_spots
+    from: "off"
+    to: "on"
+  
+  - platform: state
+    entity_id: sensor.dark_inside
+    from: "off"
+    to: "on"
+
+# condition:
+#   - condition: state
+#     entity_id: sensor.dark_inside
+#     state: "true"
+#   - alias: "geen ander licht in de keuken"
+#     condition: state
+#     entity_id: light.keuken_spots
+#     state: "off"
+
+action:
+  - choose:
+    - conditions:
+        - condition: state
+          entity_id: binary_sensor.keuken_aanwezigheid
+          state: "on"
+        - condition: state
+          entity_id: sensor.dark_inside
+          state: "true"
+        - alias: "geen ander licht in de keuken"
+          condition: state
+          entity_id: light.keuken_spots
+          state: "off"
+      sequence:
+        - service: light.turn_on
+          entity_id: light.keuken_luster
+        - service: input_datetime.set_datetime
+          data:
+            datetime: >
+              {{ now() + timedelta(hours=2) }}
+          target:
+            entity_id: input_datetime.keuken_end_time
+        - wait_for_trigger:
+            - platform: state
+              entity_id: binary_sensor.keuken_aanwezigheid
+              from: "on"
+              to: "off"
+        - service: input_datetime.set_datetime
+          data:
+            datetime: >
+              {{ now() + timedelta(seconds=120) }}
+          target:
+            entity_id: input_datetime.keuken_end_time
+    - conditions:
+        # - condition: trigger
+        #   id: presence
+        - condition: state
+          entity_id: binary_sensor.keuken_aanwezigheid
+          state: "on"
+      sequence:
+        - service: input_datetime.set_datetime
+          data:
+            datetime: >
+              {{ now() + timedelta(hours=2) }}
+          target:
+            entity_id: input_datetime.keuken_end_time
+        - wait_for_trigger:
+            - platform: state
+              entity_id: binary_sensor.keuken_aanwezigheid
+              from: "on"
+              to: "off"
+        - service: input_datetime.set_datetime
+          data:
+            datetime: >
+              {{ now() + timedelta(seconds=120) }}
+          target:
+            entity_id: input_datetime.keuken_end_time
+    default:
+        - service: input_datetime.set_datetime
+          data:
+            datetime: >
+              {{ now() + timedelta(seconds=120) }}
+          target:
+            entity_id: input_datetime.keuken_end_time
+  
+  # - service: light.turn_on
+  #   entity_id: light.keuken_luster
+  # - wait_for_trigger:
+  #     - platform: state
+  #       entity_id: binary_sensor.keuken_aanwezigheid
+  #       from: "on"
+  #       to: "off"
+  # - service: input_datetime.set_datetime
+  #   data:
+  #     datetime: >
+  #       {{ now() + timedelta(seconds=120) }}
+  #   target:
+  #     entity_id: input_datetime.keuken_end_time
+
+  # - wait_for_trigger:
+  #     platform: state
+  #     entity_id: binary_sensor.keuken_aanwezigheid
+  #     from: "on"
+  #     to: "off"
+  # - delay:
+  #     minutes: 2
+  # - service: light.turn_off
+  #   entity_id: light.keuken_luster
