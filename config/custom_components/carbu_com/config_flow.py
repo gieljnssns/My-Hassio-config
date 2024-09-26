@@ -255,6 +255,7 @@ class ComponentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_town_carbu()
             # Other countries: get town
             if user_input.get('country') not in ['NL','IT','US','ES'] or user_input.get('GEO_API_KEY') not in ['','GEO_API_KEY']:
+                self._errors = {}
                 return await self.async_step_town()
             else:
                 self._errors["base"] = "api_key_error"
@@ -287,7 +288,8 @@ class ComponentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     # self._stations.append(station)
                 # _LOGGER.debug(f"stations: {self._stations}")
                 return await self.async_step_station()
-            return self.async_create_entry(title=NAME, data=self._init_info)
+            custom_title = f"{NAME} {self._init_info.get('postalcode')} {self._init_info.get('town')} {self._init_info.get('country')}"
+            return self.async_create_entry(title=custom_title, data=self._init_info)
 
         return await self._show_town_carbu_config_form(self._towns)
 
@@ -302,7 +304,8 @@ class ComponentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         if user_input is not None:
             self._init_info.update(user_input)
-            return self.async_create_entry(title=NAME, data=self._init_info)
+            custom_title = f"{NAME} {self._init_info.get('postalcode')} {self._init_info.get('town')} {self._init_info.get('country')} {self._init_info.get('station','')}"
+            return self.async_create_entry(title=custom_title, data=self._init_info)
 
         return await self._show_station_config_form(self._stations)
 
@@ -327,7 +330,8 @@ class ComponentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     # self._stations.append(station)
                 _LOGGER.debug(f"stations: {self._stations}")
                 return await self.async_step_station()
-            return self.async_create_entry(title=NAME, data=self._init_info)
+            custom_title = f"{NAME} {self._init_info.get('postalcode')} {self._init_info.get('town')} {self._init_info.get('country')}"
+            return self.async_create_entry(title=custom_title, data=self._init_info)
         return await self._show_town_config_form(self._towns)
 
     async def _show_town_config_form(self, towns):
@@ -399,6 +403,8 @@ class ComponentOptionsHandler(config_entries.ConfigFlow):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=user_input
                 )
-                return self.async_create_entry(title=NAME, data=None)
+                self._errors = {}
+                custom_title = f"{NAME} {user_input.get('postalcode')} {user_input.get('town')} {user_input.get('country')}"
+                return self.async_create_entry(title=custom_title, data=None)
             else:
                 self._errors["base"] = "api_key_error"

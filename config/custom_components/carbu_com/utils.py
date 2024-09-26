@@ -42,22 +42,24 @@ def check_settings(config, hass):
         
 
 class FuelType(Enum):
+            # 0: carbu code, 1: de code, 2: it name, 3: nl name, 4: sp code, 5: us code
     SUPER95 = "E10", 5, "benzina", "euro95","23", "regular_gas"
     SUPER95_PREDICTION = "E95",0
-    SUPER95_OFFICIAL_E10 = "super95",0,"","Super 95 E10"
+    SUPER95_OFFICIAL_E10 = "super95",0,"","Euro95","Super 95 E10"
     SUPER98 = "SP98", 6, "benzina","superplus", "3", "premium_gas"
-    SUPER98_OFFICIAL_E5 = "super95/98_E5",0,"","Super 98 E5"
-    SUPER98_OFFICIAL_E10 = "super95/98_E10",0,"","Super 98 E10"
+    SUPER98_OFFICIAL_E5 = "super95/98_E5",0,"","Super","Super 98 E5"
+    SUPER98_OFFICIAL_E10 = "super95/98_E10",0,"","","Super 98 E10"
     DIESEL = "GO",3,"diesel","diesel","4", "diesel"
     DIESEL_Prediction = "D",0
-    DIESEL_OFFICIAL_B7 = "diesel/b7",0,"","Diesel B7"
-    DIESEL_OFFICIAL_B10 = "diesel/b10",0,"","Diesel B10"
-    DIESEL_OFFICIAL_XTL = "diesel/xtl",0,"","Diesel XTL"
+    DIESEL_OFFICIAL_B7 = "diesel/b7",0,"","Diesel","Diesel B7"
+    DIESEL_OFFICIAL_B10 = "diesel/b10",0,"","","Diesel B10"
+    DIESEL_OFFICIAL_XTL = "diesel/xtl",0,"","","Diesel XTL"
     OILSTD = "10",0
     OILSTD_PREDICTION = "mazoutH0H7",0
     OILEXTRA = "2",0
     OILEXTRA_PREDICTION = "extra",0
     LPG = "GPL", 1, "gpl","lpg","17"
+    LPG_OFFICIAL = "lpg", 1, "gpl","LPG","LPG"
     
     
     @property
@@ -322,18 +324,41 @@ class ComponentSession(object):
         for block in blocks:
             url = block['href']
             station_id = url.split('/')[-1]
-            station_name = block.find('span', class_='fuel-station-location-name').text.strip()
-            station_street = block.find('div', class_='fuel-station-location-street').text.strip()
-            station_city = block.find('div', class_='fuel-station-location-city').text.strip()
-            station_postalcode, station_locality = station_city.split(maxsplit=1)
+            try:
+                station_name = block.find('span', class_='fuel-station-location-name').text.strip()
+            except:
+                station_name = "Unknown"
+            try:
+                station_street = block.find('div', class_='fuel-station-location-street').text.strip()
+            except:
+                station_street = "Unknown"
+            try:
+                station_city = block.find('div', class_='fuel-station-location-city').text.strip()
+            except:
+                station_city = "Unknown"
+            try:
+                station_postalcode, station_locality = station_city.split(maxsplit=1)
+            except:
+                station_postalcode = "Unknown"
+            
             price_text = block.find('div', class_='price-text')
             if price_text != None:
                 price_text = price_text.text.strip()
-            else:
-                continue
-            price_changed = [span.text.strip() for span in block.find_all('span', class_='price-changed')]
-            logo_url = block.find('img', class_='mtsk-logo')['src']
-            distance = float(block.find('div', class_='fuel-station-location-distance').text.strip().replace(' km',''))
+
+            try:
+                price_changed = [span.text.strip() for span in block.find_all('span', class_='price-changed')]
+            except:
+                price_changed = None
+
+            try:
+                logo_url = block.find('img', class_='mtsk-logo')['src']
+            except:
+                logo_url = ""
+
+            try:
+                distance = float(block.find('div', class_='fuel-station-location-distance').text.strip().replace(' km',''))
+            except:
+                distance = 10
             today = date.today()
             current_date = today.strftime("%Y-%m-%d")
             # _LOGGER.debug(f"blocks id : {station_id}, postalcode: {station_postalcode}")
@@ -357,12 +382,13 @@ class ComponentSession(object):
                 'date': current_date, 
                 'country': country
             }
-            if single:
-                if postalcode == station_postalcode:
+            if price_text:
+                if single:
+                    if postalcode == station_postalcode:
+                        stationdetails.append(block_data)
+                        return stationdetails
+                else:
                     stationdetails.append(block_data)
-                    return stationdetails
-            else:
-                stationdetails.append(block_data)
         return stationdetails
     
     
@@ -691,22 +717,26 @@ class ComponentSession(object):
             # Check if matching fuel product is found
             if matching_fuel_product:
                 # Get the price for the predefined fuel type
-                price_text = float(str(matching_fuel_product.get("credit", {}).get("price",0)).replace(',','.'))
+                try:
+                    price_text = float(str(matching_fuel_product.get("credit", {}).get("price",0)).replace(',','.'))
                 
-                # url = block['href']
-                station_id = block.get('id')
-                station_name = block.get('info').get('name')
-                alias_name = block.get('info').get('alias')
-                brand_name = block.get('info').get('brand_name')
-                station_street = block.get('info').get('address').get('line_1')
-                station_city = block.get('info').get('address').get('locality')
-                station_postalcode = block.get('info').get('address').get('postal_code')
-                station_locality = block.get('info').get('address').get('WA')
-                distance = block.get('distance')
-                date = matching_fuel_product.get("credit", {}).get("posted_time")
-                lat = block.get('info').get('latitude')
-                lon = block.get('info').get('longitude')
-                score = block.get('info').get('star_rating')
+                    # url = block['href']
+                    station_id = block.get('id')
+                    station_name = block.get('info').get('name')
+                    alias_name = block.get('info').get('alias')
+                    brand_name = block.get('info').get('brand_name')
+                    station_street = block.get('info').get('address').get('line_1')
+                    station_city = block.get('info').get('address').get('locality')
+                    station_postalcode = block.get('info').get('address').get('postal_code')
+                    station_locality = block.get('info').get('address').get('WA')
+                    distance = block.get('distance')
+                    date = matching_fuel_product.get("credit", {}).get("posted_time")
+                    lat = block.get('info').get('latitude')
+                    lon = block.get('info').get('longitude')
+                    score = block.get('info').get('star_rating')
+                except Exception as e:
+                    _LOGGER.error(f"ERROR: geocode : {e}")
+
 
 
                 block_data = {
@@ -729,10 +759,11 @@ class ComponentSession(object):
                     'date': date, 
                     'country': country
                 }
-                stationdetails.append(block_data)
-                if single:
-                    if postalcode == station_postalcode:
-                        return stationdetails
+                if price_text and price_text > 0:
+                    stationdetails.append(block_data)
+                    if single:
+                        if postalcode == station_postalcode:
+                            return stationdetails
         return stationdetails
      
 
@@ -800,11 +831,15 @@ class ComponentSession(object):
         
     @sleep_and_retry
     @limits(calls=1, period=1)
-    def getFuelOfficial(self, fueltype_prediction_code):
+    def getFuelOfficial(self, fueltype: FuelType, country):
+        if country.lower() == 'nl':
+            return self.getFuelOfficialNl(fueltype, country)
+        fueltype_prediction_code = fueltype.code
         header = {"Content-Type": "application/x-www-form-urlencoded"}
 
         # Super 95: https://carbu.com/belgie/super95
         # Diesel: https://carbu.com/belgie/diesel
+        # Diesel: https://carbu.com/belgie/lpg
         _LOGGER.debug(f"https://carbu.com/belgie/{fueltype_prediction_code}")
 
         response = self.s.get(f"https://carbu.com/belgie/{fueltype_prediction_code}",headers=header,timeout=30)
@@ -843,6 +878,102 @@ class ComponentSession(object):
             result = table_to_json(html_table)
 
         return result
+    
+    
+    @sleep_and_retry
+    @limits(calls=1, period=1)
+    def getFuelOfficialNl(self, fueltype: FuelType, country):
+        if country.lower() != 'nl':
+            return self.getFuelOfficial(fueltype, country)
+        fueltype_prediction_code = fueltype.nl_name
+        header = {"Content-Type": "application/x-www-form-urlencoded"}
+        # https://www.unitedconsumers.com/tanken/brandstofprijzen
+        
+
+        response = self.s.get(f"https://www.unitedconsumers.com/tanken/brandstofprijzen",headers=header,timeout=30)
+        if response.status_code != 200:
+            _LOGGER.error(f"ERROR: {response.text}")
+        assert response.status_code == 200
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        date_text = None
+        for paragraph in soup.find_all('p', class_='text-xs'):
+            if paragraph.text.strip().startswith("Datum overzicht"):
+                date_text = paragraph.text.replace("Datum overzicht ", "").strip()
+                break
+
+
+        # Mapping of Dutch month names to English month names
+        month_translation = {
+            "januari": "January",
+            "februari": "February",
+            "maart": "March",
+            "april": "April",
+            "mei": "May",
+            "juni": "June",
+            "juli": "July",
+            "augustus": "August",
+            "september": "September",
+            "oktober": "October",
+            "november": "November",
+            "december": "December"
+        }
+
+        def translate_month(dutch_date_str):
+            spaceSplit = dutch_date_str.lower().split(" ")
+            return f"{spaceSplit[0]} {month_translation.get(spaceSplit[1], spaceSplit[1])} {spaceSplit[2]}"
+        
+        # Convert the date text to a datetime.date object if found
+        date_object = date.today()
+        if date_text:
+            try:
+                # Translate Dutch month to English
+                translated_date_text = translate_month(date_text)
+                # Define the expected date format
+                date_object = datetime.strptime(translated_date_text, "%d %B %Y").date()
+            except ValueError:
+                # Handle cases where the date format is unexpected or incorrect
+                date_object = date.today()
+
+        # Assuming 'soup' is the BeautifulSoup object containing your HTML
+        data = {}
+
+        # Find all rows
+        rows = soup.find_all('div', class_='_row_1rcw2_25')
+
+        # Loop through each row to extract data
+        for row in rows:
+            # fuel_type = row.find('a').text.strip()
+            # gla_value = row.find_all('span', class_='_root_1d6z8_1')[0].text.strip()
+            # # Remove the Euro sign and convert the GLA value to a float
+            # gla_value = float(gla_value.replace('€', '').replace(',', '.').strip())
+            # verschil_value = row.find_all('span', class_='_root_vw1r2_1')[0].next_sibling.strip()
+
+            try:
+                fuel_type = row.find('a').text.strip()
+            except AttributeError:
+                fuel_type = None
+
+            try:
+                gla_value_str = row.find_all('span', class_='_root_1d6z8_1')[0].text.strip()
+                gla_value = float(gla_value_str.replace('€', '').replace(',', '.').strip())
+            except (IndexError, AttributeError, ValueError):
+                gla_value = None
+
+            try:
+                verschil_value = row.find_all('span', class_='_root_vw1r2_1')[0].next_sibling.strip()
+            except (IndexError, AttributeError):
+                verschil_value = None
+
+            # Append the extracted data to the list
+            data[fuel_type] = {
+                'fuel_type': fuel_type,
+                'GLA': gla_value,
+                'Verschil': verschil_value,
+                'date': date_object
+            }
+        return data
     
 
     @sleep_and_retry
@@ -906,11 +1037,14 @@ class ComponentSession(object):
 
     @sleep_and_retry
     @limits(calls=10, period=5)
-    def getStationInfo(self, postalcode, country, fuel_type: FuelType, town="", max_distance=0, filter=""):
+    def getStationInfo(self, postalcode, country, fuel_type: FuelType, town="", max_distance=0, filter="", townConfirmed = False):
         locationinfo = None
         single = True if max_distance == 0 else False
         if country.lower() in ["be","fr","lu"]:
-            carbuLocationInfo = self.convertPostalCode(postalcode, country, town)
+            if townConfirmed:
+                carbuLocationInfo = self.convertPostalCodeMultiMatch(postalcode, country, town)
+            else:
+                carbuLocationInfo = self.convertPostalCode(postalcode, country)
             if not carbuLocationInfo:
                 raise Exception(f"Location not found country: {country}, postalcode: {postalcode}, town: {town}")
             town = carbuLocationInfo.get("n")
@@ -1104,7 +1238,7 @@ class ComponentSession(object):
             to_country = country
         to_location = self.geocode(to_country, to_postalcode)
         assert to_location is not None
-        return self.getPriceOnRouteLatLon(fuel_type, from_location[0], from_location[1], to_location[0], to_location[1], filter)
+        return self.getPriceOnRouteLatLon(fuel_type, from_location[1], from_location[0], to_location[1], to_location[0], filter)
 
     
     #USED BY Service: handle_get_lowest_fuel_price_on_route_coor
@@ -1137,7 +1271,11 @@ class ComponentSession(object):
             postal_code_country = self.reverseGeocode(route[i]['maneuver']['location'][0], route[i]['maneuver']['location'][1])
             if postal_code_country.get('postal_code') is not None and postal_code_country.get('postal_code') not in processedPostalCodes:
                 _LOGGER.debug(f"Get route postalcode {postal_code_country.get('postal_code')}, processedPostalCodes {processedPostalCodes}")
-                bestAroundPostalCode = self.getStationInfo(postal_code_country.get('postal_code'), postal_code_country.get('country_code'), fuel_type, postal_code_country.get('town'), 3, filter)
+                bestAroundPostalCode = None
+                try:
+                    bestAroundPostalCode = self.getStationInfo(postal_code_country.get('postal_code'), postal_code_country.get('country_code'), fuel_type, postal_code_country.get('town'), 3, filter, False)
+                except Exception as e:
+                    _LOGGER.error(f"ERROR: getStationInfo failed : {e}")
                 if bestAroundPostalCode is None:
                     continue
                 processedPostalCodes.extend(bestAroundPostalCode.get('postalcodes'))                    
@@ -1199,7 +1337,8 @@ class ComponentSession(object):
             # header = {"Accept-Language": "nl-BE"}
             address = f"{postal_code}, {country_code}"
 
-            
+            if self.API_KEY_GEOAPIFY in ["","GEO_API_KEY"]:
+                raise Exception("Geocode failed: GEO_API_KEY not set!")
             # GEOCODIFY
         #     response = self.s.get(f"{self.GEOCODIFY_BASE_URL}geocode?api_key={self.API_KEY_GEOCODIFY}&q={address}")
         #     response = response.json()
@@ -1465,7 +1604,38 @@ class ComponentSession(object):
 
         # Request the route from OpenStreetMap API
         # 'https://router.project-osrm.org/route/v1/driving/<from_lon>,<from_lat>;<to_lon>,<to_lat>?steps=true
+        
+        header = {"Content-Type": "application/x-www-form-urlencoded"}
+        self.s.headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
         url = f'https://router.project-osrm.org/route/v1/driving/{from_location[1]},{from_location[0]};{to_location[1]},{to_location[0]}?steps=true'
+        _LOGGER.debug(f"getOSMRoute: {url}")
+        response = self.s.get(url,headers=header, timeout=30)
+        route_data = response.json()
+        _LOGGER.debug(f"route_data {route_data}")
+
+
+        if route_data.get('routes') is None:
+            _LOGGER.error(f"ERROR: route not found: {route_data}")
+            return
+        # Extract the waypoints (towns) along the route
+        waypoints = route_data['routes'][0]['legs'][0]['steps']
+        
+        _LOGGER.debug(f"waypoints {waypoints}")
+        return waypoints
+
+    #  NOT USED by services on route 
+    @sleep_and_retry
+    @limits(calls=1, period=15)
+    def getRoute(self, from_location, to_location):
+
+        #location expected (lat (50.XX), lon (4.XX))
+
+        # Request the route from GeoApify.com API
+        
+        # 'https://router.project-osrm.org/route/v1/driving/<from_lon>,<from_lat>;<to_lon>,<to_lat>?steps=true
+        url = f'https://router.project-osrm.org/route/v1/driving/{from_location[1]},{from_location[0]};{to_location[1]},{to_location[0]}?steps=true'
+        url = f"https://api.geoapify.com/v1/routing?waypoints={from_location[0]},{from_location[1]}|{to_location[0]},{to_location[1]}&mode=drive&apiKey={self.API_KEY_GEOAPIFY}"
+        #NOT WORKING: steps contain no coordinates
         response = self.s.get(url)
         route_data = response.json()
         _LOGGER.debug(f"route_data {route_data}")
@@ -1474,8 +1644,7 @@ class ComponentSession(object):
         waypoints = route_data['routes'][0]['legs'][0]['steps']
         
         _LOGGER.debug(f"waypoints {waypoints}")
-        return waypoints
-    
+        return waypoints    
 
 
     def haversine_distance(self, lat1, lon1, lat2, lon2):
@@ -1530,8 +1699,26 @@ class ComponentSession(object):
 
 # Example usage
 
+# _LOGGER = logging.getLogger(__name__)
+# _LOGGER.setLevel(logging.DEBUG)
+# if not logging.getLogger().hasHandlers():
+#     logging.basicConfig(level=logging.DEBUG)
+# _LOGGER.debug("Debug logging is now enabled.")
+
 # session = ComponentSession("GEO_API_KEY")
+
+
+#LOCAL TESTS
+
 # session.geocode("BE", "1000")
+
+#  test route
+# print(session.getPriceOnRoute("BE", FuelType.DIESEL, 1000, 2000))
+
+
+# test nl official
+# session.getFuelOfficial(FuelType.DIESEL_OFFICIAL_B7, "NL")
+# session.getFuelOfficial(FuelType.LPG_OFFICIAL, "BE")
 
 #test US
 # ZIP Code 10001 - New York, New York

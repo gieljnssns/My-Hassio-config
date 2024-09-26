@@ -1,4 +1,5 @@
 """Support for ICS Calendar."""
+
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Optional
@@ -12,6 +13,7 @@ from homeassistant.components.calendar import (
     extract_offset,
     is_offset_reached,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EXCLUDE,
     CONF_INCLUDE,
@@ -28,7 +30,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now as hanow
 
-from . import (
+from .calendardata import CalendarData
+from .const import (
     CONF_ACCEPT_HEADER,
     CONF_CALENDARS,
     CONF_CONNECTION_TIMEOUT,
@@ -37,11 +40,12 @@ from . import (
     CONF_INCLUDE_ALL_DAY,
     CONF_OFFSET_HOURS,
     CONF_PARSER,
+    CONF_SET_TIMEOUT,
     CONF_USER_AGENT,
+    DOMAIN,
 )
-from .calendardata import CalendarData
 from .filter import Filter
-from .icalendarparser import ICalendarParser
+from .getparser import GetParser
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +54,33 @@ OFFSET = "!!"
 
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the calendar in background."""
+    hass.async_create_task(
+        _async_setup_entry_bg_task(hass, config_entry, async_add_entities)
+    )
+
+
+async def _async_setup_entry_bg_task(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the calendar."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    device_id = f"{data[CONF_NAME]}"
+    entity = ICSCalendarEntity(
+        generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass),
+        hass.data[DOMAIN][config_entry.entry_id],
+        config_entry.entry_id,
+    )
+    async_add_entities([entity])
 
 
 def setup_platform(
@@ -71,8 +102,13 @@ def setup_platform(
     """
     _LOGGER.debug("Setting up ics calendars")
     if discovery_info is not None:
-        calendars: list = discovery_info.get(CONF_CALENDARS)
+        _LOGGER.debug(
+            "setup_platform: ignoring discovery_info, already imported!"
+        )
+        # calendars: list = discovery_info.get(CONF_CALENDARS)
+        calendars = []
     else:
+        _LOGGER.debug("setup_platform: discovery_info is None")
         calendars: list = config.get(CONF_CALENDARS)
 
     calendar_devices = []
@@ -104,7 +140,7 @@ def setup_platform(
 class ICSCalendarEntity(CalendarEntity):
     """A CalendarEntity for an ICS Calendar."""
 
-    def __init__(self, entity_id: str, device_data):
+    def __init__(self, entity_id: str, device_data, unique_id: str = None):
         """Construct ICSCalendarEntity.
 
         :param entity_id: Entity id for the calendar
@@ -119,8 +155,9 @@ class ICSCalendarEntity(CalendarEntity):
         )
         self.data = ICSCalendarData(device_data)
         self.entity_id = entity_id
+        self._attr_unique_id = f"ICSCalendar.{unique_id}"
         self._event = None
-        self._name = device_data[CONF_NAME]
+        self._attr_name = device_data[CONF_NAME]
         self._last_call = None
 
     @property
@@ -133,12 +170,7 @@ class ICSCalendarEntity(CalendarEntity):
         return self._event
 
     @property
-    def name(self):
-        """Return the name of the calendar."""
-        return self._name
-
-    @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Indicate if the calendar should be polled.
 
         If the last call to update or get_api_events was not within the minimum
@@ -177,11 +209,13 @@ class ICSCalendarEntity(CalendarEntity):
         self.data.update()
         self._event = self.data.event
         self._attr_extra_state_attributes = {
-            "offset_reached": is_offset_reached(
-                self._event.start_datetime_local, self.data.offset
+            "offset_reached": (
+                is_offset_reached(
+                    self._event.start_datetime_local, self.data.offset
+                )
+                if self._event
+                else False
             )
-            if self._event
-            else False
         }
 
     async def async_create_event(self, **kwargs: Any):
@@ -221,7 +255,7 @@ class ICSCalendarData:  # pylint: disable=R0902
         self._offset_hours = device_data[CONF_OFFSET_HOURS]
         self.include_all_day = device_data[CONF_INCLUDE_ALL_DAY]
         self._summary_prefix: str = device_data[CONF_PREFIX]
-        self.parser = ICalendarParser.get_instance(device_data[CONF_PARSER])
+        self.parser = GetParser.get_parser(device_data[CONF_PARSER])
         self.parser.set_filter(
             Filter(device_data[CONF_EXCLUDE], device_data[CONF_INCLUDE])
         )
@@ -242,7 +276,11 @@ class ICSCalendarData:  # pylint: disable=R0902
             device_data[CONF_ACCEPT_HEADER],
         )
 
-        self._calendar_data.set_timeout(device_data[CONF_CONNECTION_TIMEOUT])
+        if CONF_SET_TIMEOUT in device_data:
+            if device_data[CONF_SET_TIMEOUT]:
+                self._calendar_data.set_timeout(
+                    device_data[CONF_CONNECTION_TIMEOUT]
+                )
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -278,6 +316,7 @@ class ICSCalendarData:  # pylint: disable=R0902
             event_list = []
 
         for event in event_list:
+            print("Adding prefix to summary 1")
             event.summary = self._summary_prefix + event.summary
 
         return event_list

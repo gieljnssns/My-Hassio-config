@@ -7,6 +7,7 @@ import backoff
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
+from homeassistant.const import Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_change
@@ -43,6 +44,8 @@ If you have any issues with this you need to open an issue here:
 {ISSUEURL}
 -------------------------------------------------------------------
 """
+
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 class NordpoolData:
@@ -108,10 +111,6 @@ class NordpoolData:
                 await self.update_today(areas=self.areas)
             except InvalidValueException:
                 _LOGGER.debug("No data available for today, retrying later")
-            try:
-                await self.update_tomorrow(areas=self.areas)
-            except InvalidValueException:
-                _LOGGER.debug("No data available for tomorrow, retrying later")
 
             # Send a new data request after new data is updated for this first run
             # This way if the user has multiple sensors they will all update
@@ -197,9 +196,7 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up nordpool as config entry."""
     res = await _dry_setup(hass, entry.data)
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.add_update_listener(async_reload_entry)
     return res
@@ -207,7 +204,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
         # This is an issue if you have multiple sensors as everything related to DOMAIN

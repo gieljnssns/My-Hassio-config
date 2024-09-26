@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_REGION
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.template import Template, attach
+from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_utils
 
 # Import sensor entity and classes.
@@ -34,7 +34,7 @@ _PRICE_IN = {"kWh": 1000, "MWh": 1, "Wh": 1000 * 1000}
 _REGIONS = {
     "DK1": ["DKK", "Denmark", 0.25],
     "DK2": ["DKK", "Denmark", 0.25],
-    "FI": ["EUR", "Finland", 0.24],
+    "FI": ["EUR", "Finland", 0.255],
     "EE": ["EUR", "Estonia", 0.22],
     "LT": ["EUR", "Lithuania", 0.21],
     "LV": ["EUR", "Latvia", 0.21],
@@ -197,8 +197,6 @@ class NordpoolSensor(SensorEntity):
         else:
             if self._ad_template.template in ("", None):
                 self._ad_template = cv.template(DEFAULT_TEMPLATE)
-
-        attach(self._hass, self._ad_template)
 
         # To control the updates.
         self._last_tick = None
