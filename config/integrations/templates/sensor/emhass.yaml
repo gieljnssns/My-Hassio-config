@@ -322,7 +322,7 @@
             {%- endfor %}
           {% endif %}
       availability: >-
-        {{ has_value("sensor.emhass_warmtepomp") }}
+        {{ states('sensor.emhass_warmtepomp') | is_number }}
 
     - name: Warm water startuur
       unique_id: f4450d07-ad80-4ed5-a96a-852c84fec6ca
@@ -346,7 +346,7 @@
             {%- endfor %}
           {% endif %}
       availability: >-
-        {{ has_value("sensor.emhass_warmtepompboiler") }}
+        {{ states('sensor.emhass_warmtepompboiler') | is_number }}
 
     - name: Wasmachien startuur
       unique_id: 12e7093b-ea97-4f69-a47d-720106331e9f
@@ -370,7 +370,7 @@
             {%- endfor %}
         {% endif %}
       availability: >-
-        {{ has_value("sensor.emhass_wasmachien") }}
+        {{ states('sensor.emhass_wasmachien') | is_number }}
 
     - name: Droogkast startuur
       unique_id: de867de0-7b23-4b42-b646-ab2f00a1c1b2
@@ -394,7 +394,7 @@
             {%- endfor %}
           {% endif %}
       availability: >-
-        {{ has_value("sensor.emhass_droogkast") }}
+        {{ states('sensor.emhass_droogkast') | is_number }}
 
     - name: Afwasmachien startuur
       unique_id: c38353a5-d1d8-4f10-a826-dbb2cf432c07
@@ -418,7 +418,7 @@
             {%- endfor %}
           {% endif %}
       availability: >-
-        {{ has_value("sensor.emhass_afwasmachien") }}
+        {{ states('sensor.emhass_afwasmachien') | is_number }}
 
     - name: Prediction horizon
       unique_id: 39144142-06b5-4c2a-897a-d24b0c8fd2e4
