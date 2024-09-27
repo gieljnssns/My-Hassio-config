@@ -106,12 +106,12 @@ action:
           target:
             entity_id: input_datetime.keuken_end_time
     default:
-        - service: input_datetime.set_datetime
-          data:
-            datetime: >
-              {{ now() + timedelta(seconds=120) }}
-          target:
-            entity_id: input_datetime.keuken_end_time
+      - service: input_datetime.set_datetime
+        data:
+          datetime: >
+            {{ now() + timedelta(seconds=120) }}
+        target:
+          entity_id: input_datetime.keuken_end_time
   
   # - service: light.turn_on
   #   entity_id: light.keuken_luster

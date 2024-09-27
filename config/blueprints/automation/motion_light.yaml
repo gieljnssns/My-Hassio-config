@@ -1,7 +1,7 @@
 blueprint:
   name: Motion-activated Light
   domain: automation
-  source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/automation/blueprints/motion_light.yaml
+  # source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/automation/blueprints/motion_light.yaml
   input:
     entity:
       name: Entity
@@ -20,16 +20,23 @@ blueprint:
         target:
           entity:
             domain: light
+    
+    occupancy_target:
+      name: Occupancy
+      selector:
+        target:
+          entity:
+            domain: binary_sensor
+
     no_motion_wait:
       name: Wait time
       description: Time to wait until the light should be turned off.
       default: 210
       selector:
-        text:
-        # number:
-        #   min: 0
-        #   max: 3600
-        #   unit_of_measurement: seconds
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
 
 # If motion is detected within the delay,
 # we restart the script.
@@ -50,25 +57,51 @@ trigger:
     
 action:
   - choose:
-    - conditions:
-        - condition: trigger
-          id: aan
-      sequence:
-        - service: light.turn_on
-          target: !input light_target
+      - conditions:
+          - condition: state
+            entity_id: !input occupancy_target
+            state: "on"
+        sequence:
+          - service: light.turn_on
+            target: !input light_target
+          - service: input_datetime.set_datetime
+            data:
+              datetime: >
+                {{ now() + timedelta(hours=1) }}
+            target:
+              entity_id: !input input_datetime_target
+          - wait_for_trigger:
+              - platform: state
+                entity_id: !input occupancy_target
+                from: "on"
+                to: "off"
+          - service: input_datetime.set_datetime
+            data:
+              datetime: >
+                {% set wait = no_motion_wait|int(210) %}
+                {{ now() + timedelta(seconds=wait) }}
+            target:
+              entity_id: !input input_datetime_target
+          # - service: input_datetime.set_datetime
+          #   data:
+          #     datetime: >
+          #       {% set wait = no_motion_wait|int(210) %}
+          #       {{ now() + timedelta(seconds=wait) }}
+          #   target:
+          #     entity_id: !input input_datetime_target
+      - conditions:
+          - condition: trigger
+            id: uit
+        sequence:
+          - service: light.turn_off
+            target: !input light_target
+    default:
         - service: input_datetime.set_datetime
           data:
             datetime: >
-              {% set wait = no_motion_wait|int(210) %}
-              {{ now() + timedelta(seconds=wait) }}
+              {{ now() + timedelta(seconds=120) }}
           target:
             entity_id: !input input_datetime_target
-    - conditions:
-        - condition: trigger
-          id: uit
-      sequence:
-        - service: light.turn_off
-          target: !input light_target
 
   # - service: light.turn_on
   #   target: !input light_target
