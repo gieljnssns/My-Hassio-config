@@ -1,0 +1,16 @@
+input_boolean:
+  gang_hal_bezetting:
+
+input_datetime:
+  gang_hal_bezetting_end_time:
+    name: Gang hal bezetting eindtijd
+    has_date: true
+    has_time: true
+  
+template:
+  - binary_sensor:
+      - name: Gang hal bezetting
+        unique_id: f6531ce2-2fed-4c3f-be2b-52529873978b
+        device_class: occupancy
+        state: >
+          {{ is_state('input_boolean.gang_hal_bezetting', 'on') }}

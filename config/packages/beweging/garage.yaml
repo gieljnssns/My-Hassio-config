@@ -1,10 +1,16 @@
 input_boolean:
-  beweging_garage:
+  garage_bezetting:
+
+input_datetime:
+  garage_bezetting_end_time:
+    name: Garage bezetting eindtijd
+    has_date: true
+    has_time: true
 
 template:
   - binary_sensor:
-      - name: Beweging garage
-        unique_id: c46477fd-a3e0-4dfd-b861-58a84366076a
+      - name: Garage bezetting
+        unique_id: 4dd34647-84ff-463f-b84c-2aba74e81189
         device_class: occupancy
         state: >-
-          {{ is_state('input_boolean.beweging_garage', 'on') }}
+          {{ is_state('input_boolean.garage_bezetting', 'on') }}

@@ -1,0 +1,16 @@
+input_boolean:
+  waskot_bezetting:
+
+input_datetime:
+  waskot_bezetting_end_time:
+    name: Waskot bezetting eindtijd
+    has_date: true
+    has_time: true
+  
+template:
+  - binary_sensor:
+      - name: Waskot bezetting
+        unique_id: 475ac291-a58b-482a-9cff-cb5707e2f67e
+        device_class: occupancy
+        state: >
+          {{ is_state('input_boolean.waskot_bezetting', 'on') }}

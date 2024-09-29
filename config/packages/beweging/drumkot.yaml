@@ -1,0 +1,16 @@
+input_boolean:
+  drumkot_bezetting:
+
+input_datetime:
+  drumkot_bezetting_end_time:
+    name: Drumkot bezetting eindtijd
+    has_date: true
+    has_time: true
+  
+template:
+  - binary_sensor:
+      - name: Drumkot bezetting
+        unique_id: 965f6e68-fdb8-4b3a-8b81-dd375bb9bff8
+        device_class: occupancy
+        state: >
+          {{ is_state('input_boolean.drumkot_bezetting', 'on') }}

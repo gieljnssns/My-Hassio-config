@@ -1,10 +1,16 @@
 input_boolean:
-  beweging_hof:
+  tuin_bezetting:
+
+input_datetime:
+  tuin_bezetting_end_time:
+    name: Tuin bezetting eindtijd
+    has_date: true
+    has_time: true
 
 template:
   - binary_sensor:
-      - name: Beweging hof
-        unique_id: a0560b64-8297-4c10-bdb9-e9122a38cf5e
+      - name: Tuin bezetting
+        unique_id: 2f35f90b-0c1d-4c01-a495-4827746ab903
         device_class: occupancy
         state: >
-          {{ is_state('input_boolean.beweging_hof', 'on') }}
+          {{ is_state('input_boolean.tuin_bezetting', 'on') }}

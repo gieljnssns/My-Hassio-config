@@ -1,0 +1,16 @@
+input_boolean:
+  wc_bezetting:
+
+input_datetime:
+  wc_bezetting_end_time:
+    name: Wc bezetting eindtijd
+    has_date: true
+    has_time: true
+  
+template:
+  - binary_sensor:
+      - name: Wc bezetting
+        unique_id: 5d711175-c9cf-4e1e-89a5-ef90cb9575bd
+        device_class: occupancy
+        state: >
+          {{ is_state('input_boolean.wc_bezetting', 'on') }}

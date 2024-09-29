@@ -1,0 +1,16 @@
+input_boolean:
+  gang_boven_bezetting:
+
+input_datetime:
+  gang_boven_bezetting_end_time:
+    name: Gang boven bezetting eindtijd
+    has_date: true
+    has_time: true
+  
+template:
+  - binary_sensor:
+      - name: Gang boven bezetting
+        unique_id: ec553547-51e5-4651-af57-670104d101a1
+        device_class: occupancy
+        state: >
+          {{ is_state('input_boolean.gang_boven_bezetting', 'on') }}

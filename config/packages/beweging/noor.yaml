@@ -1,0 +1,16 @@
+input_boolean:
+  slaapkamer_noor_bezetting:
+
+input_datetime:
+  slaapkamer_noor_bezetting_end_time:
+    name: Slaakamer Noor bezetting eindtijd
+    has_date: true
+    has_time: true
+  
+template:
+  - binary_sensor:
+      - name: Slaapkamer Noor bezetting
+        unique_id: 7ded542d-30ff-4c37-8a76-93c9f26df38b
+        device_class: occupancy
+        state: >
+          {{ is_state('input_boolean.slaapkamer_noor_bezetting', 'on') }}

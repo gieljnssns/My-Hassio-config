@@ -1,0 +1,16 @@
+input_boolean:
+  slaapkamer_bezetting:
+
+input_datetime:
+  slaapkamer_bezetting_end_time:
+    name: Slaapkamer bezetting eindtijd
+    has_date: true
+    has_time: true
+  
+template:
+  - binary_sensor:
+      - name: Slaapkamer bezetting
+        unique_id: e6f2bc11-60fa-47f6-8dac-8144e91d0d0c
+        device_class: occupancy
+        state: >
+          {{ is_state('input_boolean.slaapkamer_bezetting', 'on') }}
