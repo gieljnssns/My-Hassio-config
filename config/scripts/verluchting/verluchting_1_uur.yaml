@@ -3,16 +3,16 @@ verluchting_1_uur:
     - condition: state
       entity_id: binary_sensor.afkoeling_gewenst
       state: "off"
-    - service: fan.set_percentage
+    - action: fan.set_percentage
       target:
         entity_id: fan.ventilatie
       data:
         percentage: 100
-    - service: switch.turn_on
+    - action: switch.turn_on
       entity_id: switch.badkamer_verluchting
-    - service: switch.turn_on
+    - action: switch.turn_on
       entity_id: switch.zolder_verluchting
-    - service: input_datetime.set_datetime
+    - action: input_datetime.set_datetime
       data:
         datetime: "{{ now() + timedelta(hours=1) }}" # 1 hour from now
       target:
@@ -33,13 +33,13 @@ verluchting_1_uur:
     #               True
     #             {% endif %}
     #       sequence:
-    #         - service: switch.turn_on
+    #         - action: switch.turn_on
     #           entity_id: switch.verluchting
     # - delay:
     #     minutes: 60
-    # - service: fan.turn_off
+    # - action: fan.turn_off
     #   entity_id: fan.ventilatie
-    # - service: switch.turn_off
+    # - action: switch.turn_off
     #   entity_id: switch.badkamer_verluchting
-    # - service: switch.turn_off
+    # - action: switch.turn_off
     #   entity_id: switch.zolder_verluchting

@@ -17,8 +17,8 @@ condition:
   - condition: state
     entity_id: input_boolean.stofzuiger_leegmaken_melding
     state: "on"
-action:
-  - service: notify.iedereen
+actions:
+  - action: notify.iedereen
     data:
       title: "Claptrap"
       message: "Onze Claptrap leegmaken. Proper water en ne nieuwe dweil geven."
@@ -26,7 +26,7 @@ action:
         actions:
           - action: "RETURN"
             title: "Leeggemaakt. Terug in uw kot."
-  - service: script.turn_on
+  - action: script.turn_on
     entity_id: script.bitch_prullenbak
-  - service: counter.increment
+  - action: counter.increment
     entity_id: counter.stofzuiger

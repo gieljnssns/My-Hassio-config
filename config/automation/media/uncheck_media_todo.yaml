@@ -6,5 +6,5 @@ trigger:
     value_template: >
       {{ states("todo.playlists") | int == 0 or
           states("todo.radio_stations") | int == 0 }}
-action:
-  - service: script.uncheck_media_todo
+actions:
+  - action: script.uncheck_media_todo

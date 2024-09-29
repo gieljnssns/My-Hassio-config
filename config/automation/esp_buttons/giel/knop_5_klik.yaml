@@ -4,12 +4,12 @@ trigger:
   - platform: state
     entity_id: binary_sensor.knop_giel_5_klik
     to: "on"
-action:
-  - service: light.turn_on
+actions:
+  - action: light.turn_on
     entity_id: light.spots_tv
     data:
       brightness: 255
-  - service: light.turn_on
+  - action: light.turn_on
     entity_id:
       - light.alle_tuinverlichting
       - light.danszaal_spots
@@ -20,7 +20,7 @@ action:
       - light.keuken_inkom
   - delay:
       minutes: 5
-  - service: light.turn_off
+  - action: light.turn_off
     entity_id:
       - light.alle_tuinverlichting
       - light.danszaal_spots

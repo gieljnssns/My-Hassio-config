@@ -22,14 +22,14 @@ condition:
   - condition: state
     entity_id: input_boolean.op_verlof
     state: "off"
-action:
+actions:
   - choose:
       - conditions:
           - condition: state
             entity_id: counter.stofzuiger
             state: "1"
         sequence:
-          - service: notify.iedereen
+          - action: notify.iedereen
             data:
               title: "Claptrap"
               message: "De stofzuiger mag weer leeggemaakt worden."
@@ -37,12 +37,12 @@ action:
                 actions:
                   - action: "RETURN"
                     title: "Leeggemaakt. Terug in uw kot."
-          - service: script.turn_on
+          - action: script.turn_on
             entity_id: script.bitch_prullenbak
-          - service: counter.increment
+          - action: counter.increment
             entity_id: counter.stofzuiger
     default:
-      - service: notify.iedereen
+      - action: notify.iedereen
         data:
           title: "Claptrap"
           message: "De stofzuiger mag weer leeggemaakt worden. Water eruit en dweil eraf!"
@@ -50,7 +50,7 @@ action:
             actions:
               - action: "RETURN"
                 title: "Leeggemaakt. Terug in uw kot."
-      - service: script.turn_on
+      - action: script.turn_on
         entity_id: script.bitch_prullenbak
-      - service: counter.reset
+      - action: counter.reset
         entity_id: counter.stofzuiger

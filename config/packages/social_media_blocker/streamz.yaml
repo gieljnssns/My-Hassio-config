@@ -11,11 +11,11 @@ switch:
         icon_template: mdi:monitor-account
         friendly_name: Streamz
         turn_on:
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             data:
               entity_id: input_boolean.allowstreamz
         turn_off:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             data:
               entity_id: input_boolean.allowstreamz
 
@@ -26,8 +26,8 @@ automation:
       platform: state
       entity_id: input_boolean.allowstreamz
       to: "on"
-    action:
-      - service: adguard.remove_url
+    actions:
+      - action: adguard.remove_url
         data:
           url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-streamz.txt"
 
@@ -37,8 +37,8 @@ automation:
       platform: state
       entity_id: input_boolean.allowstreamz
       to: "off"
-    action:
-      - service: adguard.add_url
+    actions:
+      - action: adguard.add_url
         data:
           url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-streamz.txt"
           name: Streamz

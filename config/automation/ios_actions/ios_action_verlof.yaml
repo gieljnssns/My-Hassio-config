@@ -11,22 +11,22 @@ trigger:
     event_data:
       action: "VERLOF_UIT"
     id: "uit"
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
             id: "aan"
         sequence:
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             target:
               entity_id: input_boolean.op_verlof
-          # - service: notify.mobile_app_gphone
+          # - action: notify.mobile_app_gphone
           #   data:
           #     message: "Aan"
     default:
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.op_verlof
-      # - service: notify.mobile_app_gphone
+      # - action: notify.mobile_app_gphone
       #   data:
       #     message: "Uit"

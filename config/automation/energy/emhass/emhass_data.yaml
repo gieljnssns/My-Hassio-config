@@ -22,13 +22,13 @@ trigger:
   - platform: time
     at: input_datetime.emhass_data
     id: data
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
             id: data
         sequence:
-          - service: rest_command.publish_data
+          - action: rest_command.publish_data
       - conditions:
           - condition: trigger
             id: night
@@ -37,8 +37,8 @@ action:
             value_template: >
               {{ now().hour is in [1, 2, 3, 4] }}
         sequence:
-          - service: rest_command.naive_mpc_optim
-          - service: input_datetime.set_datetime
+          - action: rest_command.naive_mpc_optim
+          - action: input_datetime.set_datetime
             data:
               datetime: >
                 {{ now() + timedelta(seconds=40) }}
@@ -52,8 +52,8 @@ action:
             value_template: >
               {{ now().hour is in [0, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23] }}
         sequence:
-          - service: rest_command.naive_mpc_optim
-          - service: input_datetime.set_datetime
+          - action: rest_command.naive_mpc_optim
+          - action: input_datetime.set_datetime
             data:
               datetime: >
                 {{ now() + timedelta(seconds=40) }}
@@ -67,8 +67,8 @@ action:
           #   weekday:
           #     - mon
         sequence:
-          - service: rest_command.forecast_model_fit_load_zonder_wp
-          # - service: persistent_notification.create
+          - action: rest_command.forecast_model_fit_load_zonder_wp
+          # - action: persistent_notification.create
           #   data:
           #     message: Forecast model fit
       # - conditions:
@@ -79,35 +79,35 @@ action:
       #     #   weekday:
       #     #     - mon
       #   sequence:
-      #     - service: rest_command.forecast_model_tune_load_zonder_wp
-      #     # - service: persistent_notification.create
+      #     - action: rest_command.forecast_model_tune_load_zonder_wp
+      #     # - action: persistent_notification.create
       #     #   data:
       #     #     message: Forecast model tune
       - conditions:
           - condition: trigger
             id: start
         sequence:
-          # - service: rest_command.naive_mpc_optim
+          # - action: rest_command.naive_mpc_optim
           # - delay:
           #     seconds: 40
-          - service: rest_command.publish_data
+          - action: rest_command.publish_data
       - conditions:
           - condition: trigger
             id: prediction
         sequence:
-          - service: rest_command.fit_heating_hours
+          - action: rest_command.fit_heating_hours
           - delay:
               seconds: 14
-          - service: rest_command.predict_heating_hours
+          - action: rest_command.predict_heating_hours
           - delay:
               seconds: 4
-          - service: rest_command.fit_heating_hours_gradientboosting
+          - action: rest_command.fit_heating_hours_gradientboosting
           - delay:
               seconds: 14
-          - service: rest_command.predict_heating_hours_gradientboosting
+          - action: rest_command.predict_heating_hours_gradientboosting
           - delay:
               seconds: 4
-          - service: rest_command.fit_heating_hours_adaboost
+          - action: rest_command.fit_heating_hours_adaboost
           - delay:
               seconds: 14
-          - service: rest_command.predict_heating_hours_adaboost
+          - action: rest_command.predict_heating_hours_adaboost

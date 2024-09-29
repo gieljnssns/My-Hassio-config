@@ -48,11 +48,13 @@ trigger:
 #     entity_id: light.keuken_spots
 #     state: "off"
 
-action:
+actions:
+  - delay:
+      milliseconds: 200
   - choose:
     - conditions:
         - condition: state
-          entity_id: binary_sensor.keuken_aanwezigheid
+          entity_id: binary_sensor.keuken_bezetting
           state: "on"
         - condition: state
           entity_id: sensor.dark_inside
@@ -62,9 +64,9 @@ action:
           entity_id: light.keuken_spots
           state: "off"
       sequence:
-        - service: light.turn_on
+        - action: light.turn_on
           entity_id: light.keuken_luster
-        - service: input_datetime.set_datetime
+        - action: input_datetime.set_datetime
           data:
             datetime: >
               {{ now() + timedelta(hours=2) }}
@@ -72,23 +74,24 @@ action:
             entity_id: input_datetime.keuken_end_time
         - wait_for_trigger:
             - platform: state
-              entity_id: binary_sensor.keuken_aanwezigheid
+              entity_id: binary_sensor.keuken_bezetting
               from: "on"
               to: "off"
-        - service: input_datetime.set_datetime
+        - action: input_datetime.set_datetime
           data:
             datetime: >
               {{ now() + timedelta(seconds=120) }}
           target:
             entity_id: input_datetime.keuken_end_time
     - conditions:
-        # - condition: trigger
-        #   id: presence
         - condition: state
-          entity_id: binary_sensor.keuken_aanwezigheid
+          entity_id: sensor.dark_inside
+          state: "true"
+        - condition: state
+          entity_id: binary_sensor.keuken_bezetting
           state: "on"
       sequence:
-        - service: input_datetime.set_datetime
+        - action: input_datetime.set_datetime
           data:
             datetime: >
               {{ now() + timedelta(hours=2) }}
@@ -96,31 +99,31 @@ action:
             entity_id: input_datetime.keuken_end_time
         - wait_for_trigger:
             - platform: state
-              entity_id: binary_sensor.keuken_aanwezigheid
+              entity_id: binary_sensor.keuken_bezetting
               from: "on"
               to: "off"
-        - service: input_datetime.set_datetime
+        - action: input_datetime.set_datetime
           data:
             datetime: >
               {{ now() + timedelta(seconds=120) }}
           target:
             entity_id: input_datetime.keuken_end_time
     default:
-      - service: input_datetime.set_datetime
+      - action: input_datetime.set_datetime
         data:
           datetime: >
             {{ now() + timedelta(seconds=120) }}
         target:
           entity_id: input_datetime.keuken_end_time
   
-  # - service: light.turn_on
+  # - action: light.turn_on
   #   entity_id: light.keuken_luster
   # - wait_for_trigger:
   #     - platform: state
-  #       entity_id: binary_sensor.keuken_aanwezigheid
+  #       entity_id: binary_sensor.keuken_bezetting
   #       from: "on"
   #       to: "off"
-  # - service: input_datetime.set_datetime
+  # - action: input_datetime.set_datetime
   #   data:
   #     datetime: >
   #       {{ now() + timedelta(seconds=120) }}
@@ -129,10 +132,10 @@ action:
 
   # - wait_for_trigger:
   #     platform: state
-  #     entity_id: binary_sensor.keuken_aanwezigheid
+  #     entity_id: binary_sensor.keuken_bezetting
   #     from: "on"
   #     to: "off"
   # - delay:
   #     minutes: 2
-  # - service: light.turn_off
+  # - action: light.turn_off
   #   entity_id: light.keuken_luster

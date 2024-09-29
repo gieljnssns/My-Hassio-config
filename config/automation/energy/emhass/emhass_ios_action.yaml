@@ -37,7 +37,7 @@ trigger:
     id: "morgen"
     event_data:
       action: "MORGEN"
-action:
+actions:
   - variables:
       who: >
         {% if trigger.event.context.user_id == '14a0b456772941eda81466d1807619b7' %}
@@ -78,7 +78,7 @@ action:
           - condition: trigger
             id: "16u"
         sequence:
-          - service: input_datetime.set_datetime
+          - action: input_datetime.set_datetime
             target:
               entity_id: >
                 {{ datetime }}
@@ -91,7 +91,7 @@ action:
                   {% set date = ((as_timestamp(now()) + 86400) | as_datetime | as_local).strftime('%Y-%m-%d') %}
                 {% endif %}
                 {{ date + " 16:00:00" }}
-          - service: homeassistant.turn_on
+          - action: homeassistant.turn_on
             target:
               entity_id: >
                 {{ boolean }}
@@ -100,7 +100,7 @@ action:
           - condition: trigger
             id: "7u"
         sequence:
-          - service: input_datetime.set_datetime
+          - action: input_datetime.set_datetime
             target:
               entity_id: >
                 {{ datetime }}
@@ -113,7 +113,7 @@ action:
                   {% set date = ((as_timestamp(now()) + 86400) | as_datetime | as_local).strftime('%Y-%m-%d') %}
                 {% endif %}
                 {{ date + " 07:00:00" }}
-          - service: homeassistant.turn_on
+          - action: homeassistant.turn_on
             target:
               entity_id: >
                 {{ boolean }}
@@ -121,7 +121,7 @@ action:
           - condition: trigger
             id: "asap"
         sequence:
-          - service: input_datetime.set_datetime
+          - action: input_datetime.set_datetime
             target:
               entity_id: >
                 {{ datetime }}
@@ -133,7 +133,7 @@ action:
                   {% set time = ((as_timestamp(now()) + 7800) | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:00') %}
                 {% endif %}
                 {{ time }}
-          - service: homeassistant.turn_on
+          - action: homeassistant.turn_on
             target:
               entity_id: >
                 {{ boolean }}
@@ -141,7 +141,7 @@ action:
           - condition: trigger
             id: "nasap"
         sequence:
-          - service: input_datetime.set_datetime
+          - action: input_datetime.set_datetime
             target:
               entity_id: >
                 {{ datetime }}
@@ -149,7 +149,7 @@ action:
               datetime: >
                 {% set time = ((as_timestamp(now()) + 77400) | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:00') %}
                 {{ time }}
-          - service: homeassistant.turn_on
+          - action: homeassistant.turn_on
             target:
               entity_id: >
                 {{ boolean }}
@@ -157,7 +157,7 @@ action:
           - condition: trigger
             id: "choose"
         sequence:
-          - service: "{{ who }}"
+          - action: "{{ who }}"
             data:
               message: Vandaag/morgen
               data:
@@ -168,7 +168,7 @@ action:
                     title: "Tegen morgen."
           - delay:
               seconds: 20
-          - service: homeassistant.turn_on
+          - action: homeassistant.turn_on
             target:
               entity_id: >
                 {{ boolean }}
@@ -176,7 +176,7 @@ action:
           - condition: trigger
             id: "vandaag"
         sequence:
-          - service: input_datetime.set_datetime
+          - action: input_datetime.set_datetime
             target:
               entity_id: >
                 {{ datetime }}
@@ -184,7 +184,7 @@ action:
               datetime: >
                 {% set time = now().strftime('%Y-%m-%d %H:%M:00') %}
                 {{ time }}
-          - service: "{{ who }}"
+          - action: "{{ who }}"
             data:
               message: Kies het juiste uur.
               data:
@@ -193,7 +193,7 @@ action:
           - condition: trigger
             id: "morgen"
         sequence:
-          - service: input_datetime.set_datetime
+          - action: input_datetime.set_datetime
             target:
               entity_id: >
                 {{ datetime }}
@@ -201,7 +201,7 @@ action:
               datetime: >
                 {% set date = ((as_timestamp(now()) + 86400) | as_datetime | as_local).strftime('%Y-%m-%d') %}
                 {{ date + " 06:00:00" }}
-          - service: "{{ who }}"
+          - action: "{{ who }}"
             data:
               message: Kies het juiste uur.
               data:

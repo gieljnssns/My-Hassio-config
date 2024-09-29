@@ -12,13 +12,13 @@ trigger:
   - platform: state
     entity_id: binary_sensor.badkamer_hoog_drukknop
     id: uit
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
             id: aan
         sequence:
-          - service: climate.set_temperature
+          - action: climate.set_temperature
             data:
               entity_id: climate.badkamer
               temperature: >
@@ -27,18 +27,8 @@ action:
           - condition: trigger
             id: uit
         sequence:
-          - service: climate.set_temperature
+          - action: climate.set_temperature
             data:
               entity_id: climate.badkamer
               temperature: 10
-  #   default:
-  #       action
-  # service: climate.set_temperature
-  # data_template:
-  #   entity_id: climate.badkamer
-  #   temperature: >
-  #     {% if is_state('binary_sensor.aanwezigheid_badkamer', 'on') %}
-  #       {{states('input_select.setpunt_badkamer')}}
-  #     {% elif is_state('binary_sensor.aanwezigheid_badkamer', 'off') %}
-  #       10
-  #     {% endif %}
+

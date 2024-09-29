@@ -3,8 +3,8 @@ id: 157b1d57-73d9-4f39-82c6-13ce0cf4288a
 trigger:
   - platform: time
     at: "23:59:32"
-action:
-  # - service: notify.heating
+actions:
+  # - action: notify.heating
   #   data:
   #     message: >
   #       {% set dd = states('sensor.degree_day_daily') |float %}
@@ -20,8 +20,8 @@ action:
   #       {% set csv = dd,inside,outside,hour,kwhdd,hourdd,solar_total,solar_total_yesterday,solar %}
   #         {{csv | replace(" ", "") | replace("(", "") | replace(")", "") }}
 
-  - service: notify.send_message
-    # - service: notify.prediction
+  - action: notify.send_message
+    # - action: notify.prediction
     target:
       entity_id: notify.prediction
     data:
@@ -48,8 +48,8 @@ action:
       # {% set csv = dd,solar,verbruik_zonder_verwarming,hourdd,inside,outside,hour,kwhdd,solar_total,verwarming_total,verwarming,verbruik_total,verbruik %}
       #   ,{{csv | replace(" ", "") | replace("(", "") | replace(")", "") }}
 
-  - service: notify.send_message
-    # - service: notify.prediction_share
+  - action: notify.send_message
+    # - action: notify.prediction_share
     target:
       entity_id: notify.prediction_share
     data:

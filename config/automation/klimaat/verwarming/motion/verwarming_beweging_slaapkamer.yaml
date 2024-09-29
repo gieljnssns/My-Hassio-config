@@ -2,18 +2,18 @@
   id: a31ca706-795a-4098-97e9-e70b2085daf5
   trigger:
     - platform: state
-      entity_id: binary_sensor.aanwezigheid_slaapkamer
+      entity_id: binary_sensor.slaapkamer_bezetting
       to: 'on'
     - platform: state
-      entity_id: binary_sensor.aanwezigheid_slaapkamer
+      entity_id: binary_sensor.slaapkamer_bezetting
       to: 'off'
-  action:
-    service: climate.set_temperature
-    data_template:
-      entity_id: climate.slaapkamer
-      temperature: >
-        {% if is_state('binary_sensor.aanwezigheid_slaapkamer', 'on') %}
-          {{states('input_select.setpunt_slaapkamer')}}
-        {% elif is_state('binary_sensor.aanwezigheid_slaapkamer', 'off') %}
-          10
-        {% endif %}
+  actions:
+    - action: climate.set_temperature
+      data_template:
+        entity_id: climate.slaapkamer
+        temperature: >
+          {% if is_state('binary_sensor.slaapkamer_bezetting', 'on') %}
+            {{states('input_select.setpunt_slaapkamer')}}
+          {% elif is_state('binary_sensor.slaapkamer_bezetting', 'off') %}
+            10
+          {% endif %}

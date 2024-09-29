@@ -11,11 +11,11 @@ switch:
         icon_template: mdi:square-off-outline
         friendly_name: Roblox
         turn_on:
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             data:
               entity_id: input_boolean.allowroblox
         turn_off:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             data:
               entity_id: input_boolean.allowroblox
 
@@ -26,8 +26,8 @@ automation:
       platform: state
       entity_id: input_boolean.allowroblox
       to: "on"
-    action:
-      - service: adguard.remove_url
+    actions:
+      - action: adguard.remove_url
         data:
           url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-roblox.txt"
 
@@ -37,8 +37,8 @@ automation:
       platform: state
       entity_id: input_boolean.allowroblox
       to: "off"
-    action:
-      - service: adguard.add_url
+    actions:
+      - action: adguard.add_url
         data:
           url: "https://raw.githubusercontent.com/gieljnssns/Social-media-Blocklists/master/adguard-roblox.txt"
           name: Roblox

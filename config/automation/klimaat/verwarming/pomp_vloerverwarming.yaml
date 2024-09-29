@@ -15,7 +15,7 @@ trigger:
     for:
       minutes: 5
 condition: []
-action:
+actions:
   - choose:
       - conditions:
           # - condition: state
@@ -25,10 +25,10 @@ action:
             entity_id: binary_sensor.warmtepomp_aan
             state: "off"
         sequence:
-          - service: switch.turn_off
+          - action: switch.turn_off
             entity_id:
               - switch.vloerverwarming
     default:
-      - service: switch.turn_on
+      - action: switch.turn_on
         entity_id: switch.vloerverwarming
 mode: single

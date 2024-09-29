@@ -1,6 +1,6 @@
 uncheck_media_todo:
   sequence:
-    - service: todo.get_items
+    - action: todo.get_items
       data:
         status: completed
       target:
@@ -10,14 +10,14 @@ uncheck_media_todo:
         for_each: >
           {{ completed['todo.radio_stations']['items'] }}
         sequence:
-          - service: todo.update_item
+          - action: todo.update_item
             data:
               status: needs_action
               item: >
                 {{ repeat.item.uid }}
             target:
               entity_id: todo.radio_stations
-    - service: todo.get_items
+    - action: todo.get_items
       data:
         status: completed
       target:
@@ -27,7 +27,7 @@ uncheck_media_todo:
         for_each: >
           {{ completed['todo.playlists']['items'] }}
         sequence:
-          - service: todo.update_item
+          - action: todo.update_item
             data:
               status: needs_action
               item: >

@@ -26,10 +26,10 @@ condition:
   - condition: template
     value_template: "{{ trigger.to_state.state != trigger.from_state.state }}"
 
-action:
+actions:
   - condition: trigger
     id: 0
-  - service: |
+  - action: |
       {% if trigger.to_state.state in ["unavailable", "unknown", "docked"] %}
         camera.turn_off
       {% else %}

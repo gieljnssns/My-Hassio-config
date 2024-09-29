@@ -48,20 +48,20 @@ trigger:
     at: !input input_datetime_target
     id: uit
 
-action:
+actions:
   - choose:
     - conditions:
         - condition: trigger
           id: aan
       sequence:
-        - service: input_boolean.turn_on
+        - action: input_boolean.turn_on
           target: !input input_boolean_target
         - wait_for_trigger:
             platform: state
             entity_id: !input motion_entity
             from: "on"
             to: "off"
-        - service: input_datetime.set_datetime
+        - action: input_datetime.set_datetime
           data:
             datetime: >
               {% set wait = no_motion_wait|int(300) %}
@@ -72,5 +72,5 @@ action:
         - condition: trigger
           id: uit
       sequence:
-        - service: input_boolean.turn_off
+        - action: input_boolean.turn_off
           target: !input input_boolean_target

@@ -68,11 +68,11 @@ condition:
       value_template: >
         {{ state_attr("cover.slaapkamer_noor", "current_position") < 50 }}
 
-action:
-  - service: script.zijgevel_openen
-  # - service: notify.mobile_app_gphone
+actions:
+  - action: script.zijgevel_openen
+  # - action: notify.mobile_app_gphone
   #   data_template:
   #     message: "Het zonnescherm zijgevel geopend, reden {{trigger.entity_id}} "
   - delay:
       minutes: 5
-  - service: script.zijgevel_openen
+  - action: script.zijgevel_openen

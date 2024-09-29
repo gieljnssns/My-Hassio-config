@@ -13,49 +13,49 @@ trigger:
   #   for:
   #     minutes: 3
   - platform: state
-    entity_id: binary_sensor.zithoek_aanwezigheid
+    entity_id: binary_sensor.zithoek_bezetting
     to: "off"
     for:
       minutes: 3
   - platform: state
-    entity_id: binary_sensor.danszaal_aanwezigheid
+    entity_id: binary_sensor.danszaal_bezetting
     to: "off"
     for:
       minutes: 3
   - platform: state
-    entity_id: binary_sensor.aanwezigheid_slaapkamer
+    entity_id: binary_sensor.slaapkamer_bezetting
     to: "off"
     for:
       minutes: 2
   - platform: state
-    entity_id: binary_sensor.aanwezigheid_noor
+    entity_id: binary_sensor.slaapkamer_noor_bezetting
     to: "off"
     for:
       minutes: 2
   - platform: state
-    entity_id: binary_sensor.aanwezigheid_fien
+    entity_id: binary_sensor.slaapkamer_fien_bezetting
     to: "off"
     for:
       minutes: 2
   - platform: state
-    entity_id: binary_sensor.beweging_garage
+    entity_id: binary_sensor.garage_bezetting
     to: "off"
     for:
       minutes: 5
 
-action:
-  - service: light.turn_off
+actions:
+  - action: light.turn_off
     data_template:
       entity_id: >
-        {% if trigger.entity_id == 'binary_sensor.zithoek_aanwezigheid' %}
+        {% if trigger.entity_id == 'binary_sensor.zithoek_bezetting' %}
           light.zithoek_luster
-        {% elif trigger.entity_id == 'binary_sensor.danszaal_aanwezigheid' %}
+        {% elif trigger.entity_id == 'binary_sensor.danszaal_bezetting' %}
           light.danszaal_luster, light.danszaal_spots
-        {% elif trigger.entity_id == 'binary_sensor.aanwezigheid_noor' %}
+        {% elif trigger.entity_id == 'binary_sensor.slaapkamer_noor_bezetting' %}
           light.noor
-        {% elif trigger.entity_id == 'binary_sensor.aanwezigheid_fien' %}
+        {% elif trigger.entity_id == 'binary_sensor.slaapkamer_fien_bezetting' %}
           light.fien
-        {% elif trigger.entity_id == 'binary_sensor.beweging_garage' %}
+        {% elif trigger.entity_id == 'binary_sensor.garage_bezetting' %}
           light.garage, light.garage_werkbank, light.vogelpik, light.garage_sjotterbak, light.garage_sfeerverlichting
         {% else %}
           light.slaapkamer_hoog, light.slaapkamer_spot

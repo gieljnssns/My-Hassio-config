@@ -5,12 +5,12 @@ mode: single
 trigger:
   - platform: state
     entity_id:
-      - binary_sensor.keuken_aanwezigheid
+      - binary_sensor.keuken_bezetting
     to: "on"
     id: keuken
   - platform: state
     entity_id:
-      - binary_sensor.living_aanwezigheid
+      - binary_sensor.living_bezetting
     to: "on"
     id: living
   - platform: state
@@ -54,8 +54,8 @@ condition:
   - condition: state
     entity_id: vacuum.claptrap
     state: error
-action:
-  - service: vacuum.locate
+actions:
+  - action: vacuum.locate
     target:
       entity_id: vacuum.claptrap
   # - choose:
@@ -72,7 +72,7 @@ action:
   #               entity_id: vacuum.cl4p_tp
   #               state: error
   #           sequence:
-  #             - service: vacuum.locate
+  #             - action: vacuum.locate
   #               target:
   #                 entity_id: vacuum.cl4p_tp
   # - conditions:
@@ -88,7 +88,7 @@ action:
   #               entity_id: vacuum.cl4p_tp
   #               state: error
   #           sequence:
-  #             - service: vacuum.locate
+  #             - action: vacuum.locate
   #               target:
   #                 entity_id: vacuum.cl4p_tp
   # - conditions:
@@ -104,7 +104,7 @@ action:
   #               entity_id: vacuum.cl4p_tp
   #               state: error
   #           sequence:
-  #             - service: vacuum.locate
+  #             - action: vacuum.locate
   #               target:
   #                 entity_id: vacuum.cl4p_tp
   # - conditions:
@@ -120,7 +120,7 @@ action:
   #               entity_id: vacuum.cl4p_tp
   #               state: error
   #           sequence:
-  #             - service: vacuum.locate
+  #             - action: vacuum.locate
   #               target:
   #                 entity_id: vacuum.cl4p_tp
   # - conditions:
@@ -136,7 +136,7 @@ action:
   #               entity_id: vacuum.cl4p_tp
   #               state: error
   #           sequence:
-  #             - service: vacuum.locate
+  #             - action: vacuum.locate
   #               target:
   #                 entity_id: vacuum.cl4p_tp
   # - conditions:
@@ -152,13 +152,13 @@ action:
   #               entity_id: vacuum.cl4p_tp
   #               state: error
   #           sequence:
-  #             - service: vacuum.locate
+  #             - action: vacuum.locate
   #               target:
   #                 entity_id: vacuum.cl4p_tp
   # default:
   #   - condition: state
   #     entity_id: vacuum.claptrap
   #     state: error
-  #   - service: vacuum.locate
+  #   - action: vacuum.locate
   #     target:
   #       entity_id: vacuum.claptrap

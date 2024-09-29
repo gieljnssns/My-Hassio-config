@@ -1,6 +1,6 @@
 esphome_ignore_update:
   sequence:
-    # - service: notify.mobile_app_gphone
+    # - action: notify.mobile_app_gphone
     #   data:
     #     title: ESPHome Devices
     #     # Pick any ESPHome device below to get the version numbers in your message.
@@ -20,11 +20,11 @@ esphome_ignore_update:
               | list 
             }}
         sequence:
-          - service: update.skip
+          - action: update.skip
             target:
               entity_id: "{{ repeat.item }}"
           - wait_template: "{{ is_state(repeat.item, 'off') }}"
-    # - service: notify.mobile_app_gphone
+    # - action: notify.mobile_app_gphone
     #   data:
     #     title: ESPHome Devices
     #     message: >-

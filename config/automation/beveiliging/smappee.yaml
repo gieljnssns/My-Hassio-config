@@ -95,32 +95,32 @@ trigger:
     to: "unknown"
     for:
       minutes: 1
-action:
+actions:
   - choose:
       - conditions: 
           - condition: trigger
             id: L1
         sequence:
-          - service: switch.turn_on
+          - action: switch.turn_on
             entity_id: switch.smappee_l1_herstarten
-          - service: persistent_notification.create
+          - action: persistent_notification.create
             data:
               message: Smappee L1 is herstart omdat er iets onbekend was
       - conditions: 
           - condition: trigger
             id: L2
         sequence:
-          - service: switch.turn_on
+          - action: switch.turn_on
             entity_id: switch.smappee_l2_herstarten
-          - service: persistent_notification.create
+          - action: persistent_notification.create
             data:
               message: Smappee L3 is herstart omdat er iets onbekend was
       - conditions: 
           - condition: trigger
             id: L3
         sequence:
-          - service: switch.turn_on
+          - action: switch.turn_on
             entity_id: switch.smappee_l3_herstarten
-          - service: persistent_notification.create
+          - action: persistent_notification.create
             data:
               message: Smappee L3 is herstart omdat er iets onbekend was

@@ -11,38 +11,38 @@ trigger:
     from: "off"
     to: "on"
 
-action:
+actions:
   - choose:
       - conditions:
           - condition: template
             value_template: >
               {{  states('binary_sensor.garage_deur') == "off" and 
-                  states("binary_sensor.beweging_garage") == "off"  }}
+                  states("binary_sensor.garage_bezetting") == "off"  }}
         sequence:
-          - service: light.turn_off
+          - action: light.turn_off
             data:
               entity_id: light.garage
       - conditions:
           - condition: template
             value_template: >
               {{  states('binary_sensor.garage_deur') == "off" and 
-                  states("binary_sensor.beweging_garage") == "off" and 
+                  states("binary_sensor.garage_bezetting") == "off" and 
                   states("light.garage") == "off"  }}
         sequence:
-          - service: light.turn_off
+          - action: light.turn_off
             data:
               entity_id: light.garage
       - conditions:
           - condition: template
             value_template: >
               {{  states('binary_sensor.garage_deur') == "off" and 
-                  states("binary_sensor.beweging_garage") == "on" and 
+                  states("binary_sensor.garage_bezetting") == "on" and 
                   states("light.garage") == "off"  }}
         sequence:
-          - service: light.turn_off
+          - action: light.turn_off
             data:
               entity_id: light.garage
     default:
-      - service: light.turn_on
+      - action: light.turn_on
         data:
           entity_id: light.garage

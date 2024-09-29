@@ -6,17 +6,17 @@ trigger:
   - platform: state
     entity_id: input_boolean.giel_slaapt_na_nacht
 condition: []
-action:
+actions:
   - choose:
       - conditions:
           - condition: state
             entity_id: input_boolean.giel_slaapt_na_nacht
             state:  "off"
         sequence:
-          - service: switch.turn_on
+          - action: switch.turn_on
             entity_id:
               - switch.deurbel_actief
     default:
-      - service: switch.turn_off
+      - action: switch.turn_off
         entity_id: switch.deurbel_actief
 mode: single

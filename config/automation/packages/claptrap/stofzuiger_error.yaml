@@ -23,29 +23,29 @@ condition:
       - condition: template
         value_template: >
           {{ (as_timestamp(now()) - as_timestamp(state_attr("automation.stofzuiger_dweilen_beneden", "last_triggered"))) < 10800 }}
-action:
+actions:
   - choose:
       - conditions:
           - condition: template
             value_template: >
               {{  states("counter.stofzuiger") is in ["5", "6"] }}
         sequence:
-          - service: counter.set_value
+          - action: counter.set_value
             data:
               value: 3
             target:
               entity_id: counter.stofzuiger
-          - service: select.select_option
+          - action: select.select_option
             target:
               entity_id: select.claptrap_mop_mode
             data:
               option: Standard
-          # - service: script.roborock_set_mopping_route
+          # - action: script.roborock_set_mopping_route
           #   target:
           #     entity_id: vacuum.cl4p_tp
           #   data:
           #     route: "standard"
     default:
-      - service: counter.decrement
+      - action: counter.decrement
         target:
           entity_id: counter.stofzuiger

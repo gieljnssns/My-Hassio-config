@@ -14,8 +14,8 @@ condition:
     - condition: template
       value_template: >
         {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 30 }}
-action:
-  - service: >
+actions:
+  - action: >
       {% if trigger.to_state.state == 'on' %}
         switch.turn_on
       {% else %}

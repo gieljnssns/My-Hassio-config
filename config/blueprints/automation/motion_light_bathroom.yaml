@@ -53,16 +53,18 @@ trigger:
     at: !input input_datetime_target
     id: uit
     
-action:
+actions:
+  - delay:
+      milliseconds: 200
   - choose:
       - conditions:
           - condition: state
             entity_id: !input occupancy_target
             state: "on"
         sequence:
-          - service: light.turn_on
+          - action: light.turn_on
             target: !input light_target
-          - service: input_datetime.set_datetime
+          - action: input_datetime.set_datetime
             data:
               datetime: >
                 {{ now() + timedelta(hours=1) }}
@@ -73,7 +75,7 @@ action:
               entity_id: !input occupancy_target
               from: "on"
               to: "off"
-          - service: input_datetime.set_datetime
+          - action: input_datetime.set_datetime
             data:
               datetime: >
                 {% set wait = no_motion_wait|int(210) %}
@@ -84,25 +86,25 @@ action:
           - condition: trigger
             id: uit
         sequence:
-          - service: light.turn_off
+          - action: light.turn_off
             target: !input light_target
-          - service: light.turn_off
+          - action: light.turn_off
             entity_id: light.badkamer_pombak
     default:
-      - service: input_datetime.set_datetime
+      - action: input_datetime.set_datetime
         data:
           datetime: >
             {{ now() + timedelta(seconds=120) }}
         target:
           entity_id: !input input_datetime_target
-  # - service: light.turn_on
+  # - action: light.turn_on
   #   target: !input light_target
   # - wait_for_trigger:
   #     platform: state
   #     entity_id: !input entity
   #     from: "on"
   #     to: "off"
-  # - service: input_datetime.set_datetime
+  # - action: input_datetime.set_datetime
   #   data:
   #     datetime: >
   #       {% set wait = no_motion_wait|int(210) %}
@@ -110,5 +112,5 @@ action:
   #   target:
   #     entity_id: !input input_datetime_target
   # - delay: !input no_motion_wait
-  # - service: light.turn_off
+  # - action: light.turn_off
   #   target: !input light_target

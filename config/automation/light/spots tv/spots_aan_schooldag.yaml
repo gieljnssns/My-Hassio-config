@@ -2,7 +2,7 @@ alias: Spots aan schooldag of late
 id: 463b0a9c-0f70-4ccf-b095-52f8496c4361
 trigger:
   platform: state
-  entity_id: binary_sensor.living_aanwezigheid
+  entity_id: binary_sensor.living_bezetting
   to: "on"
 condition:
   condition: and
@@ -32,8 +32,8 @@ condition:
         - condition: state
           entity_id: binary_sensor.v_late
           state: "on"
-action:
-  - service: light.turn_on
+actions:
+  - action: light.turn_on
     entity_id: light.spots_tv
     data:
       profile: reading

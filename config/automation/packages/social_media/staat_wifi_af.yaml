@@ -24,13 +24,13 @@ trigger:
   #   entity_id: device_tracker.fphone_detect_2
   #   id: fienwifi
   #   to: "home"
-action:
+actions:
   - choose:
       # - conditions:
       #     - condition: trigger
       #       id: noorwifi
       #   sequence:
-      #     - service: notify.mobile_app_nphone
+      #     - action: notify.mobile_app_nphone
       #       data:
       #         message: Staat privemodus weer aan in uw wifi instellingen?
       #         data:
@@ -49,7 +49,7 @@ action:
           #   entity_id: sensor.nphone_bt_thuis
           #   above: 43
         sequence:
-          - service: notify.mobile_app_nphone
+          - action: notify.mobile_app_nphone
             data:
               message: Hedde wifi afgezet? Binnen 5 minuten wordt uwe 4G ook afgezet...
               data:
@@ -60,7 +60,7 @@ action:
           - condition: state
             entity_id: device_tracker.nphone_detect
             state: "not_home"
-          - service: notify.giel_en_martine
+          - action: notify.giel_en_martine
             data:
               message: De kans bestaat dat ons Noor haar wifi heeft afgezet om toch TikTok filmpjes te kunnen zien.
               data:
@@ -70,7 +70,7 @@ action:
       #     - condition: trigger
       #       id: fienwifi
       #   sequence:
-      #     - service: notify.mobile_app_fphone
+      #     - action: notify.mobile_app_fphone
       #       data:
       #         message: Staat privemodus weer aan in uw wifi instellingen?
       #         data:
@@ -89,7 +89,7 @@ action:
           #   entity_id: sensor.fphone_bt_thuis
           #   above: 43
         sequence:
-          - service: notify.mobile_app_fphone
+          - action: notify.mobile_app_fphone
             data:
               message: Hedde wifi afgezet? Binnen 5 minuten wordt uwe 4G ook afgezet...
               data:
@@ -100,7 +100,7 @@ action:
           - condition: state
             entity_id: device_tracker.fphone_detect
             state: "not_home"
-          - service: notify.giel_en_martine
+          - action: notify.giel_en_martine
             data:
               message: De kans bestaat dat ons Fien haar wifi heeft afgezet om toch met de kampioenen te kunnen lachen.
               data:

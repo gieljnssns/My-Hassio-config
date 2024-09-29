@@ -28,7 +28,7 @@ trigger:
   #   entity_id: input_button.afwasmachien
   #   id: afwasmachien
 condition: []
-action:
+actions:
   - variables:
       who: >
         {% if trigger.event.context.user_id == '14a0b456772941eda81466d1807619b7' %}
@@ -50,22 +50,22 @@ action:
                       {{ states("input_boolean.wasmachien_starten") == "on" 
                           and states("input_boolean.emhass_wasmachien") != "on" }}
                 sequence:
-                  - service: switch.turn_on
+                  - action: switch.turn_on
                     target:
                       entity_id: switch.wasmachien
-                  - service: homeassistant.turn_off
+                  - action: homeassistant.turn_off
                     target:
                       entity_id: input_boolean.wasmachien_starten
             default:
-              - service: input_boolean.turn_off
+              - action: input_boolean.turn_off
                 target:
                   entity_id: input_boolean.wasmachien_staat_op
               - delay:
                   seconds: 1
-              - service: switch.turn_off
+              - action: switch.turn_off
                 target:
                   entity_id: switch.wasmachien
-              - service: "{{ who }}"
+              - action: "{{ who }}"
                 data:
                   message: "Wanneer moet het wasmachien klaar zijn?"
                   data:
@@ -80,13 +80,13 @@ action:
                         title: "Het maakt niet uit."
                       - action: "CHOOSE"
                         title: "Zelf een uur kiezen."
-              # - service: homeassistant.turn_on
+              # - action: homeassistant.turn_on
               #   target:
               #     entity_id: input_boolean.wasmachien_starten
-              # - service: rest_command.naive_mpc_optim
+              # - action: rest_command.naive_mpc_optim
               # - delay:
               #     seconds: 40
-              # - service: rest_command.publish_data
+              # - action: rest_command.publish_data
       - conditions:
           - condition: trigger
             id: afwasmachien
@@ -98,22 +98,22 @@ action:
                       {{ states("input_boolean.afwasmachien_starten") == "on" 
                           and states("input_boolean.emhass_afwasmachien") != "on" }}
                 sequence:
-                  - service: switch.turn_on
+                  - action: switch.turn_on
                     target:
                       entity_id: switch.afwasmachien
-                  - service: homeassistant.turn_off
+                  - action: homeassistant.turn_off
                     target:
                       entity_id: input_boolean.afwasmachien_starten
             default:
-              - service: input_boolean.turn_off
+              - action: input_boolean.turn_off
                 target:
                   entity_id: input_boolean.afwasmachien_staat_op
               - delay:
                   seconds: 1
-              - service: switch.turn_off
+              - action: switch.turn_off
                 target:
                   entity_id: switch.afwasmachien
-              - service: "{{ who }}"
+              - action: "{{ who }}"
                 data:
                   message: "Wanneer moet het afwasmachien klaar zijn?"
                   data:
@@ -128,7 +128,7 @@ action:
                         title: "Maakt niet uit."
                       - action: "CHOOSE"
                         title: "Zelf een uur kiezen."
-              # - service: homeassistant.turn_on
+              # - action: homeassistant.turn_on
               #   target:
               #     entity_id: input_boolean.afwasmachien_starten
       - conditions:
@@ -142,22 +142,22 @@ action:
                       {{ states("input_boolean.droogkast_starten") == "on" 
                           and states("input_boolean.emhass_droogkast") != "on" }}
                 sequence:
-                  - service: switch.turn_on
+                  - action: switch.turn_on
                     target:
                       entity_id: switch.droogkast
-                  - service: homeassistant.turn_off
+                  - action: homeassistant.turn_off
                     target:
                       entity_id: input_boolean.droogkast_starten
             default:
-              - service: input_boolean.turn_off
+              - action: input_boolean.turn_off
                 target:
                   entity_id: input_boolean.droogkast_staat_op
               - delay:
                   seconds: 1
-              - service: switch.turn_off
+              - action: switch.turn_off
                 target:
                   entity_id: switch.droogkast
-              - service: "{{ who }}"
+              - action: "{{ who }}"
                 data:
                   message: "Wanneer moet de droogkast klaar zijn?"
                   data:
@@ -172,6 +172,6 @@ action:
                         title: "Maakt niet uit."
                       - action: "CHOOSE"
                         title: "Zelf een uur kiezen."
-              # - service: homeassistant.turn_on
+              # - action: homeassistant.turn_on
               #   target:
               #     entity_id: input_boolean.droogkast_starten

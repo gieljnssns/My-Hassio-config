@@ -6,12 +6,12 @@ trigger:
     to: "off"
     for:
       minutes: 10
-action:
-  - service: homeassistant.turn_off
+actions:
+  - action: homeassistant.turn_off
     entity_id:
       - script.rafc2_1
       - script.rafc2_2
-  - service: >-
+  - action: >-
       {% if is_state('sensor.dark_inside', 'true') %}
         light.turn_on
       {% elif is_state('sensor.dark_inside', 'false') %}
@@ -24,7 +24,7 @@ action:
     conditions:
       - condition: template
         value_template: "{{ is_state('sensor.dark_inside', 'true') }} "
-  - service: light.turn_on
+  - action: light.turn_on
     entity_id: light.spots_tv
     data:
       profile: reading

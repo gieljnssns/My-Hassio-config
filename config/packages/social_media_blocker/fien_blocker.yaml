@@ -19,11 +19,11 @@ switch:
         icon_template: mdi:link-lock
         friendly_name: Fien block
         turn_on:
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             data:
               entity_id: input_boolean.fien_blocker
         turn_off:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             data:
               entity_id: input_boolean.fien_blocker
 
@@ -32,11 +32,11 @@ switch:
         icon_template: mdi:lan-disconnect
         friendly_name: Fien block all
         turn_on:
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             data:
               entity_id: input_boolean.fien_blocker_all
         turn_off:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             data:
               entity_id: input_boolean.fien_blocker_all
 
@@ -45,11 +45,11 @@ switch:
         icon_template: mdi:snapchat
         friendly_name: Fien block snapchat
         turn_on:
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             data:
               entity_id: input_boolean.fien_snapchat_blocker
         turn_off:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             data:
               entity_id: input_boolean.fien_snapchat_blocker
 
@@ -60,8 +60,8 @@ automation:
       platform: state
       entity_id: input_boolean.fien_blocker
       to: "on"
-    action:
-      - service: adguard.add_url
+    actions:
+      - action: adguard.add_url
         data:
           url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/fien.txt"
           name: Fien
@@ -72,8 +72,8 @@ automation:
       platform: state
       entity_id: input_boolean.fien_blocker
       to: "off"
-    action:
-      - service: adguard.remove_url
+    actions:
+      - action: adguard.remove_url
         data:
           url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/fien.txt"
 
@@ -83,8 +83,8 @@ automation:
       platform: state
       entity_id: input_boolean.fien_blocker_all
       to: "on"
-    action:
-      - service: adguard.add_url
+    actions:
+      - action: adguard.add_url
         data:
           name: Fien all
           url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/no_internet_fien.txt"
@@ -95,8 +95,8 @@ automation:
       platform: state
       entity_id: input_boolean.fien_blocker_all
       to: "off"
-    action:
-      - service: adguard.remove_url
+    actions:
+      - action: adguard.remove_url
         data:
           url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/no_internet_fien.txt"
 
@@ -106,8 +106,8 @@ automation:
       platform: state
       entity_id: input_boolean.fien_snapchat_blocker
       to: "on"
-    action:
-      - service: adguard.add_url
+    actions:
+      - action: adguard.add_url
         data:
           name: Fien snapchat
           url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/fien_snapchat.txt"
@@ -118,7 +118,7 @@ automation:
       platform: state
       entity_id: input_boolean.fien_snapchat_blocker
       to: "off"
-    action:
-      - service: adguard.remove_url
+    actions:
+      - action: adguard.remove_url
         data:
           url: "https://raw.githubusercontent.com/gieljnssns/My-Hassio-config/master/documentation/adguard filters/block/fien_snapchat.txt"

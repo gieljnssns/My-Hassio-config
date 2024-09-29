@@ -2,18 +2,18 @@
   id: ea3527a0-1e19-4aeb-9dde-dee3140ef424
   trigger:
     - platform: state
-      entity_id: binary_sensor.beweging_garage
+      entity_id: binary_sensor.garage_bezetting
       to: 'on'
     - platform: state
-      entity_id: binary_sensor.beweging_garage
+      entity_id: binary_sensor.garage_bezetting
       to: 'off'
-  action:
-    service: climate.set_hvac_mode
-    data_template:
-      entity_id: climate.garage
-      hvac_mode: >
-        {% if is_state('binary_sensor.beweging_garage', 'on') %}
-          heat
-        {% elif is_state('binary_sensor.beweging_garage', 'off') %}
-          off
-        {% endif %}
+  actions:
+    - action: climate.set_hvac_mode
+      data_template:
+        entity_id: climate.garage
+        hvac_mode: >
+          {% if is_state('binary_sensor.garage_bezetting', 'on') %}
+            heat
+          {% elif is_state('binary_sensor.garage_bezetting', 'off') %}
+            off
+          {% endif %}

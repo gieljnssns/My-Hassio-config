@@ -1,17 +1,17 @@
 sonos_pauze_spreek:
   sequence:
-    - service: mass.queue_command
+    - action: mass.queue_command
       data:
         command: snapshot_create
       target:
         entity_id: "{{ sonos_entity }}"
     - delay: "00:00:03"
-    - service: media_player.volume_set
+    - action: media_player.volume_set
       data_template:
         entity_id: "{{ sonos_entity }}"
         volume_level: "{{ volume }}"
     - delay: "00:00:01"
-    - service: >
+    - action: >
         {% if is_state('input_select.tts', 'VoiceRSS') %}
           tts.voicerss_say
         {% elif is_state('input_select.tts', 'Google') %}
@@ -33,13 +33,13 @@ sonos_pauze_spreek:
     - delay: "00:00:03"
     - wait_template: "{{ states('binary_sensor.keuken_not_playing') == 'on' }}"
     - delay: "00:00:01"
-    - service: mass.queue_command
+    - action: mass.queue_command
       data:
         command: snapshot_restore
       target:
         entity_id: "{{ sonos_entity }}"
     - delay: "00:00:03"
-    - service: >
+    - action: >
         {% if states.media_player.mass_keuken.attributes.media_content_id is defined %}
           {% if 'http://192.168.79.54:8123/api' in state_attr("media_player.mass_keuken", "media_content_id") %}
             script.sonos_pauze_spreek_nl
@@ -51,13 +51,13 @@ sonos_pauze_spreek:
         {% endif %}
       data_template:
         entity_id: "{{ sonos_entity }}"
-    # - service: >
+    # - action: >
     #     {% if state_attr('media_player.mass_keuken', 'media_artist') == 'nl-nl' or state_attr('media_player.mass_keuken', 'media_artist') == 'nl' or state_attr('media_player.mass_keuken', 'media_artist') == 'nl-be' %}
     #       script.sonos_pauze_spreek_nl
     #     {% else %}
     #       script.sonos_pauze_spreek_non_nl
     #     {% endif %}
-    # - service: >
+    # - action: >
     #     {% if states.media_player.mass_keuken.attributes.media_title is defined %}
     #       {% if 'nl-nl' in state_attr("media_player.mass_keuken", "media_title") or 'nl' in state_attr("media_player.mass_keuken", "media_title") or 'nl-be' in state_attr("media_player.mass_keuken", "media_title") %}
     #         script.sonos_pauze_spreek_nl

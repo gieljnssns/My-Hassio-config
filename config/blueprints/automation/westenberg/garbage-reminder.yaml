@@ -69,8 +69,8 @@ trigger:
 condition:
   condition: template
   value_template: '{{ sensors_tomorrow != '''' }}'
-action:
-  service: !input 'notifier'
+actions:
+  action: !input 'notifier'
   data:
     title: '{{ reminder_title }}'
     message: '{{ reminder_message }}{{ sensors_tomorrow }}'

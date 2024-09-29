@@ -3,8 +3,8 @@ id: 175fe341-f1a1-4a3a-b86f-4c28f57e3e80
 trigger:
   - platform: state
     entity_id: input_boolean.op_verlof
-action:
-  - service: climate.set_preset_mode
+actions:
+  - action: climate.set_preset_mode
     entity_id: climate.living
     data_template:
       preset_mode: >
@@ -14,7 +14,7 @@ action:
           Schedule
         {% endif %}
 
-  - service: climate.set_hvac_mode
+  - action: climate.set_hvac_mode
     entity_id:
       - climate.fien
       - climate.badkamer

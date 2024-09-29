@@ -25,29 +25,29 @@ trigger:
     for:
       minutes: 1
     id: fien_snapchat
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
             id: noor_snapchat
         sequence:
-          - service: script.check_todo
+          - action: script.check_todo
             data:
               check: ["Uniform"]
               todo: noor_snapchat
               action: needs_action
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             entity_id: input_boolean.noor_snapchat_blocker
       - conditions:
           - condition: trigger
             id: fien_snapchat
         sequence:
-          - service: script.check_todo
+          - action: script.check_todo
             data:
               check: ["Uniform"]
               todo: fien_snapchat
               action: needs_action
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             entity_id: input_boolean.fien_snapchat_blocker
       - conditions:
           - condition: time
@@ -60,14 +60,14 @@ action:
                     entity_id: binary_sensor.schooldag
                     state: "on"
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Piano"]
                   #     todo: noor_todo
                   #     action: needs_action
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Drummen"]
                   #     todo: fien_todo
@@ -77,14 +77,14 @@ action:
                     value_template: >
                       {{ now().hour == 3 }}
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Piano"]
                   #     todo: noor_todo
                   #     action: needs_action
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Drummen"]
                   #     todo: fien_todo
@@ -101,14 +101,14 @@ action:
                     entity_id: binary_sensor.schooldag
                     state: "on"
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Piano"]
                   #     todo: noor_todo
                   #     action: needs_action
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Drummen"]
                   #     todo: fien_todo
@@ -118,14 +118,14 @@ action:
                     value_template: >
                       {{ now().hour == 3 }}
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Piano"]
                   #     todo: noor_todo
                   #     action: needs_action
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Drummen"]
                   #     todo: fien_todo
@@ -141,14 +141,14 @@ action:
                     entity_id: binary_sensor.schooldag
                     state: "on"
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Uniform"]
                   #     todo: noor_todo
                   #     action: needs_action
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Uniform"]
                   #     todo: fien_todo
@@ -158,14 +158,14 @@ action:
                     value_template: >
                       {{ now().hour == 3 }}
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Piano"]
                   #     todo: noor_todo
                   #     action: needs_action
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Drummen"]
                   #     todo: fien_todo
@@ -181,14 +181,14 @@ action:
                     entity_id: binary_sensor.schooldag
                     state: "on"
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Piano"]
                   #     todo: noor_todo
                   #     action: needs_action
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Drummen"]
                   #     todo: fien_todo
@@ -198,14 +198,14 @@ action:
                     value_template: >
                       {{ now().hour == 3 }}
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Piano"]
                   #     todo: noor_todo
                   #     action: needs_action
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Drummen"]
                   #     todo: fien_todo
@@ -221,14 +221,14 @@ action:
                     entity_id: binary_sensor.schooldag
                     state: "on"
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
-                  - service: script.check_todo
+                  - action: script.check_todo
                     data:
                       check: ["Wasmand", "Brooddoos"]
                       todo: noor_todo
                       action: needs_action
-                  - service: script.check_todo
+                  - action: script.check_todo
                     data:
                       check: ["Wasmand", "Brooddoos"]
                       todo: fien_todo
@@ -238,14 +238,14 @@ action:
                     value_template: >
                       {{ now().hour == 3 }}
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Piano"]
                   #     todo: noor_todo
                   #     action: needs_action
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Drummen"]
                   #     todo: fien_todo
@@ -261,7 +261,7 @@ action:
                     value_template: >
                       {{ now().hour == 3 }}
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
       - conditions:
           - condition: time
@@ -274,14 +274,14 @@ action:
                     value_template: >
                       {{ now().hour == 3 }}
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Piano"]
                   #     todo: noor_todo
                   #     action: needs_action
-                  # - service: script.check_todo
+                  # - action: script.check_todo
                   #   data:
                   #     check: ["Drummen"]
                   #     todo: fien_todo
@@ -291,21 +291,21 @@ action:
                     value_template: |
                       {{ now().hour == 17 }}
                 sequence:
-                  - service: input_boolean.turn_on
+                  - action: input_boolean.turn_on
                     entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
       - conditions:
           - condition: template
             value_template: >
               {{ now().hour == 1 }}
         sequence:
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
-          # - service: script.check_todo
+          # - action: script.check_todo
           #   data:
           #     check: ["Piano"]
           #     todo: noor_todo
           #     action: needs_action
-          # - service: script.check_todo
+          # - action: script.check_todo
           #   data:
           #     check: ["Drummen"]
           #     todo: fien_todo

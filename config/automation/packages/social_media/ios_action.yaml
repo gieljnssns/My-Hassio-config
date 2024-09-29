@@ -61,157 +61,157 @@ trigger:
     id: "nix_fien"
     event_data:
       action: "NIX_FIEN"
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
             id: "tiktok"
         sequence:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id: input_boolean.noor_blocker
-          - service: notify.mobile_app_nphone
+          - action: notify.mobile_app_nphone
             data:
               message: "Alles is terug beschikbaar, laat je gaan. Slechte muziek en rare dansjes staan klaar voor jou."
       - conditions:
           - condition: trigger
             id: "geen_tiktok"
         sequence:
-          - service: script.check_todo
+          - action: script.check_todo
             data:
               check: ["Wasmand"]
               todo: noor_todo
               action: needs_action
-          - service: notify.mobile_app_nphone
+          - action: notify.mobile_app_nphone
             data:
               message: "Zijde zeker da ge me alle klaar zij?"
       - conditions:
           - condition: trigger
             id: "snapchat_noor"
         sequence:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id: input_boolean.noor_snapchat_blocker
-          - service: notify.mobile_app_nphone
+          - action: notify.mobile_app_nphone
             data:
               message: "De wereld gaat voor een klein beetje terug open."
           - alias: "Woensdag"
             condition: time
             weekday:
               - "wed"
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id: input_boolean.noor_blocker
       - conditions:
           - condition: trigger
             id: "geen_snapchat_noor"
         sequence:
-          - service: script.check_todo
+          - action: script.check_todo
             data:
               check: ["Uniform"]
               todo: noor_snapchat
               action: needs_action
-          - service: notify.mobile_app_nphone
+          - action: notify.mobile_app_nphone
             data:
               message: "Zijde zeker da ge omgekleed zij?"
       - conditions:
           - condition: trigger
             id: "roblox"
         sequence:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id: input_boolean.fien_blocker
-          - service: notify.mobile_app_fphone
+          - action: notify.mobile_app_fphone
             data:
               message: "Roblox is er klaar voor, en bij de kampioenen is er volgens mij ook weer een misverstand gebeurd."
       - conditions:
           - condition: trigger
             id: "geen_roblox"
         sequence:
-          - service: script.check_todo
+          - action: script.check_todo
             data:
               check: ["Wasmand"]
               todo: fien_todo
               action: needs_action
-          - service: notify.mobile_app_fphone
+          - action: notify.mobile_app_fphone
             data:
               message: "Zijde zeker da ge me alle klaar zij?"
       - conditions:
           - condition: trigger
             id: "snapchat_fien"
         sequence:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id: input_boolean.fien_snapchat_blocker
-          - service: notify.mobile_app_fphone
+          - action: notify.mobile_app_fphone
             data:
               message: "De wereld gaat voor een klein beetje terug open."
           - alias: "Woensdag"
             condition: time
             weekday:
               - "wed"
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id: input_boolean.fien_blocker
       - conditions:
           - condition: trigger
             id: "geen_snapchat_fien"
         sequence:
-          - service: script.check_todo
+          - action: script.check_todo
             data:
               check: ["Uniform"]
               todo: fien_snapchat
               action: needs_action
-          - service: notify.mobile_app_fphone
+          - action: notify.mobile_app_fphone
             data:
               message: "Zijde zeker da ge omgekleed zij?"
       - conditions:
           - condition: trigger
             id: "alles_fien"
         sequence:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id: input_boolean.fien_snapchat_blocker
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id: input_boolean.fien_blocker
-          - service: notify.mobile_app_fphone
+          - action: notify.mobile_app_fphone
             data:
               message: "De wereld gaat voor een klein beetje terug open."
       - conditions:
           - condition: trigger
             id: "nix_fien"
         sequence:
-          - service: script.check_todo
+          - action: script.check_todo
             data:
               check: ["Wasmand"]
               todo: fien_todo
               action: needs_action
-          - service: script.check_todo
+          - action: script.check_todo
             data:
               check: ["Uniform"]
               todo: fien_snapchat
               action: needs_action
-          - service: notify.mobile_app_fphone
+          - action: notify.mobile_app_fphone
             data:
               message: "Zijde zeker da ge me alles klaar zij?"
       - conditions:
           - condition: trigger
             id: "alles_noor"
         sequence:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id: input_boolean.noor_snapchat_blocker
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id: input_boolean.noor_blocker
-          - service: notify.mobile_app_nphone
+          - action: notify.mobile_app_nphone
             data:
               message: "De wereld gaat voor een klein beetje terug open."
       - conditions:
           - condition: trigger
             id: "nix_noor"
         sequence:
-          - service: script.check_todo
+          - action: script.check_todo
             data:
               check: ["Wasmand"]
               todo: noor_todo
               action: needs_action
-          - service: script.check_todo
+          - action: script.check_todo
             data:
               check: ["Uniform"]
               todo: noor_snapchat
               action: needs_action
-          - service: notify.mobile_app_nphone
+          - action: notify.mobile_app_nphone
             data:
               message: "Zijde zeker da ge me alles klaar zij?"

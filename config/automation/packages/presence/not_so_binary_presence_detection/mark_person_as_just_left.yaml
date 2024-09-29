@@ -47,8 +47,8 @@ condition:
         {% elif trigger.id == 'fien' %}
           {{ is_state('binary_sensor.fien_thuis_nacht', 'off') }}
         {% endif %}
-action:
-  - service: input_select.select_option
+actions:
+  - action: input_select.select_option
     data_template:
       entity_id: >
         {% if trigger.id == 'giel' %}

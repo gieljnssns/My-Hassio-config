@@ -5,15 +5,15 @@ trigger:
     value_template: "{{ now().weekday() == 4 and now().hour == 14 }}"
   - platform: template
     value_template: "{{ now().weekday() == 6 and now().hour == 23 }}"
-action:
-  - service: >
+actions:
+  - action: >
       {% if now().weekday() == 4 %}
         automation.turn_on
       {% else %}
         automation.turn_off
       {% endif %}
     entity_id: automation.verwarming_bij_aanwezigheid_garage
-  - service: climate.set_hvac_mode
+  - action: climate.set_hvac_mode
     entity_id: climate.garage
     data:
       hvac_mode: "off"

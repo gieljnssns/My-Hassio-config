@@ -11,8 +11,8 @@ trigger:
   - platform: state
     entity_id: binary_sensor.waskot_rookmelder
     to: "on"
-action:
-  - service: notify.iedereen
+actions:
+  - action: notify.iedereen
     data_template:
       title: "Alarm Home-Assistant."
       message: >
@@ -29,7 +29,7 @@ action:
             name: "default"
             # critical: 1
             volume: 1.0
-  - service: script.turn_on
+  - action: script.turn_on
     entity_id:
       - script.alarm_lights1
       - script.alarm_sound

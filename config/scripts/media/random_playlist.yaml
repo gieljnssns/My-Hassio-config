@@ -1,6 +1,6 @@
 random_playlist:
   sequence:
-    - service: todo.get_items
+    - action: todo.get_items
       data:
         status: needs_action
       target:
@@ -10,13 +10,13 @@ random_playlist:
         playlist: >
           {%- set playlist = playlists['todo.playlists']['items'] | list %}
           {{ playlist | random }}
-    - service: media_player.shuffle_set
+    - action: media_player.shuffle_set
       data:
         shuffle: true
       target:
         entity_id: >
           {{ sonos_entity }}
-    - service: mass.play_media
+    - action: mass.play_media
       data:
         enqueue: replace
         radio_mode: >
@@ -28,7 +28,7 @@ random_playlist:
       target:
         entity_id: >
           {{ sonos_entity }}
-    - service: todo.update_item
+    - action: todo.update_item
       target:
         entity_id:
           - todo.playlists
@@ -36,13 +36,13 @@ random_playlist:
         status: completed
         item: >
           {{ playlist.uid }}
-    - service: input_text.set_value
+    - action: input_text.set_value
       target:
         entity_id: input_text.random_muziek
       data:
         value: >
           {{ playlist.summary }}
-    # - service: homeassistant.update_entity
+    # - action: homeassistant.update_entity
     #   target:
     #     entity_id: sensor.random_music
     # - choose:
@@ -51,16 +51,16 @@ random_playlist:
     #           value_template: >
     #             {{ is_state_attr("sensor.random_music", "type", "playlist") }}
     #       sequence:
-    #         - service: media_player.shuffle_set
+    #         - action: media_player.shuffle_set
     #           data:
     #             shuffle: true
     #           target:
     #             entity_id: "{{ sonos_entity }}"
-    #         # - service: mass.queue_command
+    #         # - action: mass.queue_command
     #         #   data:
     #         #     command: shuffle_on
     #         #     player_id: "{{ sonos_entity }}"
-    #         - service: mass.play_media
+    #         - action: mass.play_media
     #           data:
     #             enqueue: replace
     #             radio_mode: >
@@ -69,7 +69,7 @@ random_playlist:
     #               {{ states("sensor.random_music") }}
     #           target:
     #             entity_id: "{{ sonos_entity }}"
-    #         # - service: mass.queue_command
+    #         # - action: mass.queue_command
     #         #   data:
     #         #     enqueue_mode: replace
     #         #     command: play_media
@@ -79,23 +79,23 @@ random_playlist:
     #         #     uri: >
     #         #       {{ states("sensor.random_music") }}
     #   default:
-    #     - service: media_player.shuffle_set
+    #     - action: media_player.shuffle_set
     #       data:
     #         shuffle: false
     #       target:
     #         entity_id: "{{ sonos_entity }}"
-    #     # - service: mass.queue_command
+    #     # - action: mass.queue_command
     #     #   data:
     #     #     command: shuffle_off
     #     #     player_id: "{{ sonos_entity }}"
-    #     - service: mass.play_media
+    #     - action: mass.play_media
     #       data:
     #         enqueue: replace
     #         media_id: >
     #           {{ states("sensor.random_music") }}
     #       target:
     #         entity_id: "{{ sonos_entity }}"
-    #     # - service: mass.queue_command
+    #     # - action: mass.queue_command
     #     #   data:
     #     #     enqueue_mode: replace
     #     #     command: play_media

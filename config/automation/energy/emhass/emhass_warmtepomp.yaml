@@ -18,20 +18,20 @@ trigger:
       {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 60 }}
   - platform: event
     event_type: automation_reloaded
-action:
+actions:
   - choose:
       - conditions:
           - condition: numeric_state
             entity_id: sensor.emhass_warmtepomp
             above: 1
         sequence:
-          - service: homeassistant.turn_on
+          - action: homeassistant.turn_on
             target:
               entity_id: input_boolean.emhass_warmtepomp
           - condition: state
             entity_id: binary_sensor.warmtepomp_aan_delay_off
             state: "off"
-          - service: homeassistant.turn_on
+          - action: homeassistant.turn_on
             target:
               entity_id: switch.verwarming
       - conditions:
@@ -39,9 +39,9 @@ action:
             entity_id: sensor.emhass_warmtepomp
             below: 1
         sequence:
-          - service: homeassistant.turn_off
+          - action: homeassistant.turn_off
             target:
               entity_id: input_boolean.emhass_warmtepomp
-          - service: homeassistant.turn_off
+          - action: homeassistant.turn_off
             target:
               entity_id: switch.verwarming

@@ -5,9 +5,9 @@
       unique_id: fe4e90a2-1db1-47a9-a0f3-024a9b0c572b
       value_template: "{{ is_state('script.playstation_on', 'on') }}"
       turn_on:
-        service: script.playstation_on
+        action: script.playstation_on
       turn_off:
-        service: script.playstation_off
+        action: script.playstation_off
       icon_template: mdi:sony-playstation
 
     badkamer2keuken:
@@ -16,14 +16,14 @@
         {{ state_attr('media_player.mass_badkamer', 'group_leader') | string == 
           "RINCON_5CAAFD0F5D3C01400" | string }}
       turn_on:
-        - service: media_player.join
+        - action: media_player.join
           data:
             group_members:
               - media_player.mass_badkamer
           target:
             entity_id: media_player.mass_keuken
       turn_off:
-        - service: media_player.unjoin
+        - action: media_player.unjoin
           target:
             entity_id: media_player.mass_badkamer
       icon_template: mdi:music-box-multiple
@@ -33,14 +33,14 @@
         {{ state_attr('media_player.mass_living_2', 'group_leader') | string == 
           "RINCON_5CAAFD0F5D3C01400" | string }}
       turn_on:
-        - service: media_player.join
+        - action: media_player.join
           data:
             group_members:
               - media_player.mass_living_2
           target:
             entity_id: media_player.mass_keuken
       turn_off:
-        - service: media_player.unjoin
+        - action: media_player.unjoin
           target:
             entity_id: media_player.mass_living_2
       icon_template: mdi:music-box-multiple
@@ -50,14 +50,14 @@
         {{ state_attr('media_player.mass_2c', 'group_leader') | string == 
           "RINCON_5CAAFD0F5D3C01400" | string }}
       turn_on:
-        - service: media_player.join
+        - action: media_player.join
           data:
             group_members:
               - media_player.mass_2c
           target:
             entity_id: media_player.mass_keuken
       turn_off:
-        - service: media_player.unjoin
+        - action: media_player.unjoin
           target:
             entity_id: media_player.mass_2c
       icon_template: mdi:music-box-multiple
@@ -67,36 +67,36 @@
         {{ state_attr('media_player.mass_move', 'group_leader') | string == 
           "RINCON_5CAAFD0F5D3C01400" | string }}
       turn_on:
-        - service: media_player.join
+        - action: media_player.join
           data:
             group_members:
               - media_player.mass_move
           target:
             entity_id: media_player.mass_keuken
       turn_off:
-        - service: media_player.unjoin
+        - action: media_player.unjoin
           target:
             entity_id: media_player.mass_move
       icon_template: mdi:music-box-multiple
     incognito:
       unique_id: 5a6ddcd0-8510-48bb-85c9-97900d867c70
       turn_on:
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id: switch.tuin_detect, switch.afdak_detect
-        - service: automation.turn_off
+        - action: automation.turn_off
           target:
             entity_id: automation.licht_hof_aan, automation.den_hof_occupancy, automation.garage_occupancy
-        - service: automation.turn_on
+        - action: automation.turn_on
           target:
             entity_id: automation.poort_gphone
       turn_off:
-        - service: switch.turn_on
+        - action: switch.turn_on
           target:
             entity_id: switch.tuin_detect, switch.afdak_detect
-        - service: automation.turn_on
+        - action: automation.turn_on
           target:
             entity_id: automation.licht_hof_aan, automation.den_hof_occupancy, automation.garage_occupancy
-        - service: automation.turn_off
+        - action: automation.turn_off
           target:
             entity_id: automation.poort_gphone

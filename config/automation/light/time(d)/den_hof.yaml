@@ -27,7 +27,7 @@ trigger:
     # to: "on"
     id: door
   - platform: state
-    entity_id: binary_sensor.beweging_hof
+    entity_id: binary_sensor.tuin_bezetting
     to: "on"
     id: occupancy
   - platform: state
@@ -38,7 +38,7 @@ condition:
   - condition: state
     entity_id: sensor.dark_outside
     state: "true"
-action:
+actions:
   - choose:
       - conditions:
           - alias: "Tussen 00u en 7u"
@@ -47,7 +47,7 @@ action:
             before: "07:00:00"
 
         sequence:
-          - service: light.turn_on
+          - action: light.turn_on
             data:
               brightness_pct: 60
             target:
@@ -56,10 +56,10 @@ action:
               - conditions:
                   - alias: "Volk in den hof"
                     condition: state
-                    entity_id: binary_sensor.beweging_hof
+                    entity_id: binary_sensor.tuin_bezetting
                     state: "on"
                 sequence:
-                  - service: input_datetime.set_datetime
+                  - action: input_datetime.set_datetime
                     data:
                       datetime: >
                         {{ now() + timedelta(hours=2) }}
@@ -68,10 +68,10 @@ action:
                   - wait_for_trigger:
                       - platform: state
                         entity_id:
-                          - binary_sensor.beweging_hof
+                          - binary_sensor.tuin_bezetting
                         from: "on"
                         to: "off"
-                  - service: input_datetime.set_datetime
+                  - action: input_datetime.set_datetime
                     data:
                       datetime: >
                         {{ now() + timedelta(seconds=120) }}
@@ -81,21 +81,21 @@ action:
                   - condition: trigger
                     id: just_arrived
                 sequence:
-                  - service: input_datetime.set_datetime
+                  - action: input_datetime.set_datetime
                     data:
                       datetime: >
                         {{ now() + timedelta(seconds=120) }}
                     target:
                       entity_id: input_datetime.alle_tuinverlichting_end_time
             default:
-                - service: input_datetime.set_datetime
+                - action: input_datetime.set_datetime
                   data:
                     datetime: >
                       {{ now() + timedelta(seconds=60) }}
                   target:
                     entity_id: input_datetime.alle_tuinverlichting_end_time
     default:
-      - service: light.turn_on
+      - action: light.turn_on
         data:
           brightness_pct: 100
         target:
@@ -104,10 +104,10 @@ action:
           - conditions:
               - alias: "Volk in den hof"
                 condition: state
-                entity_id: binary_sensor.beweging_hof
+                entity_id: binary_sensor.tuin_bezetting
                 state: "on"
             sequence:
-              - service: input_datetime.set_datetime
+              - action: input_datetime.set_datetime
                 data:
                   datetime: >
                     {{ now() + timedelta(hours=2) }}
@@ -116,10 +116,10 @@ action:
               - wait_for_trigger:
                   - platform: state
                     entity_id:
-                      - binary_sensor.beweging_hof
+                      - binary_sensor.tuin_bezetting
                     from: "on"
                     to: "off"
-              - service: input_datetime.set_datetime
+              - action: input_datetime.set_datetime
                 data:
                   datetime: >
                     {{ now() + timedelta(seconds=120) }}
@@ -129,14 +129,14 @@ action:
               - condition: trigger
                 id: just_arrived
             sequence:
-              - service: input_datetime.set_datetime
+              - action: input_datetime.set_datetime
                 data:
                   datetime: >
                     {{ now() + timedelta(seconds=120) }}
                 target:
                   entity_id: input_datetime.alle_tuinverlichting_end_time
         default:
-          - service: input_datetime.set_datetime
+          - action: input_datetime.set_datetime
             data:
               datetime: >
                 {{ now() + timedelta(seconds=60) }}
@@ -146,30 +146,30 @@ action:
       #     platform: state
       #     entity_id:
       #       - binary_sensor.poort
-      #       - binary_sensor.beweging_hof
+      #       - binary_sensor.tuin_bezetting
       #       - binary_sensor.garage_deur
       #       - binary_sensor.keuken_achterdeur
       #     from: "on"
       #     to: "off"
       # - delay:
       #     minutes: 7
-      # - service: light.turn_off
+      # - action: light.turn_off
       #   target:
       #     entity_id: light.alle_tuinverlichting
-  # - service: light.turn_on
+  # - action: light.turn_on
   #   target:
   #     entity_id: light.alle_tuinverlichting
   # - wait_for_trigger:
   #     platform: state
   #     entity_id:
   #       - binary_sensor.poort
-  #       - binary_sensor.beweging_hof
+  #       - binary_sensor.tuin_bezetting
   #       - binary_sensor.garage_deur
   #       - binary_sensor.keuken_achterdeur
   #     from: "on"
   #     to: "off"
   # - delay:
   #     minutes: 10
-  # - service: light.turn_off
+  # - action: light.turn_off
   #   target:
   #     entity_id: light.alle_tuinverlichting

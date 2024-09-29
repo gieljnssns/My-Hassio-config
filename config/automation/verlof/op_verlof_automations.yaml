@@ -3,15 +3,15 @@ id: eb2a783e-d902-4fca-804a-9289e40cc729
 trigger:
   - platform: state
     entity_id: input_boolean.op_verlof
-action:
-  - service: >
+actions:
+  - action: >
       {% if states('input_boolean.op_verlof') == 'on' %}
         automation.turn_off
       {% else %}
         automation.turn_on
       {% endif %}
     entity_id: automation.kerstverlichting_aan_uit, automation.oplader_electrische_fiets_aan_uit, automation.verluchting_afkoeling, automation.achterdeur_sluiten_warm_buiten
-  # - service: >
+  # - action: >
   #     {% if states('input_boolean.op_verlof') == 'on' %}
   #       hassio.addon_start
   #     {% else %}

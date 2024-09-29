@@ -7,7 +7,7 @@ notify_everyone_at_home:
                     | map(attribute="entity_id") 
                     | list }}
         sequence:
-          - service: >
+          - action: >
               {% if repeat.item == "person.giel" %}
                 notify.mobile_app_gphone
               {% elif repeat.item == "person.martine" %}

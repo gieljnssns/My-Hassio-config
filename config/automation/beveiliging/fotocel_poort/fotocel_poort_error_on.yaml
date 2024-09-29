@@ -18,13 +18,13 @@ trigger:
 #     - condition: state
 #       entity_id: 'binary_sensor.poort'
 #       state: 'on'
-action:
-  - service: input_boolean.turn_on
+actions:
+  - action: input_boolean.turn_on
     entity_id: input_boolean.fotocel_poort_error
-  - service: light.turn_off
+  - action: light.turn_off
     target:
       entity_id: light.alle_tuinverlichting
-  - service: notify.mobile_app_gphone
+  - action: notify.mobile_app_gphone
     data_template:
       title: "Melding van Home-Assistant"
       message: "Fotocel poort geblokkeerd? En den trigger was {{ trigger.entity_id }}"

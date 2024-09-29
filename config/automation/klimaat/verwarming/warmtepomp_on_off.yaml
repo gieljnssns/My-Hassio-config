@@ -24,18 +24,18 @@ trigger:
     to: idle
     id: uit
 condition: []
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
             id: aan
         sequence:
-          - service: switch.turn_on
+          - action: switch.turn_on
             entity_id:
               - switch.kelder_warmtepomp
     default:
       - delay:
           seconds: 30
-      - service: switch.turn_off
+      - action: switch.turn_off
         entity_id: switch.kelder_warmtepomp
 mode: single

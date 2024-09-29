@@ -12,19 +12,19 @@ condition:
   - condition: state
     entity_id: binary_sensor.afkoeling_gewenst
     state: "on"
-action:
-  - service: script.turn_off
+actions:
+  - action: script.turn_off
     entity_id: script.verluchting_1_uur
-  - service: script.turn_off
+  - action: script.turn_off
     entity_id: script.verluchting_2_uur
-  - service: fan.set_percentage
+  - action: fan.set_percentage
     target:
       entity_id: fan.ventilatie
     data:
       percentage: 100
-  - service: switch.turn_on
+  - action: switch.turn_on
     entity_id: switch.badkamer_verluchting
-  - service: switch.turn_on
+  - action: switch.turn_on
     entity_id: switch.zolder_verluchting
-  - service: input_boolean.turn_on
+  - action: input_boolean.turn_on
     entity_id: input_boolean.verluchting_afkoeling

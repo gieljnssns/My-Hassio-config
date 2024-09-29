@@ -3,7 +3,7 @@ check_todo:
     - repeat:
         for_each: "{{ check }}"
         sequence:
-          - service: todo.update_item
+          - action: todo.update_item
             data:
               status: "{{ action }}"
               item: "{{ repeat.item }}"

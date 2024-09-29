@@ -65,24 +65,24 @@ condition:
               - condition: state
                 entity_id: device_tracker.noor_not_so_binary
                 state: "Juist Aangekomen"
-action:
-  - service: light.turn_on
+actions:
+  - action: light.turn_on
     data:
       brightness: 255
       rgb_color: [255, 236, 182]
       entity_id: light.slaapkamer_spot
-  # - service: light.turn_on
+  # - action: light.turn_on
   #   data:
   #     entity_id: light.slaapkamer_hoog
   - delay:
       seconds: 5
-  - service: alarm_control_panel.alarm_arm_night
+  - action: alarm_control_panel.alarm_arm_night
     entity_id: alarm_control_panel.ha_alarm
     data:
       code: !secret alarm_code
-  # - service: homeassistant.turn_off
+  # - action: homeassistant.turn_off
   #   entity_id: script.mqtt_arrive_script, script.mqtt_depart_script
-  # - service: script.mqtt_arrive_script
+  # - action: script.mqtt_arrive_script
   #   data_template:
   #     identity: >
   #       Alarm night {{ now().strftime("%H:%M") }}
@@ -93,9 +93,9 @@ action:
           - condition: template
             value_template: >
               {{ states("button.brouwerij_shutdown") != "unavailable" and 
-                  states("binary_sensor.beweging_garage") != "on" }}
+                  states("binary_sensor.garage_bezetting") != "on" }}
         sequence:
-          - service: button.press
+          - action: button.press
             target:
               entity_id: button.brouwerij_shutdown
   - choose:
@@ -104,6 +104,6 @@ action:
             entity_id: binary_sensor.badkamer_grouped_not_master
             state: "on"
         sequence:
-          - service: media_player.unjoin
+          - action: media_player.unjoin
             target:
               entity_id: media_player.mass_badkamer

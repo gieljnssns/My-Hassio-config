@@ -15,13 +15,13 @@
       - condition: state
         entity_id: input_boolean.verluchting_afkoeling
         state: 'off'
-  action:
-    - service: script.turn_off
+  actions:
+    - action: script.turn_off
       entity_id: script.verluchting_2_uur
-    - service: script.turn_off
+    - action: script.turn_off
       entity_id: script.verluchting_1_uur
     - delay:
         seconds: 5
-    - service: script.turn_on
+    - action: script.turn_on
       entity_id: script.verluchting_1_uur
     

@@ -58,17 +58,17 @@ condition:
       value_template: >
         {{ state_attr("cover.zonnetent", "current_position") > 10 }}
 
-action:
-  - service: cover.close_cover
+actions:
+  - action: cover.close_cover
     data: {}
     target:
       entity_id: cover.zonnetent
-  # - service: notify.mobile_app_gphone
+  # - action: notify.mobile_app_gphone
   #   data_template:
   #     message: "De zonnetent is ingeschoven, reden {{trigger.entity_id}} "
   - delay:
       minutes: 3
-  - service: cover.close_cover
+  - action: cover.close_cover
     data: {}
     target:
       entity_id: cover.zonnetent

@@ -21,44 +21,44 @@ trigger:
     to: "off"
     for:
       minutes: 10
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
             id: ijskast
         sequence:
-          - service: notify.mobile_app_gphone
+          - action: notify.mobile_app_gphone
             data:
               message: De ijskast staat al 10min uit.
               data:
                 push:
                   sound: default
-          - service: switch.turn_on
+          - action: switch.turn_on
             target:
               entity_id: switch.keuken_ijskast
       - conditions:
           - condition: trigger
             id: warmtepomp
         sequence:
-          - service: notify.mobile_app_gphone
+          - action: notify.mobile_app_gphone
             data:
               message: De warmetepomp staat al 10min uit.
               data:
                 push:
                   sound: default
-          - service: switch.turn_on
+          - action: switch.turn_on
             target:
               entity_id: switch.kelder_warmtepomp
       - conditions:
           - condition: trigger
             id: boiler
         sequence:
-          - service: notify.mobile_app_gphone
+          - action: notify.mobile_app_gphone
             data:
               message: De boiler staat al 10min uit.
               data:
                 push:
                   sound: default
-          - service: switch.turn_on
+          - action: switch.turn_on
             target:
               entity_id: switch.kelder_warmtepompboiler

@@ -19,8 +19,8 @@ condition:
         - sun
     - condition: template
       value_template: "{{ now().month == 12 or now().month == 1  }}"
-action:
-  - service: >
+actions:
+  - action: >
       {% if now().hour == 23 %}
         switch.turn_off
       {% else %}

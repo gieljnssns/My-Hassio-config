@@ -2,7 +2,7 @@ alias: Spots aan vroege
 id: 88c47c95-cc75-4934-b670-71c94940ece1
 trigger:
   platform: state
-  entity_id: binary_sensor.living_aanwezigheid
+  entity_id: binary_sensor.living_bezetting
   to: "on"
 condition:
   condition: and
@@ -33,8 +33,8 @@ condition:
         - condition: state
           entity_id: binary_sensor.v_vroege
           state: "on"
-action:
-  - service: light.turn_on
+actions:
+  - action: light.turn_on
     entity_id: light.spots_tv
     data:
       profile: reading

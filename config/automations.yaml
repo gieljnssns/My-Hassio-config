@@ -5,8 +5,8 @@
     - platform: time
       at: "17:59"
   condition: []
-  action:
-    - service: profiler.start
+  actions:
+    - action: profiler.start
       data: {}
   mode: single
 - id: "1617444794333"
@@ -22,8 +22,8 @@
       entity_id: binary_sensor.shelly_badkamer_verluchting_status
       state: "off"
       for: 00:05:00
-  action:
-    - service: switch.turn_on
+  actions:
+    - action: switch.turn_on
       target:
         entity_id: switch.shelly_badkamer_verluchting_herstarten
   mode: parallel
@@ -41,8 +41,8 @@
         minutes: 5
         seconds: 0
   condition: []
-  action:
-    - service: notify.mobile_app_gphone
+  actions:
+    - action: notify.mobile_app_gphone
       data:
         message: Unifi nazien!!!
   mode: single
@@ -65,8 +65,8 @@
         > 900 }}
 
         '
-  action:
-    - service: persistent_notification.create
+  actions:
+    - action: persistent_notification.create
       data:
         message:
           "Op kwartierbasis:\n{% for state in states.sensor -%} {%- if \"quarter\"
@@ -87,8 +87,8 @@
         - binary_sensor.poort
       to: "on"
   condition: []
-  action:
-    - service: notify.giel_en_martine
+  actions:
+    - action: notify.giel_en_martine
       data:
         message: Beweging poort
   mode: single
@@ -101,8 +101,8 @@
         - binary_sensor.poort
       to: "on"
   condition: []
-  action:
-    - service: notify.mobile_app_gphone
+  actions:
+    - action: notify.mobile_app_gphone
       data:
         message: Poort
   mode: single

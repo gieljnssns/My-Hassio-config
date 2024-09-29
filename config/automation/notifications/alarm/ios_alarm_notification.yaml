@@ -4,8 +4,8 @@ trigger:
   - platform: state
     entity_id: alarm_control_panel.ha_alarm
     to: "triggered"
-action:
-  - service: script.turn_on
+actions:
+  - action: script.turn_on
     data_template:
       entity_id: >
         {% if is_state('device_tracker.bompa', 'home') or is_state('device_tracker.oma_2', 'home')  %}

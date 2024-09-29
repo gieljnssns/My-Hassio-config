@@ -44,7 +44,7 @@
 #         - alias: "Invalid vacuum value"
 #           conditions: "{{ vacuum not in config_vacuum|list }}"
 #           sequence:
-#             - service: system_log.write
+#             - action: system_log.write
 #               data:
 #                 message: "Invalid vacuum value '{{ vacuum }}'. Valid values are {{ config_vacuum|list|join(', ') }}"
 #                 level: warning
@@ -52,7 +52,7 @@
 #         - alias: "Invalid mopping value"
 #           conditions: "{{ mopping not in config_mopping|list }}"
 #           sequence:
-#             - service: system_log.write
+#             - action: system_log.write
 #               data:
 #                 message: "Invalid mopping value '{{ lavaggio }}'. Valid values are {{ config_mopping|list|join(', ') }}"
 #                 level: warning
@@ -92,7 +92,7 @@
 #             - condition: template
 #               value_template: "{{ route not in config_mopping_route|list }}"
 #           sequence:
-#             - service: system_log.write
+#             - action: system_log.write
 #               data:
 #                 message: >-
 #                   Invalid mopping_route value '{{ route }}'. Valid values are {{
@@ -111,17 +111,17 @@
 
 bitch_prullenbak:
   sequence:
-    service: vacuum.send_command
-    data:
-      command: app_goto_target
-      params:
-        - 16481
-        - 24590
-      # params:
-      #   - 16050
-      #   - 24000
-    target:
-      entity_id: vacuum.claptrap
+    - action: vacuum.send_command
+      data:
+        command: app_goto_target
+        params:
+          - 16481
+          - 24590
+        # params:
+        #   - 16050
+        #   - 24000
+      target:
+        entity_id: vacuum.claptrap
 
 nacht_dweilen:
   sequence:
@@ -132,7 +132,7 @@ nacht_dweilen:
               condition: time
               before: " 16:00:00"
           sequence:
-            - service: counter.set_value
+            - action: counter.set_value
               data:
                 value: 3
               target:
@@ -142,16 +142,16 @@ nacht_dweilen:
               condition: time
               after: " 16:00:00"
           sequence:
-            - service: script.bitch_prullenbak
-            - service: counter.set_value
+            - action: script.bitch_prullenbak
+            - action: counter.set_value
               data:
                 value: 4
               target:
                 entity_id: counter.stofzuiger
     #   default:
     #       action
-    # - service: script.bitch_prullenbak
-    # - service: counter.set_value
+    # - action: script.bitch_prullenbak
+    # - action: counter.set_value
     #   data:
     #     value: 4
     #   target:
@@ -165,7 +165,7 @@ vacuum_clean_room:
               entity_id: input_select.vacuum_target_room
               state: Keuken
           sequence:
-            - service: button.press
+            - action: button.press
               target:
                 entity_id: button.claptrap_keuken
         - conditions:
@@ -173,7 +173,7 @@ vacuum_clean_room:
               entity_id: input_select.vacuum_target_room
               state: Danszaal
           sequence:
-            - service: button.press
+            - action: button.press
               target:
                 entity_id: button.claptrap_danszaal
         - conditions:
@@ -181,7 +181,7 @@ vacuum_clean_room:
               entity_id: input_select.vacuum_target_room
               state: Zithoek
           sequence:
-            - service: button.press
+            - action: button.press
               target:
                 entity_id: button.claptrap_zithoek
         - conditions:
@@ -189,7 +189,7 @@ vacuum_clean_room:
               entity_id: input_select.vacuum_target_room
               state: Gang
           sequence:
-            - service: button.press
+            - action: button.press
               target:
                 entity_id: button.claptrap_gang
         - conditions:
@@ -197,7 +197,7 @@ vacuum_clean_room:
               entity_id: input_select.vacuum_target_room
               state: Inkom
           sequence:
-            - service: button.press
+            - action: button.press
               target:
                 entity_id: button.claptrap_inkom
         - conditions:
@@ -205,7 +205,7 @@ vacuum_clean_room:
               entity_id: input_select.vacuum_target_room
               state: Waskot
           sequence:
-            - service: button.press
+            - action: button.press
               target:
                 entity_id: button.claptrap_waskot
         - conditions:
@@ -213,7 +213,7 @@ vacuum_clean_room:
               entity_id: input_select.vacuum_target_room
               state: Wc
           sequence:
-            - service: button.press
+            - action: button.press
               target:
                 entity_id: button.claptrap_wc
     # - alias: Get room id using input select
@@ -236,7 +236,7 @@ vacuum_clean_room:
     # - condition: template
     #   value_template: "{{ target_room != 0 }}"
     # # call service to clean selected room
-    # - service: xiaomi_miio.vacuum_clean_segment
+    # - action: xiaomi_miio.vacuum_clean_segment
     #   data:
     #     entity_id: vacuum.cl4p_tp
     #     # segments should be an array of numbers if more than one room want to be cleaned

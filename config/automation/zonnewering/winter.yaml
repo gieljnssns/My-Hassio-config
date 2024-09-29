@@ -35,7 +35,7 @@ trigger:
     entity_id: sensor.dark_inside
     to: "false"
     id: openen
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
@@ -53,7 +53,7 @@ action:
             value_template: >
               {{ states("sensor.windvlaag") | int(0) < 60 }}
         sequence:
-          - service: cover.close_cover
+          - action: cover.close_cover
             target:
               entity_id:
                 - cover.keuken_1
@@ -72,7 +72,7 @@ action:
                 states("cover.slaapkamer") != "open" or
                 states("cover.slaapkamer_noor") }}
         sequence:
-          - service: cover.open_cover
+          - action: cover.open_cover
             target:
               entity_id:
                 - cover.keuken_1

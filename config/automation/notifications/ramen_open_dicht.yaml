@@ -41,7 +41,7 @@ condition:
       value_template: >
         {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 900 }}
 
-action:
+actions:
   - wait_template: >
       {{ states('sensor.people_home')|int(0) > 0 }}
   # - choose:
@@ -76,7 +76,7 @@ action:
               title: "Gelieve de warmte buiten te houden."
               message: >
                 Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.gemiddelde_temp_beneden') }}°C en buiten {{ states('sensor.buiten_temperatuur') }}°C.
-  # - service: script.notify_everyone_at_home
+  # - action: script.notify_everyone_at_home
   #   data:
   #     title: "Ramen en deuren"
   #     message: >
@@ -85,7 +85,7 @@ action:
   #       {% else %}
   #         Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.binnen_lowpass') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
   #       {% endif %}
-  # - service: notify.mobile_app_gphone
+  # - action: notify.mobile_app_gphone
   #   data_template:
   #     message: >
   #       {% if states('binary_sensor.buiten_frisser_dan_binnen') == 'on' %}
@@ -93,7 +93,7 @@ action:
   #       {% else %}
   #         Het wordt hogen tijd da ge alles dicht doe, binnen is het {{ states('sensor.binnen_lowpass') }}°C en buiten {{ states('sensor.buitentemperatuur_gefilterd') }}°C.
   #       {% endif %}
-  # - service: notify.mobile_app_mphone
+  # - action: notify.mobile_app_mphone
   #   data_template:
   #     message: >
   #       {% if states('binary_sensor.buiten_frisser_dan_binnen') == 'on' %}

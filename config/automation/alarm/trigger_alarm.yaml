@@ -2,7 +2,7 @@
   id: b089d944-00eb-4e69-8be4-18be18af8759
   trigger:
     - platform: state
-      entity_id: binary_sensor.beweging_hof
+      entity_id: binary_sensor.tuin_bezetting
       to: 'on'
       for:
         seconds: 15
@@ -26,6 +26,6 @@
           - condition: state
             entity_id: alarm_control_panel.ha_alarm
             state: 'armed_night'
-  action:
-    service: alarm_control_panel.alarm_trigger
-    entity_id: alarm_control_panel.ha_alarm
+  actions:
+    - action: alarm_control_panel.alarm_trigger
+      entity_id: alarm_control_panel.ha_alarm

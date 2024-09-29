@@ -10,7 +10,7 @@ condition:
   - condition: state
     entity_id: media_player.tv_der_kinders
     state: "on"
-action:
+actions:
   - choose:
       - conditions:
           - condition: time
@@ -29,9 +29,9 @@ action:
                     entity_id: calendar.belgie_verlof
                     state:  "off"
         sequence:
-          - service: media_player.turn_off
+          - action: media_player.turn_off
             entity_id:
               - media_player.tv_der_kinders
     default:
-      - service: media_player.turn_off
+      - action: media_player.turn_off
         entity_id: media_player.tv_der_kinders

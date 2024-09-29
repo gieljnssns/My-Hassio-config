@@ -12,7 +12,7 @@ trigger:
     entity_id: sensor.voorspelde_uren_gradientboosting
     id: prediction_gradientboosting
 
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
@@ -21,7 +21,7 @@ action:
             value_template: >
               {{ has_value("sensor.voorspelde_uren") }}
         sequence:
-          - service: input_number.set_value
+          - action: input_number.set_value
             data:
               value: >
                 {{ states("sensor.voorspelde_uren") | float | round(2) }}
@@ -34,7 +34,7 @@ action:
             value_template: >
               {{ has_value("sensor.voorspelde_uren_adaboost") }}
         sequence:
-          - service: input_number.set_value
+          - action: input_number.set_value
             data:
               value: >
                 {{ states("sensor.voorspelde_uren_adaboost") | float | round(2) }}
@@ -47,7 +47,7 @@ action:
             value_template: >
               {{ has_value("sensor.voorspelde_uren_gradientboosting") }}
         sequence:
-          - service: input_number.set_value
+          - action: input_number.set_value
             data:
               value: >
                 {{ states("sensor.voorspelde_uren_gradientboosting") | float | round(2) }}

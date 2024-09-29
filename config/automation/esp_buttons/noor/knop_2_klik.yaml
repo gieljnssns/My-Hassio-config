@@ -4,18 +4,18 @@ trigger:
   - platform: state
     entity_id: binary_sensor.knop_noor_2_klik
     to: "on"
-action:
+actions:
   - choose:
       - conditions:
           - condition: template
             value_template: >
               {{ states("light.wled_noor") == 'on' }}
         sequence:
-          - service: light.turn_off
+          - action: light.turn_off
             entity_id:
               - light.wled_noor
     default:
-      - service: light.turn_on
+      - action: light.turn_on
         data:
           entity_id: light.wled_noor
           effect: Solid

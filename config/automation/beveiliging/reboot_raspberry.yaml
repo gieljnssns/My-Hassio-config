@@ -19,8 +19,8 @@ condition:
     - condition: template
       value_template: >
         {{ states('sensor.swap_verwarmingpi') | float(default=0)> 20.00 or states('sensor.uptime_verwarmingpi') | float(default=0)> 170.00 }}
-action:
-  - service: >
+actions:
+  - action: >
       {% if states('sensor.swap_keuken') | float(default=0)> 20.00 or states('sensor.uptime_keuken') | float(default=0)> 170.00 %}
         script.keuken_reboot
       {% elif states('sensor.swap_pi3_living') | float(default=0)> 20.00 or states('sensor.uptime_pi3_living') | float(default=0)> 170.00 %}

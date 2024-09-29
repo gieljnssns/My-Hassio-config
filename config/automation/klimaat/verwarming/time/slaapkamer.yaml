@@ -5,8 +5,8 @@ trigger:
     at: "06:02"
   - platform: time
     at: "00:30"
-action:
-  - service: >
+actions:
+  - action: >
       {% if now().hour == 6 %}
         automation.turn_on
       {% else %}
@@ -16,7 +16,7 @@ action:
     entity_id: automation.verwarming_bij_aanwezigheid_slaapkamer
   - condition: template
     value_template: "{{now().hour != 6}}"
-  - service: climate.set_temperature
+  - action: climate.set_temperature
     entity_id: climate.slaapkamer
     data:
       temperature: 10

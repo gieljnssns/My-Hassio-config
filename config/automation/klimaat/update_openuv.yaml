@@ -8,8 +8,8 @@ condition:
   entity_id: sun.sun
   value_template: "{{ state.attributes.elevation }}"
   above: 10
-action:
-  - service: homeassistant.update_entity
+actions:
+  - action: homeassistant.update_entity
     target:
       entity_id: sensor.current_uv_index
   - delay:
@@ -20,6 +20,6 @@ action:
     state: "unavailable"
   - delay:
       minutes: 1
-  - service: homeassistant.update_entity
+  - action: homeassistant.update_entity
     target:
       entity_id: sensor.current_uv_index

@@ -5,18 +5,18 @@ trigger:
     entity_id: binary_sensor.knop_giel_klik
     to: "on"
 
-action:
+actions:
   # - choose:
   #     - conditions:
   #         - condition: template
   #           value_template: >
   #             {{ states("light.slaapkamer_hoog") == 'on' }}
   #       sequence:
-  #         - service: light.turn_off
+  #         - action: light.turn_off
   #           entity_id:
   #             - light.slaapkamer_hoog
   #   default:
-  #     - service: light.turn_on
+  #     - action: light.turn_on
   #       data:
   #         entity_id: light.slaapkamer_hoog
   - choose:
@@ -25,11 +25,11 @@ action:
             value_template: >
               {{ states("light.slaapkamer_spot") == 'on' }}
         sequence:
-          - service: light.turn_off
+          - action: light.turn_off
             entity_id:
               - light.slaapkamer_spot
     default:
-      - service: light.turn_on
+      - action: light.turn_on
         data:
           entity_id: light.slaapkamer_spot
           brightness: 255

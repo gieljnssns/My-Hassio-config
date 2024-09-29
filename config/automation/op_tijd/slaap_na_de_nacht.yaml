@@ -16,7 +16,7 @@ trigger:
     to: "off"
     from: "on"
 condition: []
-action:
+actions:
   - choose:
       - conditions:
           - condition: or
@@ -46,10 +46,10 @@ action:
               #       for:
               #         hours: 10
         sequence:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id:
               - input_boolean.giel_slaapt_na_nacht
     default:
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         entity_id: input_boolean.giel_slaapt_na_nacht
 mode: single

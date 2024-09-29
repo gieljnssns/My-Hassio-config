@@ -69,11 +69,11 @@ condition:
       value_template: >
         {{ state_attr("cover.slaapkamer", "current_position") < 50 }}
 
-action:
-  - service: script.achtergevel_openen
-  # - service: notify.mobile_app_gphone
+actions:
+  - action: script.achtergevel_openen
+  # - action: notify.mobile_app_gphone
   #   data_template:
   #     message: "Het zonnescherm achtergevel geopend, reden {{trigger.entity_id}} "
   - delay:
       minutes: 5
-  - service: script.achtergevel_openen
+  - action: script.achtergevel_openen

@@ -18,21 +18,21 @@ trigger:
     value_template: >
       {% set sourcelist = ["TV VLAANDEREN", "Netflix", "VRT MAX", "Streamz", "YouTube", "VTM GO"] %}
       {{ state_attr("media_player.philips_tv", "app_name") is in sourcelist }}
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
             id: music_off
         sequence:
-          - service: media_player.media_pause
+          - action: media_player.media_pause
             entity_id: media_player.mass_keuken
 
     default:
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         data: {}
         target:
           entity_id: sensor.ps5
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         data:
           entity_id: media_player.philips_tv
           volume_level: 0.0
@@ -51,5 +51,5 @@ action:
                 entity_id: sensor.ps5
                 state: "on"
 
-      - service: media_player.media_pause
+      - action: media_player.media_pause
         entity_id: media_player.mass_keuken

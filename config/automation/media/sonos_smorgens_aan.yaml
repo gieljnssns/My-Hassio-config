@@ -40,8 +40,8 @@ condition:
         - condition: state
           entity_id: device_tracker.martine_not_so_binary
           state: "Thuis"
-action:
-  - service: media_player.join
+actions:
+  - action: media_player.join
     data:
       group_members:
         - media_player.mass_living_2
@@ -51,7 +51,7 @@ action:
       entity_id: media_player.mass_keuken
   - delay:
       seconds: 5
-  - service: media_player.volume_set
+  - action: media_player.volume_set
     data:
       volume_level: 0.14
     target:
@@ -62,6 +62,6 @@ action:
         - media_player.mass_move
   - delay:
       seconds: 5
-  - service: script.random_music
+  - action: script.random_music
     data:
       sonos_entity: media_player.mass_keuken

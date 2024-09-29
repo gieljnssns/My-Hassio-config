@@ -40,9 +40,9 @@ condition:
             as_timestamp(now()) - as_timestamp(state_attr('automation.welkom_allemaal_sonos_paused', 'last_triggered')) | float > 310 and
             as_timestamp(now()) - as_timestamp(state_attr('automation.welkom_allemaal_sonos_playing', 'last_triggered')) | float > 310 and
             as_timestamp(now()) - as_timestamp(state_attr('automation.welkom_sonos_paused', 'last_triggered')) | float > 310 }}
-action:
+actions:
   # https://www.wijsheidspreuk.nl/tegeltjesmaker
-  - service: media_player.play_media
+  - action: media_player.play_media
     target:
       entity_id: media_player.mass_keuken
     data:

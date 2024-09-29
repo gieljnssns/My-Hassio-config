@@ -11,23 +11,23 @@ trigger:
     for:
       seconds: 2
     id: binnen
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
             id: buiten
         sequence:
-          - service: light.turn_off
+          - action: light.turn_off
             entity_id: light.alle_tuinverlichting
           - delay:
               seconds: 2
-          - service: light.turn_off
+          - action: light.turn_off
             entity_id: light.afdak_verlichting
       - conditions:
           - condition: trigger
             id: binnen
         sequence:
-          - service: light.turn_off
+          - action: light.turn_off
             entity_id:
               - light.noor
               - light.fien
@@ -46,13 +46,13 @@ action:
               - light.vogelpik
               - light.garage_sfeerverlichting
               - light.garage_sjotterbak
-          - service: light.turn_off
+          - action: light.turn_off
             target:
               entity_id:
                 - light.spots_tv
           - delay:
               seconds: 5
-          - service: light.turn_off
+          - action: light.turn_off
             target:
               entity_id:
                 - light.spots_tv

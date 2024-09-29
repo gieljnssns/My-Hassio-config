@@ -4,17 +4,17 @@ trigger:
   - platform: state
     entity_id: binary_sensor.knop_vogelpik
     to: "on"
-action:
+actions:
   - choose:
     - conditions:
         - condition: template
           value_template: >
             {{ states("light.vogelpik") == 'on' }}
       sequence:
-        - service: light.turn_off
+        - action: light.turn_off
           entity_id:
             - light.vogelpik
     default:
-      - service: light.turn_on
+      - action: light.turn_on
         data:
           entity_id: light.vogelpik

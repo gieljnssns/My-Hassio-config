@@ -38,27 +38,27 @@ trigger:
     entity_id: sun.sun
     value_template: "{{ state.attributes.elevation }}"
     below: 0.0
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
             id: buiten
         sequence:
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             entity_id:
               - input_boolean.donker_buiten_lowpass
       - conditions:
           - condition: trigger
             id: binnen
         sequence:
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             entity_id:
               - input_boolean.donker_binnen_lowpass
     default:
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         entity_id:
           - input_boolean.donker_buiten_lowpass
           - input_boolean.donker_binnen_lowpass
-  # - service: input_boolean.turn_on
+  # - action: input_boolean.turn_on
   #   entity_id:
   #     - input_boolean.donker_buiten_lowpass

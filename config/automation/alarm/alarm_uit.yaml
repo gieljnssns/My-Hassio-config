@@ -4,14 +4,14 @@ trigger:
   platform: state
   entity_id: input_boolean.alarm
   to: "off"
-action:
-  - service: script.turn_off
+actions:
+  - action: script.turn_off
     entity_id:
       - script.alarm_lights1
       - script.alarm_lights2
       - script.alarm_sound
   - delay: "00:00:09"
-  - service: light.turn_off
+  - action: light.turn_off
     entity_id:
       - light.alle_tuinverlichting
       - light.spots_tv

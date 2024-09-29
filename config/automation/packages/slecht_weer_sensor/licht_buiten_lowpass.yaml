@@ -32,13 +32,13 @@ trigger:
       minutes: 5
     id: buiten
 
-action:
+actions:
   - choose:
       - conditions:
           - condition: trigger
             id: buiten
         sequence:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id:
               - input_boolean.donker_buiten_lowpass
       - conditions:
@@ -55,14 +55,14 @@ action:
           - condition: time
             before: " 17:00:00"
         sequence:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             entity_id:
               - input_boolean.donker_binnen_lowpass
     # default:
-    #   - service: input_boolean.turn_off
+    #   - action: input_boolean.turn_off
     #     entity_id:
     #       - input_boolean.donker_buiten_lowpass
     #       - input_boolean.donker_binnen_lowpass
-  # - service: input_boolean.turn_off
+  # - action: input_boolean.turn_off
   #   entity_id:
   #     - input_boolean.donker_buiten_lowpass

@@ -20,31 +20,31 @@ action:
       - condition: trigger
         id: verluchting
     sequence:
-      - service: fan.turn_off
+      - action: fan.turn_off
         entity_id: fan.ventilatie
-      - service: switch.turn_off
+      - action: switch.turn_off
         entity_id: switch.badkamer_verluchting
-      - service: switch.turn_off
+      - action: switch.turn_off
         entity_id: switch.zolder_verluchting
   - conditions:
       - condition: trigger
         id: den_hof
     sequence:
-      - service: light.turn_off
+      - action: light.turn_off
         target:
           entity_id: light.alle_tuinverlichting
   - conditions:
       - condition: trigger
         id: afdak
     sequence:
-      - service: light.turn_off
+      - action: light.turn_off
         target:
           entity_id: light.afdak_verlichting
   - conditions:
       - condition: trigger
         id: keuken
     sequence:
-      - service: light.turn_off
+      - action: light.turn_off
         target:
           entity_id:
             - light.keuken_inkom

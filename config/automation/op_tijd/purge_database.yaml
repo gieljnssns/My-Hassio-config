@@ -406,14 +406,14 @@ variables:
     {%- set a = part * 39 %}
     {%- set b = part * 40 %}
     {{ state_attr("sensor.purge_entites_2", "list")[a:b] }}
-action:
+actions:
   - choose:
       - conditions:
           - condition: template
             value_template: >
               {{ now().hour == 3 and now().day % 2 == 0 }}
         sequence:
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -421,7 +421,7 @@ action:
                 {{ a }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -429,7 +429,7 @@ action:
                 {{ b }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -437,7 +437,7 @@ action:
                 {{ c }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -445,7 +445,7 @@ action:
                 {{ d }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -453,7 +453,7 @@ action:
                 {{ e }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -461,7 +461,7 @@ action:
                 {{ f }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -469,7 +469,7 @@ action:
                 {{ g }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -477,7 +477,7 @@ action:
                 {{ h }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -485,7 +485,7 @@ action:
                 {{ i }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -493,7 +493,7 @@ action:
                 {{ j }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -501,7 +501,7 @@ action:
                 {{ k }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -509,7 +509,7 @@ action:
                 {{ l }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -517,7 +517,7 @@ action:
                 {{ m }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -525,7 +525,7 @@ action:
                 {{ n }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -533,7 +533,7 @@ action:
                 {{ o }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -541,7 +541,7 @@ action:
                 {{ p }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -549,7 +549,7 @@ action:
                 {{ q }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -557,7 +557,7 @@ action:
                 {{ r }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -565,7 +565,7 @@ action:
                 {{ s }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -573,7 +573,7 @@ action:
                 {{ t }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -581,7 +581,7 @@ action:
                 {{ aa }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -589,7 +589,7 @@ action:
                 {{ bb }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -597,7 +597,7 @@ action:
                 {{ cc }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -605,7 +605,7 @@ action:
                 {{ dd }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -613,7 +613,7 @@ action:
                 {{ ee }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -621,7 +621,7 @@ action:
                 {{ ff }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -629,7 +629,7 @@ action:
                 {{ gg }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -637,7 +637,7 @@ action:
                 {{ hh }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -645,7 +645,7 @@ action:
                 {{ ii }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -653,7 +653,7 @@ action:
                 {{ jj }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -661,7 +661,7 @@ action:
                 {{ kk }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -669,7 +669,7 @@ action:
                 {{ ll }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -677,7 +677,7 @@ action:
                 {{ mm }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -685,7 +685,7 @@ action:
                 {{ nn }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -693,7 +693,7 @@ action:
                 {{ oo }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -701,7 +701,7 @@ action:
                 {{ pp }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -709,7 +709,7 @@ action:
                 {{ qq }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -717,7 +717,7 @@ action:
                 {{ rr }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -725,7 +725,7 @@ action:
                 {{ ss }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -736,7 +736,7 @@ action:
             value_template: >
               {{ now().hour == 3 }}
         sequence:
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -744,7 +744,7 @@ action:
                 {{ a2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -752,7 +752,7 @@ action:
                 {{ b2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -760,7 +760,7 @@ action:
                 {{ c2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -768,7 +768,7 @@ action:
                 {{ d2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -776,7 +776,7 @@ action:
                 {{ e2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -784,7 +784,7 @@ action:
                 {{ f2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -792,7 +792,7 @@ action:
                 {{ g2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -800,7 +800,7 @@ action:
                 {{ h2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -808,7 +808,7 @@ action:
                 {{ i2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -816,7 +816,7 @@ action:
                 {{ j2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -824,7 +824,7 @@ action:
                 {{ k2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -832,7 +832,7 @@ action:
                 {{ l2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -840,7 +840,7 @@ action:
                 {{ m2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -848,7 +848,7 @@ action:
                 {{ n2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -856,7 +856,7 @@ action:
                 {{ o2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -864,7 +864,7 @@ action:
                 {{ p2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -872,7 +872,7 @@ action:
                 {{ q2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -880,7 +880,7 @@ action:
                 {{ r2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -888,7 +888,7 @@ action:
                 {{ s2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -896,7 +896,7 @@ action:
                 {{ t2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -904,7 +904,7 @@ action:
                 {{ aa2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -912,7 +912,7 @@ action:
                 {{ bb2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -920,7 +920,7 @@ action:
                 {{ cc2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -928,7 +928,7 @@ action:
                 {{ dd2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -936,7 +936,7 @@ action:
                 {{ ee2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -944,7 +944,7 @@ action:
                 {{ ff2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -952,7 +952,7 @@ action:
                 {{ gg2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -960,7 +960,7 @@ action:
                 {{ hh2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -968,7 +968,7 @@ action:
                 {{ ii2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -976,7 +976,7 @@ action:
                 {{ jj2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -984,7 +984,7 @@ action:
                 {{ kk2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -992,7 +992,7 @@ action:
                 {{ ll2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -1000,7 +1000,7 @@ action:
                 {{ mm2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -1008,7 +1008,7 @@ action:
                 {{ nn2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -1016,7 +1016,7 @@ action:
                 {{ oo2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -1024,7 +1024,7 @@ action:
                 {{ pp2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -1032,7 +1032,7 @@ action:
                 {{ qq2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -1040,7 +1040,7 @@ action:
                 {{ rr2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
@@ -1048,14 +1048,14 @@ action:
                 {{ ss2 }}
           - delay:
               seconds: 60
-          - service: recorder.purge_entities
+          - action: recorder.purge_entities
             data:
               keep_days: 7
             target:
               entity_id: >
                 {{ tt2 }}
     default:
-      - service: recorder.purge
+      - action: recorder.purge
         data:
           # keep_days: 365
           repack: true

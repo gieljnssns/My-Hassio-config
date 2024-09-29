@@ -123,8 +123,8 @@ condition:
         {% elif trigger.id == 'fien' %}
           {{ states('input_select.fien_status_dropdown') is not in ['Thuis', "Juist Aangekomen"] }}
         {% endif %}
-action:
-  - service: >
+actions:
+  - action: >
       {% if trigger.id == 'giel' %}
         script.request_gphone_update
       {% elif trigger.id == 'martine' %}
@@ -134,7 +134,7 @@ action:
       {% elif trigger.id == 'fien' %}
         script.request_fphone_update
       {% endif %}
-  - service: input_select.select_option
+  - action: input_select.select_option
     data_template:
       entity_id: >
         {% if trigger.id == 'giel' %}
@@ -158,7 +158,7 @@ action:
   #     {% elif trigger.id == 'fien' %}
   #       {{ states("device_tracker.fphone") != 'home' }}
   #     {% endif %}
-  # - service: >
+  # - action: >
   #     {% if trigger.id == 'giel' %}
   #       script.request_gphone_update
   #     {% elif trigger.id == 'martine' %}

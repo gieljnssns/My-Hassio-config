@@ -10,7 +10,7 @@ trigger:
     value_template: >
       {{ states("todo.noor_snapchat") | int == 0 }}
     id: snapchat
-action:
+actions:
   - delay:
       seconds: 5
   - choose:
@@ -22,7 +22,7 @@ action:
                   {{ states("todo.noor_todo") | int == 0 and
                       states("todo.noor_snapchat") | int == 0 }}
         sequence:
-          - service: notify.giel_en_martine
+          - action: notify.giel_en_martine
             data:
               message: "Ons Noor zou met alles klaar zijn."
               data:
@@ -37,7 +37,7 @@ action:
               - condition: trigger
                 id: snapchat
         sequence:
-          - service: notify.giel_en_martine
+          - action: notify.giel_en_martine
             data:
               message: "Ons Noor zou haar uniform uitgedaan hebben."
               data:
@@ -52,7 +52,7 @@ action:
               - condition: trigger
                 id: todo
         sequence:
-          - service: notify.giel_en_martine
+          - action: notify.giel_en_martine
             data:
               message: "Ons Noor heeft haren todo afgewerkt."
               data:
@@ -62,7 +62,7 @@ action:
                   - action: "GEEN_TIKTOK"
                     title: "Volgens mij is ze nog niet klaar."
     # default:
-    #   - service: notify.giel_en_martine
+    #   - action: notify.giel_en_martine
     #     data:
     #       message: "Ons Noor heeft haren todo afgewerkt."
     #       data:

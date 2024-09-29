@@ -4,8 +4,8 @@ mode: single
 trigger:
   - platform: state
     entity_id: input_button.random_muziek
-action:
-  - service: media_player.join
+actions:
+  - action: media_player.join
     data:
       group_members:
         - media_player.mass_living_2
@@ -15,7 +15,7 @@ action:
       entity_id: media_player.mass_keuken
   - delay:
       seconds: 2
-  - service: media_player.volume_set
+  - action: media_player.volume_set
     data:
       volume_level: 0.14
     target:
@@ -26,6 +26,6 @@ action:
         - media_player.mass_move
   - delay:
       seconds: 2
-  - service: script.random_music
+  - action: script.random_music
     data:
       sonos_entity: media_player.mass_keuken

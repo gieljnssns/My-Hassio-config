@@ -29,35 +29,35 @@ condition:
   - condition: state
     entity_id: counter.stofzuiger
     state: "5"
-action:
-  - service: vacuum.set_fan_speed
+actions:
+  - action: vacuum.set_fan_speed
     data:
       fan_speed: Silent
     target:
       entity_id: vacuum.claptrap
-  - service: select.select_option
+  - action: select.select_option
     data:
       option: Level3
     target:
       entity_id: select.claptrap_water_level
-  # - service: script.roborock_set_manual_mode
+  # - action: script.roborock_set_manual_mode
   #   target:
   #     entity_id: vacuum.cl4p_tp
   #   data:
   #     vacuum: silent
   #     mopping: high
-  # - service: script.roborock_set_mopping_route
+  # - action: script.roborock_set_mopping_route
   #   target:
   #     entity_id: vacuum.cl4p_tp
   #   data:
   #     route: deep
-  - service: select.select_option
+  - action: select.select_option
     target:
       entity_id: select.claptrap_mop_mode
     data:
       option: Deep
-  - service: vacuum.start
+  - action: vacuum.start
     data:
       entity_id: vacuum.claptrap
-  - service: counter.increment
+  - action: counter.increment
     entity_id: counter.stofzuiger

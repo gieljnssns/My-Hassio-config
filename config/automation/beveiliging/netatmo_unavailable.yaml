@@ -5,7 +5,7 @@ mode: parallel
 trigger:
   - platform: homeassistant
     event: start
-action:
+actions:
   - delay:
       seconds: 60
   - if:
@@ -14,7 +14,7 @@ action:
           {{ states("climate.living") == "unavailable" or
               states("climate.living") == "unknown" }}
     then:
-      - service: homeassistant.reload_config_entry
+      - action: homeassistant.reload_config_entry
         data:
           entry_id: 5a981e21a0b31d75284b8aad81f97329
   - if:
@@ -27,7 +27,7 @@ action:
               states("sensor.unifi_waskot_vermogen") == "unavailable" or
               states("sensor.unifi_waskot_vermogen") == "unknown" }}
     then:
-      - service: homeassistant.enable_entity
+      - action: homeassistant.enable_entity
         data:
           entity_id:
             - sensor.usw_24_poe_waskot_cpu_utilization
@@ -42,6 +42,6 @@ action:
     value_template: >
       {{ states("climate.living") == "unavailable" or
           states("climate.living") == "unknown" }}
-  - service: homeassistant.reload_config_entry
+  - action: homeassistant.reload_config_entry
     data:
       entry_id: 5a981e21a0b31d75284b8aad81f97329
