@@ -1,0 +1,30 @@
+alias: Herstarten esp
+id: d84866ff-f214-4b50-b521-6fadca16c6f9
+mode: parallel
+trigger:
+  - platform: numeric_state
+    above: 0
+    entity_id: sensor.esphome_restarts
+    for:
+      seconds: 65
+
+actions:
+  - repeat:
+      for_each: >
+        {{ state_attr("sensor.esphome_restarts", "list") }}
+      sequence:
+        - action: persistent_notification.create
+          data:
+            message: >
+              {% set unknown = expand(integration_entities('esphome')
+                    | select('match','sensor.')
+                    | reject('contains', '_energy')) 
+                    | selectattr("state", "eq", "unknown") 
+                    | map(attribute="entity_id") 
+                    | list %}
+              {{ device_attr(repeat.item, "name") }} is herstart omdat {{ unknown }} onbekend was
+        - action: switch.turn_on
+          target:
+            entity_id: >
+              {{ repeat.item }}
+  

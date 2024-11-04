@@ -4,18 +4,68 @@ trigger:
   - platform: state
     entity_id: binary_sensor.slaapkamer_fien_bezetting
     to: "on"
+    id: aan
   - platform: state
     entity_id: binary_sensor.slaapkamer_fien_bezetting
     to: "off"
+    id: uit
+  - platform: state
+    entity_id: binary_sensor.fphone_focus
+    from: "off"
+    to: "on"
+    id: sleep
+  - platform: template
+    value_template: >
+      {{ states("binary_sensor.fphone_focus") == "on" and states("device_tracker.fphone_bermuda") == "home" }}
+    id: sleep
+  - platform: state
+    entity_id: alarm_control_panel.ha_alarm
+    to: 'armed_night'
+    id: sleep
 actions:
-  - action: climate.set_temperature
-    data_template:
-      entity_id: climate.fien
-      temperature: >
-        {% if is_state('input_boolean.giel_slaapt_na_nacht', 'on') %}
-          10
-        {% elif is_state('binary_sensor.slaapkamer_fien_bezetting', 'on') %}
-          {{states('input_select.setpunt_fien')}}
-        {% elif is_state('binary_sensor.slaapkamer_fien_bezetting', 'off') %}
-          10
-        {% endif %}
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: aan
+          - condition: state
+            entity_id: input_boolean.giel_slaapt_na_nacht
+            state: "off"
+          - condition: template
+            value_template: >
+              {{ states("alarm_control_panel.ha_alarm") != "armed_night" }}
+        sequence:
+          - action: climate.set_preset_mode
+            target:
+              entity_id: climate.fien
+            data:
+              preset_mode: home
+      - conditions:
+          - condition: trigger
+            id: uit
+          - condition: template
+            value_template: >
+              {{ states("alarm_control_panel.ha_alarm") != "armed_night" }}
+        sequence:
+          - action: climate.set_preset_mode
+            target:
+              entity_id: climate.fien
+            data:
+              preset_mode: away
+      - conditions:
+          - condition: trigger
+            id: sleep
+          - condition: template
+            value_template: >
+              {{ states("device_tracker.fphone_bermuda") == "home" }}
+        sequence:
+          - action: climate.set_preset_mode
+            target:
+              entity_id: climate.fien
+            data:
+              preset_mode: sleep
+    default:
+      - action: climate.set_preset_mode
+        target:
+          entity_id: climate.fien
+        data:
+          preset_mode: away

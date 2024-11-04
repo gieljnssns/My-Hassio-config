@@ -56,18 +56,21 @@ trigger:
       {% endif %}
 
 condition:
-  condition: or
-  conditions:
-    - condition: state
-      entity_id: input_boolean.zijgevel_closed
-      state: "on"
-    - condition: template
-      value_template: >
-        {{ state_attr("cover.living", "current_position") < 50 }}
-    - condition: template
-      value_template: >
-        {{ state_attr("cover.slaapkamer_noor", "current_position") < 50 }}
-
+  - condition: or
+    conditions:
+      - condition: state
+        entity_id: input_boolean.zijgevel_closed
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ state_attr("cover.living", "current_position") < 50 }}
+      - condition: template
+        value_template: >
+          {{ state_attr("cover.slaapkamer_noor", "current_position") < 50 }}
+  - condition: state
+    entity_id: input_boolean.nacht_closed
+    state: "off"
+    
 actions:
   - action: script.zijgevel_openen
   # - action: notify.mobile_app_gphone

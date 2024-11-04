@@ -54,21 +54,24 @@ trigger:
       {% endif %}
 
 condition:
-  condition: or
-  conditions:
-    - condition: state
-      entity_id: input_boolean.achtergevel_closed
-      state: "on"
-    - condition: template
-      value_template: >
-        {{ state_attr("cover.keuken_1", "current_position") < 50 }}
-    - condition: template
-      value_template: >
-        {{ state_attr("cover.keuken_2", "current_position") < 50 }}
-    - condition: template
-      value_template: >
-        {{ state_attr("cover.slaapkamer", "current_position") < 50 }}
-
+  - condition: or
+    conditions:
+      - condition: state
+        entity_id: input_boolean.achtergevel_closed
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ state_attr("cover.keuken_1", "current_position") < 50 }}
+      - condition: template
+        value_template: >
+          {{ state_attr("cover.keuken_2", "current_position") < 50 }}
+      - condition: template
+        value_template: >
+          {{ state_attr("cover.slaapkamer", "current_position") < 50 }}
+  - condition: state
+    entity_id: input_boolean.nacht_closed
+    state: "off"
+    
 actions:
   - action: script.achtergevel_openen
   # - action: notify.mobile_app_gphone

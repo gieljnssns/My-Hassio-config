@@ -2,7 +2,7 @@ alias: Zonnewering winter
 id: 12930512-2ad9-43f8-a711-1538e0d1fb47
 trigger:
   - platform: state
-    entity_id: sensor.dark_outside
+    entity_id: sensor.dark_inside
     to: "true"
     id: sluiten
     for:
@@ -35,17 +35,26 @@ trigger:
     entity_id: sensor.dark_inside
     to: "false"
     id: openen
+  - platform: state
+    entity_id: binary_sensor.kans_op_aanvriezen
+    to: "on"
+    id: openen
 actions:
   - choose:
       - conditions:
           - condition: trigger
             id: sluiten
           - condition: numeric_state
-            entity_id: sensor.buiten_temperatuur
-            below: 7
+            entity_id: sensor.min_temperatuur_buiten_voorspelling_12u
+            below: 12
+          - condition: time
+            after: "15:00:00"
           - condition: numeric_state
             entity_id: sensor.max_neerslag_volgende_12u
             below: 10
+          - condition: template
+            value_template: >
+              {{ states("binary_sensor.kans_op_aanvriezen") == "off" }}
           - condition: template
             value_template: >
               {{ states("sensor.windsnelheid") | int(0) < 40 }}
@@ -61,6 +70,9 @@ actions:
                 - cover.living
                 - cover.slaapkamer
                 - cover.slaapkamer_noor
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.nacht_closed
       - conditions:
           - condition: trigger
             id: openen
@@ -70,7 +82,7 @@ actions:
                 states("cover.keuken_2") != "open" or
                 states("cover.living") != "open" or
                 states("cover.slaapkamer") != "open" or
-                states("cover.slaapkamer_noor") }}
+                states("cover.slaapkamer_noor") != "open" }}
         sequence:
           - action: cover.open_cover
             target:
@@ -80,3 +92,6 @@ actions:
                 - cover.living
                 - cover.slaapkamer
                 - cover.slaapkamer_noor
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.nacht_closed

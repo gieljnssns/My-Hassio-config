@@ -2,11 +2,11 @@ alias: Verwarming bij aanwezigheid badkamer
 id: b57adf81-739a-4fa1-befa-993d097b3946
 trigger:
   - platform: state
-    entity_id: binary_sensor.badkamer_presence
+    entity_id: binary_sensor.badkamer_bezetting
     to: "on"
     id: aan
   - platform: state
-    entity_id: binary_sensor.badkamer_presence
+    entity_id: binary_sensor.badkamer_bezetting
     to: "off"
     id: uit
   - platform: state
@@ -18,17 +18,18 @@ actions:
           - condition: trigger
             id: aan
         sequence:
-          - action: climate.set_temperature
-            data:
+          - action: climate.set_preset_mode
+            target:
               entity_id: climate.badkamer
-              temperature: >
-                {{ states('input_select.setpunt_badkamer') }}
+            data:
+              preset_mode: home
       - conditions:
           - condition: trigger
             id: uit
         sequence:
-          - action: climate.set_temperature
-            data:
+          - action: climate.set_preset_mode
+            target:
               entity_id: climate.badkamer
-              temperature: 10
+            data:
+              preset_mode: away
 

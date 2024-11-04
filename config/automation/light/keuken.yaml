@@ -33,7 +33,6 @@ trigger:
     entity_id: light.keuken_spots
     from: "off"
     to: "on"
-  
   - platform: state
     entity_id: sensor.dark_inside
     from: "off"
@@ -84,9 +83,9 @@ actions:
           target:
             entity_id: input_datetime.keuken_end_time
     - conditions:
-        - condition: state
-          entity_id: sensor.dark_inside
-          state: "true"
+        # - condition: state
+        #   entity_id: sensor.dark_inside
+        #   state: "true"
         - condition: state
           entity_id: binary_sensor.keuken_bezetting
           state: "on"
