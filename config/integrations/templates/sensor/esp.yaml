@@ -1,0 +1,63 @@
+- sensor:
+    - name: Esp down
+      unique_id: 0922ebc6-e577-4e0b-9370-df23b76fa9f9
+      icon: mdi:car-esp
+      # attributes:
+      #   list: >
+      #     {% set unknown = expand(integration_entities('esphome')
+      #                 | select('match','sensor.')
+      #                 | reject('contains', '_energy')) 
+      #                 | selectattr("state", "eq", "unavailable") 
+      #                 | map(attribute="entity_id") 
+      #                 | list %}
+      #     {%- set devices = namespace(all=[]) %}
+      #     {%- for entity in unknown -%}
+      #       {% if device_id(entity) not in devices.all %}
+      #       {% set devices.all = devices.all + [device_id(entity)] %}
+      #       {% endif %}
+      #     {% endfor %}
+      #     {{ devices.all | length }}
+      state: >
+        {% set unknown = expand(integration_entities('esphome')
+                  | select('match','sensor.')
+                  | reject('contains', '_energy')) 
+                  | selectattr("state", "eq", "unavailable") 
+                  | map(attribute="entity_id") 
+                  | list %}
+
+        {%- set devices = namespace(all=[]) %}
+        {%- for entity in unknown -%}
+          {% set device = device_attr(device_id(entity)|string, 'name') %}
+          {% if device not in devices.all %}
+          {% set devices.all = devices.all + [device] %}
+          {% endif %}
+        {% endfor %}
+        {{ devices.all  }}
+      # state: >-
+      #   {{  states("binary_sensor.shelly_warmtepomp_status") != 'on' or
+      #       states("binary_sensor.esp_garage_knopjes_status") != 'on' or
+      #       states("binary_sensor.esp_garage_status") != 'on' or
+      #       states("binary_sensor.knop_noor_status") != 'on' or
+      #       states("binary_sensor.leds_drukknoppen_status") != 'on' or
+      #       states("binary_sensor.knop_fien_status") != 'on' or
+      #       states("binary_sensor.knop_martine_status") != 'on' or
+      #       states("binary_sensor.knop_giel_status") != 'on' or
+      #       states("binary_sensor.esp_zolder_status") != 'on' or
+      #       states("binary_sensor.esp_verwarming_status") != 'on' or
+      #       states("binary_sensor.shelly_badkamer_verluchting_status") != 'on' or
+      #       states("binary_sensor.shelly_keuken_ijskast_status") != 'on' or
+      #       states("binary_sensor.shelly_garage_opladers_status") != 'on' or
+      #       states("binary_sensor.shelly_keuken_koffiezet_status") != 'on' or
+      #       states("binary_sensor.shelly_badkamer_hoog_pombak_status") != 'on' or
+      #       states("binary_sensor.shelly_danszaal_spots_wc_status") != 'on' or
+      #       states("binary_sensor.shelly_keuken_inkom_spots_status") != 'on' or
+      #       states("binary_sensor.shelly_waskot_trap_status") != 'on' or
+      #       states("binary_sensor.shelly_keuken_luster_gang_beneden_status") != 'on' or
+      #       states("binary_sensor.shelly_gang_boven_slaapkamer_hoog_status") != 'on' or
+      #       states("binary_sensor.shelly_danszaal_zithoek_luster_status") != 'on' or
+      #       states("binary_sensor.smappee_l3_status") != 'on' or
+      #       states("binary_sensor.smappee_l2_status") != 'on' or
+      #       states("binary_sensor.smappee_l1_status") != 'on' or
+      #       states("binary_sensor.shelly_garage_werkbank_status") != 'on' }}
+      #       # states("binary_sensor.esp_zwembad_status") != 'on' or
+      #       # states("binary_sensor.esp_zwembadverwarming_status") != 'on'

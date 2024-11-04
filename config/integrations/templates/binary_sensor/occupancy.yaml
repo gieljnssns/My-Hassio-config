@@ -8,6 +8,15 @@
         {{  is_state('binary_sensor.keuken_aqara_pir', 'on') 
             or is_state('binary_sensor.keuken_presence', 'on')
             or is_state('binary_sensor.keuken_pir_delay', 'on') }}
+    
+    - name: Badkamer bezetting
+      unique_id: da5f7441-6d4d-4326-b274-dc7002e83298
+      device_class: occupancy
+      delay_off:
+        seconds: 30
+      state: >
+        {{  is_state('binary_sensor.badkamer_presence', 'on') 
+            or is_state('binary_sensor.badkamer_pir_delay', 'on') }}
 
     - name: Living bezetting
       unique_id: 83253a76-14ae-4842-b554-9cd21324c362
@@ -35,3 +44,12 @@
       state: >
         {{ is_state('binary_sensor.zithoek_aqara_pir', 'on') or
             is_state('binary_sensor.zithoek_presence', 'on') }}
+    
+    - name: Tuin bezetting
+      unique_id: efa6d545-9ecc-4b8c-9919-1236957d31e7
+      device_class: occupancy
+      delay_off:
+        seconds: 30
+      state: >
+        {{ is_state('binary_sensor.tuin_person_occupancy', 'on') or
+            is_state('binary_sensor.afdak_person_occupancy', 'on') }}

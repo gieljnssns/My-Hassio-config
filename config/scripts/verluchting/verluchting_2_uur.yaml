@@ -14,7 +14,13 @@ verluchting_2_uur:
         percentage: 100
     - action: input_datetime.set_datetime
       data:
-        datetime: "{{ now() + timedelta(hours=2) }}"
+        datetime: >
+          {% set current = states("input_datetime.verluchting_end_time") %}
+          {% if as_timestamp(current) > as_timestamp(now() + timedelta(hours=2)) %}
+            {{ current }}
+          {% else %}
+            {{ now() + timedelta(hours=2) }}
+          {% endif %}
       target:
         entity_id: input_datetime.verluchting_end_time 
     # - choose:

@@ -1,4 +1,5 @@
-logging_level: DEBUG
+logging_level: INFO
+data_path: /share/
 costfun: profit
 sensor_power_photovoltaics: sensor.emhass_huidige_opbrengst
 sensor_power_load_no_var_loads: sensor.huidig_verbruik_zonder_wp
@@ -6,12 +7,13 @@ set_total_pv_sell: false
 set_nocharge_from_grid: false
 set_nodischarge_to_grid: false
 maximum_power_from_grid: 14000
+maximum_power_to_grid: 9000
 number_of_deferrable_loads: 5
 list_nominal_power_of_deferrable_loads:
   - nominal_power_of_deferrable_loads: 2000
   - nominal_power_of_deferrable_loads: 2000
   - nominal_power_of_deferrable_loads: 1700
-  - nominal_power_of_deferrable_loads: 1100
+  - nominal_power_of_deferrable_loads: 900
   - nominal_power_of_deferrable_loads: 2000
 list_operating_hours_of_each_deferrable_load:
   - operating_hours_of_each_deferrable_load: 2
@@ -33,10 +35,16 @@ list_end_timesteps_of_each_deferrable_load:
   - end_timesteps_of_each_deferrable_load: 0
 list_peak_hours_periods_start_hours:
   - peak_hours_periods_start_hours: "7:00"
+  - peak_hours_periods_start_hours: "9:00"
   - peak_hours_periods_start_hours: "11:00"
+  - peak_hours_periods_start_hours: "13:00"
+  - peak_hours_periods_start_hours: "15:00"
 list_peak_hours_periods_end_hours:
+  - peak_hours_periods_end_hours: "8:00"
+  - peak_hours_periods_end_hours: "10:00"
+  - peak_hours_periods_end_hours: "12:00"
+  - peak_hours_periods_end_hours: "14:00"
   - peak_hours_periods_end_hours: "16:00"
-  - peak_hours_periods_end_hours: "19:00"
 list_treat_deferrable_load_as_semi_cont:
   - treat_deferrable_load_as_semi_cont: true
   - treat_deferrable_load_as_semi_cont: true
@@ -49,13 +57,17 @@ list_set_deferrable_load_single_constant:
   - set_deferrable_load_single_constant: true
   - set_deferrable_load_single_constant: false
   - set_deferrable_load_single_constant: false
+list_set_deferrable_startup_penalty:
+  - set_deferrable_startup_penalty: 0
+  - set_deferrable_startup_penalty: 0
 load_peak_hours_cost: 0.164497535
 load_offpeak_hours_cost: 0.164497535
 photovoltaic_production_sell_price: 0
 list_pv_module_model:
   - pv_module_model: CSUN_Eurasia_Energy_Systems_Industry_and_Trade_CSUN295_60M
 list_pv_inverter_model:
-  - pv_inverter_model: Fronius_International_GmbH__Fronius_Primo_5_0_1_208_240__240V_
+  - pv_inverter_model: SolarEdge_Technologies_Ltd___SE3000__240V_
+  - pv_inverter_model: Chint_Solar_Zhejiang__CHPI4KTL_US__240V_
 list_surface_tilt:
   - surface_tilt: 30
 list_surface_azimuth:
@@ -64,19 +76,21 @@ list_modules_per_string:
   - modules_per_string: 16
 list_strings_per_inverter:
   - strings_per_inverter: 1
+inverter_is_hybrid: false
+compute_curtailment: false
 set_use_battery: false
 battery_nominal_energy_capacity: 5000
 hass_url: empty
 long_lived_token: empty
 optimization_time_step: 30
-historic_days_to_retrieve: 2
+historic_days_to_retrieve: 100
 method_ts_round: first
 lp_solver: COIN_CMD
 lp_solver_path: /usr/bin/cbc
 set_battery_dynamic: false
 battery_dynamic_max: 0.9
 battery_dynamic_min: -0.9
-load_forecast_method: naive
+load_forecast_method: mlforecaster
 battery_discharge_power_max: 1000
 battery_charge_power_max: 1000
 battery_discharge_efficiency: 0.95
@@ -84,4 +98,173 @@ battery_charge_efficiency: 0.95
 battery_minimum_state_of_charge: 0.3
 battery_maximum_state_of_charge: 0.9
 battery_target_state_of_charge: 0.6
-method: solcast
+
+
+
+
+
+
+
+
+
+{
+  "battery_charge_efficiency": 0.95,
+  "battery_charge_power_max": 1000,
+  "battery_discharge_efficiency": 0.95,
+  "battery_discharge_power_max": 1000,
+  "battery_dynamic_max": 0.9,
+  "battery_dynamic_min": -0.9,
+  "battery_maximum_state_of_charge": 0.9,
+  "battery_minimum_state_of_charge": 0.3,
+  "battery_nominal_energy_capacity": 5000,
+  "battery_target_state_of_charge": 0.6,
+  "compute_curtailment": false,
+  "continual_publish": false,
+  "costfun": "profit",
+  "delta_forecast_daily": 1,
+  "end_timesteps_of_each_deferrable_load": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "historic_days_to_retrieve": 100,
+  "inverter_is_hybrid": false,
+  "load_cost_forecast_method": "hp_hc_periods",
+  "load_forecast_method": "mlforecaster",
+  "load_negative": false,
+  "load_offpeak_hours_cost": 0.164497535,
+  "load_peak_hour_periods": {
+    "period_hp_1": [
+      {
+        "start": "08:00"
+      },
+      {
+        "end": "09:00"
+      }
+    ],
+    "period_hp_2": [
+      {
+        "start": "09:00"
+      },
+      {
+        "end": "10:00"
+      }
+    ],
+    "period_hp_3": [
+      {
+        "start": "11:00"
+      },
+      {
+        "end": "12:00"
+      }
+    ],
+    "period_hp_4": [
+      {
+        "start": "13:00"
+      },
+      {
+        "end": "14:00"
+      }
+    ],
+    "period_hp_5": [
+      {
+        "start": "15:00"
+      },
+      {
+        "end": "16:00"
+      }
+    ]
+  },
+  "load_peak_hours_cost": 0.164497535,
+  "logging_level": "DEBUG",
+  "lp_solver": "COIN_CMD",
+  "lp_solver_path": "/usr/bin/cbc",
+  "maximum_power_from_grid": 14000,
+  "maximum_power_to_grid": 9000,
+  "method_ts_round": "first",
+  "modules_per_string": [
+    16
+  ],
+  "nominal_power_of_deferrable_loads": [
+    2000,
+    2000,
+    1700,
+    900,
+    2000
+  ],
+  "number_of_deferrable_loads": 5,
+  "operating_hours_of_each_deferrable_load": [
+    2,
+    2,
+    2.5,
+    1,
+    0
+  ],
+  "optimization_time_step": 30,
+  "photovoltaic_production_sell_price": 0,
+  "production_price_forecast_method": "constant",
+  "pv_inverter_model": [
+    "SolarEdge_Technologies_Ltd___SE3000__240V_",
+    "Chint_Solar_Zhejiang__CHPI4KTL_US__240V_"
+  ],
+  "pv_module_model": [
+    "CSUN_Eurasia_Energy_Systems_Industry_and_Trade_CSUN295_60M"
+  ],
+  "sensor_linear_interp": [
+    "sensor.emhass_huidige_opbrengst",
+    "sensor.huidig_verbruik_zonder_wp"
+  ],
+  "sensor_power_load_no_var_loads": "sensor.huidig_verbruik_zonder_wp",
+  "sensor_power_photovoltaics": "sensor.emhass_huidige_opbrengst",
+  "sensor_replace_zero": [
+    "sensor.emhass_huidige_opbrengst"
+  ],
+  "set_battery_dynamic": false,
+  "set_deferrable_load_single_constant": [
+    true,
+    true,
+    true,
+    false,
+    false
+  ],
+  "set_deferrable_startup_penalty": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "set_nocharge_from_grid": false,
+  "set_nodischarge_to_grid": true,
+  "set_total_pv_sell": false,
+  "set_use_battery": false,
+  "set_zero_min": true,
+  "start_timesteps_of_each_deferrable_load": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "strings_per_inverter": [
+    1
+  ],
+  "surface_azimuth": [
+    205
+  ],
+  "surface_tilt": [
+    30
+  ],
+  "treat_deferrable_load_as_semi_cont": [
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "weather_forecast_method": "scrapper",
+  "weight_battery_charge": 1,
+  "weight_battery_discharge": 1
+}

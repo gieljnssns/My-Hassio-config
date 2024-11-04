@@ -71,7 +71,7 @@
       state: >
         {% set hours = states('input_number.voorspelde_uren')|float - states('sensor.branduren_warmtepomp')|float %}
         {% if states("input_boolean.verwarming_starten") == 'on' %}
-          {% if hours > 1 -%} 
+          {% if states('input_number.voorspelde_uren')|float > 1 -%} 
             {{ hours }} 
           {%- else %} 
             0 
@@ -83,13 +83,13 @@
     - name: Warmtepompboiler uren
       unique_id: 8225bcd3-62ca-40af-8891-ba06a95eed91
       unit_of_measurement: "uur"
-      availability: >-
-        {{ has_value("switch.warm_water") and 
-          has_value("input_boolean.warm_water_starten") and
-          has_value("input_boolean.op_verlof") and
-          has_value("binary_sensor.warmtepompboiler_aan") and
-          has_value("sensor.warmtepompboiler_is_gestart_op") and
-          has_value("sensor.thermostaat") }}
+      # availability: >-
+      #   {{ has_value("switch.warm_water") and 
+      #     has_value("input_boolean.warm_water_starten") and
+      #     has_value("input_boolean.op_verlof") and
+      #     has_value("binary_sensor.warmtepompboiler_aan") and
+      #     has_value("sensor.warmtepompboiler_is_gestart_op") and
+      #     has_value("sensor.thermostaat") }}
       state: >
         {%- set real = states('sensor.huidige_opbrengst') | float(0)%}
         {%- set percent = real / 3.3 %}
@@ -174,17 +174,19 @@
       availability: >-
         {{ has_value("sensor.solcast_solaredge_forecast_today") }}
       attributes:
+        # list: >
+        #   {%- set real = states('sensor.huidige_opbrengst') | float(0) %}
+        #   {%- set percent = real / 3.3 %}
+        #   {%- set solcast = states('sensor.solcast_solaredge_power_now') | float(0) %}
+        #   {% if real > solcast + percent %}
+        #     {% set estimate = 'pv_estimate90' %}
+        #   {% elif real < solcast - percent %}
+        #     {% set estimate = 'pv_estimate10' %}
+        #   {% else %}
+        #     {% set estimate = 'pv_estimate' %}
+        #   {% endif %}
         list: >
-          {%- set real = states('sensor.huidige_opbrengst') | float(0) %}
-          {%- set percent = real / 3.3 %}
-          {%- set solcast = states('sensor.solcast_solaredge_power_now') | float(0) %}
-          {% if real > solcast + percent %}
-            {% set estimate = 'pv_estimate90' %}
-          {% elif real < solcast - percent %}
-            {% set estimate = 'pv_estimate10' %}
-          {% else %}
-            {% set estimate = 'pv_estimate' %}
-          {% endif %}
+          {% set estimate = 'pv_estimate' %}
           {{  (state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast')
                 |selectattr('period_start','gt',utcnow())
                 |map(attribute=estimate)

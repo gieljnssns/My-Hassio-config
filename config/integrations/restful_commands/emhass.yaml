@@ -25,11 +25,11 @@ naive_mpc_optim:
       "num_def_loads": 5,
       "p_deferrable_nom": [2000, 2000, 1700, 900, 2000],
       "def_total_hours": [
-        {{  states('sensor.wasmachien_uren') | int(0) }},
-        {{  states('sensor.droogkast_uren') | int(0) }},
-        {{  states('sensor.afwasmachien_uren') | int(0) }},
-        {{  states('sensor.warmtepompboiler_uren') | int(0) }},
-        {{  0 | int(0) }}],
+        {{  states('sensor.wasmachien_uren') | round(1, "half", 0) }},
+        {{  states('sensor.droogkast_uren') | round(1, "half", 0) }},
+        {{  states('sensor.afwasmachien_uren') | round(1, "half", 0) }},
+        {{  states('sensor.warmtepompboiler_uren') | round(1, "half", 0)}},
+        {{  0 | round(1, "half", 0) }}],
       "set_def_constant":[true, true, true, true, true],
       "def_start_timestep": [
         0,

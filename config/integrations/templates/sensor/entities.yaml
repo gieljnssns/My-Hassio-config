@@ -172,6 +172,7 @@
                                 | map(attribute='entity_id')
                                 | list)[0:(states("sensor.purge_entites") | int / 2) | int] %}
             {{ purge }}
+            
     - name: Purge entites 2
       unique_id: bc8d6e09-da02-4da5-a918-078e9ffa3529
       state: >
@@ -188,3 +189,53 @@
                                 | map(attribute='entity_id')
                                 | list)[states("sensor.purge_entites") | int - states("sensor.purge_entites_1") | int:states("sensor.purge_entites") | int] %}
           {{ purge }}
+    
+    - name: Esphome restarts
+      unique_id: 261dac89-70b8-486d-a689-5f129e1fbab2
+      state: >
+        {% set unknown = expand(integration_entities('esphome')
+                    | select('match','sensor.')
+                    | reject('contains', '_energy')) 
+                    | selectattr("state", "eq", "unknown") 
+                    | map(attribute="entity_id") 
+                    | list %}
+
+        {%- set devices = namespace(all=[]) %}
+        {%- set switches = namespace(all=[]) %}
+        {%- for entity in unknown -%}
+          {% if device_id(entity) not in devices.all %}
+          {% set devices.all = devices.all + [device_id(entity)] %}
+          {% endif %}
+        {% endfor %}
+        {%- for device in devices.all -%}
+          {%- for entity in device_entities(device) -%}
+            {% if entity| contains('_herstarten') %}
+              {%- set switches.all = switches.all + [entity] -%}
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+        {{ switches.all | length }}
+      attributes:
+        list: >
+          {% set unknown = expand(integration_entities('esphome')
+                    | select('match','sensor.')
+                    | reject('contains', '_energy')) 
+                    | selectattr("state", "eq", "unknown") 
+                    | map(attribute="entity_id") 
+                    | list %}
+
+          {%- set devices = namespace(all=[]) %}
+          {%- set switches = namespace(all=[]) %}
+          {%- for entity in unknown -%}
+            {% if device_id(entity) not in devices.all %}
+            {% set devices.all = devices.all + [device_id(entity)] %}
+            {% endif %}
+          {% endfor %}
+          {%- for device in devices.all -%}
+            {%- for entity in device_entities(device) -%}
+              {% if entity| contains('_herstarten') %}
+                {%- set switches.all = switches.all + [entity] -%}
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+          {{ switches.all }}

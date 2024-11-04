@@ -27,6 +27,13 @@ blueprint:
         target:
           entity:
             domain: binary_sensor
+    
+    occupancy_target2:
+      name: Occupancy
+      selector:
+        target:
+          entity:
+            domain: binary_sensor
 
     no_motion_wait:
       name: Wait time
@@ -60,9 +67,14 @@ actions:
       milliseconds: 200
   - choose:
       - conditions:
-          - condition: state
-            entity_id: !input occupancy_target
-            state: "on"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: !input occupancy_target
+                state: "on"
+              - condition: state
+                entity_id: !input occupancy_target2
+                state: "on"
         sequence:
           - action: light.turn_on
             target: !input light_target
@@ -75,6 +87,10 @@ actions:
           - wait_for_trigger:
               - platform: state
                 entity_id: !input occupancy_target
+                from: "on"
+                to: "off"
+              - platform: state
+                entity_id: !input occupancy_target2
                 from: "on"
                 to: "off"
           - action: input_datetime.set_datetime

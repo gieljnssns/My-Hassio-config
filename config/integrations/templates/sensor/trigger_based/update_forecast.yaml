@@ -41,3 +41,13 @@
             | map(attribute='temperature') 
             | max
             | round(1) }}
+    
+    - name: Min temperatuur buiten voorspelling 12u
+      unique_id: 3623b064-44c9-4e96-a597-0b981a654c77
+      unit_of_measurement: "°C"
+      state: >
+        {% set forecast = hourly %}
+        {{ forecast["weather.home"].forecast[:12] 
+            | map(attribute='temperature') 
+            | min
+            | round(1) }}

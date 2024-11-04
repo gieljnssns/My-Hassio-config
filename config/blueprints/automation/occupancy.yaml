@@ -50,27 +50,33 @@ trigger:
 
 actions:
   - choose:
-    - conditions:
-        - condition: trigger
-          id: aan
-      sequence:
-        - action: input_boolean.turn_on
-          target: !input input_boolean_target
-        - wait_for_trigger:
-            platform: state
-            entity_id: !input motion_entity
-            from: "on"
-            to: "off"
-        - action: input_datetime.set_datetime
-          data:
-            datetime: >
-              {% set wait = no_motion_wait|int(300) %}
-              {{ now() + timedelta(seconds=wait) }}
-          target:
-            entity_id: !input input_datetime_target
-    - conditions:
-        - condition: trigger
-          id: uit
-      sequence:
-        - action: input_boolean.turn_off
-          target: !input input_boolean_target
+      - conditions:
+          - condition: trigger
+            id: aan
+        sequence:
+          - action: input_boolean.turn_on
+            target: !input input_boolean_target
+          - action: input_datetime.set_datetime
+            data:
+              datetime: >
+                {{ now() + timedelta(hours=1) }}
+            target:
+              entity_id: !input input_datetime_target
+          - wait_for_trigger:
+              platform: state
+              entity_id: !input motion_entity
+              from: "on"
+              to: "off"
+          - action: input_datetime.set_datetime
+            data:
+              datetime: >
+                {% set wait = no_motion_wait|int(300) %}
+                {{ now() + timedelta(seconds=wait) }}
+            target:
+              entity_id: !input input_datetime_target
+      - conditions:
+          - condition: trigger
+            id: uit
+        sequence:
+          - action: input_boolean.turn_off
+            target: !input input_boolean_target

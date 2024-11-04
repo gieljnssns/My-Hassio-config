@@ -1,0 +1,29 @@
+verwarming_1u:
+  alias: Verwarming 1u
+  sequence:
+    - delay:
+        seconds: 3
+    # - action: input_select.select_option
+    #   target:
+    #     entity_id: "{{ input_select }}"
+    #   data:
+    #     option: "{{ temp }}"
+    - action: climate.set_preset_mode
+      target:
+        entity_id: "{{ thermostat }}"
+      data:
+        preset_mode: comfort
+    - action: input_datetime.set_datetime
+      data:
+        datetime: >
+          {{ now() + timedelta(seconds=3600) }}
+      target:
+        entity_id: "{{ input_date }}"
+    # - delay:
+    #     hours: 1
+    # - action: input_select.select_option
+    #   target:
+    #     entity_id: "{{ input_select }}"
+    #   data:
+    #     option: "{{ temp_2 }}"
+  mode: parallel

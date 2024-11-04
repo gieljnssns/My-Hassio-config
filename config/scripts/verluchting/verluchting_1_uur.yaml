@@ -14,7 +14,13 @@ verluchting_1_uur:
       entity_id: switch.zolder_verluchting
     - action: input_datetime.set_datetime
       data:
-        datetime: "{{ now() + timedelta(hours=1) }}" # 1 hour from now
+        datetime: >
+          {% set current = states("input_datetime.verluchting_end_time") %}
+          {% if as_timestamp(current) > as_timestamp(now() + timedelta(hours=1)) %}
+            {{ current }}
+          {% else %}
+            {{ now() + timedelta(hours=1) }}
+          {% endif %}
       target:
         entity_id: input_datetime.verluchting_end_time # the entity used in the off time trigger
     # - choose:
