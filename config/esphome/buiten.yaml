@@ -30,6 +30,16 @@ switch:
     id: fan
     restore_mode: RESTORE_DEFAULT_OFF
 
+binary_sensor:
+  - platform: template
+    name: "Kans op aanvriezen"
+    lambda: |-
+      if ((id(dauwpunt).state < id(ha_temp).state) && (id(ha_temp).state < 3)) {
+        return true;
+      } else {
+        return false;
+      }
+
 sensor:
   - platform: bh1750
     name: "Buiten lichtsterkte"
@@ -73,6 +83,7 @@ sensor:
 
   - platform: template
     name: "Buiten dauwpunt"
+    id: dauwpunt
     lambda: |-
       return (243.5*(log(id(ha_humidity).state/100)+((17.67*id(ha_temp).state)/
       (243.5+id(ha_temp).state)))/(17.67-log(id(ha_humidity).state/100)-

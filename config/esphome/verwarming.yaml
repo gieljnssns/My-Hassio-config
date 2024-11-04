@@ -60,8 +60,9 @@ climate:
 #     id: masser
 one_wire:
   - platform: gpio
-    pin: 23
-    # id: masser
+    pin: 
+      number: 23
+    id: dallas
     # 0xEC3C01D075637428
     # 0x273C01D6075FEC28
     # 0xD03C01D607B86528
@@ -74,28 +75,43 @@ sensor:
   - platform: dallas_temp
     address: 0xEC3C01D075637428
     name: "Vloerverwarming heen"
-    # id: masser
+    one_wire_id: dallas
   - platform: dallas_temp
     address: 0x273C01D6075FEC28
     name: "Boiler uit"
-    # id: masser
+    id: uit
+    one_wire_id: dallas
+    on_raw_value:
+      then:
+        - if:
+            condition:
+              lambda: |-
+                return isnan(id(uit).raw_state);
+            then:
+              - homeassistant.service:
+                  service: persistent_notification.create
+                  data:
+                    title: Bericht uit de kelder
+                    message: Boiler uit is NaN
+    filters:
+        - filter_out: nan
   - platform: dallas_temp
     address: 0xD03C01D607B86528
     name: "Boiler in"
-    # id: masser
+    one_wire_id: dallas
   - platform: dallas_temp
     address: 0x563C01D607E4C728
     name: "Vloerverwarming terug"
-    id: masser
+    one_wire_id: dallas
   - platform: dallas_temp
     address: 0x423C01D075CD3928
     name: "Kelder"
-    # dallas_id: masser
+    one_wire_id: dallas
   - platform: dallas_temp
     address: 0x133C01D607F68D28
     name: "Thermostaat"
     id: thermostaat
-    # dallas_id: masser
+    one_wire_id: dallas
     on_value_range:
       above: 51
       then:

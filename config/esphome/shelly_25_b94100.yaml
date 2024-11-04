@@ -10,13 +10,23 @@ substitutions:
   ssid: !secret ssid-waskot
   manual_ip: 192.168.79.128
 
+globals:
+   - id: num_executions_a
+     type: int
+     restore_value: no
+     initial_value: '0'
+   - id: num_executions_b
+     type: int
+     restore_value: no
+     initial_value: '0'
+
 packages:
-  # wifi: !include common/wifi-waskot.yaml
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
 
 wifi:
   power_save_mode: HIGH
+  # use_address: 192.168.79.119
 
 i2c:
   sda: GPIO12
@@ -24,6 +34,7 @@ i2c:
 
 sensor:
   - platform: ade7953_i2c
+    irq_pin: GPIO16 # Prevent overheating by setting this
     voltage:
       name: ${upper_devicename} spanning
       internal: True
@@ -37,7 +48,31 @@ sensor:
       name: ${channel_2} vermogen
       id: power_channel_2
       filters:
-        - multiply: 1
+        - lambda: return abs(x);
+        - filter_out: nan
+      on_raw_value:
+        then:
+          - if:
+              condition:
+                lambda: |-
+                  return isnan(id(power_channel_2).raw_state);
+              then:
+                - if:
+                    condition:
+                      lambda: |-
+                        return id(num_executions_a) < 5;
+                    then:
+                      - lambda: |-
+                          id(num_executions_a) += 1;
+                      - homeassistant.service:
+                          service: persistent_notification.create
+                          data:
+                            title: |-
+                              "Message %d from ${upper_devicename}", id(num_executions_a)
+                            message: ${channel_2} vermogen is NaN 
+                - switch.turn_on: restart_device
+                - lambda: |-
+                    id(num_executions_a) = 0;
       on_value_range:
         - above: ${max_power}
           then:
@@ -52,7 +87,43 @@ sensor:
       name: ${channel_1} vermogen
       id: power_channel_1
       filters:
-        - multiply: -1
+        - lambda: return abs(x);
+        - filter_out: nan
+      on_raw_value:
+        then:
+          - if:
+              condition:
+                lambda: |-
+                  // static int num_executions_b = 0;
+                  return isnan(id(power_channel_1).raw_state);
+              then:
+                - if:
+                    condition:
+                      lambda: |-
+                        return id(num_executions_b) < 5;
+                    then:
+                      - lambda: |-
+                          (num_executions_b) += 1;
+                      - homeassistant.service:
+                          service: persistent_notification.create
+                          data:
+                            title: |-
+                              "Message %d from ${upper_devicename}", num_executions_b
+                            message: ${channel_1} vermogen is NaN 
+                - switch.turn_on: restart_device
+                - lambda: |-
+                    num_executions_b = 0;
+        # then:
+        #   - if:
+        #       condition:
+        #         lambda: |-
+        #           return isnan(id(power_channel_1).raw_state);
+        #       then:
+        #         - homeassistant.service:
+        #             service: persistent_notification.create
+        #             data:
+        #               title: Message from ${upper_devicename}
+        #               message: ${channel_1} vermogen is NaN
       on_value_range:
         - above: ${max_power}
           then:
@@ -64,22 +135,6 @@ sensor:
                 data_template:
                   message: Switch turned off because power ${channel_1} exceeded ${max_power}W
     update_interval: 30s
-
-  # - platform: total_daily_energy
-  #   name: ${channel_1} energie
-  #   power_id: power_channel_1
-  #   filters:
-  #       # Multiplication factor from W to kW is 0.001
-  #       - multiply: 0.001
-  #   unit_of_measurement: kW
-
-  # - platform: total_daily_energy
-  #   name: ${channel_2} energie
-  #   power_id: power_channel_2
-  #   filters:
-  #       # Multiplication factor from W to kW is 0.001
-  #       - multiply: 0.001
-  #   unit_of_measurement: kW
 
   # NTC Temperature
   - platform: ntc
@@ -158,7 +213,3 @@ binary_sensor:
         - light.toggle: lightid2
     # internal: true
     id: switchid2
-  - platform: gpio
-    pin: GPIO16
-    name: "ade7953_i2c IRQ pin"
-    internal: true

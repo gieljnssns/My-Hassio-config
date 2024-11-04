@@ -10,7 +10,10 @@ esp32:
   #   type: arduino
   framework:
     type: esp-idf
-
+logger:
+  baud_rate: 0
+  level: debug
+  
 packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
@@ -22,28 +25,36 @@ wifi:
 esphome:
   name: ${devicename}
 
-switch:
-  - platform: gpio
-    name: "MCP23017 Pin A0"
-    pin:
-      number: 14
-      mode:
-        output: true
-      inverted: true
-  - platform: gpio
-    name: "MCP23017 Pin A1"
-    pin:
-      number: 27
-      mode:
-        output: true
-      inverted: true
-# uart:
-#     tx_pin: 1
-#     rx_pin: 3
-#     baud_rate: 115200
-#     # baud_rate: 256000
-#     parity: NONE
-#     stop_bits: 1
+# switch:
+#   - platform: gpio
+#     name: "MCP23017 Pin A0"
+#     pin:
+#       number: 14
+#       mode:
+#         output: true
+#       inverted: true
+#   - platform: gpio
+#     name: "MCP23017 Pin A1"
+#     pin:
+#       number: 27
+#       mode:
+#         output: true
+#       inverted: true
+uart:
+    tx_pin: 1
+    rx_pin: 3
+    # baud_rate: 115200
+    baud_rate: 256000
+    parity: NONE
+    stop_bits: 1
+    id: uar
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   after:
+    #     delimiter: "\n"
+    #   sequence:
+    #     - lambda: UARTDebug::log_string(direction, bytes);
 # uart:
 #   id: ld2420_uart
 #   tx_pin: 17 
@@ -54,8 +65,56 @@ switch:
 #   # debug:
 #   #   direction: BOTH
 
-# ld2420:
+ld2410:
+  - uart_id: uar
+binary_sensor:
+  - platform: ld2410
+    has_target:
+      name: ${upper_devicename} Presence
+    has_moving_target:
+      name: ${upper_devicename} Moving Target
+    has_still_target:
+      name: ${upper_devicename} Still Target
+  
+  - platform: template
+    name: ${upper_devicename} pir delay
+    device_class: motion
+    lambda: |-
+      if (id(pir).state) {
+        return true;
+      } else {
+        return false;
+      }
+    filters:
+      - delayed_off: 60s
 
+  - platform: gpio
+    pin: GPIO19
+    name: ${upper_devicename} pir
+    id: pir
+    device_class: motion
+    
+switch:
+  - platform: ld2410
+    engineering_mode:
+      name: ${upper_devicename} engineering mode
+    bluetooth:
+      name: ${upper_devicename} bluetooth
+      id: ld2410_bluetooth
+
+sensor:
+  - platform: ld2410
+    moving_distance:
+      name: ${upper_devicename} Moving Distance
+    still_distance:
+      name: ${upper_devicename} Still Distance
+    moving_energy:
+      name: ${upper_devicename} Move Energy
+    still_energy:
+      name: ${upper_devicename} Still Energy
+    detection_distance:
+      name: ${upper_devicename} Detection Distance
+      
 # text_sensor:
 #   - platform: ld2420
 #     fw_version:

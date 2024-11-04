@@ -38,7 +38,7 @@ sensor:
       name: ${channel_2} vermogen
       id: power_channel_2
       filters:
-        - multiply: 1
+        - lambda: return abs(x);
       on_value_range:
         - above: ${max_power}
           then:
@@ -53,7 +53,7 @@ sensor:
       name: ${channel_1} vermogen
       id: power_channel_1
       filters:
-        - multiply: -1
+        - lambda: return abs(x);
       on_value_range:
         - above: ${max_power}
           then:
@@ -65,22 +65,6 @@ sensor:
                 data_template:
                   message: Switch turned off because power ${channel_1} exceeded ${max_power}W
     update_interval: 30s
-
-  # - platform: total_daily_energy
-  #   name: ${channel_1} energie
-  #   power_id: power_channel_1
-  #   filters:
-  #       # Multiplication factor from W to kW is 0.001
-  #       - multiply: 0.001
-  #   unit_of_measurement: kW
-
-  # - platform: total_daily_energy
-  #   name: ${channel_2} energie
-  #   power_id: power_channel_2
-  #   filters:
-  #       # Multiplication factor from W to kW is 0.001
-  #       - multiply: 0.001
-  #   unit_of_measurement: kW
 
   # NTC Temperature
   - platform: ntc

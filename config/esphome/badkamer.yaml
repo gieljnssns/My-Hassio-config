@@ -14,14 +14,39 @@ esp32:
 packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
-
+  
 wifi:
   # ...
-  power_save_mode: light
+  power_save_mode: LIGHT
+logger:
+  baud_rate: 0
+  level: DEBUG
+
+# mqtt:
+#   broker: 192.168.79.54
+#   username: !secret mqtt_user
+#   password: !secret mqtt_password
+#   discovery: false
+
+# psram:
 
 esphome:
   name: ${devicename}
+  # on_boot:
+  #   - priority: 600.0
+  #     then:
+  #       - switch.turn_on: ld2410_bluetooth
+        # - button.press: ld2410_query_params
+debug:
+  update_interval: 5s
 
+text_sensor:
+  - platform: debug
+    # device:
+    #   name: ${upper_devicename} Device Info
+    reset_reason:
+      name: ${upper_devicename} Reset Reason  
+    
 esp32_ble_tracker:
   scan_parameters:
     # We currently use the defaults to ensure Bluetooth
@@ -35,9 +60,19 @@ bluetooth_proxy:
 uart:
   tx_pin: 1
   rx_pin: 3
+  id: uar
+  # tx_pin: 1
+  # rx_pin: 3
   baud_rate: 256000
   parity: NONE
   stop_bits: 1
+  # debug:
+  #   direction: BOTH
+  #   dummy_receiver: false
+  #   after:
+  #     delimiter: "\n"
+  #   sequence:
+  #     - lambda: UARTDebug::log_string(direction, bytes);
 
 i2c:
   - id: bus_a
@@ -50,6 +85,16 @@ i2c:
     scan: true
 
 ld2410:
+  - uart_id: uar
+
+button:
+  - platform: ld2410
+    factory_reset:
+      name: ${upper_devicename} ld2410 factory reset
+    restart:
+      name: ${upper_devicename} ld2410 restart
+    query_params:
+      name: ${upper_devicename} ld2410 query params
 
 number:
   - platform: ld2410
@@ -62,48 +107,66 @@ number:
     g0:
       move_threshold:
         name: ${upper_devicename} g0 move
+        mode: box
       still_threshold:
         name: ${upper_devicename} g0 still
+        mode: box
     g1:
       move_threshold:
         name: ${upper_devicename} g1 move
+        mode: box
       still_threshold:
         name: ${upper_devicename} g1 still
+        mode: box
     g2:
       move_threshold:
         name: ${upper_devicename} g2 move
+        mode: box
       still_threshold:
         name: ${upper_devicename} g2 still
+        mode: box
     g3:
       move_threshold:
         name: ${upper_devicename} g3 move
+        mode: box
       still_threshold:
         name: ${upper_devicename} g3 still
+        mode: box
     g4:
       move_threshold:
         name: ${upper_devicename} g4 move
+        mode: box
       still_threshold:
         name: ${upper_devicename} g4 still
+        mode: box
     g5:
       move_threshold:
         name: ${upper_devicename} g5 move
+        mode: box
       still_threshold:
         name: ${upper_devicename} g5 still
+        mode: box
     g6:
       move_threshold:
         name: ${upper_devicename} g6 move
+        mode: box
       still_threshold:
         name: ${upper_devicename} g6 still
+        mode: box
     g7:
       move_threshold:
         name: ${upper_devicename} g7 move
+        mode: box
       still_threshold:
         name: ${upper_devicename} g7 still
+        mode: box
     g8:
       move_threshold:
         name: ${upper_devicename} g8 move
+        mode: box
       still_threshold:
         name: ${upper_devicename} g8 still
+        mode: box
 
 switch:
   - platform: ld2410
@@ -111,8 +174,21 @@ switch:
       name: ${upper_devicename} engineering mode
     bluetooth:
       name: ${upper_devicename} bluetooth
+      id: ld2410_bluetooth
 
 sensor:
+  - platform: debug
+    free:
+      name: ${upper_devicename} Heap Free
+    # fragmentation:
+    #   name: ${upper_devicename} Heap Fragmentation
+    block:
+      name: ${upper_devicename} Heap Max Block
+    loop_time:
+      name: ${upper_devicename} Loop Time
+    # psram:
+    #   name: ${upper_devicename} Free PSRAM
+
   - platform: ld2410
     moving_distance:
       name: ${upper_devicename} Moving Distance
@@ -171,11 +247,6 @@ sensor:
       still_energy:
         name: ${upper_devicename} g8 still energy
 
-  # - platform: bh1750
-  #   name: "Badkamer lichtsterkte"
-  #   address: 0x23
-  #   update_interval: 60s
-  #   i2c_id: bus_b
 
   - platform: bme280_i2c
     temperature:
@@ -212,3 +283,21 @@ binary_sensor:
       name: ${upper_devicename} Moving Target
     has_still_target:
       name: ${upper_devicename} Still Target
+  
+  - platform: template
+    name: ${upper_devicename} pir delay
+    device_class: motion
+    lambda: |-
+      if (id(pir).state) {
+        return true;
+      } else {
+        return false;
+      }
+    filters:
+      - delayed_off: 60s
+
+  - platform: gpio
+    pin: GPIO19
+    name: ${upper_devicename} pir
+    id: pir
+    device_class: motion
