@@ -50,19 +50,16 @@ from custom_components.powercalc.const import (
     ATTR_INTEGRATION,
     ATTR_SOURCE_DOMAIN,
     ATTR_SOURCE_ENTITY,
+    CALCULATION_STRATEGY_CONF_KEYS,
     CONF_CALCULATION_ENABLED_CONDITION,
-    CONF_COMPOSITE,
     CONF_DELAY,
     CONF_DISABLE_EXTENDED_ATTRIBUTES,
     CONF_DISABLE_STANDBY_POWER,
-    CONF_FIXED,
     CONF_FORCE_UPDATE_FREQUENCY,
     CONF_IGNORE_UNAVAILABLE_STATE,
-    CONF_LINEAR,
     CONF_MODEL,
     CONF_MULTIPLY_FACTOR,
     CONF_MULTIPLY_FACTOR_STANDBY,
-    CONF_PLAYBOOK,
     CONF_POWER,
     CONF_POWER_SENSOR_CATEGORY,
     CONF_POWER_SENSOR_ID,
@@ -70,10 +67,10 @@ from custom_components.powercalc.const import (
     CONF_SLEEP_POWER,
     CONF_STANDBY_POWER,
     CONF_UNAVAILABLE_POWER,
-    CONF_WLED,
     DATA_CALCULATOR_FACTORY,
     DATA_DISCOVERY_MANAGER,
     DATA_STANDBY_POWER_SENSORS,
+    DEFAULT_POWER_SENSOR_PRECISION,
     DOMAIN,
     DUMMY_ENTITY_ID,
     OFF_STATES,
@@ -257,7 +254,7 @@ def _get_standby_power(
 
     if not sensor_config.get(CONF_DISABLE_STANDBY_POWER):
         if sensor_config.get(CONF_STANDBY_POWER) is not None:
-            standby_power = sensor_config.get(CONF_STANDBY_POWER)  # type: ignore
+            standby_power = sensor_config.get(CONF_STANDBY_POWER)
             if not isinstance(standby_power, Template):
                 standby_power = Decimal(standby_power)
         elif power_profile is not None:
@@ -298,11 +295,11 @@ def is_manually_configured(sensor_config: ConfigType) -> bool:
     """
     if CONF_MODEL in sensor_config:
         return False
-    return any(key in sensor_config for key in [CONF_LINEAR, CONF_FIXED, CONF_PLAYBOOK, CONF_COMPOSITE])
+    return any(key in sensor_config for key in CALCULATION_STRATEGY_CONF_KEYS)
 
 
 def is_fully_configured(config: ConfigType) -> bool:
-    return any(key in config for key in [CONF_LINEAR, CONF_WLED, CONF_FIXED, CONF_PLAYBOOK])
+    return any(key in config for key in CALCULATION_STRATEGY_CONF_KEYS)
 
 
 class PowerSensor(BaseEntity):
@@ -348,7 +345,7 @@ class VirtualPowerSensor(SensorEntity, PowerSensor):
         self._multiply_factor = sensor_config.get(CONF_MULTIPLY_FACTOR)
         self._multiply_factor_standby = bool(sensor_config.get(CONF_MULTIPLY_FACTOR_STANDBY, False))
         self._ignore_unavailable_state = bool(sensor_config.get(CONF_IGNORE_UNAVAILABLE_STATE, False))
-        self._rounding_digits = int(sensor_config.get(CONF_POWER_SENSOR_PRECISION))  # type: ignore
+        self._rounding_digits = int(sensor_config.get(CONF_POWER_SENSOR_PRECISION, DEFAULT_POWER_SENSOR_PRECISION))
         self.entity_id = entity_id
         self._sensor_config = sensor_config
         self._track_entities: list = []
@@ -462,7 +459,7 @@ class VirtualPowerSensor(SensorEntity, PowerSensor):
 
         self.async_on_remove(start.async_at_start(self.hass, initial_update))
 
-        if isinstance(self._strategy_instance, PlaybookStrategy):
+        if hasattr(self._strategy_instance, "set_update_callback"):
             self._strategy_instance.set_update_callback(self._update_power_sensor)
 
         @callback
@@ -596,7 +593,7 @@ class VirtualPowerSensor(SensorEntity, PowerSensor):
     async def calculate_standby_power(self, state: State) -> Decimal:
         """Calculate the power of the device in OFF state."""
         assert self._strategy_instance is not None
-        sleep_power: ConfigType = self._sensor_config.get(CONF_SLEEP_POWER)  # type: ignore
+        sleep_power: ConfigType = self._sensor_config.get(CONF_SLEEP_POWER)
         if sleep_power:
             delay = sleep_power.get(CONF_DELAY)
 
@@ -610,13 +607,13 @@ class VirtualPowerSensor(SensorEntity, PowerSensor):
 
             self._sleep_power_timer = async_call_later(
                 self.hass,
-                delay,  # type: ignore
+                delay,
                 _update_sleep_power,
             )
 
         standby_power = self._standby_power
         if self._strategy_instance.can_calculate_standby():
-            standby_power = await self._strategy_instance.calculate(state) or Decimal(0)
+            standby_power = await self._strategy_instance.calculate(state) or self._standby_power
 
         evaluated = await evaluate_power(standby_power)
         if evaluated is None:

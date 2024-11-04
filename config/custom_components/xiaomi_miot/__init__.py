@@ -32,6 +32,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import (
     Entity,
     ToggleEntity,
+    EntityCategory,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components import persistent_notification
@@ -727,27 +728,18 @@ class BaseEntity(Entity):
     @property
     def entity_category(self):
         cat = super().entity_category
-        if ENTITY_CATEGORY_VIA_ENUM:
-            if isinstance(cat, str):
-                try:
-                    cat = EntityCategory(cat)
-                except KeyError:
-                    cat = None
-        elif isinstance(cat, EntityCategory):
-            # for v2021.11
-            cat = cat.value
-        return cat
+        if isinstance(cat, EntityCategory):
+            return cat
+        if isinstance(cat, str) and cat in EntityCategory:
+            return EntityCategory(cat)
+        return None
 
     def get_device_class(self, enum):
         cls = self._attr_device_class
         if isinstance(cls, enum):
             return cls
-        if isinstance(cls, str):
-            try:
-                cls = EntityCategory(cls)
-            except (KeyError, ValueError):
-                cls = None
-            return cls
+        if isinstance(cls, str) and cls in enum:
+            return enum(cls)
         return None
 
     @property
@@ -993,11 +985,14 @@ class MiioEntity(BaseEntity):
         swv = self._miio_info.firmware_version
         if self._miio_info.hardware_version:
             swv = f'{swv}@{self._miio_info.hardware_version}'
+        updater = self._state_attrs.get('state_updater')
+        if updater and updater not in ['none']:
+            swv = f'{swv} ({updater})'
         return {
             'identifiers': {(DOMAIN, self._unique_did)},
             'name': self.device_name,
             'model': self._model,
-            'manufacturer': (self._model or 'Xiaomi').split('.', 1)[0],
+            'manufacturer': (self.model or 'Xiaomi').split('.', 1)[0],
             'sw_version': swv,
             'suggested_area': self._config.get('room_name'),
             'configuration_url': f'https://home.miot-spec.com/s/{self._model}',
@@ -1162,6 +1157,22 @@ class MiotEntityInterface:
 
     def update_attrs(self, *args, **kwargs):
         raise NotImplementedError()
+
+
+def update_attrs_add_suffix_on_duplicate(attrs, new_dict):
+    updated_attrs = {}
+
+    for key, value in new_dict.items():
+        if key in attrs:
+            suffix = 2
+            while f"{key}_{suffix}" in attrs:
+                suffix += 1
+            updated_key = f"{key}_{suffix}"
+        else:
+            updated_key = key
+
+        updated_attrs[updated_key] = value
+    attrs.update(updated_attrs)
 
 
 class MiotEntity(MiioEntity):
@@ -1542,13 +1553,13 @@ class MiotEntity(MiioEntity):
     async def async_update_for_main_entity(self):
         if self._miot_service:
             for d in [
-                'sensor', 'binary_sensor', 'switch', 'number',
-                'select', 'fan', 'cover', 'button', 'number_select',
+                'sensor', 'binary_sensor', 'switch', 'number', 'select',
+                'fan', 'cover', 'button', 'scanner', 'number_select',
             ]:
                 pls = self.custom_config_list(f'{d}_properties') or []
                 if pls:
                     self._update_sub_entities(pls, '*', domain=d)
-            for d in ['button', 'text']:
+            for d in ['button', 'text', 'select']:
                 als = self.custom_config_list(f'{d}_actions') or []
                 if als:
                     self._update_sub_entities(None, '*', domain=d, actions=als)
@@ -1617,16 +1628,17 @@ class MiotEntity(MiioEntity):
 
         # update micloud statistics in cloud
         cls = self.custom_config_list('micloud_statistics') or []
-        if key := self.custom_config('stat_power_cost_key'):
-            dic = {
-                'type': self.custom_config('stat_power_cost_type', 'stat_day_v3'),
-                'key': key,
-                'day': 32,
-                'limit': 31,
-                'attribute': None,
-                'template': 'micloud_statistics_power_cost',
-            }
-            cls = [*cls, dic]
+        if keys := self.custom_config_list('stat_power_cost_key'):
+            for k in keys:
+                dic = {
+                    'type': self.custom_config('stat_power_cost_type', 'stat_day_v3'),
+                    'key': k,
+                    'day': 32,
+                    'limit': 31,
+                    'attribute': None,
+                    'template': 'micloud_statistics_power_cost',
+                }
+                cls.append(dic)
         if cls:
             await self.async_update_micloud_statistics(cls)
 
@@ -1793,7 +1805,7 @@ class MiotEntity(MiioEntity):
             if anm := c.get('attribute'):
                 attrs[anm] = rls
             elif isinstance(rls, dict):
-                attrs.update(rls)
+                update_attrs_add_suffix_on_duplicate(attrs, rls)
         if attrs:
             await self.async_update_attrs(attrs)
 
@@ -2025,6 +2037,7 @@ class MiotEntity(MiioEntity):
         add_selects = self._add_entities.get('select')
         add_buttons = self._add_entities.get('button')
         add_texts = self._add_entities.get('text')
+        add_device_trackers = self._add_entities.get('device_tracker')
         exclude_services = self._state_attrs.get('exclude_miot_services') or []
         for s in sls:
             if s.name in exclude_services:
@@ -2085,6 +2098,10 @@ class MiotEntity(MiioEntity):
                         from .text import MiotTextActionSubEntity
                         self._subs[fnm] = MiotTextActionSubEntity(self, p, option=opt)
                         add_texts([self._subs[fnm]])
+                    elif add_selects and domain == 'select' and p.ins:
+                        from .select import MiotActionSelectSubEntity
+                        self._subs[fnm] = MiotActionSelectSubEntity(self, p, option=opt)
+                        add_selects([self._subs[fnm]])
                 elif add_buttons and domain == 'button' and (p.value_list or p.is_bool):
                     from .button import MiotButtonSubEntity
                     nls = []
@@ -2131,6 +2148,10 @@ class MiotEntity(MiioEntity):
                     from .select import MiotSelectSubEntity
                     self._subs[fnm] = MiotSelectSubEntity(self, p, option=opt)
                     add_selects([self._subs[fnm]], update_before_add=True)
+                elif add_device_trackers and domain == 'scanner' and (p.is_bool or p.is_integer):
+                    from .device_tracker import MiotScannerSubEntity
+                    self._subs[fnm] = MiotScannerSubEntity(self, p, option=opt)
+                    add_device_trackers([self._subs[fnm]], update_before_add=True)
                 if new and fnm in self._subs:
                     self._check_same_sub_entity(fnm, domain, add=1)
                     self.logger.debug('%s: Added sub entity %s: %s', self.name_model, domain, fnm)
@@ -2141,7 +2162,7 @@ class MiotEntity(MiioEntity):
         mic = self.xiaomi_cloud
         if not isinstance(mic, MiotCloud):
             return None
-        result = await self.async_get_user_device_data(did, key, raw=True, **kwargs)
+        result = await mic.async_get_user_device_data(did, key, raw=True, **kwargs)
         _LOGGER.info('%s: Xiaomi device data: %s', self.name_model, result)
         return result
 
@@ -2495,6 +2516,8 @@ class MiotPropertySubEntity(BaseSubEntity):
             if not prop:
                 continue
             val = prop.from_dict(self.parent_attributes)
+            if prop.value_range and not (prop.range_min() <= val <= prop.range_max()):
+                val = None
             self._extra_attrs[prop.name] = val
 
     def update(self, data=None):

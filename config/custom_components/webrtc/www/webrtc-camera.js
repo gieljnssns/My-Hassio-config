@@ -1,5 +1,5 @@
 /** Chrome 63+, Safari 11.1+ */
-import {VideoRTC} from './video-rtc.js?v=1.8.0';
+import {VideoRTC} from './video-rtc.js?v=1.9.4';
 import {DigitalPTZ} from './digital-ptz.js?v=3.3.0';
 
 class WebRTCCamera extends VideoRTC {
@@ -422,14 +422,21 @@ class WebRTCCamera extends VideoRTC {
     }
 
     saveScreenshot() {
-        const canvas = document.createElement('canvas');
-        canvas.width = this.video.videoWidth;
-        canvas.height = this.video.videoHeight;
-        canvas.getContext('2d').drawImage(this.video, 0, 0, canvas.width, canvas.height);
+        const a = document.createElement('a');
+
+        if (this.video.videoWidth && this.video.videoHeight) {
+            const canvas = document.createElement('canvas');
+            canvas.width = this.video.videoWidth;
+            canvas.height = this.video.videoHeight;
+            canvas.getContext('2d').drawImage(this.video, 0, 0, canvas.width, canvas.height);
+            a.href = canvas.toDataURL('image/jpeg');
+        } else if (this.video.poster && this.video.poster.startsWith('data:image/jpeg')) {
+            a.href = this.video.poster;
+        } else {
+            return;
+        }
 
         const ts = new Date().toISOString().substring(0, 19).replaceAll('-', '').replaceAll(':', '');
-        const a = document.createElement('a');
-        a.href = canvas.toDataURL('image/jpeg');
         a.download = `snapshot_${ts}.jpeg`;
         a.click();
     }
@@ -605,16 +612,16 @@ class WebRTCCamera extends VideoRTC {
         const shortcuts = this.querySelector('.shortcuts');
         shortcuts.addEventListener('click', ev => {
             const value = services[ev.target.dataset.index];
-            if(value.more_info !== undefined) {
+            if (value.more_info !== undefined) {
                 const event = new Event('hass-more-info', {
                     bubbles: true,
                     cancelable: true,
                     composed: true,
                 });
-                event.detail = { entityId: value.more_info };
+                event.detail = {entityId: value.more_info};
                 ev.target.dispatchEvent(event);
             }
-            if(value.service !== undefined) {
+            if (value.service !== undefined) {
                 const [domain, name] = value.service.split('.');
                 this.hass.callService(domain, name, value.service_data || {});
             }

@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.exceptions import HomeAssistantError
@@ -27,7 +28,6 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import (
     DOMAIN,
     TRANSLATION_LANGUAGES,
-    EntityCategory,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -806,7 +806,7 @@ class MiotProperty(MiotSpecInstance):
             'tds_out': SensorStateClass.MEASUREMENT,
             'filter_used_flow': SensorStateClass.TOTAL_INCREASING,
         }
-        if self.name in names:
+        if self.name in names and self.value_range:
             return names[self.name]
         return None
 
@@ -919,6 +919,12 @@ class MiotAction(MiotSpecInstance):
             or self.unique_name in lst \
             or self.unique_prop in lst \
             or self.full_name in lst
+
+    def in_properties(self):
+        properties = []
+        for pid in self.ins:
+            properties.append(self.service.properties.get(pid))
+        return properties
 
     def in_params_from_attrs(self, dat: dict, with_piid=True):
         pms = []

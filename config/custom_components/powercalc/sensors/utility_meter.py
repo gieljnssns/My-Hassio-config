@@ -242,7 +242,7 @@ async def create_utility_meter(
         params["sensor_always_available"] = sensor_config.get(CONF_IGNORE_UNAVAILABLE_STATE) or False
 
     utility_meter = VirtualUtilityMeter(**params)  # type: ignore[no-untyped-call]
-    utility_meter.rounding_digits = sensor_config.get(CONF_ENERGY_SENSOR_PRECISION)  # type: ignore
+    utility_meter.rounding_digits = int(sensor_config.get(CONF_ENERGY_SENSOR_PRECISION, DEFAULT_ENERGY_SENSOR_PRECISION))
     utility_meter.entity_id = entity_id
 
     return utility_meter
@@ -260,6 +260,6 @@ class VirtualUtilityMeter(UtilityMeterSensor, BaseEntity):
     def native_value(self) -> Decimal | StateType:
         """Return the state of the sensor."""
         if self.rounding_digits and self._state is not None:
-            return round(self._state, self.rounding_digits)  # type: ignore
+            return round(self._state, self.rounding_digits)
 
         return self._state
