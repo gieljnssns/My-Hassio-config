@@ -116,7 +116,7 @@ class ComponentSession(object):
             # _LOGGER.debug(f"loop location info found: {info_dict}")
             if info_dict.get('c') is not None and info_dict.get('pc') is not None:
                 if town is not None and town.strip() != '' and info_dict.get("n") is not None:
-                    if info_dict.get("n",'').lower() == town.lower() and info_dict.get("c",'').lower() == country.lower() and info_dict.get("pc",'') == str(postalcode):
+                    if (info_dict.get("pn",'').lower() == town.lower() or info_dict.get("n",'').lower() == town.lower()) and info_dict.get("c",'').lower() == country.lower() and info_dict.get("pc",'') == str(postalcode):
                         # _LOGGER.debug(f"location info found: {info_dict}, matching town {town}, postal {postalcode} and country {country}")
                         return info_dict
                 else:
@@ -147,7 +147,7 @@ class ComponentSession(object):
             _LOGGER.debug(f"loop location info found: {info_dict}")
             if info_dict.get('c') is not None and info_dict.get('pc') is not None:
                 if town is not None and town.strip() != '' and info_dict.get("n") is not None:
-                    if info_dict.get("n",'').lower() == town.lower() and info_dict.get("c",'').lower() == country.lower() and info_dict.get("pc",'') == str(postalcode):
+                    if (info_dict.get("pn",'').lower() == town.lower() or info_dict.get("n",'').lower() == town.lower()) and info_dict.get("c",'').lower() == country.lower() and info_dict.get("pc",'') == str(postalcode):
                         _LOGGER.debug(f"location info found: {info_dict}, matching town {town}, postal {postalcode} and country {country}")
                         results.append(info_dict)
                 else:
@@ -379,7 +379,7 @@ class ComponentSession(object):
                 'lon': 0,
                 'fuelname': fueltype.name,
                 'distance': distance,
-                'date': current_date, 
+                'date': price_changed[0] if price_changed else current_date, 
                 'country': country
             }
             if price_text:
@@ -440,7 +440,7 @@ class ComponentSession(object):
                 'url': f"https://www.brandstof-zoeker.nl/station/{block.get('station').get('url')}",
                 'brand':block.get('station').get('chain'),
                 'address': block.get('station').get('adres'),
-                'postalcode': f"{block.get('station').get('postcode')}",
+                'postalcode': f"{block.get('station').get('postcode')}".replace(" ",""),
                 'locality': block.get('station').get('plaats'),
                 'price': block.get('fuelPrice').get('prijs'),
                 'price_changed': block.get('fuelPrice').get('datum'),
@@ -452,7 +452,7 @@ class ComponentSession(object):
                 'country': country
             }
             if single:
-                if postalcode == f"{block.get('station').get('pc_cijfer')}{block.get('station').get('pc_letter')}":
+                if postalcode.lower() == block.get('station').get('postcode').lower().replace(" ",""):
                     stationdetails.append(block_data)
                     return stationdetails
             else:
@@ -898,9 +898,10 @@ class ComponentSession(object):
         soup = BeautifulSoup(response.text, 'html.parser')
 
         date_text = None
-        for paragraph in soup.find_all('p', class_='text-xs'):
+        for paragraph in soup.find_all('div', class_='_tableFooter_14l7y_20'):
             if paragraph.text.strip().startswith("Datum overzicht"):
                 date_text = paragraph.text.replace("Datum overzicht ", "").strip()
+                date_text = date_text.split("*")[0]
                 break
 
 
@@ -940,7 +941,7 @@ class ComponentSession(object):
         data = {}
 
         # Find all rows
-        rows = soup.find_all('div', class_='_row_1rcw2_25')
+        rows = soup.find_all('div', class_='_row_14l7y_25')
 
         # Loop through each row to extract data
         for row in rows:
@@ -1145,8 +1146,20 @@ class ComponentSession(object):
                 continue
             _LOGGER.debug(f"getStationInfoFromPriceInfo maxDistance: {max_distance}, currDistance: {currDistance}, postalcode: {station.get("postalcode")}, currPrice: {currPrice} new price: {data.get("price")}")
             
+            data_recently_updated = True
+            if station.get("date") is not None:
+                try:
+                    station_date = datetime.strptime(station.get("date"), "%d/%m/%y") #assuming the date is in the format dd/mm/yy
+                    six_months_ago = datetime.now() - timedelta(days=180)  # 180 days = 6 months
+                    if station_date >= six_months_ago:
+                        data_recently_updated = True
+                    else:
+                        # The date is older than 6 months
+                        data_recently_updated = False
+                except:
+                    _LOGGER.debug(f"date validation not possible since non matching date notation: {station.get("date")}")
             # _LOGGER.debug(f'if (({max_distance} == 0 and ({currDistance} <= 5 or {postalcode} == {station.get("postalcode")})) or {currDistance} <= {max_distance}) and ({data.get("price")} is None or {currPrice} < {float(data.get("price"))})')
-            if ((max_distance == 0 and (currDistance <= 5 or postalcode == station.get("postalcode"))) or currDistance <= max_distance) and (data.get("price") is None or currPrice < float(data.get("price"))):
+            if ((max_distance == 0  and (currDistance <= 5 or postalcode == station.get("postalcode"))) or currDistance <= max_distance) and data_recently_updated and (data.get("price") is None or currPrice < float(data.get("price"))):
                 data["distance"] = float(station.get("distance"))
                 data["price"] = 0 if station.get("price") == '' else float(station.get("price"))
                 data["localPrice"] = 0 if price_info[0].get("price") == '' else float(price_info[0].get("price"))
@@ -1435,6 +1448,8 @@ class ComponentSession(object):
             #     return {"lat": location[1], "lon": location[0], "boundingbox": [bbox[1],bbox[0],bbox[3],bbox[2]]}
 
 
+            if self.API_KEY_GEOAPIFY in ["","GEO_API_KEY"]:
+                raise Exception("Geocode failed: GEO_API_KEY not set!")
             # GEOAPIFY
             response = self.s.get(f"{self.GEOAPIFY_BASE_URL}/search?text={address}&api_key={self.API_KEY_GEOAPIFY}&format=json")
 
@@ -1697,10 +1712,7 @@ class ComponentSession(object):
             return None
     
 
-#test
-
-
-# Example usage
+#manual tests - enable debug logging
 
 # _LOGGER = logging.getLogger(__name__)
 # _LOGGER.setLevel(logging.DEBUG)
@@ -1709,7 +1721,6 @@ class ComponentSession(object):
 # _LOGGER.debug("Debug logging is now enabled.")
 
 # session = ComponentSession("GEO_API_KEY")
-
 
 #LOCAL TESTS
 
@@ -1742,17 +1753,32 @@ class ComponentSession(object):
 
 # #test BE
 # locationinfo= session.convertPostalCode("3300", "BE", "Bost")
+# print(session.getOilPrice(locationinfo.get("id"), 1000, FuelType.OILSTD.code))
+# locationinfo= session.convertPostalCode("3300", "BE", "Bost")
 # print(session.getFuelPrices("3300", "BE", "Bost", locationinfo.get("id"), FuelType.LPG, False))
+# #test2
+# locationinfo= session.convertPostalCode("8380", "BE", "Brugge")
+# if locationinfo:
+#     print(session.getFuelPrices("8380", "BE", "Brugge", locationinfo.get("id"), FuelType.SUPER95, False))
+# #test3
+# locationinfo= session.convertPostalCode("31830", "FR")
+# if locationinfo:
+#     # print(session.getFuelPrices("31830", "FR", "Plaisance-du-Touch", locationinfo.get("id"), FuelType.SUPER95, True))
+#     print(session.getStationInfo("31830", "FR", FuelType.SUPER95, "Plaisance-du-Touch", 0, "", True))
 # test IT
 # locationinfo= session.convertLocationBoundingBox("07021", "IT", "Arzachena")
 # print(session.getFuelPrices("07021", "IT", "Arzachena", locationinfo, FuelType.LPG, False))
 # test NL
 # locationinfo= session.convertLocationBoundingBox("2627AR", "NL", "Delft")
-# print(session.getFuelPrices("2627AR", "NL", "Delft", locationinfo, FuelType.LPG, False))
+# if len(locationinfo) > 0: 
+#     print(session.getFuelPrices("2627AR", "NL", "Delft", locationinfo, FuelType.DIESEL, False))
+    # print(session.getStationInfo("2627AR", "NL", FuelType.DIESEL, "Delft", 0, "", False))
             
 # print(FuelType.DIESEL.code)
 # print(FuelType.SUPER95_PREDICTION.code)
-# print(session.getFuelOfficial(FuelType.DIESEL_OFFICIAL_B10.code))
-# print(session.getFuelOfficial(FuelType.SUPER95_OFFICIAL_E10.code))
+# print("FuelType.DIESEL_OFFICIAL_B10")
+# print(session.getFuelOfficial(FuelType.DIESEL_OFFICIAL_B10, "NL"))
+# print("FuelType.SUPER95_OFFICIAL_E10")
+# print(session.getFuelOfficial(FuelType.SUPER95_OFFICIAL_E10, "NL"))
 
 # print(FuelType.DIESEL.code)

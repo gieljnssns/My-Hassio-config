@@ -165,15 +165,22 @@ class MiotCloud(micloud.MiCloud):
         }
         try:
             rdt = await self.async_request_api(api, dat, method='POST') or {}
-            nid = f'xiaomi-miot-auth-warning-{self.user_id}'
             eno = rdt.get('code', 0)
-            if eno != 3:
+            msg = rdt.get('message', '')
+            if eno in [2, 3]:
+                pass
+            elif 'auth err' in msg:
+                pass
+            elif msg in ['invalid signature', 'SERVICETOKEN_EXPIRED']:
+                pass
+            else:
                 return True
         except requests.exceptions.ConnectionError:
             return None
         except requests.exceptions.Timeout:
             return None
         # auth err
+        nid = f'xiaomi-miot-auth-warning-{self.user_id}'
         if await self.async_relogin():
             persistent_notification.dismiss(self.hass, nid)
             return True
@@ -300,14 +307,15 @@ class MiotCloud(micloud.MiCloud):
         return None
 
     async def get_all_devices(self, homes=None):
-        dvs = await self.get_device_list() or []
+        devices = {
+            d['did']: d
+            for d in await self.get_device_list() or []
+        }
         if not isinstance(homes, list):
-            return dvs
+            return await self.get_device_list() or []
         for home in homes:
             hid = int(home.get('id', 0))
             uid = int(home.get('uid', 0))
-            if not hid or uid == self.user_id:
-                continue
             start_did = ''
             has_more = True
             while has_more:
@@ -322,10 +330,12 @@ class MiotCloud(micloud.MiCloud):
                     'get_third_device': True,
                 }, debug=False, timeout=20) or {}
                 rdt = rdt.get('result') or {}
-                dvs.extend(rdt.get('device_info') or {})
+                for d in rdt.get('device_info') or []:
+                    did = d.get('did')
+                    devices.setdefault(did, {}).update(d)
                 start_did = rdt.get('max_did') or ''
-                has_more = rdt.get('has_more')
-        return dvs
+                has_more = rdt.get('has_more') and start_did
+        return list(devices.values())
 
     async def get_home_devices(self):
         rdt = await self.async_request_api('v2/homeroom/gethome_merged', {
@@ -433,7 +443,7 @@ class MiotCloud(micloud.MiCloud):
         return dat.get('homes') or []
 
     async def async_get_beaconkey(self, did):
-        dat = {'did': did or self.miot_did, 'pdid': 1}
+        dat = {'did': did, 'pdid': 1}
         rdt = await self.async_request_api('v2/device/blt_get_beaconkey', dat) or {}
         return rdt.get('result')
 
@@ -468,6 +478,7 @@ class MiotCloud(micloud.MiCloud):
 
     def _logout(self):
         self.service_token = None
+        self.async_session = None
 
     def _login_request(self, captcha=None):
         self._init_session(True)
@@ -565,6 +576,7 @@ class MiotCloud(micloud.MiCloud):
         service_token = response.cookies.get('serviceToken')
         if service_token:
             self.service_token = service_token
+            self.async_session = None
         else:
             err = {
                 'location': location,

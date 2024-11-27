@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME
 )
 
-from . import DOMAIN, NAME, VERSION
+from . import DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
 _DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.0%z"
@@ -494,9 +494,18 @@ class ComponentPriceSensor(Entity):
                 self._price = float(self._priceinfo.get("data")[0].get("unitPrice"))
                 self._supplier  = self._priceinfo.get("data")[0].get("supplier").get("name") #x.data[0].supplier.name
                 oilproductid = self._fueltype.code
-                self._url   = f"https://mazout.com/belgie/offers?areaCode={self._data._locationinfo}&by=quantity&for={self._quantity}&productId={oilproductid}"
-                self._logourl = self._priceinfo.get("data")[0].get("supplier").get("media").get("logo").get("src") #x.data[0].supplier.media.logo.src
-                self._score = self._priceinfo.get("data")[0].get("supplier").get("rating").get("score") #x.data[0].supplier.rating.score
+                try:
+                    self._url   = f"https://mazout.com/belgie/offers?areaCode={self._data._locationinfo}&by=quantity&for={self._quantity}&productId={oilproductid}"
+                except:
+                    self._url   = None
+                try:
+                    self._logourl = self._priceinfo.get("data")[0].get("supplier").get("media").get("logo").get("src") #x.data[0].supplier.media.logo.src
+                except:
+                    self._logourl = None
+                try:
+                    self._score = self._priceinfo.get("data")[0].get("supplier").get("rating").get("score") #x.data[0].supplier.rating.score
+                except:
+                    self._score = None
                 # self._address = 
                 # self._city = 
                 # self._lat = 
@@ -604,7 +613,6 @@ class ComponentPriceSensor(Entity):
             },
             name=f"{NAME} {self._data._postalcode} {self._data._country}",
             model=f"{self._data._postalcode} {self._data._country}",
-            sw_version= f"{VERSION}",
             manufacturer= NAME
         )
     @property
@@ -758,7 +766,6 @@ class ComponentPriceNeighborhoodSensor(Entity):
             },
             name=f"{NAME} {self._data._postalcode} {self._data._country}",
             model=f"{self._data._postalcode} {self._data._country}",
-            sw_version= f"{VERSION}",
             manufacturer= NAME
         )
 
@@ -859,7 +866,6 @@ class ComponentFuelPredictionSensor(Entity):
             },
             name=f"{NAME} {self._data._postalcode} {self._data._country}",
             model=f"{self._data._postalcode} {self._data._country}",
-            sw_version= f"{VERSION}",
             manufacturer= NAME
         )
 
@@ -1004,7 +1010,6 @@ class ComponentOilPredictionSensor(Entity):
             },
             name=f"{NAME} {self._data._postalcode} {self._data._country}",
             model=f"{self._data._postalcode} {self._data._country}",
-            sw_version= f"{VERSION}",
             manufacturer= NAME
         )
 
@@ -1127,7 +1132,6 @@ class ComponentFuelOfficialSensor(Entity):
             },
             name=f"{NAME} {self._data._postalcode} {self._data._country}",
             model=f"{self._data._postalcode} {self._data._country}",
-            sw_version= f"{VERSION}",
             manufacturer= NAME
         )
 

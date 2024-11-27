@@ -112,7 +112,9 @@ async def check_miio_device(hass, user_input, errors):
     return user_input
 
 
-class BaseFlowHandler(config_entries.ConfigEntryBaseFlow):
+class BaseFlowHandler:
+    hass = None
+    context = None
     cloud: MiotCloud = None
     devices: Optional[list] = None
 
@@ -278,8 +280,8 @@ class XiaomiMiotFlowHandler(config_entries.ConfigFlow, BaseFlowHandler, domain=D
         }
         if self.hass.data[DOMAIN].get('entities', {}):
             actions.update({
+                'customizing_device': 'Customizing device (自定义设备) <推荐>',
                 'customizing_entity': 'Customizing entity (自定义实体)',
-                'customizing_device': 'Customizing device (自定义设备)',
             })
         return self.async_show_form(
             step_id='user',
@@ -383,7 +385,7 @@ class XiaomiMiotFlowHandler(config_entries.ConfigFlow, BaseFlowHandler, domain=D
 
     async def async_step_customizing(self, user_input=None):
         tip = ''
-        via = self.context.get('customizing_via') or 'customizing_entity'
+        via = self.context.get('customizing_via') or 'customizing_device'
         self.context['customizing_via'] = via
         entry = await self.async_set_unique_id(f'{DOMAIN}-customizes')
         entry_data = copy.deepcopy(dict(entry.data) if entry else {})
@@ -490,6 +492,9 @@ class XiaomiMiotFlowHandler(config_entries.ConfigFlow, BaseFlowHandler, domain=D
                 else:
                     tip = f'None entities in `{domain}`'
             else:
+                tip = ('⚠️ 自定义实体后续可能会弃用，推荐通过设备型号**自定义设备**。\n'
+                       'The Customization of entity may be deprecated in the future, '
+                       'it is recommended to customize the device through the device model.')
                 schema.update({
                     vol.Required('domain', default=user_input.get('domain', vol.UNDEFINED)): vol.In(SUPPORTED_DOMAINS),
                     vol.Optional('only_main_entity', default=user_input.get('only_main_entity', True)): cv.boolean,
@@ -517,7 +522,7 @@ class XiaomiMiotFlowHandler(config_entries.ConfigFlow, BaseFlowHandler, domain=D
                 for v in self.hass.data[DOMAIN].values():
                     if isinstance(v, dict):
                         if mod := v.get('miio_info', {}).get(CONF_MODEL):
-                            models.append(mod)
+                            models[mod] = v
                         v = v.get(CONF_XIAOMI_CLOUD)
                     if isinstance(v, MiotCloud):
                         mic = v
@@ -685,6 +690,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, BaseFlowHandler):
             cfg = self.cloud.to_config() or {}
             cfg.update({
                 CONF_CONN_MODE: prev_input.get(CONF_CONN_MODE),
+                'filter_models': prev_input.get('filter_models'),
                 'disable_message': prev_input.get('disable_message'),
                 'disable_scene_history': prev_input.get('disable_scene_history'),
                 **user_input,

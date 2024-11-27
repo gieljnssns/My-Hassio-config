@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 
 from homeassistant.core import HomeAssistant
@@ -11,14 +12,18 @@ from custom_components.powercalc.const import (
 )
 from custom_components.powercalc.errors import ModelNotSupportedError
 
+from .error import LibraryError
 from .library import ModelInfo, ProfileLibrary
 from .power_profile import PowerProfile
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def get_power_profile(
     hass: HomeAssistant,
     config: dict,
     model_info: ModelInfo | None = None,
+    log_errors: bool = True,
 ) -> PowerProfile | None:
     manufacturer = config.get(CONF_MANUFACTURER)
     model = config.get(CONF_MODEL)
@@ -28,10 +33,11 @@ async def get_power_profile(
         model = config.get(CONF_MODEL) or model_info.model
         model_id = model_info.model_id
 
-    if not manufacturer or not model:
+    custom_model_directory = config.get(CONF_CUSTOM_MODEL_DIRECTORY)
+
+    if (not manufacturer or not model) and not custom_model_directory:
         return None
 
-    custom_model_directory = config.get(CONF_CUSTOM_MODEL_DIRECTORY)
     if custom_model_directory:
         custom_model_directory = os.path.join(
             hass.config.config_dir,
@@ -39,12 +45,16 @@ async def get_power_profile(
         )
 
     library = await ProfileLibrary.factory(hass)
-    profile = await library.get_profile(
-        ModelInfo(manufacturer, model, model_id),
-        custom_model_directory,
-    )
-    if profile is None:
+    try:
+        profile = await library.get_profile(
+            ModelInfo(manufacturer or "", model or "", model_id),
+            custom_model_directory,
+        )
+    except LibraryError as err:
+        if log_errors:
+            _LOGGER.error("Problem loading model: %s", err)
         raise ModelNotSupportedError(
             f"Model not found in library (manufacturer: {manufacturer}, model: {model})",
-        )
+        ) from err
+
     return profile
