@@ -11,7 +11,7 @@ actions:
         {% if trigger.to_state.state == 'on' %}
           away
         {% else %}
-          Schedule
+          schedule
         {% endif %}
 
   - action: climate.set_hvac_mode
@@ -20,6 +20,7 @@ actions:
       - climate.badkamer
       - climate.noor
       - climate.slaapkamer
+      - climate.garage
     data_template:
       hvac_mode: >
         {% if trigger.to_state.state == 'on' %}

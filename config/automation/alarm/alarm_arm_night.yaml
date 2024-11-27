@@ -11,6 +11,12 @@ trigger:
   - platform: state
     entity_id: light.slaapkamer_hoog
     to: "off"
+  - platform: template
+    value_template: >
+      {{ states("binary_sensor.gphone_focus") == "on" and states("device_tracker.gphone_bermuda") == "home" }}
+  - platform: template
+    value_template: >
+      {{ states("binary_sensor.mphone_focus") == "on" and states("device_tracker.mphone_bermuda") == "home" }}
 condition:
   - condition: not
     conditions:
@@ -88,16 +94,16 @@ actions:
   #       Alarm night {{ now().strftime("%H:%M") }}
   - delay:
       minutes: 20
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: >
-              {{ states("button.brouwerij_shutdown") != "unavailable" and 
-                  states("binary_sensor.garage_bezetting") != "on" }}
-        sequence:
-          - action: button.press
-            target:
-              entity_id: button.brouwerij_shutdown
+  # - choose:
+  #     - conditions:
+  #         - condition: template
+  #           value_template: >
+  #             {{ states("button.brouwerij_shutdown") != "unavailable" and 
+  #                 states("binary_sensor.garage_bezetting") != "on" }}
+  #       sequence:
+  #         - action: button.press
+  #           target:
+  #             entity_id: button.brouwerij_shutdown
   - choose:
       - conditions:
           - condition: state

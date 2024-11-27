@@ -4,9 +4,9 @@ trigger:
   - platform: time
     at: "01:31:00"
     id: "fit"
-  # - platform: time
-  #   at: "01:36:00"
-  #   id: "tune"
+  - platform: time
+    at: "05:34:56"
+    id: "dayahead"
   - platform: time
     at: "06:02:00"
     id: "prediction"
@@ -29,6 +29,18 @@ actions:
             id: data
         sequence:
           - action: rest_command.publish_data
+            data:
+              prefix: ""
+      - conditions:
+          - condition: trigger
+            id: dayahead
+        sequence:
+          - action: rest_command.dayahead_optim
+          - delay:
+              seconds: 40
+          - action: rest_command.publish_data
+            data:
+              prefix: "dh_"
       - conditions:
           - condition: trigger
             id: night
@@ -91,6 +103,8 @@ actions:
           # - delay:
           #     seconds: 40
           - action: rest_command.publish_data
+            data:
+              prefix: ""
       - conditions:
           - condition: trigger
             id: prediction

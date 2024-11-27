@@ -53,3 +53,21 @@
       state: >
         {{ is_state('binary_sensor.tuin_person_occupancy', 'on') or
             is_state('binary_sensor.afdak_person_occupancy', 'on') }}
+    
+    - name: Noor bezetting
+      unique_id: cf897eeb-ba92-433a-87e5-d337ca69b8a1
+      device_class: occupancy
+      delay_off:
+        seconds: 30
+      state: >
+        {{ is_state('binary_sensor.slaapkamer_noor_presence', 'on') or
+            is_state('binary_sensor.slaapkamer_noor_bezetting', 'on') }}
+    
+    - name: Fien bezetting
+      unique_id: cb63613c-2171-414f-b3ea-b1a09f595901
+      device_class: occupancy
+      delay_off:
+        seconds: 30
+      state: >
+        {{ is_state('binary_sensor.slaapkamer_fien_presence', 'on') or
+            is_state('binary_sensor.slaapkamer_fien_bezetting', 'on') }}

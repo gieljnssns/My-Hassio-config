@@ -57,6 +57,23 @@ naive_mpc_optim:
         {{  "true" if is_state('input_boolean.emhass_warmtepomp', "on") else "false" }}]
     }
 
+dayahead_optim:
+  url: http://localhost:5003/action/dayahead-optim
+  method: POST
+  content_type: "application/json"
+  payload: >-
+    {
+      "prod_price_forecast": {{
+        (state_attr('sensor.prod_price_forecast_list', 'list')[:48]) | tojson
+        }},
+      "load_cost_forecast": {{
+        (state_attr('sensor.cost_forecast_list', 'list')[:48]) | tojson
+        }},
+      "pv_power_forecast": {{
+        (state_attr('sensor.pv_power_forecast_list', 'list')[:48]) | tojson
+        }}
+    }
+
 fit_heating_hours:
   url: http://localhost:5003/action/regressor-model-fit
   method: POST
@@ -225,5 +242,6 @@ publish_data:
       "custom_pv_curtailment_id": {
         "entity_id": "sensor.emhass_curtailment",
         "unit_of_measurement": "W",
-        "friendly_name": "Emhass curtailment"}
+        "friendly_name": "Emhass curtailment"},
+      "publish_prefix": "{{ prefix }}"
     }

@@ -8,6 +8,8 @@ trigger:
     entity_id: light.waskot
   - platform: state
     entity_id: light.badkamer_hoog
+  - platform: state
+    entity_id: light.kelder
 condition:
   condition: and
   conditions:
@@ -27,6 +29,8 @@ actions:
           switch.led_wc
         {% elif trigger.entity_id == 'light.waskot' %}
           switch.led_waskot
+        {% elif trigger.entity_id == 'light.kelder' %}
+          switch.led_kelder
         {% else %}
           switch.led_badkamer
         {% endif %}

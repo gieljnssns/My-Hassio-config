@@ -26,16 +26,21 @@
       unit_of_measurement: "W"
       device_class: power
       availability: >-
-        {{ has_value("sensor.s1_vermogen") and 
-          has_value("sensor.s2_vermogen") and
-          has_value("sensor.s3_vermogen") }}
+        {{ has_value("sensor.huawei_active_power") and 
+          has_value("sensor.solaredge_inverter_watts") }}
       state: >
-        {{ (states("sensor.s1_vermogen") | float(default=0) + 
-            states("sensor.s2_vermogen") | float(default=0) + 
-            states("sensor.s3_vermogen") | float(default=0)) | round(2) }}
+        {{ (states("sensor.huawei_active_power") | float(0) + states("sensor.solaredge_inverter_watts") | float(0)) | round(1) }}
+      # availability: >-
+      #   {{ has_value("sensor.s1_vermogen") and 
+      #     has_value("sensor.s2_vermogen") and
+      #     has_value("sensor.s3_vermogen") }}
+      # state: >
+      #   {{ (states("sensor.s1_vermogen") | float(default=0) + 
+      #       states("sensor.s2_vermogen") | float(default=0) + 
+      #       states("sensor.s3_vermogen") | float(default=0)) | round(2) }}
 
-    - name: Huidig verbruik
-      unique_id: ad98e883-b2b4-4ad5-a5c0-9668d1953445
+    - name: Huidig verbruik oud
+      unique_id: 675346df-e08d-44c2-86ef-d31a872671ad
       unit_of_measurement: "W"
       device_class: power
       availability: >-
@@ -46,6 +51,32 @@
         {{ (states("sensor.v1_vermogen") | float(default=0) + 
             states("sensor.v2_vermogen") | float(default=0) + 
             states("sensor.v3_vermogen") | float(default=0)) | round(2) }}
+    
+    - name: Huidig verbruik
+      unique_id: 88576813-0ac7-4deb-9b6d-15bb99a08752
+      unit_of_measurement: "W"
+      device_class: power
+      availability: >-
+        {{ has_value("sensor.v1") and 
+          has_value("sensor.v2") and
+          has_value("sensor.v3") and 
+          has_value("sensor.s1") and
+          has_value("sensor.s2") and 
+          has_value("sensor.s3") and
+          has_value("sensor.zonne_opbrengst") }}
+      state: >
+        {% if states("sensor.zonne_opbrengst") | float(0) == 0%}
+          {{ (states("sensor.v1") | float(0)
+            + states("sensor.v2") | float(0)
+            + states("sensor.v3") | float(0)
+            + states("sensor.s1") | float(0)
+            + states("sensor.s2") | float(0)
+            + states("sensor.s3") | float(0)) | round(1) }}
+        {% else %}
+          {{ (states("sensor.v1") | float(0)
+            + states("sensor.v2") | float(0)
+            + states("sensor.v3") | float(0)) | round(1) }}
+        {% endif %}
 
     - name: Eigen verbruik
       unique_id: e4bfb06d-169c-4bc6-a269-d4a4d70665d5
@@ -144,8 +175,14 @@
             states("sensor.zithoek_links_midden_vermogen") | float(default=0) + 
             states("sensor.zithoek_links_voor_vermogen") | float(default=0) + 
             states("sensor.zithoek_rechts_achter_vermogen") | float(default=0) + 
+            states("sensor.kelder_vermogen") | float(default=0) +
             states("sensor.zithoek_rechts_midden_vermogen") | float(default=0) + 
-            states("sensor.zithoek_rechts_voor_vermogen") | float(default=0)) | round (3)}}
+            states("sensor.welcome_1_vermogen") | float(default=0) +
+            states("sensor.welcome_2_vermogen") | float(default=0) + 
+            states("sensor.den_hof_spot_vermogen") | float(default=0) + 
+            states("sensor.wled_fien_vermogen") | float(default=0) +
+            states("sensor.wled_noor_vermogen") | float(default=0) +
+            states("sensor.zithoek_rechts_voor_vermogen") | float(default=0)) | round (1)}}
 
     - name: Verluchting vermogen
       unique_id: fa9b4afd-7d1b-4e6d-a7e7-909919db295c

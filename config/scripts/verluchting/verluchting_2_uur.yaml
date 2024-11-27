@@ -15,11 +15,22 @@ verluchting_2_uur:
     - action: input_datetime.set_datetime
       data:
         datetime: >
-          {% set current = states("input_datetime.verluchting_end_time") %}
-          {% if as_timestamp(current) > as_timestamp(now() + timedelta(hours=2)) %}
+          {% set current = states("input_datetime.luchtdroger_end_time") %}
+          {% if as_timestamp(current) > as_timestamp(now() + timedelta(minutes=170)) %}
             {{ current }}
           {% else %}
-            {{ now() + timedelta(hours=2) }}
+            {{ now() + timedelta(minutes=170) }}
+          {% endif %}
+      target:
+        entity_id: input_datetime.luchtdroger_end_time
+    - action: input_datetime.set_datetime
+      data:
+        datetime: >
+          {% set current = states("input_datetime.verluchting_end_time") %}
+          {% if as_timestamp(current) > as_timestamp(now() + timedelta(hours=3)) %}
+            {{ current }}
+          {% else %}
+            {{ now() + timedelta(hours=3) }}
           {% endif %}
       target:
         entity_id: input_datetime.verluchting_end_time 

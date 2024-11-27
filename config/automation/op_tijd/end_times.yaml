@@ -6,6 +6,9 @@ trigger:
     at: input_datetime.verluchting_end_time
     id: verluchting
   - platform: time
+    at: input_datetime.luchtdroger_end_time
+    id: luchtdroger
+  - platform: time
     at: input_datetime.alle_tuinverlichting_end_time
     id: den_hof
   - platform: time
@@ -14,6 +17,18 @@ trigger:
   - platform: time
     at: input_datetime.keuken_end_time
     id: keuken
+  - platform: time
+    at: input_datetime.slaapkamer_noor_verlichting_end_time
+    id: noor
+  - platform: time
+    at: input_datetime.slaapkamer_fien_verlichting_end_time
+    id: fien
+  - platform: time
+    at: input_datetime.wled_noor_end_time
+    id: noorwled
+  - platform: time
+    at: input_datetime.wled_fien_end_time
+    id: fienwled
 action:
 - choose:
   - conditions:
@@ -26,6 +41,12 @@ action:
         entity_id: switch.badkamer_verluchting
       - action: switch.turn_off
         entity_id: switch.zolder_verluchting
+  - conditions:
+      - condition: trigger
+        id: luchtdroger
+    sequence:
+      - action: switch.turn_off
+        entity_id: switch.luchtdroger
   - conditions:
       - condition: trigger
         id: den_hof
@@ -50,3 +71,31 @@ action:
             - light.keuken_inkom
             - light.keuken_luster
             - light.keuken_spots
+  - conditions:
+      - condition: trigger
+        id: noor
+    sequence:
+      - action: light.turn_off
+        target:
+          entity_id: light.noor
+  - conditions:
+      - condition: trigger
+        id: fien
+    sequence:
+      - action: light.turn_off
+        target:
+          entity_id: light.fien
+  - conditions:
+      - condition: trigger
+        id: noorwled
+    sequence:
+      - action: light.turn_off
+        target:
+          entity_id: light.wled_noor
+  - conditions:
+      - condition: trigger
+        id: fienwled
+    sequence:
+      - action: light.turn_off
+        target:
+          entity_id: light.wled_fien

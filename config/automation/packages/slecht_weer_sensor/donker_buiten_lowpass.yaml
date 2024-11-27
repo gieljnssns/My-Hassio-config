@@ -7,8 +7,7 @@ trigger:
   #   below: 80
   - platform: template
     value_template: >
-      {{ states("sensor.huidige_opbrengst") | int(0) < 10 and
-        states("sensor.zonne_opbrengst") | int(0) < 10 }}
+      {{ states("sensor.huidige_opbrengst") | int(0) < 100 }}
     for:
       minutes: 5
     id: binnen
@@ -21,7 +20,7 @@ trigger:
     id: buiten
   - platform: numeric_state
     entity_id: sensor.buiten_lichtsterkte
-    below: 650
+    below: 950
     for:
       minutes: 5
     id: binnen

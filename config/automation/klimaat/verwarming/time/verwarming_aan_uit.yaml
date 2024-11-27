@@ -1,0 +1,46 @@
+alias: "Verwarming Aan/Uit"
+id: faac69de-f54b-4ac5-82c1-4de36624c400
+trigger:
+  - platform: state
+    entity_id: alarm_control_panel.ha_alarm
+    to: 'armed_night'
+    id: uit
+  - platform: state
+    entity_id: alarm_control_panel.ha_alarm
+    from: 'armed_night'
+    to: 'disarmed'
+    id: aan
+actions:
+  - choose:
+    - conditions:
+        - condition: trigger
+          id: uit
+      sequence:
+        - delay:
+            minutes: 15
+        - action: climate.set_preset_mode
+          target:
+            entity_id:
+              - climate.slaapkamer
+              - climate.fien
+              - climate.noor
+          data:
+            preset_mode: away
+        - action: automation.turn_off
+          target:
+            entity_id:
+              - automation.verwarming_bij_aanwezigheid_fien
+              - automation.verwarming_bij_aanwezigheid_noor
+              - automation.verwarming_bij_aanwezigheid_slaapkamer
+          data:
+            stop_actions: true
+    - conditions:
+        - condition: trigger
+          id: aan
+      sequence:
+        - action: automation.turn_on
+          target:
+            entity_id:
+              - automation.verwarming_bij_aanwezigheid_fien
+              - automation.verwarming_bij_aanwezigheid_noor
+              - automation.verwarming_bij_aanwezigheid_slaapkamer

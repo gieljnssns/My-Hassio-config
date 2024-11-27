@@ -1,0 +1,26 @@
+alias: Drukknop slaapkamer Noor
+id: Drukknop slaapkamer Noor
+initial_state: "on"
+trigger:
+  - device_id: 33d2050e6c144c54beb87dd3f12e8b92
+    domain: zha
+    platform: device
+    type: remote_button_short_press
+    subtype: remote_button_short_press
+
+actions:
+  - choose:
+    - conditions:
+        - condition: template
+          value_template: >
+            {{ states("light.noor") == 'on' }}
+      sequence:
+        - action: light.turn_off
+          entity_id:
+            - light.noor
+    default:
+      - action: light.turn_on
+        data:
+          entity_id: light.noor
+          brightness: 255
+          rgb_color: [255, 236, 182]

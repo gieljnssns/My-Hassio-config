@@ -1,0 +1,37 @@
+alias: "wled nightlight"
+id: 0885f397-d620-4085-80cc-8700c94c5bf1
+mode: parallel
+trigger:
+  - platform: event
+    event_type: state_changed
+    event_data:
+      entity_id: input_button.wled_noor_nightlight
+    id: noor
+  - platform: event
+    event_type: state_changed
+    event_data:
+      entity_id: input_button.wled_fien_nightlight
+    id: fien
+action:
+  - choose:
+    - conditions:
+        - condition: trigger
+          id: noor
+      sequence:
+        - action: input_datetime.set_datetime
+          data:
+            datetime: >
+              {{ now() + timedelta(seconds=10800) }}
+          target:
+            entity_id: input_datetime.wled_noor_end_time
+    - conditions:
+        - condition: trigger
+          id: fien
+      sequence:
+        - action: input_datetime.set_datetime
+          data:
+            datetime: >
+              {{ now() + timedelta(seconds=10800) }}
+          target:
+            entity_id: input_datetime.wled_fien_end_time
+  

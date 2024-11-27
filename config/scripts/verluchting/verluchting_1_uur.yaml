@@ -15,11 +15,22 @@ verluchting_1_uur:
     - action: input_datetime.set_datetime
       data:
         datetime: >
-          {% set current = states("input_datetime.verluchting_end_time") %}
-          {% if as_timestamp(current) > as_timestamp(now() + timedelta(hours=1)) %}
+          {% set current = states("input_datetime.luchtdroger_end_time") %}
+          {% if as_timestamp(current) > as_timestamp(now() + timedelta(minutes=110)) %}
             {{ current }}
           {% else %}
-            {{ now() + timedelta(hours=1) }}
+            {{ now() + timedelta(minutes=110) }}
+          {% endif %}
+      target:
+        entity_id: input_datetime.luchtdroger_end_time
+    - action: input_datetime.set_datetime
+      data:
+        datetime: >
+          {% set current = states("input_datetime.verluchting_end_time") %}
+          {% if as_timestamp(current) > as_timestamp(now() + timedelta(hours=2)) %}
+            {{ current }}
+          {% else %}
+            {{ now() + timedelta(hours=2) }}
           {% endif %}
       target:
         entity_id: input_datetime.verluchting_end_time # the entity used in the off time trigger

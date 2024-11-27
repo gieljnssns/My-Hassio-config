@@ -195,7 +195,10 @@
       state: >
         {% set unknown = expand(integration_entities('esphome')
                     | select('match','sensor.')
-                    | reject('contains', '_energy')) 
+                    | reject('contains', 'boiler_in')
+                    | reject('contains', 'boiler_uit')
+                    | reject('contains', '_energy')
+                    | reject('contains', 'kelder')) 
                     | selectattr("state", "eq", "unknown") 
                     | map(attribute="entity_id") 
                     | list %}
@@ -219,7 +222,10 @@
         list: >
           {% set unknown = expand(integration_entities('esphome')
                     | select('match','sensor.')
-                    | reject('contains', '_energy')) 
+                    | reject('contains', 'boiler_in')
+                    | reject('contains', 'boiler_uit')
+                    | reject('contains', '_energy')
+                    | reject('contains', 'kelder')) 
                     | selectattr("state", "eq", "unknown") 
                     | map(attribute="entity_id") 
                     | list %}
