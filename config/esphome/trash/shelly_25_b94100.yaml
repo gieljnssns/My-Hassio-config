@@ -50,29 +50,29 @@ sensor:
       filters:
         - lambda: return abs(x);
         - filter_out: nan
-      on_raw_value:
-        then:
-          - if:
-              condition:
-                lambda: |-
-                  return isnan(id(power_channel_2).raw_state);
-              then:
-                - if:
-                    condition:
-                      lambda: |-
-                        return id(num_executions_a) < 5;
-                    then:
-                      - lambda: |-
-                          id(num_executions_a) += 1;
-                      - homeassistant.service:
-                          service: persistent_notification.create
-                          data:
-                            title: |-
-                              "Message %d from ${upper_devicename}", id(num_executions_a)
-                            message: ${channel_2} vermogen is NaN 
-                - switch.turn_on: restart_device
-                - lambda: |-
-                    id(num_executions_a) = 0;
+      # on_raw_value:
+      #   then:
+      #     - if:
+      #         condition:
+      #           lambda: |-
+      #             return isnan(id(power_channel_2).raw_state);
+      #         then:
+      #           - if:
+      #               condition:
+      #                 lambda: |-
+      #                   return id(num_executions_a) < 5;
+      #               then:
+      #                 - lambda: |-
+      #                     id(num_executions_a) += 1;
+      #                 - homeassistant.service:
+      #                     service: persistent_notification.create
+      #                     data:
+      #                       title: |-
+      #                         "Message %d from ${upper_devicename}", id(num_executions_a)
+      #                       message: ${channel_2} vermogen is NaN 
+      #           - switch.turn_on: restart_device
+      #           - lambda: |-
+      #               id(num_executions_a) = 0;
       on_value_range:
         - above: ${max_power}
           then:
@@ -89,30 +89,31 @@ sensor:
       filters:
         - lambda: return abs(x);
         - filter_out: nan
-      on_raw_value:
-        then:
-          - if:
-              condition:
-                lambda: |-
-                  // static int num_executions_b = 0;
-                  return isnan(id(power_channel_1).raw_state);
-              then:
-                - if:
-                    condition:
-                      lambda: |-
-                        return id(num_executions_b) < 5;
-                    then:
-                      - lambda: |-
-                          (num_executions_b) += 1;
-                      - homeassistant.service:
-                          service: persistent_notification.create
-                          data:
-                            title: |-
-                              "Message %d from ${upper_devicename}", num_executions_b
-                            message: ${channel_1} vermogen is NaN 
-                - switch.turn_on: restart_device
-                - lambda: |-
-                    num_executions_b = 0;
+      # on_raw_value:
+      #   then:
+      #     - if:
+      #         condition:
+      #           lambda: |-
+      #             // static int num_executions_b = 0;
+      #             return isnan(id(power_channel_1).raw_state);
+      #         then:
+      #           - if:
+      #               condition:
+      #                 lambda: |-
+      #                   return id(num_executions_b) < 5;
+      #               then:
+      #                 - lambda: |-
+      #                     (num_executions_b) += 1;
+      #                 - homeassistant.service:
+      #                     service: persistent_notification.create
+      #                     data:
+      #                       title: |-
+      #                         "Message %d from ${upper_devicename}", num_executions_b
+      #                       message: ${channel_1} vermogen is NaN 
+      #           - switch.turn_on: restart_device
+      #           - lambda: |-
+      #               num_executions_b = 0;
+      ############################
         # then:
         #   - if:
         #       condition:
@@ -124,6 +125,7 @@ sensor:
         #             data:
         #               title: Message from ${upper_devicename}
         #               message: ${channel_1} vermogen is NaN
+      ##################################
       on_value_range:
         - above: ${max_power}
           then:

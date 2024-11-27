@@ -13,10 +13,19 @@ packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
+# external_components:
+#   - source:
+#       type: git
+#       url: https://github.com/ssieb/esphome
+#       ref: onewire
+#     components: [ gpio ]
+#     refresh: 1min
+
 wifi:
   # ...
   power_save_mode: light
-
+logger: 
+  level: DEBUG
 esphome:
   name: ${devicename}
 
@@ -25,118 +34,226 @@ esp32_ble_tracker:
     # We currently use the defaults to ensure Bluetooth
     # can co-exist with WiFi In the future we may be able to
     # enable the built-in coexistence logic in ESP-IDF
-    active: true
+    active: false
 
 bluetooth_proxy:
   active: true
+    
+# climate:
+#   - platform: thermostat
+#     name: "Sanitair extra"
+#     sensor: thermostaat
+#     # default_target_temperature_low: 50 °C
+#     default_preset: "Sanitair extra"
+#     preset:
+#       - name: "Sanitair extra"
+#         default_target_temperature_low: 45 °C
+#         mode: heat
+#     startup_delay: true
+#     heat_deadband: 4 °C
+#     min_heating_off_time: 10s
+#     min_heating_run_time: 10s
+#     min_idle_time: 1s
+#     visual:
+#       min_temperature: 30 °C
+#       max_temperature: 85 °C
+#       temperature_step: 1 °C
+#     heat_action:
+#       - switch.turn_on: extra
 
-climate:
-  - platform: thermostat
-    name: "Sanitair extra"
-    sensor: thermostaat
-    # default_target_temperature_low: 50 °C
-    default_preset: "Sanitair extra"
-    preset:
-      - name: "Sanitair extra"
-        default_target_temperature_low: 45 °C
-        mode: heat
-    startup_delay: true
-    heat_deadband: 4 °C
-    min_heating_off_time: 10s
-    min_heating_run_time: 10s
-    min_idle_time: 1s
-    visual:
-      min_temperature: 30 °C
-      max_temperature: 85 °C
-      temperature_step: 1 °C
-    heat_action:
-      - switch.turn_on: extra
+#     idle_action:
+#       - switch.turn_off: extra
 
-    idle_action:
-      - switch.turn_off: extra
+# # dallas:
+# #   - pin: 23
+# #     id: masser
+# one_wire:
+#   - platform: gpio
+#     pin: 
+#       number: 23
+#     id: dallas
+  
+#   - platform: gpio
+#     pin: 
+#       number: 4
+#     id: dallas2
+#     # 0xEC3C01D075637428
+#     # 0x273C01D6075FEC28
+#     # 0xD03C01D607B86528
+#     # 0x563C01D607E4C728
+#     # 0x423C01D075CD3928
+#     # 0x133C01D607F68D28
 
-# dallas:
-#   - pin: 23
-#     id: masser
-one_wire:
-  - platform: gpio
-    pin: 
-      number: 23
-    id: dallas
-    # 0xEC3C01D075637428
-    # 0x273C01D6075FEC28
-    # 0xD03C01D607B86528
-    # 0x563C01D607E4C728
-    # 0x423C01D075CD3928
-    # 0x133C01D607F68D28
+# # Individual sensors
+# sensor:
+#   - platform: uptime
+#     type: seconds
+#     id: uptime_
+#     internal: true
 
-# Individual sensors
-sensor:
-  - platform: dallas_temp
-    address: 0xEC3C01D075637428
-    name: "Vloerverwarming heen"
-    one_wire_id: dallas
-  - platform: dallas_temp
-    address: 0x273C01D6075FEC28
-    name: "Boiler uit"
-    id: uit
-    one_wire_id: dallas
-    on_raw_value:
-      then:
-        - if:
-            condition:
-              lambda: |-
-                return isnan(id(uit).raw_state);
-            then:
-              - homeassistant.service:
-                  service: persistent_notification.create
-                  data:
-                    title: Bericht uit de kelder
-                    message: Boiler uit is NaN
-    filters:
-        - filter_out: nan
-  - platform: dallas_temp
-    address: 0xD03C01D607B86528
-    name: "Boiler in"
-    one_wire_id: dallas
-  - platform: dallas_temp
-    address: 0x563C01D607E4C728
-    name: "Vloerverwarming terug"
-    one_wire_id: dallas
-  - platform: dallas_temp
-    address: 0x423C01D075CD3928
-    name: "Kelder"
-    one_wire_id: dallas
-  - platform: dallas_temp
-    address: 0x133C01D607F68D28
-    name: "Thermostaat"
-    id: thermostaat
-    one_wire_id: dallas
-    on_value_range:
-      above: 51
-      then:
-        if:
-          condition:
-            # Same syntax for is_off
-            switch.is_on: warm_water
-          then:
-            - switch.turn_off: warm_water
-            - homeassistant.service:
-                service: persistent_notification.create
-                data:
-                  title: Bericht uit de kelder
-                  message: Warmtepompboiler uitgezet door ESP
+#   - platform: dallas_temp
+#     address: 0xEC3C01D075637428
+#     name: "Vloerverwarming heen"
+#     one_wire_id: dallas2
+#     id: heen
+#     filters:
+#         - filter_out: nan
+#     on_raw_value:
+#       then:
+#         - if:
+#             condition:
+#               - sensor.in_range:
+#                   id: uptime_
+#                   above: 15
+#               - lambda: |-
+#                   return isnan(id(heen).raw_state);
+#             then:
+#               - number.increment:
+#                   id: nans
+#               - text.set:
+#                   id: nans_text
+#                   value: "Vloerverwarming heen"
+#   - platform: dallas_temp
+#     address: 0x273C01D6075FEC28
+#     name: "Boiler uit"
+#     id: uit
+#     one_wire_id: dallas2
+#     filters:
+#         - filter_out: nan
+#     on_raw_value:
+#       then:
+#         - if:
+#             condition:
+#               - sensor.in_range:
+#                   id: uptime_
+#                   above: 15
+#               - lambda: |-
+#                   return isnan(id(uit).raw_state);
+#             then:
+#               - number.increment:
+#                   id: nans
+#               - text.set:
+#                   id: nans_text
+#                   value: "Boiler uit"
+#               # - homeassistant.service:
+#               #     service: persistent_notification.create
+#               #     data:
+#               #       title: Bericht uit de kelder
+#               #       message: Boiler uit is NaN
+    
+#   - platform: dallas_temp
+#     address: 0xD03C01D607B86528
+#     name: "Boiler in"
+#     one_wire_id: dallas
+#     id: in
+#     filters:
+#         - filter_out: nan
+#     on_raw_value:
+#       then:
+#         - if:
+#             condition:
+#               - sensor.in_range:
+#                   id: uptime_
+#                   above: 15
+#               - lambda: |-
+#                   return isnan(id(in).raw_state);
+#             then:
+#               - number.increment:
+#                   id: nans
+#               - text.set:
+#                   id: nans_text
+#                   value: "Boiler in"
+#   - platform: dallas_temp
+#     address: 0x563C01D607E4C728
+#     name: "Vloerverwarming terug"
+#     id: terug
+#     one_wire_id: dallas2
+#     filters:
+#         - filter_out: nan
+#     on_raw_value:
+#       then:
+#         - if:
+#             condition:
+#               - sensor.in_range:
+#                   id: uptime_
+#                   above: 15
+#               - lambda: |-
+#                   return isnan(id(terug).raw_state);
+#             then:
+#               - number.increment:
+#                   id: nans
+#               - text.set:
+#                   id: nans_text
+#                   value: "Vloerverwarming terug"
+#   - platform: dallas_temp
+#     address: 0x423C01D075CD3928
+#     name: "Kelder"
+#     id: kelder
+#     one_wire_id: dallas
+#     filters:
+#         - filter_out: nan
+#     on_raw_value:
+#       then:
+#         - if:
+#             condition:  
+#               - sensor.in_range:
+#                   id: uptime_
+#                   above: 15
+#               - lambda: |-
+#                   return isnan(id(kelder).raw_state);
+#             then:
+#               - number.increment:
+#                   id: nans
+#               - text.set:
+#                   id: nans_text
+#                   value: "Kelder"
+#   - platform: dallas_temp
+#     address: 0x133C01D607F68D28
+#     name: "Thermostaat"
+#     id: thermostaat
+#     one_wire_id: dallas
+#     filters:
+#         - filter_out: nan
+#     on_raw_value:
+#       then:
+#         - if:
+#             condition:  
+#               - sensor.in_range:
+#                   id: uptime_
+#                   above: 15
+#               - lambda: |-
+#                   return isnan(id(thermostaat).raw_state);
+#             then:
+#               - number.increment:
+#                   id: nans
+#               - text.set:
+#                   id: nans_text
+#                   value: "Thermostaat"
+#     on_value_range:
+#       above: 51
+#       then:
+#         if:
+#           condition:
+#             # Same syntax for is_off
+#             switch.is_on: warm_water
+#           then:
+#             - switch.turn_off: warm_water
+#             - homeassistant.service:
+#                 service: persistent_notification.create
+#                 data:
+#                   title: Bericht uit de kelder
+#                   message: Warmtepompboiler uitgezet door ESP
 
-  - platform: dht
-    pin: 32
-    model: DHT22
-    temperature:
-      accuracy_decimals: 1
-      name: "Kelder temperatuur DHT"
-    humidity:
-      accuracy_decimals: 1
-      name: "Kelder luchtvochtigheid"
-    update_interval: 60s
+  # - platform: dht
+  #   pin: 32
+  #   model: DHT22
+  #   temperature:
+  #     accuracy_decimals: 1
+  #     name: "Kelder temperatuur DHT"
+  #   humidity:
+  #     accuracy_decimals: 1
+  #     name: "Kelder luchtvochtigheid"
+  #   update_interval: 60s
 
 switch:
   - platform: gpio
@@ -168,7 +285,7 @@ switch:
 
   - platform: gpio
     pin:
-      number: 17
+      number: 13
       # inverted: yes
     name: "Verwarming"
     id: verwarming
@@ -176,7 +293,7 @@ switch:
 
   - platform: gpio
     pin:
-      number: 16
+      number: 26
       # inverted: yes
     name: "Warm water"
     id: warm_water

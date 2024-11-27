@@ -1,9 +1,8 @@
 substitutions:
-  devicename: gang-boven
-  upper_devicename: Gang boven
+  devicename: slaapkamer-fien
+  upper_devicename: Slaapkamer Fien
   ssid: !secret ssid
   manual_ip: 192.168.79.159
-  plant: plant_
 
 esp32:
   board: esp32dev
@@ -30,22 +29,176 @@ esp32_ble_tracker:
     # We currently use the defaults to ensure Bluetooth
     # can co-exist with WiFi In the future we may be able to
     # enable the built-in coexistence logic in ESP-IDF
-    active: true
+    active: false
 
 bluetooth_proxy:
   active: true
 
 
-# sensor:
-#   - platform: xiaomi_hhccjcy01
-#     mac_address: 5C:85:7E:B1:09:0B
-#     temperature:
-#       name: "${plant}temperature"
-#     moisture:
-#       name: "${plant}moisture"
-#     illuminance:
-#       name: "${plant}illuminance"
-#     conductivity:
-#       name: "${plant}conductivity"
-#     battery_level:
-#       name: "${plant}battery"
+uart:
+  tx_pin: 1
+  rx_pin: 3
+  id: uar
+  baud_rate: 256000
+  parity: NONE
+  stop_bits: 1
+
+ld2410:
+  - uart_id: uar
+
+binary_sensor:
+  - platform: ld2410
+    has_target:
+      name: ${upper_devicename} Presence
+    has_moving_target:
+      name: ${upper_devicename} Moving Target
+    has_still_target:
+      name: ${upper_devicename} Still Target
+      
+button:
+  - platform: ld2410
+    factory_reset:
+      name: ${upper_devicename} ld2410 factory reset
+    restart:
+      name: ${upper_devicename} ld2410 restart
+    query_params:
+      name: ${upper_devicename} ld2410 query params
+
+number:
+  - platform: ld2410
+    timeout:
+      name: ${upper_devicename} timeout
+    max_move_distance_gate:
+      name: ${upper_devicename} max_move_distance
+    max_still_distance_gate:
+      name: ${upper_devicename} max_still_distance
+    g0:
+      move_threshold:
+        name: ${upper_devicename} g0 move
+        mode: box
+      still_threshold:
+        name: ${upper_devicename} g0 still
+        mode: box
+    g1:
+      move_threshold:
+        name: ${upper_devicename} g1 move
+        mode: box
+      still_threshold:
+        name: ${upper_devicename} g1 still
+        mode: box
+    g2:
+      move_threshold:
+        name: ${upper_devicename} g2 move
+        mode: box
+      still_threshold:
+        name: ${upper_devicename} g2 still
+        mode: box
+    g3:
+      move_threshold:
+        name: ${upper_devicename} g3 move
+        mode: box
+      still_threshold:
+        name: ${upper_devicename} g3 still
+        mode: box
+    g4:
+      move_threshold:
+        name: ${upper_devicename} g4 move
+        mode: box
+      still_threshold:
+        name: ${upper_devicename} g4 still
+        mode: box
+    g5:
+      move_threshold:
+        name: ${upper_devicename} g5 move
+        mode: box
+      still_threshold:
+        name: ${upper_devicename} g5 still
+        mode: box
+    g6:
+      move_threshold:
+        name: ${upper_devicename} g6 move
+        mode: box
+      still_threshold:
+        name: ${upper_devicename} g6 still
+        mode: box
+    g7:
+      move_threshold:
+        name: ${upper_devicename} g7 move
+        mode: box
+      still_threshold:
+        name: ${upper_devicename} g7 still
+        mode: box
+    g8:
+      move_threshold:
+        name: ${upper_devicename} g8 move
+        mode: box
+      still_threshold:
+        name: ${upper_devicename} g8 still
+        mode: box
+
+switch:
+  - platform: ld2410
+    engineering_mode:
+      name: ${upper_devicename} engineering mode
+    bluetooth:
+      name: ${upper_devicename} bluetooth
+      id: ld2410_bluetooth
+
+sensor:
+  - platform: ld2410
+    moving_distance:
+      name: ${upper_devicename} Moving Distance
+    still_distance:
+      name: ${upper_devicename} Still Distance
+    moving_energy:
+      name: ${upper_devicename} Move Energy
+    still_energy:
+      name: ${upper_devicename} Still Energy
+    detection_distance:
+      name: ${upper_devicename} Detection Distance
+
+    g0:
+      move_energy:
+        name: ${upper_devicename} g0 move energy
+      still_energy:
+        name: ${upper_devicename} g0 still energy
+    g1:
+      move_energy:
+        name: ${upper_devicename} g1 move energy
+      still_energy:
+        name: ${upper_devicename} g1 still energy
+    g2:
+      move_energy:
+        name: ${upper_devicename} g2 move energy
+      still_energy:
+        name: ${upper_devicename} g2 still energy
+    g3:
+      move_energy:
+        name: ${upper_devicename} g3 move energy
+      still_energy:
+        name: ${upper_devicename} g3 still energy
+    g4:
+      move_energy:
+        name: ${upper_devicename} g4 move energy
+      still_energy:
+        name: ${upper_devicename} g4 still energy
+    g5:
+      move_energy:
+        name: ${upper_devicename} g5 move energy
+      still_energy:
+        name: ${upper_devicename} g5 still energy
+    g6:
+      move_energy:
+        name: ${upper_devicename} g6 move energy
+      still_energy:
+        name: ${upper_devicename} g6 still energy
+    g7:
+      move_energy:
+        name: ${upper_devicename} g7 move energy
+      still_energy:
+        name: ${upper_devicename} g7 still energy
+    g8:
+      move_energy:
+        name: ${upper_devicename} g8 move energy
+      still_energy:
+        name: ${upper_devicename} g8 still energy

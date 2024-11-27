@@ -68,8 +68,14 @@ fan:
       - lambda: |-
           id(ventilator).turn_on();
     on_turn_off:
+      # - lambda: |-
+      #     id(luchtdroger).turn_off();
+      # - delay: 10min
       - lambda: |-
           id(ventilator).turn_off();
+    # on_turn_off:
+    #   - lambda: |-
+    #       id(ventilator).turn_off();
     # on_state:
     #   - do something
 
@@ -105,7 +111,7 @@ switch:
             if ((id(living_luchtvochtigheid).state > 59) && (id(living_temperatuur).state < 21)) {
               id(luchtdroger).turn_on();
             }
-            if ((id(ha_temp).state > 1) && (id(ha_temp).state < 32) && (id(living_absolute_luchtvochtigheid).state > id(buiten_absolute_luchtvochtigheid).state) && (id(living_temperatuur).state < 21)) {
+            if ((id(temp_in).state > 1) && (id(ha_temp).state < 32) && (id(living_absolute_luchtvochtigheid).state > id(buiten_absolute_luchtvochtigheid).state) && (id(living_temperatuur).state < 21)) {
               id(luchtdroger).turn_on();
             } 
     
@@ -128,7 +134,7 @@ binary_sensor:
     entity_id: script.verluchting_1_uur
     on_press:
       then:
-        - delay: 1h
+        - delay: 2h
         - fan.turn_off: ventilatie
 
 
@@ -138,7 +144,7 @@ binary_sensor:
     entity_id: script.verluchting_2_uur
     on_press:
       then:
-        - delay: 2h
+        - delay: 3h
         - fan.turn_off: ventilatie
 
 
@@ -167,6 +173,11 @@ sensor:
   - platform: sht3xd
     temperature:
       name: ${upper_devicename} ingaande temperatuur
+      id: temp_in
+      on_value_range:
+        - below: 3.0
+          then:
+            - switch.turn_off: luchtdroger
       # internal: true
     humidity:
       name: ${upper_devicename} ingaande luchtvochtigheid

@@ -8,7 +8,7 @@
 # Enable logging
 logger:
   baud_rate: 0
-  level: WARN
+  level: DEBUG
 
 api:
   password: !secret password
@@ -21,6 +21,26 @@ time:
   - platform: homeassistant
     id: homeassistant_time
 
+number:
+  - platform: template
+    name: "${upper_devicename} Nans"
+    id: nans
+    mode: box
+    icon: "mdi:alert-circle"
+    optimistic: true
+    min_value: 0
+    max_value: 100
+    step: 1
+
+text:
+  - platform: template
+    name: "${upper_devicename} Nans"
+    id: nans_text
+    optimistic: true
+    min_length: 0
+    max_length: 100
+    mode: text
+    
 # sensor:
 #   - platform: wifi_signal
 #     name: "WiFi ${upper_devicename}"

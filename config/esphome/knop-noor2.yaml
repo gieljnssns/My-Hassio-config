@@ -1,8 +1,8 @@
 substitutions:
-  devicename: knop-fien2
-  upper_devicename: Knop Fien
-  ssid: !secret ssid
-  manual_ip: 192.168.79.156
+  devicename: knop-noor2
+  upper_devicename: Knop Noor
+  ssid: !secret ssid-waskot
+  manual_ip: 192.168.79.136
 
 esp32:
   board: esp32dev
@@ -12,16 +12,18 @@ esp32:
 packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
-
+  
 wifi:
   # ...
-  power_save_mode: light
+  power_save_mode: LIGHT
+logger:
+  baud_rate: 0
+  level: DEBUG
+
 
 esphome:
   name: ${devicename}
-
-# improv_serial:
-
+    
 esp32_ble_tracker:
   scan_parameters:
     # We currently use the defaults to ensure Bluetooth
@@ -32,36 +34,16 @@ esp32_ble_tracker:
 bluetooth_proxy:
   active: true
 
-i2c:
-  sda: 21
-  scl: 22
-  scan: True
-  id: bus_a
-
-sensor:
-  - platform: bme280_i2c
-    temperature:
-      name: "Slaapkamer Fien temperatuur"
-      id: bme280_temperature
-      oversampling: 1x
-    humidity:
-      name: "Slaapkamer Fien luchtvochtigheid"
-      id: bme280_humidity
-      oversampling: 1x
-    address: 0x76
-    i2c_id: bus_a
-    update_interval: 60s
-
 output:
   - platform: ledc
     pin: GPIO19
-    id: led_knop
+    id: redgpio
 
 light:
   - platform: monochromatic
-    name: "Led knop Fien"
+    name: "Led knop Noor"
     id: licht
-    output: led_knop
+    output: redgpio
     effects:
       - strobe:
       - flicker:
@@ -69,11 +51,8 @@ light:
 binary_sensor:
   - platform: gpio
     pin:
-      number: GPIO4
-      # mode:
-      #   input: true
-      #   pullup: true
-    id: "knop_fien"
+      number: 16
+    id: "knop_noor"
     on_multi_click:
       - timing:
           - ON for at most 1s
@@ -83,10 +62,50 @@ binary_sensor:
           - ON for at most 1s
           - OFF for at most 1s
           - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
           - OFF for at least 0.5s
         then:
           - binary_sensor.template.publish:
-              id: fien_4_klik
+              id: noor_5_klik
+              state: ON
+          - if:
+              condition:
+                light.is_on: licht
+              then:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 5s
+                - light.turn_off:
+                    id: licht
+                - light.turn_on:
+                    id: licht
+              else:
+                - delay: 1s
+                - light.turn_on:
+                    id: licht
+                    effect: strobe
+                - delay: 5s
+                - light.turn_off:
+                    id: licht
+          - delay: 2s
+          - binary_sensor.template.publish:
+              id: noor_5_klik
+              state: OFF
+      - timing:
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at least 0.5s
+        then:
+          - binary_sensor.template.publish:
+              id: noor_4_klik
               state: ON
           - if:
               condition:
@@ -111,7 +130,7 @@ binary_sensor:
                     id: licht
           - delay: 2s
           - binary_sensor.template.publish:
-              id: fien_4_klik
+              id: noor_4_klik
               state: OFF
       - timing:
           - ON for at most 1s
@@ -122,7 +141,7 @@ binary_sensor:
           - OFF for at least 0.5s
         then:
           - binary_sensor.template.publish:
-              id: fien_3_klik
+              id: noor_3_klik
               state: ON
           - if:
               condition:
@@ -147,7 +166,7 @@ binary_sensor:
                     id: licht
           - delay: 2s
           - binary_sensor.template.publish:
-              id: fien_3_klik
+              id: noor_3_klik
               state: OFF
       - timing:
           - ON for at most 1s
@@ -156,7 +175,7 @@ binary_sensor:
           - OFF for at least 0.5s
         then:
           - binary_sensor.template.publish:
-              id: fien_2_klik
+              id: noor_2_klik
               state: ON
           - if:
               condition:
@@ -181,14 +200,14 @@ binary_sensor:
                     id: licht
           - delay: 2s
           - binary_sensor.template.publish:
-              id: fien_2_klik
+              id: noor_2_klik
               state: OFF
       - timing:
           - ON for at most 1s
           - OFF for at least 0.5s
         then:
           - binary_sensor.template.publish:
-              id: fien_klik
+              id: noor_klik
               state: ON
           - if:
               condition:
@@ -213,13 +232,13 @@ binary_sensor:
                     id: licht
           - delay: 2s
           - binary_sensor.template.publish:
-              id: fien_klik
+              id: noor_klik
               state: OFF
       - timing:
           - ON for at least 1.2s
         then:
           - binary_sensor.template.publish:
-              id: fien_long_klik
+              id: noor_long_klik
               state: ON
           - if:
               condition:
@@ -242,25 +261,29 @@ binary_sensor:
                     id: licht
     on_release:
       - binary_sensor.template.publish:
-          id: fien_long_klik
+          id: noor_long_klik
           state: OFF
 
   - platform: template
-    id: fien_klik
-    name: "Knop Fien klik"
+    id: noor_klik
+    name: "Knop Noor klik"
 
   - platform: template
-    id: fien_long_klik
-    name: "Knop Fien lange klik"
+    id: noor_long_klik
+    name: "Knop Noor lange klik"
 
   - platform: template
-    id: fien_2_klik
-    name: "Knop Fien 2 klik"
+    id: noor_2_klik
+    name: "Knop Noor 2 klik"
 
   - platform: template
-    id: fien_3_klik
-    name: "Knop Fien 3 klik"
+    id: noor_3_klik
+    name: "Knop Noor 3 klik"
 
   - platform: template
-    id: fien_4_klik
-    name: "Knop Fien 4 klik"
+    id: noor_4_klik
+    name: "Knop Noor 4 klik"
+
+  - platform: template
+    id: noor_5_klik
+    name: "Knop Noor 5 klik"    

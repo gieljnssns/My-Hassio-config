@@ -1,0 +1,50 @@
+substitutions:
+  devicename: cam
+  upper_devicename: Cam
+  cam_devicename: cam
+  ssid: !secret ssid
+  manual_ip: 192.168.79.164
+
+esp32:
+  board: esp32cam
+  framework:
+    type: arduino
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+wifi:
+  # ...
+  power_save_mode: light
+
+
+esphome:
+  name: ${devicename}
+
+
+esp32_camera:
+  name: ${cam_devicename}
+  external_clock:
+    pin: GPIO0
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO26
+    scl: GPIO27
+  data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  power_down_pin: GPIO32
+  resolution: 640x480
+  # resolution: 800x600
+  # resolution: 1920x1080
+  horizontal_mirror: False
+  vertical_flip: False
+  max_framerate: 20 fps
+
+esp32_camera_web_server:
+  - port: 8080
+    mode: stream
+  - port: 8081
+    mode: snapshot

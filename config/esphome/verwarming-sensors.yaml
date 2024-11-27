@@ -1,0 +1,224 @@
+substitutions:
+  devicename: verwarming-sensors
+  platform: ESP8266
+  board: nodemcuv2
+  upper_devicename: Verwarming sensors
+  ssid: !secret ssid-waskot
+  manual_ip: 192.168.79.125
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base.yaml
+    
+switch:
+  - platform: homeassistant
+    id: extra
+    entity_id: switch.warm_water_extra
+  - platform: homeassistant
+    id: warm_water
+    entity_id: switch.warm_water
+
+climate:
+  - platform: thermostat
+    name: "Sanitair extra"
+    sensor: thermostaat
+    # default_target_temperature_low: 50 °C
+    default_preset: "Sanitair extra"
+    preset:
+      - name: "Sanitair extra"
+        default_target_temperature_low: 45 °C
+        mode: heat
+    startup_delay: true
+    heat_deadband: 4 °C
+    min_heating_off_time: 10s
+    min_heating_run_time: 10s
+    min_idle_time: 1s
+    visual:
+      min_temperature: 30 °C
+      max_temperature: 85 °C
+      temperature_step: 1 °C
+    heat_action:
+      - switch.turn_on: extra
+
+    idle_action:
+      - switch.turn_off: extra
+
+# dallas:
+#   - pin: 23
+#     id: masser
+one_wire:
+  - platform: gpio
+    pin: 
+      number: D1
+    id: dallas
+  
+  - platform: gpio
+    pin: 
+      number: D2
+    id: dallas2
+    # 0xEC3C01D075637428
+    # 0x273C01D6075FEC28
+    # 0xD03C01D607B86528
+    # 0x563C01D607E4C728
+    # 0x423C01D075CD3928
+    # 0x133C01D607F68D28
+
+# Individual sensors
+sensor:
+  - platform: uptime
+    type: seconds
+    id: uptime_
+    internal: true
+
+  - platform: dallas_temp
+    address: 0xEC3C01D075637428
+    name: "Vloerverwarming heen"
+    one_wire_id: dallas2
+    id: heen
+    filters:
+        - filter_out: nan
+    on_raw_value:
+      then:
+        - if:
+            condition:
+              - sensor.in_range:
+                  id: uptime_
+                  above: 15
+              - lambda: |-
+                  return isnan(id(heen).raw_state);
+            then:
+              - number.increment:
+                  id: nans
+              - text.set:
+                  id: nans_text
+                  value: "Vloerverwarming heen"
+  - platform: dallas_temp
+    address: 0x273C01D6075FEC28
+    name: "Boiler uit"
+    id: uit
+    one_wire_id: dallas2
+    filters:
+        - filter_out: nan
+    on_raw_value:
+      then:
+        - if:
+            condition:
+              - sensor.in_range:
+                  id: uptime_
+                  above: 15
+              - lambda: |-
+                  return isnan(id(uit).raw_state);
+            then:
+              - number.increment:
+                  id: nans
+              - text.set:
+                  id: nans_text
+                  value: "Boiler uit"
+              # - homeassistant.service:
+              #     service: persistent_notification.create
+              #     data:
+              #       title: Bericht uit de kelder
+              #       message: Boiler uit is NaN
+    
+  - platform: dallas_temp
+    address: 0xD03C01D607B86528
+    name: "Boiler in"
+    one_wire_id: dallas
+    id: in
+    filters:
+        - filter_out: nan
+    on_raw_value:
+      then:
+        - if:
+            condition:
+              - sensor.in_range:
+                  id: uptime_
+                  above: 15
+              - lambda: |-
+                  return isnan(id(in).raw_state);
+            then:
+              - number.increment:
+                  id: nans
+              - text.set:
+                  id: nans_text
+                  value: "Boiler in"
+  - platform: dallas_temp
+    address: 0x563C01D607E4C728
+    name: "Vloerverwarming terug"
+    id: terug
+    one_wire_id: dallas2
+    filters:
+        - filter_out: nan
+    on_raw_value:
+      then:
+        - if:
+            condition:
+              - sensor.in_range:
+                  id: uptime_
+                  above: 15
+              - lambda: |-
+                  return isnan(id(terug).raw_state);
+            then:
+              - number.increment:
+                  id: nans
+              - text.set:
+                  id: nans_text
+                  value: "Vloerverwarming terug"
+  - platform: dallas_temp
+    address: 0x423C01D075CD3928
+    name: "Kelder"
+    id: kelder
+    one_wire_id: dallas
+    filters:
+        - filter_out: nan
+    on_raw_value:
+      then:
+        - if:
+            condition:  
+              - sensor.in_range:
+                  id: uptime_
+                  above: 15
+              - lambda: |-
+                  return isnan(id(kelder).raw_state);
+            then:
+              - number.increment:
+                  id: nans
+              - text.set:
+                  id: nans_text
+                  value: "Kelder"
+  - platform: dallas_temp
+    address: 0x133C01D607F68D28
+    name: "Thermostaat"
+    id: thermostaat
+    one_wire_id: dallas
+    filters:
+        - filter_out: nan
+    on_raw_value:
+      then:
+        - if:
+            condition:  
+              - sensor.in_range:
+                  id: uptime_
+                  above: 15
+              - lambda: |-
+                  return isnan(id(thermostaat).raw_state);
+            then:
+              - number.increment:
+                  id: nans
+              - text.set:
+                  id: nans_text
+                  value: "Thermostaat"
+    on_value_range:
+      above: 55
+      then:
+        if:
+          condition:
+            # Same syntax for is_off
+            switch.is_on: warm_water
+          then:
+            - switch.turn_off: warm_water
+            - homeassistant.service:
+                service: persistent_notification.create
+                data:
+                  title: Bericht uit de kelder
+                  message: Warmtepompboiler uitgezet door ESP

@@ -1,0 +1,347 @@
+substitutions:
+  devicename: zolder
+  upper_devicename: Zolder
+  ssid: !secret ssid
+  fien: Slaapkamer Fien
+  noor: Slaapkamer Noor
+  manual_ip: 192.168.79.143
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+wifi:
+  # ...
+  power_save_mode: light
+
+
+esphome:
+  name: ${devicename}
+
+logger:
+  level: DEBUG
+
+uart:
+  - id: fien1
+    tx_pin: 1
+    rx_pin: 3
+    baud_rate: 256000
+    parity: NONE
+    stop_bits: 1
+  - id: noor1
+    tx_pin: 17
+    rx_pin: 16
+    baud_rate: 256000
+    parity: NONE
+    stop_bits: 1
+
+ld2410:
+  - id: fien
+    uart_id: fien1
+    # throttle: 1500ms
+  - id: noor
+    uart_id: noor1
+    # throttle: 1500ms
+
+number:
+  - platform: ld2410
+    ld2410_id: fien
+    timeout:
+      name: ${fien} timeout
+    max_move_distance_gate:
+      name: ${fien} max_move_distance
+    max_still_distance_gate:
+      name: ${fien} max_still_distance
+    g0:
+      move_threshold:
+        name: ${fien} g0 move
+        mode: box
+      still_threshold:
+        name: ${fien} g0 still
+        mode: box
+    g1:
+      move_threshold:
+        name: ${fien} g1 move
+        mode: box
+      still_threshold:
+        name: ${fien} g1 still
+        mode: box
+    g2:
+      move_threshold:
+        name: ${fien} g2 move
+        mode: box
+      still_threshold:
+        name: ${fien} g2 still
+        mode: box
+    g3:
+      move_threshold:
+        name: ${fien} g3 move
+        mode: box
+      still_threshold:
+        name: ${fien} g3 still
+        mode: box
+    g4:
+      move_threshold:
+        name: ${fien} g4 move
+        mode: box
+      still_threshold:
+        name: ${fien} g4 still
+        mode: box
+    g5:
+      move_threshold:
+        name: ${fien} g5 move
+        mode: box
+      still_threshold:
+        name: ${fien} g5 still
+        mode: box
+    g6:
+      move_threshold:
+        name: ${fien} g6 move
+        mode: box
+      still_threshold:
+        name: ${fien} g6 still
+        mode: box
+    g7:
+      move_threshold:
+        name: ${fien} g7 move
+        mode: box
+      still_threshold:
+        name: ${fien} g7 still
+        mode: box
+    g8:
+      move_threshold:
+        name: ${fien} g8 move
+        mode: box
+      still_threshold:
+        name: ${fien} g8 still
+        mode: box
+
+  - platform: ld2410
+    ld2410_id: noor
+    timeout:
+      name: ${noor} timeout
+    max_move_distance_gate:
+      name: ${noor} max_move_distance
+    max_still_distance_gate:
+      name: ${noor} max_still_distance
+    g0:
+      move_threshold:
+        name: ${noor} g0 move
+        mode: box
+      still_threshold:
+        name: ${noor} g0 still
+        mode: box
+    g1:
+      move_threshold:
+        name: ${noor} g1 move
+        mode: box
+      still_threshold:
+        name: ${noor} g1 still
+        mode: box
+    g2:
+      move_threshold:
+        name: ${noor} g2 move
+        mode: box
+      still_threshold:
+        name: ${noor} g2 still
+        mode: box
+    g3:
+      move_threshold:
+        name: ${noor} g3 move
+        mode: box
+      still_threshold:
+        name: ${noor} g3 still
+        mode: box
+    g4:
+      move_threshold:
+        name: ${noor} g4 move
+        mode: box
+      still_threshold:
+        name: ${noor} g4 still
+        mode: box
+    g5:
+      move_threshold:
+        name: ${noor} g5 move
+        mode: box
+      still_threshold:
+        name: ${noor} g5 still
+        mode: box
+    g6:
+      move_threshold:
+        name: ${noor} g6 move
+        mode: box
+      still_threshold:
+        name: ${noor} g6 still
+        mode: box
+    g7:
+      move_threshold:
+        name: ${noor} g7 move
+        mode: box
+      still_threshold:
+        name: ${noor} g7 still
+        mode: box
+    g8:
+      move_threshold:
+        name: ${noor} g8 move
+        mode: box
+      still_threshold:
+        name: ${noor} g8 still
+        mode: box
+
+switch:
+  - platform: ld2410
+    ld2410_id: fien
+    engineering_mode:
+      name: ${fien} engineering mode
+    bluetooth:
+      name: ${fien} bluetooth
+
+  - platform: ld2410
+    ld2410_id: noor
+    engineering_mode:
+      name: ${noor} engineering mode
+    bluetooth:
+      name: ${noor} bluetooth
+
+sensor:
+  - platform: ld2410
+    ld2410_id: fien
+    moving_distance:
+      name: ${fien} Moving Distance
+    still_distance:
+      name: ${fien} Still Distance
+    moving_energy:
+      name: ${fien} Move Energy
+    still_energy:
+      name: ${fien} Still Energy
+    detection_distance:
+      name: ${fien} Detection Distance
+
+    g0:
+      move_energy:
+        name: ${fien} g0 move energy
+      still_energy:
+        name: ${fien} g0 still energy
+    g1:
+      move_energy:
+        name: ${fien} g1 move energy
+      still_energy:
+        name: ${fien} g1 still energy
+    g2:
+      move_energy:
+        name: ${fien} g2 move energy
+      still_energy:
+        name: ${fien} g2 still energy
+    g3:
+      move_energy:
+        name: ${fien} g3 move energy
+      still_energy:
+        name: ${fien} g3 still energy
+    g4:
+      move_energy:
+        name: ${fien} g4 move energy
+      still_energy:
+        name: ${fien} g4 still energy
+    g5:
+      move_energy:
+        name: ${fien} g5 move energy
+      still_energy:
+        name: ${fien} g5 still energy
+    g6:
+      move_energy:
+        name: ${fien} g6 move energy
+      still_energy:
+        name: ${fien} g6 still energy
+    g7:
+      move_energy:
+        name: ${fien} g7 move energy
+      still_energy:
+        name: ${fien} g7 still energy
+    g8:
+      move_energy:
+        name: ${fien} g8 move energy
+      still_energy:
+        name: ${fien} g8 still energy
+
+  - platform: ld2410
+    ld2410_id: noor
+    moving_distance:
+      name: ${noor} Moving Distance
+    still_distance:
+      name: ${noor} Still Distance
+    moving_energy:
+      name: ${noor} Move Energy
+    still_energy:
+      name: ${noor} Still Energy
+    detection_distance:
+      name: ${noor} Detection Distance
+
+    g0:
+      move_energy:
+        name: ${noor} g0 move energy
+      still_energy:
+        name: ${noor} g0 still energy
+    g1:
+      move_energy:
+        name: ${noor} g1 move energy
+      still_energy:
+        name: ${noor} g1 still energy
+    g2:
+      move_energy:
+        name: ${noor} g2 move energy
+      still_energy:
+        name: ${noor} g2 still energy
+    g3:
+      move_energy:
+        name: ${noor} g3 move energy
+      still_energy:
+        name: ${noor} g3 still energy
+    g4:
+      move_energy:
+        name: ${noor} g4 move energy
+      still_energy:
+        name: ${noor} g4 still energy
+    g5:
+      move_energy:
+        name: ${noor} g5 move energy
+      still_energy:
+        name: ${noor} g5 still energy
+    g6:
+      move_energy:
+        name: ${noor} g6 move energy
+      still_energy:
+        name: ${noor} g6 still energy
+    g7:
+      move_energy:
+        name: ${noor} g7 move energy
+      still_energy:
+        name: ${noor} g7 still energy
+    g8:
+      move_energy:
+        name: ${noor} g8 move energy
+      still_energy:
+        name: ${noor} g8 still energy
+
+binary_sensor:
+  - platform: ld2410
+    ld2410_id: fien
+    has_target:
+      name: ${fien} Presence
+    has_moving_target:
+      name: ${fien} Moving Target
+    has_still_target:
+      name: ${fien} Still Target
+
+  - platform: ld2410
+    ld2410_id: noor
+    has_target:
+      name: ${noor} Presence
+    has_moving_target:
+      name: ${noor} Moving Target
+    has_still_target:
+      name: ${noor} Still Target

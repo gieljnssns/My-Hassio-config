@@ -1,0 +1,137 @@
+substitutions:
+  devicename: leds-drukknoppen
+  upper_devicename: Leds drukknoppen
+  ssid: !secret ssid
+  manual_ip: 192.168.79.137
+
+esp32:
+  board: esp32dev
+  # framework:
+  #   type: arduino
+  framework:
+    type: esp-idf
+
+esphome:
+  name: ${devicename}
+
+packages:
+  # wifi: !include common/wifi-waskot.yaml
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+globals:
+  - id: chime
+    type: bool
+    restore_value: true
+    initial_value: "true"
+
+switch:
+  - platform: gpio
+    pin:
+      number: 4
+      # inverted: yes
+    name: "Led wc"
+    id: wc
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    pin:
+      number: 16
+      # inverted: yes
+    name: "Led waskot"
+    id: waskot
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    pin:
+      number: 19
+      # inverted: yes
+    name: "Led badkamer"
+    id: badkamer
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    pin:
+      number: 18
+      # inverted: yes
+    name: "Stopcontacten terras"
+    id: reserve
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    pin:
+      number: 21
+      inverted: yes
+    name: "Led kelder"
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    pin:
+      number: 17
+      inverted: yes
+    name: "Deurbel"
+    id: deurbel
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: template
+    restore_mode: DISABLED
+    name: "Deurbel actief"
+    id: deurbel_actief
+    turn_on_action:
+      - globals.set:
+          id: chime
+          value: "true"
+    turn_off_action:
+      - globals.set:
+          id: chime
+          value: "false"
+    lambda: |-
+      return id(chime);
+
+binary_sensor:
+  - platform: gpio
+    id: deurbel_drukknop
+    name: Deurbel drukknop
+    pin:
+      number: 25
+      mode: INPUT_PULLUP
+      inverted: true
+    filters:
+      # Small filter, to debounce the button press.
+      - delayed_on: 25ms
+      - delayed_off: 25ms
+    on_press:
+      # Only turn on the chime when it is active.
+      then:
+        if:
+          condition:
+            - switch.is_on: deurbel_actief
+          then:
+            - switch.turn_on: deurbel
+    on_release:
+      # On release, turn of the chime.
+      - switch.turn_off: deurbel
+
+  - platform: gpio
+    id: spots_tv_drukknop
+    name: Spots tv drukknop
+    pin:
+      number: 26
+      mode: INPUT_PULLUP
+      inverted: true
+    on_press:
+      - homeassistant.service:
+          service: light.toggle
+          data:
+            entity_id: light.spots_tv
+
+  - platform: gpio
+    id: spots_slaapkamer_drukknop
+    name: Spots slaapkamer drukknop
+    pin:
+      number: 27
+      mode: INPUT_PULLUP
+      inverted: true
+    on_press:
+      # - homeassistant.service:
+      #     service: light.toggle
+      #     data:
+      #       entity_id: light.slaapkamer_hoog
+      - homeassistant.service:
+          service: light.toggle
+          data:
+            entity_id: light.slaapkamer_spot
