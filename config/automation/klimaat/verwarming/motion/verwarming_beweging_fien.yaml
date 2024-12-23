@@ -32,7 +32,7 @@ actions:
             state: "off"
           - condition: template
             value_template: >
-              {{ states("alarm_control_panel.ha_alarm") == "disarmed" }}
+              {{ states("alarm_control_panel.ha_alarm") != "armed_night" }}
         sequence:
           - action: climate.set_preset_mode
             target:
@@ -44,7 +44,7 @@ actions:
             id: uit
           - condition: template
             value_template: >
-              {{ states("alarm_control_panel.ha_alarm") == "disarmed" }}
+              {{ states("alarm_control_panel.ha_alarm") != "armed_night" }}
         sequence:
           - action: climate.set_preset_mode
             target:

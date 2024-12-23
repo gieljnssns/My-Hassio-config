@@ -14,13 +14,17 @@ esp32:
 packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
+
   
+
 wifi:
   # ...
   power_save_mode: LIGHT
+
 logger:
-  baud_rate: 0
-  level: DEBUG
+  # baud_rate: 0
+  # level: VERBOSE
+  hardware_uart: UART1
 
 # mqtt:
 #   broker: 192.168.79.54
@@ -29,6 +33,9 @@ logger:
 #   discovery: false
 
 # psram:
+
+web_server:
+  
 
 esphome:
   name: ${devicename}
@@ -58,21 +65,20 @@ bluetooth_proxy:
   active: true
 
 uart:
-  tx_pin: 1
-  rx_pin: 3
-  id: uar
-  # tx_pin: 1
-  # rx_pin: 3
+  tx_pin: 
+    number: GPIO1
+  rx_pin: 
+    number: GPIO3
   baud_rate: 256000
   parity: NONE
   stop_bits: 1
-  # debug:
-  #   direction: BOTH
-  #   dummy_receiver: false
-  #   after:
-  #     delimiter: "\n"
-  #   sequence:
-  #     - lambda: UARTDebug::log_string(direction, bytes);
+  debug:
+    direction: BOTH
+    dummy_receiver: false
+    after:
+      delimiter: "\n"
+    sequence:
+      - lambda: UARTDebug::log_string(direction, bytes);
 
 i2c:
   - id: bus_a
@@ -85,7 +91,7 @@ i2c:
     scan: true
 
 ld2410:
-  - uart_id: uar
+  # - uart_id: uar
 
 button:
   - platform: ld2410

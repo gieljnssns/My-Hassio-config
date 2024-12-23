@@ -10,6 +10,22 @@ trigger:
     from: 'armed_night'
     to: 'disarmed'
     id: aan
+  - platform: template
+    value_template: >
+      {{ states("binary_sensor.gphone_focus") == "off" and states("device_tracker.gphone_bermuda") == "home" }}
+    id: aan_slaapkamer
+  - platform: template
+    value_template: >
+      {{ states("binary_sensor.mphone_focus") == "off" and states("device_tracker.mphone_bermuda") == "home" }}
+    id: aan_slaapkamer
+  - platform: template
+    value_template: >
+      {{ states("binary_sensor.nphone_focus") == "off" and states("device_tracker.nphone_bermuda") == "home" }}
+    id: aan_slaapkamer_noor
+  # - platform: template
+  #   value_template: >
+  #     {{ states("binary_sensor.fphone_focus") == "off" and states("device_tracker.fphone_bermuda") == "home" }}
+  #   id: aan_slaapkamer_fien
 actions:
   - choose:
     - conditions:
@@ -42,5 +58,22 @@ actions:
           target:
             entity_id:
               - automation.verwarming_bij_aanwezigheid_fien
-              - automation.verwarming_bij_aanwezigheid_noor
+    - conditions:
+        - condition: trigger
+          id: aan_slaapkamer
+        - condition: template
+          value_template: >
+            {{ states("binary_sensor.gphone_focus") == "off" and states("binary_sensor.mphone_focus") == "off" }}
+      sequence:
+        - action: automation.turn_on
+          target:
+            entity_id:
               - automation.verwarming_bij_aanwezigheid_slaapkamer
+    - conditions:
+        - condition: trigger
+          id: aan_slaapkamer_noor
+      sequence:
+        - action: automation.turn_on
+          target:
+            entity_id:
+              - automation.verwarming_bij_aanwezigheid_noor

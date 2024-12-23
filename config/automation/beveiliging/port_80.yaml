@@ -1,0 +1,42 @@
+alias: Port 80
+id: 90caa7a7-5a9a-4416-90f6-2110912423b9
+description: ""
+trigger:
+  - platform: template
+    value_template: >
+      {{ ( ( states('sensor.vervaldatum_certificaat') | as_timestamp(0) - now().timestamp() ) / 86400 ) | round(0) < 7 }}
+    id: open
+  - platform: template
+    value_template: >
+      {{ ( ( states('sensor.vervaldatum_certificaat') | as_timestamp(0) - now().timestamp() ) / 86400 ) | round(0) > 7 }}
+    id: close
+actions:
+  - choose:
+    - conditions:
+        - condition: trigger
+          id: open
+        - condition: state
+          entity_id: switch.unifi_network_caddy_80
+          state: "off"
+      sequence:
+        - action: switch.turn_on
+          entity_id: switch.unifi_network_caddy_80
+        - action: notify.mobile_app_gphone
+          data:
+            title: "Poort 80 opengezet"
+            message: >
+              "Certificaat verloopt binnen {{ ( ( states('sensor.vervaldatum_certificaat') | as_timestamp(0) - now().timestamp() ) / 86400 ) | round(0) }} dagen"
+    - conditions:
+        - condition: trigger
+          id: close
+        - condition: state
+          entity_id: switch.unifi_network_caddy_80
+          state: "on"
+      sequence:
+        - action: switch.turn_off
+          entity_id: switch.unifi_network_caddy_80
+        - action: notify.mobile_app_gphone
+          data:
+            title: "Poort 80 dichtgezet"
+            message: >
+              "Certificaat verloopt binnen {{ ( ( states('sensor.vervaldatum_certificaat') | as_timestamp(0) - now().timestamp() ) / 86400 ) | round(0) }} dagen"

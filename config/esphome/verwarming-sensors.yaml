@@ -4,12 +4,13 @@ substitutions:
   board: nodemcuv2
   upper_devicename: Verwarming sensors
   ssid: !secret ssid-waskot
-  manual_ip: 192.168.79.125
+  manual_ip: 192.168.79.128
 
 packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base.yaml
-    
+
+  
 switch:
   - platform: homeassistant
     id: extra
@@ -26,7 +27,7 @@ climate:
     default_preset: "Sanitair extra"
     preset:
       - name: "Sanitair extra"
-        default_target_temperature_low: 45 °C
+        default_target_temperature_low: 34 °C
         mode: heat
     startup_delay: true
     heat_deadband: 4 °C

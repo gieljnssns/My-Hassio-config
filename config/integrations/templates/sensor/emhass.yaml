@@ -99,12 +99,12 @@
         {% if states("input_boolean.warm_water_starten") == 'on' %}
           {% if states("input_boolean.op_verlof") == 'off' %}
             {% if (states("sensor.solcast_solaredge_forecast_remaining_today") | float(0)) > 2 %}
-              {% set hours =  max(0, (53 - (states("sensor.thermostaat") | float(45))) | round(1)/4)  %}
+              {% set hours =  max(0, (53 - (states("sensor.thermostaat") | float(45))) | round(1, "half", default)/4)  %}
             {% else %}
-              {% set hours =  max(0, (52 - (states("sensor.thermostaat") | float(45))) | round(1)/4)  %}
+              {% set hours =  max(0, (52 - (states("sensor.thermostaat") | float(45))) | round(1, "half", default)/4)  %}
             {% endif %}
           {% else %}
-            {% set hours =  max(0, (46 - (states("sensor.thermostaat") | float(45))) | round(1)/4)  %}
+            {% set hours =  max(0, (46 - (states("sensor.thermostaat") | float(45))) | round(1, "half", default)/4)  %}
           {% endif %}
           {% if hours|float > horizon %}
             {{ horizon }}
@@ -244,47 +244,47 @@
           {%- endfor %}
           {{ (new_list.all)[:48]}}
 
-    - name: Real cost forecast list
-      unique_id: b826cf88-14b2-4a57-9727-6b74b0e58032
-      state: >
-        {{ states("sensor.nordpool_kwh_be_eur")}}
-      availability: >-
-        {{ has_value("sensor.nordpool_kwh_be_eur") }}
-      unit_of_measurement: "EUR/kWh"
-      attributes:
-        list: >
-          {%- set list = (state_attr('sensor.nordpool_kwh_be_eur', 'raw_today')
-                |selectattr('start','gt',utcnow())
-                |map(attribute='value')
-                |list
-            + state_attr('sensor.nordpool_kwh_be_eur', 'raw_tomorrow')
-                |selectattr('start','gt',utcnow())
-                |map(attribute='value')
-                |list)[:48] -%}
-          {%- set new_list = namespace(all=[]) %}
-          {%- for i in range (list | length) %}
-            {%- if i == 0 %}
-              {%- if now().minute | int(0) < 30 %}
-                {%- set new = [states('sensor.nordpool_kwh_be_eur') | float(0)] %}
-                {%- set new_list.all = new_list.all + new -%}
-              {%- else %}
-                {%- set new = [list[i]] + [list[i]] %}
-                {%- set new_list.all = new_list.all + new -%}
-              {%- endif %}
-            {%- else %}
-              {%- set new = [list[i]] + [list[i]] %}
-              {%- set new_list.all = new_list.all + new -%}
-            {%- endif %}
-          {%- endfor %}
-          {{ (new_list.all)[:48]}}
+    # - name: Real cost forecast list
+    #   unique_id: b826cf88-14b2-4a57-9727-6b74b0e58032
+    #   state: >
+    #     {{ states("sensor.nordpool_kwh_be_eur")}}
+    #   availability: >-
+    #     {{ has_value("sensor.nordpool_kwh_be_eur") }}
+    #   unit_of_measurement: "EUR/kWh"
+    #   attributes:
+    #     list: >
+    #       {%- set list = (state_attr('sensor.nordpool_kwh_be_eur', 'raw_today')
+    #             |selectattr('start','gt',utcnow())
+    #             |map(attribute='value')
+    #             |list
+    #         + state_attr('sensor.nordpool_kwh_be_eur', 'raw_tomorrow')
+    #             |selectattr('start','gt',utcnow())
+    #             |map(attribute='value')
+    #             |list)[:48] -%}
+    #       {%- set new_list = namespace(all=[]) %}
+    #       {%- for i in range (list | length) %}
+    #         {%- if i == 0 %}
+    #           {%- if now().minute | int(0) < 30 %}
+    #             {%- set new = [states('sensor.nordpool_kwh_be_eur') | float(0)] %}
+    #             {%- set new_list.all = new_list.all + new -%}
+    #           {%- else %}
+    #             {%- set new = [list[i]] + [list[i]] %}
+    #             {%- set new_list.all = new_list.all + new -%}
+    #           {%- endif %}
+    #         {%- else %}
+    #           {%- set new = [list[i]] + [list[i]] %}
+    #           {%- set new_list.all = new_list.all + new -%}
+    #         {%- endif %}
+    #       {%- endfor %}
+    #       {{ (new_list.all)[:48]}}
 
-        length: >
-          {% if state_attr('sensor.real_cost_forecast_list', 'list') is iterable %}
-            {% set len = state_attr('sensor.real_cost_forecast_list', 'list') | length %}
-          {% else %}
-            {% set len = 48 %}
-          {% endif %}
-          {{ len }}
+    #     length: >
+    #       {% if state_attr('sensor.real_cost_forecast_list', 'list') is iterable %}
+    #         {% set len = state_attr('sensor.real_cost_forecast_list', 'list') | length %}
+    #       {% else %}
+    #         {% set len = 48 %}
+    #       {% endif %}
+    #       {{ len }}
 
     - name: Verwarming startuur
       unique_id: ceff5121-3392-4bac-8fa5-a8cec3e3d331
@@ -500,40 +500,42 @@
         {% set solar = state_attr('sensor.pv_power_forecast_list', 'list') | length %}
         {% set hour = now().hour %}
         {% set minutes = now().minute %}
+        {% set operate = states("sensor.warmtepompboiler_uren") | float(0) * 2 %}
         {% macro min(X, Y) -%} {{X|int(0) if X|int(0) < Y|int(0) else Y|int(0) }} {%- endmacro %}
+        {% macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {%- endmacro %}
         {% if states("binary_sensor.boiler_temperatuur_laag") == "on" %}
           {{ (states("sensor.warmtepompboiler_uren") | float(0) * 2.5) | int(0) }}
         {% else %}
           {% if hour == 7 %}
-            {{ min(solar, 32) if minutes < 30 else min(solar, 31) }}
+            {{ max(operate, min(solar, 32)) if minutes < 30 else max(operate, min(solar, 31)) }}
           {% elif hour == 8 %}
-            {{ min(solar, 30) if minutes < 30 else min(solar, 29) }}
+            {{ max(operate, min(solar, 30)) if minutes < 30 else max(operate, min(solar, 29)) }}
           {% elif hour == 9 %}
-            {{ min(solar, 28) if minutes < 30 else min(solar, 27) }}
+            {{ max(operate, min(solar, 28)) if minutes < 30 else max(operate, min(solar, 27)) }}
           {% elif hour == 10 %}
-            {{ min(solar, 26) if minutes < 30 else min(solar, 25) }}
+            {{ max(operate, min(solar, 26)) if minutes < 30 else max(operate, min(solar, 25)) }}
           {% elif hour == 11 %}
-            {{ min(solar, 24) if minutes < 30 else min(solar, 23) }}
+            {{ max(operate, min(solar, 24)) if minutes < 30 else max(operate, min(solar, 23)) }}
           {% elif hour == 12 %}
-            {{ min(solar, 22) if minutes < 30 else min(solar, 21) }}
+            {{ max(operate, min(solar, 22)) if minutes < 30 else max(operate, min(solar, 21)) }}
           {% elif hour == 13 %}
-            {{ min(solar, 20) if minutes < 30 else min(solar, 19) }}
+            {{ max(operate, min(solar, 20)) if minutes < 30 else max(operate, min(solar, 19)) }}
           {% elif hour == 14 %}
-            {{ min(solar, 18) if minutes < 30 else min(solar, 17) }}
+            {{ max(operate, min(solar, 18)) if minutes < 30 else max(operate, min(solar, 17)) }}
           {% elif hour == 15 %}
-            {{ min(solar, 16) if minutes < 30 else min(solar, 15) }}
+            {{ max(operate, min(solar, 16)) if minutes < 30 else max(operate, min(solar, 15)) }}
           {% elif hour == 16 %}
-            {{ min(solar, 14) if minutes < 30 else min(solar, 13) }}
+            {{ max(operate, min(solar, 14)) if minutes < 30 else max(operate, min(solar, 13)) }}
           {% elif hour == 17 %}
-            {{ min(solar, 12) if minutes < 30 else min(solar, 11) }}
+            {{ max(operate, min(solar, 12)) if minutes < 30 else max(operate, min(solar, 11)) }}
           {% elif hour == 18 %}
-            {{ min(solar, 10) if minutes < 30 else min(solar, 9) }}
+            {{ max(operate, min(solar, 10)) if minutes < 30 else max(operate, min(solar, 9)) }}
           {% elif hour == 19 %}
-            {{ min(solar, 8) if minutes < 30 else min(solar, 7) }}
+            {{ max(operate, min(solar, 8)) if minutes < 30 else max(operate, min(solar, 7)) }}
           {% elif hour == 20 %}
-            {{ min(solar, 6) if minutes < 30 else min(solar, 5) }}
+            {{ max(operate, min(solar, 6)) if minutes < 30 else max(operate, min(solar, 5)) }}
           {% elif hour == 21 %}
-            {{ min(solar, 4) if minutes < 30 else min(solar, 3) }}
+            {{ max(operate, min(solar, 4)) if minutes < 30 else max(operate, min(solar, 3)) }}
           {% else %}
             {{ solar }}
           {% endif %}

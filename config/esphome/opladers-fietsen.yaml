@@ -1,0 +1,124 @@
+substitutions:
+  devicename: opladers-fietsen
+  platform: ESP8266
+  board: esp01_1m
+  upper_devicename: Opladers fietsen
+  channel_1: Pries boven
+  channel_2: Pries onder
+  max_power: "1000.0"
+  max_temp: "75.0"
+  ssid: !secret ssid-waskot
+  manual_ip: 192.168.79.129
+
+packages:
+  # wifi: !include common/wifi-waskot.yaml
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base.yaml
+
+wifi:
+  power_save_mode: HIGH
+  # use_address: 192.168.79.128
+
+i2c:
+  sda: GPIO12
+  scl: GPIO14
+
+sensor:
+  - platform: ade7953_i2c
+    irq_pin: GPIO16 # Prevent overheating by setting this
+    voltage:
+      name: ${upper_devicename} spanning
+      internal: True
+    current_a:
+      name: ${channel_2} stroom
+      internal: true
+    current_b:
+      name: ${channel_1} stroom
+      internal: true
+    active_power_a:
+      name: ${channel_2} vermogen
+      id: power_channel_2
+      filters:
+        - lambda: return abs(x);
+      on_value_range:
+        - above: ${max_power}
+          then:
+            - output.turn_off: shelly_25_relay_2
+            - homeassistant.service:
+                service: persistent_notification.create
+                data:
+                  title: Message from ${upper_devicename}
+                data_template:
+                  message: Switch turned off because power ${channel_2} exceeded ${max_power}W
+    active_power_b:
+      name: ${channel_1} vermogen
+      id: power_channel_1
+      filters:
+        - lambda: return abs(x);
+      on_value_range:
+        - above: ${max_power}
+          then:
+            - output.turn_off: shelly_25_relay_1
+            - homeassistant.service:
+                service: persistent_notification.create
+                data:
+                  title: Message from ${upper_devicename}
+                data_template:
+                  message: Switch turned off because power ${channel_1} exceeded ${max_power}W
+    update_interval: 30s
+
+  # NTC Temperature
+  - platform: ntc
+    sensor: temp_resistance_reading
+    name: ${upper_devicename} temperatuur
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    icon: "mdi:thermometer"
+    calibration:
+      b_constant: 3350
+      reference_resistance: 10kOhm
+      reference_temperature: 298.15K
+    on_value_range:
+      - above: ${max_temp}
+        then:
+          - output.turn_off: shelly_25_relay_1
+          - output.turn_off: shelly_25_relay_2
+          - homeassistant.service:
+              service: persistent_notification.create
+              data:
+                title: Message from ${upper_devicename}
+              data_template:
+                message: Switch turned off because temperature exceeded ${max_temp}°C
+  - platform: resistance
+    id: temp_resistance_reading
+    sensor: temp_analog_reading
+    configuration: DOWNSTREAM
+    resistor: 32kOhm
+  - platform: adc
+    id: temp_analog_reading
+    pin: A0
+
+status_led:
+  pin:
+    number: GPIO0
+    inverted: yes
+
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: shelly_25_relay_1
+  - platform: gpio
+    pin: GPIO15
+    id: shelly_25_relay_2
+
+switch:
+  - platform: output
+    name: "${channel_1}"
+    output: shelly_25_relay_1
+    restore_mode: RESTORE_DEFAULT_OFF
+    device_class: outlet
+  - platform: output
+    name: "${channel_2}"
+    output: shelly_25_relay_2
+    restore_mode: RESTORE_DEFAULT_OFF
+    device_class: outlet

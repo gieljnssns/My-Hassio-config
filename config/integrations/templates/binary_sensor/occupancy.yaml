@@ -16,6 +16,8 @@
         seconds: 30
       state: >
         {{  is_state('binary_sensor.badkamer_presence', 'on') 
+            or is_state('binary_sensor.badkamer_still_target', 'on')
+            or is_state('binary_sensor.badkamer_moving_target', 'on')
             or is_state('binary_sensor.badkamer_pir_delay', 'on') }}
 
     - name: Living bezetting
@@ -33,8 +35,10 @@
       delay_off:
         seconds: 30
       state: >
-        {{ is_state('binary_sensor.danszaal_aqara_pir', 'on') or
-            is_state('binary_sensor.danszaal_presence', 'on') }}
+        {{  is_state('binary_sensor.danszaal_aqara_pir', 'on')
+            or is_state('binary_sensor.danszaal_still_target', 'on')
+            or is_state('binary_sensor.danszaal_moving_target', 'on')
+            or is_state('binary_sensor.danszaal_presence', 'on') }}
 
     - name: Zithoek bezetting
       unique_id: 24236364-25f6-4b03-be23-cb6e2428a22d
@@ -42,8 +46,10 @@
       delay_off:
         seconds: 30
       state: >
-        {{ is_state('binary_sensor.zithoek_aqara_pir', 'on') or
-            is_state('binary_sensor.zithoek_presence', 'on') }}
+        {{  is_state('binary_sensor.zithoek_aqara_pir', 'on')
+            or is_state('binary_sensor.zithoek_still_target', 'on')
+            or is_state('binary_sensor.zithoek_moving_target', 'on')
+            or is_state('binary_sensor.zithoek_presence', 'on') }}
     
     - name: Tuin bezetting
       unique_id: efa6d545-9ecc-4b8c-9919-1236957d31e7
@@ -51,8 +57,8 @@
       delay_off:
         seconds: 30
       state: >
-        {{ is_state('binary_sensor.tuin_person_occupancy', 'on') or
-            is_state('binary_sensor.afdak_person_occupancy', 'on') }}
+        {{  is_state('binary_sensor.tuin_person_occupancy', 'on')
+            or is_state('binary_sensor.afdak_person_occupancy', 'on') }}
     
     - name: Noor bezetting
       unique_id: cf897eeb-ba92-433a-87e5-d337ca69b8a1
@@ -60,8 +66,10 @@
       delay_off:
         seconds: 30
       state: >
-        {{ is_state('binary_sensor.slaapkamer_noor_presence', 'on') or
-            is_state('binary_sensor.slaapkamer_noor_bezetting', 'on') }}
+        {{  is_state('binary_sensor.slaapkamer_noor_presence', 'on')
+            or is_state('binary_sensor.slaapkamer_noor_still_target', 'on')
+            or is_state('binary_sensor.slaapkamer_noor_moving_target', 'on')
+            or is_state('binary_sensor.slaapkamer_noor_bezetting', 'on') }}
     
     - name: Fien bezetting
       unique_id: cb63613c-2171-414f-b3ea-b1a09f595901
@@ -69,5 +77,7 @@
       delay_off:
         seconds: 30
       state: >
-        {{ is_state('binary_sensor.slaapkamer_fien_presence', 'on') or
-            is_state('binary_sensor.slaapkamer_fien_bezetting', 'on') }}
+        {{  is_state('binary_sensor.slaapkamer_fien_presence', 'on') 
+            or is_state('binary_sensor.slaapkamer_fien_still_target', 'on')
+            or is_state('binary_sensor.slaapkamer_fien_moving_target', 'on')
+            or is_state('binary_sensor.slaapkamer_fien_bezetting', 'on') }}

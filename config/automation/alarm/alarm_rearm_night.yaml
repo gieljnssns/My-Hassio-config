@@ -1,0 +1,25 @@
+alias: "Alarm re-arm night"
+id: a689d4e9-11e3-4dd6-ba59-a3c0a525c5f2
+trigger:
+  - platform: state
+    entity_id: alarm_control_panel.ha_alarm
+    from: "armed_night"
+    to: "disarmed"
+condition:
+  - condition: and
+    conditions:
+      - condition: template
+        value_template: >
+          {{ now().hour is in [22, 23, 0, 1, 2, 3, 4, 5, 6] }}
+      - condition: template
+        value_template: >
+          {{ states("sensor.people_arrive_count") | int(0) > 0 }}
+      
+actions:
+  - wait_template: >
+      {{ states("sensor.people_arrive_count") | int(0) == 0 }}
+  - action: alarm_control_panel.alarm_arm_night
+    entity_id: alarm_control_panel.ha_alarm
+    data:
+      code: !secret alarm_code
+

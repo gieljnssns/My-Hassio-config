@@ -1,0 +1,101 @@
+
+
+substitutions:
+  devicename: tester
+  platform: ESP8266
+  board: nodemcuv2
+  upper_devicename: Tester
+  ssid: !secret ssid-waskot
+  manual_ip: 192.168.79.124
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base.yaml
+logger:
+  level: DEBUG
+# i2c:
+#   sda: 4
+#   scl: 5
+#   scan: True
+#   id: bus_a
+web_server:
+  port: 80
+# sensor:
+#   - platform: bme280_i2c
+#     temperature:
+#       name: ${upper_devicename} temperatuur
+#       id: bme280_temperature
+#       oversampling: 1x
+#     pressure:
+#       name: ${upper_devicename} luchtdruk
+#       id: bme280_pressure
+#       oversampling: 1x
+#       internal: true
+#     humidity:
+#       name: ${upper_devicename} luchtvochtigheid
+#       id: bme280_humidity
+#       oversampling: 1x
+#     address: 0x76
+#     i2c_id: bus_a
+#     update_interval: 1s
+
+
+switch:
+  - platform: gpio
+    pin:
+      number: D0
+      inverted: yes
+    name: "D0"
+    id: pomp_vloerverwarming
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  # - platform: gpio
+  #   pin:
+  #     number: D3
+  #     # inverted: yes
+  #   name: "Warm water extra"
+  #   id: extra
+  #   restore_mode: RESTORE_DEFAULT_OFF
+
+  # - platform: gpio
+  #   pin:
+  #     number: D4
+  #     # inverted: yes
+  #   name: "Warm water snel"
+  #   id: warm_water_snel
+  #   on_turn_on:
+  #     - delay: 500ms
+  #     - switch.turn_off: warm_water_snel
+  #   restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    pin:
+      number: D5
+      inverted: yes
+    name: "D5"
+    id: verwarming
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    pin:
+      number: D6
+      inverted: yes
+    name: "D6"
+    id: warm_water
+    restore_mode: DISABLED
+  
+  - platform: gpio
+    pin:
+      number: D7
+      inverted: yes
+    name: "D7"
+    id: verwarming2
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    pin:
+      number: D8
+      inverted: yes
+    name: "D8"
+    id: warm_water2
+    restore_mode: DISABLED
