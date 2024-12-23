@@ -12,7 +12,6 @@ from functools import partial
 from urllib.parse import urlencode, urlparse, parse_qsl
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_FRIENDLY_NAME,
     CONF_HOST,
 )
@@ -38,6 +37,7 @@ from . import (
     CONF_MODEL,
     XIAOMI_CONFIG_SCHEMA as PLATFORM_SCHEMA,  # noqa: F401
     XIAOMI_MIIO_SERVICE_SCHEMA,
+    HassEntry,
     BaseEntity,
     MiotEntityInterface,
     MiotEntity,
@@ -80,6 +80,7 @@ SERVICE_TO_METHOD = {
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
+    HassEntry.init(hass, config_entry).new_adder(ENTITY_DOMAIN, async_add_entities)
     await async_setup_config_entry(hass, config_entry, async_setup_platform, async_add_entities, ENTITY_DOMAIN)
 
 
@@ -170,7 +171,7 @@ class BaseMediaPlayerEntity(MediaPlayerEntity, MiotEntityInterface, BaseEntity):
     def device_class(self):
         if cls := self.get_device_class(MediaPlayerDeviceClass):
             return cls
-        typ = f'{self._model} {self._miot_service.spec.type}'
+        typ = f'{self.model} {self._miot_service.spec.type}'
         if 'speaker' in typ:
             return MediaPlayerDeviceClass.SPEAKER
         if 'receiver' in typ:
@@ -182,7 +183,7 @@ class BaseMediaPlayerEntity(MediaPlayerEntity, MiotEntityInterface, BaseEntity):
     @property
     def state(self):
         if self._prop_state and self._prop_state.readable:
-            sta = self._prop_state.from_dict(self._state_attrs)
+            sta = self._prop_state.from_device(self.device)
             if sta is not None:
                 if sta in self._prop_state.list_search('Playing', 'Play'):
                     return MediaPlayerState.PLAYING
@@ -202,7 +203,7 @@ class BaseMediaPlayerEntity(MediaPlayerEntity, MiotEntityInterface, BaseEntity):
     @property
     def is_volume_muted(self):
         if self._prop_mute:
-            return self._prop_mute.from_dict(self._state_attrs) and True
+            return self._prop_mute.from_device(self.device) and True
         return None
 
     def mute_volume(self, mute):
@@ -213,7 +214,7 @@ class BaseMediaPlayerEntity(MediaPlayerEntity, MiotEntityInterface, BaseEntity):
     @property
     def volume_level(self):
         if self._prop_volume:
-            val = self._prop_volume.from_dict(self._state_attrs)
+            val = self._prop_volume.from_device(self.device)
             if val is not None:
                 try:
                     return round(val or 0) / 100
@@ -233,14 +234,14 @@ class BaseMediaPlayerEntity(MediaPlayerEntity, MiotEntityInterface, BaseEntity):
     def volume_up(self):
         if self._prop_volume:
             stp = self._prop_volume.range_step() or 5
-            val = round(self._prop_volume.from_dict(self._state_attrs) or 0) + stp
+            val = round(self._prop_volume.from_device(self.device) or 0) + stp
             return self.set_property(self._prop_volume, val)
         return False
 
     def volume_down(self):
         if self._prop_volume:
             stp = self._prop_volume.range_step() or 5
-            val = round(self._prop_volume.from_dict(self._state_attrs) or 0) - stp
+            val = round(self._prop_volume.from_device(self.device) or 0) - stp
             return self.set_property(self._prop_volume, val)
         return False
 
@@ -299,7 +300,7 @@ class BaseMediaPlayerEntity(MediaPlayerEntity, MiotEntityInterface, BaseEntity):
     def source(self):
         """Name of the current input source."""
         if self._prop_input:
-            val = self._prop_input.from_dict(self._state_attrs)
+            val = self._prop_input.from_device(self.device)
             if val is not None:
                 return self._prop_input.list_description(val)
         return None
@@ -337,8 +338,6 @@ class MiotMediaPlayerEntity(MiotEntity, BaseMediaPlayerEntity):
         self._message_router = miot_service.spec.get_service('message_router')
         self.xiaoai_cloud = None
         self.xiaoai_device = None
-        if self._intelligent_speaker:
-            self._state_attrs[ATTR_ATTRIBUTION] = 'Support TTS through service'
         self._supported_features |= MediaPlayerEntityFeature.PLAY_MEDIA
 
     @property
@@ -358,7 +357,6 @@ class MiotMediaPlayerEntity(MiotEntity, BaseMediaPlayerEntity):
         await super().async_update()
         if not self._available:
             return
-        self._update_sub_entities('on', domain='switch')
 
         if self._prop_state and not self._prop_state.readable:
             if self.is_volume_muted is False:
@@ -392,7 +390,7 @@ class MiotMediaPlayerEntity(MiotEntity, BaseMediaPlayerEntity):
         for d in result.get('data', []):
             if not isinstance(d, dict):
                 continue
-            if d.get('miotDID') == self.miot_did or d.get('mac') == self._miio_info.mac_address:
+            if d.get('miotDID') == self.miot_did or d.get('mac') == self.device.info.mac:
                 self.xiaoai_device = d
                 break
         return self.xiaoai_device
@@ -802,7 +800,7 @@ class MitvMediaPlayerEntity(MiotMediaPlayerEntity):
         if not self.cloud_only and not self._local_state and not self._state_attrs.get('6095_state'):
             sta = MediaPlayerState.OFF
         if self._speaker_mode_switch and self.custom_config_bool('turn_off_screen'):
-            if self._speaker_mode_switch.from_dict(self._state_attrs):
+            if self._speaker_mode_switch.from_device(self.device):
                 sta = MediaPlayerState.OFF
         return sta
 

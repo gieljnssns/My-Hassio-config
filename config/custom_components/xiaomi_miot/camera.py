@@ -28,6 +28,7 @@ from . import (
     DOMAIN,
     CONF_MODEL,
     XIAOMI_CONFIG_SCHEMA as PLATFORM_SCHEMA,  # noqa: F401
+    HassEntry,
     MiotToggleEntity,
     BaseSubEntity,
     MiotCloud,
@@ -49,6 +50,7 @@ SERVICE_TO_METHOD = {}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
+    HassEntry.init(hass, config_entry).new_adder(ENTITY_DOMAIN, async_add_entities)
     await async_setup_config_entry(hass, config_entry, async_setup_platform, async_add_entities, ENTITY_DOMAIN)
 
 
@@ -181,7 +183,7 @@ class MiotCameraEntity(MiotToggleEntity, BaseCameraEntity):
             self._supported_features |= CameraEntityFeature.ON_OFF
         if miot_service:
             self._prop_motion_tracking = miot_service.bool_property('motion_detection', 'motion_tracking')
-            self._is_doorbell = miot_service.name in ['video_doorbell'] or '.lock.' in self._model
+            self._is_doorbell = miot_service.name in ['video_doorbell'] or '.lock.' in self.model
 
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
@@ -279,7 +281,7 @@ class MiotCameraEntity(MiotToggleEntity, BaseCameraEntity):
             api = mic.get_api_by_host('business.smartcamera.api.io.mi.com', 'common/app/get/eventlist')
             rqd = {
                 'did': self.miot_did,
-                'model': self._model,
+                'model': self.model,
                 'doorBell': self._is_doorbell,
                 'eventType': 'Default',
                 'needMerge': True,
@@ -313,7 +315,7 @@ class MiotCameraEntity(MiotToggleEntity, BaseCameraEntity):
     @property
     def is_on(self):
         if self._prop_power:
-            return self._state_attrs.get(self._prop_power.full_name) and True
+            return self._prop_power.from_device(self.device) and True
         return True
 
     async def stream_source(self, **kwargs):
@@ -551,7 +553,7 @@ class MiotCameraEntity(MiotToggleEntity, BaseCameraEntity):
     @property
     def motion_detection_enabled(self):
         if self._prop_motion_tracking:
-            return self._prop_motion_tracking.from_dict(self._state_attrs)
+            return self._prop_motion_tracking.from_device(self.device)
         return None
 
     def enable_motion_detection(self):

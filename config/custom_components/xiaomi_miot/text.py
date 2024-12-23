@@ -4,25 +4,19 @@ import time
 
 from homeassistant.components.text import (
     DOMAIN as ENTITY_DOMAIN,
-    TextEntity,
+    TextEntity as BaseEntity,
 )
 
 from . import (
     DOMAIN,
-    CONF_MODEL,
     XIAOMI_CONFIG_SCHEMA as PLATFORM_SCHEMA,  # noqa: F401
-    MiotEntity,
+    HassEntry,
+    XEntity,
     MiotPropertySubEntity,
     BaseSubEntity,
     async_setup_config_entry,
-    bind_services_to_entries,
 )
-from .core.miot_spec import (
-    MiotSpec,
-    MiotService,
-    MiotProperty,
-    MiotAction,
-)
+from .core.miot_spec import MiotAction
 
 _LOGGER = logging.getLogger(__name__)
 DATA_KEY = f'{ENTITY_DOMAIN}.{DOMAIN}'
@@ -31,40 +25,79 @@ SERVICE_TO_METHOD = {}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
+    HassEntry.init(hass, config_entry).new_adder(ENTITY_DOMAIN, async_add_entities)
     await async_setup_config_entry(hass, config_entry, async_setup_platform, async_add_entities, ENTITY_DOMAIN)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     hass.data.setdefault(DATA_KEY, {})
-    hass.data[DOMAIN]['add_entities'][ENTITY_DOMAIN] = async_add_entities
-    config['hass'] = hass
-    model = str(config.get(CONF_MODEL) or '')
-    spec = hass.data[DOMAIN]['miot_specs'].get(model)
-    entities = []
-    if isinstance(spec, MiotSpec):
-        for srv in spec.get_services('none_service'):
-            if not srv.get_property('none_property'):
-                continue
-            entities.append(MiotTextEntity(config, srv))
-    for entity in entities:
-        hass.data[DOMAIN]['entities'][entity.unique_id] = entity
-    async_add_entities(entities, update_before_add=True)
-    bind_services_to_entries(hass, SERVICE_TO_METHOD)
 
 
-class MiotTextEntity(MiotEntity, TextEntity):
+class TextEntity(XEntity, BaseEntity):
     _attr_native_value = ''
 
-    def __init__(self, config, miot_service: MiotService):
-        super().__init__(miot_service, config=config, logger=_LOGGER)
+    def get_state(self) -> dict:
+        return {self.attr: self._attr_native_value}
 
-    def set_value(self, value):
-        """Change the value."""
-        self._attr_native_value = value
-        raise NotImplementedError()
+    def set_state(self, data: dict):
+        val = self.conv.value_from_dict(data)
+        if isinstance(val, list):
+            val = val[0] if val else None
+        if val is None:
+            val = ''
+        self._attr_native_value = val
+
+    async def async_set_value(self, value: str):
+        if self._miot_action and self._miot_action.name == 'execute_text_directive':
+            silent = self.custom_config_integer('silent_execution', 0)
+            silent_prop = self._miot_service.get_property('silent_execution')
+            if silent_prop:
+                """
+                xiaomi.wifispeaker.07g  bool
+                xiaomi.wifispeaker.16b  bool
+                xiaomi.wifispeaker.l04m 0:On 1:Off
+                xiaomi.wifispeaker.l05b bool
+                xiaomi.wifispeaker.l05c bool
+                xiaomi.wifispeaker.l05g bool
+                xiaomi.wifispeaker.l06a 0:On 1:Off
+                xiaomi.wifispeaker.l09a 0:On 1:Off
+                xiaomi.wifispeaker.l09b bool
+                xiaomi.wifispeaker.l15a bool
+                xiaomi.wifispeaker.l16a bool
+                xiaomi.wifispeaker.l17a bool
+                xiaomi.wifispeaker.l7a  0:On 1:Off
+                xiaomi.wifispeaker.lx01 0:On 1:Off
+                xiaomi.wifispeaker.lx04 0:On 1:Off
+                xiaomi.wifispeaker.lx05 bool
+                xiaomi.wifispeaker.lx06 bool
+                xiaomi.wifispeaker.lx5a bool
+                xiaomi.wifispeaker.m03a bool
+                xiaomi.wifispeaker.s12  bool
+                xiaomi.wifispeaker.x08a 0:On 1:Off
+                xiaomi.wifispeaker.x08c 0:On 1:Off
+                xiaomi.wifispeaker.x08e bool
+                xiaomi.wifispeaker.x10a bool
+                xiaomi.wifispeaker.x6a  bool
+                xiaomi.wifispeaker.x8f  bool
+                xiaomi.wifispeaker.x8s  bool
+                """
+                if silent_prop.value_list:
+                    val = silent_prop.list_value('On' if silent else 'Off')
+                    if val == None:
+                        val = 0 if silent else 1
+                    silent = val
+                value = [value, silent]
+
+        await self.device.async_write({self.attr: value})
+
+        if self._miot_action:
+            self._attr_native_value = ''
+            self.schedule_update_ha_state()
+
+XEntity.CLS[ENTITY_DOMAIN] = TextEntity
 
 
-class MiotTextSubEntity(MiotPropertySubEntity, TextEntity):
+class MiotTextSubEntity(MiotPropertySubEntity, BaseEntity):
     _attr_native_value = ''
 
     def update(self, data=None):
@@ -79,7 +112,7 @@ class MiotTextSubEntity(MiotPropertySubEntity, TextEntity):
         return self.set_parent_property(value)
 
 
-class MiotTextActionSubEntity(BaseSubEntity, TextEntity):
+class MiotTextActionSubEntity(BaseSubEntity, BaseEntity):
     _attr_native_value = ''
 
     def __init__(self, parent, miot_action: MiotAction, option=None):

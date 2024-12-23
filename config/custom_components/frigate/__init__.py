@@ -25,7 +25,13 @@ from homeassistant.components.mqtt.subscription import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODEL, CONF_HOST, CONF_URL
+from homeassistant.const import (
+    ATTR_MODEL,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -44,7 +50,6 @@ from .const import (
     ATTR_WS_EVENT_PROXY,
     ATTRIBUTE_LABELS,
     CONF_CAMERA_STATIC_IMAGE_HEIGHT,
-    CONF_ENABLE_WEBRTC,
     CONF_RTMP_URL_TEMPLATE,
     DOMAIN,
     FRIGATE_RELEASES_URL,
@@ -197,6 +202,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = FrigateApiClient(
         str(entry.data.get(CONF_URL)),
         async_get_clientsession(hass),
+        entry.data.get(CONF_USERNAME),
+        entry.data.get(CONF_PASSWORD),
     )
     coordinator = FrigateDataUpdateCoordinator(hass, client=client)
     await coordinator.async_config_entry_first_refresh()
@@ -268,7 +275,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Remove old options.
     OLD_OPTIONS = [
         CONF_CAMERA_STATIC_IMAGE_HEIGHT,
-        CONF_ENABLE_WEBRTC,
         CONF_RTMP_URL_TEMPLATE,
     ]
     if any(option in entry.options for option in OLD_OPTIONS):

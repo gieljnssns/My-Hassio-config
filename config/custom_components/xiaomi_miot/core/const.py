@@ -1,12 +1,15 @@
 from enum import Enum
 from typing import Union
 
-from .device_customizes import DEVICE_CUSTOMIZES  # noqa
+from homeassistant.const import __version__ as HAVERSION  # noqa
+from awesomeversion import AwesomeVersion
+from .device_customizes import DEVICE_CUSTOMIZES, GLOBAL_CONVERTERS  # noqa
 from .miot_local_devices import MIOT_LOCAL_MODELS  # noqa
 from .translation_languages import TRANSLATION_LANGUAGES  # noqa
 
 DOMAIN = 'xiaomi_miot'
 DEFAULT_NAME = 'Xiaomi Miot'
+HA_VERSION = AwesomeVersion(HAVERSION)
 
 CONF_MODEL = 'model'
 CONF_XIAOMI_CLOUD = 'xiaomi_cloud'
@@ -89,7 +92,6 @@ try:
 except (ModuleNotFoundError, ImportError):
     class AlarmControlPanelState(StrEnum):
         """Alarm control panel entity states."""
-
         DISARMED = "disarmed"
         ARMED_HOME = "armed_home"
         ARMED_AWAY = "armed_away"

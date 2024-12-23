@@ -74,6 +74,7 @@ CONF_HIDE_MEMBERS = "hide_members"
 CONF_IGNORE_UNAVAILABLE_STATE = "ignore_unavailable_state"
 CONF_INCLUDE = "include"
 CONF_INCLUDE_NON_POWERCALC_SENSORS = "include_non_powercalc_sensors"
+CONF_LABEL = "label"
 CONF_LINEAR = "linear"
 CONF_MODEL = "model"
 CONF_MANUFACTURER = "manufacturer"
@@ -173,6 +174,8 @@ DEFAULT_UTILITY_METER_TYPES = [DAILY, WEEKLY, MONTHLY]
 DISCOVERY_SOURCE_ENTITY = "source_entity"
 DISCOVERY_POWER_PROFILES = "power_profiles"
 DISCOVERY_TYPE = "discovery_type"
+
+MANUFACTURER_WLED = "WLED"
 
 ATTR_CALCULATION_MODE = "calculation_mode"
 ATTR_ENERGY_SENSOR_ENTITY_ID = "energy_sensor_entity_id"

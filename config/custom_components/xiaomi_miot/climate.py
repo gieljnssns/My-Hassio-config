@@ -30,6 +30,7 @@ from . import (
     DOMAIN,
     CONF_MODEL,
     XIAOMI_CONFIG_SCHEMA as PLATFORM_SCHEMA,  # noqa: F401
+    HassEntry,
     MiotEntity,
     MiotToggleEntity,
     async_setup_config_entry,
@@ -55,6 +56,7 @@ SERVICE_TO_METHOD = {}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
+    HassEntry.init(hass, config_entry).new_adder(ENTITY_DOMAIN, async_add_entities)
     await async_setup_config_entry(hass, config_entry, async_setup_platform, async_add_entities, ENTITY_DOMAIN)
 
 
@@ -210,11 +212,11 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
                 fst = fst or v
                 val = v.get('value')
                 if val not in mvs:
-                    des = self._prop_mode.get_translation(v.get('description'))
+                    des = self._prop_mode.get_translation(v.get('description'), viid=val)
                     self._preset_modes[val] = des
             if self._prop_mode.value_range:
                 for val in self._prop_mode.list_descriptions():
-                    des = self._prop_mode.get_translation(val)
+                    des = self._prop_mode.get_translation(val, viid=val)
                     self._preset_modes[val] = des
             if fst and len(self._hvac_modes) <= 1:
                 self._hvac_modes[HVACMode.AUTO] = {
@@ -252,18 +254,6 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
                     add_fans([self._subs[des]], update_before_add=True)
 
             add_switches = self._add_entities.get('switch')
-            for p in self._miot_service.properties.values():
-                if not (p.format == 'bool' and p.readable and p.writeable):
-                    continue
-                if p.name in self._power_modes:
-                    continue
-                if self._prop_power and self._prop_power.name == p.name:
-                    continue
-                self._update_sub_entities(p, None, 'switch')
-
-            if self._miot_service.name in ['ptc_bath_heater']:
-                self._update_sub_entities(None, ['light', 'light_bath_heater'], domain='light')
-
             if self._miot_service.get_action('start_wash'):
                 pnm = 'action_wash'
                 prop = self._miot_service.get_property('status')
@@ -278,21 +268,21 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
     def is_on(self):
         ret = None
         if self._prop_power and not ret:
-            ret = self._prop_power.from_dict(self._state_attrs) and True
+            ret = self._prop_power.from_device(self.device) and True
         if self._prop_fan_power and not ret:
-            ret = self._prop_fan_power.from_dict(self._state_attrs) and True
+            ret = self._prop_fan_power.from_device(self.device) and True
         if ret is not None:
             return ret
         for m in self._power_modes:
             p = self._miot_service.bool_property(m)
             if not p:
                 continue
-            if self._state_attrs.get(p.full_name):
+            if p.from_device(self.device):
                 return True
         if self._prop_mode:
             off = self._hvac_modes.get(HVACMode.OFF, {}).get('value')
             if off is not None:
-                return off != self._prop_mode.from_dict(self._state_attrs)
+                return off != self._prop_mode.from_device(self.device)
         power = self._state_attrs.get('power')
         if power is not None:
             return not not power
@@ -357,7 +347,7 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
     def state(self):
         sta = self.hvac_mode
         if sta is None and self._prop_mode:
-            val = self._prop_mode.from_dict(self._state_attrs)
+            val = self._prop_mode.from_device(self.device)
             if val is not None:
                 sta = self._prop_mode.list_description(val)
             if sta:
@@ -369,7 +359,7 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
         if not self.is_on:
             return HVACMode.OFF
         if self._prop_mode:
-            acm = self._prop_mode.from_dict(self._state_attrs)
+            acm = self._prop_mode.from_device(self.device)
             try:
                 acm = -1 if acm is None else int(acm or 0)
             except TypeError:
@@ -421,7 +411,7 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
         if not self.is_on:
             return HVACMode.OFF
         if self._preset_modes and self._prop_mode:
-            acm = self._prop_mode.from_dict(self._state_attrs)
+            acm = self._prop_mode.from_device(self.device)
             acm = -1 if acm is None else acm
             return self._preset_modes.get(acm)
         return None
@@ -481,7 +471,7 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
         if ATTR_CURRENT_TEMPERATURE in self._state_attrs:
             return float(self._state_attrs[ATTR_CURRENT_TEMPERATURE] or 0)
         if self._prop_temperature:
-            return float(self._prop_temperature.from_dict(self._state_attrs) or 0)
+            return float(self._prop_temperature.from_device(self.device) or 0)
         return None
 
     @property
@@ -499,7 +489,7 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
     @property
     def target_temperature(self):
         if self._prop_target_temp:
-            val = float(self._prop_target_temp.from_dict(self._state_attrs) or 0)
+            val = float(self._prop_target_temp.from_device(self.device) or 0)
             if val:
                 self._prev_target_temp = val
             elif self._prev_target_temp:
@@ -544,13 +534,13 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
         if ATTR_CURRENT_HUMIDITY in self._state_attrs:
             return float(self._state_attrs[ATTR_CURRENT_HUMIDITY] or 0)
         if self._prop_humidity:
-            return int(self._prop_humidity.from_dict(self._state_attrs) or 0)
+            return int(self._prop_humidity.from_device(self.device) or 0)
         return None
 
     @property
     def target_humidity(self):
         if self._prop_target_humi:
-            return int(self._prop_target_humi.from_dict(self._state_attrs) or 0)
+            return int(self._prop_target_humi.from_device(self.device) or 0)
         return None
 
     @property
@@ -574,7 +564,7 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
     def fan_mode(self):
         des = None
         if self._prop_fan_level:
-            val = self._prop_fan_level.from_dict(self._state_attrs)
+            val = self._prop_fan_level.from_device(self.device)
             if val is not None:
                 des = self._prop_fan_level.list_description(val)
             if des is not None:
@@ -603,9 +593,9 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
         val = 0
         pvs = self._prop_vertical_swing
         phs = self._prop_horizontal_swing
-        if pvs and pvs.from_dict(self._state_attrs, False):
+        if pvs and pvs.from_device(self.device, False):
             val |= 1
-        if phs and phs.from_dict(self._state_attrs, False):
+        if phs and phs.from_device(self.device, False):
             val |= 2
         return SwingModes(val).name
 
@@ -644,7 +634,7 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
         if self._prop_horizontal_swing:
             swm[self._prop_horizontal_swing.full_name] = hor
         for mk, mv in swm.items():
-            old = self._state_attrs.get(mk, None)
+            old = self.device.props.get(mk, None)
             if old is None or mv is None:
                 continue
             if mv == old:
@@ -656,7 +646,7 @@ class MiotClimateEntity(MiotToggleEntity, BaseClimateEntity):
     def is_aux_heat(self):
         """Return true if aux heater."""
         if self._prop_heater:
-            return self._prop_heater.from_dict(self._state_attrs) and self.hvac_mode in [
+            return self._prop_heater.from_device(self.device) and self.hvac_mode in [
                 HVACMode.AUTO,
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -724,7 +714,7 @@ class ClimateModeSubEntity(MiotModesSubEntity):
     @property
     def preset_mode(self):
         if self._prop_speed:
-            val = self._prop_speed.from_dict(self._state_attrs)
+            val = self._prop_speed.from_device(self.device)
             if val is not None:
                 return self._prop_speed.list_description(val)
         return self._parent.fan_mode

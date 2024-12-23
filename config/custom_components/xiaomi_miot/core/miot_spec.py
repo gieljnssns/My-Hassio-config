@@ -4,7 +4,9 @@ import platform
 import random
 import time
 import re
+from functools import cached_property
 
+from homeassistant.core import HomeAssistant
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
@@ -20,6 +22,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.util.dt import now
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -29,10 +32,11 @@ from .const import (
     DOMAIN,
     TRANSLATION_LANGUAGES,
 )
+from .utils import get_translation_langs
 
 _LOGGER = logging.getLogger(__name__)
 
-# https://iot.mi.com/new/doc/guidelines-for-access/other-platform-access/control-api#MIOT%E7%8A%B6%E6%80%81%E7%A0%81
+# https://iot.mi.com/new/doc/accesses/direct-access/other-platform-access/control-api#MIOT%E7%8A%B6%E6%80%81%E7%A0%81
 SPEC_ERRORS = {
     '000': 'Unknown',
     '001': 'Device does not exist',
@@ -103,7 +107,7 @@ class MiotSpecInstance:
     def translation_keys(self):
         return ['_globals']
 
-    @property
+    @cached_property
     def translations(self):
         dic = TRANSLATION_LANGUAGES
         kls = self.translation_keys
@@ -114,7 +118,7 @@ class MiotSpecInstance:
             dic = {**dic, **d}
         return dic
 
-    def get_translation(self, des):
+    def get_translation(self, des, viid=None, spec=True):
         dls = [
             des.lower(),
             des,
@@ -131,6 +135,11 @@ class MiotSpecInstance:
                     continue
                 ret = ret[d]
             return ret
+
+        fun = getattr(self, 'get_spec_translation', None)
+        ret = fun(viid=viid) if fun and spec else None
+        if ret:
+            return ret
         return des
 
     @staticmethod
@@ -143,10 +152,16 @@ class MiotSpecInstance:
             err += f' {SPEC_ERRORS.get(cod)}'
         return err
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.type})'
+
 
 # https://iot.mi.com/new/doc/design/spec/xiaoai
 class MiotSpec(MiotSpecInstance):
-    def __init__(self, dat: dict):
+    def __init__(self, hass: HomeAssistant, dat: dict, translations=None, trans_options=None):
+        self.hass = hass
+        self.trans_options = trans_options
+        self.spec_translations = translations or {}
         super().__init__(dat)
         self.services = {}
         self.services_count = {}
@@ -170,6 +185,7 @@ class MiotSpec(MiotSpecInstance):
     def services_mapping(self, *args, **kwargs):
         dat = None
         eps = kwargs.pop('exclude_properties', [])
+        ips = kwargs.pop('include_properties', [])
         urp = kwargs.pop('unreadable_properties', None)
         sls = self.get_services(*args, **kwargs)
         if self.custom_mapping:
@@ -183,7 +199,7 @@ class MiotSpec(MiotSpecInstance):
         for s in sls:
             if dat is None:
                 dat = {}
-            nxt = s.mapping(excludes=eps, unreadable_properties=urp) or {}
+            nxt = s.mapping(excludes=eps, includes=ips, unreadable_properties=urp) or {}
             dat = {**nxt, **dat}
         return dat
 
@@ -204,7 +220,7 @@ class MiotSpec(MiotSpecInstance):
                 p.full_name = n
 
     def get_services(self, *args, **kwargs):
-        excludes = kwargs.get('excludes', [])
+        excludes = kwargs.get('excludes') or []
         excludes.append('device_information')
         return [
             s
@@ -231,6 +247,12 @@ class MiotSpec(MiotSpecInstance):
                 return p
         return None
 
+    def get_properties(self, *args):
+        lst = []
+        for srv in self.services.values():
+            lst.extend(srv.get_properties(*args))
+        return lst
+
     def generate_entity_id(self, entity, suffix=None, domain=None):
         mod = f'{self.type}::::'.split(':')[5]
         if not mod:
@@ -243,6 +265,18 @@ class MiotSpec(MiotSpecInstance):
         if not domain:
             domain = DOMAIN
         return f'{domain}.{eid}'
+
+    def get_spec_translation(self, siid, piid=None, aiid=None, viid=None):
+        if viid != None and not self.trans_options:
+            return None
+        key = MiotSpec.spec_lang_key(siid, piid=piid, aiid=aiid, viid=viid)
+        langs = get_translation_langs(self.hass, list(self.spec_translations.keys()))
+        for lang in langs:
+            dic = self.spec_translations.get(lang) or {}
+            val = dic.get(key)
+            if val != None:
+                return val
+        return None
 
     @staticmethod
     async def async_from_model(hass, model, use_remote=False):
@@ -307,7 +341,9 @@ class MiotSpec(MiotSpecInstance):
         return typ
 
     @staticmethod
-    async def async_from_type(hass, typ):
+    async def async_from_type(hass, typ, trans_options=False):
+        if not typ:
+            return None
         fnm = f'{DOMAIN}/{typ}.json'
         if platform.system() == 'Windows':
             fnm = fnm.replace(':', '_')
@@ -342,7 +378,9 @@ class MiotSpec(MiotSpecInstance):
                     }
                     await store.async_save(dat)
                     _LOGGER.warning('Get miot-spec for %s failed: %s', typ, exc)
-        return MiotSpec(dat)
+
+        translations = await MiotSpec.async_get_langs(hass, typ)
+        return MiotSpec(hass, dat, translations, trans_options=trans_options)
 
     @staticmethod
     def unique_prop(siid, piid=None, aiid=None, eiid=None, valid=False):
@@ -362,6 +400,57 @@ class MiotSpec(MiotSpecInstance):
         if valid and not iid:
             return None
         return f'{typ}.{siid}.{iid}'
+
+    @staticmethod
+    def spec_lang_key(siid, piid=None, aiid=None, viid=None):
+        key = f'service:{siid:03}'
+        if aiid != None:
+            return f'{key}:action:{aiid:03}'
+        if piid != None:
+            key = f'{key}:property:{piid:03}'
+        if viid != None:
+            key = f'{key}:valuelist:{viid:03}'
+        return key
+
+    @staticmethod
+    async def async_get_langs(hass, typ):
+        if not typ:
+            return None
+        fnm = f'{DOMAIN}/spec-langs/{typ}.json'
+        if platform.system() == 'Windows':
+            fnm = fnm.replace(':', '_')
+        store = Store(hass, 1, fnm)
+        try:
+            cached = await store.async_load() or {}
+        except (ValueError, HomeAssistantError):
+            await store.async_remove()
+            cached = {}
+        dat = cached
+        ptm = dat.pop('_updated_time', 0)
+        now = int(time.time())
+        ttl = 60
+        if dat.get('data'):
+            ttl = 86400 * random.randint(30, 50)
+        if dat and now - ptm > ttl:
+            dat = {}
+        if not dat.get('type'):
+            try:
+                url = f'/instance/v2/multiLanguage?urn={typ}'
+                dat = await MiotSpec.async_download_miot_spec(hass, url, tries=3)
+                dat['_updated_time'] = now
+                await store.async_save(dat)
+            except (TypeError, ValueError, BaseException) as exc:
+                if cached:
+                    dat = cached
+                else:
+                    dat = {
+                        'type': typ or 'unknown',
+                        'exception': f'{exc}',
+                        '_updated_time': now,
+                    }
+                    await store.async_save(dat)
+                    _LOGGER.warning('Get miot-spec langs for %s failed: %s', typ, exc)
+        return dat.get('data') or {}
 
     @staticmethod
     async def async_download_miot_spec(hass, path, tries=1, timeout=30):
@@ -437,9 +526,11 @@ class MiotService(MiotSpecInstance):
     def name_count(self):
         return self.spec.services_count.get(self.name) or 0
 
-    def mapping(self, excludes=None, **kwargs):
+    def mapping(self, excludes=None, includes=None, **kwargs):
         dat = {}
         if not isinstance(excludes, list):
+            excludes = []
+        if not isinstance(includes, list):
             excludes = []
         for p in self.properties.values():
             if not isinstance(p, MiotProperty):
@@ -453,17 +544,20 @@ class MiotService(MiotSpecInstance):
                     continue
             if p.in_list(excludes):
                 continue
+            if includes and not p.in_list(includes):
+                continue
             dat[p.full_name] = {
                 'siid': self.iid,
                 'piid': p.iid,
             }
         return dat
 
-    def get_properties(self, *args):
+    def get_properties(self, *args, **kwargs):
+        excludes = kwargs.get('excludes') or []
         return [
             p
             for p in self.properties.values()
-            if p.in_list(args) or not args
+            if not p.in_list(excludes) and (not args or p.in_list(args))
         ]
 
     def get_property(self, *args, only_format=None):
@@ -524,6 +618,9 @@ class MiotService(MiotSpecInstance):
     def generate_entity_id(self, entity, domain=None):
         return self.spec.generate_entity_id(entity, self.desc_name, domain)
 
+    def get_spec_translation(self, piid=None, aiid=None, viid=None):
+        return self.spec.get_spec_translation(self.iid, piid=piid, aiid=aiid, viid=viid)
+
     @property
     def translation_keys(self):
         return ['_globals', self.name]
@@ -551,7 +648,6 @@ class MiotProperty(MiotSpecInstance):
         self.unique_prop = self.service.unique_prop(piid=self.iid)
         self.desc_name = self.format_desc_name(self.description, self.name)
         self.friendly_name = f'{service.name}.{self.name}'
-        self.friendly_desc = self.short_desc
         self.format = dat.get('format') or ''
         self.access = dat.get('access') or []
         self.unit = dat.get('unit') or ''
@@ -582,6 +678,7 @@ class MiotProperty(MiotSpecInstance):
                 'siid': self.siid,
                 'piid': self.iid,
             }
+        self.friendly_desc = self.short_desc
 
     def in_list(self, lst):
         return self.name in lst \
@@ -593,17 +690,28 @@ class MiotProperty(MiotSpecInstance):
 
     @property
     def short_desc(self):
-        sde = (self.service.description or self.service.name).strip()
-        pde = (self.description or self.name).strip()
-        des = pde
-        if sde != pde:
-            des = f'{sde} {pde}'.strip()
-        ret = self.get_translation(des)
-        if ret != des:
-            return ret
-        ret = self.get_translation(pde)
-        if ret != pde:
-            return f'{sde} {ret}'.strip()
+        serv = self.service
+        sde = ''
+        if self.in_list(['on', 'switch']):
+            sde = serv.get_spec_translation() or ''
+        pde = self.get_spec_translation() or ''
+        if sde and pde:
+            pde = pde.replace(sde, '')
+        des = f'{sde} {pde}'.strip()
+        if not des:
+            sde = (serv.description or serv.name).strip()
+            pde = (self.description or self.name).strip()
+            if sde == pde:
+                des = pde
+            else:
+                des = f'{sde} {pde}'.strip()
+            ret = self.get_translation(des, spec=False)
+            if ret != des:
+                return ret
+            sde = serv.get_translation(sde, spec=False)
+            pde = self.get_translation(pde, spec=False)
+            if sde != pde:
+                return f'{sde} {pde}'.strip()
         arr = des.split(' ')
         return ' '.join(dict(zip(arr, arr)).keys())
 
@@ -620,6 +728,16 @@ class MiotProperty(MiotSpecInstance):
         eid = re.sub(r'_(\d(?:_|$))', r'\1', eid)  # issue#153
         return eid
 
+    def get_spec_translation(self, viid=None):
+        if viid == None:
+            return self.service.get_spec_translation(piid=self.iid)
+        idx = 0
+        for v in self.value_list:
+            if viid == v.get('value'):
+                return self.service.get_spec_translation(piid=self.iid, viid=idx)
+            idx += 1
+        return None
+
     @property
     def translation_keys(self):
         return [
@@ -631,6 +749,10 @@ class MiotProperty(MiotSpecInstance):
 
     def from_dict(self, dat: dict, default=None):
         return dat.get(self.full_name, default)
+
+    def from_device(self, device, default=None):
+        props = getattr(device, 'props', {}) if device else {}
+        return self.from_dict(props, default)
 
     def description_to_dict(self, dat: dict):
         if not self.value_list:
@@ -659,19 +781,20 @@ class MiotProperty(MiotSpecInstance):
             vde = v.get('description')
             if des is None:
                 rls.append(val)
-            elif des in [vde, f'{vde}'.lower(), self.get_translation(vde)]:
+            elif des in [vde, f'{vde}'.lower(), self.get_translation(vde, viid=val)]:
                 return val
         return rls if des is None else None
 
     def list_description(self, val):
         rls = []
         for v in self.value_list:
-            des = self.get_translation(v.get('description'))
+            vid = v.get('value')
+            des = self.get_translation(v.get('description'), viid=vid)
             if val is None:
                 if des == '':
-                    des = v.get('value')
+                    des = vid
                 rls.append(str(des))
-            elif val == v.get('value'):
+            elif val == vid:
                 return des
         if rls and val is None:
             return rls
@@ -711,7 +834,7 @@ class MiotProperty(MiotSpecInstance):
                 des,
                 des.lower(),
                 self.format_name(des),
-                self.get_translation(des),
+                self.get_translation(des, viid=v.get('value', -1)),
             ]
             for d in dls:
                 if d not in args:
@@ -739,6 +862,21 @@ class MiotProperty(MiotSpecInstance):
             return self.value_range[2]
         return None
 
+    def range_valid(self, val):
+        if not self.value_range:
+            return True
+        range_min = self.range_min()
+        range_max = self.range_max()
+        if None in [range_min, range_max]:
+            return True
+        if val == None:
+            return False
+        try:
+            val = float(val)
+        except (TypeError, ValueError):
+            return False
+        return range_min <= val <= range_max
+
     @property
     def is_bool(self):
         return self.format == 'bool'
@@ -750,6 +888,13 @@ class MiotProperty(MiotSpecInstance):
             'uint8', 'uint16', 'uint32', 'uint64',
         ]:
             return True
+        if self.value_list:
+            return True
+        return False
+
+    def use_desc(self, domain=None):
+        if domain not in ['sensor', 'select']:
+            return False
         if self.value_list:
             return True
         return False
@@ -964,6 +1109,9 @@ class MiotAction(MiotSpecInstance):
             return dict(zip(kls, out))
         return None
 
+    def get_spec_translation(self, viid=None):
+        return self.service.get_spec_translation(aiid=self.iid)
+
     @property
     def translation_keys(self):
         return [
@@ -973,15 +1121,27 @@ class MiotAction(MiotSpecInstance):
 
 
 class MiotResults:
-    def __init__(self, results, mapping=None):
-        self._results = results
+    _results: list = None
+    updater: str = None
+    updated = None
+    errors = None
+
+    def __init__(self, results=None, mapping=None):
         self.mapping = mapping or {}
-        self.results = []
+        self.results: list[MiotResult] = []
+        if results:
+            self.set_results(results)
+
+    def set_results(self, results, mapping=None):
+        if mapping:
+            self.mapping = mapping
+        self._results = results
         for v in results or []:
             if not isinstance(v, dict):
                 continue
             r = MiotResult(v)
             self.results.append(r)
+        self.updated = now()
 
     @property
     def is_empty(self):
@@ -997,30 +1157,28 @@ class MiotResults:
             return None
         return self.results[0]
 
-    def to_attributes(self, attrs=None):
+    def to_attributes(self, attrs=None, mapping=None):
         rmp = {}
-        for k, v in self.mapping.items():
-            s = v.get('siid')
-            p = v.get('piid')
-            rmp[f'prop.{s}.{p}'] = k
+        if not mapping:
+            mapping = self.mapping
+        for k, v in mapping.items():
+            u = MiotSpec.unique_prop(v.get('siid'), piid=v.get('piid'))
+            rmp[u] = k
         if attrs is None:
             attrs = {}
-        adt = {}
         for prop in self.results:
-            s = prop.siid
-            p = prop.piid
-            k = rmp.get(f'prop.{s}.{p}', prop.did)
-            if k is None:
+            k = rmp.get(prop.unique_prop)
+            if k == None:
                 continue
             e = prop.code
             ek = f'{k}.error'
             if e == 0:
-                adt[k] = prop.value
+                attrs[k] = prop.value
                 if ek in attrs:
                     attrs.pop(ek, None)
             else:
-                adt[ek] = prop.spec_error
-        return adt
+                attrs[ek] = prop.spec_error
+        return attrs
 
     def to_json(self):
         return [r.to_json() for r in self.results]
@@ -1030,13 +1188,16 @@ class MiotResults:
 
 
 class MiotResult:
-    def __init__(self, result: dict):
+    def __init__(self, result: dict, **kwargs):
+        result.update(kwargs)
         self.result = result
         self.code = result.get('code')
         self.value = result.get('value')
         self.did = result.get('did')
         self.siid = result.get('siid')
         self.piid = result.get('piid')
+        self.unique_prop = MiotSpec.unique_prop(self.siid, piid=self.piid)
+        self.error = result.get('error')
 
     def get(self, key, default=None):
         return self.result.get(key, default)

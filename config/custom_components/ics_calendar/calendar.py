@@ -26,8 +26,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 from homeassistant.util.dt import now as hanow
 
 from .calendardata import CalendarData
@@ -41,6 +41,7 @@ from .const import (
     CONF_OFFSET_HOURS,
     CONF_PARSER,
     CONF_SET_TIMEOUT,
+    CONF_SUMMARY_DEFAULT,
     CONF_USER_AGENT,
     DOMAIN,
 )
@@ -76,6 +77,7 @@ async def _async_setup_entry_bg_task(
     data = hass.data[DOMAIN][config_entry.entry_id]
     device_id = f"{data[CONF_NAME]}"
     entity = ICSCalendarEntity(
+        hass,
         generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass),
         hass.data[DOMAIN][config_entry.entry_id],
         config_entry.entry_id,
@@ -132,7 +134,9 @@ def setup_platform(
         }
         device_id = f"{device_data[CONF_NAME]}"
         entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
-        calendar_devices.append(ICSCalendarEntity(entity_id, device_data))
+        calendar_devices.append(
+            ICSCalendarEntity(hass, entity_id, device_data)
+        )
 
     add_entities(calendar_devices)
 
@@ -140,7 +144,13 @@ def setup_platform(
 class ICSCalendarEntity(CalendarEntity):
     """A CalendarEntity for an ICS Calendar."""
 
-    def __init__(self, entity_id: str, device_data, unique_id: str = None):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entity_id: str,
+        device_data,
+        unique_id: str = None,
+    ):
         """Construct ICSCalendarEntity.
 
         :param entity_id: Entity id for the calendar
@@ -149,11 +159,12 @@ class ICSCalendarEntity(CalendarEntity):
         :type device_data: dict
         """
         _LOGGER.debug(
-            "Initializing calendar: %s with URL: %s",
+            "Initializing calendar: %s with URL: %s, uniqueid: %s",
             device_data[CONF_NAME],
             device_data[CONF_URL],
+            unique_id,
         )
-        self.data = ICSCalendarData(device_data)
+        self.data = ICSCalendarData(hass, device_data)
         self.entity_id = entity_id
         self._attr_unique_id = f"ICSCalendar.{unique_id}"
         self._event = None
@@ -202,11 +213,11 @@ class ICSCalendarEntity(CalendarEntity):
         _LOGGER.debug(
             "%s: async_get_events called; calling internal.", self.name
         )
-        return await self.data.async_get_events(hass, start_date, end_date)
+        return await self.data.async_get_events(start_date, end_date)
 
-    def update(self):
+    async def async_update(self):
         """Get the current or next event."""
-        self.data.update()
+        await self.data.async_update()
         self._event = self.data.event
         self._attr_extra_state_attributes = {
             "offset_reached": (
@@ -245,7 +256,7 @@ class ICSCalendarEntity(CalendarEntity):
 class ICSCalendarData:  # pylint: disable=R0902
     """Class to use the calendar ICS client object to get next event."""
 
-    def __init__(self, device_data):
+    def __init__(self, hass: HomeAssistant, device_data):
         """Set up how we are going to connect to the URL.
 
         :param device_data Information about the calendar
@@ -255,18 +266,25 @@ class ICSCalendarData:  # pylint: disable=R0902
         self._offset_hours = device_data[CONF_OFFSET_HOURS]
         self.include_all_day = device_data[CONF_INCLUDE_ALL_DAY]
         self._summary_prefix: str = device_data[CONF_PREFIX]
+        self._summary_default: str = device_data[CONF_SUMMARY_DEFAULT]
         self.parser = GetParser.get_parser(device_data[CONF_PARSER])
         self.parser.set_filter(
             Filter(device_data[CONF_EXCLUDE], device_data[CONF_INCLUDE])
         )
         self.offset = None
         self.event = None
+        self._hass = hass
 
         self._calendar_data = CalendarData(
+            get_async_client(hass),
             _LOGGER,
-            self.name,
-            device_data[CONF_URL],
-            timedelta(minutes=device_data[CONF_DOWNLOAD_INTERVAL]),
+            {
+                "name": self.name,
+                "url": device_data[CONF_URL],
+                "min_update_time": timedelta(
+                    minutes=device_data[CONF_DOWNLOAD_INTERVAL]
+                ),
+            },
         )
 
         self._calendar_data.set_headers(
@@ -276,28 +294,23 @@ class ICSCalendarData:  # pylint: disable=R0902
             device_data[CONF_ACCEPT_HEADER],
         )
 
-        if CONF_SET_TIMEOUT in device_data:
-            if device_data[CONF_SET_TIMEOUT]:
-                self._calendar_data.set_timeout(
-                    device_data[CONF_CONNECTION_TIMEOUT]
-                )
+        if device_data.get(CONF_SET_TIMEOUT):
+            self._calendar_data.set_timeout(
+                device_data[CONF_CONNECTION_TIMEOUT]
+            )
 
     async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+        self, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame.
 
-        :param hass: Home Assistant object
-        :type hass: HomeAssistant
         :param start_date: The first starting date to consider
         :type start_date: datetime
         :param end_date: The last starting date to consider
         :type end_date: datetime
         """
         event_list = []
-        if await hass.async_add_executor_job(
-            self._calendar_data.download_calendar
-        ):
+        if await self._calendar_data.download_calendar():
             _LOGGER.debug("%s: Setting calendar content", self.name)
             self.parser.set_content(self._calendar_data.get())
         try:
@@ -316,16 +329,16 @@ class ICSCalendarData:  # pylint: disable=R0902
             event_list = []
 
         for event in event_list:
-            print("Adding prefix to summary 1")
             event.summary = self._summary_prefix + event.summary
+            if not event.summary:
+                event.summary = self._summary_default
 
         return event_list
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    async def async_update(self):
         """Get the current or next event."""
         _LOGGER.debug("%s: Update was called", self.name)
-        if self._calendar_data.download_calendar():
+        if await self._calendar_data.download_calendar():
             _LOGGER.debug("%s: Setting calendar content", self.name)
             self.parser.set_content(self._calendar_data.get())
         try:
@@ -350,6 +363,8 @@ class ICSCalendarData:  # pylint: disable=R0902
             )
             (summary, offset) = extract_offset(self.event.summary, OFFSET)
             self.event.summary = self._summary_prefix + summary
+            if not self.event.summary:
+                self.event.summary = self._summary_default
             self.offset = offset
             return True
 

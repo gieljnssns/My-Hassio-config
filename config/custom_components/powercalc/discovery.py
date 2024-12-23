@@ -9,7 +9,7 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, SOURCE_USER
-from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM
+from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.entity import EntityCategory
@@ -25,17 +25,16 @@ from .const import (
     DISCOVERY_POWER_PROFILES,
     DISCOVERY_SOURCE_ENTITY,
     DOMAIN,
+    MANUFACTURER_WLED,
     CalculationStrategy,
 )
 from .errors import ModelNotSupportedError
 from .helpers import get_or_create_unique_id
 from .power_profile.factory import get_power_profile
 from .power_profile.library import ModelInfo, ProfileLibrary
-from .power_profile.power_profile import DOMAIN_DEVICE_TYPE, DeviceType, PowerProfile
+from .power_profile.power_profile import PowerProfile
 
 _LOGGER = logging.getLogger(__name__)
-
-MANUFACTURER_WLED = "WLED"
 
 
 async def get_power_profile_by_source_entity(hass: HomeAssistant, source_entity: SourceEntity) -> PowerProfile | None:
@@ -68,10 +67,9 @@ class DiscoveryManager:
     async def start_discovery(self) -> None:
         """Start the discovery procedure."""
 
-        existing_config_entries = self.hass.config_entries.async_entries(DOMAIN)
-        for entry in existing_config_entries:
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.unique_id:
-                self.initialized_flows.add(entry.unique_id)
+                self.initialized_flows.update({entry.unique_id, str(entry.data.get(CONF_ENTITY_ID))})
 
         _LOGGER.debug("Start auto discovering entities")
         entity_registry = er.async_get(self.hass)
@@ -81,10 +79,23 @@ class DiscoveryManager:
                 model_info = await self.extract_model_info_from_entity(source_entity.entity_entry)
                 if not model_info:
                     continue
+
                 power_profiles = await self.discover_entity(source_entity, model_info)
                 if not power_profiles:
                     continue
-                self._init_entity_discovery(source_entity, model_info, power_profiles, {})
+
+                unique_id = get_or_create_unique_id(
+                    {},
+                    source_entity,
+                    power_profiles[0] if power_profiles else None,
+                )
+                if self._is_already_discovered(source_entity, unique_id):
+                    _LOGGER.debug(
+                        "%s: Already setup with discovery, skipping new discovery",
+                        source_entity.entity_id,
+                    )
+                    continue
+                self._init_entity_discovery(source_entity, model_info, unique_id, power_profiles, {})
             except Exception:
                 _LOGGER.exception(
                     "%s: Error during auto discovery",
@@ -144,9 +155,19 @@ class DiscoveryManager:
 
     async def init_wled_flow(self, model_info: ModelInfo, source_entity: SourceEntity) -> None:
         """Initialize the discovery flow for a WLED light."""
+        unique_id = f"pc_{source_entity.device_entry.id}" if source_entity.device_entry else get_or_create_unique_id({}, source_entity, None)
+        if self._is_already_discovered(source_entity, unique_id):
+            _LOGGER.debug(
+                "%s: Already setup with discovery, skipping new discovery (unique_id=%s)",
+                source_entity.entity_id,
+                unique_id,
+            )
+            return
+
         self._init_entity_discovery(
             source_entity,
             model_info,
+            unique_id,
             power_profiles=None,
             extra_discovery_data={
                 CONF_MODE: CalculationStrategy.WLED,
@@ -160,6 +181,7 @@ class DiscoveryManager:
             model_info.manufacturer == MANUFACTURER_WLED
             and entity_entry.domain == LIGHT_DOMAIN
             and not re.search("master|segment", str(entity_entry.original_name), flags=re.IGNORECASE)
+            and not re.search("master|segment", str(entity_entry.entity_id), flags=re.IGNORECASE)
         )
 
     async def is_entity_supported(
@@ -188,12 +210,6 @@ class DiscoveryManager:
     def should_process_entity(self, entity_entry: er.RegistryEntry) -> bool:
         """Do some validations on the registry entry to see if it qualifies for discovery."""
         if entity_entry.disabled:
-            return False
-
-        if entity_entry.domain not in DOMAIN_DEVICE_TYPE:
-            return False
-
-        if DOMAIN_DEVICE_TYPE[entity_entry.domain] == DeviceType.PRINTER and entity_entry.unit_of_measurement:
             return False
 
         if entity_entry.entity_category in [
@@ -267,26 +283,16 @@ class DiscoveryManager:
         self,
         source_entity: SourceEntity,
         model_info: ModelInfo,
+        unique_id: str,
         power_profiles: list[PowerProfile] | None,
         extra_discovery_data: dict | None,
     ) -> None:
         """Dispatch the discovery flow for a given entity."""
 
-        unique_id = get_or_create_unique_id({}, source_entity, power_profiles[0] if power_profiles else None)
-        unique_ids_to_check = [unique_id]
-        if unique_id.startswith("pc_"):
-            unique_ids_to_check.append(unique_id[3:])
-
-        if any(unique_id in self.initialized_flows for unique_id in unique_ids_to_check):
-            _LOGGER.debug(
-                "%s: Already setup with discovery, skipping new discovery",
-                source_entity.entity_id,
-            )
-            return
-
         discovery_data: dict[str, Any] = {
             CONF_ENTITY_ID: source_entity.entity_id,
             DISCOVERY_SOURCE_ENTITY: source_entity,
+            CONF_UNIQUE_ID: unique_id,
         }
 
         if power_profiles:
@@ -304,7 +310,10 @@ class DiscoveryManager:
         if extra_discovery_data:
             discovery_data.update(extra_discovery_data)
 
-        self.initialized_flows.add(unique_id)
+        self.initialized_flows.update({unique_id, source_entity.entity_id})
+
+        _LOGGER.debug("%s: Initiating discovery flow, unique_id=%s", source_entity.entity_id, unique_id)
+
         discovery_flow.async_create_flow(
             self.hass,
             DOMAIN,
@@ -370,3 +379,12 @@ class DiscoveryManager:
         for item in items:
             if isinstance(item, dict):
                 self._extract_entity_ids(item, found_entity_ids)
+
+    def _is_already_discovered(self, source_entity: SourceEntity, unique_id: str) -> bool:
+        """Prevent duplicate discovery flows."""
+        unique_ids_to_check = [unique_id, source_entity.entity_id, source_entity.unique_id]
+        if unique_id.startswith("pc_"):
+            unique_ids_to_check.append(unique_id[3:])
+        unique_ids_to_check.extend([f"pc_{uid}" for uid in unique_ids_to_check])
+
+        return any(unique_id in self.initialized_flows for unique_id in unique_ids_to_check)
