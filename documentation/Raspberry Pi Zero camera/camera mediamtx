@@ -1,7 +1,55 @@
-https://www.youtube.com/watch?v=kfHVxvMZMnw
 
-https://phazertech.com/tutorials/rtsp.html
 
-sudo /usr/local/bin/mediamtx &
-v4l2-ctl --set-ctrl video_bitrate=10000000 &
-ffmpeg -input_format h264 -f video4linux2 -video_size 1640x922 -framerate 15 -i /dev/video0 -c:v copy -an -f rtsp rtsp://localhost:8554/Keuken -rtsp_transport tcp
+sudo raspi-config
+  expand filesystem
+
+sudo reboot
+
+sudo apt update
+sudo apt upgrade -y
+sudo apt install git libcamera0 libfreetype6
+git clone https://github.com/gieljnssns/dotfiles-raspi.git
+cd dotfiles-raspi
+chmod +x install.sh
+./install.sh
+
+sudo reboot
+
+# FFMPEG
+# https://jollejolles.com/installing-ffmpeg-with-h264-support-on-raspberry-pi/
+
+# MediaMTX
+wget https://github.com/bluenviron/mediamtx/releases/download/v1.9.3/mediamtx_v1.9.3_linux_armv7.tar.gz
+tar -xvzf mediamtx_v1.9.3_linux_armv7.tar.gz
+
+```sh
+sudo mv mediamtx /usr/local/bin/
+sudo rm mediamtx.yml
+sudo nano /usr/local/etc/mediamtx.yml
+/Users/giel/Dev/My-Hassio/documentation/Hidden/mediamtx.yml
+```
+
+Create a _systemd_ service:
+
+```sh
+sudo tee /etc/systemd/system/mediamtx.service >/dev/null << EOF
+[Unit]
+Wants=network.target
+[Service]
+ExecStart=/usr/local/bin/mediamtx /usr/local/etc/mediamtx.yml
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+Enable and start the service:
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl enable mediamtx
+sudo systemctl start mediamtx
+sudo systemctl status mediamtx
+sudo systemctl restart mediamtx
+
+sudo journalctl -u mediamtx.service
+```
