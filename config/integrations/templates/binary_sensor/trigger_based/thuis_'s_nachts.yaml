@@ -1,0 +1,41 @@
+- trigger:
+    - platform: template
+      id: aan
+      value_template: >
+        {{ states('device_tracker.gphone_2') == 'home' and
+          states('alarm_control_panel.ha_alarm') == 'armed_night' }}
+      for:
+        minutes: 60
+    - platform: template
+      id: uit
+      value_template: >
+        {{ states("binary_sensor.gphone_focus") == "off" and states('alarm_control_panel.ha_alarm') == 'disarmed' }}
+  binary_sensor:
+    - name: Giel thuis nacht
+      unique_id: a5f7fb80-700e-4883-afa1-39171f29208d
+      # delay_on:
+      #   minutes: 60
+      state: >
+        {{ states('device_tracker.gphone_2') == 'home' and
+          states('alarm_control_panel.ha_alarm') == 'armed_night' }}
+
+- trigger:
+    - platform: template
+      id: aan
+      value_template: >
+        {{ states('device_tracker.mphone_2') == 'home' and
+          states('alarm_control_panel.ha_alarm') == 'armed_night' }}
+      for:
+        minutes: 60
+    - platform: template
+      id: uit
+      value_template: >
+        {{ states("binary_sensor.mphone_focus") == "off" and states('alarm_control_panel.ha_alarm') == 'disarmed' }}
+  binary_sensor:
+    - name: Martine thuis nacht
+      unique_id: 62c3a0c9-3737-45ff-bcae-a038ef985811
+      # delay_on:
+      #   minutes: 60
+      state: >
+        {{ states('device_tracker.mphone_2') == 'home' and
+          states('alarm_control_panel.ha_alarm') == 'armed_night' }}

@@ -2,14 +2,42 @@ alias: "Oplader electrische fiets aan/uit"
 id: c8dc7693-df59-44e3-8a60-b6d7160c5c3f
 trigger:
   - platform: time
-    at: "16:02:00"
+    at: "14:02:00"
+  - platform: state
+    entity_id: input_select.noor_status_dropdown
+    to: 'Juist Aangekomen'
+    for:
+      minutes: 2
+    id: noor_status
+  - platform: state
+    entity_id: input_select.fien_status_dropdown
+    to: 'Juist Aangekomen'
+    for:
+      minutes: 2
+    id: fien_status
   - platform: state
     entity_id: alarm_control_panel.ha_alarm
+    id: armed_night
     to: "armed_night"
     for:
       minutes: 15
   - platform: numeric_state
     entity_id: sensor.garage_oplader_vermogen
+    id: garage_oplader
+    above: 1
+    below: 10
+    for:
+      minutes: 60
+  - platform: numeric_state
+    entity_id: sensor.pries_boven_vermogen
+    id: pries_boven
+    above: 1
+    below: 10
+    for:
+      minutes: 60
+  - platform: numeric_state
+    entity_id: sensor.pries_onder_vermogen
+    id: pries_onder
     above: 1
     below: 10
     for:
@@ -27,10 +55,61 @@ condition:
         - sat
         - sun
 actions:
-  - action: >
-      {% if now().hour == 16 %}
-        switch.turn_on
-      {% else %}
-        switch.turn_off
-      {% endif %}
-    entity_id: switch.garage_oplader
+  - choose:
+    - conditions:
+        - condition: trigger
+          id: noor_status
+      sequence:
+        - service: switch.turn_on
+          target:
+            entity_id: switch.pries_boven, switch.pries_onder
+    - conditions:
+        - condition: trigger
+          id: fien_status
+      sequence:
+        - service: switch.turn_on
+          target:
+            entity_id: switch.pries_boven, switch.pries_onder
+    - conditions:
+        - condition: template
+          value_template: >
+            {{ now().hour == 14 }}
+      sequence:
+        - service: switch.turn_on
+          target:
+            entity_id: switch.garage_oplader, switch.pries_boven, switch.pries_onder
+    - conditions:
+        - condition: trigger
+          id: garage_oplader
+      sequence:
+        - service: switch.turn_off
+          target:
+            entity_id: switch.garage_oplader
+    - conditions:
+        - condition: trigger
+          id: pries_boven
+      sequence:
+        - service: switch.turn_off
+          target:
+            entity_id: switch.pries_boven
+    - conditions:
+        - condition: trigger
+          id: pries_onder
+      sequence:
+        - service: switch.turn_off
+          target:
+            entity_id: switch.pries_onder
+    - conditions:
+        - condition: trigger
+          id: armed_night
+      sequence:
+        - service: switch.turn_off
+          target:
+            entity_id: switch.garage_oplader, switch.pries_boven, switch.pries_onder
+  # - action: >
+  #     {% if now().hour == 16 %}
+  #       switch.turn_on
+  #     {% else %}
+  #       switch.turn_off
+  #     {% endif %}
+  #   entity_id: switch.garage_oplader

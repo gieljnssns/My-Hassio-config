@@ -1,12 +1,19 @@
 - sensor:
-    - name: "SolarEdge energy"
-      unique_id: f7e4ae3b-cb83-4e93-8955-c681d4025ea6
-      icon: "mdi:counter"
-      unit_of_measurement: "kWh"
-      device_class: energy
-      state_class: total_increasing
-      state: >
-        {{ (states('sensor.solaredge_inverter_watthours')|float(0) / 1000) | round(2) }}
+    # - name: "SolarEdge energy"
+    #   unique_id: f7e4ae3b-cb83-4e93-8955-c681d4025ea6
+    #   icon: "mdi:counter"
+    #   unit_of_measurement: "kWh"
+    #   device_class: energy
+    #   state_class: total_increasing
+    #   state: >
+    #     {% set current_value = states('sensor.solaredge_energy') | float(0) %}
+    #     {% set source_state = states('sensor.solaredge_inverter_watthours') %}
+    #     {% if source_state in ['unavailable', 'unknown', None] %}
+    #       {{ current_value }}
+    #     {% else %}
+    #       {% set new_value = (states('sensor.solaredge_inverter_watthours') | float(0) / 1000) | round(2) %}
+    #       {{ current_value if new_value < current_value else new_value }}
+    #     {% endif %}
       # availability: >
       #   {{ states('sensor.solaredge_inverter_watthours')|float(0) > 1 }}
 
@@ -17,7 +24,14 @@
       device_class: energy
       state_class: total_increasing
       state: >
-        {{ states('sensor.huawei_accumulated_energy_yield')|float(0) | round(2) }}
+        {% set current_value = states('sensor.huawei_energy') | float(0) %}
+        {% set source_state = states('sensor.huawei_accumulated_energy_yield') %}
+        {% if source_state in ['unavailable', 'unknown', None] %}
+          {{ current_value }}
+        {% else %}
+          {% set new_value = states('sensor.huawei_accumulated_energy_yield')|float(0) | round(2) %}
+          {{ current_value if new_value < current_value else new_value }}
+        {% endif %}
       availability: >
         {{ states('sensor.huawei_accumulated_energy_yield')|float(0) > 1 }}
 
@@ -148,6 +162,8 @@
         {{ (states("sensor.danszaal_luster_vermogen") | float(default=0) + 
             states("sensor.zithoek_luster_vermogen") | float(default=0) + 
             states("sensor.gang_boven_vermogen") | float(default=0) + 
+            states("sensor.gang_hal_1_vermogen") | float(default=0) +
+            states("sensor.gang_hal_2_vermogen") | float(default=0) +
             states("sensor.slaapkamer_hoog_vermogen") | float(default=0) + 
             states("sensor.keuken_inkom_vermogen") | float(default=0) + 
             states("sensor.keuken_spots_vermogen") | float(default=0) + 
@@ -217,10 +233,13 @@
             states("sensor.droogkast_vermogen") | float(default=0) + 
             states("sensor.garage_ijskast_vermogen") | float(default=0) + 
             states("sensor.garage_oplader_vermogen") | float(default=0) + 
+            states("sensor.sensor.pries_boven_vermogen") | float(default=0) +
+            states("sensor.sensor.pries_onder_vermogen") | float(default=0) +
             states("sensor.keuken_ijskast_vermogen") | float(default=0) + 
             states("sensor.keuken_microgolf_vermogen") | float(default=0) + 
             states("sensor.keuken_oven_vermogen") | float(default=0) + 
             states("sensor.keuken_toestellen_2_vermogen") | float(default=0) + 
+            states("sensor.keuken_toestellen_3_vermogen") | float(default=0) + 
             states("sensor.keuken_toestellen_vermogen") | float(default=0) + 
             states("sensor.koffiezet_vermogen") | float(default=0) + 
             states("sensor.regenwaterpomp_vermogen") | float(default=0) + 

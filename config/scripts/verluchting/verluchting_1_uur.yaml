@@ -3,11 +3,8 @@ verluchting_1_uur:
     - condition: state
       entity_id: binary_sensor.afkoeling_gewenst
       state: "off"
-    - action: fan.set_percentage
-      target:
-        entity_id: fan.ventilatie
-      data:
-        percentage: 100
+    - action: switch.turn_on
+      entity_id: switch.verluchting
     - action: switch.turn_on
       entity_id: switch.badkamer_verluchting
     - action: switch.turn_on

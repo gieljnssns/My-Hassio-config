@@ -1,0 +1,47 @@
+alias: Light gang hal
+id: 169e30a6-8d76-4193-83db-a362b6ebca25
+description: ""
+trigger:
+  - platform: state
+    entity_id: light.gang_boven
+    from: "on"
+    to: "off"
+    id: uit
+  - platform: state
+    entity_id: light.gang_boven
+    from: "off"
+    to: "on"
+    id: aan
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: uit
+        sequence:
+          - action: light.turn_off
+            data:
+              entity_id: light.gang_hal
+      - conditions:
+          - condition: trigger
+            id: aan
+          - condition: or
+            conditions: 
+              - condition: state
+                entity_id: binary_sensor.giel_thuis_nacht
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.martine_thuis_nacht
+                state: "on"
+        sequence:
+          - action: light.turn_on
+            data:
+              brightness_pct: 1
+            target:
+              entity_id: light.gang_hal
+    default:
+      - action: light.turn_on
+        data:
+          brightness_pct: 70
+        target:
+          entity_id: light.gang_hal
