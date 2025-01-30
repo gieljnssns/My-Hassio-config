@@ -1552,6 +1552,39 @@
   ],
   "yeelink.light.panel1": "yeelink.light.ceiling1",
   "yeelink.light.panel3": "yeelink.light.ceiling1",
+  "yeelink.light.lamp15": [
+    {
+      "iid": 200,
+      "type": "urn:miot-spec-v2:service:ambient-light",
+      "description": "Ambient Light",
+      "properties": [
+        {
+          "iid": 201,
+          "type": "urn:miot-spec-v2:property:on",
+          "description": "Switch Status",
+          "format": "bool",
+          "access": ["read", "write"]
+        },
+        {
+          "iid": 202,
+          "type": "urn:miot-spec-v2:property:brightness",
+          "format": "uint8",
+          "access": ["read", "write"],
+          "unit": "percentage",
+          "value-range": [1, 100, 1]
+        },
+        {
+          "iid": 204,
+          "type": "urn:miot-spec-v2:property:color",
+          "description": "Color",
+          "format": "uint32",
+          "access": ["read", "write"],
+          "unit": "rgb",
+          "value-range": [1, 16777215, 1]
+        }
+      ]
+    }
+  ],
 
   "yunmi.waterpuri.lx5": [
     {
@@ -1637,6 +1670,44 @@
     }
   ],
 
+  "zhimi.aircondition.v1": [
+    {
+      "iid": 3,
+      "properties": [
+        {
+          "iid": 1,
+          "value-list": [
+            {"value": 4, "description": "Quiet"},
+            {"value": 1, "description": "Low"},
+            {"value": 2, "description": "Medium"},
+            {"value": 3, "description": "High"},
+            {"value": 5, "description": "Turbo"},
+            {"value": 0, "description": "Auto"}
+          ]
+        }
+      ]
+    },
+    {
+      "iid": 5,
+      "properties": [
+        {
+          "iid": 1,
+          "access": ["read", "write"],
+          "value-range": [0, 7, 1]
+        }
+      ]
+    },
+    {
+      "iid": 3,
+      "properties": [
+        {
+          "iid": 4,
+          "access": ["read", "write"],
+          "value-range": [0, 60, 1]
+        }
+      ]
+    }
+  ],
   "zhimi.airfresh.va4":[
     {
       "iid": 2,

@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_MODEL, CONF_USERNAME, EntityCategory
 from homeassistant.util import dt
 from homeassistant.components import persistent_notification
+from homeassistant.helpers.event import async_call_later
 import homeassistant.helpers.device_registry as dr
 
 from .const import (
@@ -109,6 +110,10 @@ class DeviceInfo:
         return self.data.get('urn') or self.data.get('spec_type') or ''
 
     @property
+    def parent_id(self):
+        return self.data.get('parent_id', '')
+
+    @property
     def extra(self):
         return self.data.get('extra') or {}
 
@@ -156,6 +161,7 @@ class Device(CustomConfigHelper):
     miot_entity = None
     miot_results = None
     _local_state = None
+    _proxy_device = None
     _miot_mapping = None
     _exclude_miot_services = None
     _exclude_miot_properties = None
@@ -184,6 +190,14 @@ class Device(CustomConfigHelper):
             mps = self.custom_config_list('miio_properties')
             if mps and self.miio2miot:
                 self.miio2miot.extend_miio_props(mps)
+
+        if self.info.pid not in [18]:
+            """ not proxy device """
+        elif parent := await self.get_parent_device():
+            if parent.use_local:
+                self.local = parent.local
+                self._proxy_device = parent if self.local else None
+                self.log.info('Proxy local device: %s', self.local)
 
         self._exclude_miot_services = self.custom_config_list('exclude_miot_services', [])
         self._exclude_miot_properties = self.custom_config_list('exclude_miot_properties', [])
@@ -264,6 +278,9 @@ class Device(CustomConfigHelper):
 
     @property
     def hass_device_info(self):
+        via_device = None
+        if self._proxy_device:
+            via_device = next(iter(self._proxy_device.identifiers))
         return {
             'identifiers': self.identifiers,
             'name': self.name,
@@ -271,6 +288,7 @@ class Device(CustomConfigHelper):
             'manufacturer': (self.model or 'Xiaomi').split('.', 1)[0],
             'sw_version': self.sw_version,
             'suggested_area': self.info.room_name,
+            'via_device': via_device,
             'configuration_url': f'https://home.miot-spec.com/s/{self.model}',
         }
 
@@ -354,9 +372,6 @@ class Device(CustomConfigHelper):
         self.dispatch_info()
 
         if not self.spec:
-            return
-        if dby := self.hass_device_disabled:
-            self.log.debug('Device disabled by: %s', dby)
             return
 
         for cfg in GLOBAL_CONVERTERS:
@@ -452,17 +467,21 @@ class Device(CustomConfigHelper):
                 self.add_converter(AttrConv(attr, d))
 
     async def init_coordinators(self):
-        interval = 30
+        if dby := self.hass_device_disabled:
+            self.log.debug('Device disabled by: %s', dby)
+            return
+
+        interval = 60
         interval = self.entry.get_config('scan_interval') or interval
         interval = self.custom_config_integer('interval_seconds') or interval
         lst = await self.init_miot_coordinators(interval)
         if self.cloud_statistics_commands:
             lst.append(
-                DataCoordinator(self, self.update_cloud_statistics, update_interval=timedelta(seconds=interval*20)),
+                DataCoordinator(self, self.update_cloud_statistics, update_interval=timedelta(seconds=interval*10)),
             )
         if self.miio_cloud_records:
             lst.append(
-                DataCoordinator(self, self.update_miio_cloud_records, update_interval=timedelta(seconds=interval*20)),
+                DataCoordinator(self, self.update_miio_cloud_records, update_interval=timedelta(seconds=interval*10)),
             )
         if self.miio_cloud_props:
             lst.append(
@@ -479,6 +498,7 @@ class Device(CustomConfigHelper):
         self.coordinators.extend(lst)
         for coo in lst:
             await coo.async_config_entry_first_refresh()
+        async_call_later(self.hass, 10, self.update_all_status)
 
     async def init_miot_coordinators(self, interval=60):
         lst = []
@@ -544,6 +564,10 @@ class Device(CustomConfigHelper):
 
     async def update_main_status(self):
         for coo in self.main_coordinators:
+            await coo.async_request_refresh()
+
+    async def update_all_status(self, _=None):
+        for coo in self.coordinators:
             await coo.async_request_refresh()
 
     def add_entities(self, domain):
@@ -704,15 +728,17 @@ class Device(CustomConfigHelper):
     def use_local(self):
         if self.cloud_only:
             return False
+        if not self.local:
+            return False
         if self.local_only:
             return True
         if self.miio2miot:
             return True
         if self.custom_config_bool('miot_local'):
             return True
-        if not self.local:
-            return False
         if self.model in MIOT_LOCAL_MODELS:
+            return True
+        if self._proxy_device:
             return True
         return False
 
@@ -735,6 +761,12 @@ class Device(CustomConfigHelper):
         if not self.cloud:
             return False
         return self.custom_config_bool('auto_cloud')
+
+    async def get_parent_device(self):
+        if not (pid := self.info.parent_id):
+            return None
+        info = await self.entry.get_cloud_device(pid)
+        return await self.entry.new_device(info)
 
     def miot_mapping(self):
         if self._miot_mapping:
@@ -956,6 +988,9 @@ class Device(CustomConfigHelper):
         result = MiotResults(results, mapping)
         return result.to_attributes()
 
+    async def async_set_property(self, *args, **kwargs):
+        return await self.hass.async_add_executor_job(partial(self.set_property,*args, **kwargs))
+
     def set_property(self, field, value):
         if isinstance(field, MiotProperty):
             siid = field.siid
@@ -1001,14 +1036,16 @@ class Device(CustomConfigHelper):
                     cloud_pms = pms
             elif self.local:
                 results = self.local.send('set_properties', [pms])
+            else:
+                cloud_pms = pms
             if self.cloud and cloud_pms:
                 results = self.cloud.set_props([pms])
             result = MiotResults(results).first
         except (DeviceException, MiCloudException) as exc:
             self.log.warning('Set miot property %s failed: %s', pms, exc)
             return MiotResult({}, code=-1, error=str(exc))
-        if not result.is_success:
-            self.log.warning('Set miot property %s failed, result: %s', pms, result)
+        if not result or not result.is_success:
+            self.log.warning('Set miot property %s failed, result: %s', pms, [results, m2m])
         else:
             self.log.info('Set miot property %s, result: %s', pms, result)
             result.value = value

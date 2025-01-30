@@ -2291,6 +2291,19 @@ MIIO_TO_MIOT_SPECS = {
     'yeelink.light.lamp7': 'yeelink.light.ceiling16',
     'yeelink.light.lamp9': 'yeelink.light.ceiling6',
     'yeelink.light.lamp10': 'yeelink.light.bslamp3',
+    'yeelink.light.lamp15': {
+        'miio_specs': {
+            'prop.2.1': {'prop': 'power', 'setter': True, 'format': 'onoff'},
+            'prop.2.2': {'prop': 'bright', 'setter': True},
+            'prop.2.3': {'prop': 'ct', 'setter': 'set_ct_abx', 'set_template': '{{ [value,"smooth",500] }}'},
+            'prop.2.5': {'prop': 'color_mode'},
+            'prop.3.6': {'prop': 'bg_power', 'setter': 'bg_set_power', 'format': 'onoff'},
+            'prop.200.201': {'prop': 'bg_power', 'setter': 'bg_set_power', 'format': 'onoff'},
+            'prop.200.202': {'prop': 'bg_bright', 'setter': 'bg_set_bright'},
+            'prop.200.203': {'prop': 'bg_ct', 'setter': 'bg_set_ct_abx', 'set_template': '{{ [value,"smooth",500] }}'},
+            'prop.200.204': {'prop': 'bg_rgb', 'setter': 'bg_set_rgb'},
+        },
+    },
     'yeelink.light.mono1': {
         'miio_specs': {
             'prop.2.1': {'prop': 'power', 'setter': True, 'format': 'onoff'},
@@ -2529,7 +2542,7 @@ MIIO_TO_MIOT_SPECS = {
         'chunk_properties': 1,
         'miio_specs': {
             'prop.2.1': {'prop': 'power', 'setter': True, 'format': 'onoff'},
-            'prop.2.2': {'prop': 'mode', 'dict': {
+            'prop.2.2': {'prop': 'mode', 'setter': True, 'dict': {
                 'automode':   0,
                 'cooling':    1,
                 'arefaction': 2,
@@ -2568,6 +2581,48 @@ MIIO_TO_MIOT_SPECS = {
     'zhimi.aircondition.ma3': 'zhimi.aircondition.ma1',
     'zhimi.aircondition.ma4': 'zhimi.aircondition.ma1',
     'zhimi.aircondition.za1': 'zhimi.aircondition.ma1',
+    'zhimi.aircondition.v1': {
+        'chunk_properties': 1,
+        'miio_specs': {
+            'prop.2.1': {'prop': 'power', 'setter': True, 'format': 'onoff'},
+            'prop.2.2': {'prop': 'mode', 'setter': True, 'dict': {
+                'cooling':    1,
+                'arefaction': 2,
+                'heat':       3,
+                'wind':       4,
+            }, 'default': 0},
+            'prop.2.3': {
+                'prop': 'st_temp_dec',
+                'setter': 'set_temperature',
+                'template': '{{ value|default(0,true)/10.0 }}',
+                'set_template': '{{ (value*10)|int(0) }}',
+            },
+            'prop.2.4': {'prop': 'silent', 'setter': True, 'format': 'onoff'},
+            'prop.2.5': {'prop': 'ptc', 'setter': True, 'format': 'onoff'},
+            'prop.3.1': {'prop': 'speed_level', 'setter': 'set_spd_level', 'dict': {
+                0: 4, # quiet
+                1: 1, # low
+                2: 2, # medium
+                3: 3, # high
+                4: 5, # turbo
+                5: 0, # auto
+            }},
+            'prop.3.2': {'prop': 'horizon_swing', 'setter': 'set_horizon', 'format': 'onoff'},
+            'prop.3.3': {'prop': 'vertical_swing', 'setter': 'set_vertical', 'format': 'onoff'},
+            'prop.3.4': {'prop': 'vertical_rt', 'setter': 'set_ver_pos'},
+            'prop.4.1': {'prop': 'temp_dec', 'template': '{{ value|default(0,true)/10.0 }}'},
+            'prop.4.2': {'prop': 'ot_run_temp'},
+            'prop.4.3': {'prop': 'humidity'},
+            'prop.4.4': {'prop': 'ot_humidity'},
+            'prop.5.1': {
+                'prop': 'volume',
+                'setter': 'set_volume',
+                'template': '{{ (value/10)|int }}',
+                'set_template': '{{ value|int }}',
+            },
+            'prop.6.1': {'prop': 'lcd_level', 'setter': 'set_lcd_level'},
+        },
+    },
 
     'zhimi.airmonitor.v1': {
         'miio_specs': {
@@ -2740,7 +2795,7 @@ MIIO_TO_MIOT_SPECS = {
         'miio_specs': {
             'prop.4.2': {
                 'prop': 'f1_hour_used',
-                'template': '{{ value/(props.filter1_life|default(0,true)/100)-value }}',
+                'template': '{{ value/(props.filter1_life|default(1,true)/100)-value }}',
             },
             'prop.7.1': {'prop': 'child_lock', 'setter': True, 'format': 'onoff'},
         },

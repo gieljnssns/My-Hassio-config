@@ -19,7 +19,6 @@ from .utils import (
     get_end_time,
     get_HMS_error_text,
     get_print_error_text,
-    get_generic_AMS_HMS_error_code,
     get_HMS_severity,
     get_HMS_module,
     set_temperature_to_gcode,
@@ -38,6 +37,8 @@ from .const import (
 from .commands import (
     CHAMBER_LIGHT_ON,
     CHAMBER_LIGHT_OFF,
+    PROMPT_SOUND_ENABLE,
+    PROMPT_SOUND_DISABLE,
     SPEED_PROFILE_TEMPLATE,
 )
 
@@ -54,7 +55,7 @@ class Device:
         self.ams = AMSList(client = client)
         self.external_spool = ExternalSpool(client = client)
         self.hms = HMSList(client = client)
-        self.print_error = PrintErrorList(client = client)
+        self.print_error = PrintError(client = client)
         self.camera = Camera(client = client)
         self.home_flag = HomeFlag(client=client)
         self.push_all_data = None
@@ -139,6 +140,8 @@ class Device:
             return self.info.device_type != "A1" and self.info.device_type != "A1MINI"
         elif feature == Features.SET_TEMPERATURE:
             return self._supports_temperature_set()
+        elif feature == Features.PROMPT_SOUND:
+            return self.info.device_type == "A1" or self.info.device_type == "A1MINI"
 
         return False
     
@@ -471,8 +474,6 @@ class PrintJob:
         self.print_percentage = data.get("mc_percent", self.print_percentage)
         previous_gcode_state = self.gcode_state
         self.gcode_state = data.get("gcode_state", self.gcode_state)
-        if previous_gcode_state != self.gcode_state:
-            LOGGER.debug(f"GCODE_STATE: {previous_gcode_state} -> {self.gcode_state}")
         if self.gcode_state.lower() not in GCODE_STATE_OPTIONS:
             LOGGER.error(f"Unknown gcode_state. Please log an issue : '{self.gcode_state}'")
             self.gcode_state = "unknown"
@@ -504,8 +505,10 @@ class PrintJob:
             existing_remaining_time = self.remaining_time
             self.remaining_time = data.get("mc_remaining_time")
             if existing_remaining_time != self.remaining_time:
-                self.end_time = get_end_time(self.remaining_time)
-                LOGGER.debug(f"END TIME2: {self.end_time}")
+                end_time = get_end_time(self.remaining_time)
+                if end_time != self.end_time:
+                    self.end_time = end_time
+                    LOGGER.debug(f"END TIME2: {self.end_time}")
 
         # Handle print start
         previously_idle = previous_gcode_state == "IDLE" or previous_gcode_state == "FAILED" or previous_gcode_state == "FINISH"
@@ -641,8 +644,8 @@ class PrintJob:
                 if self._client._device.supports_feature(Features.START_TIME_GENERATED) and (status == 4):
                     # If we generate the start time (not X1), then rely more heavily on the cloud task data and
                     # do so uniformly so we always have matched start/end times.
-
                     # "startTime": "2023-12-21T19:02:16Z"
+                    
                     cloud_time_str = self._task_data.get('startTime', "")
                     LOGGER.debug(f"CLOUD START TIME1: {self.start_time}")
                     if cloud_time_str != "":
@@ -661,7 +664,6 @@ class PrintJob:
                         local_dt = datetime.fromtimestamp(local_dt.timestamp())
                         self.end_time = local_dt
                         LOGGER.debug(f"CLOUD END TIME2: {self.end_time}")
-
 
 @dataclass
 class Info:
@@ -685,7 +687,7 @@ class Info:
         self._client = client
 
         self.serial = self._client._serial
-        self.device_type = self._client._device_type.upper()
+        self.device_type = self._client._device_type
         self.wifi_signal = 0
         self.hw_ver = "unknown"
         self.sw_ver = "unknown"
@@ -816,6 +818,13 @@ class Info:
     @property
     def has_bambu_cloud_connection(self) -> bool:
         return self._client.bambu_cloud.auth_token != ""
+    
+    def set_prompt_sound(self, enable: bool):
+        if enable:
+            self._client.publish(PROMPT_SOUND_ENABLE)
+        else:
+            self._client.publish(PROMPT_SOUND_DISABLE)
+       
 
 @dataclass
 class AMSInstance:
@@ -1207,9 +1216,9 @@ class HMSList:
                 index = index + 1
                 attr = int(hms['attr'])
                 code = int(hms['code'])
-                hms_notif = HMSNotification(attr=attr, code=code)
+                hms_notif = HMSNotification(user_language=self._client.user_language, attr=attr, code=code)
                 errors[f"{index}-Code"] = f"HMS_{hms_notif.hms_code}"
-                errors[f"{index}-Error"] = get_HMS_error_text(hms_notif.hms_code)
+                errors[f"{index}-Error"] = hms_notif.hms_error
                 errors[f"{index}-Wiki"] = hms_notif.wiki_url
                 errors[f"{index}-Severity"] = hms_notif.severity
                 #LOGGER.debug(f"HMS error for '{hms_notif.module}' and severity '{hms_notif.severity}': HMS_{hms_notif.hms_code}")
@@ -1235,7 +1244,7 @@ class HMSList:
         return self._count
 
 @dataclass
-class PrintErrorList:
+class PrintError:
     """Return all print_error related info"""
     _error: dict
 
@@ -1252,13 +1261,14 @@ class PrintErrorList:
 
         if 'print_error' in data.keys():
             errors = None
-            print_error_code = data.get('print_error')
-            if print_error_code != 0:
-                hex_conversion = f'0{int(print_error_code):x}'
-                print_error_code_hex = hex_conversion[slice(0,4,1)] + "_" + hex_conversion[slice(4,8,1)]
+            code = data.get('print_error')
+            if code != 0:
+                code = f'0{int(code):x}'
+                code = code[slice(0,4,1)] + "_" + code[slice(4,8,1)]
+                code = code.upper()
                 errors = {}
-                errors[f"code"] = print_error_code_hex.upper()
-                errors[f"error"] = get_print_error_text(print_error_code)
+                errors[f"code"] = code
+                errors[f"error"] = get_print_error_text(code, self._client.user_language)
                 # LOGGER.warning(f"PRINT ERRORS: {errors}") # This will emit a message to home assistant log every 1 second if enabled
 
             if self._error != errors:
@@ -1283,7 +1293,8 @@ class HMSNotification:
     attr: int
     code: int
 
-    def __init__(self, attr: int = 0, code: int = 0):
+    def __init__(self, user_language: str, attr: int, code: int):
+        self._user_language = user_language
         self.attr = attr
         self.code = code
 
@@ -1300,11 +1311,17 @@ class HMSNotification:
         if self.attr > 0 and self.code > 0:
             return f'{int(self.attr / 0x10000):0>4X}_{self.attr & 0xFFFF:0>4X}_{int(self.code / 0x10000):0>4X}_{self.code & 0xFFFF:0>4X}' # 0300_0100_0001_0007
         return ""
+    
+    @property
+    def hms_error(self) -> str:
+        error_text = get_HMS_error_text(code=self.hms_code, language=self._user_language)
+        return error_text
 
     @property
     def wiki_url(self):
         if self.attr > 0 and self.code > 0:
-            return f"https://wiki.bambulab.com/en/x1/troubleshooting/hmscode/{get_generic_AMS_HMS_error_code(self.hms_code)}"
+            # Only English wiki content seems to exist
+            return f"https://wiki.bambulab.com/en/x1/troubleshooting/hmscode/{self.hms_code}"
         return ""
 
 

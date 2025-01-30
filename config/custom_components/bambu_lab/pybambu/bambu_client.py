@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import asyncio
-import queue
 import json
 import math
+import os
+import queue
 import re
 import socket
 import ssl
@@ -291,7 +292,7 @@ class BambuClient:
 
         self._access_code = config.get('access_code', '')
         self._auth_token = config.get('auth_token', '')
-        self._device_type = config.get('device_type', 'unknown')
+        self._device_type = config.get('device_type', 'unknown').upper()
         self._local_mqtt = config.get('local_mqtt', False)
         self._manual_refresh_mode = config.get('manual_refresh_mode', False)
         self._serial = config.get('serial', '')
@@ -305,13 +306,24 @@ class BambuClient:
 
         self._device = Device(self)
         self.bambu_cloud = BambuCloud(
-            config.get('region', ''),
-            config.get('email', ''),
-            config.get('username', ''),
-            config.get('auth_token', '')
+            region = config.get('region', ''),
+            email = config.get('email', ''),
+            username = config.get('username', ''),
+            auth_token = config.get('auth_token', '')
         )
+        self._loaded_slicer_settings = False
         self.slicer_settings = SlicerSettings(self)
+        language = config.get('user_language', 'pt')
+        if 'zh' in language:
+            language = 'zh-CN'
+        else:
+            language = language[:2]
+        self._user_language = language
 
+    @property
+    def user_language(self):
+        return self._user_language
+    
     @property
     def connected(self):
         """Return if connected to server"""
@@ -347,6 +359,17 @@ class BambuClient:
             self._stop_camera()
 
     def setup_tls(self):
+        # Some people got this error with this change so disabled for now:
+        # Exception. Type: <class 'ssl.SSLCertVerificationError'> Args: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: CA cert does not include key usage extension (_ssl.c:1020)
+        #
+        # script_path = os.path.abspath(__file__)
+        # directory_path = os.path.dirname(script_path)
+        # certfile = directory_path + "/bambu.cert"
+        # context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+        # context.verify_mode = ssl.CERT_REQUIRED
+        # context.load_verify_locations(cafile=certfile)
+        # context.check_hostname = not self._local_mqtt
+        # self.client.tls_set_context(context)
         self.client.tls_set(tls_version=ssl.PROTOCOL_TLS, cert_reqs=ssl.CERT_NONE)
         self.client.tls_insecure_set(True)
 
@@ -375,8 +398,6 @@ class BambuClient:
         self._mqtt.start()
 
     def subscribe_and_request_info(self):
-        LOGGER.debug("Loading slicer settings...")
-        self.slicer_settings.update()
         LOGGER.debug("Now subscribing...")
         self.subscribe()
         LOGGER.debug("On Connect: Getting version info")
@@ -445,6 +466,7 @@ class BambuClient:
     
     def _on_disconnect(self):
         LOGGER.debug("_on_disconnect: Lost connection to the printer")
+        self._loaded_slicer_settings = False
         self._connected = False
         self._device.info.set_online(False)
         if self._watchdog is not None:
@@ -464,6 +486,11 @@ class BambuClient:
     def on_message(self, client, userdata, message):
         """Return the payload when received"""
         try:
+            if not self._loaded_slicer_settings:
+                # Only update slicer settings once per successful connection to the printer.
+                self._loaded_slicer_settings = True
+                self.slicer_settings.update()
+
             # X1 mqtt payload is inconsistent. Adjust it for consistent logging.
             clean_msg = re.sub(r"\\n *", "", str(message.payload))
             if self._refreshed:
@@ -493,6 +520,7 @@ class BambuClient:
                 elif json_data.get("info") and json_data.get("info").get("command") == "get_version":
                     LOGGER.debug("Got Version Data")
                     self._device.info_update(data=json_data.get("info"))
+
         except Exception as e:
             LOGGER.error("An exception occurred processing a message:", exc_info=e)
 
@@ -524,8 +552,6 @@ class BambuClient:
             LOGGER.debug("Force Refresh: Request Push All")
             self._refreshed = True
             self.publish(PUSH_ALL)
-
-        self.slicer_settings.update()
 
     def get_device(self):
         """Return device"""

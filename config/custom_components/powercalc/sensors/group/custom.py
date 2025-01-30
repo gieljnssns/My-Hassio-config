@@ -65,6 +65,8 @@ from custom_components.powercalc.const import (
     CONF_EXCLUDE_ENTITIES,
     CONF_FORCE_CALCULATE_GROUP_ENERGY,
     CONF_GROUP_ENERGY_ENTITIES,
+    CONF_GROUP_ENERGY_START_AT_ZERO,
+    CONF_GROUP_MEMBER_DEVICES,
     CONF_GROUP_MEMBER_SENSORS,
     CONF_GROUP_POWER_ENTITIES,
     CONF_GROUP_TYPE,
@@ -87,7 +89,8 @@ from custom_components.powercalc.const import (
     UnitPrefix,
 )
 from custom_components.powercalc.device_binding import get_device_info
-from custom_components.powercalc.group_include.include import resolve_include_entities
+from custom_components.powercalc.group_include.filter import AreaFilter, CompositeFilter, DeviceFilter, EntityFilter, FilterOperator
+from custom_components.powercalc.group_include.include import find_entities
 from custom_components.powercalc.sensors.abstract import (
     BaseEntity,
     generate_energy_sensor_entity_id,
@@ -229,7 +232,7 @@ def filter_entity_list_by_class(
     ]
 
 
-async def resolve_entity_ids_recursively(
+async def resolve_entity_ids_recursively(  # noqa: C901
     hass: HomeAssistant,
     entry: ConfigEntry,
     device_class: SensorDeviceClass,
@@ -262,17 +265,22 @@ async def resolve_entity_ids_recursively(
         conf_key = CONF_GROUP_POWER_ENTITIES if device_class == SensorDeviceClass.POWER else CONF_GROUP_ENERGY_ENTITIES
         resolved_ids.update(entry.data.get(conf_key) or [])
 
-    async def add_area_entities() -> None:
+    async def add_device_and_area_entities() -> None:
         """Add entities from the defined areas."""
-        if CONF_AREA not in entry.data:
+        if CONF_AREA not in entry.data and CONF_GROUP_MEMBER_DEVICES not in entry.data:
             return
 
-        resolved_area_entities, _ = await resolve_include_entities(
+        filters: list[EntityFilter] = []
+        if CONF_AREA in entry.data:
+            filters.append(AreaFilter(hass, entry.data[CONF_AREA]))
+        if CONF_GROUP_MEMBER_DEVICES in entry.data:
+            filters.append(DeviceFilter(set(entry.data[CONF_GROUP_MEMBER_DEVICES])))
+        entity_filter = CompositeFilter(filters, FilterOperator.OR)
+
+        resolved_area_entities, _ = await find_entities(
             hass,
-            {
-                CONF_AREA: entry.data[CONF_AREA],
-                CONF_INCLUDE_NON_POWERCALC_SENSORS: entry.data.get(CONF_INCLUDE_NON_POWERCALC_SENSORS),
-            },
+            entity_filter,
+            bool(entry.data.get(CONF_INCLUDE_NON_POWERCALC_SENSORS)),
         )
         area_entities = [
             entity.entity_id
@@ -298,7 +306,7 @@ async def resolve_entity_ids_recursively(
     # Process the main logic
     add_member_entry_ids()
     add_specified_sensors()
-    await add_area_entities()
+    await add_device_and_area_entities()
     await add_subgroup_entities()
 
     return resolved_ids
@@ -331,7 +339,6 @@ def create_grouped_power_sensor(
         entities=power_sensor_ids,
         unique_id=unique_id,
         sensor_config=sensor_config,
-        rounding_digits=int(sensor_config.get(CONF_POWER_SENSOR_PRECISION) or DEFAULT_POWER_SENSOR_PRECISION),
         group_type=group_type,
         entity_id=entity_id,
         device_id=sensor_config.get(CONF_DEVICE),
@@ -383,7 +390,6 @@ def create_grouped_energy_sensor(
         entities=energy_sensor_ids,
         unique_id=energy_unique_id,
         sensor_config=sensor_config,
-        rounding_digits=int(sensor_config.get(CONF_ENERGY_SENSOR_PRECISION) or DEFAULT_ENERGY_SENSOR_PRECISION),
         group_type=group_type,
         entity_id=entity_id,
         device_id=sensor_config.get(CONF_DEVICE),
@@ -407,7 +413,6 @@ class GroupedSensor(BaseEntity, RestoreSensor, SensorEntity):
         entities: set[str],
         entity_id: str,
         sensor_config: dict[str, Any],
-        rounding_digits: int,
         group_type: GroupType,
         unique_id: str | None = None,
         device_id: str | None = None,
@@ -416,7 +421,10 @@ class GroupedSensor(BaseEntity, RestoreSensor, SensorEntity):
         # Remove own entity from entities, when it happens to be there. To prevent recursion
         entities.discard(entity_id)
         self._entities = entities
-        self._rounding_digits = rounding_digits
+        if isinstance(self, GroupedEnergySensor):
+            self._rounding_digits = int(sensor_config.get(CONF_ENERGY_SENSOR_PRECISION, DEFAULT_ENERGY_SENSOR_PRECISION))
+        else:
+            self._rounding_digits = int(sensor_config.get(CONF_POWER_SENSOR_PRECISION, DEFAULT_POWER_SENSOR_PRECISION))
         self._sensor_config = sensor_config
         if unique_id:
             self._attr_unique_id = unique_id
@@ -480,7 +488,7 @@ class GroupedSensor(BaseEntity, RestoreSensor, SensorEntity):
         domain = self._sensor_config.get(CONF_DOMAIN)
         if domain == "all":
             entity_registry = er.async_get(self.hass)
-            entities = [entity.entity_id for entity in entity_registry.entities.values() if entity.device_class == self.device_class]  # type: ignore
+            entities = [entity.entity_id for entity in entity_registry.entities.values() if entity.device_class == self.device_class]
         else:
             entities = self.hass.data[DOMAIN].get(DATA_DOMAIN_ENTITIES).get(domain, [])
             entities = filter_entity_list_by_class(
@@ -564,6 +572,13 @@ class GroupedSensor(BaseEntity, RestoreSensor, SensorEntity):
         if write_state:
             self.async_write_ha_state()
 
+    @property
+    def entities(self) -> set[str]:
+        return self._entities
+
+    def get_group_entities(self) -> dict[str, set[str]]:
+        return {ATTR_ENTITIES: self._entities}
+
     @abstractmethod
     def calculate_initial_state(
         self,
@@ -625,7 +640,6 @@ class GroupedEnergySensor(GroupedSensor, EnergySensor):
         entities: set[str],
         entity_id: str,
         sensor_config: dict[str, Any],
-        rounding_digits: int,
         group_type: GroupType,
         unique_id: str | None = None,
         device_id: str | None = None,
@@ -636,7 +650,6 @@ class GroupedEnergySensor(GroupedSensor, EnergySensor):
             entities,
             entity_id,
             sensor_config,
-            rounding_digits,
             group_type,
             unique_id,
             device_id,
@@ -728,7 +741,9 @@ class GroupedEnergySensor(GroupedSensor, EnergySensor):
             state,
         )
 
-        delta = cur_state_value - prev_state_value
+        start_at_zero = bool(self._sensor_config.get(CONF_GROUP_ENERGY_START_AT_ZERO, False))
+        delta = Decimal(0) if not prev_state and start_at_zero else cur_state_value - prev_state_value
+
         if _LOGGER.isEnabledFor(logging.DEBUG):  # pragma: no cover
             rounded_delta = round(delta, self._rounding_digits)
             rounded_prev = round(prev_state_value, self._rounding_digits)

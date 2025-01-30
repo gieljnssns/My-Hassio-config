@@ -74,11 +74,13 @@ class InfoConv(BaseConv):
             'updater': updater or 'none',
             'updated_at': str(device.data.get('updated', '')),
         }
+        customizes = {**device.customizes}
+        customizes.pop('extend_miot_specs', None)
         payload.update({
             **infos,
             **device.props,
             'converters': [c.full_name for c in device.converters],
-            'customizes': device.customizes,
+            'customizes': customizes,
             **infos,
         })
         if device.available:
@@ -253,6 +255,24 @@ class MiotHsColorConv(MiotPropConv):
         super().encode(device, payload, num)
 
 @dataclass
+class MiotFanConv(MiotServiceConv):
+    domain: str = 'fan'
+
+    def __post_init__(self):
+        if not self.main_props:
+            self.main_props = ['on', 'fan_level']
+        super().__post_init__()
+
+@dataclass
+class MiotCoverConv(MiotServiceConv):
+    domain: str = 'cover'
+
+    def __post_init__(self):
+        if not self.main_props:
+            self.main_props = ['motor_control']
+        super().__post_init__()
+
+@dataclass
 class PercentagePropConv(MiotPropConv):
     ranged = None
 
@@ -263,12 +283,16 @@ class PercentagePropConv(MiotPropConv):
 
     def decode(self, device: 'Device', payload: dict, value: int):
         if self.ranged:
-            value = int(percentage.ranged_value_to_percentage(self.ranged, value))
+            value = int(percentage.scale_ranged_value_to_int_range(self.ranged, (0, 100), value))
         super().decode(device, payload, value)
 
     def encode(self, device: 'Device', payload: dict, value: int):
         if self.ranged:
-            value = int(percentage.percentage_to_ranged_value(self.ranged, value))
+            value = int(percentage.scale_to_ranged_value((0, 100), self.ranged, value))
+            if value < self.ranged[0]:
+                value = self.ranged[0]
+            if value > self.ranged[1]:
+                value = self.ranged[1]
         super().encode(device, payload, value)
 
 class MiotTargetPositionConv(PercentagePropConv):
