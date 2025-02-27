@@ -252,7 +252,6 @@ class BambuCloud:
 
         if status_code == 200:
             LOGGER.debug("Authentication successful.")
-            LOGGER.debug(f"Response = '{response.json()}'")
         elif status_code == 400:
             LOGGER.debug(f"Received response: {response.json()}")           
             if response.json()['code'] == 1:
@@ -310,7 +309,7 @@ class BambuCloud:
                             LOGGER.debug("No user_id entry")
                         else:
                             username = f"u_{project['user_id']}"
-                            LOGGER.debug(f"Found user_id of {username}")
+                            LOGGER.debug(f"Found user_id of {username[:7]}xxxxx")
         else:
             LOGGER.debug("Authentication token looks to be a JWT")
             try:
@@ -324,7 +323,7 @@ class BambuCloud:
                 LOGGER.debug("Unable to decode authToken to json to retrieve username.")
 
         if username is None:
-            LOGGER.debug(f"Unable to decode authToken to retrieve username. AuthToken = {self._auth_token}")
+            LOGGER.debug(f"Unable to decode authToken to retrieve username. AuthToken = {self._auth_token[:10]}xxxxx")
 
         return username
     
@@ -539,7 +538,7 @@ class BambuCloud:
     # "projects": [
     #     {
     #     "project_id": "164995388",
-    #     "user_id": "1688388450",
+    #     "user_id": "16xxxxx50",
     #     "model_id": "US48e2103d939bf8",
     #     "status": "ACTIVE",
     #     "name": "Alcohol_Marker_Storage_for_Copic,_Ohuhu_and_the_like",

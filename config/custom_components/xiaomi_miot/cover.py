@@ -56,9 +56,13 @@ class CoverEntity(XEntity, BaseEntity):
     _close_texts = ['close', 'down']
     _closed_position = 0
     _deviated_position = 0
+    _target_position_props = None
+    _cover_position_mapping = None
     _target2current_position = None
 
     def on_init(self):
+        self._attr_available = self.device.available
+
         models = f'{self.device.model} {self.device.info.urn}'
         if 'curtain' in models:
             self._attr_device_class = CoverDeviceClass.CURTAIN
@@ -71,6 +75,8 @@ class CoverEntity(XEntity, BaseEntity):
         self._close_texts = self.custom_config_list('close_texts', self._close_texts)
         if self._motor_reverse:
             self._open_texts, self._close_texts = self._close_texts, self._open_texts
+        self._target_position_props = self.custom_config_list('target_position_props') or ['target_position']
+        self._cover_position_mapping = self.custom_config_json('cover_position_mapping') or {}
 
         for conv in self.device.converters:
             prop = getattr(conv, 'prop', None)
@@ -84,14 +90,18 @@ class CoverEntity(XEntity, BaseEntity):
                 self._attr_supported_features |= CoverEntityFeature.CLOSE
                 if prop.list_first('Stop', 'Pause') != None:
                     self._attr_supported_features |= CoverEntityFeature.STOP
-            elif prop.value_range and prop.in_list(['current_position']):
-                self._conv_current_position = conv
-                self._current_range = (prop.range_min(), prop.range_max())
+            elif prop.in_list(['current_position']):
+                if prop.value_range:
+                    self._conv_current_position = conv
+                    self._current_range = (prop.range_min(), prop.range_max())
+                elif prop.value_list and self._cover_position_mapping:
+                    self._conv_current_position = conv
+                    self._current_range = (0, 100)
             elif prop.value_range and isinstance(conv, MiotTargetPositionConv):
                 self._conv_target_position = conv
                 self._target_range = conv.ranged
                 self._attr_supported_features |= CoverEntityFeature.SET_POSITION
-            elif prop.value_range and prop.in_list(['target_position']):
+            elif prop.value_range and prop.in_list(self._target_position_props):
                 self._conv_target_position = conv
                 self._target_range = (prop.range_min(), prop.range_max())
                 self._attr_supported_features |= CoverEntityFeature.SET_POSITION
@@ -117,13 +127,18 @@ class CoverEntity(XEntity, BaseEntity):
         prop_status = getattr(self._conv_status, 'prop', None) if self._conv_status else None
         if prop_status:
             val = self._conv_status.value_from_dict(data)
+            self._attr_is_closed  = val in prop_status.list_search('Closed')
             self._attr_is_opening = val in prop_status.list_search('Opening', 'Rising')
             self._attr_is_closing = val in prop_status.list_search('Closing', 'Falling')
-            self._attr_is_closed  = val in prop_status.list_search('Closed')
+            if self._position_reverse:
+                self._attr_is_opening = not self._attr_is_opening
+                self._attr_is_closing = not self._attr_is_closing
         if self._conv_current_position:
             val = self._conv_current_position.value_from_dict(data)
             if val is not None:
                 val = int(val)
+                if self._cover_position_mapping:
+                    val = self._cover_position_mapping.get(val, val)
                 if self._position_reverse:
                     val = self._current_range[1] - val
                 self._attr_current_cover_position = val

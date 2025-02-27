@@ -254,10 +254,13 @@ class MiotSpec(MiotSpecInstance):
         return lst
 
     def generate_entity_id(self, entity, suffix=None, domain=None):
+        return self.generate_entity_id_by_mac(entity.unique_mac, suffix, domain)
+
+    def generate_entity_id_by_mac(self, mac, suffix=None, domain=None):
         mod = f'{self.type}::::'.split(':')[5]
         if not mod:
             return None
-        mac = re.sub(r'[\W_]+', '', entity.unique_mac)
+        mac = re.sub(r'[\W_]+', '', mac)
         eid = f'{mod}_{mac[-4:]}'
         if suffix:
             eid = f'{eid}_{suffix}'
@@ -1127,6 +1130,7 @@ class MiotResults:
     updater: str = None
     updated = None
     errors = None
+    has_error = None
 
     def __init__(self, results=None, mapping=None):
         self.mapping = mapping or {}
@@ -1143,6 +1147,8 @@ class MiotResults:
                 continue
             r = MiotResult(v)
             self.results.append(r)
+            if not self.has_error and not r.is_success:
+                self.has_error = r
         self.updated = now()
 
     @property
@@ -1188,6 +1194,9 @@ class MiotResults:
     def __str__(self):
         return f'{self._results}'
 
+    def __repr__(self):
+        return f'{self._results}'
+
 
 class MiotResult:
     def __init__(self, result: dict, **kwargs):
@@ -1218,4 +1227,7 @@ class MiotResult:
         return self.result
 
     def __str__(self):
+        return f'{self.result}'
+
+    def __repr__(self):
         return f'{self.result}'

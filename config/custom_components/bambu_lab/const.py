@@ -1,11 +1,15 @@
 import logging
 from datetime import timedelta
+from enum import (
+    IntEnum,
+)
 
 from homeassistant.const import Platform
 
 # Integration domain
 DOMAIN = "bambu_lab"
 BRAND = "Bambu Lab"
+URL_BASE = "/bambu_lab"
 
 LOGGER = logging.getLogger(__package__)
 LOGGERFORHA = logging.getLogger(f"{__package__}_HA")
@@ -20,5 +24,31 @@ PLATFORMS = (
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
-    Platform.SWITCH
+    Platform.SWITCH,
+    Platform.UPDATE,
 )
+
+BAMBU_LAB_CARDS = [
+    {
+        'name': 'Bambu Lab Cards',
+        'filename': 'ha-bambulab-cards.js',
+        'version': '0.3.20'
+    }
+]
+
+class Options(IntEnum):
+    CAMERA = 1,
+    IMAGECAMERA = 2,
+    FTP = 3,
+    TIMELAPSE = 4,
+    MANUALREFRESH = 5,
+    FIRMWAREUPDATE = 6,
+
+OPTION_NAME = {
+    Options.CAMERA:         "enable_camera",
+    Options.IMAGECAMERA:    "camera_as_image_sensor",
+    Options.FIRMWAREUPDATE: "enable_firmware_update",
+    Options.FTP:            "enable_ftp",
+    Options.TIMELAPSE:      "enable_timelapse",
+    Options.MANUALREFRESH:  "manual_refresh_mode"
+}

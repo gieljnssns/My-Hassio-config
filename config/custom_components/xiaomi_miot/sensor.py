@@ -25,7 +25,6 @@ from . import (
     MiotEntity,
     BaseSubEntity,
     MiCoordinatorEntity,
-    MiotPropertySubEntity,
     MiotCloud,
     async_setup_config_entry,
     bind_services_to_entries,
@@ -33,7 +32,6 @@ from . import (
 from .core.miot_spec import (
     MiotSpec,
     MiotService,
-    MiotProperty,
 )
 from .core.utils import local_zone, get_translation
 
@@ -587,7 +585,7 @@ class MihomeSceneHistorySensor(MiCoordinatorEntity, BaseEntity, RestoreEntity):
         messages = [self.trim_message(msg) for msg in (res.get('result') or {}).get('history') or []]
         if not messages:
             if not self._has_none_message:
-                _LOGGER.warning('Get xiaomi scene history for %s %d failed: %s', self.cloud.user_id, self.home_id, res)
+                _LOGGER.info('Get xiaomi scene history for %s %d failed: %s', self.cloud.user_id, self.home_id, res)
 
             self._has_none_message = True
             return {}

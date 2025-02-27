@@ -4,7 +4,9 @@ from .const import (
     BRAND,
     DOMAIN,
     LOGGER,
-    LOGGERFORHA
+    LOGGERFORHA,
+    Options,
+    OPTION_NAME,
 )
 import asyncio
 from typing import Any
@@ -21,7 +23,25 @@ from homeassistant.const import (
 )
 
 from .pybambu import BambuClient
-from .pybambu.const import Features
+from .pybambu.const import (
+    Features,
+    PRINT_PROJECT_FILE_BUS_EVENT,
+    SEND_GCODE_BUS_EVENT,
+    SKIP_OBJECTS_BUS_EVENT,
+    MOVE_AXIS_BUS_EVENT,
+    EXTRUDE_RETRACT_BUS_EVENT,
+    LOAD_FILAMENT_BUS_EVENT,
+    UNLOAD_FILAMENT_BUS_EVENT,
+)
+from .pybambu.commands import (
+    PRINT_PROJECT_FILE_TEMPLATE,
+    SEND_GCODE_TEMPLATE,
+    SKIP_OBJECTS_TEMPLATE,
+    MOVE_AXIS_GCODE,
+    HOME_GCODE,
+    EXTRUDER_GCODE,
+    SWITCH_AMS_TEMPLATE,
+)
 
 class BambuDataUpdateCoordinator(DataUpdateCoordinator):
     hass: HomeAssistant
@@ -40,6 +60,7 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
         self.client = BambuClient(config)
             
         self._updatedDevice = False
+        self._shutdown = False
         self.data = self.get_model()
         self._eventloop = asyncio.get_running_loop()
         # Pass LOGGERFORHA logger into HA as otherwise it generates a debug output line every single time we tell it we have an update
@@ -51,6 +72,13 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        self.hass.bus.async_listen(PRINT_PROJECT_FILE_BUS_EVENT, self._service_call_print_project_file)
+        self.hass.bus.async_listen(SEND_GCODE_BUS_EVENT, self._service_call_send_gcode)
+        self.hass.bus.async_listen(SKIP_OBJECTS_BUS_EVENT, self._service_call_skip_objects)
+        self.hass.bus.async_listen(MOVE_AXIS_BUS_EVENT, self._service_call_move_axis)
+        self.hass.bus.async_listen(EXTRUDE_RETRACT_BUS_EVENT, self._service_call_extrude_retract)
+        self.hass.bus.async_listen(LOAD_FILAMENT_BUS_EVENT, self._service_call_load_filament)
+        self.hass.bus.async_listen(UNLOAD_FILAMENT_BUS_EVENT, self._service_call_unload_filament)
 
     @callback
     def _async_shutdown(self, event: Event) -> None:
@@ -59,12 +87,17 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
         self.shutdown()
 
     def event_handler(self, event: str):
+        if self._shutdown:
+            # Handle race conditions when the integration is being deleted by re-registering and existing device.
+            return
+        
         # The callback comes in on the MQTT thread. Need to jump to the HA main thread to guarantee thread safety.
         self._eventloop.call_soon_threadsafe(self.event_handler_internal, event)
 
     def event_handler_internal(self, event: str):
-        # if event != "event_printer_chamber_image_update":
-        #     LOGGER.debug(f"EVENT: {event}")
+        if self._shutdown:
+            # Handle race conditions when the integration is being deleted by re-registering and existing device.
+            return
 
         if event == "event_printer_info_update":
             self._update_device_info()
@@ -96,7 +129,7 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
                     options=options)
 
         elif event == "event_printer_chamber_image_update":
-            if self.camera_as_image_sensor:
+            if self.get_option_enabled(Options.IMAGECAMERA):
                 self._update_data()
 
         elif event == "event_printer_cover_image_update":
@@ -126,10 +159,190 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
 
     def shutdown(self) -> None:
         """ Halt the MQTT listener thread """
+        self._shutdown = True
         self.client.disconnect()
 
     async def _publish(self, msg):
         return self.client.publish(msg)
+
+    def _service_call_is_for_me(self, data: dict):
+        dev_reg = device_registry.async_get(self._hass)
+        hadevice = dev_reg.async_get_device(identifiers={(DOMAIN, self.get_model().info.serial)})
+        device_id = data.get('device_id', [])
+        if len(device_id) != 1:
+            LOGGER.error("Invalid skip objects data payload: {data}")
+            return False
+
+        return (device_id[0] == hadevice.id)
+
+    def _service_call_skip_objects(self, event: Event):
+        data = event.data
+        if not self._service_call_is_for_me(data):
+            return
+        
+        LOGGER.debug(f"_service_call_skip_objects: {data}")
+        command = SKIP_OBJECTS_TEMPLATE
+        object_ids = data.get("objects")
+        command["print"]["obj_list"] = [int(x) for x in object_ids.split(',')]
+        self.client.publish(command)
+
+    def _service_call_send_gcode(self, event: Event):
+        data = event.data
+        if not self._service_call_is_for_me(data):
+            return
+        
+        LOGGER.debug(f"_service_call_send_gcode: {data}")
+        command = SEND_GCODE_TEMPLATE
+        command['print']['param'] = f"{data.get('command')}\n"
+        self.client.publish(command)
+
+    def _service_call_move_axis(self, event: Event):
+        data = event.data
+        if not self._service_call_is_for_me(data):
+            return
+
+        LOGGER.debug(f"_service_call_move_axis: {data}")
+
+        axis = data.get('axis').upper()
+        distance = int(data.get('distance') or 10)
+
+        if axis not in ['X', 'Y', 'Z', 'HOME'] or abs(distance) > 100:
+            LOGGER.error(f"Invalid axis '{axis}' or distance out of range '{distance}'")
+            return False
+        
+        command = SEND_GCODE_TEMPLATE
+        gcode = HOME_GCODE if axis == 'HOME' else MOVE_AXIS_GCODE
+        speed = 900 if axis == 'Z' else 3000
+        if axis != 'HOME':
+            if axis in ['Y', 'Z'] and not self.get_model().is_core_xy:
+                LOGGER.debug(f"Non-core XY, reversing '{axis}' axis distance")
+                distance = -1 * distance
+            gcode = gcode.format(axis=axis, distance=distance, speed=speed)
+        
+        command['print']['param'] = gcode
+        self.client.publish(command)
+
+    def _service_call_extrude_retract(self, event: Event):
+        data = event.data
+        if not self._service_call_is_for_me(data):
+            return
+
+        LOGGER.debug(f"_service_call_extrude_retract: {data}")
+
+        move = data.get('type').upper()
+        force = data.get('force')
+
+        if move not in ['EXTRUDE', 'RETRACT']:
+            LOGGER.error(f"Invalid extrusion move '{move}'")
+            return False
+
+        nozzle_temp = self.get_model().temperature.nozzle_temp
+        if force is not True and nozzle_temp < 170:
+            LOGGER.error(f"Nozzle temperature too low to perform extrusion: {nozzle_temp}ºC")
+            return False
+
+        command = SEND_GCODE_TEMPLATE
+        gcode = EXTRUDER_GCODE
+        distance = (1 if move == 'EXTRUDE' else -1) * 10
+
+        gcode = gcode.format(distance=distance)
+
+        command['print']['param'] = gcode
+        self.client.publish(command)
+
+    def _service_call_load_filament(self, event: Event):
+        data = event.data
+        if not self._service_call_is_for_me(data):
+            return
+
+        LOGGER.debug(f"_service_call_load_filament: {data}")
+
+        # Printers with older firmware require a different method to change
+        # filament. For now, only support newer firmware.
+        if not self.get_model().supports_feature(Features.AMS_SWITCH_COMMAND):
+            LOGGER.error(f"Loading filament is not available for this printer's firmware version, please update it")
+            return False
+
+        tray = int(data.get('tray', 1))
+        temperature = int(data.get('temperature', 0))
+
+        if data.get('external_spool') is True:
+            tray = 254
+            # Unless a target temperature override is set, try and find the
+            # midway temperature of the filament set in the ext spool
+            ext_spool = self.get_model().external_spool
+            if data.get('temperature') is None and not ext_spool.empty:
+                temperature = (int(ext_spool.nozzle_temp_min) + int(ext_spool.nozzle_temp_max)) / 2
+        elif not self.get_model().supports_feature(Features.AMS):
+            LOGGER.error(f"AMS not available")
+            return False
+        elif data.get('tray') is not None and tray >= 1 and tray <= 16:
+            # Zero-index the tray ID and find the AMS index
+            tray = tray -1
+            ams_idx = (tray // 4)
+            
+            # Check the AMS exists and has filament
+            if not self.get_model().ams.data[ams_idx] or self.get_model().ams.data[ams_idx].tray[tray].empty:
+                LOGGER.error(f"AMS tray '{data.get('tray')}' is empty")
+                return False
+
+            # Unless a target temperature override is set, try and find the
+            # midway temperature of the filament set in the ext spool
+            if data.get('temperature') is None:
+                ams_tray = self.get_model().ams.data[ams_idx].tray[tray]
+                temperature = (int(ams_tray.nozzle_temp_min) + int(ams_tray.nozzle_temp_max)) // 2
+        else:
+            LOGGER.error(f"An AMS tray or external spool is required")
+            return False
+
+        command = SWITCH_AMS_TEMPLATE
+        command['print']['target'] = tray
+        command['print']['tar_temp'] = temperature
+        self.client.publish(command)
+
+    def _service_call_unload_filament(self, event: Event):
+        data = event.data
+        if not self._service_call_is_for_me(data):
+            return
+
+        LOGGER.debug(f"_service_call_unload_filament: {data}")
+
+        if not self.get_model().supports_feature(Features.AMS_SWITCH_COMMAND):
+            LOGGER.error(f"Loading filament is not available for this printer's firmware version, please update it")
+            return
+        
+        command = SWITCH_AMS_TEMPLATE
+        command['print']['target'] = 255
+        self.client.publish(command)
+
+    def _service_call_print_project_file(self, event: Event):
+        data = event.data
+        if not self._service_call_is_for_me(data):
+            return
+
+        LOGGER.debug(f"_service_call_print_project_file: {data}")
+        command = PRINT_PROJECT_FILE_TEMPLATE
+        file = data.get("filepath")
+        plate = data.get("plate")
+        timelapse = data.get("timelapse")
+        bed_leveling = data.get("bed_leveling")
+        flow_cali = data.get("flow_cali")
+        vibration_cali = data.get("vibration_cali")
+        layer_inspect = data.get("layer_inspect")
+        use_ams = data.get("use_ams")
+        ams_mapping = data.get("ams_mapping")
+
+        command["print"]["param"] = f"Metadata/plate_{plate}.gcode"
+        command["print"]["url"] = f"ftp://{file}"
+        command["print"]["timelapse"] = timelapse
+        command["print"]["bed_leveling"] = bed_leveling
+        command["print"]["flow_cali"] = flow_cali
+        command["print"]["vibration_cali"] = vibration_cali
+        command["print"]["layer_inspect"] = layer_inspect
+        command["print"]["use_ams"] = use_ams
+        command["print"]["ams_mapping"] = [int(x) for x in ams_mapping.split(',')]
+
+        self.client.publish(command)
 
     async def _async_update_data(self):
         LOGGER.debug(f"_async_update_data() called")
@@ -270,7 +483,6 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
         }
         LOGGER.debug(f"BUS EVENT: {event}: {event_data}")
         self._hass.bus.async_fire(f"{DOMAIN}_event", event_data)
-        
 
     def get_model(self):
         return self.client.get_device()
@@ -319,46 +531,42 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
             sw_version=""
         )
 
-    async def set_manual_refresh_mode(self, manual_refresh_mode):
-        await self.client.set_manual_refresh_mode(manual_refresh_mode)
+    def get_option_enabled(self, option: Options):
         options = dict(self.config_entry.options)
-        options['manual_refresh_mode'] = manual_refresh_mode
+
+        default = False
+        match option:
+            case Options.CAMERA:
+                default = True
+            case Options.FTP:
+                default = options.get('local_mqtt', False)
+
+        return options.get(OPTION_NAME[option], default)
+        
+    async def set_option_enabled(self, option: Options, enable: bool):
+        LOGGER.debug(f"Setting {OPTION_NAME[option]} to {enable}")
+        options = dict(self.config_entry.options)
+        options[OPTION_NAME[option]] = enable
         self._hass.config_entries.async_update_entry(
             entry=self.config_entry,
             title=self.get_model().info.serial,
             data=self.config_entry.data,
             options=options)
+        
+        if option == Options.MANUALREFRESH:
+            await self.client.set_manual_refresh_mode(enable)
+        
+        force_reload = False
+        match option:
+            case Options.CAMERA:
+                force_reload = True
+            case Options.IMAGECAMERA:
+                force_reload = True
+            case Options.FTP:
+                force_reload = True
+            case Options.TIMELAPSE:
+                force_reload = True
 
-    @property
-    def camera_enabled(self):
-        options = dict(self.config_entry.options)
-        return options.get('enable_camera', True)
-
-    async def set_camera_enabled(self, enable):
-        LOGGER.debug(f"Setting camera enabled to {enable}")
-        options = dict(self.config_entry.options)
-        options['enable_camera'] = enable
-        self._hass.config_entries.async_update_entry(
-            entry=self.config_entry,
-            title=self.get_model().info.serial,
-            data=self.config_entry.data,
-            options=options)
-        # Force reload of sensors.
-        return await self.hass.config_entries.async_reload(self._entry.entry_id)
-
-    @property
-    def camera_as_image_sensor(self):
-        options = dict(self.config_entry.options)
-        return options.get('camera_as_image_sensor', False)
-
-    async def set_camera_as_image_sensor(self, enable):
-        LOGGER.debug(f"Setting camera_as_image_sensor to {enable}")
-        options = dict(self.config_entry.options)
-        options['camera_as_image_sensor'] = enable
-        self._hass.config_entries.async_update_entry(
-            entry=self.config_entry,
-            title=self.get_model().info.serial,
-            data=self.config_entry.data,
-            options=options)
-        # Force reload of sensors.
-        return await self.hass.config_entries.async_reload(self._entry.entry_id)
+        if force_reload:
+            # Force reload of sensors.
+            return await self.hass.config_entries.async_reload(self._entry.entry_id)

@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_MODEL, CONF_USERNAME, EntityCategory
 from homeassistant.util import dt
 from homeassistant.components import persistent_notification
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.helpers.device_registry as dr
 
 from .const import (
@@ -166,6 +166,7 @@ class Device(CustomConfigHelper):
     _exclude_miot_services = None
     _exclude_miot_properties = None
     _unreadable_properties = None
+    _unsub_purge = None
 
     def __init__(self, info: DeviceInfo, entry: HassEntry):
         self.data = {}
@@ -206,12 +207,19 @@ class Device(CustomConfigHelper):
         if not self.coordinators:
             await self.init_coordinators()
 
+        if not self._unsub_purge:
+            self._unsub_purge = async_track_time_interval(self.hass, self.async_purge_entities, timedelta(hours=12))
+
     async def async_unload(self):
         for coo in self.coordinators:
             await coo.async_shutdown()
 
         self.spec = None
         self.hass.data[DOMAIN].setdefault('miot_specs', {}).pop(self.model, None)
+
+        if self._unsub_purge:
+            self._unsub_purge()
+            self._unsub_purge = None
 
     @cached_property
     def did(self):
@@ -361,6 +369,15 @@ class Device(CustomConfigHelper):
             return
         self.converters.append(conv)
 
+    def add_converter_by_property(self, prop: MiotProperty, domain=None, option=None, cls=None, **kwargs):
+        if not cls:
+            cls = MiotPropConv
+        conv = cls(prop.full_name, domain=domain, prop=prop, **kwargs)
+        if option:
+            conv.with_option(**option)
+        self.add_converter(conv)
+        return conv
+
     def find_converter(self, full_name):
         for c in self.converters:
             if c.full_name == full_name:
@@ -374,7 +391,8 @@ class Device(CustomConfigHelper):
         if not self.spec:
             return
 
-        for cfg in GLOBAL_CONVERTERS:
+        appends = self.custom_config_list('append_converters') or []
+        for cfg in [*GLOBAL_CONVERTERS, *appends]:
             cls = cfg.get('class')
             kwargs = cfg.get('kwargs', {})
             if services := cfg.get('services'):
@@ -403,7 +421,7 @@ class Device(CustomConfigHelper):
                             d = pc.get('domain', None)
                             ac = c(attr, domain=d, prop=prop, desc=pc.get('desc'))
                             self.add_converter(ac)
-                            if conv and not d:
+                            if conv:
                                 conv.attrs.add(ac.full_name)
 
         for d in [
@@ -498,7 +516,6 @@ class Device(CustomConfigHelper):
         self.coordinators.extend(lst)
         for coo in lst:
             await coo.async_config_entry_first_refresh()
-        async_call_later(self.hass, 10, self.update_all_status)
 
     async def init_miot_coordinators(self, interval=60):
         lst = []
@@ -567,8 +584,11 @@ class Device(CustomConfigHelper):
             await coo.async_request_refresh()
 
     async def update_all_status(self, _=None):
+        all = []
         for coo in self.coordinators:
             await coo.async_request_refresh()
+            all.append(coo.name)
+        self.log.info('Update all coordinators: %s', all)
 
     def add_entities(self, domain):
         for conv in self.converters:
@@ -592,6 +612,7 @@ class Device(CustomConfigHelper):
 
         if domain == 'button':
             self.dispatch_info()
+            async_call_later(self.hass, 5, self.update_all_status)
 
     def add_entity(self, entity: 'BasicEntity', unique=None):
         if unique == None:
@@ -675,12 +696,12 @@ class Device(CustomConfigHelper):
                 result = await self.update_main_status()
 
             if method == 'set_properties':
+                result = []
                 params = data.get('params', [])
                 cloud_params = []
                 if not self._local_state or self.cloud_only:
                     cloud_params = params
                 elif self.miio2miot:
-                    result = []
                     for param in params:
                         siid = param['siid']
                         piid = param['piid']
@@ -693,6 +714,8 @@ class Device(CustomConfigHelper):
                     result = await self.local.async_send(method, params)
                 if self.cloud and cloud_params:
                     result = await self.cloud.async_set_props(cloud_params)
+                if err := MiotResults(result).has_error:
+                    self.log.warning('Device write error: %s', [payload, err])
 
             if method == 'action':
                 param = data.get('param', {})
@@ -766,6 +789,8 @@ class Device(CustomConfigHelper):
         if not (pid := self.info.parent_id):
             return None
         info = await self.entry.get_cloud_device(pid)
+        if not info:
+            return None
         return await self.entry.new_device(info)
 
     def miot_mapping(self):
@@ -859,10 +884,12 @@ class Device(CustomConfigHelper):
                 log = self.log.error
                 if auto_cloud:
                     use_cloud = self.cloud
-                    log = self.log.warning if self._local_state else self.log.info
+                    log = self.log.warning
                 else:
                     self.miot_results.errors = exc
                     self.available = False
+                if self._local_state is False:
+                    log = self.log.info
                 self._local_state = False
                 props_count = len(mapping)
                 log(
@@ -951,6 +978,16 @@ class Device(CustomConfigHelper):
                 notification_id,
             )
         self.data['offline_times'] = offline_times
+
+    async def async_purge_entities(self, _now):
+        if not self.spec:
+            return
+        glob = self.spec.generate_entity_id_by_mac(self.info.unique_id, 'info', 'button')
+        await self.hass.services.async_call('recorder', 'purge_entities', {
+            'keep_days': 1,
+            'entity_globs': [glob],
+        })
+        self.log.info('Purge entities: %s', glob)
 
     async def async_get_properties(self, mapping, update_entity=True, throw=False, **kwargs):
         if not self.spec:

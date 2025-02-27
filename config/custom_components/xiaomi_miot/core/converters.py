@@ -75,6 +75,7 @@ class InfoConv(BaseConv):
             'updated_at': str(device.data.get('updated', '')),
         }
         customizes = {**device.customizes}
+        customizes.pop('append_converters', None)
         customizes.pop('extend_miot_specs', None)
         payload.update({
             **infos,
@@ -261,6 +262,15 @@ class MiotFanConv(MiotServiceConv):
     def __post_init__(self):
         if not self.main_props:
             self.main_props = ['on', 'fan_level']
+        super().__post_init__()
+
+@dataclass
+class MiotClimateConv(MiotServiceConv):
+    domain: str = 'climate'
+
+    def __post_init__(self):
+        if not self.main_props:
+            self.main_props = ['mode', 'target_temperature']
         super().__post_init__()
 
 @dataclass

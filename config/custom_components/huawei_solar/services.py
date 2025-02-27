@@ -13,7 +13,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from huawei_solar import HuaweiSolarBridge, register_names as rn, register_values as rv
+from huawei_solar import (
+    HuaweiSolarBridge,
+    HuaweiSUN2000Bridge,
+    register_names as rn,
+    register_values as rv,
+)
 from huawei_solar.registers import (
     ChargeDischargePeriod,
     ChargeFlag,
@@ -175,12 +180,12 @@ class HuaweiSolarServiceException(Exception):
     """Exception while executing Huawei Solar Service Call."""
 
 
-def _parse_days_effective(days_text):
+def _parse_days_effective(days_text) -> tuple[bool, bool, bool, bool, bool, bool, bool]:
     days = [False, False, False, False, False, False, False]
     for day in days_text:
         days[int(day) % 7] = True
 
-    return tuple(days)
+    return tuple(days)  # type: ignore
 
 
 def _parse_time(value: str):
@@ -196,7 +201,7 @@ def _parse_time(value: str):
 @callback
 def _get_battery_bridge(
     hass: HomeAssistant, device_id: str
-) -> tuple[HuaweiSolarBridge, HuaweiSolarUpdateCoordinator]:
+) -> tuple[HuaweiSUN2000Bridge, HuaweiSolarUpdateCoordinator]:
     dev_reg = dr.async_get(hass)
     device_entry = dev_reg.async_get(device_id)
 
@@ -211,11 +216,14 @@ def _get_battery_bridge(
             if uc.device_infos["connected_energy_storage"] is None:
                 continue
 
+            assert isinstance(uc.bridge, HuaweiSUN2000Bridge)
+            assert "identifiers" in uc.device_infos["connected_energy_storage"]
             for ces_identifier in uc.device_infos["connected_energy_storage"][
                 "identifiers"
             ]:
                 for device_identifier in device_entry.identifiers:
                     if ces_identifier == device_identifier:
+                        assert uc.configuration_update_coordinator
                         return uc.bridge, uc.configuration_update_coordinator
     _LOGGER.error("The provided device is not a Connected Energy Storage")
     raise HuaweiSolarServiceException("Not a valid 'Connected Energy Storage' device")
@@ -224,16 +232,24 @@ def _get_battery_bridge(
 @callback
 def get_battery_bridge(
     hass: HomeAssistant, service_call: ServiceCall
-) -> tuple[HuaweiSolarBridge, HuaweiSolarUpdateCoordinator]:
+) -> tuple[HuaweiSUN2000Bridge, HuaweiSolarUpdateCoordinator]:
     """Return the HuaweiSolarBridge associated with the battery device_id in the service call."""
     device_id = service_call.data[DATA_DEVICE_ID]
-    return _get_battery_bridge(hass, device_id)
+    bridge, uc = _get_battery_bridge(hass, device_id)
+
+    _LOGGER.info(
+        "Got the following bridge and update_coordinators in get_battery_bridge: %r, %r",
+        bridge,
+        uc,
+    )
+
+    return bridge, uc
 
 
 @callback
 def _get_inverter_bridge(
     hass: HomeAssistant, device_id: str
-) -> tuple[HuaweiSolarBridge, HuaweiSolarUpdateCoordinator]:
+) -> tuple[HuaweiSUN2000Bridge, HuaweiSolarUpdateCoordinator]:
     dev_reg = dr.async_get(hass)
     device_entry = dev_reg.async_get(device_id)
 
@@ -244,9 +260,14 @@ def _get_inverter_bridge(
             DATA_UPDATE_COORDINATORS
         ]
         for uc in hsucs:
+            if uc.device_infos["inverter"] is None:
+                continue
+            assert isinstance(uc.bridge, HuaweiSUN2000Bridge)
+            assert "identifiers" in uc.device_infos["inverter"]
             for identifier in uc.device_infos["inverter"]["identifiers"]:
                 for device_identifier in device_entry.identifiers:
                     if identifier == device_identifier:
+                        assert uc.configuration_update_coordinator
                         return uc.bridge, uc.configuration_update_coordinator
 
     _LOGGER.error("The provided device is not an inverter")
@@ -528,16 +549,16 @@ async def set_tou_periods(hass: HomeAssistant, service_call: ServiceCall) -> Non
         if not re.fullmatch(
             HUAWEI_LUNA2000_TOU_PATTERN, service_call.data[DATA_PERIODS]
         ):
-            raise ValueError("Invalid periods")
+            raise ValueError(f"Invalid periods: validation failed for '{service_call.data[DATA_PERIODS]}' as LUNA2000 TOU periods")
         await bridge.set(
-            rn.STORAGE_TIME_OF_USE_CHARGING_AND_DISCHARGING_PERIODS,
+            rn.STORAGE_HUAWEI_LUNA2000_TIME_OF_USE_CHARGING_AND_DISCHARGING_PERIODS,
             _parse_huawei_luna2000_periods(service_call.data[DATA_PERIODS]),
         )
     elif bridge.battery_type == rv.StorageProductModel.LG_RESU:
         if not re.fullmatch(LG_RESU_TOU_PATTERN, service_call.data[DATA_PERIODS]):
-            raise ValueError("Invalid periods")
+            raise ValueError(f"Invalid periods: validation failed for '{service_call.data[DATA_PERIODS]}' as LG RESU TOU periods")
         await bridge.set(
-            rn.STORAGE_TIME_OF_USE_CHARGING_AND_DISCHARGING_PERIODS,
+            rn.STORAGE_LG_RESU_TIME_OF_USE_CHARGING_AND_DISCHARGING_PERIODS,
             _parse_lg_resu_periods(service_call.data[DATA_PERIODS]),
         )
 
@@ -565,17 +586,25 @@ async def set_capacity_control_periods(
             )
         return result
 
-    bridge = get_battery_bridge(hass, service_call)
+    bridge, uc = get_battery_bridge(hass, service_call)
+
+    _LOGGER.info(
+        "Got the following bridge and update_coordinators in set_capacity_control_periods: %r, %r",
+        bridge,
+        uc,
+    )
 
     if not re.fullmatch(
         CAPACITY_CONTROL_PERIODS_PATTERN, service_call.data[DATA_PERIODS]
     ):
-        raise ValueError("Invalid periods")
+        raise ValueError(f"Invalid periods: could not validate '{service_call.data[DATA_PERIODS]}' as capacity control periods")
 
     await bridge.set(
         rn.STORAGE_CAPACITY_CONTROL_PERIODS,
         _parse_periods(service_call.data[DATA_PERIODS]),
     )
+
+    await uc.async_refresh()
 
 
 async def set_fixed_charge_periods(
@@ -601,7 +630,7 @@ async def set_fixed_charge_periods(
     bridge, uc = get_battery_bridge(hass, service_call)
 
     if not re.fullmatch(FIXED_CHARGE_PERIODS_PATTERN, service_call.data[DATA_PERIODS]):
-        raise ValueError("Invalid periods")
+        raise ValueError(f"Invalid periods: could not validate '{service_call.data[DATA_PERIODS]}' as fixed charging periods")
 
     await bridge.set(
         rn.STORAGE_FIXED_CHARGING_AND_DISCHARGING_PERIODS,
@@ -658,7 +687,11 @@ async def async_setup_services(  # noqa: C901
         DATA_UPDATE_COORDINATORS
     ]
 
-    if any(uc.bridge.battery_type != rv.StorageProductModel.NONE for uc in hsucs):
+    if any(
+        isinstance(uc.bridge, HuaweiSUN2000Bridge)
+        and uc.bridge.battery_type != rv.StorageProductModel.NONE
+        for uc in hsucs
+    ):
         hass.services.async_register(
             DOMAIN,
             SERVICE_FORCIBLE_CHARGE,
@@ -704,13 +737,17 @@ async def async_setup_services(  # noqa: C901
             schema=FIXED_CHARGE_PERIODS_SCHEMA,
         )
 
-        if any(uc.bridge.supports_capacity_control for uc in hsucs):
-            hass.services.async_register(
-                DOMAIN,
-                SERVICE_SET_CAPACITY_CONTROL_PERIODS,
-                partial(set_capacity_control_periods, hass),
-                schema=CAPACITY_CONTROL_PERIODS_SCHEMA,
-            )
+    if any(
+        isinstance(uc.bridge, HuaweiSUN2000Bridge)
+        and uc.bridge.supports_capacity_control
+        for uc in hsucs
+    ):
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SET_CAPACITY_CONTROL_PERIODS,
+            partial(set_capacity_control_periods, hass),
+            schema=CAPACITY_CONTROL_PERIODS_SCHEMA,
+        )
 
 
 async def async_cleanup_services(hass: HomeAssistant):

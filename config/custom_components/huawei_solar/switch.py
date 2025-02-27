@@ -8,13 +8,14 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
+from huawei_solar import HuaweiSolarBridge, register_names as rn, register_values as rv
+
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from huawei_solar import HuaweiSolarBridge, register_names as rn, register_values as rv
 
 from . import HuaweiSolarEntity
 from .const import CONF_ENABLE_PARAMETER_CONFIGURATION, DATA_UPDATE_COORDINATORS, DOMAIN
@@ -70,6 +71,14 @@ ENERGY_STORAGE_SWITCH_DESCRIPTIONS: tuple[HuaweiSolarSwitchEntityDescription, ..
     ),
 )
 
+INVERTER_SWITCH_DESCRIPTIONS: tuple[HuaweiSolarSwitchEntityDescription, ...] = (
+    HuaweiSolarSwitchEntityDescription(
+        key=rn.MPPT_MULTIMODAL_SCANNING,
+        icon="mdi:magnify-scan",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
+) 
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -94,31 +103,34 @@ async def async_setup_entry(
             HuaweiSolarSwitchEntity | HuaweiSolarOnOffSwitchEntity
         ] = []
 
-        slave_entities.append(
-            HuaweiSolarOnOffSwitchEntity(
-                # This entity dependens on DEVICE_STATUS which is already read by the inverter_update_coordinator
-                ucs.inverter_update_coordinator,
-                ucs.bridge,
-                ucs.device_infos["inverter"],
+        if ucs.device_infos["inverter"]:
+            slave_entities.append(
+                HuaweiSolarOnOffSwitchEntity(
+                    # This entity dependens on DEVICE_STATUS which is already read by the inverter_update_coordinator
+                    ucs.inverter_update_coordinator,
+                    ucs.bridge,
+                    ucs.device_infos["inverter"],
+                )
             )
-        )
-
-        if ucs.bridge.battery_type != rv.StorageProductModel.NONE:
-            assert ucs.device_infos["connected_energy_storage"]
-
-            for entity_description in ENERGY_STORAGE_SWITCH_DESCRIPTIONS:
+            for entity_description in INVERTER_SWITCH_DESCRIPTIONS:
                 slave_entities.append(
                     HuaweiSolarSwitchEntity(
-                        ucs.configuration_update_coordinator,
+                        ucs.inverter_update_coordinator,
                         ucs.bridge,
                         entity_description,
-                        ucs.device_infos["connected_energy_storage"],
+                        ucs.device_infos["inverter"],
                     )
                 )
-        else:
-            _LOGGER.debug(
-                "No battery detected on slave %s. Skipping energy storage switch entities",
-                ucs.bridge.slave_id,
+
+        if ucs.device_infos["connected_energy_storage"]:
+            slave_entities.extend(
+                HuaweiSolarSwitchEntity(
+                    ucs.configuration_update_coordinator,
+                    ucs.bridge,
+                    entity_description,
+                    ucs.device_infos["connected_energy_storage"],
+                )
+                for entity_description in ENERGY_STORAGE_SWITCH_DESCRIPTIONS
             )
 
         entities_to_add.extend(slave_entities)

@@ -43,10 +43,11 @@ def check_settings(config, hass):
 
 class FuelType(Enum):
             # 0: carbu code, 1: de code, 2: it name, 3: nl name, 4: sp code, 5: us code
+    SUPER95_E5 = "E10", 7, "benzina", "specbenzine","20", "regular_gas"
     SUPER95 = "E10", 5, "benzina", "euro95","23", "regular_gas"
     SUPER95_PREDICTION = "E95",0
     SUPER95_OFFICIAL_E10 = "super95",0,"","Euro95","Super 95 E10"
-    SUPER98 = "SP98", 6, "benzina","superplus", "3", "premium_gas"
+    SUPER98 = "SP98", 6, "benzinasp","superplus", "3", "premium_gas"
     SUPER98_OFFICIAL_E5 = "super95/98_E5",0,"","Super","Super 98 E5"
     SUPER98_OFFICIAL_E10 = "super95/98_E10",0,"","","Super 98 E10"
     DIESEL = "GO",3,"diesel","diesel","4", "diesel"
@@ -61,7 +62,9 @@ class FuelType(Enum):
     LPG = "GPL", 1, "gpl","lpg","17"
     LPG_OFFICIAL = "lpg", 1, "gpl","LPG","LPG"
     
-    
+    # https://www.anwb.nl/auto/brandstof/tanken-in-het-buitenland
+
+
     @property
     def code(self):
         return self.value[0]
@@ -421,7 +424,7 @@ class ComponentSession(object):
             # _LOGGER.debug(f"NL URL: {nl_url}")
             response = self.s.get(nl_url,headers=header,timeout=50)
             if response.status_code != 200:
-                _LOGGER.error(f"ERROR: {response.text}")
+                _LOGGER.error(f"ERROR: NL URL: {nl_url}, {response.text}")
             assert response.status_code == 200
             radius = radius + 0.045
 
@@ -499,8 +502,9 @@ class ComponentSession(object):
 
             # station_ids = [item["station"] for item in sorted_diesel_items]
             comma_separated_station_ids = ",".join(sorted_fuel_type_items_dict.keys())
-            
-            response = self.s.get(f"https://api3.prezzibenzina.it/?do=pb_get_stations&output=json&appname=PrezziBenzinaWidget&ids={comma_separated_station_ids}&prices=on&minprice=1&fuels=d&apiversion=3.1",headers=header,timeout=50)
+            url = f"https://api3.prezzibenzina.it/?do=pb_get_stations&output=json&appname=PrezziBenzinaWidget&ids={comma_separated_station_ids}&prices=on&minprice=1&fuels=d&apiversion=3.1"
+            _LOGGER.debug(f"url: {url}")
+            response = self.s.get(url,headers=header,timeout=50)
             if response.status_code != 200:
                 _LOGGER.error(f"ERROR: {response.text}")
             assert response.status_code == 200
@@ -1125,6 +1129,7 @@ class ComponentSession(object):
             filterSet = filter.strip().lower()
 
 
+
         for station in price_info:
             # _LOGGER.debug(f"getStationInfoFromPriceInfo station: {station} , {filterSet}, {individual_station}")
             if filterSet:
@@ -1158,6 +1163,9 @@ class ComponentSession(object):
                         data_recently_updated = False
                 except:
                     _LOGGER.debug(f"date validation not possible since non matching date notation: {station.get("date")}")
+            if station.get('country').lower() == 'it' and max_distance == 0:
+                # IT results are not sorted by price, so don't expect the first to be the best match for local price
+                max_distance = 0.1
             # _LOGGER.debug(f'if (({max_distance} == 0 and ({currDistance} <= 5 or {postalcode} == {station.get("postalcode")})) or {currDistance} <= {max_distance}) and ({data.get("price")} is None or {currPrice} < {float(data.get("price"))})')
             if ((max_distance == 0  and (currDistance <= 5 or postalcode == station.get("postalcode"))) or currDistance <= max_distance) and data_recently_updated and (data.get("price") is None or currPrice < float(data.get("price"))):
                 data["distance"] = float(station.get("distance"))
@@ -1183,6 +1191,7 @@ class ComponentSession(object):
                 data['id'] = station.get('id')
                 # _LOGGER.debug(f"before break {max_distance}, country: {station.get('country') }, postalcode: {station.get('postalcode')} required postalcode {postalcode}")
                 if max_distance == 0:
+                        #if max distance is 0, we expect the first result to be the cheapest and no need to loop over the rest
                         # _LOGGER.debug(f"break {max_distance}, country: {station.get('country') }, postalcode: {station.get('postalcode')} required postalcode {postalcode}")
                         break
             # else:
@@ -1767,7 +1776,9 @@ class ComponentSession(object):
 #     print(session.getStationInfo("31830", "FR", FuelType.SUPER95, "Plaisance-du-Touch", 0, "", True))
 # test IT
 # locationinfo= session.convertLocationBoundingBox("07021", "IT", "Arzachena")
-# print(session.getFuelPrices("07021", "IT", "Arzachena", locationinfo, FuelType.LPG, False))
+# print(session.getFuelPrices("07021", "IT", "Arzachena", locationinfo, FuelType.SUPER95, False))
+#locationinfo= session.convertLocationBoundingBox("09040", "IT", "Settimo San Pietro")
+#print(session.getFuelPrices("09040", "IT", "Settimo San Pietro", locationinfo, FuelType.SUPER95, False))
 # test NL
 # locationinfo= session.convertLocationBoundingBox("2627AR", "NL", "Delft")
 # if len(locationinfo) > 0: 

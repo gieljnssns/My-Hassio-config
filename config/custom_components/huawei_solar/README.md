@@ -5,7 +5,7 @@
 [![Documentation](https://img.shields.io/badge/Documentation-2D963D?logo=read-the-docs&logoColor=white)](https://github.com/wlcrs/huawei_solar/wiki)
 ![](https://img.shields.io/badge/dynamic/json?color=41BDF5&logo=home-assistant&label=integration%20usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.huawei_solar.total)
 
-This integration exposes the information and functions made available by Huawei Solar inverters directly via one of its Modbus interfaces in Home Assistant.
+This integration exposes the information and functions made available by Huawei Solar installations over Modbus to Home Assistant.
 
 ## Table of Contents
 
@@ -55,20 +55,20 @@ Detailed information can be found on the ['Connecting to the inverter' Wiki-page
 
 **Firmware**
 
-This integration supports inverters running **V200**R001C00 firmware.
-If you are running an older *V100*R001C00 firmware, then please consult the "Upgrade guide" included
-with *V200*R001C00 firmware versions to check if your inverter is eligibile for an upgrade.
+This integration supports inverters running firmware versions released in 2023 and later. Older firmware versions don't have support for all registers, which can result in the integration failing to work properly.
 
 ## Installation
 
 1. Install this integration with HACS, or copy the contents of this
 repository into the `custom_components/huawei_solar` directory
-2. Restart HA
-3. Start the configuration flow:
+   [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=wlcrs&repository=huawei_solar&category=integration)
+   
+3. Restart HA
+4. Start the configuration flow:
    - [![Start Config Flow](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=huawei_solar)
    - Or: Go to `Configuration` -> `Integrations` and click the `+ Add Integration`. Select `Huawei Solar` from the list
 
-4. Choose whether you want to connect via serial or network connection
+5. Choose whether you want to connect via serial or network connection
 
 
 ![](images/select-connection-type.png)
@@ -140,6 +140,12 @@ The integration will poll the inverter for new values every 30 seconds. If you w
 
 ## FAQ - Troubleshooting
 
+**Q**: The Daily Yield/Total Yield is incorrect: it also goes up when the battery is discharging.
+
+**A**: Huawei does not provide a Modbus register that represents the *output* of the inverter produced by energy coming only from the solar panels. It does provide a register that represents the *input* of the solar panels, but that does not take into account the conversion losses of the inverter. cfr. the Wiki page '[Daily Solar Yield](https://github.com/wlcrs/huawei_solar/wiki/Daily-Solar-Yield)' for some possible workarounds. cfr. [#1](https://github.com/wlcrs/huawei_solar/issues/1) for more context. 
+
+---
+
 **Q**: Why do I get the error "Connection succeeded, but failed to read from inverter." while setting up this integration?
 
 **A**: While the integration was able to setup the initial connection to the Huawei Inverter, it did not respond to any queries in time. This is either caused by using an invalid slave ID (typically 0 or 1, try both or ask your installer if unsure), or because an other device established a connection with the inverter, causing the integration to lose it's connection
@@ -193,4 +199,4 @@ By providing logs directly when creating the issue, you will likely get help muc
 
 **Q**: I didn't check 'Advanced: Elevate permissions' during the initial setup of this integration and changed my mind. How do I change this?
 
-**A**: Uninstall and reinstall this integration. You will not lose the history of your sensors.
+**A**: 'Reconfigure' the integration. This action is available from the dropdown menu on the [integration settings page](https://my.home-assistant.io/redirect/integration/?domain=huawei_solar).

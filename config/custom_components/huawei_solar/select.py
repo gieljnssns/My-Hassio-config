@@ -8,19 +8,22 @@ from enum import IntEnum
 import logging
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
+from huawei_solar import (
+    HuaweiSolarBridge,
+    HuaweiEMMABridge,
+    HuaweiSUN2000Bridge,
+    register_names as rn,
+    register_values as rv,
+    registers as r,
+)
+from huawei_solar.registers import REGISTERS
+
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from huawei_solar import (
-    HuaweiSolarBridge,
-    register_names as rn,
-    register_values as rv,
-    registers as r,
-)
-from huawei_solar.registers import REGISTERS
 
 from . import HuaweiSolarEntity
 from .const import CONF_ENABLE_PARAMETER_CONFIGURATION, DATA_UPDATE_COORDINATORS, DOMAIN
@@ -83,6 +86,17 @@ CAPACITY_CONTROL_SWITCH_DESCRIPTIONS: tuple[HuaweiSolarSelectEntityDescription, 
     ),
 )
 
+EMMA_SELECT_DESCRIPTIONS: tuple[HuaweiSolarSelectEntityDescription, ...] = (
+    HuaweiSolarSelectEntityDescription(
+        key=rn.EMMA_ESS_CONTROL_MODE,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    HuaweiSolarSelectEntityDescription(
+        key=rn.EMMA_TOU_PREFERRED_USE_OF_SURPLUS_PV_POWER,
+        entity_category=EntityCategory.CONFIG,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -104,19 +118,29 @@ async def async_setup_entry(
             continue
 
         slave_entities: list[HuaweiSolarSelectEntity | StorageModeSelectEntity] = []
-
-        if ucs.bridge.battery_type != rv.StorageProductModel.NONE:
-            assert ucs.device_infos["connected_energy_storage"]
-
-            for entity_description in ENERGY_STORAGE_SWITCH_DESCRIPTIONS:
-                slave_entities.append(
+        if ucs.device_infos["emma"]:
+            assert isinstance(ucs.bridge, HuaweiEMMABridge)
+            for entity_description in EMMA_SELECT_DESCRIPTIONS:
+                slave_entities.append(  # noqa: PERF401
                     HuaweiSolarSelectEntity(
                         ucs.configuration_update_coordinator,
                         ucs.bridge,
                         entity_description,
-                        ucs.device_infos["connected_energy_storage"],
+                        ucs.device_infos["emma"],
                     )
                 )
+
+        if ucs.device_infos["connected_energy_storage"]:
+            assert isinstance(ucs.bridge, HuaweiSUN2000Bridge)
+            slave_entities.extend(
+                HuaweiSolarSelectEntity(
+                    ucs.configuration_update_coordinator,
+                    ucs.bridge,
+                    entity_description,
+                    ucs.device_infos["connected_energy_storage"],
+                )
+                for entity_description in ENERGY_STORAGE_SWITCH_DESCRIPTIONS
+            )
             slave_entities.append(
                 StorageModeSelectEntity(
                     ucs.configuration_update_coordinator,
@@ -124,23 +148,25 @@ async def async_setup_entry(
                     ucs.device_infos["connected_energy_storage"],
                 )
             )
-
             if ucs.bridge.supports_capacity_control:
-                for entity_description in CAPACITY_CONTROL_SWITCH_DESCRIPTIONS:
-                    slave_entities.append(
-                        HuaweiSolarSelectEntity(
-                            ucs.configuration_update_coordinator,
-                            ucs.bridge,
-                            entity_description,
-                            ucs.device_infos["connected_energy_storage"],
-                        )
+                _LOGGER.debug(
+                    "Adding capacity control switch entities for %s",
+                    ucs.bridge.serial_number,
+                )
+                slave_entities.extend(
+                    HuaweiSolarSelectEntity(
+                        ucs.configuration_update_coordinator,
+                        ucs.bridge,
+                        entity_description,
+                        ucs.device_infos["connected_energy_storage"],
                     )
-
-        else:
-            _LOGGER.debug(
-                "No battery detected on slave %s. Skipping energy storage select entities",
-                ucs.bridge.slave_id,
-            )
+                    for entity_description in CAPACITY_CONTROL_SWITCH_DESCRIPTIONS
+                )
+            else:
+                _LOGGER.debug(
+                    "Storage capacity control is not supported by inverter %s",
+                    ucs.bridge.serial_number,
+                )
 
         entities_to_add.extend(slave_entities)
 
@@ -245,7 +271,7 @@ class StorageModeSelectEntity(CoordinatorEntity, HuaweiSolarEntity, SelectEntity
     def __init__(
         self,
         coordinator: HuaweiSolarUpdateCoordinator,
-        bridge: HuaweiSolarBridge,
+        bridge: HuaweiSUN2000Bridge,
         device_info: DeviceInfo,
     ) -> None:
         """Huawei Solar Storage Mode Select Entity constructor.

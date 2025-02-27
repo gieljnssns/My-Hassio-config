@@ -58,6 +58,7 @@ async def async_setup_entry(
             entities.append(BermudaSensorRange(coordinator, entry, address))
             entities.append(BermudaSensorScanner(coordinator, entry, address))
             entities.append(BermudaSensorRssi(coordinator, entry, address))
+            entities.append(BermudaSensorAreaLastSeen(coordinator, entry, address))
 
             for scanner in scanners:
                 entities.append(BermudaSensorScannerRange(coordinator, entry, address, scanner))
@@ -319,6 +320,22 @@ class BermudaSensorScannerRangeRaw(BermudaSensorScannerRange):
         return None
 
 
+class BermudaSensorAreaLastSeen(BermudaSensor):
+    """Sensor for name of last seen area."""
+
+    @property
+    def unique_id(self):
+        return f"{self._device.unique_id}_area_last_seen"
+
+    @property
+    def name(self):
+        return "Area Last Seen"
+
+    @property
+    def native_value(self):
+        return self._device.area_last_seen
+
+
 class BermudaGlobalSensor(BermudaGlobalEntity, SensorEntity):
     """bermuda Global Sensor class."""
 
@@ -351,7 +368,7 @@ class BermudaTotalProxyCount(BermudaGlobalSensor):
     @property
     def native_value(self) -> int:
         """Gets the number of proxies we have access to."""
-        return len(self.coordinator.scanner_list)
+        return self._cached_ratelimit(len(self.coordinator.scanner_list)) or 0
 
     @property
     def name(self):
@@ -375,7 +392,7 @@ class BermudaActiveProxyCount(BermudaGlobalSensor):
     @property
     def native_value(self) -> int:
         """Gets the number of proxies we have access to."""
-        return self.coordinator.count_active_scanners()
+        return self._cached_ratelimit(self.coordinator.count_active_scanners()) or 0
 
     @property
     def name(self):
@@ -399,7 +416,7 @@ class BermudaTotalDeviceCount(BermudaGlobalSensor):
     @property
     def native_value(self) -> int:
         """Gets the amount of devices we have seen."""
-        return len(self.coordinator.devices)
+        return self._cached_ratelimit(len(self.coordinator.devices)) or 0
 
     @property
     def name(self):
@@ -423,7 +440,7 @@ class BermudaVisibleDeviceCount(BermudaGlobalSensor):
     @property
     def native_value(self) -> int:
         """Gets the amount of devices that are active."""
-        return self.coordinator.count_active_devices()
+        return self._cached_ratelimit(self.coordinator.count_active_devices()) or 0
 
     @property
     def name(self):

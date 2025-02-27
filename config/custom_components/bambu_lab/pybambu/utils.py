@@ -1,7 +1,11 @@
 import math
 import requests
+import socket
+import re
 
 from datetime import datetime, timedelta
+from urllib3.exceptions import ReadTimeoutError
+from bs4 import BeautifulSoup
 
 from .const import (
     CURRENT_STAGE_IDS,
@@ -14,7 +18,7 @@ from .const import (
     FansEnum,
     TempEnum
 )
-from .commands import SEND_GCODE_TEMPLATE
+from .commands import SEND_GCODE_TEMPLATE, UPGRADE_CONFIRM_TEMPLATE
 from .const_hms_errors import HMS_ERRORS
 from .const_print_errors import PRINT_ERROR_ERRORS
 
@@ -79,6 +83,11 @@ def get_filament_name(idx, custom_filaments: dict):
     return result
 
 
+def get_ip_address_from_int(ip_int: int):
+    packed_ip = ip_int.to_bytes(4, 'little')
+    return socket.inet_ntoa(packed_ip)
+
+
 def get_speed_name(id):
     """Return the human-readable name for a speed id"""
     return SPEED_PROFILE.get(int(id), "standard")
@@ -93,7 +102,7 @@ def get_HMS_error_text(code: str, language: str):
     """Return the human-readable description for an HMS error"""
     try:
         code = code.replace('_', '')
-        response = requests.get(f"https://e.bambulab.com/query.php?lang={language}&e={code}", timeout=5)
+        response = requests.get(f"https://e.bambulab.com/query.php?lang={language}&e={code}", timeout=10)
         json = response.json()
         if json['result'] == 0:
             # We successfuly got results.
@@ -102,6 +111,10 @@ def get_HMS_error_text(code: str, language: str):
                 if entry['ecode'] == code:
                     if "" != entry['intro']:
                         return entry['intro']
+    except TimeoutError as e:
+        pass    
+    except ReadTimeoutError as e:
+        LOGGER.debug("ERROR: Timeout trying t retrieve print error text")
     except:
         LOGGER.debug(f"ERROR: {response.text}")
 
@@ -117,7 +130,7 @@ def get_print_error_text(code: str, language: str):
 
     try:
         code = code.replace('_', '')
-        response = requests.get(f"https://e.bambulab.com/query.php?lang={language}&e={code}", timeout=5)
+        response = requests.get(f"https://e.bambulab.com/query.php?lang={language}&e={code}", timeout=10)
         json = response.json()
         if json['result'] == 0:
             # We successfuly got results.
@@ -126,6 +139,10 @@ def get_print_error_text(code: str, language: str):
                 if entry['ecode'] == code:
                     if "" != entry['intro']:
                         return entry['intro']
+    except TimeoutError as e:
+        pass    
+    except ReadTimeoutError as e:
+        LOGGER.debug("ERROR: Timeout trying t retrieve print error text")
     except:
         LOGGER.debug(f"ERROR: {response.text}")
 
@@ -223,6 +240,12 @@ def get_sw_version(modules, default):
         return ota.get("sw_ver")
     return default
 
+def compare_version(version_max, version_min):
+    maxver = list(map(int, version_max.split('.')))
+    minver = list(map(int, version_min.split('.')))
+
+    # Returns 1 if max > min, -1 if max < min, 0 if equal
+    return (maxver > minver) - (maxver < minver)
 
 def get_start_time(timestamp):
     """Return start time of a print"""
@@ -251,3 +274,41 @@ def get_Url(url: str, region: str):
     if region == "China":
         urlstr = urlstr.replace('.com', '.cn')
     return urlstr
+
+
+def get_upgrade_url(name: str):
+    """Retrieve upgrade URL from BambuLab website"""
+    response = requests.get(f"https://bambulab.com/en/support/firmware-download/{name}")
+    soup = BeautifulSoup(response.text, 'html.parser')
+    selector = soup.select_one(
+        "#__next > div > div > div > "
+        "div.portal-css-npiem8 > "
+        "div.pageContent.MuiBox-root.portal-css-0 > "
+        "div > div > div.portal-css-1v0qi56 > "
+        "div.flex > div.detailContent > div > "
+        "div > div.portal-css-kyyjle > div.top > "
+        "div.versionContent > div > "
+        "div.linkContent.pc > a:nth-child(2)"
+    )
+    if selector:
+        return selector.get("href")
+    return None
+
+def upgrade_template(url: str) -> dict:
+    """Template for firmware upgrade"""
+    pattern = (
+        r"offline\/([\w-]+)\/([\d\.]+)\/([\w]+)\/"
+        r"offline-([\w\-\.]+)\.zip"
+    )
+    info = re.search(pattern, url).groups()
+    if not info:
+        LOGGER.warning(f"Could not parse firmware url: {url}")
+        return None
+    
+    model, version, hash, stamp = info
+    template = UPGRADE_CONFIRM_TEMPLATE.copy()
+    template["upgrade"]["url"] = template["upgrade"]["url"].format(
+        model=model, version=version, hash=hash, stamp=stamp
+    )
+    template["upgrade"]["version"] = version
+    return template

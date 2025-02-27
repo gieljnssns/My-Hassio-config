@@ -106,7 +106,6 @@ class FanEntity(XEntity, BaseEntity):
                     _stp = prop.range_step()
                     self._speed_range = (_min, _max)
                     self._attr_speed_count = (_max - _min) / _stp + 1
-                    self._attr_supported_features |= FanEntityFeature.SET_SPEED
                 elif prop.value_list and not self._conv_speed:
                     self._speed_list = prop.list_descriptions()
                     self._attr_speed_count = len(prop.value_list)
@@ -121,7 +120,7 @@ class FanEntity(XEntity, BaseEntity):
 
         # issues/617
         if self.custom_config_bool('disable_preset_modes'):
-            self._supported_features &= ~FanEntityFeature.PRESET_MODE
+            self._attr_supported_features &= ~FanEntityFeature.PRESET_MODE
             self._attr_preset_modes = []
         elif dpm := self.custom_config_list('disable_preset_modes'):
             self._attr_preset_modes = [
@@ -172,7 +171,7 @@ class FanEntity(XEntity, BaseEntity):
     async def async_turn_on(self, percentage=None, preset_mode=None, **kwargs):
         dat = {}
         if self._conv_power and not self.is_on:
-            dat[self._conv_power.attr] = True
+            dat[self._conv_power.full_name] = True
         if percentage is not None:
             if self._prop_percentage:
                 await self.device.async_set_property(self._prop_percentage, percentage)
@@ -180,21 +179,21 @@ class FanEntity(XEntity, BaseEntity):
                 des = percentage_to_ordered_list_item(self._speed_list, percentage)
                 val = self._prop_speed.list_value(des)
                 if val is not None:
-                    await self.device.async_set_property(self._prop_percentage, val)
+                    await self.device.async_set_property(self._prop_speed, val)
             elif self._speed_range:
-                dat[self._conv_speed.attr] = percentage_to_ranged_value(self._speed_range, percentage)
+                dat[self._conv_speed.full_name] = percentage_to_ranged_value(self._speed_range, percentage)
             elif self._speed_list:
                 des = percentage_to_ordered_list_item(self._speed_list, percentage)
-                dat[self._conv_speed.attr] = self._conv_speed.prop.list_value(des)
+                dat[self._conv_speed.full_name] = self._conv_speed.prop.list_value(des)
         if preset_mode is not None:
-            dat[self._conv_mode.attr] = preset_mode
+            dat[self._conv_mode.full_name] = preset_mode
         if dat:
             await self.device.async_write(dat)
 
     async def async_turn_off(self, **kwargs):
         if not self._conv_power:
             return
-        await self.device.async_write({self._conv_power.attr: False})
+        await self.device.async_write({self._conv_power.full_name: False})
 
     async def async_set_percentage(self, percentage: int):
         if percentage == 0 and self._conv_power:
@@ -205,12 +204,12 @@ class FanEntity(XEntity, BaseEntity):
     async def async_set_preset_mode(self, preset_mode: str):
         if not self._conv_mode:
             return
-        await self.device.async_write({self._conv_mode.attr: preset_mode})
+        await self.device.async_write({self._conv_mode.full_name: preset_mode})
 
     async def async_oscillate(self, oscillating: bool):
         if not self._conv_oscillate:
             return
-        await self.device.async_write({self._conv_oscillate.attr: oscillating})
+        await self.device.async_write({self._conv_oscillate.full_name: oscillating})
 
 XEntity.CLS[ENTITY_DOMAIN] = FanEntity
 

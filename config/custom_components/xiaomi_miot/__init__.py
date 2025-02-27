@@ -197,7 +197,11 @@ async def async_setup(hass, hass_config: dict):
 
     def extend_miot_specs():
         with open(os.path.dirname(__file__) + '/core/miot_specs_extend.json') as file:
-            models = json.load(file) or {}
+            try:
+                models = json.load(file) or {}
+            except ValueError as exc:
+                models = {}
+                _LOGGER.exception('Error parsing miot_specs_extend.json: %s', exc)
             for m, specs in models.items():
                 DEVICE_CUSTOMIZES.setdefault(m, {})
                 DEVICE_CUSTOMIZES[m]['extend_miot_specs'] = specs
@@ -755,6 +759,7 @@ class MiioEntity(BaseEntity):
         self._config = dict(kwargs.get('config') or {})
         self.device = self._config.get(CONF_DEVICE)
         self.hass = self.device.hass
+        self.log = self.device.log
         self.logger = self.device.log
         self._miio_info = self.device.info.miio_info
         self._unique_did = self.unique_did

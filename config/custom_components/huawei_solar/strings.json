@@ -26,7 +26,7 @@
                     "enable_parameter_configuration": "Advanced: elevate permissions",
                     "host": "Host",
                     "port": "Port",
-                    "slave_ids": "Slave IDs (Comma separated)"
+                    "slave_ids": "Slave IDs: AUTO for auto-discovery, otherwise a comma separated list"
                 }
             },
             "setup_serial": {
@@ -52,6 +52,9 @@
     },
     "entity": {
         "number": {
+            "mppt_scanning_interval": {
+                "name": "MPPT-Scan Interval"
+            },
             "active_power_percentage_derating": {
                 "name": "Power derating (by percentage)"
             },
@@ -81,9 +84,21 @@
             },
             "storage_capacity_control_soc_peak_shaving": {
                 "name": "Peak Shaving SOC"
+            },
+            "emma_maximum_feed_grid_power_percent": {
+                "name": "Maximum feed grid power (%)"
+            },
+            "emma_maximum_feed_grid_power_watt": {
+                "name": "Maximum feed grid power"
             }
         },
         "sensor": {
+            "rated_power": {
+                "name": "Rated power"
+            },
+            "p_max": {
+                "name": "Max active power"
+            },
             "input_power": {
                 "name": "Input power"
             },
@@ -112,6 +127,15 @@
                 "name": "Phase B current"
             },
             "phase_c_current": {
+                "name": "Phase C current"
+            },
+            "active_grid_a_current": {
+                "name": "Phase A current"
+            },
+            "active_grid_b_current": {
+                "name": "Phase B current"
+            },
+            "active_grid_c_current": {
                 "name": "Phase C current"
             },
             "day_active_power_peak": {
@@ -149,6 +173,12 @@
             },
             "daily_yield_energy": {
                 "name": "Daily yield"
+            },
+            "monthly_yield_energy": {
+                "name": "Monthly yield"
+            },
+            "yearly_yield_energy": {
+                "name": "Yearly yield"
             },
             "hourly_yield_energy": {
                 "name": "Hourly yield"
@@ -270,6 +300,15 @@
             "active_grid_c_power": {
                 "name": "Phase C active power"
             },
+            "storage_maximum_charge_power": {
+                "name": "Maximum charge power"
+            },
+            "storage_maximum_discharge_power": {
+                "name": "Maximum discharge power"
+            },
+            "storage_rated_capacity": {
+                "name": "Rated Capacity"
+            },
             "storage_state_of_capacity": {
                 "name": "State of capacity"
             },
@@ -303,14 +342,8 @@
             "current_electricity_generation_statistics_time": {
                 "name": "Current electricity generation statistics time"
             },
-            "storage_time_of_use_charging_and_discharging_periods": {
-                "name": "Time Of use periods"
-            },
             "storage_capacity_control_periods": {
                 "name": "Capacity control periods"
-            },
-            "storage_fixed_charging_and_discharging_periods": {
-                "name": "Fixed charging periods"
             },
             "pv_01_voltage": {
                 "name": "PV 1 voltage"
@@ -459,12 +492,6 @@
             "battery_working_mode": {
                 "name": "Working mode"
             },
-            "battery_rated_charge_power": {
-                "name": "Rated charge power"
-            },
-            "battery_rated_discharge_power": {
-                "name": "Rated discharge power"
-            },
             "battery_remaining_charge_discharge_time": {
                 "name": "Remaining charge/discharge time"
             },
@@ -473,6 +500,216 @@
             },
             "active_power_control": {
                 "name": "Active power control"
+            },
+            "soh_calibration_status": {
+                "name": "SOH calibration status"
+            },
+            "pack_1_max_temperature": {
+                "name": "Pack 1 max temperature"
+            },
+            "pack_1_min_temperature": {
+                "name": "Pack 1 min temperature"
+            },
+            "pack_2_max_temperature": {
+                "name": "Pack 2 max temperature"
+            },
+            "pack_2_min_temperature": {
+                "name": "Pack 2 min temperature"
+            },
+            "pack_3_max_temperature": {
+                "name": "Pack 3 max temperature"
+            },
+            "pack_3_min_temperature": {
+                "name": "Pack 3 min temperature"
+            },
+            "pack_1_working_status": {
+                "name": "Pack 1 working status"
+            },
+            "pack_2_working_status": {
+                "name": "Pack 2 working status"
+            },
+            "pack_3_working_status": {
+                "name": "Pack 3 working status"
+            },
+            "pack_1_firmware_version": {
+                "name": "Pack 1 firmware version"
+            },
+            "pack_1_serial_number": {
+                "name": "Pack 1 serial number"
+            },
+            "pack_1_state_of_capacity": {
+                "name": "Pack 1 state of capacity"
+            },
+            "pack_1_charge_discharge_power": {
+                "name": "Pack 1 charge discharge power"
+            },
+            "pack_1_voltage": {
+                "name": "Pack 1 voltage"
+            },
+            "pack_1_current": {
+                "name": "Pack 1 current"
+            },
+            "pack_1_soh_calibration_status": {
+                "name": "Pack 1 SOH calibration status"
+            },
+            "pack_1_total_charge": {
+                "name": "Pack 1 total charge"
+            },
+            "pack_1_total_discharge": {
+                "name": "Pack 1 total discharge"
+            },
+            "pack_2_firmware_version": {
+                "name": "Pack 2 firmware version"
+            },
+            "pack_2_serial_number": {
+                "name": "Pack 2 serial number"
+            },
+            "pack_2_state_of_capacity": {
+                "name": "Pack 2 state of capacity"
+            },
+            "pack_2_charge_discharge_power": {
+                "name": "Pack 2 charge discharge power"
+            },
+            "pack_2_voltage": {
+                "name": "Pack 2 voltage"
+            },
+            "pack_2_current": {
+                "name": "Pack 2 current"
+            },
+            "pack_2_soh_calibration_status": {
+                "name": "Pack 2 SOH calibration status"
+            },
+            "pack_2_total_charge": {
+                "name": "Pack 2 total charge"
+            },
+            "pack_2_total_discharge": {
+                "name": "Pack 2 total discharge"
+            },
+            "pack_3_firmware_version": {
+                "name": "Pack 3 firmware version"
+            },
+            "pack_3_serial_number": {
+                "name": "Pack 3 serial number"
+            },
+            "pack_3_state_of_capacity": {
+                "name": "Pack 3 state of capacity"
+            },
+            "pack_3_charge_discharge_power": {
+                "name": "Pack 3 charge discharge power"
+            },
+            "pack_3_voltage": {
+                "name": "Pack 3 voltage"
+            },
+            "pack_3_current": {
+                "name": "Pack 3 current"
+            },
+            "pack_3_soh_calibration_status": {
+                "name": "Pack 3 SOH calibration status"
+            },
+            "pack_3_total_charge": {
+                "name": "Pack 3 total charge"
+            },
+            "pack_3_total_discharge": {
+                "name": "Pack 3 total discharge"
+            },
+            "bms_temperature": {
+                "name": "BMS temperature"
+            },
+            "storage_lg_resu_time_of_use_price_periods": {
+                "name": "TOU price periods"
+            },
+            "storage_huawei_luna2000_time_of_use_price_periods": {
+                "name": "TOU price periods"
+            },
+            "storage_huawei_luna2000_time_of_use_charging_and_discharging_periods": {
+                "name": "TOU charging and discharging periods"
+            },
+            "storage_lg_resu_time_of_use_charging_and_discharging_periods": {
+                "name": "TOU charging and discharging periods"
+            },
+            "storage_fixed_charging_and_discharging_periods": {
+                "name": "Fixed charging periods"
+            },
+            "inverter_total_absorbed_energy": {
+                "name": "Total absorbed energy"
+            },
+            "energy_charged_today": {
+                "name": "Energy charged today"
+            },
+            "total_charged_energy": {
+                "name": "Total charged energy"
+            },
+            "energy_discharged_today": {
+                "name": "Energy discharged today"
+            },
+            "total_discharged_energy": {
+                "name": "Total discharged energy"
+            },
+            "ess_chargeable_energy": {
+                "name": "ESS Chargeable energy"
+            },
+            "ess_dischargeable_energy": {
+                "name": "ESS Dischargeable energy"
+            },
+            "rated_ess_capacity": {
+                "name": "Rated ESS capacity"
+            },
+            "consumption_today": {
+                "name": "Consumption today"
+            },
+            "total_energy_consumption": {
+                "name": "Total energy consumption"
+            },
+            "feed_in_to_grid_today": {
+                "name": "Feed in to grid today"
+            },
+            "supply_from_grid_today": {
+                "name": "Supply from grid today"
+            },
+            "total_supply_from_grid": {
+                "name": "Total supply from grid"
+            },
+            "inverter_energy_yield_today": {
+                "name": "Inverter energy yield today"
+            },
+            "inverter_total_energy_yield": {
+                "name": "Inverter total energy yield"
+            },
+            "pv_yield_today": {
+                "name": "PV yield today"
+            },
+            "total_pv_energy_yield": {
+                "name": "Total PV energy yield"
+            },
+            "pv_output_power": {
+                "name": "PV output power"
+            },
+            "load_power": {
+                "name": "Load power"
+            },
+            "feed_in_power": {
+                "name": "Feed in power"
+            },
+            "battery_charge_discharge_power": {
+                "name": "Battery charge/discharge power"
+            },
+            "inverter_rated_power": {
+                "name": "Inverter rated power"
+            },
+            "inverter_active_power": {
+                "name": "Inverter active power"
+            },
+            "state_of_capacity": {
+                "name": "State of capacity"
+            },
+            "ess_chargeable_capacity": {
+                "name": "ESS chargeable capacity"
+            },
+            "ess_dischargeable_capacity": {
+                "name": "ESS dischargeable capacity"
+            },
+            "backup_power_state_of_charge": {
+                "name": "Backup power state of charge"
             }
         },
         "select": {
@@ -501,11 +738,32 @@
                     "fully_fed_to_grid": "Fully fed to grid",
                     "time_of_use_luna2000": "Time of use"
                 }
+            },
+            "emma_ess_control_mode": {
+                "name": "ESS Control Mode",
+                "state": {
+                    "reserved_1": "Reserved 1",
+                    "maximum_self_consumption": "Maximum self consumption",
+                    "reserved_3": "Reserved 3",
+                    "fully_fed_to_grid": "Fully fed to grid",
+                    "time_of_use": "Time of use",
+                    "third_party_dispatch": "Third party dispatch"
+                }
+            },
+            "emma_tou_preferred_use_of_surplus_pv_power": {
+                "name": "Excess PV energy use in TOU",
+                "state": {
+                    "fed_to_grid": "Fed to grid",
+                    "charge": "Charge"
+                }
             }
         },
         "switch": {
             "storage_charge_from_grid_function": {
                 "name": "Charge from grid"
+            },
+            "mppt_multimodal_scanning": {
+                "name": "MPPT-Scan"
             },
             "startup": {
                 "name": "Inverter ON/OFF"
@@ -697,6 +955,9 @@
         }
     },
     "device": {
+        "emma": {
+            "name": "EMMA"
+        },
         "inverter": {
             "name": "Inverter"
         },
