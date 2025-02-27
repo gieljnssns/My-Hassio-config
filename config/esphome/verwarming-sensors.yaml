@@ -1,6 +1,6 @@
 substitutions:
   devicename: verwarming-sensors
-  platform: ESP8266
+  platform: esp8266
   board: nodemcuv2
   upper_devicename: Verwarming sensors
   ssid: !secret ssid-waskot
@@ -8,8 +8,18 @@ substitutions:
 
 packages:
   wifi: !include common/wifi.yaml
-  device_base: !include common/device_base.yaml
+  device_base: !include common/device_base_new_style.yaml
 
+wifi:
+  networks:
+    - ssid: !secret ssid-esphome-airport
+      password: !secret password-esphome
+    - ssid: !secret ssid-esphome
+      password: !secret password-esphome
+    - ssid: !secret ssid-esphome-backup
+      password: !secret password-esphome
+      
+captive_portal:
   
 switch:
   - platform: homeassistant
@@ -78,21 +88,21 @@ sensor:
     id: heen
     filters:
         - filter_out: nan
-    on_raw_value:
-      then:
-        - if:
-            condition:
-              - sensor.in_range:
-                  id: uptime_
-                  above: 15
-              - lambda: |-
-                  return isnan(id(heen).raw_state);
-            then:
-              - number.increment:
-                  id: nans
-              - text.set:
-                  id: nans_text
-                  value: "Vloerverwarming heen"
+    # on_raw_value:
+    #   then:
+    #     - if:
+    #         condition:
+    #           - sensor.in_range:
+    #               id: uptime_
+    #               above: 15
+    #           - lambda: |-
+    #               return isnan(id(heen).raw_state);
+    #         then:
+    #           - number.increment:
+    #               id: nans
+    #           - text.set:
+    #               id: nans_text
+    #               value: "Vloerverwarming heen"
   - platform: dallas_temp
     address: 0x273C01D6075FEC28
     name: "Boiler uit"
@@ -100,26 +110,26 @@ sensor:
     one_wire_id: dallas2
     filters:
         - filter_out: nan
-    on_raw_value:
-      then:
-        - if:
-            condition:
-              - sensor.in_range:
-                  id: uptime_
-                  above: 15
-              - lambda: |-
-                  return isnan(id(uit).raw_state);
-            then:
-              - number.increment:
-                  id: nans
-              - text.set:
-                  id: nans_text
-                  value: "Boiler uit"
-              # - homeassistant.service:
-              #     service: persistent_notification.create
-              #     data:
-              #       title: Bericht uit de kelder
-              #       message: Boiler uit is NaN
+    # on_raw_value:
+    #   then:
+    #     - if:
+    #         condition:
+    #           - sensor.in_range:
+    #               id: uptime_
+    #               above: 15
+    #           - lambda: |-
+    #               return isnan(id(uit).raw_state);
+    #         then:
+    #           - number.increment:
+    #               id: nans
+    #           - text.set:
+    #               id: nans_text
+    #               value: "Boiler uit"
+    #           # - homeassistant.service:
+    #           #     service: persistent_notification.create
+    #           #     data:
+    #           #       title: Bericht uit de kelder
+    #           #       message: Boiler uit is NaN
     
   - platform: dallas_temp
     address: 0xD03C01D607B86528
@@ -128,21 +138,21 @@ sensor:
     id: in
     filters:
         - filter_out: nan
-    on_raw_value:
-      then:
-        - if:
-            condition:
-              - sensor.in_range:
-                  id: uptime_
-                  above: 15
-              - lambda: |-
-                  return isnan(id(in).raw_state);
-            then:
-              - number.increment:
-                  id: nans
-              - text.set:
-                  id: nans_text
-                  value: "Boiler in"
+    # on_raw_value:
+    #   then:
+    #     - if:
+    #         condition:
+    #           - sensor.in_range:
+    #               id: uptime_
+    #               above: 15
+    #           - lambda: |-
+    #               return isnan(id(in).raw_state);
+    #         then:
+    #           - number.increment:
+    #               id: nans
+    #           - text.set:
+    #               id: nans_text
+    #               value: "Boiler in"
   - platform: dallas_temp
     address: 0x563C01D607E4C728
     name: "Vloerverwarming terug"
@@ -150,21 +160,21 @@ sensor:
     one_wire_id: dallas2
     filters:
         - filter_out: nan
-    on_raw_value:
-      then:
-        - if:
-            condition:
-              - sensor.in_range:
-                  id: uptime_
-                  above: 15
-              - lambda: |-
-                  return isnan(id(terug).raw_state);
-            then:
-              - number.increment:
-                  id: nans
-              - text.set:
-                  id: nans_text
-                  value: "Vloerverwarming terug"
+    # on_raw_value:
+    #   then:
+    #     - if:
+    #         condition:
+    #           - sensor.in_range:
+    #               id: uptime_
+    #               above: 15
+    #           - lambda: |-
+    #               return isnan(id(terug).raw_state);
+    #         then:
+    #           - number.increment:
+    #               id: nans
+    #           - text.set:
+    #               id: nans_text
+    #               value: "Vloerverwarming terug"
   - platform: dallas_temp
     address: 0x423C01D075CD3928
     name: "Kelder"
@@ -172,21 +182,21 @@ sensor:
     one_wire_id: dallas
     filters:
         - filter_out: nan
-    on_raw_value:
-      then:
-        - if:
-            condition:  
-              - sensor.in_range:
-                  id: uptime_
-                  above: 15
-              - lambda: |-
-                  return isnan(id(kelder).raw_state);
-            then:
-              - number.increment:
-                  id: nans
-              - text.set:
-                  id: nans_text
-                  value: "Kelder"
+    # on_raw_value:
+    #   then:
+    #     - if:
+    #         condition:  
+    #           - sensor.in_range:
+    #               id: uptime_
+    #               above: 15
+    #           - lambda: |-
+    #               return isnan(id(kelder).raw_state);
+    #         then:
+    #           - number.increment:
+    #               id: nans
+    #           - text.set:
+    #               id: nans_text
+    #               value: "Kelder"
   - platform: dallas_temp
     address: 0x133C01D607F68D28
     name: "Thermostaat"
@@ -194,21 +204,21 @@ sensor:
     one_wire_id: dallas
     filters:
         - filter_out: nan
-    on_raw_value:
-      then:
-        - if:
-            condition:  
-              - sensor.in_range:
-                  id: uptime_
-                  above: 15
-              - lambda: |-
-                  return isnan(id(thermostaat).raw_state);
-            then:
-              - number.increment:
-                  id: nans
-              - text.set:
-                  id: nans_text
-                  value: "Thermostaat"
+    # on_raw_value:
+    #   then:
+    #     - if:
+    #         condition:  
+    #           - sensor.in_range:
+    #               id: uptime_
+    #               above: 15
+    #           - lambda: |-
+    #               return isnan(id(thermostaat).raw_state);
+    #         then:
+    #           - number.increment:
+    #               id: nans
+    #           - text.set:
+    #               id: nans_text
+    #               value: "Thermostaat"
     on_value_range:
       above: 55
       then:

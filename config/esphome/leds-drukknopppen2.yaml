@@ -3,22 +3,23 @@ substitutions:
   upper_devicename: Leds drukknoppen
   ssid: !secret ssid
   manual_ip: 192.168.79.137
+  platform: esp32
+  board: esp32dev
 
 esp32:
-  board: esp32dev
+  # board: esp32dev
   # framework:
   #   type: arduino
   framework:
     type: esp-idf
-
-esphome:
-  name: ${devicename}
 
 packages:
   # wifi: !include common/wifi-waskot.yaml
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
+captive_portal:
+  
 globals:
   - id: chime
     type: bool
@@ -92,8 +93,8 @@ binary_sensor:
       inverted: true
     filters:
       # Small filter, to debounce the button press.
-      - delayed_on: 25ms
-      - delayed_off: 25ms
+      - delayed_on: 50ms
+      - delayed_off: 50ms
     on_press:
       # Only turn on the chime when it is active.
       then:
@@ -113,6 +114,10 @@ binary_sensor:
       number: 26
       mode: INPUT_PULLUP
       inverted: true
+    filters:
+      # Small filter, to debounce the button press.
+      - delayed_on: 50ms
+      - delayed_off: 50ms
     on_press:
       - homeassistant.service:
           service: light.toggle
@@ -126,6 +131,10 @@ binary_sensor:
       number: 27
       mode: INPUT_PULLUP
       inverted: true
+    filters:
+      # Small filter, to debounce the button press.
+      - delayed_on: 25ms
+      - delayed_off: 25ms
     on_press:
       # - homeassistant.service:
       #     service: light.toggle

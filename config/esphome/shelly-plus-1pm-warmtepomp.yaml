@@ -8,14 +8,18 @@ substitutions:
   max_temp: '80.0'
   ssid: !secret ssid-living
   manual_ip: 192.168.79.132
+  platform: esp32
+  board: esp32doit-devkit-v1
 
 esphome:
   name: shelly-plus-1pm-warmtepomp
   platformio_options:
     board_build.f_cpu: 160000000L
 
+  
+
 esp32:
-  board: esp32doit-devkit-v1
+  # board: esp32doit-devkit-v1
   framework:
     type: esp-idf
     # version: recommended
@@ -29,8 +33,16 @@ packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
-# wifi:
-#   power_save_mode: HIGH
+captive_portal:
+  
+wifi:
+  networks:
+    - ssid: !secret ssid-esphome-airport
+      password: !secret password-esphome
+    - ssid: !secret ssid-esphome
+      password: !secret password-esphome
+    - ssid: !secret ssid-esphome-backup
+      password: !secret password-esphome
   
 output:
   - platform: gpio

@@ -3,9 +3,11 @@ substitutions:
   upper_devicename: Badkamer
   ssid: !secret ssid
   manual_ip: 192.168.79.151
+  platform: esp32
+  board: esp32dev
 
 esp32:
-  board: esp32dev
+  # board: esp32dev
   # framework:
   #   type: arduino
   framework:
@@ -15,7 +17,7 @@ packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
-  
+captive_portal: 
 
 wifi:
   # ...
@@ -37,8 +39,8 @@ logger:
 web_server:
   
 
-esphome:
-  name: ${devicename}
+# esphome:
+#   name: ${devicename}
   # on_boot:
   #   - priority: 600.0
   #     then:
@@ -72,13 +74,13 @@ uart:
   baud_rate: 256000
   parity: NONE
   stop_bits: 1
-  debug:
-    direction: BOTH
-    dummy_receiver: false
-    after:
-      delimiter: "\n"
-    sequence:
-      - lambda: UARTDebug::log_string(direction, bytes);
+  # debug:
+  #   direction: BOTH
+  #   dummy_receiver: false
+  #   after:
+  #     delimiter: "\n"
+  #   sequence:
+  #     - lambda: UARTDebug::log_string(direction, bytes);
 
 i2c:
   - id: bus_a

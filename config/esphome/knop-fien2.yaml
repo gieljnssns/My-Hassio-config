@@ -3,9 +3,11 @@ substitutions:
   upper_devicename: Knop Fien
   ssid: !secret ssid
   manual_ip: 192.168.79.156
+  platform: esp32
+  board: esp32dev
 
 esp32:
-  board: esp32dev
+  # board: esp32dev
   framework:
     type: esp-idf
 
@@ -13,12 +15,14 @@ packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
+captive_portal:
+  
 wifi:
   # ...
   power_save_mode: light
 
-esphome:
-  name: ${devicename}
+# esphome:
+#   name: ${devicename}
 
 # improv_serial:
 

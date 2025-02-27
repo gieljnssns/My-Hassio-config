@@ -6,16 +6,16 @@ substitutions:
   devicename: luchtdroger
   upper_devicename: Luchtdroger
   manual_ip: 192.168.79.165
+  platform: esp32
+  board: esp32dev
 
 esp32:
-  board: esp32dev
+  # board: esp32dev
   # board: denky32
   framework:
-    # type: arduino
     type: esp-idf
 
 packages:
-  # wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
 ethernet:
@@ -25,26 +25,19 @@ ethernet:
   miso_pin: GPIO19
   cs_pin: GPIO33
   interrupt_pin: GPIO25
+  manual_ip:
+    static_ip: ${manual_ip}
+    gateway: 192.168.79.1
+    subnet: 255.255.255.0
+    dns1: 1.1.1.1
+    dns2: 8.8.8.8
   # reset_pin: 
-  # use_address: 192.168.79.220
+  # use_address: 192.168.79.239
 
-esphome:
-  name: ${devicename}
+# esphome:
+#   name: ${devicename}
 
-# wifi:
-#   on_disconnect:
-#     then:
-#       - delay: 3min
-#       - if:
-#           # condition:
-#           #   binary_sensor.is_off: connected
-#           condition:
-#             not:
-#               wifi.connected:
-#           # Should return either true or false
-#           then:
-#             - switch.turn_off: luchtdroger
-#             - fan.turn_off: ventilatie
+
 # esp32_ble_tracker:
 #   scan_parameters:
 #     # We currently use the defaults to ensure Bluetooth
@@ -60,38 +53,13 @@ i2c:
     sda: 21
     scl: 22
     scan: true
-  - id: bus_b
-    sda: 14
-    scl: 15
-    scan: true
-
-# fan:
-#   - platform: template
-#     name: "Ventilatie"
-#     id: ventilatie
-#     restore_mode: RESTORE_DEFAULT_OFF
-#     speed_count: 2
-#     on_speed_set:
-#       - lambda: |-
-#           if (id(ventilatie).speed == 2) {
-#             id(low).turn_off();
-#           } else {
-#             id(low).turn_on();
-#           }
-#     on_turn_on:
-#       - lambda: |-
-#           id(ventilator).turn_on();
-#     on_turn_off:
-#       # - lambda: |-
-#       #     id(luchtdroger).turn_off();
-#       # - delay: 10min
-#       - lambda: |-
-#           id(ventilator).turn_off();
-#     # on_turn_off:
-#     #   - lambda: |-
-#     #       id(ventilator).turn_off();
-#     # on_state:
-#     #   - do something
+  # - id: bus_b
+  #   sda: 14
+  #   scl: 15
+  - id: bus_c
+    sda: 26
+    scl: 27
+    # scan: true
 
 switch:
   - platform: gpio
@@ -103,21 +71,21 @@ switch:
     id: luchtdroger
     restore_mode: RESTORE_DEFAULT_OFF
 
-  - platform: gpio
-    pin:
-      # number: 33
-      number: 17
-      # inverted: yes
-    internal: true
-    name: low
-    id: low
-    restore_mode: RESTORE_DEFAULT_OFF
+  # - platform: gpio
+  #   pin:
+  #     # number: 33
+  #     number: 17
+  #     # inverted: yes
+  #   #internal: true
+  #   name: low
+  #   id: low
+  #   restore_mode: RESTORE_DEFAULT_OFF
 
   - platform: gpio
     pin:
       # number: 25
       number: 16
-      # inverted: yes
+      inverted: yes
     # internal: true
     name: Verluchting
     id: ventilator
@@ -128,9 +96,16 @@ switch:
             if ((id(living_luchtvochtigheid).state > 59) && (id(living_temperatuur).state < 21)) {
               id(luchtdroger).turn_on();
             }
-            if ((id(temp_in).state > 1) && (id(ha_temp).state < 32) && (id(living_absolute_luchtvochtigheid).state > id(buiten_absolute_luchtvochtigheid).state) && (id(living_temperatuur).state < 21)) {
+            if ((id(ha_temp).state > -7) && (id(ha_temp).state < 32) && (id(living_absolute_luchtvochtigheid).state > id(buiten_absolute_luchtvochtigheid).state) && (id(living_temperatuur).state < 21)) {
               id(luchtdroger).turn_on();
             } 
+        # - lambda: |-
+        #     if ((id(living_luchtvochtigheid).state > 59) && (id(living_temperatuur).state < 21)) {
+        #       id(luchtdroger).turn_on();
+        #     }
+        #     if ((id(temp_in).state > 1) && (id(ha_temp).state < 32) && (id(living_absolute_luchtvochtigheid).state > id(buiten_absolute_luchtvochtigheid).state) && (id(living_temperatuur).state < 21)) {
+        #       id(luchtdroger).turn_on();
+        #     } 
     
     on_turn_off: 
       then:
@@ -152,9 +127,11 @@ binary_sensor:
     entity_id: script.verluchting_1_uur
     on_press:
       then:
-        - delay: 2h
+        - delay: 110min
+        - switch.turn_off: luchtdroger
+        # - delay: 2h
+        - delay: 10min
         - switch.turn_off: ventilator
-        # - fan.turn_off: ventilatie
 
 
   - platform: homeassistant
@@ -163,9 +140,11 @@ binary_sensor:
     entity_id: script.verluchting_2_uur
     on_press:
       then:
-        - delay: 3h
+        - delay: 170min
+        - switch.turn_off: luchtdroger
+        # - delay: 3h
+        - delay: 10min
         - switch.turn_off: ventilator
-        # - fan.turn_off: ventilatie
 
 
 sensor:
@@ -194,16 +173,17 @@ sensor:
     temperature:
       name: ${upper_devicename} ingaande temperatuur
       id: temp_in
-      on_value_range:
-        - below: 3.0
-          then:
-            - switch.turn_off: luchtdroger
-      # internal: true
+      # on_value_range:
+      #   - below: 3.0
+      #     then:
+      #       - switch.turn_off: luchtdroger
+      internal: true
     humidity:
       name: ${upper_devicename} ingaande luchtvochtigheid
+      internal: true
     address: 0x44
     update_interval: 60s
-    i2c_id: bus_b
+    i2c_id: bus_c
   
   - platform: homeassistant
     entity_id: sensor.living_absolute_luchtvochtigheid
@@ -230,65 +210,3 @@ sensor:
     id: living_temperatuur
     internal: true
 
-# Interlock ssd relay
-# fan:
-#   - platform: speed
-#     name: "Ventilatie"
-#     id: ventilatie
-#     restore_mode: RESTORE_DEFAULT_OFF
-#     output: fan_output
-#     speed_count: 2
-#     on_turn_off:
-#       - switch.turn_off: low
-#       - switch.turn_off: high
-# output:
-#   - platform: template
-#     type: float
-#     id: fan_output   
-#     write_action:
-#       - if:
-#           condition:
-#             lambda: return ((state = 0));
-#           then:
-#             - switch.turn_off: low
-#             - switch.turn_off: high
-#       - if: 
-#           condition: 
-#             lambda: return ((state > 0.1) && (state < 0.6));
-#           then:
-#             - switch.turn_off: high
-#             - switch.turn_on: low
-#       - if:
-#           condition:
-#             lambda: return ((state > 0.7));
-#           then: 
-#             - switch.turn_off: low
-#             - switch.turn_on: high     
-# switch:
-#   - platform: gpio
-#     pin:
-#       number: 16
-#       inverted: yes
-#     name: ${upper_devicename}
-#     id: luchtdroger
-#     restore_mode: RESTORE_DEFAULT_OFF
-#   - platform: gpio
-#     pin:
-#       number: 17
-#       inverted: yes
-#     internal: true
-#     name: high
-#     id: high
-#     interlock: &interlock_group [low, high]
-#     interlock_wait_time: 1s
-#     restore_mode: RESTORE_DEFAULT_OFF
-#   - platform: gpio
-#     pin:
-#       number: 18
-#       inverted: yes
-#     internal: true
-#     name: low
-#     id: low
-#     interlock: *interlock_group
-#     interlock_wait_time: 1s
-#     restore_mode: RESTORE_DEFAULT_OFF

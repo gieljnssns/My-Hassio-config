@@ -1,9 +1,9 @@
 substitutions:
   devicename: shelly-plug-s-3cf0de
-  platform: ESP8266
+  platform: esp8266
   board: esp8285
-  upper_devicename: Shelly Keuken ijskast
-  channel_1: Keuken ijskast  
+  upper_devicename: Shelly Garage ijskast
+  channel_1: Garage ijskast  
   # Higher value gives lower watt readout
   current_res: "0.000943"
   # Lower value gives lower voltage readout
@@ -19,8 +19,10 @@ substitutions:
 packages:
   # wifi: !include common/wifi-waskot.yaml
   wifi: !include common/wifi.yaml
-  device_base: !include common/device_base.yaml
+  device_base: !include common/device_base_new_style.yaml
     
+captive_portal:
+  
 binary_sensor:
   - platform: gpio
     pin:

@@ -1,17 +1,22 @@
-# esphome:
-#   name: ${devicename}
+esphome:
+  name: ${devicename}
 #   # platform: ${platform}
 #   # board: ${board}
+
+${platform}:
+  board: ${board}
 
 # captive_portal:
 
 # Enable logging
 logger:
   baud_rate: 0
-  level: DEBUG
+  level: WARN
 
 api:
-  password: !secret password
+  # password: !secret password
+  encryption:
+    key: !secret api_key
 
 ota:
   platform: esphome
@@ -21,25 +26,25 @@ time:
   - platform: homeassistant
     id: homeassistant_time
 
-number:
-  - platform: template
-    name: "${upper_devicename} Nans"
-    id: nans
-    mode: box
-    icon: "mdi:alert-circle"
-    optimistic: true
-    min_value: 0
-    max_value: 100
-    step: 1
+# number:
+#   - platform: template
+#     name: "${upper_devicename} Nans"
+#     id: nans
+#     mode: box
+#     icon: "mdi:alert-circle"
+#     optimistic: true
+#     min_value: 0
+#     max_value: 100
+#     step: 1
 
-text:
-  - platform: template
-    name: "${upper_devicename} Nans"
-    id: nans_text
-    optimistic: true
-    min_length: 0
-    max_length: 100
-    mode: text
+# text:
+#   - platform: template
+#     name: "${upper_devicename} Nans"
+#     id: nans_text
+#     optimistic: true
+#     min_length: 0
+#     max_length: 100
+#     mode: text
     
 # sensor:
 #   - platform: wifi_signal

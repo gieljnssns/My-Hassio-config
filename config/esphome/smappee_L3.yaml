@@ -1,6 +1,6 @@
 substitutions:
   devicename: smappee-l3
-  platform: ESP8266
+  platform: esp8266
   board: nodemcuv2
   upper_devicename: Smappee L3
   ssid: !secret ssid-waskot
@@ -9,8 +9,10 @@ substitutions:
 packages:
   # wifi: !include common/wifi-waskot.yaml
   wifi: !include common/wifi.yaml
-  device_base: !include common/device_base.yaml
+  device_base: !include common/device_base_new_style.yaml
 
+captive_portal:
+  
 uart:
   - id: ubus
     tx_pin: GPIO1

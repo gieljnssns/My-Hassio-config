@@ -1,6 +1,6 @@
 substitutions:
   devicename: buitenv2
-  platform: ESP8266
+  platform: esp8266
   board: nodemcuv2
   upper_devicename: Buiten
   ssid: !secret ssid
@@ -8,8 +8,10 @@ substitutions:
 
 packages:
   wifi: !include common/wifi.yaml
-  device_base: !include common/device_base.yaml
+  device_base: !include common/device_base_new_style.yaml
 
+captive_portal:
+  
 i2c:
   sda: D2
   scl: D1
@@ -33,12 +35,20 @@ switch:
 binary_sensor:
   - platform: template
     name: "Kans op aanvriezen"
+    # Als het dauwpunt lager is dan de temperatuur die de voorruit en de lucht eromheen 's nachts bereiken, zult u niet wakker worden met een bevroren voorruit. Als het dauwpunt hoger is dan die temperaturen, zult u dat wel (ervan uitgaande dat de temperatuur onder het vriespunt ligt).
     lambda: |-
-      if ((id(dauwpunt).state < id(ha_temp).state) && (id(ha_temp).state < 3)) {
+      if ((id(dauwpunt).state > id(ha_temp).state) && (id(ha_temp).state < 1)) {
         return true;
       } else {
         return false;
       }
+    
+    # lambda: |-
+    #   if ((id(dauwpunt).state < id(ha_temp).state) && (id(ha_temp).state < 2)) {
+    #     return true;
+    #   } else {
+    #     return false;
+    #   }
 
 sensor:
   - platform: bh1750
