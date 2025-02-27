@@ -116,26 +116,27 @@
         {% endif %}
       availability: >
         {{ is_number(states('sensor.huidig_verbruik')) }}
-- trigger:
-    - platform: state
-      entity_id: sensor.emhass_load_forecast
-  sensor:
-    - name: "Emhass load forecast 2"
-      unique_id: 3ec4ef1c-166b-4551-b5f3-a5f7191e4ca9
-      unit_of_measurement: "W"
-      device_class: power
-      state: >
-        {%- set load = (state_attr('sensor.emhass_load_forecast', 'forecasts')
-            |map(attribute='emhass_load_forecast')
-            |map('int')
-            |list) %}
-        {{load[0]}}
-      attributes:
-        load: >
-          {%- set load = (state_attr('sensor.emhass_load_forecast', 'forecasts')
-              |map(attribute='emhass_load_forecast')
-              |map('int')
-              |list) %}
-          {{load[1:]}}
-      availability: >
-        {{ is_number(states('sensor.emhass_load_forecast')) }}
+
+# - trigger:
+#     - platform: state
+#       entity_id: sensor.emhass_load_forecast
+#   sensor:
+#     - name: "Emhass load forecast 2"
+#       unique_id: 3ec4ef1c-166b-4551-b5f3-a5f7191e4ca9
+#       unit_of_measurement: "W"
+#       device_class: power
+#       state: >
+#         {%- set load = (state_attr('sensor.emhass_load_forecast', 'forecasts')
+#             |map(attribute='emhass_load_forecast')
+#             |map('int')
+#             |list) %}
+#         {{load[0]}}
+#       attributes:
+#         load: >
+#           {%- set load = (state_attr('sensor.emhass_load_forecast', 'forecasts')
+#               |map(attribute='emhass_load_forecast')
+#               |map('int')
+#               |list) %}
+#           {{load[1:]}}
+#       availability: >
+#         {{ is_number(states('sensor.emhass_load_forecast')) }}

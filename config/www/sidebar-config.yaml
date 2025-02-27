@@ -1,16 +1,141 @@
-# order:
-#   - item: overview
-#     order: 0
+hide_all: true
+order:
+  - item: overzicht
+    # new_item: true
+    order: 1
+    href: "/lovelace/default_view"
+    hide: false
 #   - new_item: true
 #     item: History explorer
 #     href: "/history-explorer"
 #     icon: mdi:history
 #     order: 1
-#   - new_item: true
-#     item: Kalenders
-#     href: "/lovelace-kalender/kalenders"
-#     icon: mdi:calendar-star
-#     order: 2
+  - item: Kalenders
+    new_item: true
+    href: "/lovelace-kalender/kalenders"
+    icon: mdi:calendar-star
+    hide: false
+    order: 2
+  # - divider: true
+# extendable_configs:
+#   martine:
+#     extend_from: 'base'
+#     order:
+#       - item: todo
+#         order: 3
+#       - item: music-assistant
+#         order: 4
+#       - item: frigate
+#         order: 5
+#       - item: energy
+#         order: 6
+exceptions:
+  - user: Martine
+    extend_from: 'base'
+    order:
+      - item: to-do
+        order: 3
+        hide: false
+      - item: Music assistant
+        new_item: true
+        href: "/hassio/ingress/d5369777_music_assistant_beta"
+        icon: mdi:music
+        order: 4
+        hide: false
+      - new_item: true
+        item: Frigate
+        icon: mdi:cctv
+        href: "/hassio/ingress/ccab4aaf_frigate-proxy"
+        order: 5
+      - item: energie
+        order: 6
+        hide: false
+  - user: Giel
+    hide_all: true
+    order:
+      - item: overview
+        order: 1
+        href: "/lovelace/default_view"
+        hide: false
+      - item: Kalenders
+        new_item: true
+        href: "/lovelace-kalender/kalenders"
+        icon: mdi:calendar-star
+        hide: false
+        order: 2
+      - item: to-do
+        order: 3
+        hide: false
+      - item: Music assistant
+        new_item: true
+        href: "/hassio/ingress/d5369777_music_assistant_beta"
+        icon: mdi:music
+        order: 4
+        hide: false
+      - new_item: true
+        item: Frigate
+        icon: mdi:cctv
+        href: "/hassio/ingress/ccab4aaf_frigate-proxy"
+        order: 5
+      - item: energy
+        order: 6
+        hide: false
+      # - divider: true
+      - new_item: true
+        item: Emhass
+        href: "/hassio/ingress/5b918bf2_emhass"
+        icon: mdi:home-lightning-bolt
+        order: 7
+      - new_item: true
+        item: Adguard
+        href: "/hassio/ingress/a0d7b954_adguard"
+        icon: mdi:shield
+        order: 8
+        hide: false
+      - item: hacs
+        order: 9
+        hide: false
+        notification: |
+          [[[
+            const outdatedHacsEntities = Object.values(entities.update).filter(
+              (entity) => entity.platform === 'hacs' && is_state(entity.entity_id, 'on')
+            );
+            return outdatedHacsEntities.length || '';
+          ]]]
+      - item: Esphome
+        new_item: true
+        order: 10
+        hide: false
+        icon: mdi:car-esp
+        href: "/hassio/ingress/15ef4d2f_esphome"
+      - item: History explorer
+        new_item: true
+        href: "/history-explorer"
+        icon: mdi:history
+        order: 11
+        hide: false
+      - item: Foutenboek
+        bottom: true
+        href: "/config/logs"
+        icon: mdi:math-log
+        order: 12
+        hide: false
+      - item: developer tools
+        name: Dev tools
+        icon: mdi:tools
+        bottom: true
+        hide: false
+        order: 13
+      - item: Config
+        bottom: true
+        new_item: true
+        icon: mdi:cog
+        order: 13
+        href: "/config/dashboard"
+        hide: false
+
+
+
 #   - new_item: true
 #     item: Energy
 #     href: "/energy"
@@ -26,8 +151,8 @@
 #     href: "/5b918bf2_emhass/ingress"
 #     icon: mdi:home-lightning-bolt
 #     order: 5
-#   - item: hacs
-#     order: 6
+  # - item: hacs
+  #   order: 7
 #     # notification: |
 #     #   [[[
 #     #     const outdatedHacsEntities = Object.values(entities.update).filter(
