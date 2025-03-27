@@ -7,7 +7,8 @@
       state: >
         {{  is_state('binary_sensor.keuken_aqara_pir', 'on') 
             or is_state('binary_sensor.keuken_presence', 'on')
-            or is_state('binary_sensor.keuken_pir_delay', 'on') }}
+            or is_state('binary_sensor.keuken_pir_delay', 'on') 
+            or states('sensor.keuken_person_count') | int(0) > 0 }}
     
     - name: Badkamer bezetting
       unique_id: da5f7441-6d4d-4326-b274-dc7002e83298
@@ -49,7 +50,8 @@
         {{  is_state('binary_sensor.zithoek_aqara_pir', 'on')
             or is_state('binary_sensor.zithoek_still_target', 'on')
             or is_state('binary_sensor.zithoek_moving_target', 'on')
-            or is_state('binary_sensor.zithoek_presence', 'on') }}
+            or is_state('binary_sensor.zithoek_presence', 'on')
+            or states('sensor.living_person_count') | int(0) > 0 }}
     
     - name: Tuin bezetting
       unique_id: efa6d545-9ecc-4b8c-9919-1236957d31e7

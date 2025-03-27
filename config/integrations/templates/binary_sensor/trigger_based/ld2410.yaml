@@ -1,0 +1,315 @@
+- trigger:
+    - platform: template
+      id: off_trigger
+      value_template:  >
+        {{ states("sensor.keuken_g0_still_energy") | int < states("number.keuken_g0_still") | int
+            and states("sensor.keuken_g1_still_energy")| int < states("number.keuken_g1_still")| int
+            and states("sensor.keuken_g2_still_energy")| int < states("number.keuken_g2_still")| int 
+            and states("sensor.keuken_g3_still_energy")| int < states("number.keuken_g3_still")| int
+            and states("sensor.keuken_g4_still_energy")| int < states("number.keuken_g4_still")| int
+            and states("sensor.keuken_g5_still_energy")| int < states("number.keuken_g5_still")| int
+            and states("sensor.keuken_g6_still_energy")| int < states("number.keuken_g6_still")| int
+            and states("sensor.keuken_g7_still_energy")| int < states("number.keuken_g7_still")| int
+            and states("sensor.keuken_g8_still_energy")| int < states("number.keuken_g8_still")| int
+            }}
+    - platform: template
+      id: g0_still
+      value_template: >
+        {{ states("sensor.keuken_g0_still_energy") | int > states("number.keuken_g0_still") | int }}
+    - platform: template
+      id: g1_still
+      value_template: >
+        {{ states("sensor.keuken_g1_still_energy") | int > states("number.keuken_g1_still") | int }}
+    - platform: template
+      id: g2_still
+      value_template: >
+        {{ states("sensor.keuken_g2_still_energy") | int > states("number.keuken_g2_still") | int }}
+    - platform: template
+      id: g3_still
+      value_template: >
+        {{ states("sensor.keuken_g3_still_energy") | int > states("number.keuken_g3_still") | int }}
+    - platform: template
+      id: g4_still
+      value_template: >
+        {{ states("sensor.keuken_g4_still_energy") | int > states("number.keuken_g4_still") | int }}
+    - platform: template
+      id: g5_still
+      value_template: >
+        {{ states("sensor.keuken_g5_still_energy") | int > states("number.keuken_g5_still") | int }}
+    - platform: template
+      id: g6_still
+      value_template: >
+        {{ states("sensor.keuken_g6_still_energy") | int > states("number.keuken_g6_still") | int }}
+    - platform: template
+      id: g7_still
+      value_template: >
+        {{ states("sensor.keuken_g7_still_energy") | int > states("number.keuken_g7_still") | int }}
+    - platform: template
+      id: g8_still
+      value_template: >
+        {{ states("sensor.keuken_g8_still_energy") | int > states("number.keuken_g8_still") | int }}
+    
+  action:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: g0_still
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_still_trigger
+              data:
+                value: g0_still
+        - conditions:
+            - condition: trigger
+              id: g1_still
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_still_trigger
+              data:
+                value: g1_still
+        - conditions:
+            - condition: trigger
+              id: g2_still
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_still_trigger
+              data:
+                value: g2_still
+        - conditions:
+            - condition: trigger
+              id: g3_still
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_still_trigger
+              data:
+                value: g3_still
+        - conditions:
+            - condition: trigger
+              id: g4_still
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_still_trigger
+              data:
+                value: g4_still
+        - conditions:
+            - condition: trigger
+              id: g5_still
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_still_trigger
+              data:
+                value: g5_still
+        - conditions:
+            - condition: trigger
+              id: g6_still
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_still_trigger
+              data:
+                value: g6_still
+        - conditions:
+            - condition: trigger
+              id: g7_still
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_still_trigger
+              data:
+                value: g7_still
+        - conditions:
+            - condition: trigger
+              id: g8_still
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_still_trigger
+              data:
+                value: g8_still
+        - conditions:
+            - condition: trigger
+              id: off_trigger
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_still_trigger
+              data:
+                value: off_trigger
+
+  binary_sensor:
+    - name: Keuken still
+      unique_id: 506217ad-1eb0-4ddd-a381-dbb52d28b36d
+      state: >
+        {{ states("sensor.keuken_g0_still_energy") | int > states("number.keuken_g0_still") | int
+            or states("sensor.keuken_g1_still_energy")| int > states("number.keuken_g1_still")| int
+            or states("sensor.keuken_g2_still_energy")| int > states("number.keuken_g2_still")| int 
+            or states("sensor.keuken_g3_still_energy")| int > states("number.keuken_g3_still")| int
+            or states("sensor.keuken_g4_still_energy")| int > states("number.keuken_g4_still")| int
+            or states("sensor.keuken_g5_still_energy")| int > states("number.keuken_g5_still")| int
+            or states("sensor.keuken_g6_still_energy")| int > states("number.keuken_g6_still")| int
+            or states("sensor.keuken_g7_still_energy")| int > states("number.keuken_g7_still")| int
+            or states("sensor.keuken_g8_still_energy")| int > states("number.keuken_g8_still")| int
+            }}
+
+- trigger:
+    - platform: template
+      id: off_trigger
+      value_template:  >
+        {{ states("sensor.keuken_g0_move_energy") | int < states("number.keuken_g0_move") | int
+            and states("sensor.keuken_g1_move_energy")| int < states("number.keuken_g1_move")| int
+            and states("sensor.keuken_g2_move_energy")| int < states("number.keuken_g2_move")| int 
+            and states("sensor.keuken_g3_move_energy")| int < states("number.keuken_g3_move")| int
+            and states("sensor.keuken_g4_move_energy")| int < states("number.keuken_g4_move")| int
+            and states("sensor.keuken_g5_move_energy")| int < states("number.keuken_g5_move")| int
+            and states("sensor.keuken_g6_move_energy")| int < states("number.keuken_g6_move")| int
+            and states("sensor.keuken_g7_move_energy")| int < states("number.keuken_g7_move")| int
+            and states("sensor.keuken_g8_move_energy")| int < states("number.keuken_g8_move")| int
+            }}
+    - platform: template
+      id: g0_move
+      value_template: >
+        {{ states("sensor.keuken_g0_move_energy") | int > states("number.keuken_g0_move") | int }}
+    - platform: template
+      id: g1_move
+      value_template: >
+        {{ states("sensor.keuken_g1_move_energy") | int > states("number.keuken_g1_move") | int }}
+    - platform: template
+      id: g2_move
+      value_template: >
+        {{ states("sensor.keuken_g2_move_energy") | int > states("number.keuken_g2_move") | int }}
+    - platform: template
+      id: g3_move
+      value_template: >
+        {{ states("sensor.keuken_g3_move_energy") | int > states("number.keuken_g3_move") | int }}
+    - platform: template
+      id: g4_move
+      value_template: >
+        {{ states("sensor.keuken_g4_move_energy") | int > states("number.keuken_g4_move") | int }}
+    - platform: template
+      id: g5_move
+      value_template: >
+        {{ states("sensor.keuken_g5_move_energy") | int > states("number.keuken_g5_move") | int }}
+    - platform: template
+      id: g6_move
+      value_template: >
+        {{ states("sensor.keuken_g6_move_energy") | int > states("number.keuken_g6_move") | int }}
+    - platform: template
+      id: g7_move
+      value_template: >
+        {{ states("sensor.keuken_g7_move_energy") | int > states("number.keuken_g7_move") | int }}
+    - platform: template
+      id: g8_move
+      value_template: >
+        {{ states("sensor.keuken_g8_move_energy") | int > states("number.keuken_g8_move") | int }}
+  action:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: g0_move
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_moving_trigger
+              data:
+                value: g0_move
+        - conditions:
+            - condition: trigger
+              id: g1_move
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_moving_trigger
+              data:
+                value: g1_move
+        - conditions:
+            - condition: trigger
+              id: g2_move
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_moving_trigger
+              data:
+                value: g2_move
+        - conditions:
+            - condition: trigger
+              id: g3_move
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_moving_trigger
+              data:
+                value: g3_move
+        - conditions:
+            - condition: trigger
+              id: g4_move
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_moving_trigger
+              data:
+                value: g4_move
+        - conditions:
+            - condition: trigger
+              id: g5_move
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_moving_trigger
+              data:
+                value: g5_move
+        - conditions:
+            - condition: trigger
+              id: g6_move
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_moving_trigger
+              data:
+                value: g6_move
+        - conditions:
+            - condition: trigger
+              id: g7_move
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_moving_trigger
+              data:
+                value: g7_move
+        - conditions:
+            - condition: trigger
+              id: g8_move
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_moving_trigger
+              data:
+                value: g8_move  
+        - conditions:
+            - condition: trigger
+              id: off_trigger
+          sequence:
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.keuken_moving_trigger
+              data:
+                value: off_trigger
+  binary_sensor:
+    - name: Keuken moving
+      unique_id: b872eed4-8617-407c-ab11-afc46dde612d
+      state: >
+        {{ states("sensor.keuken_g0_move_energy") | int > states("number.keuken_g0_move") | int
+            or states("sensor.keuken_g1_move_energy")| int > states("number.keuken_g1_move")| int
+            or states("sensor.keuken_g2_move_energy")| int > states("number.keuken_g2_move")| int 
+            or states("sensor.keuken_g3_move_energy")| int > states("number.keuken_g3_move")| int
+            or states("sensor.keuken_g4_move_energy")| int > states("number.keuken_g4_move")| int
+            or states("sensor.keuken_g5_move_energy")| int > states("number.keuken_g5_move")| int
+            or states("sensor.keuken_g6_move_energy")| int > states("number.keuken_g6_move")| int
+            or states("sensor.keuken_g7_move_energy")| int > states("number.keuken_g7_move")| int
+            or states("sensor.keuken_g8_move_energy")| int > states("number.keuken_g8_move")| int
+            }}

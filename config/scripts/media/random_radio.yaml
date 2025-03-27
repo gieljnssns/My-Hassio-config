@@ -1,5 +1,8 @@
 random_radio:
   sequence:
+    # - action: media_player.unjoin
+    #   target:
+    #     entity_id: media_player.mass_badkamer, media_player.mass_keuken, media_player.mass_living_2, media_player.mass_2c, media_player.mass_move
     - action: todo.get_items
       data:
         status: needs_action
@@ -27,6 +30,9 @@ random_radio:
       target:
         entity_id: >
           {{ sonos_entity }}
+    - action: media_player.unjoin
+      target:
+        entity_id: media_player.mass_badkamer
     - action: todo.update_item
       target:
         entity_id:

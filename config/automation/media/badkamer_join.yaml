@@ -1,0 +1,29 @@
+alias: Badkamer join
+id: 1154da8f-d6ff-4ad8-9cc3-ebe8501fcee7
+mode: single
+trigger:
+  - platform: state
+    entity_id: binary_sensor.badkamer_bezetting
+    to: "on"
+condition:
+  - condition: and
+    conditions:
+      - condition: numeric_state
+        entity_id: sensor.people_home
+        below: 2
+        above: 0
+      - condition: state
+        entity_id: binary_sensor.giel_bayesian
+        state: "on"
+      - condition: state
+        entity_id: media_player.mass_keuken
+        state: "playing"
+actions:
+  sequence:
+    - action: media_player.join
+      target:
+        entity_id: media_player.mass_keuken
+      data:
+        group_members:
+          - media_player.mass_badkamer
+    

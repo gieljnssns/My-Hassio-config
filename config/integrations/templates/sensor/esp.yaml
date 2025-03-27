@@ -2,37 +2,50 @@
     - name: Esp down
       unique_id: 0922ebc6-e577-4e0b-9370-df23b76fa9f9
       icon: mdi:car-esp
-      # attributes:
-      #   list: >
-      #     {% set unknown = expand(integration_entities('esphome')
-      #                 | select('match','sensor.')
-      #                 | reject('contains', '_energy')) 
-      #                 | selectattr("state", "eq", "unavailable") 
-      #                 | map(attribute="entity_id") 
-      #                 | list %}
-      #     {%- set devices = namespace(all=[]) %}
-      #     {%- for entity in unknown -%}
-      #       {% if device_id(entity) not in devices.all %}
-      #       {% set devices.all = devices.all + [device_id(entity)] %}
-      #       {% endif %}
-      #     {% endfor %}
-      #     {{ devices.all | length }}
       state: >
-        {% set unknown = expand(integration_entities('esphome')
-                  | select('match','sensor.')
-                  | reject('contains', '_energy')) 
-                  | selectattr("state", "eq", "unavailable") 
-                  | map(attribute="entity_id") 
-                  | list %}
+        {% set now = now().timestamp() %}
+        {% set min_unavailable_time = 5 %} 
 
-        {%- set devices = namespace(all=[]) %}
-        {%- for entity in unknown -%}
-          {% set device = device_attr(device_id(entity)|string, 'name') %}
-          {% if device not in devices.all %}
-          {% set devices.all = devices.all + [device] %}
+        {% set esp_sensors = states.binary_sensor 
+            | selectattr('entity_id', 'search', '_status')  
+            | selectattr('entity_id', 'in', integration_entities('esphome'))
+            | selectattr('state', 'eq', 'off')  
+            | list %}
+
+        {% set down_devices = namespace(all=[]) %}
+        {% for entity in esp_sensors %}
+          {% if entity.last_changed.timestamp() <= (now - min_unavailable_time) %}
+            {% set device = device_attr(device_id(entity.entity_id)|string, 'name') | default('Onbekend') %}
+            {% if device not in down_devices.all %}
+              {% set down_devices.all = down_devices.all + [device] %}
+            {% endif %}
           {% endif %}
         {% endfor %}
-        {{ devices.all  }}
+        {% if down_devices.all | length > 0 %}
+          {{ down_devices.all | join(', ') }}
+        {% else %}
+          Alles ok!
+        {% endif %}
+
+      # state: >
+      #   {% set unknown = expand(integration_entities('esphome')
+      #             | select('match','sensor.')
+      #             | reject('contains', '_energy')) 
+      #             | selectattr("state", "eq", "unavailable") 
+      #             | map(attribute="entity_id") 
+      #             | list %}
+
+      #   {%- set devices = namespace(all=[]) %}
+      #   {%- for entity in unknown -%}
+      #     {% set device = device_attr(device_id(entity)|string, 'name') %}
+      #     {% if device not in devices.all %}
+      #     {% set devices.all = devices.all + [device] %}
+      #     {% endif %}
+      #   {% endfor %}
+      #   {{ devices.all  }}
+
+
+
       # state: >-
       #   {{  states("binary_sensor.shelly_warmtepomp_status") != 'on' or
       #       states("binary_sensor.esp_garage_knopjes_status") != 'on' or

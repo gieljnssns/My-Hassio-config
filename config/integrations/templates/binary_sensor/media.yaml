@@ -10,11 +10,12 @@
         {% set noor = "RINCON_38420B719A4801400" %}
         {% set fien = "RINCON_38420B719A6A01400" %}
         {% set players = [ keuken, move, wc, badkamer, noor, fien] %}
-        {{  state_attr('media_player.mass_living_2', 'active_queue') | string is in players and
-            state_attr('media_player.mass_living_2', 'group_members') == [] }}
+        {{  state_attr('media_player.mass_living_2', 'active_queue') | string is in players }}
 
     - name: Living 2 not playing
       unique_id: bdab5606-5315-4fa7-b5e2-3432763f5116
+      delay_on:
+        minutes: 5
       state: >
         {{ states('media_player.mass_living_2') != 'playing' }}
 
@@ -29,11 +30,12 @@
         {% set noor = "RINCON_38420B719A4801400" %}
         {% set fien = "RINCON_38420B719A6A01400" %}
         {% set players = [ move, living, wc, badkamer, noor, fien] %}
-        {{  state_attr('media_player.mass_keuken', 'active_queue') | string is in players and
-            state_attr('media_player.mass_keuken', 'group_members') == [] }}
+        {{  state_attr('media_player.mass_keuken', 'active_queue') | string is in players }}
 
     - name: Keuken not playing
       unique_id: 073660a3-1e9a-40cf-b0f9-4fae6aa566d9
+      delay_on:
+        minutes: 5
       state: >
         {{ states('media_player.mass_keuken') != 'playing' }}
 
@@ -48,11 +50,12 @@
         {% set noor = "RINCON_38420B719A4801400" %}
         {% set fien = "RINCON_38420B719A6A01400" %}
         {% set players = [ keuken, move, living, wc, noor, fien] %}
-        {{  state_attr('media_player.mass_badkamer', 'active_queue') | string is in players and
-            state_attr('media_player.mass_badkamer', 'group_members') == [] }}
+        {{  state_attr('media_player.mass_badkamer', 'active_queue') | string is in players }}
 
     - name: Badkamer not playing
       unique_id: 494b0d57-a8f3-494b-9b61-470cbcd2605f
+      delay_on:
+        minutes: 5
       state: >
         {{ states('media_player.mass_badkamer') != 'playing' }}
 
@@ -67,11 +70,12 @@
         {% set noor = "RINCON_38420B719A4801400" %}
         {% set fien = "RINCON_38420B719A6A01400" %}
         {% set players = [ keuken, move, living, badkamer, noor, fien] %}
-        {{  state_attr('media_player.mass_2c', 'active_queue') | string is in players and
-            state_attr('media_player.mass_2c', 'group_members') == [] }}
+        {{  state_attr('media_player.mass_2c', 'active_queue') | string is in players }}
 
     - name: 2c not playing
       unique_id: 7d41c0cd-bd85-4830-be17-ce2d2e294abc
+      delay_on:
+        minutes: 5
       state: >
         {{ states('media_player.mass_2c') != 'playing' }}
 
@@ -86,11 +90,12 @@
         {% set noor = "RINCON_38420B719A4801400" %}
         {% set fien = "RINCON_38420B719A6A01400" %}
         {% set players = [ keuken, living, wc, badkamer, noor, fien] %}
-        {{  state_attr('media_player.mass_move', 'active_queue') | string is in players and
-            state_attr('media_player.mass_move', 'group_members') == [] }}
+        {{  state_attr('media_player.mass_move', 'active_queue') | string is in players }}
 
     - name: Move not playing
       unique_id: 1480d1a8-4800-4f39-af26-6baeb1202b53
+      delay_on:
+        minutes: 5
       state: >
         {{ states('media_player.mass_move') != 'playing' }}
 
@@ -105,11 +110,12 @@
         {% set noor = "RINCON_38420B719A4801400" %}
         {% set fien = "RINCON_38420B719A6A01400" %}
         {% set players = [ keuken, move, living, wc, badkamer, fien] %}
-        {{  state_attr('media_player.mass_slaapkamer_noor', 'active_queue') | string is in players and
-            state_attr('media_player.mass_slaapkamer_noor', 'group_members') == [] }}
+        {{  state_attr('media_player.mass_slaapkamer_noor', 'active_queue') | string is in players }}
 
     - name: Noor not playing
       unique_id: 7b4aea22-9fc7-4262-b41e-f8415e2c2b09
+      delay_on:
+        minutes: 5
       state: >
         {{ states('media_player.mass_slaapkamer_noor') != 'playing' }}
 
@@ -124,11 +130,12 @@
         {% set noor = "RINCON_38420B719A4801400" %}
         {% set fien = "RINCON_38420B719A6A01400" %}
         {% set players = [ keuken, move, living, wc, badkamer, noor] %}
-        {{  state_attr('media_player.mass_slaapkamer_fien', 'active_queue') | string is in players and
-            state_attr('media_player.mass_slaapkamer_fien', 'group_members') == [] }}
+        {{  state_attr('media_player.mass_slaapkamer_fien', 'active_queue') | string is in players }}
 
     - name: Fien not playing
       unique_id: c8163868-c516-4932-a806-5fcc94afb03a
+      delay_on:
+        minutes: 5
       state: >
         {{ states('media_player.mass_slaapkamer_fien') != 'playing' }}
 

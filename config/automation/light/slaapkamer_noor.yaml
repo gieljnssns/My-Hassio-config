@@ -32,17 +32,19 @@ trigger:
     from: "off"
     to: "on"
     id: focus_on
-  - platform: state
-    entity_id: binary_sensor.nphone_focus
-    from: "on"
-    to: "off"
-    id: focus_on
+  # - platform: state
+  #   entity_id: binary_sensor.nphone_focus
+  #   from: "on"
+  #   to: "off"
+  #   id: focus_on
 
 actions:
   - delay:
       milliseconds: 200
   - choose:
     - conditions:
+        - condition: trigger
+          id: presence
         - condition: state
           entity_id: binary_sensor.noor_bezetting
           state: "on"
@@ -76,6 +78,8 @@ actions:
           target:
             entity_id: input_datetime.slaapkamer_noor_verlichting_end_time
     - conditions:
+        - condition: trigger
+          id: presence
         - condition: state
           entity_id: binary_sensor.noor_bezetting
           state: "on"
@@ -117,36 +121,36 @@ actions:
             transition: 120
           target:
             entity_id: light.noor
-        - delay:
-            seconds: 30
-        - action: light.turn_on
-          data:
-            effect: Solid
-            brightness: 9
-            rgb_color:
-              - 4
-              - 0
-              - 255
-            transition: 30
-          target:
-            entity_id: light.wled_noor
-        - delay:
-            seconds: 30
-        - action: switch.turn_on
-          target:
-            entity_id: switch.wled_noor_nightlight
-    - conditions:
-        - condition: trigger
-          id: focus_off
-        - condition: state
-          entity_id: binary_sensor.noor_bezetting
-          state: "on"
-      sequence:
-        - action: light.turn_on
-          data:
-            transition: 120
-          target:
-            entity_id: light.noor
+        # - delay:
+        #     seconds: 30
+        # - action: light.turn_on
+        #   data:
+        #     effect: Solid
+        #     brightness: 9
+        #     rgb_color:
+        #       - 4
+        #       - 0
+        #       - 255
+        #     transition: 30
+        #   target:
+        #     entity_id: light.wled_noor
+        # - delay:
+        #     seconds: 30
+        # - action: switch.turn_on
+        #   target:
+        #     entity_id: switch.wled_noor_nightlight
+    # - conditions:
+    #     - condition: trigger
+    #       id: focus_off
+    #     - condition: state
+    #       entity_id: binary_sensor.noor_bezetting
+    #       state: "on"
+    #   sequence:
+    #     - action: light.turn_on
+    #       data:
+    #         transition: 120
+    #       target:
+    #         entity_id: light.noor
     - conditions:
         - condition: trigger
           id: zha

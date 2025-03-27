@@ -8,7 +8,18 @@ trigger:
 #     entity_id: binary_sensor.schooldag
 #     state: "off"
 actions:
+  - action: input_boolean.turn_on
+    entity_id: input_boolean.fien_snapchat_blocker
   - action: input_boolean.turn_off
-    entity_id: input_boolean.noor_blocker, input_boolean.fien_blocker
+    entity_id: input_boolean.noor_blocker
+  - wait_for_trigger:
+    - trigger: state
+      entity_id: sensor.fphone_area
+      to: "Keuken"
+    - trigger: state
+      entity_id: sensor.fphone_area
+      to: "Badkamer"
+  - action: input_boolean.turn_off
+    entity_id: input_boolean.fien_blocker, input_boolean.fien_snapchat_blocker
   # - action: input_boolean.turn_on
   #   entity_id: input_boolean.allowinstagram, input_boolean.allowroblox, input_boolean.allowtiktok, input_boolean.allowyoutube, input_boolean.allowstreamz

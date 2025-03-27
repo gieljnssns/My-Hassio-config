@@ -12,12 +12,11 @@ trigger:
     id: zondag
   - platform: time
     at: "09:00:00"
-    # id: week
-  - platform: state
-    entity_id: calendar.noor_school
-    from: "on"
-    to: "off"
-    id: noor_snapchat
+  # - platform: state
+  #   entity_id: calendar.noor_school
+  #   from: "on"
+  #   to: "off"
+  #   id: noor_snapchat
   - platform: state
     entity_id: calendar.fien_school
     from: "on"
@@ -300,6 +299,8 @@ actions:
         sequence:
           - action: input_boolean.turn_on
             entity_id: input_boolean.fien_blocker, input_boolean.noor_blocker
+
+
           # - action: script.check_todo
           #   data:
           #     check: ["Piano"]

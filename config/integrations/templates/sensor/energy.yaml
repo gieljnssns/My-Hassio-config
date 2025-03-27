@@ -352,3 +352,72 @@
       device_class: power
       state: >
         {{ states("sensor.garage_oplader_vermogen_2") | float(default=0) | round(2) }}
+
+    - name: Open meteo voorspelling vandaag
+      unique_id: 0337653c-eaf4-485d-baed-4f283dc03d21
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state: >
+        {% set badkamer = states("sensor.energy_production_today_3") | float(0) %}
+        {% set huis = states("sensor.energy_production_today_2") | float(0) %}
+        {% set garage = states("sensor.energy_production_today") | float(0) %}
+          {{ (garage + huis + badkamer) | round(2) }}
+      attributes:
+        watts: >-
+          {%- set garage = state_attr('sensor.energy_production_today', 'watts') %}
+          {%- set huis = state_attr('sensor.energy_production_today_2', 'watts') %}
+          {%- set badkamer = state_attr('sensor.energy_production_today_3', 'watts') %}
+          {%- set ns = namespace(output={}) %}
+          {%- for time, value in garage.items() %}
+            {%- set sum_value = value + huis[time] + badkamer[time] %}
+            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
+          {%- endfor %}
+            {{ ns.output }}
+        wh_period: >-
+          {%- set garage = state_attr('sensor.energy_production_today', 'wh_period') %}
+          {%- set huis = state_attr('sensor.energy_production_today_2', 'wh_period') %}
+          {%- set badkamer = state_attr('sensor.energy_production_today_3', 'wh_period') %}
+          {%- set ns = namespace(output={}) %}
+          {%- for time, value in garage.items() %}
+            {%- set sum_value = value + huis[time] + badkamer[time] %}
+            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
+          {%- endfor %}
+            {{ ns.output }}
+    
+    - name: Open meteo voorspelling vandaag huawei
+      unique_id: 5ea37fe4-b9d8-4ac6-9d06-7f0c245d2157
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state: >
+        {%- set huis = states('sensor.energy_production_today_2') | float(default=0) %}
+        {%- set badkamer = states('sensor.energy_production_today_3') | float(default=0) %}
+        {{ (huis + badkamer) | round(2) }}
+      attributes:
+        watts: >-
+          {%- set huis = state_attr('sensor.energy_production_today_2', 'watts') %}
+          {%- set badkamer = state_attr('sensor.energy_production_today_3', 'watts') %}
+          {%- set ns = namespace(output={}) %}
+          {%- for time, value in huis.items() %}
+            {%- set sum_value = value + badkamer[time] %}
+            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
+          {%- endfor %}
+            {{ ns.output }}
+        wh_period: >-
+          {%- set huis = state_attr('sensor.energy_production_today_2', 'wh_period') %}
+          {%- set badkamer = state_attr('sensor.energy_production_today_3', 'wh_period') %}
+          {%- set ns = namespace(output={}) %}
+          {%- for time, value in huis.items() %}
+            {%- set sum_value = value + badkamer[time] %}
+            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
+          {%- endfor %}
+            {{ ns.output }}
+
+    - name: Open meteo voorspelling resterend vandaag
+      unique_id: 2d19babc-2ce9-4f67-9b76-cbe630a8cf64
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state: >
+        {%- set garage = states('sensor.energy_production_today_remaining') | float(default=0) %}
+        {%- set huis = states('sensor.energy_production_today_remaining_2') | float(default=0) %}
+        {%- set badkamer = states('sensor.energy_production_today_remaining_3') | float(default=0) %}
+        {{ (garage + huis + badkamer) | round(2) }}

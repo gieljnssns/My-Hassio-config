@@ -11,6 +11,9 @@ trigger:
   - platform: state
     entity_id: binary_sensor.waskot_rookmelder
     to: "on"
+  - platform: state
+    entity_id: binary_sensor.kelder_rookmelder
+    to: "on"
 actions:
   - action: notify.iedereen
     data_template:
@@ -22,6 +25,8 @@ actions:
           Rook gedetecteerd in de living.
         {%- elif is_state("binary_sensor.waskot_rookmelder", "on") -%}
           Rook gedetecteerd in het waskot.
+        {%- elif is_state("binary_sensor.kelder_rookmelder", "on") -%}
+          Rook gedetecteerd in de kelder.
         {%- endif %}
       data:
         push:
