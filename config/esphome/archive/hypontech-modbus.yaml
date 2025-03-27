@@ -1,0 +1,172 @@
+substitutions:
+  devicename: hypontech-modbus
+  upper_devicename: Hypontech-modbus
+  ssid: !secret ssid
+  manual_ip: 192.168.79.167
+  platform: esp32
+  board: esp32dev
+
+esp32:
+  # board: esp32dev
+  framework:
+    type: arduino
+
+captive_portal:
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+  
+wifi:
+  # ...
+  power_save_mode: LIGHT
+logger:
+  baud_rate: 0
+  # level: VERY_VERBOSE
+  # level: VERBOSE
+  level: DEBUG
+
+# esphome:
+#   name: ${devicename}
+
+uart:
+  # - id: mod_bus
+  #   tx_pin: GPIO1
+  #   rx_pin: GPIO3
+  #   baud_rate: 9600
+  #   stop_bits: 1
+  #   rx_buffer_size: 1024
+  #   debug:
+  #     direction: BOTH
+  #     dummy_receiver: false
+  #     after:
+  #       delimiter: "\n"
+  #     sequence:
+  #       - lambda: UARTDebug::log_string(direction, bytes);
+  
+  - id: mod_bus2
+    tx_pin: GPIO17
+    rx_pin: GPIO16
+    baud_rate: 9600
+    stop_bits: 1
+    data_bits: 8
+    rx_buffer_size: 1024
+    debug:
+      direction: BOTH
+      dummy_receiver: false
+      after:
+        delimiter: "\n"
+      sequence:
+        - lambda: UARTDebug::log_string(direction, bytes);
+
+web_server:
+  port: 80
+
+modbus:
+#   flow_control_pin: GPIO0
+  # - id: modbus1
+  #   send_wait_time: 500ms
+  #   uart_id: mod_bus
+  
+  - id: modbus2
+    send_wait_time: 500ms
+    uart_id: mod_bus2
+
+modbus_controller:
+  # - id: hypontech_inverter
+  #   address: 0x01
+  #   modbus_id: modbus1
+  #   setup_priority: -10
+  #   command_throttle: 50ms
+  #   update_interval: 15s
+  
+  - id: hypontech_inverter2
+    address: 0x0
+    modbus_id: modbus2
+    setup_priority: -10
+    command_throttle: 50ms
+    update_interval: 15s
+
+text_sensor:
+  # Range 30010 - 30035
+  - name: "Hypontech inverter model"
+    icon: "mdi:information"
+    platform: modbus_controller
+    modbus_controller_id: hypontech_inverter2
+    register_type: holding
+    address: 30018
+    register_count: 1
+    response_size: 16
+    # skip_updates: 100
+  # - name: "Hypontech inverter SN"
+  #   icon: "mdi:information"
+  #   platform: modbus_controller
+  #   modbus_controller_id: hypontech_inverter
+  #   register_type: holding
+  #   address: 30015
+  #   register_count: 10
+  #   response_size: 20
+  #   skip_updates: 100
+  # - name: "Hypontech inverter PN"
+  #   icon: "mdi:information"
+  #   platform: modbus_controller
+  #   modbus_controller_id: hypontech_inverter
+  #   register_type: holding
+  #   address: 30025
+  #   register_count: 10
+  #   response_size: 20
+  #   skip_updates: 100
+
+  # # Inverter status string
+  # - name: "Hypontech inverter status"
+  #   platform: template
+  #   id: inverter_status_string
+  #   icon: "mdi:information"
+
+sensor:
+  # - name: "Huawei meter active power"
+  #   id: meter_power
+  #   icon: "mdi:transmission-tower-export"
+  #   platform: modbus_controller
+  #   modbus_controller_id: hypontech_inverter
+  #   register_type: holding
+  #   address: 30108
+  #   value_type: S_DWORD
+  #   register_count: 2
+  #   unit_of_measurement: "W"
+  #   # value_type: int32
+  #   # data_type: signed
+  #   # byte_offset: 0
+  #   device_class: power
+  #   state_class: measurement
+  #   # accuracy_decimals: 3
+  #   # filters:
+  #   #   - multiply: 0.001
+  
+  - name: "Modbus2 active power"
+    id: meter_power2
+    icon: "mdi:transmission-tower-export"
+    platform: modbus_controller
+    modbus_controller_id: hypontech_inverter2
+    register_type: holding
+    address: 30108
+    value_type: S_DWORD
+    register_count: 2
+    unit_of_measurement: "W"
+    # value_type: int32
+    # data_type: signed
+    # byte_offset: 0
+    device_class: power
+    state_class: measurement
+    # accuracy_decimals: 3
+    # filters:
+    #   - multiply: 0.001
+  
+  # - name: "Huawei inverter fault code"
+  #   icon: "mdi:alert-circle"
+  #   platform: modbus_controller
+  #   modbus_controller_id: hypontech_inverter
+  #   register_type: holding
+  #   address: 30115
+  #   value_type: U_WORD
+  #   register_count: 1

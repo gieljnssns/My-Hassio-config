@@ -1,0 +1,536 @@
+globals:
+  - id: highest_zone
+    type: std::string
+    restore_value: no
+
+ld2410:
+
+number:
+  - platform: ld2410
+    timeout:
+      name: ${upper_devicename} timeout
+      id: timeout
+    max_move_distance_gate:
+      name: ${upper_devicename} max_move_distance
+    max_still_distance_gate:
+      name: ${upper_devicename} max_still_distance
+    g0:
+      move_threshold:
+        name: ${upper_devicename} g0 move
+        mode: box
+        id: g0_move_threshold
+      still_threshold:
+        name: ${upper_devicename} g0 still
+        mode: box
+        id: g0_still_threshold
+    g1:
+      move_threshold:
+        name: ${upper_devicename} g1 move
+        mode: box
+        id: g1_move_threshold
+      still_threshold:
+        name: ${upper_devicename} g1 still
+        mode: box
+        id: g1_still_threshold
+    g2:
+      move_threshold:
+        name: ${upper_devicename} g2 move
+        mode: box
+        id: g2_move_threshold
+      still_threshold:
+        name: ${upper_devicename} g2 still
+        mode: box
+        id: g2_still_threshold
+    g3:
+      move_threshold:
+        name: ${upper_devicename} g3 move
+        mode: box
+        id: g3_move_threshold
+      still_threshold:
+        name: ${upper_devicename} g3 still
+        mode: box
+        id: g3_still_threshold
+    g4:
+      move_threshold:
+        name: ${upper_devicename} g4 move
+        mode: box
+        id: g4_move_threshold
+      still_threshold:
+        name: ${upper_devicename} g4 still
+        mode: box
+        id: g4_still_threshold
+    g5:
+      move_threshold:
+        name: ${upper_devicename} g5 move
+        mode: box
+        id: g5_move_threshold
+      still_threshold:
+        name: ${upper_devicename} g5 still
+        mode: box
+        id: g5_still_threshold
+    g6:
+      move_threshold:
+        name: ${upper_devicename} g6 move
+        mode: box
+        id: g6_move_threshold
+      still_threshold:
+        name: ${upper_devicename} g6 still
+        mode: box
+        id: g6_still_threshold
+    g7:
+      move_threshold:
+        name: ${upper_devicename} g7 move
+        mode: box
+        id: g7_move_threshold
+      still_threshold:
+        name: ${upper_devicename} g7 still
+        mode: box
+        id: g7_still_threshold
+    g8:
+      move_threshold:
+        name: ${upper_devicename} g8 move
+        mode: box
+        id: g8_move_threshold
+      still_threshold:
+        name: ${upper_devicename} g8 still
+        mode: box
+        id: g8_still_threshold
+
+switch:
+  - platform: ld2410
+    engineering_mode:
+      name: ${upper_devicename} engineering mode
+    bluetooth:
+      name: ${upper_devicename} bluetooth
+
+script:
+  - id: check_all_zones_move
+    # mode: queued
+    mode: single
+    then:
+      - delay: !lambda "return id(timeout).state * 1000;"
+      - lambda: |-
+          ESP_LOGD("check_all_zones_move", "Start controle van bewegingsenergie in alle zones...");
+
+          bool all_below_threshold = true;
+          
+          // Controleer of alle zones onder of gelijk aan de drempel zitten
+          if (id(g0_move_energy).state >= id(g0_move_threshold).state) all_below_threshold = false;
+          if (id(g1_move_energy).state >= id(g1_move_threshold).state) all_below_threshold = false;
+          if (id(g2_move_energy).state >= id(g2_move_threshold).state) all_below_threshold = false;
+          if (id(g3_move_energy).state >= id(g3_move_threshold).state) all_below_threshold = false;
+          if (id(g4_move_energy).state >= id(g4_move_threshold).state) all_below_threshold = false;
+          if (id(g5_move_energy).state >= id(g5_move_threshold).state) all_below_threshold = false;
+          if (id(g6_move_energy).state >= id(g6_move_threshold).state) all_below_threshold = false;
+          if (id(g7_move_energy).state >= id(g7_move_threshold).state) all_below_threshold = false;
+          if (id(g8_move_energy).state >= id(g8_move_threshold).state) all_below_threshold = false;
+
+          if (all_below_threshold) {
+            id(move_binary).publish_state(false);
+            ESP_LOGD("check_all_zones_move", "Alle zones onder drempel. move_binary = false");
+          } else {
+            ESP_LOGD("check_all_zones_move", "Minstens één zone boven drempel. move_binary blijft ongewijzigd.");
+          }
+
+          ESP_LOGD("check_all_zones_move", "Einde controle.");
+  - id: check_all_zones_still
+    # mode: queued
+    mode: single
+    then:
+      - delay: !lambda "return id(timeout).state * 1000;"
+      - lambda: |-
+          ESP_LOGD("check_all_zones_still", "Start controle van still energy in alle zones...");
+
+          bool all_below_threshold = true;
+          
+          // Controleer of alle zones onder of gelijk aan de drempel zitten
+          if (id(g0_still_energy).state >= id(g0_still_threshold).state) all_below_threshold = false;
+          if (id(g1_still_energy).state >= id(g1_still_threshold).state) all_below_threshold = false;
+          if (id(g2_still_energy).state >= id(g2_still_threshold).state) all_below_threshold = false;
+          if (id(g3_still_energy).state >= id(g3_still_threshold).state) all_below_threshold = false;
+          if (id(g4_still_energy).state >= id(g4_still_threshold).state) all_below_threshold = false;
+          if (id(g5_still_energy).state >= id(g5_still_threshold).state) all_below_threshold = false;
+          if (id(g6_still_energy).state >= id(g6_still_threshold).state) all_below_threshold = false;
+          if (id(g7_still_energy).state >= id(g7_still_threshold).state) all_below_threshold = false;
+          if (id(g8_still_energy).state >= id(g8_still_threshold).state) all_below_threshold = false;
+
+          if (all_below_threshold) {
+            id(still_binary).publish_state(false);
+            ESP_LOGD("check_all_zones_still", "Alle zones onder drempel. still_binary = false");
+          } else {
+            ESP_LOGD("check_all_zones_still", "Minstens één zone boven drempel. still_binary blijft ongewijzigd.");
+          }
+
+          ESP_LOGD("check_all_zones_still", "Einde controle.");
+sensor:
+  - platform: ld2410
+    moving_distance:
+      name: ${upper_devicename} Moving Distance
+      id: moving_distance
+    still_distance:
+      name: ${upper_devicename} Still Distance
+      id: still_distance
+    moving_energy:
+      name: ${upper_devicename} Move Energy
+      id: moving_energy
+    still_energy:
+      name: ${upper_devicename} Still Energy
+      id: still_energy
+    detection_distance:
+      name: ${upper_devicename} Detection Distance
+      id: detection_distance
+
+    # G0 t/m G8 zones
+    g0:
+      move_energy:
+        name: ${upper_devicename} g0 move energy
+        id: g0_move_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g0_move_threshold).state) {
+              id(move_binary).publish_state(true);
+              id(moving_trigger).publish_state("g0");
+            }
+            if (id(move_binary).state) {
+              id(check_all_zones_move).execute();
+              }
+      still_energy:
+        name: ${upper_devicename} g0 still energy
+        id: g0_still_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g0_still_threshold).state) {
+              id(still_binary).publish_state(true);
+              id(still_trigger).publish_state("g0");
+            }
+            if (id(still_binary).state) {
+              id(check_all_zones_still).execute();
+              } 
+    g1:
+      move_energy:
+        name: ${upper_devicename} g1 move energy
+        id: g1_move_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g1_move_threshold).state) {
+              id(move_binary).publish_state(true);
+              id(moving_trigger).publish_state("g1");
+            }
+            if (id(move_binary).state) {
+              id(check_all_zones_move).execute();
+              }
+      still_energy: 
+        name: ${upper_devicename} g1 still energy
+        id: g1_still_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g1_still_threshold).state) {
+              id(still_binary).publish_state(true);
+              id(still_trigger).publish_state("g1");
+            }
+            if (id(still_binary).state) {
+              id(check_all_zones_still).execute();
+              }
+    g2:
+      move_energy:
+        name: ${upper_devicename} g2 move energy
+        id: g2_move_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g2_move_threshold).state) {
+              id(move_binary).publish_state(true);
+              id(moving_trigger).publish_state("g2");
+            }
+            if (id(move_binary).state) {
+              id(check_all_zones_move).execute();
+              }
+      still_energy:
+        name: ${upper_devicename} g2 still energy
+        id: g2_still_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g2_still_threshold).state) {
+              id(still_binary).publish_state(true);
+              id(still_trigger).publish_state("g2");
+            }
+            if (id(still_binary).state) {
+              id(check_all_zones_still).execute();
+              }
+    g3: 
+      move_energy:
+        name: ${upper_devicename} g3 move energy
+        id: g3_move_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g3_move_threshold).state) {
+              id(move_binary).publish_state(true);
+              id(moving_trigger).publish_state("g3");
+            }
+            if (id(move_binary).state) {
+              id(check_all_zones_move).execute();
+              }
+      still_energy:
+        name: ${upper_devicename} g3 still energy
+        id: g3_still_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g3_still_threshold).state) {
+              id(still_binary).publish_state(true);
+              id(still_trigger).publish_state("g3");
+            }
+            if (id(still_binary).state) {
+              id(check_all_zones_still).execute();
+              }
+    g4:
+      move_energy:
+        name: ${upper_devicename} g4 move energy
+        id: g4_move_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g4_move_threshold).state) {
+              id(move_binary).publish_state(true);
+              id(moving_trigger).publish_state("g4");
+            }
+            if (id(move_binary).state) {
+              id(check_all_zones_move).execute();
+              }
+      still_energy:
+        name: ${upper_devicename} g4 still energy
+        id: g4_still_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g4_still_threshold).state) {
+              id(still_binary).publish_state(true);
+              id(still_trigger).publish_state("g4");
+            }
+            if (id(still_binary).state) {
+              id(check_all_zones_still).execute();
+              }
+    g5:
+      move_energy:
+        name: ${upper_devicename} g5 move energy
+        id: g5_move_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g5_move_threshold).state) {
+              id(move_binary).publish_state(true);
+              id(moving_trigger).publish_state("g5");
+            }
+            if (id(move_binary).state) {
+              id(check_all_zones_move).execute();
+              }
+      still_energy:
+        name: ${upper_devicename} g5 still energy
+        id: g5_still_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g5_still_threshold).state) {
+              id(still_binary).publish_state(true);
+              id(still_trigger).publish_state("g5");
+            }
+            if (id(still_binary).state) {
+              id(check_all_zones_still).execute();
+              }
+    g6: 
+      move_energy:
+        name: ${upper_devicename} g6 move energy
+        id: g6_move_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g6_move_threshold).state) {
+              id(move_binary).publish_state(true);
+              id(moving_trigger).publish_state("g6");
+            }
+            if (id(move_binary).state) {
+              id(check_all_zones_move).execute();
+              }
+      still_energy:
+        name: ${upper_devicename} g6 still energy
+        id: g6_still_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g6_still_threshold).state) {
+              id(still_binary).publish_state(true);
+              id(still_trigger).publish_state("g6");
+            }
+            if (id(still_binary).state) {
+              id(check_all_zones_still).execute();
+              }
+    g7:
+      move_energy:
+        name: ${upper_devicename} g7 move energy
+        id: g7_move_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g7_move_threshold).state) {
+              id(move_binary).publish_state(true);
+              id(moving_trigger).publish_state("g7");
+            }
+            if (id(move_binary).state) {
+              id(check_all_zones_move).execute();
+              }
+      still_energy:
+        name: ${upper_devicename} g7 still energy
+        id: g7_still_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g7_still_threshold).state) {
+              id(still_binary).publish_state(true);
+              id(still_trigger).publish_state("g7");
+            }
+            if (id(still_binary).state) {
+              id(check_all_zones_still).execute();
+              }
+    g8:
+      move_energy:
+        name: ${upper_devicename} g8 move energy
+        id: g8_move_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g8_move_threshold).state) {
+              id(move_binary).publish_state(true);
+              id(moving_trigger).publish_state("g8");
+            }
+            if (id(move_binary).state) {
+              id(check_all_zones_move).execute();
+              }
+      still_energy:
+        name: ${upper_devicename} g8 still energy
+        id: g8_still_energy
+        on_value:
+          lambda: |-
+            if (x >= id(g8_still_threshold).state) {
+              id(still_binary).publish_state(true);
+              id(still_trigger).publish_state("g8");
+            }
+            if (id(still_binary).state) {
+              id(check_all_zones_still).execute();
+              }
+    # g0:
+    #   move_energy:
+    #     name: ${upper_devicename} g0 move energy
+    #     id: g0_move_energy
+    #   still_energy:
+    #     name: ${upper_devicename} g0 still energy
+    #     id: g0_still_energy
+    # g1:
+    #   move_energy:
+    #     name: ${upper_devicename} g1 move energy
+    #     id: g1_move_energy
+    #   still_energy:
+    #     name: ${upper_devicename} g1 still energy
+    #     id: g1_still_energy
+    # g2:
+    #   move_energy:
+    #     name: ${upper_devicename} g2 move energy
+    #     id: g2_move_energy
+    #   still_energy:
+    #     name: ${upper_devicename} g2 still energy
+    #     id: g2_still_energy
+    # g3:
+    #   move_energy:
+    #     name: ${upper_devicename} g3 move energy
+    #     id: g3_move_energy
+    #   still_energy:
+    #     name: ${upper_devicename} g3 still energy
+    #     id: g3_still_energy
+    # g4:
+    #   move_energy:
+    #     name: ${upper_devicename} g4 move energy
+    #     id: g4_move_energy
+    #   still_energy:
+    #     name: ${upper_devicename} g4 still energy
+    #     id: g4_still_energy
+    # g5:
+    #   move_energy:
+    #     name: ${upper_devicename} g5 move energy
+    #     id: g5_move_energy
+    #   still_energy:
+    #     name: ${upper_devicename} g5 still energy
+    #     id: g5_still_energy
+    # g6:
+    #   move_energy:
+    #     name: ${upper_devicename} g6 move energy
+    #     id: g6_move_energy
+    #   still_energy:
+    #     name: ${upper_devicename} g6 still energy
+    #     id: g6_still_energy
+    # g7:
+    #   move_energy:
+    #     name: ${upper_devicename} g7 move energy
+    #     id: g7_move_energy
+    #   still_energy:
+    #     name: ${upper_devicename} g7 still energy
+    #     id: g7_still_energy
+    # g8:
+    #   move_energy:
+    #     name: ${upper_devicename} g8 move energy
+    #     id: g8_move_energy
+    #   still_energy:
+    #     name: ${upper_devicename} g8 still energy
+    #     id: g8_still_energy
+
+text:
+  - platform: template
+    name: ${upper_devicename} moving trigger
+    id: moving_trigger
+    optimistic: true
+    min_length: 0
+    max_length: 100
+    mode: text
+  
+  - platform: template
+    name: ${upper_devicename} still trigger
+    id: still_trigger
+    optimistic: true
+    min_length: 0
+    max_length: 100
+    mode: text
+
+binary_sensor:
+  - platform: ld2410
+    has_target:
+      name: ${upper_devicename} Presence
+    has_moving_target:
+      name: ${upper_devicename} Moving Target
+    has_still_target:
+      name: ${upper_devicename} Still Target
+
+  - platform: template
+    name: ${upper_devicename} Moving 
+    id: move_binary
+    device_class: motion
+    # on_press:
+    #   then:
+    #     - binary_sensor.turn_on: occupancy
+    # on_release:
+    #   then:
+    #     - if:
+    #         condition:
+    #           binary_sensor.is_off: still_binary
+    #         then:
+    #           - binary_sensor.turn_off: occupancy
+
+  - platform: template
+    name: ${upper_devicename} Still
+    id: still_binary
+    device_class: motion
+    # on_press:
+    #   then:
+    #     - binary_sensor.turn_on: occupancy
+    # on_release:
+    #   then:
+    #     - if:
+    #         condition:
+    #           binary_sensor.is_off: move_binary
+    #         then:
+    #           - binary_sensor.turn_off: occupancy
+    
+  
+  # - platform: template
+  #   name: ${upper_devicename} occupancy
+  #   device_class: occupancy
+  #   filters:
+  #     - delayed_off: !lambda |-
+  #         return id(timeout).state;
+
