@@ -124,7 +124,15 @@ MIIO_TO_MIOT_SPECS = {
         'miio_specs': {
             'prop.2.1': {'prop': 'power', 'setter': True, 'format': 'onoff', 'set_template': '{{ [value|int] }}'},
             'prop.2.2': {'prop': 'speed', 'setter': 'set_wind', 'set_template': '{{ [props.mode, value|int] }}'},
-            'prop.2.3': {'prop': 'mode', 'setter': 'set_wind', 'set_template': '{{ [value|int, props.speed] }}'},
+            'prop.2.3': {
+                'prop': 'mode',
+                'setter': 'set_wind',
+                'dict': {1: 2, 2: 1},
+                'set_template': '{{ '
+                                '[2,props.speed] if value == 1 else '
+                                '[1,props.speed] if value == 2 else '
+                                '[value,props.speed] }}',
+            },
             'prop.3.1': {'prop': 'pm25'},
             'prop.4.1': {
                 'prop': 'lock', 'setter': True,
@@ -2084,6 +2092,18 @@ MIIO_TO_MIOT_SPECS = {
         },
     },
 
+    'yeelink.light._base': {
+        'miio_specs': {
+            'prop.2.1': {'prop': 'power', 'setter': True, 'format': 'onoff'},
+            'prop.2.2': {'prop': 'bright', 'setter': True},
+            'prop.2.3': {'prop': 'ct', 'setter': 'set_ct_abx', 'set_template': '{{ [value,"smooth",500] }}'},
+            'prop.2.102': {
+                'prop': 'delayoff',
+                'setter': 'set_scene',
+                'set_template': '{{ ["auto_delay_off",props.bright|default(100)|int,value] }}',
+            },
+        },
+    },
     'yeelink.light.bslamp1': {
         'extend_model': 'yeelink.light.color1',
         'miio_specs': {
@@ -2180,7 +2200,7 @@ MIIO_TO_MIOT_SPECS = {
         },
     },
     'yeelink.light.ceiling6': {
-        'extend_model': 'yeelink.mirror.bm1',
+        'extend_model': 'yeelink.light._base',
         'miio_props': ['nl_br'],
         'miio_specs': {
             'prop.2.2': {
@@ -2326,6 +2346,29 @@ MIIO_TO_MIOT_SPECS = {
     'yeelink.light.strip4': 'yeelink.light.ceiling16',
     'yeelink.light.strip6': 'yeelink.light.strip2',
     'yeelink.light.strip8': 'yeelink.light.strip2',
+    'yeelink.mirror.bm1': {
+        'miio_specs': {
+            'prop.2.1': {'prop': 'power', 'setter': True, 'format': 'onoff'},
+            'prop.2.2': {'prop': 'bright', 'setter': True},
+            'prop.2.3': {'prop': 'ct', 'setter': 'set_ct_abx', 'set_template': '{{ [value,"smooth",500] }}'},
+            'prop.2.102': {
+                'prop': 'delayoff',
+                'setter': 'set_scene',
+                'set_template': '{{ ["auto_delay_off",props.bright|default(100)|int,value] }}',
+            },
+            'prop.200.201': {
+                'prop': 'heat_control',
+                'setter': 'set_ps',
+                'template': '{{ value|int == 1 }}',
+                'set_template': '{{ ["heat_control",value|int] }}',
+            },
+            'prop.200.202': {
+                'prop': 'heat_delayoff',
+                'setter': 'set_ps',
+                'set_template': '{{ ["heat_delayoff",value] }}',
+            },
+        },
+    },
     'yeelink.ven_fan.vf1': {
         'miio_specs': {
             'prop.2.1': {
@@ -2343,18 +2386,6 @@ MIIO_TO_MIOT_SPECS = {
                 'setter': 'set_swing',
                 'template': '{{ value in ["swing"] }}',
                 'set_template': '{{ ["swing" if value else "stop"] }}',
-            },
-        },
-    },
-    'yeelink.mirror.bm1': {
-        'miio_specs': {
-            'prop.2.1': {'prop': 'power', 'setter': True, 'format': 'onoff'},
-            'prop.2.2': {'prop': 'bright', 'setter': True},
-            'prop.2.3': {'prop': 'ct', 'setter': 'set_ct_abx', 'set_template': '{{ [value,"smooth",500] }}'},
-            'prop.2.102': {
-                'prop': 'delayoff',
-                'setter': 'set_scene',
-                'set_template': '{{ ["auto_delay_off",props.bright|default(100)|int,value] }}',
             },
         },
     },
@@ -2392,6 +2423,9 @@ MIIO_TO_MIOT_SPECS = {
             'prop.3.3': {'prop': 'bright', 'setter': True},
         },
     },
+    'yilai.light.ceiling1': 'yeelink.light._base',
+    'yilai.light.ceiling2': 'yeelink.light._base',
+    'yilai.light.ceiling3': 'yeelink.light._base',
 
     'yunmi.waterpuri.lx5': {
         'chunk_properties': 1,
@@ -2729,7 +2763,7 @@ MIIO_TO_MIOT_SPECS = {
         'miio_specs': {
             'prop.4.2': {
                 'prop': 'f1_hour_used',
-                'template': '{{ value/(props.filter1_life|default(0,true)/100)-value }}',
+                'template': '{{ value/(props.filter1_life|default(1,true)/100)-value }}',
             },
         },
     },
@@ -2924,6 +2958,7 @@ MIIO_TO_MIOT_SPECS = {
         'chunk_properties': 1,
         'miio_specs': {
             'prop.2.3': {'prop': 'depth'},
+            'prop.2.101': {'prop': 'limit_hum', 'setter': True},
         },
     },
     'zhimi.humidifier.cb1': {

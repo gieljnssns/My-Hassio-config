@@ -50,6 +50,7 @@ class CoverEntity(XEntity, BaseEntity):
     _conv_target_position = None
     _current_range = None
     _target_range = (0, 100)
+    _is_airer = None
     _motor_reverse = None
     _position_reverse = None
     _open_texts = ['open', 'up']
@@ -64,13 +65,16 @@ class CoverEntity(XEntity, BaseEntity):
         self._attr_available = self.device.available
 
         models = f'{self.device.model} {self.device.info.urn}'
-        if 'curtain' in models:
+        self._is_airer = 'airer' in models
+        if self._is_airer:
+            self._position_reverse = True
+        elif 'curtain' in models:
             self._attr_device_class = CoverDeviceClass.CURTAIN
         elif 'wopener' in models or 'window-opener' in models:
             self._attr_device_class = CoverDeviceClass.WINDOW
 
-        self._motor_reverse = self.custom_config_bool('motor_reverse', False)
-        self._position_reverse = self.custom_config_bool('position_reverse', self._motor_reverse)
+        self._motor_reverse = self.custom_config_bool('motor_reverse', self._motor_reverse)
+        self._position_reverse = self.custom_config_bool('position_reverse', self._position_reverse)
         self._open_texts = self.custom_config_list('open_texts', self._open_texts)
         self._close_texts = self.custom_config_list('close_texts', self._close_texts)
         if self._motor_reverse:
@@ -78,8 +82,9 @@ class CoverEntity(XEntity, BaseEntity):
         self._target_position_props = self.custom_config_list('target_position_props') or ['target_position']
         self._cover_position_mapping = self.custom_config_json('cover_position_mapping') or {}
 
-        for conv in self.device.converters:
-            prop = getattr(conv, 'prop', None)
+        for attr in self.conv.attrs:
+            conv = self.device.find_converter(attr)
+            prop = getattr(conv, 'prop', None) if conv else None
             if not isinstance(prop, MiotProperty):
                 continue
             elif prop.in_list(['status']):
@@ -127,12 +132,28 @@ class CoverEntity(XEntity, BaseEntity):
         prop_status = getattr(self._conv_status, 'prop', None) if self._conv_status else None
         if prop_status:
             val = self._conv_status.value_from_dict(data)
-            self._attr_is_closed  = val in prop_status.list_search('Closed')
-            self._attr_is_opening = val in prop_status.list_search('Opening', 'Rising')
-            self._attr_is_closing = val in prop_status.list_search('Closing', 'Falling')
-            if self._position_reverse:
-                self._attr_is_opening = not self._attr_is_opening
-                self._attr_is_closing = not self._attr_is_closing
+            if val in prop_status.list_search('Closed', 'Stop Upper Limit', 'Stop At Highest', 'Ceiling'):
+                self._attr_is_closed = True
+            elif val in prop_status.list_search('Opened', 'Stop Lower Limit', 'Stop At Lowest'):
+                self._attr_is_closed = False
+            elif val in prop_status.list_search('Opening'):
+                self._attr_is_opening = True
+            elif val in prop_status.list_search('Closing'):
+                self._attr_is_closing = True
+            elif val in prop_status.list_search('Rising'):
+                self._attr_is_closing = self._position_reverse
+            elif val in prop_status.list_search('Falling', 'Dropping'):
+                self._attr_is_opening = self._position_reverse
+            elif self._is_airer and val in prop_status.list_search('Down'):
+                self._attr_is_closed = False
+            else:
+                self._attr_is_closed = None
+                self._attr_is_opening = None
+                self._attr_is_closing = None
+            if self._attr_is_opening is not None:
+                self._attr_is_closing = not self._attr_is_opening
+            elif self._attr_is_closing is not None:
+                self._attr_is_opening = not self._attr_is_closing
         if self._conv_current_position:
             val = self._conv_current_position.value_from_dict(data)
             if val is not None:
@@ -154,14 +175,21 @@ class CoverEntity(XEntity, BaseEntity):
             self._attr_extra_state_attributes.update({
                 'target2current_position': True,
             })
-        if (val := self._attr_current_cover_position) != None:
+        if (val := self._attr_current_cover_position) is not None:
+            closed = val <= self._closed_position
             if self._deviated_position is None:
                 pass
             elif val <= self._deviated_position:
                 self._attr_current_cover_position = 0
+                closed = not self._is_airer
             elif val >= (100 - self._deviated_position):
                 self._attr_current_cover_position = 100
-            self._attr_is_closed = val <= self._closed_position
+                closed = self._is_airer
+            if self._attr_is_closed is None or not prop_status:
+                self._attr_is_closed = closed
+        self._attr_extra_state_attributes.update({
+            'state_is_closed': self._attr_is_closed,
+        })
 
     async def async_open_cover(self, **kwargs):
         if conv := self._conv_motor:

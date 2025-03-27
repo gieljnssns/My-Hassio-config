@@ -33,6 +33,7 @@ from .const import (
     CONF_BATTERY_QUANTITY,
     CONF_BATTERY_TYPE,
     CONF_DEVICE_NAME,
+    CONF_FILTER_OUTLIERS,
     CONF_MANUFACTURER,
     CONF_MODEL,
     CONF_MODEL_ID,
@@ -168,7 +169,8 @@ class BatteryNotesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 library_updater: LibraryUpdater = self.hass.data[DOMAIN][
                     DATA_LIBRARY_UPDATER
                 ]
-                await library_updater.get_library_updates(dt_util.utcnow())
+                if await library_updater.time_to_update_library(1):
+                    await library_updater.get_library_updates(dt_util.utcnow())
 
             device_registry = dr.async_get(self.hass)
             device_entry = device_registry.async_get(device_id)
@@ -261,7 +263,8 @@ class BatteryNotesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         library_updater: LibraryUpdater = self.hass.data[DOMAIN][
                             DATA_LIBRARY_UPDATER
                         ]
-                        await library_updater.get_library_updates(dt_util.utcnow())
+                        if await library_updater.time_to_update_library(1):
+                            await library_updater.get_library_updates(dt_util.utcnow())
 
                     device_registry = dr.async_get(self.hass)
                     device_entry = device_registry.async_get(entity_entry.device_id)
@@ -354,6 +357,7 @@ class BatteryNotesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.data[CONF_BATTERY_LOW_TEMPLATE] = user_input.get(
                 CONF_BATTERY_LOW_TEMPLATE, None
             )
+            self.data[CONF_FILTER_OUTLIERS] = user_input.get(CONF_FILTER_OUTLIERS, False)
 
             source_entity_id = self.data.get(CONF_SOURCE_ENTITY_ID, None)
             device_id = self.data.get(CONF_DEVICE_ID, None)
@@ -431,6 +435,9 @@ class BatteryNotesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_BATTERY_LOW_TEMPLATE
                     ): selector.TemplateSelector(),
+                    vol.Optional(
+                        CONF_FILTER_OUTLIERS,
+                        default=False): selector.BooleanSelector(),
                 }
             ),
             errors=errors,
@@ -450,6 +457,7 @@ class OptionsFlowHandler(OptionsFlow):
         self.battery_type: str
         self.battery_quantity: int
         self.battery_low_template: str
+        self.filter_outliers: bool
 
     async def async_step_init(
         self,
@@ -464,6 +472,9 @@ class OptionsFlowHandler(OptionsFlow):
         self.battery_quantity = int(self.current_config.get(CONF_BATTERY_QUANTITY) or 1)
         self.battery_low_template = str(
             self.current_config.get(CONF_BATTERY_LOW_TEMPLATE) or ""
+        )
+        self.filter_outliers = bool(
+            self.current_config.get(CONF_FILTER_OUTLIERS) or False
         )
 
         if self.source_device_id:
@@ -593,6 +604,7 @@ class OptionsFlowHandler(OptionsFlow):
                     ),
                 ),
                 vol.Optional(CONF_BATTERY_LOW_TEMPLATE): selector.TemplateSelector(),
+                vol.Optional(CONF_FILTER_OUTLIERS): selector.BooleanSelector(),
             }
         )
 

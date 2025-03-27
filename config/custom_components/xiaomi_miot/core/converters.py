@@ -61,7 +61,7 @@ class InfoConv(BaseConv):
     def decode(self, device: 'Device', payload: dict, value):
         updater = device.data.get('updater')
         infos = {
-            self.attr: device.name,
+            self.full_name: device.name,
             'model': device.model,
             'did': device.info.did,
             'mac': device.info.mac,
@@ -280,6 +280,15 @@ class MiotCoverConv(MiotServiceConv):
     def __post_init__(self):
         if not self.main_props:
             self.main_props = ['motor_control']
+        super().__post_init__()
+
+@dataclass
+class MiotHumidifierConv(MiotServiceConv):
+    domain: str = 'humidifier'
+
+    def __post_init__(self):
+        if not self.main_props:
+            self.main_props = ['on', 'target_humidity']
         super().__post_init__()
 
 @dataclass
