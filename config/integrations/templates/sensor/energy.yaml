@@ -52,20 +52,20 @@
       #   {{ (states("sensor.s1_vermogen") | float(default=0) + 
       #       states("sensor.s2_vermogen") | float(default=0) + 
       #       states("sensor.s3_vermogen") | float(default=0)) | round(2) }}
-
-    - name: Huidig verbruik oud
-      unique_id: 675346df-e08d-44c2-86ef-d31a872671ad
-      unit_of_measurement: "W"
-      device_class: power
-      availability: >-
-        {{ has_value("sensor.v1_vermogen") and 
-          has_value("sensor.v2_vermogen") and
-          has_value("sensor.v3_vermogen") }}
-      state: >
-        {{ (states("sensor.v1_vermogen") | float(default=0) + 
-            states("sensor.v2_vermogen") | float(default=0) + 
-            states("sensor.v3_vermogen") | float(default=0)) | round(2) }}
-    
+##aanpassen
+    # - name: Huidig verbruik oud
+    #   unique_id: 675346df-e08d-44c2-86ef-d31a872671ad
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   availability: >-
+    #     {{ has_value("sensor.v1_vermogen") and 
+    #       has_value("sensor.v2_vermogen") and
+    #       has_value("sensor.v3_vermogen") }}
+    #   state: >
+    #     {{ (states("sensor.v1_vermogen") | float(default=0) + 
+    #         states("sensor.v2_vermogen") | float(default=0) + 
+    #         states("sensor.v3_vermogen") | float(default=0)) | round(2) }}
+##aanpassen
     - name: Huidig verbruik
       unique_id: 88576813-0ac7-4deb-9b6d-15bb99a08752
       unit_of_measurement: "W"
@@ -77,9 +77,9 @@
       #     has_value("sensor.s1") and
       #     has_value("sensor.s2") and 
       #     has_value("sensor.s3") and
-      #     has_value("sensor.zonne_opbrengst") }}
+      #     has_value("sensor.huidige_opbrengst") }}
       state: >
-        {% if states("sensor.zonne_opbrengst") | float(0) == 0%}
+        {% if states("sensor.huidige_opbrengst") | float(0) == 0%}
           {{ (states("sensor.v1") | float(0)
             + states("sensor.v2") | float(0)
             + states("sensor.v3") | float(0)
@@ -107,19 +107,19 @@
         {% else  %}
             {{ 0 | float(default=0) }}
         {% endif %}
-
-    - name: Huidig fluvius
-      unique_id: aa64ea1f-e88f-4126-8e0f-622faa35c8c5
-      unit_of_measurement: "W"
-      device_class: power
-      availability: >-
-        {{ has_value("sensor.l1_vermogen") and 
-          has_value("sensor.l2_vermogen") and
-          has_value("sensor.l3_vermogen") }}
-      state: >
-        {{ ((states("sensor.l1_vermogen") | float(default=0) + 
-             states("sensor.l2_vermogen") | float(default=0) + 
-             states("sensor.l3_vermogen") | float(default=0)) | round(2)) * -1 }}
+##aanpassen
+    # - name: Huidig fluvius
+    #   unique_id: aa64ea1f-e88f-4126-8e0f-622faa35c8c5
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   availability: >-
+    #     {{ has_value("sensor.l1_vermogen") and 
+    #       has_value("sensor.l2_vermogen") and
+    #       has_value("sensor.l3_vermogen") }}
+    #   state: >
+    #     {{ ((states("sensor.l1_vermogen") | float(default=0) + 
+    #          states("sensor.l2_vermogen") | float(default=0) + 
+    #          states("sensor.l3_vermogen") | float(default=0)) | round(2)) * -1 }}
 
     - name: Net afname
       unique_id: dd4adeb0-ffa4-4e52-959f-a8b50d081b4f
@@ -246,38 +246,6 @@
             states("sensor.ventilator_kerstverlichting_vermogen") | float(default=0) + 
             states("sensor.wasmachien_vermogen") | float(default=0)) | round (3)}}
 
-    # - name: Rest vermogen
-    #   unique_id: afeecd42-5b6b-4765-8119-16a2b81761d2
-    #   unit_of_measurement: "W"
-    #   device_class: power
-    #   state: >
-    #     {% if ( states("sensor.huidig_verbruik") | float(default=0)
-    #         - states("sensor.verwarming_vermogen") | float(default=0)
-    #         - states("sensor.toestellen_vermogen") | float(default=0)
-    #         - states("sensor.verlichting_vermogen") | float(default=0)
-    #         - states("sensor.verluchting_vermogen") | float(default=0)
-    #         - states("sensor.media_vermogen_2") | float(default=0)
-    #         - states("sensor.unifi_vermogen") | float(default=0)
-    #         - states("sensor.nuc_vermogen") | float(default=0)
-    #         - states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0)
-    #         - states("sensor.raspi_vermogen") | float(default=0) )
-    #         | round (2) > 0
-    #         %}
-    #         {{ ( states("sensor.huidig_verbruik") | float(default=0)
-    #             - states("sensor.verwarming_vermogen") | float(default=0)
-    #             - states("sensor.toestellen_vermogen") | float(default=0)
-    #             - states("sensor.verlichting_vermogen") | float(default=0)
-    #             - states("sensor.verluchting_vermogen") | float(default=0)
-    #             - states("sensor.media_vermogen_2") | float(default=0)
-    #             - states("sensor.unifi_vermogen") | float(default=0)
-    #             - states("sensor.nuc_vermogen") | float(default=0)
-    #             - states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0)
-    #             - states("sensor.raspi_vermogen") | float(default=0) )
-    #             | round (2)
-    #             }}
-    #         {% else  %}
-    #             0
-    #         {% endif %}
 
     ###  Capaciteitstarief  ###
     - name: Max peak 2
@@ -329,16 +297,6 @@
               states('input_number.december_peak_2') | float(default=0) ) / 12) | round(2)
         }}
 
-    - name: Zonne opbrengst
-      unique_id: 51b5c2c8-6480-4320-8ec2-8bc2d9d00308
-      unit_of_measurement: "W"
-      device_class: power
-      # availability: >-
-      #   {{ has_value("sensor.huawei_active_power") and 
-      #     has_value("sensor.solaredge_inverter_watts") }}
-      state: >
-        {{ (states("sensor.huawei_active_power") | float(0) + states("sensor.solaredge_inverter_watts") | float(0)) | round(2) }}
-
     - name: Koffiezet vermogen
       unique_id: 5774b780-4758-40c7-82e1-db6a5f2e0a01
       unit_of_measurement: "W"
@@ -352,72 +310,3 @@
       device_class: power
       state: >
         {{ states("sensor.garage_oplader_vermogen_2") | float(default=0) | round(2) }}
-
-    - name: Open meteo voorspelling vandaag
-      unique_id: 0337653c-eaf4-485d-baed-4f283dc03d21
-      unit_of_measurement: "kWh"
-      device_class: energy
-      state: >
-        {% set badkamer = states("sensor.energy_production_today_3") | float(0) %}
-        {% set huis = states("sensor.energy_production_today_2") | float(0) %}
-        {% set garage = states("sensor.energy_production_today") | float(0) %}
-          {{ (garage + huis + badkamer) | round(2) }}
-      attributes:
-        watts: >-
-          {%- set garage = state_attr('sensor.energy_production_today', 'watts') %}
-          {%- set huis = state_attr('sensor.energy_production_today_2', 'watts') %}
-          {%- set badkamer = state_attr('sensor.energy_production_today_3', 'watts') %}
-          {%- set ns = namespace(output={}) %}
-          {%- for time, value in garage.items() %}
-            {%- set sum_value = value + huis[time] + badkamer[time] %}
-            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
-          {%- endfor %}
-            {{ ns.output }}
-        wh_period: >-
-          {%- set garage = state_attr('sensor.energy_production_today', 'wh_period') %}
-          {%- set huis = state_attr('sensor.energy_production_today_2', 'wh_period') %}
-          {%- set badkamer = state_attr('sensor.energy_production_today_3', 'wh_period') %}
-          {%- set ns = namespace(output={}) %}
-          {%- for time, value in garage.items() %}
-            {%- set sum_value = value + huis[time] + badkamer[time] %}
-            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
-          {%- endfor %}
-            {{ ns.output }}
-    
-    - name: Open meteo voorspelling vandaag huawei
-      unique_id: 5ea37fe4-b9d8-4ac6-9d06-7f0c245d2157
-      unit_of_measurement: "kWh"
-      device_class: energy
-      state: >
-        {%- set huis = states('sensor.energy_production_today_2') | float(default=0) %}
-        {%- set badkamer = states('sensor.energy_production_today_3') | float(default=0) %}
-        {{ (huis + badkamer) | round(2) }}
-      attributes:
-        watts: >-
-          {%- set huis = state_attr('sensor.energy_production_today_2', 'watts') %}
-          {%- set badkamer = state_attr('sensor.energy_production_today_3', 'watts') %}
-          {%- set ns = namespace(output={}) %}
-          {%- for time, value in huis.items() %}
-            {%- set sum_value = value + badkamer[time] %}
-            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
-          {%- endfor %}
-            {{ ns.output }}
-        wh_period: >-
-          {%- set huis = state_attr('sensor.energy_production_today_2', 'wh_period') %}
-          {%- set badkamer = state_attr('sensor.energy_production_today_3', 'wh_period') %}
-          {%- set ns = namespace(output={}) %}
-          {%- for time, value in huis.items() %}
-            {%- set sum_value = value + badkamer[time] %}
-            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
-          {%- endfor %}
-            {{ ns.output }}
-
-    - name: Open meteo voorspelling resterend vandaag
-      unique_id: 2d19babc-2ce9-4f67-9b76-cbe630a8cf64
-      unit_of_measurement: "kWh"
-      device_class: energy
-      state: >
-        {%- set garage = states('sensor.energy_production_today_remaining') | float(default=0) %}
-        {%- set huis = states('sensor.energy_production_today_remaining_2') | float(default=0) %}
-        {%- set badkamer = states('sensor.energy_production_today_remaining_3') | float(default=0) %}
-        {{ (garage + huis + badkamer) | round(2) }}
