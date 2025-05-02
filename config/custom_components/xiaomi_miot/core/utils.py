@@ -164,7 +164,7 @@ def convert_globs_to_pattern(globs: list[str] | None):
     if not globs:
         return None
     translated_patterns = [
-        pattern for glob in set(globs) if (pattern := fnmatch.translate(glob))
+        pattern for glob in set(globs) if (pattern := fnmatch.translate(str(glob)))
     ]
     if not translated_patterns:
         return None
@@ -227,6 +227,10 @@ def update_attrs_with_suffix(attrs, new_dict):
 
         updated_attrs[updated_key] = value
     attrs.update(updated_attrs)
+
+def logger_filter(record):
+    record.msg = re.sub(r'[\w/+-]{30,}', '***', record.msg)
+    return True
 
 
 async def async_analytics_track_event(hass: HomeAssistant, event, action, label, value=0, **kwargs):

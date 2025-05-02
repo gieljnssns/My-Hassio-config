@@ -79,7 +79,7 @@ class CoverEntity(XEntity, BaseEntity):
         self._close_texts = self.custom_config_list('close_texts', self._close_texts)
         if self._motor_reverse:
             self._open_texts, self._close_texts = self._close_texts, self._open_texts
-        self._target_position_props = self.custom_config_list('target_position_props') or ['target_position']
+        self._target_position_props = self.custom_config_list('target_position_props') or []
         self._cover_position_mapping = self.custom_config_json('cover_position_mapping') or {}
 
         for attr in self.conv.attrs:
@@ -99,9 +99,11 @@ class CoverEntity(XEntity, BaseEntity):
                 if prop.value_range:
                     self._conv_current_position = conv
                     self._current_range = (prop.range_min(), prop.range_max())
-                elif prop.value_list and self._cover_position_mapping:
+                    self.log.debug('current_position: %s', conv)
+                elif prop.value_list and self._cover_position_mapping and not self._conv_current_position:
                     self._conv_current_position = conv
                     self._current_range = (0, 100)
+                    self.log.debug('current_position: %s', conv)
             elif prop.value_range and isinstance(conv, MiotTargetPositionConv):
                 self._conv_target_position = conv
                 self._target_range = conv.ranged
@@ -110,6 +112,10 @@ class CoverEntity(XEntity, BaseEntity):
                 self._conv_target_position = conv
                 self._target_range = (prop.range_min(), prop.range_max())
                 self._attr_supported_features |= CoverEntityFeature.SET_POSITION
+
+        if self.custom_config_bool('disable_target_position'):
+            self._conv_target_position = None
+            self._attr_supported_features &= ~CoverEntityFeature.SET_POSITION
 
         self._deviated_position = self.custom_config_integer('deviated_position', 2)
         if self._current_range:
@@ -132,9 +138,13 @@ class CoverEntity(XEntity, BaseEntity):
         prop_status = getattr(self._conv_status, 'prop', None) if self._conv_status else None
         if prop_status:
             val = self._conv_status.value_from_dict(data)
-            if val in prop_status.list_search('Closed', 'Stop Upper Limit', 'Stop At Highest', 'Ceiling'):
+            if val is not None:
+                self._attr_is_closed = None
+                self._attr_is_opening = None
+                self._attr_is_closing = None
+            if val in prop_status.list_search('Closed'):
                 self._attr_is_closed = True
-            elif val in prop_status.list_search('Opened', 'Stop Lower Limit', 'Stop At Lowest'):
+            elif val in prop_status.list_search('Opened'):
                 self._attr_is_closed = False
             elif val in prop_status.list_search('Opening'):
                 self._attr_is_opening = True
@@ -144,16 +154,12 @@ class CoverEntity(XEntity, BaseEntity):
                 self._attr_is_closing = self._position_reverse
             elif val in prop_status.list_search('Falling', 'Dropping'):
                 self._attr_is_opening = self._position_reverse
+            elif val in prop_status.list_search('Stop Lower Limit', 'Stop At Lowest', 'Floor'):
+                self._attr_is_closed = not self._position_reverse
+            elif val in prop_status.list_search('Stop Upper Limit', 'Stop At Highest', 'Ceiling'):
+                self._attr_is_closed = self._position_reverse
             elif self._is_airer and val in prop_status.list_search('Down'):
                 self._attr_is_closed = False
-            else:
-                self._attr_is_closed = None
-                self._attr_is_opening = None
-                self._attr_is_closing = None
-            if self._attr_is_opening is not None:
-                self._attr_is_closing = not self._attr_is_opening
-            elif self._attr_is_closing is not None:
-                self._attr_is_opening = not self._attr_is_closing
         if self._conv_current_position:
             val = self._conv_current_position.value_from_dict(data)
             if val is not None:

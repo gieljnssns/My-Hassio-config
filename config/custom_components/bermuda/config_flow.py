@@ -51,7 +51,7 @@ from .const import (
 from .util import rssi_to_metres
 
 if TYPE_CHECKING:
-    from homeassistant.data_entry_flow import FlowResult
+    from homeassistant.config_entries import ConfigFlowResult
 
     from . import BermudaConfigEntry
     from .bermuda_device import BermudaDevice
@@ -72,7 +72,7 @@ class BermudaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._errors = {}
 
-    async def async_step_bluetooth(self, discovery_info: BluetoothServiceInfoBleak) -> FlowResult:
+    async def async_step_bluetooth(self, discovery_info: BluetoothServiceInfoBleak) -> ConfigFlowResult:
         """
         Support automatic initiation of setup through bluetooth discovery.
         (we still show a confirmation form to the user, though)
@@ -175,8 +175,8 @@ class BermudaOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 status = '<ha-icon icon="mdi:skull-crossbones"></ha-icon>'
 
             scanner_table += (
-                f"| {scanner.get("name", "NAME_ERR")}| [{scanner.get("address", "ADDR_ERR")}]"
-                f"| {status} {int(scanner.get("last_stamp_age", DISTANCE_INFINITE)):d} seconds ago.|\n"
+                f"| {scanner.get('name', 'NAME_ERR')}| [{scanner.get('address', 'ADDR_ERR')}]"
+                f"| {status} {int(scanner.get('last_stamp_age', DISTANCE_INFINITE)):d} seconds ago.|\n"
             )
         messages["status"] += scanner_table
 
@@ -249,7 +249,7 @@ class BermudaOptionsFlowHandler(OptionsFlowWithConfigEntry):
         for device in self.devices.values():
             # Iterate through all the discovered devices to build the options list
 
-            name = device.prefname or device.name or ""
+            name = device.name
 
             if device.is_scanner:
                 # We don't "track" scanner devices, per se
@@ -259,8 +259,8 @@ class BermudaOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 continue
             if device.address_type == ADDR_TYPE_IBEACON:
                 # This is an iBeacon meta-device
-                if len(device.beacon_sources) > 0:
-                    source_mac = f"[{device.beacon_sources[0].upper()}]"
+                if len(device.metadevice_sources) > 0:
+                    source_mac = f"[{device.metadevice_sources[0].upper()}]"
                 else:
                     source_mac = ""
 
@@ -268,7 +268,7 @@ class BermudaOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     SelectOptionDict(
                         value=device.address.upper(),
                         label=f"iBeacon: {device.address.upper()} {source_mac} "
-                        f"{name if device.address.upper() != name.upper() else ""}",
+                        f"{name if device.address.upper() != name.upper() else ''}",
                     )
                 )
                 continue
@@ -412,9 +412,8 @@ class BermudaOptionsFlowHandler(OptionsFlowWithConfigEntry):
         results_str = ""
         device = self._get_bermuda_device_from_registry(user_input[CONF_DEVICES])
         if device is not None:
-            if user_input[CONF_SCANNERS] in device.scanners:
-                scanner = device.scanners[user_input[CONF_SCANNERS]]
-            else:
+            scanner = device.get_scanner(user_input[CONF_SCANNERS])
+            if scanner is None:
                 return self.async_show_form(
                     step_id="calibration1_global",
                     errors={"err_scanner_no_record": "The selected scanner hasn't (yet) seen this device."},
@@ -476,7 +475,9 @@ class BermudaOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 rssi_offset_by_address = {}
                 for address in self.coordinator.scanner_list:
                     scanner_name = self.coordinator.devices[address].name
-                    rssi_offset_by_address[address] = user_input[CONF_SCANNER_INFO][scanner_name]
+                    val = user_input[CONF_SCANNER_INFO][scanner_name]
+                    # Clip to keep in sensible range, fixes #497
+                    rssi_offset_by_address[address] = max(min(val, 127), -127)
 
                 self.options.update({CONF_RSSI_OFFSETS: rssi_offset_by_address})
                 # Per previous step, returning elsewhere in the flow after updating the entry doesn't
@@ -527,14 +528,14 @@ class BermudaOptionsFlowHandler(OptionsFlowWithConfigEntry):
             for scanner in self.coordinator.scanner_list:
                 scanner_name = self.coordinator.devices[scanner].name
                 cur_offset = self._last_scanner_info.get(scanner_name, 0)
-                if scanner in device.scanners:
+                if (scanneradvert := device.get_scanner(scanner)) is not None:
                     results[scanner_name] = [
                         rssi_to_metres(
                             historical_rssi + cur_offset,
                             self.options.get(CONF_REF_POWER, DEFAULT_REF_POWER),
                             self.options.get(CONF_ATTENUATION, DEFAULT_ATTENUATION),
                         )
-                        for historical_rssi in device.scanners[scanner].hist_rssi
+                        for historical_rssi in scanneradvert.hist_rssi
                     ]
             # Format the results for display (HA has full markdown support!)
             results_str = "| Scanner | 0 | 1 | 2 | 3 | 4 |\n|---|---:|---:|---:|---:|---:|"

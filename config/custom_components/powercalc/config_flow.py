@@ -697,7 +697,7 @@ class PowercalcCommonFlow(ABC, ConfigEntryBaseFlow):
             )
 
         default_entities = entity_selector.config.get("include_entities", [])
-        schema = vol.Schema({vol.Required(CONF_ENTITIES, default=default_entities): entity_selector})
+        schema = vol.Schema({vol.Optional(CONF_ENTITIES, default=default_entities): entity_selector})
 
         if not self.is_library_flow:
             schema = schema.extend(SCHEMA_POWER_MULTI_SWITCH_MANUAL.schema)
@@ -991,7 +991,7 @@ class PowercalcCommonFlow(ABC, ConfigEntryBaseFlow):
             library = await ProfileLibrary.factory(self.hass)
             device_types = DOMAIN_DEVICE_TYPE_MAPPING.get(self.source_entity.domain, set()) if self.source_entity else None
             manufacturers = [
-                selector.SelectOptionDict(value=manufacturer, label=manufacturer)
+                selector.SelectOptionDict(value=manufacturer[0], label=manufacturer[1])
                 for manufacturer in await library.get_manufacturer_listing(device_types)
             ]
             return vol.Schema(

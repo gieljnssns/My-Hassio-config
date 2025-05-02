@@ -16,7 +16,7 @@ DOMAIN_DATA = f"{DOMAIN}_data"
 # that the component has been checked out from git, not pulled from
 # an officially built release. HACS will use the git tag (or the zip file,
 # either way it works).
-VERSION = "0.7.4rc3"
+VERSION = "0.8.1"
 
 ATTRIBUTION = "Data provided by http://jsonplaceholder.typicode.com/"
 ISSUE_URL = "https://github.com/agittins/bermuda/issues"
@@ -67,10 +67,12 @@ LOGSPAM_INTERVAL = 22
 # originators of beacon-like data. We then create a "meta-device" for the beacon's
 # uuid. Other non-static-mac protocols should use this method as well, by adding their
 # own BEACON_ types.
-BEACON_IBEACON_SOURCE: Final = "beacon source"  # The source-device sending a beacon packet (MAC-tracked)
-BEACON_IBEACON_DEVICE: Final = "beacon device"  # The meta-device created to track the beacon
-BEACON_PRIVATE_BLE_SOURCE: Final = "private_ble_src"  # current (random) MAC of a private ble device
-BEACON_PRIVATE_BLE_DEVICE: Final = "private_ble_device"  # meta-device create to track private ble device
+METADEVICE_TYPE_IBEACON_SOURCE: Final = "beacon source"  # The source-device sending a beacon packet (MAC-tracked)
+METADEVICE_IBEACON_DEVICE: Final = "beacon device"  # The meta-device created to track the beacon
+METADEVICE_TYPE_PRIVATE_BLE_SOURCE: Final = "private_ble_src"  # current (random) MAC of a private ble device
+METADEVICE_PRIVATE_BLE_DEVICE: Final = "private_ble_device"  # meta-device create to track private ble device
+
+METADEVICE_SOURCETYPES: Final = {METADEVICE_TYPE_IBEACON_SOURCE, METADEVICE_TYPE_PRIVATE_BLE_SOURCE}
 
 # Bluetooth Device Address Type - classify MAC addresses
 BDADDR_TYPE_UNKNOWN: Final = "bd_addr_type_unknown"  # uninitialised
@@ -90,10 +92,18 @@ ADDR_TYPE_PRIVATE_BLE_DEVICE: Final = "addr_type_private_ble_device"
 #
 # IRK devices typically change their MAC every 15 minutes, so 96 addresses/day.
 #
+# Accoring to the backend comments, BlueZ times out adverts at 180 seconds, and HA
+# expires adverts at 195 seconds to avoid churning.
+#
 PRUNE_MAX_COUNT = 1000  # How many device entries to allow at maximum
-PRUNE_TIME_INTERVAL = 310  # Every 5m10s, prune stale devices
-PRUNE_TIME_DEFAULT = 259200  # Max age of regular device entries (3days)
-PRUNE_TIME_IRK = 3600  # Resolvable Private addresses change often, prune regularly (1h)
+PRUNE_TIME_INTERVAL = 180  # Every 3m, prune stale devices
+# ### Note about timeouts: Bluez and HABT cache for 180 or 195 seconds. Setting
+# timeouts below that may result in prune/create/prune churn, but as long as
+# we only re-create *fresh* devices the risk is low.
+PRUNE_TIME_DEFAULT = 86400  # Max age of regular device entries (1day)
+PRUNE_TIME_UNKNOWN_IRK = 240  # Resolvable Private addresses change often, prune regularly.
+# see Bluetooth Core Spec, Vol3, Part C, Appendix A, Table A.1: Defined GAP timers
+PRUNE_TIME_KNOWN_IRK = 960  # spec "recommends" 15 min max address age. Round up to 16 :-)
 
 SAVEOUT_COOLDOWN = 10  # seconds to delay before re-trying config entry save.
 

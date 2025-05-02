@@ -45,8 +45,10 @@ class BermudaEntity(CoordinatorEntity):
         self.config_entry = config_entry
         self.address = address
         self._device = coordinator.devices[address]
+        self._lastname = self._device.name  # So we can track when we get a new name
         self.area_reg = ar.async_get(coordinator.hass)
         self.devreg = dr.async_get(coordinator.hass)
+        self.devreg_init_done = False
 
         self.bermuda_update_interval = config_entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
         self.bermuda_last_state: Any = 0
@@ -86,8 +88,16 @@ class BermudaEntity(CoordinatorEntity):
         """
         Handle updated data from the co-ordinator.
 
-        (we don't need to implement this, but if we want to do anything special we can)
+        Any specific things we want to do during an update cycle
         """
+        if not self.devreg_init_done and self.device_entry:
+            self._device.name_by_user = self.device_entry.name_by_user
+            self.devreg_init_done = True
+        if self._device.name != self._lastname:
+            self._lastname = self._device.name
+            if self.device_entry:
+                # We have a new name locally, so let's update the device registry.
+                self.devreg.async_update_device(self.device_entry.id, name=self._device.name)
         self.async_write_ha_state()
 
     @property
@@ -112,16 +122,23 @@ class BermudaEntity(CoordinatorEntity):
         model = None
 
         if self._device.is_scanner:
-            connection = {(dr.CONNECTION_NETWORK_MAC, self._device.address.lower())}
+            # ESPHome proxies prior to 2025.3 report their WIFI MAC for any address,
+            # except for received iBeacons.
+            connections = {
+                # Keeps the distance_to entities the same across pre/post 2025.3
+                (dr.CONNECTION_NETWORK_MAC, (self._device.address_wifi_mac or self._device.address).lower()),
+                # Ensures we can also match the Bluetooth integration entities.
+                (dr.CONNECTION_BLUETOOTH, (self._device.address_ble_mac or self._device.address).upper()),
+            }
         elif self._device.address_type == ADDR_TYPE_IBEACON:
             # ibeacon doesn't (yet) actually set a "connection", but
             # this "matches" what it stores for identifier.
-            connection = {("ibeacon", self._device.address.lower())}
+            connections = {("ibeacon", self._device.address.lower())}
             model = f"iBeacon: {self._device.address.lower()}"
         elif self._device.address_type == ADDR_TYPE_PRIVATE_BLE_DEVICE:
             # Private BLE Device integration doesn't specify "connection" tuples,
             # so we use what it defines for the "identifier" instead.
-            connection = {("private_ble_device", self._device.address.lower())}
+            connections = {("private_ble_device", self._device.address.lower())}
             # We don't set the model since the Private BLE integration should have
             # already named it nicely.
             # model = f"IRK: {self._device.address.lower()[:4]}"
@@ -134,14 +151,14 @@ class BermudaEntity(CoordinatorEntity):
             #    existing_device_id = dr_device.id
             domain_name = DOMAIN_PRIVATE_BLE_DEVICE
         else:
-            connection = {(dr.CONNECTION_BLUETOOTH, self._device.address.upper())}
+            connections = {(dr.CONNECTION_BLUETOOTH, self._device.address.upper())}
             # No need to set model, since MAC address will be shown via connection.
             # model = f"Bermuda: {self._device.address.lower()}"
 
         device_info = {
             "identifiers": {(domain_name, self._device.unique_id)},
-            "connections": connection,
-            "name": self._device.prefname,
+            "connections": connections,
+            "name": self._device.name,
         }
         if model is not None:
             device_info["model"] = model

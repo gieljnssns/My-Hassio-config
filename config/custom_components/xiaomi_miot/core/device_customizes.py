@@ -674,8 +674,8 @@ DEVICE_CUSTOMIZES = {
         'number_properties': 'off_delay_time',
         'exclude_miot_properties': 'natural_*',
         'chunk_coordinators': [
-            {'interval': 16, 'props': 'on,mode,fan_level'},
-            {'interval': 21, 'props': 'speed_level,off_delay_time,horizontal_swing*'},
+            {'interval': 16, 'props': 'on,mode,fan_level,speed_level'},
+            {'interval': 21, 'props': 'off_delay_time,horizontal_swing*'},
         ],
         'append_converters': [
             {
@@ -814,6 +814,15 @@ DEVICE_CUSTOMIZES = {
     },
     'hyd.airer.lyjpro': {
         **CHUNK_1,
+        'number_properties': 'target_position,drying_time',
+        'append_converters': [
+            {
+                'class': MiotCoverConv,
+                'services': ['airer'],
+                'converters': [{'props': ['prop.2.11']}],
+            }
+        ],
+        'disable_target_position': True,
         'cover_position_mapping': {},
     },
     'hyd.airer.pro': {
@@ -821,6 +830,7 @@ DEVICE_CUSTOMIZES = {
         'number_properties': 'brightness,upper_limit,lower_limit',
         'append_converters': [
             {
+                'class': MiotCoverConv,
                 'services': ['airer'],
                 'converters': [{'props': ['*.current_position', '*.set_position']}],
             }
@@ -842,6 +852,7 @@ DEVICE_CUSTOMIZES = {
         'target_position_props': 'set_position',
         'cover_position_mapping': None,
     },
+    'hyd.airer.znlyj2': CHUNK_1,
     'hyd.airer.znlyj5': {
         'cover_position_mapping': {0: 50, 1: 0, 2: 100},
     },
@@ -1059,17 +1070,22 @@ DEVICE_CUSTOMIZES = {
     },
     'lumi.acpartner.mcn04': {
         'auto_cloud': True,
-        'chunk_properties': 8,
+        'interval_seconds': 120,
         'sensor_properties': 'electric_power',
-        'switch_properties': 'on,quick_cool_enable,indicator_light',
+        'switch_properties': 'on,vertical_swing,quick_cool_enable,indicator_light',
         'select_properties': 'fan_level,ac_mode',
         'miio_cloud_props': [],
         'stat_power_cost_type': 'stat_day_v3',
         'stat_power_cost_key': '7.1,7.3',
         'sensor_attributes': 'power_cost_today,power_cost_month,power_cost_today_2,power_cost_month_2',
         'configuration_entities': 'ac_mode,indicator_light',
+        'exclude_miot_services': 'device_protect,device_info',
+        'exclude_miot_properties': 'fault,set_ele_info,sleep_cfg',
         'chunk_coordinators': [
-            {'interval': 10, 'props': 'on,mode,target_temperature,fan_level,electric_power'},
+            {'interval': 11, 'props': 'on,mode,target_temperature'},
+            {'interval': 16, 'props': 'fan_level,vertical_swing'},
+            {'interval': 26, 'props': 'electric_power'},
+            {'interval': 500, 'props': 'brand_id,remote_id,ac_ctrl_range,ac_state'},
         ],
     },
     'lumi.acpartner.mcn04:power_consumption': ENERGY_KWH,
@@ -1368,6 +1384,16 @@ DEVICE_CUSTOMIZES = {
         'select_properties': 'nursing_value,fan_level,buzzer_status',
         'number_properties': 'temp_set,fan_countdown_time',
         'percentage_property': 'fan_advance.speed',
+        'append_converters': [
+            {
+                'services': ['fan'],
+                'converters': [{'props': ['fan_advance.speed']}],
+            }
+        ],
+        'chunk_coordinators': [
+            {'interval': 11, 'props': 'light.on,mode,brightness,color_temperature'},
+            {'interval': 16, 'props': 'fan.on,speed,fan_level'},
+        ],
     },
     'opple.light.yrtd': {
         'switch_properties': 'night_light,time_display,wake_up_at_night,voice',
@@ -1564,6 +1590,17 @@ DEVICE_CUSTOMIZES = {
         'state_property': 'chanitex_wp_gs.rsysstate',
         'sensor_properties': 'tds_in,tds_out,rwaterconsumption,rfilterwaterlifei,rfilterwaterlifeii,rfilterwaterlifeiii',
     },
+    'shhf.light.sfla12': {
+        'button_actions': 'toggle,toggle_light_mode',
+        'switch_properties': 'ambient_light.on,switch.on,default_power_on_state,flex_switch,sleep_aid_mode,wake_up_mode,'
+                             'delay,off_to_center,vertical_swing,horizontal_swing',
+        'chunk_coordinators': [
+            {'interval': 16, 'props': 'light.on,brightness,color_temperature,mode'},
+            {'interval': 21, 'props': 'fan.on,fan_level,ambient_light.on,switch.on'},
+            {'interval': 61, 'props': 'default_power_on_state,flex_switch,sleep_aid_mode,wake_up_mode'},
+            {'interval': 71, 'props': 'delay*,off_to_center,vertical_swing,horizontal_swing'},
+        ],
+    },
     'shuii.humidifier.jsq002': {
         'brightness_for_on': 3,
         'brightness_for_off': 1,
@@ -1576,6 +1613,14 @@ DEVICE_CUSTOMIZES = {
         'chunk_coordinators': [],
     },
 
+    'tofan.airrtc.wk01': {
+        'append_converters': [
+            {
+                'services': ['thermostat'],
+                'converters': [{'props': ['air_conditioner.mode']}],
+            }
+        ],
+    },
     'topwit.bhf_light.rz01': {
         'sensor_attributes': 'ptc_bath_heater.temperature.error',
         'switch_properties': 'heating,blow,ventilation',
@@ -1585,16 +1630,22 @@ DEVICE_CUSTOMIZES = {
     'uvfive.steriliser.maine': CHUNK_1,
 
     'viomi.aircondition.y116': {
-        **CHUNK_1,
         'interval_seconds': 200,
         'switch_properties': 'air_conditioner.on,uv,auto_clean',
         'exclude_miot_properties': 'fault,autoclean_worktime',
         'chunk_coordinators': [
-            {'interval': 31, 'props': 'air_conditioner.on,mode'},
-            {'interval': 41, 'props': 'target_temperature,eco,sleep_mode'},
-            {'interval': 51, 'props': 'fan_level,horizontal_swing,vertical_swing'},
-            {'interval': 61, 'props': 'temperature,uv'},
-            {'interval': 299, 'props': 'auto_clean,indicator_light.on'},
+            {'interval': 31, 'props': 'air_conditioner.on'},
+            {'interval': 36, 'props': 'mode'},
+            {'interval': 41, 'props': 'target_temperature'},
+            {'interval': 46, 'props': 'fan_level'},
+            {'interval': 51, 'props': 'horizontal_swing'},
+            {'interval': 56, 'props': 'vertical_swing'},
+            {'interval': 61, 'props': 'temperature'},
+            {'interval': 66, 'props': 'uv'},
+            {'interval': 71, 'props': 'eco'},
+            {'interval': 76, 'props': 'sleep_mode'},
+            {'interval': 199, 'props': 'indicator_light.on'},
+            {'interval': 299, 'props': 'auto_clean'},
         ],
     },
     'viomi.airer.xy108': {
@@ -1711,8 +1762,17 @@ DEVICE_CUSTOMIZES = {
     },
     'xiaomi.airc.*:power_consumption': ENERGY_KWH,
     'xiaomi.aircondition.m9': {
-        'exclude_miot_services': 'machine_state,flag_bit,single_smart_scene',
-        'exclude_miot_properties': 'enhance.timer,humidity_range',
+        'interval_seconds': 90,
+        'switch_properties': 'air_conditioner.on,un_straight_blowing,favorite_on',
+        'exclude_miot_services': 'electricity,maintenance,enhance,machine_state,flag_bit,single_smart_scene,system_parm,'
+                                 'mosquito_repellent,favorite_type_data,air_conditioner_dev_mode,product_appearance',
+        'exclude_miot_properties': 'fault,enhance.timer,humidity_range',
+        'chunk_coordinators': [
+            {'interval': 16, 'props': 'air_conditioner.on,mode,target_temperature,target_humidity'},
+            {'interval': 26, 'props': 'fan_level,vertical_swing,vertical_angle'},
+            {'interval': 56, 'props': 'eco,heater,dryer,sleep_mode,temperature,relative_humidity'},
+            {'interval': 299, 'props': 'filter_life_level'},
+        ],
     },
     'xiaomi.aircondition.ma1': {
         'miot_type': 'urn:miot-spec-v2:device:air-conditioner:0000A004:xiaomi-ma1:4',
@@ -1762,6 +1822,10 @@ DEVICE_CUSTOMIZES = {
         'brightness_for_on': 0,
         'brightness_for_off': 2,
         'exclude_miot_services': 'rfid',
+    },
+    'xiaomi.airp.va2b': {
+        'switch_properties': 'on,anion',
+        'exclude_miot_services': 'custom_service,rfid',
     },
     'xiaomi.airp.va4': {
         'sensor_properties': 'relative_humidity,air_quality,pm2_5_density,temperature,hcho_density,filter_life_level',
@@ -1889,7 +1953,7 @@ DEVICE_CUSTOMIZES = {
         'unit_of_measurement': 'g',
     },
     'xiaomi.feeder.*:pet_food_out': {
-        'action_params': 1,
+        'action_params': '{{ attrs["target_feeding_measure-2-7"]|default(1) }}',
     },
     'xiaomi.juicer.dems2': {
         'button_actions': 'start_cook,cancel_cooking,resume_cook,set_recipe,pause',
@@ -1904,12 +1968,36 @@ DEVICE_CUSTOMIZES = {
     'xiaomi.heater.ma8': {
         'button_actions': 'toggle',
     },
+    'xiaomi.hood.jyjp2': {
+        'interval_seconds': 90,
+        'button_actions': 'toggle,stop_dry_cleaning',
+        'binary_sensor_properties': 'prop.12.2,prop.12.3',
+        'sensor_properties': 'status,stove_link_status,current_heat_level,left_time,stove_hood_linkage,charge_progress,'
+                             'dry_cleaning_status,dry_cleaning_left_time,pm1',
+        'switch_properties': 'delay,off_delay,power_on_with_light,power_off_with_light,clean_remind_on,gestures,'
+                             'auto_ventilation_on,*_auto_ventilation,dry_cleaning_timing_on,dry_cleaning_guide,'
+                             'auto_screen_off,delay_remain_time',
+        'select_properties': 'display_state,delay_time',
+        'number_properties': 'off_delay_time,countdown_time,clean_remind_time,working_remind_time,auto_screen_off_time,'
+                             'pm_trig_*_value,pm_auto_ventilation_time',
+        'chunk_coordinators': [
+            {'interval': 16, 'props': 'on,fan_level,current_heat_level'},
+            {'interval': 21, 'props': 'status,left_time'},
+        ],
+    },
     'xiaomi.humidifier.airmx': {
         'button_actions': 'toggle,reset_filter_life',
         'sensor_properties': 'water_level,air_dry_remain_time,remain_time,filter_life_level',
         'switch_properties': 'overwet_protect,automatic_air_drying,delay,alarm,auto_alarm_off,clean.on,descale.on'
                              'indicator_light.on,auto_lights_off,wash_water_tank',
         'select_properties': 'indicator_light.brightness',
+        'number_properties': 'delay_time',
+    },
+    'xiaomi.humidifier.p800': {
+        'button_actions': 'loop_mode,reset_filter_life',
+        'select_properties': 'screen.brightness',
+        'sensor_properties': 'fault,water_level,air_dry_remain_time,clean_left_time,filter_life_level,delay_remain_time',
+        'switch_properties': 'overwet_protect,automatic_air_drying,alarm,dry_switch,over_wet_protect,screen.on,delay',
         'number_properties': 'delay_time',
     },
     'xiaomi.humidifier.p1200': {
@@ -1919,7 +2007,7 @@ DEVICE_CUSTOMIZES = {
         'switch_properties': 'alarm,dry_switch,over_wet_protect,screen.on',
         'number_properties': 'off_delay_time',
     },
-    'xiaomi.humidifier.p1200:water_level': {
+    'xiaomi.humidifier.*:water_level': {
         'state_class': 'measurement',
         'unit_of_measurement': '%',
     },
@@ -2169,6 +2257,16 @@ DEVICE_CUSTOMIZES = {
     'yeelink.light.fancl5': {
         'number_properties': 'fan_speed_std,fan_speed_rec,dl_brightness,nl_brightness',
     },
+    'yeelink.light.lamp22': {
+        'interval_seconds': 120,
+        'chunk_coordinators': [
+            {'interval': 21, 'props': 'on,brightness'},
+            {'interval': 31, 'props': 'color_temperature,mode,default_power_on_state'},
+            {'interval': 81, 'props': 'delay_*,scene_mode,work_minutes,break_minutes'},
+            {'interval': 91, 'props': 'mode_one_*,mode_two_*'},
+            {'interval': 96, 'props': 'mode_three_*,mode_four_*'},
+        ],
+    },
     'yeelink.light.nl1': {
         'use_ble_object': True,
         'motion_timeout': 120,
@@ -2202,6 +2300,13 @@ DEVICE_CUSTOMIZES = {
             'extension.flash':     {'siid': 4, 'piid': 2},
             'extension.rc_list':   {'siid': 4, 'piid': 3},
         },
+    },
+    'yuemee.sensor_gas.56712': {
+        'chunk_coordinators': [
+            {'interval': 21, 'props': 'status'},
+            {'interval': 120, 'props': 'updown'},
+            {'interval': 300, 'props': 'read_log_data'},
+        ],
     },
     'yunmi.kettle.*': {
         'button_actions': 'stop_work',
@@ -2367,8 +2472,8 @@ DEVICE_CUSTOMIZES = {
         'number_properties': 'horizontal_angle,vertical_angle,off_delay',
         'append_converters': [
             {
-                'services': ['custom_service'],
-                'converters': [{'props': ['speed_level']}],
+                'services': ['fan'],
+                'converters': [{'props': ['custom_service.speed_level']}],
             }
         ],
     },
@@ -2507,7 +2612,9 @@ DEVICE_CUSTOMIZES = {
         'switch_properties': 'dryer,uv',
         'select_properties': 'drying_level',
         'chunk_coordinators': [
-            {'interval': 15, 'props': 'status,current_position,target_position,dryer,drying_level'},
+            {'interval': 16, 'props': 'status,current_position,target_position'},
+            {'interval': 21, 'props': 'light.on'},
+            {'interval': 26, 'props': 'dryer,drying_level,uv'},
         ],
     },
     '*.airfresh.*': {
@@ -2972,7 +3079,7 @@ GLOBAL_CONVERTERS = [
             {'props': ['fan_level', 'fan_control.fan_level', 'heat_level'], 'desc': True},
             {'props': ['horizontal_swing', 'fan_control.horizontal_swing'], 'domain': 'switch'},
             {'props': ['vertical_swing', 'fan_control.vertical_swing'], 'domain': 'switch'},
-            {'props': ['uv', 'heater', 'eco', 'dryer', 'sleep_mode', 'soft_wind'], 'domain': 'switch'},
+            {'props': ['*.uv', 'heater', 'eco', 'dryer', 'sleep_mode', 'soft_wind'], 'domain': 'switch'},
         ],
     },
     {
@@ -3042,10 +3149,12 @@ GLOBAL_CONVERTERS = [
             {
                 'props': [
                     'temperature', 'indoor_temperature', 'outdoor_temperature', 'relative_humidity', 'humidity',
-                    'pm2_5_density', 'pm10_density', 'co2_density', 'tvoc_density', 'voc_density', 'hcho_density',
-                    'air_quality', 'air_quality_index', 'illumination', 'atmospheric_pressure',
+                    'pm2_5_density', 'pm10_density', 'co_density', 'co2_density', 'tvoc_density', 'voc_density',
+                    'hcho_density', 'ch4_density', 'illumination', 'atmospheric_pressure',
+                    'air_quality', 'air_quality_index',
                 ],
                 'domain': 'sensor',
+                'exclude_format': ['bool'],
             },
         ],
     },
