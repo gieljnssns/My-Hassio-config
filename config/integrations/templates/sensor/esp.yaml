@@ -35,8 +35,8 @@
       #             | map(attribute="entity_id") 
       #             | list %}
 
-      #   {%- set devices = namespace(all=[]) %}
-      #   {%- for entity in unknown -%}
+      #   {% set devices = namespace(all=[]) %}
+      #   {% for entity in unknown -%}
       #     {% set device = device_attr(device_id(entity)|string, 'name') %}
       #     {% if device not in devices.all %}
       #     {% set devices.all = devices.all + [device] %}

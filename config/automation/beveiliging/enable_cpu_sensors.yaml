@@ -1,6 +1,6 @@
-alias: Reload netatmo
-description: "Herladen van netatmo integratie bij unkown of unavailable."
-id: c0d3c232-b89e-4b24-a87b-9d8aeb5e2fea
+alias: Enable cpu sensors
+description: "Enable de unifi cpu sensors And reload Netatmo."
+id: 2c771c0d-4d36-4678-bc2a-3b93c6d38ce5
 mode: parallel
 trigger:
   - platform: homeassistant
@@ -16,7 +16,13 @@ actions:
     then:
       - action: homeassistant.reload_config_entry
         data:
-          entry_id: 5a981e21a0b31d75284b8aad81f97329
+          entry_id: |
+            {{ config_entry_id('climate.living') }}
+        target:
+          entity_id: climate.living
+      # - action: homeassistant.reload_config_entry
+      #   data:
+      #     entry_id: 5a981e21a0b31d75284b8aad81f97329
   - if:
       - condition: template
         value_template: >
@@ -35,10 +41,10 @@ actions:
 
 
 
-  - condition: template
-    value_template: >
-      {{ states("climate.living") == "unavailable" or
-          states("climate.living") == "unknown" }}
-  - action: homeassistant.reload_config_entry
-    data:
-      entry_id: 5a981e21a0b31d75284b8aad81f97329
+  # - condition: template
+  #   value_template: >
+  #     {{ states("climate.living") == "unavailable" or
+  #         states("climate.living") == "unknown" }}
+  # - action: homeassistant.reload_config_entry
+  #   data:
+  #     entry_id: 5a981e21a0b31d75284b8aad81f97329

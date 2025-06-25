@@ -11,10 +11,10 @@ random_radio:
       response_variable: radios
     - variables:
         radio: >
-          {%- set radio = radios['todo.radio_stations']['items'] | list %}
+          {% set radio = radios['todo.radio_stations']['items'] | list %}
           {{ radio | random }}
         # radio: >
-        #   {%- set radio = radios['todo.radio_stations']['items']| map(attribute='summary') | list %}
+        #   {% set radio = radios['todo.radio_stations']['items']| map(attribute='summary') | list %}
         #   {{ radio | random }}
     - action: media_player.shuffle_set
       data:

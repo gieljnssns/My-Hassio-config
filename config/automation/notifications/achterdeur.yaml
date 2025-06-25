@@ -14,7 +14,7 @@ condition:
     #   state: "off"
     - condition: template
       value_template: >
-        {{ (states('sensor.gemiddelde_temp_beneden') | float(default=0) < (states('sensor.buiten_temperatuur') | float(default=0)) + 1 ) }}
+        {{ states('sensor.gemiddelde_temp_binnen') | float(default=0) < states('sensor.buiten_temperatuur') | float(default=0) }}
     - condition: numeric_state
       entity_id: sensor.gemiddelde_temp_beneden
       above: 22

@@ -1,0 +1,130 @@
+alias: Reload integrations
+description: "Herladen van integraties bij unkown of unavailable."
+id: 57abe3da-cb31-43f9-bea8-a3d73f4d3b5c
+mode: parallel
+trigger:
+  - platform: template
+    value_template: >
+      {{ states("climate.living")  is in ["unavailable", "unknown"]}}
+    for:
+      minutes: 2
+    id: netatmo
+  - platform: template
+    value_template: >
+      {{ states("sensor.huawei_active_power")  is in ["unavailable", "unknown"]}}
+    for:
+      minutes: 2
+    id: huawei
+  - platform: template
+    value_template: >
+      {{ states("sensor.energy_production_today")  is in ["unavailable", "unknown"]}}
+    for:
+      minutes: 2
+    id: open_meteo
+  - platform: template
+    value_template: >
+      {{ states("sensor.energy_production_tomorrow")  is in ["unavailable", "unknown"]}}
+    for:
+      minutes: 2
+    id: open_meteo
+  - platform: template
+    value_template: >
+      {{ states("sensor.energy_production_today_2")  is in ["unavailable", "unknown"]}}
+    for:
+      minutes: 2
+    id: open_meteo_2
+  - platform: template
+    value_template: >
+      {{ states("sensor.energy_production_tomorrow_2")  is in ["unavailable", "unknown"]}}
+    for:
+      minutes: 2
+    id: open_meteo_2
+  - platform: template
+    value_template: >
+      {{ states("sensor.energy_production_today_3")  is in ["unavailable", "unknown"]}}
+    for:
+      minutes: 2
+    id: open_meteo_3
+  - platform: template
+    value_template: >
+      {{ states("sensor.energy_production_tomorrow_3")  is in ["unavailable", "unknown"]}}
+    for:
+      minutes: 2
+    id: open_meteo_3
+  - platform: template
+    value_template: >
+      {{ states("sensor.solaredge_inverter_watts")  is in ["unavailable", "unknown"]}}
+    for:
+      minutes: 2
+    id: solaredge
+actions:
+  - choose:
+    - conditions:
+        - condition: trigger
+          id: huawei
+      sequence:
+        - action: homeassistant.reload_config_entry
+          target:
+            entity_id: sensor.huawei_active_power
+          data:
+            entry_id: >
+              {{ config_entry_id('sensor.huawei_active_power') }}
+    - conditions:
+        - condition: trigger
+          id: open_meteo
+      sequence:
+        - action: homeassistant.reload_config_entry
+          target:
+            entity_id: sensor.power_production_now
+          data: 
+            entry_id: >
+              {{ config_entry_id('sensor.power_production_now') }}
+    - conditions:
+        - condition: trigger
+          id: open_meteo_2
+      sequence:
+        - action: homeassistant.reload_config_entry
+          target:
+            entity_id: sensor.power_production_now_2
+          data:
+            entry_id: >
+              {{ config_entry_id('sensor.power_production_now_2') }}
+    - conditions:
+        - condition: trigger
+          id: netatmo
+      sequence:
+        - action: homeassistant.reload_config_entry
+          target:
+            entity_id: climate.living
+          data:
+            entry_id: >
+              {{ config_entry_id('climate.living') }}
+    - conditions:
+        - condition: trigger
+          id: open_meteo_3
+      sequence:
+        - action: homeassistant.reload_config_entry
+          target:
+            entity_id: sensor.power_production_now_3
+          data:
+            entry_id: >
+              {{ config_entry_id('sensor.power_production_now_3') }}
+    - conditions:
+        - condition: trigger
+          id: solaredge
+      sequence:
+        - action: notify.mobile_app_gphone
+          data:
+            message: SolarEdge problemen!
+        - action: button.press
+          target:
+            entity_id: button.usw_lite_8_restart
+        - delay:
+            minutes: 5
+        - action: homeassistant.reload_config_entry
+          target:
+            entity_id: sensor.solaredge_inverter_watts
+          data:
+            entry_id: >
+              {{ config_entry_id('sensor.solaredge_inverter_watts') }}
+          

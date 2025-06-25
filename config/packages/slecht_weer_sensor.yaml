@@ -101,9 +101,9 @@ template:
         unique_id: a6dc694b-10bb-461a-938d-009a015e4d52
         state: >-
           {{ states("sensor.notification_hour") }}:
-          {%- if states("sensor.notification_minute") | length == 1 -%}
+          {% if states("sensor.notification_minute") | length == 1 -%}
             0
-          {%- endif -%}
+          {% endif -%}
             {{ states("sensor.notification_minute") }}
 
       - name: Notification time long
@@ -111,9 +111,9 @@ template:
         state: >-
           {% if states("sensor.notification_hour") | length == 1 -%}
             0
-          {%- endif -%}
+          {% endif -%}
             {{ states("sensor.notification_hour") }}:
-          {%- if states("sensor.notification_minute") | length == 1 -%}
+          {% if states("sensor.notification_minute") | length == 1 -%}
             0
-          {%- endif -%}
+          {% endif -%}
             {{ states("sensor.notification_minute") }}

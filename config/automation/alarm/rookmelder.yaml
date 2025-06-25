@@ -19,15 +19,15 @@ actions:
     data_template:
       title: "Alarm Home-Assistant."
       message: >
-        {%- if is_state("binary_sensor.gang_rookmelder", "on") -%}
+        {% if is_state("binary_sensor.gang_rookmelder", "on") -%}
           Rook gedetecteerd in de gang.
-        {%- elif is_state("binary_sensor.living_rookmelder", "on") -%}
+        {% elif is_state("binary_sensor.living_rookmelder", "on") -%}
           Rook gedetecteerd in de living.
-        {%- elif is_state("binary_sensor.waskot_rookmelder", "on") -%}
+        {% elif is_state("binary_sensor.waskot_rookmelder", "on") -%}
           Rook gedetecteerd in het waskot.
-        {%- elif is_state("binary_sensor.kelder_rookmelder", "on") -%}
+        {% elif is_state("binary_sensor.kelder_rookmelder", "on") -%}
           Rook gedetecteerd in de kelder.
-        {%- endif %}
+        {% endif %}
       data:
         push:
           sound:

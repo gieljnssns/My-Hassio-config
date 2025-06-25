@@ -2,146 +2,146 @@
     - name: Not recorded entites
       unique_id: c524665f-347d-44e3-9968-a7e60ffb42ce
       state: >
-        {%- set shelly = states.sensor | selectattr('entity_id', 'match', 'sensor.shelly_') 
+        {% set shelly = states.sensor | selectattr('entity_id', 'match', 'sensor.shelly_') 
                                       | selectattr('entity_id', 'search', '_temperatuur')
                                       | map(attribute='entity_id')
                                       | list %}
-        {%- set uptime = states.sensor | selectattr('entity_id', 'search', 'uptime') 
+        {% set uptime = states.sensor | selectattr('entity_id', 'search', 'uptime') 
                                       | map(attribute='entity_id')
                                       | list %}
-        {%- set start = states.sensor | selectattr('entity_id', 'search', '_startuur') 
+        {% set start = states.sensor | selectattr('entity_id', 'search', '_startuur') 
                                       | map(attribute='entity_id')
                                       | list %}
-        {%- set poe = states.sensor | selectattr('entity_id', 'search', '_poe_power') 
+        {% set poe = states.sensor | selectattr('entity_id', 'search', '_poe_power') 
                                     | map(attribute='entity_id')
                                     | list %}
-        {%- set moving_distance = states.sensor | selectattr('entity_id', 'search', '_moving_distance') 
+        {% set moving_distance = states.sensor | selectattr('entity_id', 'search', '_moving_distance') 
                                                 | map(attribute='entity_id')
                                                 | list %}
-        {%- set still_distance = states.sensor | selectattr('entity_id', 'search', '_still_distance') 
+        {% set still_distance = states.sensor | selectattr('entity_id', 'search', '_still_distance') 
                                               | map(attribute='entity_id')
                                               | list %}
-        {%- set detection_distance = states.sensor | selectattr('entity_id', 'search', '_detection_distance') 
+        {% set detection_distance = states.sensor | selectattr('entity_id', 'search', '_detection_distance') 
                                                   | map(attribute='entity_id')
                                                   | list %}
-        {%- set move_energy = states.sensor | selectattr('entity_id', 'search', '_move_energy') 
+        {% set move_energy = states.sensor | selectattr('entity_id', 'search', '_move_energy') 
                                             | map(attribute='entity_id')
                                             | list %}
-        {%- set still_energy = states.sensor | selectattr('entity_id', 'search', '_still_energy') 
+        {% set still_energy = states.sensor | selectattr('entity_id', 'search', '_still_energy') 
                                             | map(attribute='entity_id')
                                             | list %}
-        {%- set cpu = states.sensor | selectattr('entity_id', 'match', 'sensor.cpu_') 
+        {% set cpu = states.sensor | selectattr('entity_id', 'match', 'sensor.cpu_') 
                                     | map(attribute='entity_id')
                                     | list %}                 
-        {%- set swap = states.sensor | selectattr('entity_id', 'match', 'sensor.swap_*') 
+        {% set swap = states.sensor | selectattr('entity_id', 'match', 'sensor.swap_*') 
                                     | map(attribute='entity_id')
                                     | list %}
-        {%- set ram = states.sensor | selectattr('entity_id', 'match', 'sensor.ram_') 
+        {% set ram = states.sensor | selectattr('entity_id', 'match', 'sensor.ram_') 
                                     | map(attribute='entity_id')
                                     | list %}
-        {%- set wifi = states.sensor | selectattr('entity_id', 'match', 'sensor.wifi_') 
+        {% set wifi = states.sensor | selectattr('entity_id', 'match', 'sensor.wifi_') 
                                     | map(attribute='entity_id')
                                     | list %}
-        {%- set quarter = states.sensor | selectattr('entity_id', 'match', 'sensor.quarter_') 
+        {% set quarter = states.sensor | selectattr('entity_id', 'match', 'sensor.quarter_') 
                                         | map(attribute='entity_id')
                                         | list %}
-        {%- set plant = states.sensor | selectattr('entity_id', 'match', 'sensor.plant_') 
+        {% set plant = states.sensor | selectattr('entity_id', 'match', 'sensor.plant_') 
                                       | map(attribute='entity_id')
                                       | list %}
-        {%- set cpu2 = states.sensor | selectattr('entity_id', 'match', 'sensor.*_cpu_utilization') 
+        {% set cpu2 = states.sensor | selectattr('entity_id', 'match', 'sensor.*_cpu_utilization') 
                                         | map(attribute='entity_id')
                                         | list %}
-        {%- set memory = states.sensor | selectattr('entity_id', 'match', 'sensor.*_memory_utilization') 
+        {% set memory = states.sensor | selectattr('entity_id', 'match', 'sensor.*_memory_utilization') 
                                         | map(attribute='entity_id')
                                         | list %}
-        {%- set camera = states.camera | map(attribute='entity_id') | list %}
-        {%- set group = states.group | map(attribute='entity_id') | list %}
-        {%- set scene = states.scene | map(attribute='entity_id') | list %}
-        {%- set sun = states.sun | map(attribute='entity_id') | list %}
-        {%- set weather = states.weather | map(attribute='entity_id') | list %}
-        {%- set zone = states.zone | map(attribute='entity_id') | list %}
-        {%- set update = states.update | map(attribute='entity_id') | list %}
-        {%- set image = states.image | map(attribute='entity_id') | list %}
-        {%- set tts = states.tts | map(attribute='entity_id') | list %}
-        {%- set event = states.event | map(attribute='entity_id') | list %}
-        {%- set all = cpu2 + memory + update + zone + weather + sun + scene + group + camera + plant + quarter + wifi + ram + swap + cpu + still_energy + move_energy + detection_distance + still_distance + moving_distance + poe + start + uptime + shelly + image + tts + event%}
+        {% set camera = states.camera | map(attribute='entity_id') | list %}
+        {% set group = states.group | map(attribute='entity_id') | list %}
+        {% set scene = states.scene | map(attribute='entity_id') | list %}
+        {% set sun = states.sun | map(attribute='entity_id') | list %}
+        {% set weather = states.weather | map(attribute='entity_id') | list %}
+        {% set zone = states.zone | map(attribute='entity_id') | list %}
+        {% set update = states.update | map(attribute='entity_id') | list %}
+        {% set image = states.image | map(attribute='entity_id') | list %}
+        {% set tts = states.tts | map(attribute='entity_id') | list %}
+        {% set event = states.event | map(attribute='entity_id') | list %}
+        {% set all = cpu2 + memory + update + zone + weather + sun + scene + group + camera + plant + quarter + wifi + ram + swap + cpu + still_energy + move_energy + detection_distance + still_distance + moving_distance + poe + start + uptime + shelly + image + tts + event%}
 
         {{ all | length }}
       attributes:
         list: >
-          {%- set shelly = states.sensor | selectattr('entity_id', 'match', 'sensor.shelly_') 
+          {% set shelly = states.sensor | selectattr('entity_id', 'match', 'sensor.shelly_') 
                                         | selectattr('entity_id', 'search', '_temperatuur')
                                         | map(attribute='entity_id')
                                         | list %}
-          {%- set uptime = states.sensor | selectattr('entity_id', 'search', 'uptime') 
+          {% set uptime = states.sensor | selectattr('entity_id', 'search', 'uptime') 
                                         | map(attribute='entity_id')
                                         | list %}
-          {%- set start = states.sensor | selectattr('entity_id', 'search', '_startuur') 
+          {% set start = states.sensor | selectattr('entity_id', 'search', '_startuur') 
                                         | map(attribute='entity_id')
                                         | list %}
-          {%- set poe = states.sensor | selectattr('entity_id', 'search', '_poe_power') 
+          {% set poe = states.sensor | selectattr('entity_id', 'search', '_poe_power') 
                                       | map(attribute='entity_id')
                                       | list %}
-          {%- set moving_distance = states.sensor | selectattr('entity_id', 'search', '_moving_distance') 
+          {% set moving_distance = states.sensor | selectattr('entity_id', 'search', '_moving_distance') 
                                                   | map(attribute='entity_id')
                                                   | list %}
-          {%- set still_distance = states.sensor | selectattr('entity_id', 'search', '_still_distance') 
+          {% set still_distance = states.sensor | selectattr('entity_id', 'search', '_still_distance') 
                                                 | map(attribute='entity_id')
                                                 | list %}
-          {%- set detection_distance = states.sensor | selectattr('entity_id', 'search', '_detection_distance') 
+          {% set detection_distance = states.sensor | selectattr('entity_id', 'search', '_detection_distance') 
                                                     | map(attribute='entity_id')
                                                     | list %}
-          {%- set move_energy = states.sensor | selectattr('entity_id', 'search', '_move_energy') 
+          {% set move_energy = states.sensor | selectattr('entity_id', 'search', '_move_energy') 
                                               | map(attribute='entity_id')
                                               | list %}
-          {%- set still_energy = states.sensor | selectattr('entity_id', 'search', '_still_energy') 
+          {% set still_energy = states.sensor | selectattr('entity_id', 'search', '_still_energy') 
                                               | map(attribute='entity_id')
                                               | list %}
-          {%- set cpu = states.sensor | selectattr('entity_id', 'match', 'sensor.cpu_') 
+          {% set cpu = states.sensor | selectattr('entity_id', 'match', 'sensor.cpu_') 
                                       | map(attribute='entity_id')
                                       | list %}                 
-          {%- set swap = states.sensor | selectattr('entity_id', 'match', 'sensor.swap_*') 
+          {% set swap = states.sensor | selectattr('entity_id', 'match', 'sensor.swap_*') 
                                       | map(attribute='entity_id')
                                       | list %}
-          {%- set ram = states.sensor | selectattr('entity_id', 'match', 'sensor.ram_') 
+          {% set ram = states.sensor | selectattr('entity_id', 'match', 'sensor.ram_') 
                                       | map(attribute='entity_id')
                                       | list %}
-          {%- set wifi = states.sensor | selectattr('entity_id', 'match', 'sensor.wifi_') 
+          {% set wifi = states.sensor | selectattr('entity_id', 'match', 'sensor.wifi_') 
                                       | map(attribute='entity_id')
                                       | list %}
-          {%- set quarter = states.sensor | selectattr('entity_id', 'match', 'sensor.quarter_') 
+          {% set quarter = states.sensor | selectattr('entity_id', 'match', 'sensor.quarter_') 
                                           | map(attribute='entity_id')
                                           | list %}
-          {%- set plant = states.sensor | selectattr('entity_id', 'match', 'sensor.plant_') 
+          {% set plant = states.sensor | selectattr('entity_id', 'match', 'sensor.plant_') 
                                         | map(attribute='entity_id')
                                         | list %}
-          {%- set cpu2 = states.sensor | selectattr('entity_id', 'match', 'sensor.*_cpu_utilization') 
+          {% set cpu2 = states.sensor | selectattr('entity_id', 'match', 'sensor.*_cpu_utilization') 
                                         | map(attribute='entity_id')
                                         | list %}
-          {%- set memory = states.sensor | selectattr('entity_id', 'match', 'sensor.*_memory_utilization') 
+          {% set memory = states.sensor | selectattr('entity_id', 'match', 'sensor.*_memory_utilization') 
                                         | map(attribute='entity_id')
                                         | list %}
-          {%- set camera = states.camera | map(attribute='entity_id') | list %}
-          {%- set group = states.group | map(attribute='entity_id') | list %}
-          {%- set scene = states.scene | map(attribute='entity_id') | list %}
-          {%- set sun = states.sun | map(attribute='entity_id') | list %}
-          {%- set weather = states.weather | map(attribute='entity_id') | list %}
-          {%- set zone = states.zone | map(attribute='entity_id') | list %}
-          {%- set update = states.update | map(attribute='entity_id') | list %}
-          {%- set image = states.image | map(attribute='entity_id') | list %}
-          {%- set tts = states.tts | map(attribute='entity_id') | list %}
-          {%- set event = states.event | map(attribute='entity_id') | list %}
-          {%- set all = cpu2 + memory + update + zone + weather + sun + scene + group + camera + plant + quarter + wifi + ram + swap + cpu + still_energy + move_energy + detection_distance + still_distance + moving_distance + poe + start + uptime + shelly + image + tts + event%}
+          {% set camera = states.camera | map(attribute='entity_id') | list %}
+          {% set group = states.group | map(attribute='entity_id') | list %}
+          {% set scene = states.scene | map(attribute='entity_id') | list %}
+          {% set sun = states.sun | map(attribute='entity_id') | list %}
+          {% set weather = states.weather | map(attribute='entity_id') | list %}
+          {% set zone = states.zone | map(attribute='entity_id') | list %}
+          {% set update = states.update | map(attribute='entity_id') | list %}
+          {% set image = states.image | map(attribute='entity_id') | list %}
+          {% set tts = states.tts | map(attribute='entity_id') | list %}
+          {% set event = states.event | map(attribute='entity_id') | list %}
+          {% set all = cpu2 + memory + update + zone + weather + sun + scene + group + camera + plant + quarter + wifi + ram + swap + cpu + still_energy + move_energy + detection_distance + still_distance + moving_distance + poe + start + uptime + shelly + image + tts + event%}
 
           {{ all }}
 
     - name: Purge entites
       unique_id: 5244c410-7c08-4f38-a199-91f2f41dc374
       state: >
-        {%- set power = state_attr("group.power_entities", "entity_id") %}
-        {%- set not_recorded = state_attr("group.not_recorded_entities", "entity_id") %}
-        {%- set not_recorded_2 = state_attr("sensor.not_recorded_entites", "list") %}
-        {%- set purge = (states | selectattr('entity_id') 
+        {% set power = state_attr("group.power_entities", "entity_id") %}
+        {% set not_recorded = state_attr("group.not_recorded_entities", "entity_id") %}
+        {% set not_recorded_2 = state_attr("sensor.not_recorded_entites", "list") %}
+        {% set purge = (states | selectattr('entity_id') 
                               | rejectattr('entity_id', 'in', power)
                               | rejectattr('entity_id', 'in', not_recorded)
                               | rejectattr('entity_id', 'in', not_recorded_2)
@@ -150,8 +150,8 @@
         {{ purge }}
       # attributes:
       #   list: >
-      #     {%- set exclude = state_attr("group.power_entities", "entity_id") %}
-      #     {%- set purge = states | selectattr('entity_id')
+      #     {% set exclude = state_attr("group.power_entities", "entity_id") %}
+      #     {% set purge = states | selectattr('entity_id')
       #                           | rejectattr('entity_id', 'in', exclude)
       #                           | map(attribute='entity_id')
       #                           | list %}
@@ -162,10 +162,10 @@
         {{ (states("sensor.purge_entites") | int / 2) | int }}
       attributes:
         list: >
-          {%- set power = state_attr("group.power_entities", "entity_id") %}
-          {%- set not_recorded = state_attr("group.not_recorded_entities", "entity_id") %}
-          {%- set not_recorded_2 = state_attr("sensor.not_recorded_entites", "list") %}
-          {%- set purge = (states | selectattr('entity_id') 
+          {% set power = state_attr("group.power_entities", "entity_id") %}
+          {% set not_recorded = state_attr("group.not_recorded_entities", "entity_id") %}
+          {% set not_recorded_2 = state_attr("sensor.not_recorded_entites", "list") %}
+          {% set purge = (states | selectattr('entity_id') 
                                 | rejectattr('entity_id', 'in', power)
                                 | rejectattr('entity_id', 'in', not_recorded)
                                 | rejectattr('entity_id', 'in', not_recorded_2)
@@ -179,10 +179,10 @@
         {{ states("sensor.purge_entites") | int - states("sensor.purge_entites_1") | int }}
       attributes:
         list: >
-          {%- set power = state_attr("group.power_entities", "entity_id") %}
-          {%- set not_recorded = state_attr("group.not_recorded_entities", "entity_id") %}
-          {%- set not_recorded_2 = state_attr("sensor.not_recorded_entites", "list") %}
-          {%- set purge = (states | selectattr('entity_id') 
+          {% set power = state_attr("group.power_entities", "entity_id") %}
+          {% set not_recorded = state_attr("group.not_recorded_entities", "entity_id") %}
+          {% set not_recorded_2 = state_attr("sensor.not_recorded_entites", "list") %}
+          {% set purge = (states | selectattr('entity_id') 
                                 | rejectattr('entity_id', 'in', power)
                                 | rejectattr('entity_id', 'in', not_recorded)
                                 | rejectattr('entity_id', 'in', not_recorded_2)
@@ -203,17 +203,17 @@
                     | map(attribute="entity_id") 
                     | list %}
 
-        {%- set devices = namespace(all=[]) %}
-        {%- set switches = namespace(all=[]) %}
-        {%- for entity in unknown -%}
+        {% set devices = namespace(all=[]) %}
+        {% set switches = namespace(all=[]) %}
+        {% for entity in unknown -%}
           {% if device_id(entity) not in devices.all %}
           {% set devices.all = devices.all + [device_id(entity)] %}
           {% endif %}
         {% endfor %}
-        {%- for device in devices.all -%}
-          {%- for entity in device_entities(device) -%}
+        {% for device in devices.all -%}
+          {% for entity in device_entities(device) -%}
             {% if entity| contains('_herstarten') %}
-              {%- set switches.all = switches.all + [entity] -%}
+              {% set switches.all = switches.all + [entity] -%}
             {% endif %}
           {% endfor %}
         {% endfor %}
@@ -230,17 +230,17 @@
                     | map(attribute="entity_id") 
                     | list %}
 
-          {%- set devices = namespace(all=[]) %}
-          {%- set switches = namespace(all=[]) %}
-          {%- for entity in unknown -%}
+          {% set devices = namespace(all=[]) %}
+          {% set switches = namespace(all=[]) %}
+          {% for entity in unknown -%}
             {% if device_id(entity) not in devices.all %}
             {% set devices.all = devices.all + [device_id(entity)] %}
             {% endif %}
           {% endfor %}
-          {%- for device in devices.all -%}
-            {%- for entity in device_entities(device) -%}
+          {% for device in devices.all -%}
+            {% for entity in device_entities(device) -%}
               {% if entity| contains('_herstarten') %}
-                {%- set switches.all = switches.all + [entity] -%}
+                {% set switches.all = switches.all + [entity] -%}
               {% endif %}
             {% endfor %}
           {% endfor %}

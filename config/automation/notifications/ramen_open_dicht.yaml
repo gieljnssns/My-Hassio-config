@@ -10,7 +10,7 @@ trigger:
   - platform: template
     id: open
     value_template: >
-      {{ (states('sensor.gemiddelde_temp_beneden') | float(default=0) > (states('sensor.buiten_temperatuur') | float(default=0)) - 1 ) }}
+      {{ states('sensor.gemiddelde_temp_beneden') | float(default=0) > (states('sensor.buiten_temperatuur') | float(default=0) - 1 ) }}
     for:
       minutes: 5
   - platform: template

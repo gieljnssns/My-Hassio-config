@@ -34,15 +34,15 @@ trigger:
 
   - platform: template
     value_template: >
-      {% if states("sensor.ba_precipitation_forecast_average") != "unknown" and states("sensor.ba_precipitation_forecast_average") != "unavailable" %}
-        {{ states("sensor.ba_precipitation_forecast_average") | float > 0.15 }}
+      {% if states("sensor.neerslag_komend_uur_zandhoven") != "unknown" and states("sensor.neerslag_komend_uur_zandhoven") != "unavailable" %}
+        {{ states("sensor.neerslag_komend_uur_zandhoven") | float > 0.15 }}
       {% else %}
         {{ states("sensor.neerslagverwachting_gemiddeld")  | float > 0.15 }}
       {% endif %}
   - platform: template
     value_template: >
-      {% if states("sensor.ba_precipitation") != "unknown" and states("sensor.ba_precipitation") != "unavailable" %}
-        {{ states("sensor.ba_precipitation") | float > 0.15 }}
+      {% if states("sensor.neerslag_zandhoven") != "unknown" and states("sensor.neerslag_zandhoven") != "unavailable" %}
+        {{ states("sensor.neerslag_zandhoven") | float > 0.15 }}
       {% else %}
         {{ states("sensor.neerslagintensiteit")  | float > 0.15 }}
       {% endif %}

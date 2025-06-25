@@ -66,11 +66,11 @@
   actions:
   - action: persistent_notification.create
     data:
-      message: "Op kwartierbasis:\n{% for state in states.sensor -%} {%- if \"quarter\"
-        in state.entity_id -%} {%- if state.attributes.last_period | float(0) > 0
+      message: "Op kwartierbasis:\n{% for state in states.sensor -%} {% if \"quarter\"
+        in state.entity_id -%} {% if state.attributes.last_period | float(0) > 0
         -%}\n  {{ state.attributes.friendly_name }} = {{ state.attributes.last_period
         }} kWh\n{% endif -%} {% endif -%} {% endfor %}\nOp uurbasis:\n{% for state
-        in states.sensor -%} {%- if \"quarter\" in state.entity_id -%} {%- if state.attributes.last_period
+        in states.sensor -%} {% if \"quarter\" in state.entity_id -%} {% if state.attributes.last_period
         | float(0) > 0 -%}\n  {{ state.attributes.friendly_name | replace(\"kwartierverbruik\",
         \"uurverbruik\") }} = {{ state.attributes.last_period | float * 4}} kWh\n{%
         endif -%} {% endif -%} {% endfor -%}"
@@ -107,23 +107,6 @@
         - action: POORT
           title: Afzetten?
   mode: single
-- id: '1706796655723'
-  alias: Oerwoud
-  description: ''
-  use_blueprint:
-    path: H0W2D017/Flowers.yaml
-    input:
-      device: 090171ff60b56ff2cb4922cea35e102a
-      time: '19:50:00'
-      exclude:
-        entity_id:
-        - plant.kattenbak
-      water_text: 'Geef me alstublieft water: '
-      nutritions_text: 'Ik wil extra voeding:'
-      both_text: 'Wij willen alles:'
-      persistent: true
-      hourly_weather_forcast: weather.home
-      temp_sensor: sensor.slaapkamer_fien_temperatuur_2
 - id: '1741689014825'
   alias: Gang verklikker
   description: ''
@@ -163,11 +146,6 @@
         data:
           message: Trap!!!
           data: {}
-      # - delay:
-      #     hours: 0
-      #     minutes: 0
-      #     seconds: 30
-      #     milliseconds: 0
       - action: automation.turn_off
         metadata: {}
         data:

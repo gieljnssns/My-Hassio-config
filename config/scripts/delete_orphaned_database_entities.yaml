@@ -1,0 +1,11 @@
+delete_orphaned_database_entities:
+  sequence:
+    - action: homeassistant.list_orphaned_database_entities
+      response_variable: orphaned
+    - action: recorder.purge_entities
+      target:
+        entity_id: |
+          {{ orphaned.entities }}
+      data:
+        keep_days: 0
+  mode: single
