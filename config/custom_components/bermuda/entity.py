@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.bluetooth import MONOTONIC_TIME
+from bluetooth_data_tools import monotonic_time_coarse
 from homeassistant.core import callback
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
@@ -46,8 +46,8 @@ class BermudaEntity(CoordinatorEntity):
         self.address = address
         self._device = coordinator.devices[address]
         self._lastname = self._device.name  # So we can track when we get a new name
-        self.area_reg = ar.async_get(coordinator.hass)
-        self.devreg = dr.async_get(coordinator.hass)
+        self.ar = ar.async_get(coordinator.hass)
+        self.dr = dr.async_get(coordinator.hass)
         self.devreg_init_done = False
 
         self.bermuda_update_interval = config_entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
@@ -66,7 +66,7 @@ class BermudaEntity(CoordinatorEntity):
         if interval is not None:
             self.bermuda_update_interval = interval
 
-        nowstamp = MONOTONIC_TIME()
+        nowstamp = monotonic_time_coarse()
         if (
             (self.bermuda_last_stamp < nowstamp - self.bermuda_update_interval)  # Cache is stale
             or (self._device.ref_power_changed > nowstamp + 2)  # ref power changed in last 2sec
@@ -97,7 +97,7 @@ class BermudaEntity(CoordinatorEntity):
             self._lastname = self._device.name
             if self.device_entry:
                 # We have a new name locally, so let's update the device registry.
-                self.devreg.async_update_device(self.device_entry.id, name=self._device.name)
+                self.dr.async_update_device(self.device_entry.id, name=self._device.name)
         self.async_write_ha_state()
 
     @property
@@ -205,7 +205,7 @@ class BermudaGlobalEntity(CoordinatorEntity):
         """A simple way to rate-limit sensor updates."""
         if interval is not None:
             self._cache_ratelimit_interval = interval
-        nowstamp = MONOTONIC_TIME()
+        nowstamp = monotonic_time_coarse()
 
         if nowstamp > self._cache_ratelimit_stamp + self._cache_ratelimit_interval:
             self._cache_ratelimit_stamp = nowstamp

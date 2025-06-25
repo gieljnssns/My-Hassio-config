@@ -165,14 +165,12 @@ class ClimateEntity(XEntity, BaseClimateEntity):
     _conv_current_temp = None
     _conv_target_humidity = None
     _conv_current_humidity = None
-    _prop_temperature = None
+    _prop_temperature_name = None
 
     def on_init(self):
         BaseClimateEntity.on_init(self)
 
-        if self._miot_service:
-            if prop := self.custom_config('current_temp_property'):
-                self._prop_temperature = self._miot_service.spec.get_property(prop)
+        self._prop_temperature_name = self.custom_config('temperature_property') or 'indoor_temperature'
 
         hvac_modes = set()
         for attr in self.conv.attrs:
@@ -219,10 +217,14 @@ class ClimateEntity(XEntity, BaseClimateEntity):
                 self._attr_target_temperature_step = prop.range_step()
                 self._attr_temperature_unit = self.prop_temperature_unit(prop)
                 self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-            elif prop.in_list(['indoor_temperature', 'temperature']):
-                self._conv_current_temp = conv
-                if not self._attr_temperature_unit:
-                    self._attr_temperature_unit = self.prop_temperature_unit(prop)
+            elif prop.in_list([self._prop_temperature_name, 'temperature']):
+                if prop.in_list([self._prop_temperature_name]):
+                    self._conv_current_temp = conv
+                elif not self._conv_current_temp:
+                    self._conv_current_temp = conv
+                else:
+                    continue
+                self._attr_temperature_unit = self.prop_temperature_unit(prop)
             elif prop.in_list(['relative_humidity', 'humidity']):
                 self._conv_current_humidity = conv
             elif prop.in_list(['target_humidity']):
@@ -247,7 +249,8 @@ class ClimateEntity(XEntity, BaseClimateEntity):
                         break
         if self._conv_power:
             val = self._conv_power.value_from_dict(data)
-            self._attr_is_on = val
+            if val is not None:
+                self._attr_is_on = val
             if val in [False, 0]:
                 self._attr_hvac_mode = HVACMode.OFF
                 self._attr_hvac_action = HVACAction.OFF
@@ -332,7 +335,7 @@ class ClimateEntity(XEntity, BaseClimateEntity):
             await self.async_turn_switch(False)
             return
 
-        if self._conv_power and not self._attr_is_on:
+        if self._conv_power and self._attr_is_on is False:
             dat[self._conv_power.full_name] = True
 
         if hvac and hvac != self._attr_hvac_mode and self._conv_mode:
@@ -341,6 +344,8 @@ class ClimateEntity(XEntity, BaseClimateEntity):
                 self.log.warning('Unsupported hvac mode: %s', hvac)
             elif (desc := mode.get('description')) is not None:
                 dat[self._conv_mode.full_name] = desc
+                if self._conv_target_temp and self._attr_target_temperature and hvac in [HVACMode.HEAT, HVACMode.COOL]:
+                    dat[self._conv_target_temp.full_name] = self._attr_target_temperature
 
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp and self._conv_target_temp:
@@ -368,7 +373,7 @@ class ClimateEntity(XEntity, BaseClimateEntity):
         dat = {
             ATTR_FAN_MODE: fan_mode,
         }
-        if not self._attr_is_on and HVACMode.FAN_ONLY in self.hvac_modes:
+        if self._attr_is_on is False and HVACMode.FAN_ONLY in self.hvac_modes:
             dat[ATTR_HVAC_MODE] = HVACMode.FAN_ONLY
         await self.async_set_temperature(**dat)
 

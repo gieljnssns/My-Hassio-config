@@ -33,7 +33,7 @@ async def async_setup_entry(
     created_devices = []  # list of devices we've already created entities for
 
     @callback
-    def device_new(address: str, scanners: list[str]) -> None:  # pylint: disable=unused-argument
+    def device_new(address: str) -> None:
         """
         Create entities for newly-found device.
 
@@ -82,7 +82,7 @@ class BermudaDeviceTracker(BermudaEntity, BaseTrackerEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return extra state attributes for this device."""
-        _scannername = self._device.area_scanner.name if self._device.area_scanner is not None else None
+        _scannername = self._device.area_advert.name if self._device.area_advert is not None else None
         return {"scanner": _scannername, "area": self._device.area_name}
 
     @property

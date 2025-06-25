@@ -1,59 +1,110 @@
-"""Support for Buienalarm weather service."""
+"""Constants for Buienalarm."""
+# const.py
 
 import logging
 from datetime import timedelta
-from typing import NamedTuple
+from typing import Any, Final
 
-from homeassistant.const import UnitOfLength, UnitOfTemperature
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import UnitOfLength, UnitOfVolumetricFlux
 
-SensorType = NamedTuple(
-    "SensorType",
-    [
-        ("name", str),
-        ("unit", str),
-        ("icon", str),
-    ],
-)
+# API
+API_ENDPOINT: Final[str] = "https://cdn.buienalarm.nl/api/4.0/nowcast/timeseries/{}/{}"
+API_TIMEOUT: Final[int] = 15
+API_TIMEZONE: Final[str] = "Europe/Amsterdam"
+API_CONF_URL: Final[str] = "https://buienalarm.nl"
+DATA_KEY: Final[str] = "data"
 
+# Base component constants.
+NAME: Final[str] = "Buienalarm"
+DOMAIN: Final[str] = "buienalarm"
+VERSION: Final[str] = "2023.10.15"
+ATTRIBUTION: Final[str] = "Data provided by Buienalarm"
+ATTR_ATTRIBUTION: Final[str] = "Data provided by Buienalarm"
+CONF_ATTRIBUTION: Final[str] = "Data provided by Buienalarm"
 
-LOGGER = logging.getLogger(__package__)
-UPDATE_INTERVAL = timedelta(seconds=300)
-ATTRIBUTION = "Data provided by Buienalarm B.V."
-DEFAULT_TIMEFRAME = 60
-DEFAULT_NAME = "ba"
-ICON_THERMOMETER = "mdi:thermometer"
-ICON_WEATHER_POURING = "mdi:weather-pouring"
-ITEM_TEMP = "temperature"
-ITEM_PRECIP_NOW = "precipitation"
-ITEM_PRECIP_FORECAST_AVG = "precipitation_forecast_average"
-ITEM_PRECIP_FORECAST_TOTAL = "precipitation_forecast_total"
-ITEM_NEXT_RAIN_FORECAST = "next_rain_forecast"
-SENSOR_TYPES = {
-    ITEM_TEMP: SensorType(
-        "Temperature",
-        UnitOfTemperature.CELSIUS,
-        ICON_THERMOMETER),
-    ITEM_PRECIP_NOW: SensorType(
-        "Precipitation",
-        UnitOfLength.MILLIMETERS + "/h",
-        ICON_WEATHER_POURING
-    ),
-    ITEM_PRECIP_FORECAST_AVG: SensorType(
-        "Precipitation forecast average",
-        UnitOfLength.MILLIMETERS + "/h",
-        ICON_WEATHER_POURING,
-    ),
-    ITEM_PRECIP_FORECAST_TOTAL: SensorType(
-        "Precipitation forecast total",
-        UnitOfLength.MILLIMETERS,
-        ICON_WEATHER_POURING
-    ),
-    ITEM_NEXT_RAIN_FORECAST: SensorType(
-        "Next rain forecast",
-        None,
-        ICON_WEATHER_POURING
-    ),
-}
-CONF_TIMEFRAME = "timeframe"
-CONF_CONDITION_PRECIPITATION = "precipitation"
+# Defaults
+DEFAULT_NAME: Final[str] = NAME
+_LOGGER: logging.Logger = logging.getLogger(__name__)
 
+# API and Data Refresh
+SCAN_INTERVAL = timedelta(minutes=5)
+DATA_REFRESH_INTERVAL: Final[int] = 300
+
+# Platforms.
+#BINARY_SENSOR: Final[str] = "binary_sensor"
+SENSOR: Final[str] = "sensor"
+#PLATFORMS: Final[list[str]] = [BINARY_SENSOR, SENSOR]
+PLATFORMS: Final[list[str]] = [SENSOR]
+
+# Icon templates (not in use)
+ICON_TEMPLATE: Final[str] = "mdi:weather-{}"
+
+# Sensors
+SENSORS: Final[list] = [
+    {
+        "name": "Buienalarm",
+        "icon": "mdi:weather-pouring",
+        "key": "nowcastmessage",
+        "attributes": [
+            {"attr_name": "attribute_name", "attr_value": "attribute_value"},
+        ],
+        "unit_of_measurement": None,
+        "device_class": None,
+        "state_class": None,
+    },
+    {
+        "name": "My Buienalarm",
+        "icon": "mdi:weather-pouring",
+        "key": "mycastmessage",
+        "attributes": [],
+        "unit_of_measurement": None,
+        "device_class": None,
+        "state_class": None,
+    },
+    {
+        "name": "Neerslag omschrijving",
+        "icon": "mdi:weather-rainy",
+        "key": "precipitationrate_now_desc",
+        "attributes": [],
+        "unit_of_measurement": None,
+        "device_class": None,
+        "state_class": None,
+    },
+    {
+        "name": "Soort neerslag",
+        "icon": "mdi:weather-pouring",
+        "key": "precipitationtype_now",
+        "attributes": [],
+        "unit_of_measurement": None,
+        "device_class": None,
+        "state_class": None,
+    },
+    {
+        "name": "Neerslag",
+        "icon": "mdi:weather-rainy",
+        "attributes": [],
+        "key": "precipitationrate_now",
+        "unit_of_measurement": UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        "device_class": SensorDeviceClass.PRECIPITATION_INTENSITY,
+        "state_class": SensorStateClass.MEASUREMENT,
+    },
+    {
+        "name": "Neerslag komend uur",
+        "icon": "mdi:weather-rainy",
+        "attributes": [],
+        "key": "precipitationrate_hour",
+        "unit_of_measurement": UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        "device_class": SensorDeviceClass.PRECIPITATION_INTENSITY,
+        "state_class": SensorStateClass.MEASUREMENT,
+    },
+    {
+        "name": "Neerslag verwacht",
+        "icon": "mdi:weather-rainy",
+        "attributes": [],
+        "key": "precipitationrate_total",
+        "unit_of_measurement": UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        "device_class": SensorDeviceClass.PRECIPITATION_INTENSITY,
+        "state_class": SensorStateClass.MEASUREMENT,
+    },
+]

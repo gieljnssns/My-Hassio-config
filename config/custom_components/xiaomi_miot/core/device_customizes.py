@@ -37,6 +37,13 @@ ENERGY_KWH = {
 DEVICE_CUSTOMIZES = {
     '090615.aircondition.ktf': {
         'current_temp_property': 'setmode.roomtemp',
+        'append_converters': [
+            {
+                'class': MiotClimateConv,
+                'services': ['air_conditioner'],
+                'converters': [{'props': ['setmode.roomtemp']}],
+            }
+        ],
     },
     '090615.curtain.wsdml1': {
         'switch_properties': 'on,wake_up_mode',
@@ -312,6 +319,17 @@ DEVICE_CUSTOMIZES = {
         'binary_sensor_properties': 'cover_state,cook_finish_flag',
         'sensor_properties': 'status,left_time,temperature,cook_time,taste,cook_status,press_status,error_code',
         'switch_properties': 'finish_push',
+    },
+    'cubee.airrtc.th123e': {
+        'sensor_properties': 'tempfloor',
+        'current_temp_property': 'tempfloor',
+        'append_converters': [
+            {
+                'class': MiotClimateConv,
+                'services': ['thermostat'],
+                'converters': [{'props': ['heatold.tempfloor']}],
+            }
+        ],
     },
     'cubee.airrtc.*': {
         **CHUNK_1,
@@ -679,6 +697,7 @@ DEVICE_CUSTOMIZES = {
         ],
         'append_converters': [
             {
+                'class': MiotFanConv,
                 'services': ['fan'],
                 'converters': [{'props': ['dm_service.speed_level']}],
             }
@@ -853,6 +872,9 @@ DEVICE_CUSTOMIZES = {
         'cover_position_mapping': None,
     },
     'hyd.airer.znlyj2': CHUNK_1,
+    'hyd.airer.znlyj4': {
+        'cover_position_mapping': {0: 50, 1: 0, 2: 100},
+    },
     'hyd.airer.znlyj5': {
         'cover_position_mapping': {0: 50, 1: 0, 2: 100},
     },
@@ -1386,6 +1408,7 @@ DEVICE_CUSTOMIZES = {
         'percentage_property': 'fan_advance.speed',
         'append_converters': [
             {
+                'class': MiotFanConv,
                 'services': ['fan'],
                 'converters': [{'props': ['fan_advance.speed']}],
             }
@@ -1761,6 +1784,11 @@ DEVICE_CUSTOMIZES = {
         'number_properties': 'fan_percent',
     },
     'xiaomi.airc.*:power_consumption': ENERGY_KWH,
+    'xiaomi.aircondition.c16': {
+        'stat_power_cost_type': 'total_day',
+        'stat_power_cost_key': '8.1',
+        'sensor_attributes': 'power_cost_today,power_cost_month',
+    },
     'xiaomi.aircondition.m9': {
         'interval_seconds': 90,
         'switch_properties': 'air_conditioner.on,un_straight_blowing,favorite_on',
@@ -1801,6 +1829,8 @@ DEVICE_CUSTOMIZES = {
         'exclude_miot_services': 'iot_linkage,machine_state,flag_bit',
         'exclude_miot_properties': 'enhance.timer',
     },
+    'xiaomi.aircondition.*:power_cost_today': ENERGY_KWH,
+    'xiaomi.aircondition.*:power_cost_month': ENERGY_KWH,
     'xiaomi.airp.cpa4': {
         'button_actions': 'toggle,reset_filter_life',
         'sensor_properties': 'filter_life_level',
@@ -2472,6 +2502,7 @@ DEVICE_CUSTOMIZES = {
         'number_properties': 'horizontal_angle,vertical_angle,off_delay',
         'append_converters': [
             {
+                'class': MiotFanConv,
                 'services': ['fan'],
                 'converters': [{'props': ['custom_service.speed_level']}],
             }

@@ -19,7 +19,10 @@ def mac_math_offset(mac, offset=0) -> str | None:
     if mac is None:
         return None
     octet = mac[-2:]
-    octet_int = bytes.fromhex(octet)[0]
+    try:
+        octet_int = bytes.fromhex(octet)[0]
+    except ValueError:
+        return None
     if 0 <= (octet_new := octet_int + offset) <= 255:
         return f"{mac[:-3]}:{(octet_new):02x}"
     return None
@@ -61,18 +64,24 @@ def mac_norm(mac: str) -> str:
 
 
 @lru_cache(2048)
-def mac_explode_formats(mac):
+def mac_explode_formats(mac: str) -> set[str]:
     """
     Take a formatted mac address and return the formats
-    likely to be found in our device info, adverts etc.
+    likely to be found in our device info, adverts etc
+    by replacing ":" with each of "", "-", "_", ".".
     """
-    return [
-        mac,
-        mac.replace(":", ""),
-        mac.replace(":", "-"),
-        mac.replace(":", "_"),
-        mac.replace(":", "."),
-    ]
+    altmacs = set()
+    altmacs.add(mac)
+    for newsep in ["", "-", "_", "."]:
+        altmacs.add(mac.replace(":", newsep))
+    return altmacs
+
+
+def mac_redact(mac: str, tag: str | None = None) -> str:
+    """Remove the centre octets of a MAC and optionally replace with a tag."""
+    if tag is None:
+        tag = ":"
+    return f"{mac[:2]}::{tag}::{mac[-2:]}"
 
 
 @lru_cache(1024)

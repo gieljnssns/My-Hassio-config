@@ -2,14 +2,23 @@
 
 from typing import Final
 
-DOMAIN: Final[str] = "energyid"
+DOMAIN: Final = "energyid"
 
-CONF_WEBHOOK_URL: Final["str"] = "webhook_url"
-CONF_ENTITY_ID: Final["str"] = "entity_id"
-CONF_METRIC: Final["str"] = "metric"
-CONF_METRIC_KIND: Final["str"] = "metric_kind"
-CONF_UNIT: Final["str"] = "unit"
-DEFAULT_DATA_INTERVAL: Final["str"] = "P1D"
-DEFAULT_UPLOAD_INTERVAL: Final[int] = 300
+CONF_PROVISIONING_KEY: Final = "provisioning_key"
+CONF_PROVISIONING_SECRET: Final = "provisioning_secret"
+CONF_DEVICE_ID: Final = "device_id"
+CONF_DEVICE_NAME: Final = "device_name"
+CONF_RECORD_NUMBER: Final = "record_number"
+CONF_RECORD_NAME: Final = "record_name"
+CONF_HA_ENTITY_ID: Final = "ha_entity_id"
+CONF_ENERGYID_KEY: Final = "energyid_key"
 
-ENERGYID_METRIC_KINDS = ["cumulative", "total", "delta", "gauge"]
+DATA_CLIENT: Final = "client"
+DATA_LISTENERS: Final = "listeners"
+DATA_MAPPINGS: Final = "mappings"
+
+SIGNAL_CONFIG_ENTRY_CHANGED = f"{DOMAIN}_config_entry_changed"
+
+DEFAULT_UPLOAD_INTERVAL_SECONDS: Final = 60
+
+LISTENER_TYPE_STATE = "state_change"

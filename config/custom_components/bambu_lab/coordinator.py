@@ -204,7 +204,7 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
 
         return device_entry  # Returns a DeviceEntry object or None
 
-    def _handle_service_call_event(self, event: Event):
+    def _handle_service_call_event(self, event: Event) -> Any:
         data = event.data
 
         if not self._is_service_call_for_me(data):
@@ -276,18 +276,20 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
         command['print']['param'] = gcode
         self.client.publish(command)
 
-    def _service_call_extrude_retract(self, data: dict):
+    def _service_call_extrude_retract(self, data: dict) -> dict:
         move = data.get('type').upper()
         force = data.get('force')
 
         if move not in ['EXTRUDE', 'RETRACT']:
             LOGGER.error(f"Invalid extrusion move '{move}'")
-            return False
+            return { "Success": False,
+                     "Error": "Invalid type specified: '{move}'." }
 
         nozzle_temp = self.get_model().temperature.nozzle_temp
         if force is not True and nozzle_temp < 170:
             LOGGER.error(f"Nozzle temperature too low to perform extrusion: {nozzle_temp}ºC")
-            return False
+            return { "Success": False,
+                     "Error": f"Nozzle temperature too low to perform extrusion: {nozzle_temp}ºC" }
 
         command = SEND_GCODE_TEMPLATE
         gcode = EXTRUDER_GCODE
@@ -298,6 +300,8 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
         command['print']['param'] = gcode
         self.client.publish(command)
 
+        return { "Success": True }
+
     def _get_ams_and_tray_index_from_entity_entry(self, ams_device, entity_entry):
         match = re.search(r"tray_([1-4])$", entity_entry.unique_id)
         # Zero-index the tray ID and find the AMS index
@@ -305,16 +309,16 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
         # identifiers is a set of tuples. We only have one tuple in the set - DOMAIN + serial.
         ams_serial = next(iter(ams_device.identifiers))[1]
         ams_index = None
-        for index in range(0,4):
-            ams = self.get_model().ams.data[index]
+        for key in self.get_model().ams.data.keys():
+            ams = self.get_model().ams.data[key]
             if ams is not None:
                 if ams.serial == ams_serial:
                     # We found the right AMS.
-                    ams_index = index
+                    ams_index = key
                     break
 
         full_tray = tray + ams_index * 4
-        LOGGER.debug(f"FINAL TRAY VALUE: {full_tray + 1}/16 = Tray {tray + 1}/4 on AMS {ams_index+1}/4")
+        LOGGER.debug(f"FINAL TRAY VALUE: {full_tray + 1}/16 = Tray {tray + 1}/4 on AMS {ams_index}")
 
         return ams_index, tray
 
@@ -374,6 +378,15 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER.error(f"An AMS tray or external spool is required")
             return False
         
+        tray_color = data.get('tray_color', '')
+        # Allow them to include the preceding # in the provided color string.
+        tray_color = tray_color.replace('#', '')
+        if len(tray_color) == 6:
+            # If the provided string is RRGGBB, we need to add the AA value to make it an opaque RRGGBBAA
+            tray_color = f"{tray_color}FF"
+        # String must be upper case
+        tray_color = tray_color.upper()
+
         command = AMS_FILAMENT_SETTING_TEMPLATE
         command['print']['ams_id'] = ams_index
         command['print']['tray_info_idx'] = data.get('tray_info_idx', '')
@@ -584,8 +597,9 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
         LOGGER.debug("_reinitialize_sensors START")
         LOGGER.debug("async_forward_entry_unload")
         await self.hass.config_entries.async_forward_entry_unload(self.config_entry, Platform.SENSOR)
+        await self.hass.config_entries.async_forward_entry_unload(self.config_entry, Platform.BINARY_SENSOR)
         LOGGER.debug("async_forward_entry_setups")
-        await self.hass.config_entries.async_forward_entry_setups(self.config_entry, [Platform.SENSOR])
+        await self.hass.config_entries.async_forward_entry_setups(self.config_entry, [Platform.SENSOR, Platform.BINARY_SENSOR])
         LOGGER.debug("_reinitialize_sensors DONE")
 
     def _update_ams_info(self):
@@ -597,7 +611,7 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
 
         # But we can use this to clean up orphaned AMS devices such as when an AMS is moved between printers.
         existing_ams_devices = []
-        for index in range (0, len(self.get_model().ams.data)):
+        for index in self.get_model().ams.data.keys():
             ams_entry = self.get_model().ams.data[index]
             if ams_entry is not None:
                 existing_ams_devices.append(ams_entry.serial)
@@ -608,7 +622,7 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
         for device in dev_reg.devices.values():
             if config_entry_id in device.config_entries:
                 # This device is associated with this printer.
-                if device.model == 'AMS' or device.model == 'AMS Lite':
+                if device.model == 'AMS' or device.model == 'AMS Lite' or device.model == 'AMS 2 Pro' or device.model == 'AMS HT':
                     # And it's an AMS device
                     ams_serial = list(device.identifiers)[0][1]
                     if ams_serial not in existing_ams_devices:
@@ -664,11 +678,15 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     def get_ams_device(self, index):
+        # Adjust indices to be 1-based for normal AMS, 128-based for HT.
+        ams_index = index
+        if ams_index < 128:
+            ams_index = index + 1
         printer_serial = self.config_entry.data["serial"]
         device_type = self.config_entry.data["device_type"]
-        device_name = f"{device_type}_{printer_serial}_AMS_{index+1}"
+        device_name = f"{device_type}_{printer_serial}_AMS_{ams_index}"
         ams_serial = self.get_model().ams.data[index].serial
-        model = self.get_model().ams.model
+        model = self.get_model().ams.data[index].model
 
         return DeviceInfo(
             identifiers={(DOMAIN, ams_serial)},
@@ -724,9 +742,6 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
             title=self.get_model().info.serial,
             data=self.config_entry.data,
             options=options)
-        
-        if option == Options.MANUALREFRESH:
-            await self.client.set_manual_refresh_mode(enable)
         
         force_reload = False
         match option:

@@ -46,7 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BermudaConfigEntry) -> b
 
     async def on_failure():
         _LOGGER.debug("Coordinator last update failed, rasing ConfigEntryNotReady")
-        await coordinator.stop_purging()
         raise ConfigEntryNotReady
 
     try:
@@ -76,6 +75,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: BermudaConfigEn
         #
         # This is lifted from the discussion at https://community.home-assistant.io/t/migrating-unique-ids/348512
         #
+        # Also worth looking at https://github.com/home-assistant/core/pull/115265/files for an example
+        # of migrating unique_ids from one form to another.
+        #
         old_unique_id = config_entry.unique_id
         new_unique_id = mac_math_offset(old_unique_id, 3)
 
@@ -99,16 +101,16 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: BermudaConfigEn
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: BermudaConfigEntry, device_entry: DeviceEntry
 ) -> bool:
-    """Remove a config entry from a device."""
+    """Implements user-deletion of devices from device registry."""
     coordinator: BermudaDataUpdateCoordinator = config_entry.runtime_data.coordinator
     address = None
-    for ident in device_entry.identifiers:
+    for domain, ident in device_entry.identifiers:
         try:
-            if ident[0] == DOMAIN:
+            if domain == DOMAIN:
                 # the identifier should be the base device address, and
                 # may have "_range" or some other per-sensor suffix.
                 # The address might be a mac address, IRK or iBeacon uuid
-                address = ident[1].split("_")[0]
+                address = ident.split("_")[0]
         except KeyError:
             pass
     if address is not None:
@@ -130,10 +132,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: BermudaConfigEntry) -> 
     """Handle removal of an entry."""
     if unload_result := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         _LOGGER.debug("Unloaded platforms.")
-    await entry.runtime_data.coordinator.stop_purging()
     return unload_result
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: BermudaConfigEntry) -> None:
     """Reload config entry."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    hass.config_entries.async_schedule_reload(entry.entry_id)

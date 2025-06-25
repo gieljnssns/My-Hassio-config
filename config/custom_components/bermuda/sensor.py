@@ -20,6 +20,7 @@ from .const import (
     ADDR_TYPE_IBEACON,
     ADDR_TYPE_PRIVATE_BLE_DEVICE,
     SIGNAL_DEVICE_NEW,
+    SIGNAL_SCANNERS_CHANGED,
 )
 from .entity import BermudaEntity, BermudaGlobalEntity
 
@@ -40,45 +41,44 @@ async def async_setup_entry(
     """Setup sensor platform."""
     coordinator: BermudaDataUpdateCoordinator = entry.runtime_data.coordinator
 
-    created_devices = []  # list of already-created devices
+    created_devices: list[str] = []  # list of already-created devices
+    created_scanners: dict[str, list[str]] = {}  # list of scanner:address for created entities
 
     @callback
-    def device_new(address: str, scanners: list[str]) -> None:
+    def device_new(address: str) -> None:
         """
         Create entities for newly-found device.
 
         Called from the data co-ordinator when it finds a new device that needs
         to have sensors created. Not called directly, but via the dispatch
         facility from HA.
-        Make sure you have a full list of scanners ready before calling this.
         """
-        if len(scanners) == 0:
-            # Bail out until we get called with some scanners to work with!
-            return
-        for scanner in scanners:
-            if (
-                coordinator.devices[scanner].is_remote_scanner is None  # usb/HCI scanner's are fine.
-                or (
-                    coordinator.devices[scanner].is_remote_scanner  # usb/HCI scanner's are fine.
-                    and coordinator.devices[scanner].address_wifi_mac is None
-                )
-            ):
-                # This scanner doesn't have a wifi mac yet, bail out
-                # until they are all filled out.
-                return
+        # if len(scanners) == 0:
+        #     # Bail out until we get called with some scanners to work with!
+        #     return
+        # for scanner in scanners:
+        #     if (
+        #         coordinator.devices[scanner]._is_remote_scanner is None  # usb/HCI scanner's are fine.
+        #         or (
+        #             coordinator.devices[scanner]._is_remote_scanner  # usb/HCI scanner's are fine.
+        #             and coordinator.devices[scanner].address_wifi_mac is None
+        #         )
+        #     ):
+        #         # This scanner doesn't have a wifi mac yet, bail out
+        #         # until they are all filled out.
+        #         return
 
         if address not in created_devices:
             entities = []
             entities.append(BermudaSensor(coordinator, entry, address))
+            if coordinator.have_floors:
+                entities.append(BermudaSensorFloor(coordinator, entry, address))
             entities.append(BermudaSensorRange(coordinator, entry, address))
             entities.append(BermudaSensorScanner(coordinator, entry, address))
             entities.append(BermudaSensorRssi(coordinator, entry, address))
             entities.append(BermudaSensorAreaLastSeen(coordinator, entry, address))
             entities.append(BermudaSensorAreaSwitchReason(coordinator, entry, address))
 
-            for scanner in scanners:
-                entities.append(BermudaSensorScannerRange(coordinator, entry, address, scanner))
-                entities.append(BermudaSensorScannerRangeRaw(coordinator, entry, address, scanner))
             # _LOGGER.debug("Sensor received new_device signal for %s", address)
             # We set update before add to False because we are being
             # call(back(ed)) from the update, so causing it to call another would be... bad.
@@ -88,12 +88,54 @@ async def async_setup_entry(
             # We've already created this one.
             # _LOGGER.debug("Ignoring duplicate creation request for %s", address)
             pass
+        # Get the per-scanner entities set up to match
+        create_scanner_entities()
         # tell the co-ord we've done it.
         coordinator.sensor_created(address)
 
+    def create_scanner_entities():
+        # These are per-proxy entities on each device, and scanners may come and
+        # go over time. So we need to maintain our matrix of which ones we have already
+        # spun-up so we don't duplicate any.
+
+        for scanner in coordinator.get_scanners:
+            if (
+                scanner.is_remote_scanner is None  # usb/HCI scanner's are fine.
+                or (scanner.is_remote_scanner and scanner.address_wifi_mac is None)
+            ):
+                # This scanner doesn't have a wifi mac yet, bail out
+                # until they are all filled out.
+                return
+
+        entities = []
+        for scanner in coordinator.scanner_list:
+            for address in created_devices:
+                if address not in created_scanners.get(scanner, []):
+                    _LOGGER.debug(
+                        "Creating Scanner %s entities for %s",
+                        scanner,
+                        address,
+                    )
+                    entities.append(BermudaSensorScannerRange(coordinator, entry, address, scanner))
+                    entities.append(BermudaSensorScannerRangeRaw(coordinator, entry, address, scanner))
+                    created_entry = created_scanners.setdefault(scanner, [])
+                    created_entry.append(address)
+        # _LOGGER.debug("Sensor received new_device signal for %s", address)
+        # We set update before add to False because we are being
+        # call(back(ed)) from the update, so causing it to call another would be... bad.
+        async_add_entities(entities, False)
+
+    @callback
+    def scanners_changed() -> None:
+        """Callback for event from coordinator advising that the roster of scanners has changed."""
+        create_scanner_entities()
+
     # Connect device_new to a signal so the coordinator can call it
-    _LOGGER.debug("Registering device_new callback")
+    _LOGGER.debug("Registering device_new and scanners_changed callbacks")
     entry.async_on_unload(async_dispatcher_connect(hass, SIGNAL_DEVICE_NEW, device_new))
+    entry.async_on_unload(async_dispatcher_connect(hass, SIGNAL_SCANNERS_CHANGED, scanners_changed))
+
+    # Create Global Bermuda entities
     async_add_entities(
         (
             BermudaTotalProxyCount(coordinator, entry),
@@ -135,9 +177,25 @@ class BermudaSensor(BermudaEntity, SensorEntity):
         return self._device.area_name
 
     @property
+    def icon(self):
+        """Provide a custom icon for particular entities."""
+        # TODO: This is ugly doing a check on name, and is a kludge
+        # because I originally was a bit reckless with the multiple
+        # inheritance here. So all the sensors should be restructured
+        # a bit to clean up this and other properties.
+        if self.name == "Area":
+            return self._device.area_icon
+        if self.name == "Area Last Seen":
+            return self._device.area_last_seen_icon
+        if self.name == "Floor":
+            return self._device.floor_icon
+        return super().icon
+        # return "mdi:floor-plan" or "mdi:map-marker-distance" or "mdi:signal-distance-variant"
+
+    @property
     def entity_registry_enabled_default(self) -> bool:
         """Declare if entity should be automatically enabled on adding."""
-        return self.name in ["Area", "Distance"]
+        return self.name in ["Area", "Distance", "Floor"]
 
     @property
     def device_class(self):
@@ -158,7 +216,7 @@ class BermudaSensor(BermudaEntity, SensorEntity):
             # Check the current sources and find the latest
             current_mac: str = STATE_UNAVAILABLE
             _best_stamp = 0
-            for source_ad in self._device.scanners.values():
+            for source_ad in self._device.adverts.values():
                 if source_ad.stamp > _best_stamp:  # It's a valid ad
                     current_mac = source_ad.device_address
                     _best_stamp = source_ad.stamp
@@ -167,12 +225,34 @@ class BermudaSensor(BermudaEntity, SensorEntity):
         # since oft-changing attribs cause more db writes than sensors
         # "last_seen": self.coordinator.dt_mono_to_datetime(self._device.last_seen),
         attribs = {}
-        if self.name in ["Area"]:
+        if self.name in ["Area", "Floor"]:
             attribs["area_id"] = self._device.area_id
             attribs["area_name"] = self._device.area_name
+            attribs["floor_id"] = self._device.floor_id
+            attribs["floor_name"] = self._device.floor_name
+            attribs["floor_level"] = self._device.floor_level
         attribs["current_mac"] = current_mac
 
         return attribs
+
+
+class BermudaSensorFloor(BermudaSensor):
+    """Sensor for the Floor of the current Area."""
+
+    @property
+    def unique_id(self):
+        return f"{self._device.unique_id}_floor"
+
+    @property
+    def name(self):
+        return "Floor"
+
+    @property
+    def native_value(self):
+        # Don't use area_scanner.name because it comes from the advert
+        # entry. Instead refer to the BermudaDevice, which takes trouble
+        # to use user-given names etc.
+        return self._device.floor_name
 
 
 class BermudaSensorScanner(BermudaSensor):
@@ -191,8 +271,8 @@ class BermudaSensorScanner(BermudaSensor):
         # Don't use area_scanner.name because it comes from the advert
         # entry. Instead refer to the BermudaDevice, which takes trouble
         # to use user-given names etc.
-        if self._device.area_scanner is not None:
-            return self.coordinator.devices[self._device.area_scanner.scanner_address].name
+        if self._device.area_advert is not None:
+            return self.coordinator.devices[self._device.area_advert.scanner_address].name
         return None
 
 

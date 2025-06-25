@@ -464,7 +464,7 @@ class MiotCloud(micloud.MiCloud):
     async def async_get_beaconkey(self, did):
         dat = {'did': did, 'pdid': 1}
         rdt = await self.async_request_api('v2/device/blt_get_beaconkey', dat) or {}
-        return rdt.get('result')
+        return rdt.get('result', rdt)
 
     @staticmethod
     def is_hide(d):
@@ -740,7 +740,7 @@ class MiotCloud(micloud.MiCloud):
             self.username = config.get(CONF_USERNAME)
             changed = True
         if self.password != config.get(CONF_PASSWORD):
-            self.username = config.get(CONF_PASSWORD)
+            self.password = config.get(CONF_PASSWORD)
             changed = True
         if changed:
             self.async_session = None

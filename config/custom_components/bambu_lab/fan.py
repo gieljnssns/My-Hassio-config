@@ -38,7 +38,8 @@ FANS: tuple[FanEntityDescription, ...] = (
     BambuLabFanEntityDescription(
         key="aux_fan",
         translation_key="aux_fan",
-        value_fn=lambda device: device.fans.get_fan_speed(FansEnum.AUXILIARY)
+        value_fn=lambda device: device.fans.get_fan_speed(FansEnum.AUXILIARY),
+        exists_fn=lambda coordinator: coordinator.get_model().supports_feature(Features.AUX_FAN)
     ),
     BambuLabFanEntityDescription(
         key="chamber_fan",
@@ -85,8 +86,10 @@ class BambuLabFan(BambuLabEntity, FanEntity):
     @property
     def available(self) -> bool:
         """Is the fan available"""
-        return True
-
+        available = True
+        available = available and not self.coordinator.get_model().supports_feature(Features.MQTT_ENCRYPTION_ENABLED)
+        return available
+    
     @property
     def is_on(self) -> bool:
         """Return the state of the fan"""

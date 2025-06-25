@@ -4,9 +4,20 @@ import logging
 from pathlib import Path
 from enum import (
     IntEnum,
+    StrEnum,
 )
 
 LOGGER = logging.getLogger(__package__)
+
+class Printers(StrEnum):
+    X1E = "X1E"
+    X1C = "X1C"
+    X1 = "X1"
+    P1P = "P1P"
+    P1S = "P1S"
+    H2D = "H2D"
+    A1MINI = "A1MINI"
+    A1 = "A1"
 
 class Features(IntEnum):
     AUX_FAN = 1,
@@ -24,14 +35,20 @@ class Features(IntEnum):
     START_TIME_GENERATED = 14,
     CAMERA_IMAGE = 15,
     DOOR_SENSOR = 16,
-    MANUAL_MODE = 17,
     AMS_FILAMENT_REMAINING = 18,
     SET_TEMPERATURE = 19,
     PROMPT_SOUND = 20,
     FTP = 21,
     TIMELAPSE = 22,
     AMS_SWITCH_COMMAND = 23,
-    DOWNLOAD_GCODE_FILE = 24
+    DOWNLOAD_GCODE_FILE = 24,
+    AMS_HUMIDITY = 25,
+    AMS_DRYING = 26,
+    CHAMBER_LIGHT_2 = 27,
+    DUAL_NOZZLES = 28,
+    EXTRUDER_TOOL = 29,
+    MQTT_ENCRYPTION_FIRMWARE = 30,
+    MQTT_ENCRYPTION_ENABLED = 31,
 
 
 class FansEnum(IntEnum):
@@ -105,6 +122,12 @@ GCODE_STATE_OPTIONS = [
     "unknown"
 ]
 
+SDCARD_STATUS = [
+    "missing",
+    "normal",
+    "abnormal"
+]
+
 SPEED_PROFILE = {
     1: "silent",
     2: "standard",
@@ -144,12 +167,6 @@ HMS_MODULES = {
     0x08: "toolhead",
     0x03: "mc"
 }
-
-class SdcardState(IntEnum):
-    NO_SDCARD                           = 0x00000000,
-    HAS_SDCARD_NORMAL                   = 0x00000100,
-    HAS_SDCARD_ABNORMAL                 = 0x00000200,
-    SDCARD_STATE_NUM                    = 0x00000300,
 
 class Home_Flag_Values(IntEnum):
     X_AXIS                              = 0x00000001,
