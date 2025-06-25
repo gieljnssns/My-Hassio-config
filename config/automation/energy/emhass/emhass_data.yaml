@@ -5,7 +5,7 @@ trigger:
     at: "01:31:00"
     id: "fit"
   - platform: time
-    at: "05:34:56"
+    at: "23:58:00"
     id: "dayahead"
   - platform: time
     at: "06:02:00"
@@ -37,7 +37,7 @@ actions:
         sequence:
           - action: rest_command.dayahead_optim
           - delay:
-              seconds: 40
+              seconds: 5
           - action: rest_command.publish_data
             data:
               prefix: "dh_"
@@ -47,13 +47,15 @@ actions:
           - alias: "snachts"
             condition: template
             value_template: >
-              {{ now().hour is in [1, 2, 3, 4] }}
+              {{ now().hour is in [0, 1, 2, 3, 4, 5] }}
         sequence:
+          - delay:
+              seconds: 2
           - action: rest_command.naive_mpc_optim
           - action: input_datetime.set_datetime
             data:
               datetime: >
-                {{ now() + timedelta(seconds=40) }}
+                {{ now() + timedelta(seconds=5) }}
             target:
               entity_id: input_datetime.emhass_data
       - conditions:
@@ -62,13 +64,15 @@ actions:
           - alias: "overdag"
             condition: template
             value_template: >
-              {{ now().hour is in [0, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23] }}
+              {{ now().hour is in [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23] }}
         sequence:
+          - delay:
+              seconds: 2
           - action: rest_command.naive_mpc_optim
           - action: input_datetime.set_datetime
             data:
               datetime: >
-                {{ now() + timedelta(seconds=40) }}
+                {{ now() + timedelta(seconds=5) }}
             target:
               entity_id: input_datetime.emhass_data
       - conditions:

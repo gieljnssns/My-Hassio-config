@@ -126,14 +126,14 @@
 #       unit_of_measurement: "W"
 #       device_class: power
 #       state: >
-#         {%- set load = (state_attr('sensor.emhass_load_forecast', 'forecasts')
+#         {% set load = (state_attr('sensor.emhass_load_forecast', 'forecasts')
 #             |map(attribute='emhass_load_forecast')
 #             |map('int')
 #             |list) %}
 #         {{load[0]}}
 #       attributes:
 #         load: >
-#           {%- set load = (state_attr('sensor.emhass_load_forecast', 'forecasts')
+#           {% set load = (state_attr('sensor.emhass_load_forecast', 'forecasts')
 #               |map(attribute='emhass_load_forecast')
 #               |map('int')
 #               |list) %}

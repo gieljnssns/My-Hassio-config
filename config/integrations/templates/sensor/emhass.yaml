@@ -1,186 +1,276 @@
 - sensor:
+    ## emhass_timestep
+    - name: "Ecopower Afnameprijzen"
+      unique_id: 16ccc75e-d8ab-4b79-ad3a-af3d289b1724
+      unit_of_measurement: "EUR/kWh"
+      state: >
+        {% set factor_A = 1.02 -%}
+        {% set factor_B = 0.004 -%}
+        {% set GSC = 0.011 -%}
+        {% set WKC = 0.00392 -%}
+        {% set nettarief = 0.0565101 -%}
+        {% set heffing = 0.0019261 -%}
+        {% set accijns = 0.04748 -%}
+        {% set VAT_scaling = 1.06 -%}       
+        {% set today = now().strftime('%Y-%m-%d') -%}
+        {% set tomorrow = (now().timestamp() + 86400) | timestamp_custom('%Y-%m-%d') -%}
+        {% set quarter_index = (now().minute // 15) -%}
+        {% set current_hour = now().hour -%}
+        {% set today_prices = (state_attr('sensor.average_electricity_price', 'prices')
+            | selectattr('time', 'search', today)
+            | map(attribute='price')
+            | list)[current_hour:] -%}
+        {% set tomorrow_prices = (state_attr('sensor.average_electricity_price', 'prices')
+            | selectattr('time', 'search', tomorrow)
+            | map(attribute='price')
+            | list) -%}
+        {% set all_prices = today_prices + tomorrow_prices -%}
+        {% set ns = namespace(z=[]) -%}
+        {% for price in all_prices -%}
+          {% set ns.z = ns.z + [price, price, price, price] -%}
+        {% endfor -%}
+        {% set start = quarter_index -%}
+        {% set prices = ns.z[start:start+96] -%}
+        {{ ((prices[0] * factor_A + factor_B + GSC + WKC + nettarief + heffing + accijns) * VAT_scaling) | round(5) }}
+      attributes:
+        prijzen: >
+          {% set factor_A = 1.02 -%}
+          {% set factor_B = 0.004 -%}
+          {% set GSC = 0.011 -%}
+          {% set WKC = 0.00392 -%}
+          {% set nettarief = 0.0565101 -%}
+          {% set heffing = 0.0019261 -%}
+          {% set accijns = 0.04748 -%}
+          {% set VAT_scaling = 1.06 -%}   
+          {% set today = now().strftime('%Y-%m-%d') -%}
+          {% set tomorrow = (now().timestamp() + 86400) | timestamp_custom('%Y-%m-%d') -%}
+          {% set quarter_index = (now().minute // 15) -%}
+          {% set current_hour = now().hour -%}
+          {% set today_prices = (state_attr('sensor.average_electricity_price', 'prices')
+              | selectattr('time', 'search', today)
+              | map(attribute='price')
+              | list)[current_hour:] -%}
+          {% set tomorrow_prices = (state_attr('sensor.average_electricity_price', 'prices')
+              | selectattr('time', 'search', tomorrow)
+              | map(attribute='price')
+              | list) -%}
+          {% set all_prices = today_prices + tomorrow_prices -%}
+          {% set ns = namespace(z=[]) -%}
+          {% for price in all_prices -%}
+            {% set ns.z = ns.z + [price, price, price, price] -%}
+          {% endfor -%}
+          {% set start = quarter_index -%}
+          {% set prices = ns.z[start:start+96] -%}
+          {{ prices | map('float') 
+                    | map('multiply', factor_A) 
+                    | map('add', factor_B) 
+                    | map('add', GSC) 
+                    | map('add', WKC)
+                    | map('add', nettarief) 
+                    | map('add', heffing) 
+                    | map('add', accijns)
+                    | map('multiply', VAT_scaling) 
+                    | map('round', 5) | list }}
+
+## emhass_timestep      
+    - name: "Ecopower Injectieprijzen"
+      unique_id: 98d961f2-497a-440a-865b-bf2fe1897218
+      unit_of_measurement: "EUR/kWh"
+      state: >
+        {% set factor_C = 0.98 -%}
+        {% set factor_D = -0.015 -%}
+        {% set today = now().strftime('%Y-%m-%d') -%}
+        {% set tomorrow = (now().timestamp() + 86400) | timestamp_custom('%Y-%m-%d') -%}
+        {% set quarter_index = (now().minute // 15) -%}
+        {% set current_hour = now().hour -%}
+        {% set today_prices = (state_attr('sensor.average_electricity_price', 'prices')
+            | selectattr('time', 'search', today)
+            | map(attribute='price')
+            | list)[current_hour:] -%}
+        {% set tomorrow_prices = (state_attr('sensor.average_electricity_price', 'prices')
+            | selectattr('time', 'search', tomorrow)
+            | map(attribute='price')
+            | list) -%}
+        {% set all_prices = today_prices + tomorrow_prices -%}
+        {% set ns = namespace(z=[]) -%}
+        {% for price in all_prices -%}
+          {% set ns.z = ns.z + [price, price, price, price] -%}
+        {% endfor -%}
+        {% set start = quarter_index -%}
+        {% set prices = ns.z[start:start+96] -%}
+        {{ (prices[0] * factor_C + factor_D) | round(5) }}
+      attributes:
+        prijzen: >
+          {% set factor_C = 0.98 -%}
+          {% set factor_D = -0.015 -%}
+          {% set today = now().strftime('%Y-%m-%d') -%}
+          {% set tomorrow = (now().timestamp() + 86400) | timestamp_custom('%Y-%m-%d') -%}
+          {% set quarter_index = (now().minute // 15) -%}
+          {% set current_hour = now().hour -%}
+          {% set today_prices = (state_attr('sensor.average_electricity_price', 'prices')
+              | selectattr('time', 'search', today)
+              | map(attribute='price')
+              | list)[current_hour:] -%}
+          {% set tomorrow_prices = (state_attr('sensor.average_electricity_price', 'prices')
+              | selectattr('time', 'search', tomorrow)
+              | map(attribute='price')
+              | list) -%}
+          {% set all_prices = today_prices + tomorrow_prices -%}
+          {% set ns = namespace(z=[]) -%}
+          {% for price in all_prices -%}
+            {% set ns.z = ns.z + [price, price, price, price] -%}
+          {% endfor -%}
+          {% set start = quarter_index -%}
+          {% set prices = ns.z[start:start+96] -%}
+          {{ prices | map('float') | map('multiply', factor_C) | map('add', factor_D) | map('round', 5) | list }}
+    
     - name: "Wasmachien uren"
       unique_id: c7278411-c766-4fcd-81ea-0604db1b1f76
       unit_of_measurement: "uur"
       state: >
-        {%- if states("input_boolean.wasmachien_starten") == 'on' %}
-          {%- if states("switch.wasmachien") == 'off' %}
+        {% if states("input_boolean.wasmachien_starten") == 'on' %}
+          {% if states("switch.wasmachien") == 'off' %}
             2
-          {%- elif states("input_boolean.emhass_wasmachien") == 'on' %}
-            {%- if (2 - ((as_timestamp(now()) - states("sensor.wasmachien_is_gestart_op") | float(0)) / 3600) | round(1)) | float(0) > 0  %}
+          {% elif states("input_boolean.emhass_wasmachien") == 'on' %}
+            {% if (2 - ((as_timestamp(now()) - states("sensor.wasmachien_is_gestart_op") | float(0)) / 3600) | round(1)) | float(0) > 0  %}
               {{ 2 - ((as_timestamp(now()) - states("sensor.wasmachien_is_gestart_op") | float(0)) / 3600) | round(1) }}
-            {%- else %}
+            {% else %}
               0
-            {%- endif %}
-          {%- else %}
+            {% endif %}
+          {% else %}
             0
-          {%- endif %}
-        {%- else %}
+          {% endif %}
+        {% else %}
           0
-        {%- endif %}
+        {% endif %}
 
     - name: "Droogkast uren"
       unique_id: 59e14f81-ccd8-4099-b08d-d21c53ff3c70
       unit_of_measurement: "uur"
       state: >
-        {%- if states("input_boolean.droogkast_starten") == 'on' %}
-          {%- if states("switch.droogkast") == 'off' and states("input_boolean.wasmachien_starten") == 'on' and states("input_boolean.afwasmachien_starten") == 'on' %}
+        {% if states("input_boolean.droogkast_starten") == 'on' %}
+          {% if states("switch.droogkast") == 'off' and states("input_boolean.wasmachien_starten") == 'on' and states("input_boolean.afwasmachien_starten") == 'on' %}
             6
-          {%- elif states("switch.droogkast") == 'off' and states("input_boolean.wasmachien_starten") == 'on' %}
+          {% elif states("switch.droogkast") == 'off' and states("input_boolean.wasmachien_starten") == 'on' %}
             4
-          {%- elif states("switch.droogkast") == 'off' and states("input_boolean.afwasmachien_starten") == 'on' %}
+          {% elif states("switch.droogkast") == 'off' and states("input_boolean.afwasmachien_starten") == 'on' %}
             4
-          {%- elif states("switch.droogkast") == 'off' %}
+          {% elif states("switch.droogkast") == 'off' %}
             2
-          {%- elif states("input_boolean.emhass_droogkast") == 'on'%}
-            {%- if (2 - ((as_timestamp(now()) - states("sensor.droogkast_is_gestart_op") | float(0)) / 3600) | round(1)) | float(0) > 0  %}
+          {% elif states("input_boolean.emhass_droogkast") == 'on'%}
+            {% if (2 - ((as_timestamp(now()) - states("sensor.droogkast_is_gestart_op") | float(0)) / 3600) | round(1)) | float(0) > 0  %}
               {{ 2 - ((as_timestamp(now()) - states("sensor.droogkast_is_gestart_op") | float(0)) / 3600) | round(1) }}
-            {%- else %}
+            {% else %}
               0
-            {%- endif %}
-          {%- else %}
+            {% endif %}
+          {% else %}
             0
-          {%- endif %}
-        {%- else %}
+          {% endif %}
+        {% else %}
           0
-        {%- endif %}
+        {% endif %}
 
     - name: "Afwasmachien uren"
       unique_id: 062928fa-46a0-407c-9947-085b5278ec96
       unit_of_measurement: "uur"
       state: >
-        {%- if states("input_boolean.afwasmachien_starten") == 'on'%}
-          {%- if states("switch.afwasmachien") == 'off'%}
+        {% if states("input_boolean.afwasmachien_starten") == 'on'%}
+          {% if states("switch.afwasmachien") == 'off'%}
             2.5
-          {%- elif states("input_boolean.emhass_afwasmachien") == 'on'%}
-            {%- if (2.5 - ((as_timestamp(now()) - states("sensor.afwasmachien_is_gestart_op") | float(0)) / 3600) | round(1)) | float(0) > 0  %}
+          {% elif states("input_boolean.emhass_afwasmachien") == 'on'%}
+            {% if (2.5 - ((as_timestamp(now()) - states("sensor.afwasmachien_is_gestart_op") | float(0)) / 3600) | round(1)) | float(0) > 0  %}
               {{ 2.5 - ((as_timestamp(now()) - states("sensor.afwasmachien_is_gestart_op") | float(0)) / 3600) | round(1) }}
-            {%- else %}
+            {% else %}
               0
-            {%- endif %}
-          {%- else %}
+            {% endif %}
+          {% else %}
             0
-          {%- endif %}
-        {%- else %}
+          {% endif %}
+        {% else %}
           0
-        {%- endif %}
+        {% endif %}
 
     - name: "Warmtepomp uren"
       unique_id: 5c252e9e-ae09-4100-aace-8bb8d4149e8e
       unit_of_measurement: "uur"
       state: >
-        {%- set hours = states('input_number.voorspelde_uren')|float - states('sensor.branduren_warmtepomp')|float %}
-        {%- set hour = now().hour %}
-        {%- if 0 <= hour < 7 %}
+        {% set hours = states('input_number.voorspelde_uren')|float - states('sensor.branduren_warmtepomp')|float %}
+        {% set hour = now().hour %}
+        {% if 0 <= hour < 7 %}
           0
-        {%- elif states("input_boolean.verwarming_starten") == 'on' %}
-          {%- if states('input_number.voorspelde_uren')|float > 1 -%} 
+        {% elif states("input_boolean.verwarming_starten") == 'on' %}
+          {% if states('input_number.voorspelde_uren')|float > 1 -%} 
             {{ hours }} 
-          {%- else %} 
+          {% else %} 
             0 
-          {%- endif %}
-        {%- else %}
+          {% endif %}
+        {% else %}
           0
-        {%- endif %}
+        {% endif %}
 ## emhass_timestep
     - name: Warmtepompboiler uren
       unique_id: 8225bcd3-62ca-40af-8891-ba06a95eed91
       unit_of_measurement: "uur"
       state: >
-        {%- set horizon = states('sensor.prediction_horizon')|int(0) / 4 %}
-        {%- set temp = (states("sensor.thermostaat") | float(45) * 4) | round(0) / 4 %}
-        {%- set temp = states("sensor.thermostaat") | float(45) %}
-        {%- macro max(X, Y) -%} {{X|float(0)if X|float(0)> Y|float(0)else Y|float(0)}} {%- endmacro %}
-        {%- if states("input_boolean.warm_water_starten") == 'on' %}
-          {%- if states("input_boolean.op_verlof") == 'off' %}
-            {%- if (states("sensor.open_meteo_voorspelling_resterend_vandaag") | float(0)) > 2 %}
-              {%- set hours =  max(0, (53 - temp) / 4)  %}
-            {%- else %}
-              {%- set hours =  max(0, (52 - temp) / 4)  %}
-            {%- endif %}
-          {%- else %}
-            {%- set hours =  max(0, (46 - temp) / 4)  %}
-          {%- endif %}
-          {%- if hours|float > horizon %}
+        {% set horizon = states('sensor.prediction_horizon')|int(0) / 4 %}
+        {% set temp = (states("sensor.thermostaat") | float(45) * 4) | round(0) / 4 %}
+        {% set temp = states("sensor.thermostaat") | float(45) %}
+        {% macro max(X, Y) -%} {{X|float(0)if X|float(0)> Y|float(0)else Y|float(0)}} {% endmacro %}
+        {% if states("input_boolean.warm_water_starten") == 'on' %}
+          {% if states("input_boolean.op_verlof") == 'off' %}
+            {% if (states("sensor.open_meteo_voorspelling_resterend_vandaag") | float(0)) > 2 %}
+              {% set hours =  max(0, (53 - temp) / 4)  %}
+            {% else %}
+              {% set hours =  max(0, (52 - temp) / 4)  %}
+            {% endif %}
+          {% else %}
+            {% set hours =  max(0, (46 - temp) / 4)  %}
+          {% endif %}
+          {% if hours|float > horizon %}
             {{ horizon }}
-          {%- else %}
+          {% else %}
             {{ (hours|float * 4) | round(0) / 4}}
-          {%- endif %}
-        {%- else %}
+          {% endif %}
+        {% else %}
           0
-        {%- endif %}
-      # state: >
-      #   {%- set horizon = states('sensor.prediction_horizon')|int(0) / 2 %}
-      #   {%- macro max(X, Y) -%} {{X|float(0)if X|float(0)> Y|float(0)else Y|float(0)}} {%- endmacro %}
-      #   {%- if states("input_boolean.warm_water_starten") == 'on' %}
-      #     {%- if states("input_boolean.op_verlof") == 'off' %}
-      #       {%- if (states("sensor.solcast_solaredge_forecast_remaining_today") | float(0)) > 2 %}
-      #         {%- set hours =  max(0, (53 - (states("sensor.thermostaat") | float(45))) | round(1, "half", default)/4)  %}
-      #       {%- else %}
-      #         {%- set hours =  max(0, (52 - (states("sensor.thermostaat") | float(45))) | round(1, "half", default)/4)  %}
-      #       {%- endif %}
-      #     {%- else %}
-      #       {%- set hours =  max(0, (46 - (states("sensor.thermostaat") | float(45))) | round(1, "half", default)/4)  %}
-      #     {%- endif %}
-      #     {%- if hours|float > horizon %}
-      #       {{ horizon }}
-      #     {%- else %}
-      #       {{ hours }}
-      #     {%- endif %}
-      #   {%- else %}
-      #     0
-      #   {%- endif %}
+        {% endif %}
+
 ## emhass_timestep
     - name: Pv power forecast list
       unique_id: 6bc0c511-9c6f-4778-b13e-a20e3646a7e5
-      # state: >
-      #   {{ states("sensor.solcast_solaredge_forecast_today")}}
       state: >
         {{ states("sensor.open_meteo_voorspelling_vandaag") }}
       attributes:
         list: >
-          {%- set data = state_attr('sensor.open_meteo_voorspelling_vandaag', 'watts') -%}
-          {%- set data2 = state_attr('sensor.open_meteo_voorspelling_morgen', 'watts') -%}
-          {%- set now = as_timestamp(now()) -%}
-          {%- set items = data.items() | list -%}
-          {%- set sorted = items | sort(attribute=0) -%}
-          {%- set items2 = data2.items() | list -%}
-          {%- set sorted2 = items2 | sort(attribute=0) -%}
-          
-          {%- set ns = namespace(result=[]) -%}
-          {%- for timestring, value in sorted -%}
-            {%- set time = as_timestamp(as_datetime(timestring)) -%}
-            {%- if time >= now -%}
-              {%- set ns.result = ns.result + [value] -%}
-            {%- endif -%}
-          {%- endfor -%}
-          {%- set today = ns.result -%}
+          {% set data = state_attr('sensor.open_meteo_voorspelling_vandaag', 'watts') -%}
+          {% set data2 = state_attr('sensor.open_meteo_voorspelling_morgen', 'watts') -%}
+          {% if data is not none and data2 is not none -%}
+            {% set now = as_timestamp(now()) -%}
+            {% set items = data.items() | list -%}
+            {% set sorted = items | sort(attribute=0) -%}
+            {% set items2 = data2.items() | list -%}
+            {% set sorted2 = items2 | sort(attribute=0) -%}
+            
+            {% set ns = namespace(result=[]) -%}
+            {% for timestring, value in sorted -%}
+              {% set time = as_timestamp(as_datetime(timestring)) -%}
+              {% if time >= now -%}
+                {% set ns.result = ns.result + [value] -%}
+              {% endif -%}
+            {% endfor -%}
+            {% set today = ns.result -%}
 
-          {%- set ns = namespace(result2=[]) -%}
-          {%- for timestring, value in sorted2 -%}
-            {%- set time = as_timestamp(as_datetime(timestring)) -%}
-            {%- if time >= now -%}
-              {%- set ns.result2 = ns.result2 + [value] -%}
-            {%- endif -%}
-          {%- endfor -%}
-          {%- set tomorrow = ns.result2 -%}
-          {{ today + tomorrow }}
+            {% set ns = namespace(result2=[]) -%}
+            {% for timestring, value in sorted2 -%}
+              {% set time = as_timestamp(as_datetime(timestring)) -%}
+              {% if time >= now -%}
+                {% set ns.result2 = ns.result2 + [value] -%}
+              {% endif -%}
+            {% endfor -%}
+            {% set tomorrow = ns.result2 -%}
+            {{ today + tomorrow }}
+          {% endif -%}
 
-        # list: >
-        #   {%- set estimate = 'pv_estimate' %}
-        #   {{  (state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast')
-        #         |selectattr('period_start','gt',utcnow())
-        #         |map(attribute=estimate)
-        #         |map('multiply',1000)
-        #         |map('int')
-        #         |list
-        #     + state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast')
-        #         |selectattr('period_start','gt',utcnow())
-        #         |map(attribute=estimate)
-        #         |map('multiply',1000)
-        #         |map('int')
-        #         |list)[:48]
-        #         }}
 ## emhass_timestep
     - name: Prod price forecast list
       unique_id: c081ad21-6e07-4346-82e3-d392b4a251d6
@@ -189,302 +279,224 @@
       unit_of_measurement: "EUR/kWh"
       attributes:
         list: >
-          {%- set data = state_attr('sensor.open_meteo_voorspelling_vandaag', 'watts') -%}
-          {%- set data2 = state_attr('sensor.open_meteo_voorspelling_morgen', 'watts') -%}
-          {%- set now = as_timestamp(now()) -%}
-          {%- set items = data.items() | list -%}
-          {%- set sorted = items | sort(attribute=0) -%}
-          {%- set items2 = data2.items() | list -%}
-          {%- set sorted2 = items2 | sort(attribute=0) -%}
-          
-          {%- set ns = namespace(result=[]) -%}
-          {%- for timestring, value in sorted -%}
-            {%- set time = as_timestamp(as_datetime(timestring)) -%}
-            {%- if time >= now -%}
-              {%- set ns.result = ns.result + [as_datetime(timestring)] -%}
-            {%- endif -%}
-          {%- endfor -%}
-          {%- set today = ns.result -%}
+          {% set data = state_attr('sensor.open_meteo_voorspelling_vandaag', 'watts') -%}
+          {% set data2 = state_attr('sensor.open_meteo_voorspelling_morgen', 'watts') -%}
+          {% if data is not none and data2 is not none -%}
+            {% set now = as_timestamp(now()) -%}
+            {% set items = data.items() | list -%}
+            {% set sorted = items | sort(attribute=0) -%}
+            {% set items2 = data2.items() | list -%}
+            {% set sorted2 = items2 | sort(attribute=0) -%}
+            
+            {% set ns = namespace(result=[]) -%}
+            {% for timestring, value in sorted -%}
+              {% set time = as_timestamp(as_datetime(timestring)) -%}
+              {% if time >= now -%}
+                {% set ns.result = ns.result + [as_datetime(timestring)] -%}
+              {% endif -%}
+            {% endfor -%}
+            {% set today = ns.result -%}
 
-          {%- set ns = namespace(result2=[]) -%}
-          {%- for timestring, value in sorted2 -%}
-            {%- set time = as_timestamp(as_datetime(timestring)) -%}
-            {%- if time >= now -%}
-              {%- set ns.result2 = ns.result2 + [as_datetime(timestring)] -%}
-            {%- endif -%}
-          {%- endfor -%}
-          {%- set tomorrow = ns.result2 -%}
+            {% set ns = namespace(result2=[]) -%}
+            {% for timestring, value in sorted2 -%}
+              {% set time = as_timestamp(as_datetime(timestring)) -%}
+              {% if time >= now -%}
+                {% set ns.result2 = ns.result2 + [as_datetime(timestring)] -%}
+              {% endif -%}
+            {% endfor -%}
+            {% set tomorrow = ns.result2 -%}
 
-          {%- set list = today + tomorrow -%}    
+            {% set list = today + tomorrow -%}    
 
-          {%- set new_list = namespace(all=[]) -%}
-          {%- for i in range (list | length) -%}
-            {%- set hour = (list[i].hour) | int(0) -%}
-            {%- if hour in [13, 14, 15, 16, 17] -%}
-              {%- set new_list.all = new_list.all + [ -0.11 ] -%}
-            {%- else %}
-              {%- set new_list.all = new_list.all + [ -0.11 ] -%}
-            {%- endif -%}
-          {%- endfor -%}
-          {{ (new_list.all)}}
-        # list: >
-        #   {%- set list =  (state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast')
-        #       |selectattr('period_start','gt',utcnow())
-        #       |map(attribute='period_start')
-        #       |list
-        #     + state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast')
-        #       |selectattr('period_start','gt',utcnow())
-        #       |map(attribute='period_start')
-        #       |list)[:48]
-        #       -%}
-        #   {%- set new_list = namespace(all=[]) %}
-        #   {%- for i in range (list | length) %}
-        #     {%- set hour = (list[i].hour) | int(0)%}
-        #     {%- if hour in [13, 14, 15, 16, 17] %}
-        #       {%- set new_list.all = new_list.all + [ -0.11 ] %}
-        #     {%- else %}
-        #       {%- set new_list.all = new_list.all + [ -0.11 ] %}
-        #     {%- endif %}
-        #   {%- endfor %}
-        #   {{ (new_list.all)[:48]}}
+            {% set new_list = namespace(all=[]) -%}
+            {% for i in range (list | length) -%}
+              {% set hour = (list[i].hour) | int(0) -%}
+              {% if hour in [13, 14, 15, 16, 17] -%}
+                {% set new_list.all = new_list.all + [ -0.11 ] -%}
+              {% else %}
+                {% set new_list.all = new_list.all + [ -0.11 ] -%}
+              {% endif -%}
+            {% endfor -%}
+            {{ (new_list.all)}}
+          {% endif -%}
         extra: >
           -0.11
 ## emhass_timestep
     - name: Cost forecast list
       unique_id: 1e92ec2a-1886-4322-8cb9-7cef05077dec
       state: >
-        {%- set hour = now().hour | int(0)%}
-        {%- if hour in [7, 8, 9, 16, 17, 18] %}
+        {% set hour = now().hour | int(0)%}
+        {% if hour in [7, 8, 9, 16, 17, 18] %}
             0.174497535 
-        {%- else %}
+        {% else %}
             0.164497535
-        {%- endif %}
+        {% endif %}
       unit_of_measurement: "EUR/kWh"
       attributes:
         list: >
-          {%- set data = state_attr('sensor.open_meteo_voorspelling_vandaag', 'watts') -%}
-          {%- set data2 = state_attr('sensor.open_meteo_voorspelling_morgen', 'watts') -%}
-          {%- set now = as_timestamp(now()) -%}
-          {%- set items = data.items() | list -%}
-          {%- set sorted = items | sort(attribute=0) -%}
-          {%- set items2 = data2.items() | list -%}
-          {%- set sorted2 = items2 | sort(attribute=0) -%}
-          
-          {%- set ns = namespace(result=[]) -%}
-          {%- for timestring, value in sorted -%}
-            {%- set time = as_timestamp(as_datetime(timestring)) -%}
-            {%- if time >= now -%}
-              {%- set ns.result = ns.result + [as_datetime(timestring)] -%}
-            {%- endif -%}
-          {%- endfor -%}
-          {%- set today = ns.result -%}
+          {% set data = state_attr('sensor.open_meteo_voorspelling_vandaag', 'watts') -%}
+          {% set data2 = state_attr('sensor.open_meteo_voorspelling_morgen', 'watts') -%}
+          {% if data is not none and data2 is not none -%}
+            {% set now = as_timestamp(now()) -%}
+            {% set items = data.items() | list -%}
+            {% set sorted = items | sort(attribute=0) -%}
+            {% set items2 = data2.items() | list -%}
+            {% set sorted2 = items2 | sort(attribute=0) -%}
+            
+            {% set ns = namespace(result=[]) -%}
+            {% for timestring, value in sorted -%}
+              {% set time = as_timestamp(as_datetime(timestring)) -%}
+              {% if time >= now -%}
+                {% set ns.result = ns.result + [as_datetime(timestring)] -%}
+              {% endif -%}
+            {% endfor -%}
+            {% set today = ns.result -%}
 
-          {%- set ns = namespace(result2=[]) -%}
-          {%- for timestring, value in sorted2 -%}
-            {%- set time = as_timestamp(as_datetime(timestring)) -%}
-            {%- if time >= now -%}
-              {%- set ns.result2 = ns.result2 + [as_datetime(timestring)] -%}
-            {%- endif -%}
-          {%- endfor -%}
-          {%- set tomorrow = ns.result2 -%}
-          
-          {%- set list = today + tomorrow -%} 
-          
-          {%- set new_list = namespace(all=[]) -%}
-          {%- for i in range (list | length) %}
-            {%- set hour = (list[i].hour) | int(0)%}
-            {%- if hour in [7, 8, 9, 16, 17, 18] %}
-              {%- set new_list.all = new_list.all + [ 0.174497535 ] %}
-            {%- else %}
-              {%- set new_list.all = new_list.all + [ 0.164497535 ] %}
-            {%- endif %}
-          {%- endfor %}
-          {{ (new_list.all)}}
-        # list: >
-        #   {%- set list =  (state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast')
-        #       |selectattr('period_start','gt',utcnow())
-        #       |map(attribute='period_start')
-        #       |list
-        #     + state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast')
-        #       |selectattr('period_start','gt',utcnow())
-        #       |map(attribute='period_start')
-        #       |list)[:48]
-        #       -%}
-        #   {%- set new_list = namespace(all=[]) %}
-        #   {%- for i in range (list | length) %}
-        #     {%- set hour = (list[i].hour) | int(0)%}
-        #     {%- if hour in [7, 8, 9, 16, 17, 18] %}
-        #       {%- set new_list.all = new_list.all + [ 0.174497535 ] %}
-        #     {%- else %}
-        #       {%- set new_list.all = new_list.all + [ 0.164497535 ] %}
-        #     {%- endif %}
-        #   {%- endfor %}
-        #   {{ (new_list.all)[:48]}}
-
-    # - name: Real cost forecast list
-    #   unique_id: b826cf88-14b2-4a57-9727-6b74b0e58032
-    #   state: >
-    #     {{ states("sensor.nordpool_kwh_be_eur")}}
-    #   availability: >-
-    #     {{ has_value("sensor.nordpool_kwh_be_eur") }}
-    #   unit_of_measurement: "EUR/kWh"
-    #   attributes:
-    #     list: >
-    #       {%- set list = (state_attr('sensor.nordpool_kwh_be_eur', 'raw_today')
-    #             |selectattr('start','gt',utcnow())
-    #             |map(attribute='value')
-    #             |list
-    #         + state_attr('sensor.nordpool_kwh_be_eur', 'raw_tomorrow')
-    #             |selectattr('start','gt',utcnow())
-    #             |map(attribute='value')
-    #             |list)[:48] -%}
-    #       {%- set new_list = namespace(all=[]) %}
-    #       {%- for i in range (list | length) %}
-    #         {%- if i == 0 %}
-    #           {%- if now().minute | int(0) < 30 %}
-    #             {%- set new = [states('sensor.nordpool_kwh_be_eur') | float(0)] %}
-    #             {%- set new_list.all = new_list.all + new -%}
-    #           {%- else %}
-    #             {%- set new = [list[i]] + [list[i]] %}
-    #             {%- set new_list.all = new_list.all + new -%}
-    #           {%- endif %}
-    #         {%- else %}
-    #           {%- set new = [list[i]] + [list[i]] %}
-    #           {%- set new_list.all = new_list.all + new -%}
-    #         {%- endif %}
-    #       {%- endfor %}
-    #       {{ (new_list.all)[:48]}}
-
-    #     length: >
-    #       {%- if state_attr('sensor.real_cost_forecast_list', 'list') is iterable %}
-    #         {%- set len = state_attr('sensor.real_cost_forecast_list', 'list') | length %}
-    #       {%- else %}
-    #         {%- set len = 48 %}
-    #       {%- endif %}
-    #       {{ len }}
+            {% set ns = namespace(result2=[]) -%}
+            {% for timestring, value in sorted2 -%}
+              {% set time = as_timestamp(as_datetime(timestring)) -%}
+              {% if time >= now -%}
+                {% set ns.result2 = ns.result2 + [as_datetime(timestring)] -%}
+              {% endif -%}
+            {% endfor -%}
+            {% set tomorrow = ns.result2 -%}
+            
+            {% set list = today + tomorrow -%} 
+            
+            {% set new_list = namespace(all=[]) -%}
+            {% for i in range (list | length) %}
+              {% set hour = (list[i].hour) | int(0)%}
+              {% if hour in [7, 8, 9, 16, 17, 18] %}
+                {% set new_list.all = new_list.all + [ 0.174497535 ] %}
+              {% else %}
+                {% set new_list.all = new_list.all + [ 0.164497535 ] %}
+              {% endif %}
+            {% endfor %}
+            {{ (new_list.all)}}
+          {% endif -%}
 
     - name: Verwarming startuur
       unique_id: ceff5121-3392-4bac-8fa5-a8cec3e3d331
       state: >
-        {%- from 'easy_time.jinja' import easy_relative_time %}
-        {%- set load = (state_attr('sensor.emhass_warmtepomp', 'deferrables_schedule')
+        {% from 'easy_time.jinja' import easy_relative_time %}
+        {% set load = (state_attr('sensor.emhass_warmtepomp', 'deferrables_schedule')
                 |map(attribute='emhass_warmtepomp')
                 |list) %}
-        {%- set time = (state_attr('sensor.emhass_warmtepomp', 'deferrables_schedule')
+        {% set time = (state_attr('sensor.emhass_warmtepomp', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) %}
-        {%- if is_state("input_boolean.emhass_warmtepomp", "on") %}
+        {% if is_state("input_boolean.emhass_warmtepomp", "on") %}
           Staat op
-        {%- else %}
-          {%- set new_list = namespace(all=[]) %}
-            {%- for i in range (load | length) %}
-              {%- if load[i] | float(0) > 1 %}
+        {% else %}
+          {% set new_list = namespace(all=[]) %}
+            {% for i in range (load | length) %}
+              {% if load[i] | float(0) > 1 %}
                 {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
-                {%- break -%}
-              {%- endif %}
-            {%- endfor %}
-          {%- endif %}
+                {% break -%}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
       availability: >-
         {{ states('sensor.emhass_warmtepomp') | is_number }}
 
     - name: Warm water startuur
       unique_id: f4450d07-ad80-4ed5-a96a-852c84fec6ca
       state: >
-        {%- from 'easy_time.jinja' import easy_relative_time %}
-        {%- set load = (state_attr('sensor.emhass_warmtepompboiler', 'deferrables_schedule')
+        {% from 'easy_time.jinja' import easy_relative_time %}
+        {% set load = (state_attr('sensor.emhass_warmtepompboiler', 'deferrables_schedule')
                 |map(attribute='emhass_warmtepompboiler')
                 |list) %}
-        {%- set time = (state_attr('sensor.emhass_warmtepompboiler', 'deferrables_schedule')
+        {% set time = (state_attr('sensor.emhass_warmtepompboiler', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) %}
-        {%- if is_state("input_boolean.emhass_warmtepompboiler", "on") %}
+        {% if is_state("input_boolean.emhass_warmtepompboiler", "on") %}
           Staat op
-        {%- else %}
-          {%- set new_list = namespace(all=[]) %}
-            {%- for i in range (load | length) %}
-              {%- if load[i] | float(0) > 1 %}
+        {% else %}
+          {% set new_list = namespace(all=[]) %}
+            {% for i in range (load | length) %}
+              {% if load[i] | float(0) > 1 %}
                 {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
-                {%- break -%}
-              {%- endif %}
-            {%- endfor %}
-          {%- endif %}
+                {% break -%}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
       availability: >-
         {{ states('sensor.emhass_warmtepompboiler') | is_number }}
 
     - name: Wasmachien startuur
       unique_id: 12e7093b-ea97-4f69-a47d-720106331e9f
       state: >
-        {%- from 'easy_time.jinja' import easy_relative_time %}
-        {%- set load = (state_attr('sensor.emhass_wasmachien', 'deferrables_schedule')
+        {% from 'easy_time.jinja' import easy_relative_time %}
+        {% set load = (state_attr('sensor.emhass_wasmachien', 'deferrables_schedule')
                 |map(attribute='emhass_wasmachien')
                 |list) %}
-        {%- set time = (state_attr('sensor.emhass_wasmachien', 'deferrables_schedule')
+        {% set time = (state_attr('sensor.emhass_wasmachien', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) %}
-        {%- if is_state("input_boolean.emhass_wasmachien", "on") %}
+        {% if is_state("input_boolean.emhass_wasmachien", "on") %}
           Staat op
-        {%- else %}
-          {%- set new_list = namespace(all=[]) %}
-            {%- for i in range (load | length) %}
-              {%- if load[i] | float(0) > 1 %}
+        {% else %}
+          {% set new_list = namespace(all=[]) %}
+            {% for i in range (load | length) %}
+              {% if load[i] | float(0) > 1 %}
                 {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
-                {%- break -%}
-              {%- endif %}
-            {%- endfor %}
-        {%- endif %}
+                {% break -%}
+              {% endif %}
+            {% endfor %}
+        {% endif %}
       availability: >-
         {{ states('sensor.emhass_wasmachien') | is_number }}
 
     - name: Droogkast startuur
       unique_id: de867de0-7b23-4b42-b646-ab2f00a1c1b2
       state: >
-        {%- from 'easy_time.jinja' import easy_relative_time %}
-        {%- set load = (state_attr('sensor.emhass_droogkast', 'deferrables_schedule')
+        {% from 'easy_time.jinja' import easy_relative_time %}
+        {% set load = (state_attr('sensor.emhass_droogkast', 'deferrables_schedule')
                 |map(attribute='emhass_droogkast')
                 |list) %}
-        {%- set time = (state_attr('sensor.emhass_droogkast', 'deferrables_schedule')
+        {% set time = (state_attr('sensor.emhass_droogkast', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) %}
-        {%- if is_state("input_boolean.emhass_droogkast", "on") %}
+        {% if is_state("input_boolean.emhass_droogkast", "on") %}
           Staat op
-        {%- else %}
-          {%- set new_list = namespace(all=[]) %}
-            {%- for i in range (load | length) %}
-              {%- if load[i] | float(0) > 1 %}
+        {% else %}
+          {% set new_list = namespace(all=[]) %}
+            {% for i in range (load | length) %}
+              {% if load[i] | float(0) > 1 %}
                 {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
-                {%- break -%}
-              {%- endif %}
-            {%- endfor %}
-          {%- endif %}
+                {% break -%}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
       availability: >-
         {{ states('sensor.emhass_droogkast') | is_number }}
 
     - name: Afwasmachien startuur
       unique_id: c38353a5-d1d8-4f10-a826-dbb2cf432c07
       state: >
-        {%- from 'easy_time.jinja' import easy_relative_time %}
-        {%- set load = (state_attr('sensor.emhass_afwasmachien', 'deferrables_schedule')
+        {% from 'easy_time.jinja' import easy_relative_time %}
+        {% set load = (state_attr('sensor.emhass_afwasmachien', 'deferrables_schedule')
                 |map(attribute='emhass_afwasmachien')
                 |list) %}
-        {%- set time = (state_attr('sensor.emhass_afwasmachien', 'deferrables_schedule')
+        {% set time = (state_attr('sensor.emhass_afwasmachien', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) %}
-        {%- if is_state("input_boolean.emhass_afwasmachien", "on") %}
+        {% if is_state("input_boolean.emhass_afwasmachien", "on") %}
           Staat op
-        {%- else %}
-          {%- set new_list = namespace(all=[]) %}
-            {%- for i in range (load | length) %}
-              {%- if load[i] | float(0) > 1 %}
+        {% else %}
+          {% set new_list = namespace(all=[]) %}
+            {% for i in range (load | length) %}
+              {% if load[i] | float(0) > 1 %}
                 {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
-                {%- break -%}
-              {%- endif %}
-            {%- endfor %}
-          {%- endif %}
+                {% break -%}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
       availability: >-
         {{ states('sensor.emhass_afwasmachien') | is_number }}
 ## emhass_timestep
-    - name: Prediction horizon
-      unique_id: 39144142-06b5-4c2a-897a-d24b0c8fd2e4
+    - name: Prediction horizon oud
+      unique_id: 81f0ab8c-45c8-42cb-a7da-4b0516172908
       # unit_of_measurement: 1/2u
       unit_of_measurement: 1/4u
       availability: >
@@ -493,447 +505,399 @@
             states("sensor.droogkast_end_timesteps") | is_number and 
             states("sensor.afwasmachien_end_timesteps") | is_number }}
       state: >
-        {%- set prediction = state_attr('sensor.pv_power_forecast_list', 'list') %}
-        {%- macro max(X, Y) %} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {%- endmacro %}
-        {%- macro min(X, Y) %} {{X|int(0) if X|int(0) < Y|int(0) else Y|int(0) }} {%- endmacro %}
-        {%- set hour = now().hour %}
-        {%- set minutes = now().minute %}
-        {%- if prediction is iterable %}
-          {%- set solar = prediction | length %}
-        {%- else %}
-          {%- set solar = 96 %}
-        {%- endif %}
-        {%- set endstep = max(states('sensor.wasmachien_end_timesteps'), states('sensor.droogkast_end_timesteps')) %}
-        {%- set endstep = max(endstep, states('sensor.afwasmachien_end_timesteps')) %}
+        {% set prediction = state_attr('sensor.pv_power_forecast_list', 'list') %}
+        {% macro max(X, Y) %} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {% endmacro %}
+        {% macro min(X, Y) %} {{X|int(0) if X|int(0) < Y|int(0) else Y|int(0) }} {% endmacro %}
+        {% set hour = now().hour %}
+        {% set minutes = now().minute %}
+        {% if prediction is iterable %}
+          {% set solar = prediction | length %}
+        {% else %}
+          {% set solar = 96 %}
+        {% endif %}
+        {% set endstep = max(states('sensor.wasmachien_end_timesteps'), states('sensor.droogkast_end_timesteps')) %}
+        {% set endstep = max(endstep, states('sensor.afwasmachien_end_timesteps')) %}
 
-        {%- if hour == 7 %}
+        {% if hour == 7 %}
           {{ min(96, max(endstep, min(solar, 68))) if minutes < 15 else
             min(96, max(endstep, min(solar, 67))) if minutes < 30 else
             min(96, max(endstep, min(solar, 66))) if minutes < 45 else
             min(96, max(endstep, min(solar, 65))) }}
-        {%- elif hour == 8 %}
+        {% elif hour == 8 %}
           {{ min(96, max(endstep, min(solar, 64))) if minutes < 15 else
             min(96, max(endstep, min(solar, 63))) if minutes < 30 else
             min(96, max(endstep, min(solar, 62))) if minutes < 45 else
             min(96, max(endstep, min(solar, 61))) }}
-        {%- elif hour == 9 %}
+        {% elif hour == 9 %}
           {{ min(96, max(endstep, min(solar, 60))) if minutes < 15 else
             min(96, max(endstep, min(solar, 59))) if minutes < 30 else
             min(96, max(endstep, min(solar, 58))) if minutes < 45 else
             min(96, max(endstep, min(solar, 57))) }}
-        {%- elif hour == 10 %}
+        {% elif hour == 10 %}
           {{ min(96, max(endstep, min(solar, 56))) if minutes < 15 else
             min(96, max(endstep, min(solar, 55))) if minutes < 30 else
             min(96, max(endstep, min(solar, 54))) if minutes < 45 else
             min(96, max(endstep, min(solar, 53))) }}
-        {%- elif hour == 11 %}
+        {% elif hour == 11 %}
           {{ min(96, max(endstep, min(solar, 52))) if minutes < 15 else
             min(96, max(endstep, min(solar, 51))) if minutes < 30 else
             min(96, max(endstep, min(solar, 50))) if minutes < 45 else
             min(96, max(endstep, min(solar, 49))) }}
-        {%- elif hour == 12 %}
+        {% elif hour == 12 %}
           {{ min(96, max(endstep, min(solar, 48))) if minutes < 15 else
             min(96, max(endstep, min(solar, 47))) if minutes < 30 else
             min(96, max(endstep, min(solar, 46))) if minutes < 45 else
             min(96, max(endstep, min(solar, 45))) }}
-        {%- elif hour == 13 %}
+        {% elif hour == 13 %}
           {{ min(96, max(endstep, min(solar, 44))) if minutes < 15 else
             min(96, max(endstep, min(solar, 43))) if minutes < 30 else
             min(96, max(endstep, min(solar, 42))) if minutes < 45 else
             min(96, max(endstep, min(solar, 41))) }}
-        {%- elif hour == 14 %}
+        {% elif hour == 14 %}
           {{ min(96, max(endstep, min(solar, 40))) if minutes < 15 else
             min(96, max(endstep, min(solar, 39))) if minutes < 30 else
             min(96, max(endstep, min(solar, 38))) if minutes < 45 else
             min(96, max(endstep, min(solar, 37))) }}
-        {%- elif hour == 15 %}
+        {% elif hour == 15 %}
           {{ min(96, max(endstep, min(solar, 36))) if minutes < 15 else
             min(96, max(endstep, min(solar, 35))) if minutes < 30 else
             min(96, max(endstep, min(solar, 34))) if minutes < 45 else
             min(96, max(endstep, min(solar, 33))) }}
-        {%- elif hour == 16 %}
+        {% elif hour == 16 %}
           {{ min(96, max(endstep, min(solar, 32))) if minutes < 15 else
             min(96, max(endstep, min(solar, 31))) if minutes < 30 else
             min(96, max(endstep, min(solar, 30))) if minutes < 45 else
             min(96, max(endstep, min(solar, 29))) }}
-        {%- elif hour == 17 %}
+        {% elif hour == 17 %}
           {{ min(96, max(endstep, min(solar, 28))) if minutes < 15 else
             min(96, max(endstep, min(solar, 27))) if minutes < 30 else
             min(96, max(endstep, min(solar, 26))) if minutes < 45 else
             min(96, max(endstep, min(solar, 25))) }}
-        {%- elif hour == 18 %}
+        {% elif hour == 18 %}
           {{ min(96, max(endstep, min(solar, 24))) if minutes < 15 else
             min(96, max(endstep, min(solar, 23))) if minutes < 30 else
             min(96, max(endstep, min(solar, 22))) if minutes < 45 else
             min(96, max(endstep, min(solar, 21))) }}
-        {%- elif hour == 19 %}
+        {% elif hour == 19 %}
           {{ min(96, max(endstep, min(solar, 20))) if minutes < 15 else
             min(96, max(endstep, min(solar, 19))) if minutes < 30 else
             min(96, max(endstep, min(solar, 18))) if minutes < 45 else
             min(96, max(endstep, min(solar, 17))) }}
-        {%- else %}
+        {% else %}
           {{ min(96, max(endstep, min(solar, 72))) }}
-        {%- endif %}
-      # state: >
-      #   {%- macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {%- endmacro %}
-      #   {%- macro min(X, Y) -%} {{X|int(0) if X|int(0) < Y|int(0) else Y|int(0) }} {%- endmacro %}
-      #   {%- set hour = now().hour %}
-      #   {%- set minutes = now().minute %}
-      #   {%- if state_attr('sensor.pv_power_forecast_list', 'list') is iterable %}
-      #     {%- set solar = state_attr('sensor.pv_power_forecast_list', 'list') | length %}
-      #   {%- else %}
-      #     {%- set solar = 48 %}
-      #   {%- endif %}
-      #   {%- set endstep = max(states('sensor.wasmachien_end_timesteps'), states('sensor.droogkast_end_timesteps')) %}
-      #   {%- set endstep = max(endstep, states('sensor.afwasmachien_end_timesteps')) %}
+        {% endif %}
+    
+## emhass_timestep    
+    - name: Prediction horizon
+      unique_id: 39144142-06b5-4c2a-897a-d24b0c8fd2e4
+      unit_of_measurement: 1/4u
+      availability: >
+        {{ state_attr('sensor.ecopower_afnameprijzen', 'prijzen') | length | is_number  }}
+      state: >
+        {% set prediction = state_attr('sensor.ecopower_afnameprijzen', 'prijzen') -%}
+        {% macro min(X, Y) -%} {{X|int(0) if X|int(0) < Y|int(0) else Y|int(0) }} {% endmacro -%}
+        {% set hour = now().hour -%}
+        {% set minutes = now().minute -%}
+        {% if prediction is iterable -%}
+          {% set prices = prediction | length -%}
+        {% else -%}
+          {% set prices = 96 -%}
+        {% endif -%}
+        {% if hour == 7 -%}
+          {{ min(96, min(prices, 68)) if minutes < 15 else
+            min(96, min(prices, 67)) if minutes < 30 else
+            min(96, min(prices, 66)) if minutes < 45 else
+            min(96, min(prices, 65)) }}
+        {% elif hour == 8 -%}
+          {{ min(96, min(prices, 64)) if minutes < 15 else
+            min(96, min(prices, 63)) if minutes < 30 else
+            min(96, min(prices, 62)) if minutes < 45 else
+            min(96, min(prices, 61)) }}
+        {% elif hour == 9 -%}
+          {{ min(96, min(prices, 60)) if minutes < 15 else
+            min(96, min(prices, 59)) if minutes < 30 else
+            min(96, min(prices, 58)) if minutes < 45 else
+            min(96, min(prices, 57)) }}
+        {% elif hour == 10 -%}
+          {{ min(96, min(prices, 56)) if minutes < 15 else
+            min(96, min(prices, 55)) if minutes < 30 else
+            min(96, min(prices, 54)) if minutes < 45 else
+            min(96, min(prices, 53)) }}
+        {% elif hour == 11 -%}
+          {{ min(96, min(prices, 52)) if minutes < 15 else
+            min(96, min(prices, 51)) if minutes < 30 else
+            min(96, min(prices, 50)) if minutes < 45 else
+            min(96, min(prices, 49)) }}
+        {% elif hour == 12 -%}
+          {{ min(96, min(prices, 48)) if minutes < 15 else
+            min(96, min(prices, 47)) if minutes < 30 else
+            min(96, min(prices, 46)) if minutes < 45 else
+            min(96, min(prices, 45)) }}
+        {% elif hour == 13 -%}
+          {{ min(96, min(prices, 44)) if minutes < 15 else
+            min(96, min(prices, 43)) if minutes < 30 else
+            min(96, min(prices, 42)) if minutes < 45 else
+            min(96, min(prices, 41)) }}
+        {% elif hour == 14 -%}
+          {{ min(96, min(prices, 40)) if minutes < 15 else
+            min(96, min(prices, 39)) if minutes < 30 else
+            min(96, min(prices, 38)) if minutes < 45 else
+            min(96, min(prices, 37)) }}
+        {% elif hour == 15 -%}
+          {{ min(96, min(prices, 36)) if minutes < 15 else
+            min(96, min(prices, 35)) if minutes < 30 else
+            min(96, min(prices, 34)) if minutes < 45 else
+            min(96, min(prices, 33)) }}
+        {% elif hour == 16 -%}
+          {{ min(96, min(prices, 32)) if minutes < 15 else
+            min(96, min(prices, 31)) if minutes < 30 else
+            min(96, min(prices, 30)) if minutes < 45 else
+            min(96, min(prices, 29)) }}
+        {% elif hour == 17 -%}
+          {{ min(96, min(prices, 28)) if minutes < 15 else
+            min(96, min(prices, 27)) if minutes < 30 else
+            min(96, min(prices, 26)) if minutes < 45 else
+            min(96, min(prices, 25)) }}
+        {% elif hour == 18 -%}
+          {{ min(96, min(prices, 24)) if minutes < 15 else
+            min(96, min(prices, 23)) if minutes < 30 else
+            min(96, min(prices, 22)) if minutes < 45 else
+            min(96, min(prices, 21)) }}
+        {% elif hour == 19 -%}
+          {{ min(96, min(prices, 20)) if minutes < 15 else
+            min(96, min(prices, 19)) if minutes < 30 else
+            min(96, min(prices, 18)) if minutes < 45 else
+            min(96, min(prices, 17)) }}
+        {% else -%}
+          {{ min(96, min(prices, 72)) }}
+        {% endif -%}
 
-      #   {%- if hour == 7 %}
-      #     {{ min(48, max(endstep, min(solar, 34))) if minutes < 30 else min(48, max(endstep, min(solar, 33))) }}
-      #   {%- elif hour == 8 %}
-      #     {{ min(48, max(endstep, min(solar, 32))) if minutes < 30 else min(48, max(endstep, min(solar, 31))) }}
-      #   {%- elif hour == 9 %}
-      #     {{ min(48, max(endstep, min(solar, 30))) if minutes < 30 else min(48, max(endstep, min(solar, 29))) }}
-      #   {%- elif hour == 10 %}
-      #     {{ min(48, max(endstep, min(solar, 28))) if minutes < 30 else min(48, max(endstep, min(solar, 27))) }}
-      #   {%- elif hour == 11 %}
-      #     {{ min(48, max(endstep, min(solar, 26))) if minutes < 30 else min(48, max(endstep, min(solar, 25))) }}
-      #   {%- elif hour == 12 %}
-      #     {{ min(48, max(endstep, min(solar, 24))) if minutes < 30 else min(48, max(endstep, min(solar, 23))) }}
-      #   {%- elif hour == 13 %}
-      #     {{ min(48, max(endstep, min(solar, 22))) if minutes < 30 else min(48, max(endstep, min(solar, 21))) }}
-      #   {%- elif hour == 14 %}
-      #     {{ min(48, max(endstep, min(solar, 20))) if minutes < 30 else min(48, max(endstep, min(solar, 19))) }}
-      #   {%- elif hour == 15 %}
-      #     {{ min(48, max(endstep, min(solar, 18))) if minutes < 30 else min(48, max(endstep, min(solar, 17))) }}
-      #   {%- elif hour == 16 %}
-      #     {{ min(48, max(endstep, min(solar, 16))) if minutes < 30 else min(48, max(endstep, min(solar, 15))) }}
-      #   {%- elif hour == 17 %}
-      #     {{ min(48, max(endstep, min(solar, 14))) if minutes < 30 else min(48, max(endstep, min(solar, 13))) }}
-      #   {%- elif hour == 18 %}
-      #     {{ min(48, max(endstep, min(solar, 12))) if minutes < 30 else min(48, max(endstep, min(solar, 11))) }}
-      #   {%- elif hour == 19 %}
-      #     {{ min(48, max(endstep, min(solar, 10))) if minutes < 30 else min(48, max(endstep, min(solar, 9))) }}
-      #   {%- else %}
-      #     {{ min(48, max(endstep, min(solar, 36))) }}
-      #   {%- endif %}
 ## emhass_timestep
     - name: Wasmachien end timesteps
       unique_id: 0c02daa5-efbc-4156-9ada-f402a878194a
       # unit_of_measurement: 1/2u
       unit_of_measurement: 1/4u
       state: >
-        {%- set steps = (((states("input_datetime.emhass_wasmachien_end_time") | as_timestamp) - now() | as_timestamp) / 900) + 1 | int(0) %}
-        {%- macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {%- endmacro %}
-        {%- if is_state("input_boolean.wasmachien_starten", "on") %}
+        {% set steps = (((states("input_datetime.emhass_wasmachien_end_time") | as_timestamp) - now() | as_timestamp) / 900) + 1 | int(0) %}
+        {% macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {% endmacro %}
+        {% if is_state("input_boolean.wasmachien_starten", "on") %}
           {{ max(steps, 0) }}
-        {%- else %}
+        {% else %}
           0
-        {%- endif %}
-      # state: >
-        # {%- set steps = (((states("input_datetime.emhass_wasmachien_end_time") | as_timestamp) - now() | as_timestamp) / 1800) + 1 | int(0) %}
-        # {%- macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {%- endmacro %}
-        # {%- if is_state("input_boolean.wasmachien_starten", "on") %}
-          # {{ max(steps, 0) }}
-        # {%- else %}
-          # 0
-        # {%- endif %}
+        {% endif %}
+
 ## emhass_timestep
     - name: Droogkast end timesteps
       unique_id: 233e7698-caad-47b8-9917-5e228f3dabae
       # unit_of_measurement: 1/2u
       unit_of_measurement: 1/4u
       state: >
-        {%- set steps = (((states("input_datetime.emhass_droogkast_end_time") | as_timestamp) - now() | as_timestamp) / 900) + 1 | int(0) %}
-        {%- macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {%- endmacro %}
-        {%- if is_state("input_boolean.droogkast_starten", "on") %}
+        {% set steps = (((states("input_datetime.emhass_droogkast_end_time") | as_timestamp) - now() | as_timestamp) / 900) + 1 | int(0) %}
+        {% macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {% endmacro %}
+        {% if is_state("input_boolean.droogkast_starten", "on") %}
           {{ max(steps, 0) }}
-        {%- else %}
+        {% else %}
           0
-        {%- endif %}
-      # state: >
-      #   {%- set steps = (((states("input_datetime.emhass_droogkast_end_time") | as_timestamp) - now() | as_timestamp) / 1800) + 1 | int(0) %}
-      #   {%- macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {%- endmacro %}
-      #   {%- if is_state("input_boolean.droogkast_starten", "on") %}
-      #     {{ max(steps, 0) }}
-      #   {%- else %}
-      #     0
-      #   {%- endif %}
+        {% endif %}
+
 ## emhass_timestep
     - name: Afwasmachien end timesteps
       unique_id: 32c63c15-0e67-4686-8680-1a8ca97f4aff
       # unit_of_measurement: 1/2u
       unit_of_measurement: 1/4u
       state: >
-        {%- set steps = (((states("input_datetime.emhass_afwasmachien_end_time") | as_timestamp) - now() | as_timestamp) / 900) + 1 | int(0) %}
-        {%- macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {%- endmacro %}
-        {%- if is_state("input_boolean.afwasmachien_starten", "on") %}
+        {% set steps = (((states("input_datetime.emhass_afwasmachien_end_time") | as_timestamp) - now() | as_timestamp) / 900) + 1 | int(0) %}
+        {% macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {% endmacro %}
+        {% if is_state("input_boolean.afwasmachien_starten", "on") %}
           {{ max(steps, 0) }}
-        {%- else %}
+        {% else %}
           0
-        {%- endif %}
-      # state: >
-      #   {%- set steps = (((states("input_datetime.emhass_afwasmachien_end_time") | as_timestamp) - now() | as_timestamp) / 1800) + 1 | int(0) %}
-      #   {%- macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {%- endmacro %}
-      #   {%- if is_state("input_boolean.afwasmachien_starten", "on") %}
-      #     {{ max(steps, 0) }}
-      #   {%- else %}
-      #     0
-      #   {%- endif %}
+        {% endif %}
+
 ## emhass_timestep
     - name: Warmtepompboiler end timesteps
       unique_id: 108e2881-9ac7-49ef-baab-2631da9ab3f4
       # unit_of_measurement: 1/2u
       unit_of_measurement: 1/4u
+      # {% set solar = state_attr('sensor.pv_power_forecast_list', 'list') | length %}
       state: >
-        {%- set solar = state_attr('sensor.pv_power_forecast_list', 'list') | length %}
-        {%- set hour = now().hour %}
-        {%- set minutes = now().minute %}
-        {%- set operate = states("sensor.warmtepompboiler_uren") | float(0) * 4 %}
-        {%- macro min(X, Y) -%} {{X|int(0) if X|int(0) < Y|int(0) else Y|int(0) }} {%- endmacro %}
-        {%- macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {%- endmacro %}
-        {%- if states("binary_sensor.boiler_temperatuur_laag") == "on" %}
+        {% set solar = state_attr('sensor.ecopower_afnameprijzen', 'prijzen') | length %}
+        {% set hour = now().hour %}
+        {% set minutes = now().minute %}
+        {% set operate = states("sensor.warmtepompboiler_uren") | float(0) * 4 %}
+        {% macro min(X, Y) -%} {{X|int(0) if X|int(0) < Y|int(0) else Y|int(0) }} {% endmacro %}
+        {% macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {% endmacro %}
+        {% if states("binary_sensor.boiler_temperatuur_laag") == "on" %}
           {{ (operate + 2) | int(0) }}
-        {%- else %}
-          {%- if hour == 7 %}
+        {% else %}
+          {% if hour == 7 %}
             {{ max(operate, min(solar, 64)) if minutes < 15 else
               max(operate, min(solar, 63)) if minutes < 30 else
               max(operate, min(solar, 62)) if minutes < 45 else
               max(operate, min(solar, 61)) }}
-          {%- elif hour == 8 %}
+          {% elif hour == 8 %}
             {{ max(operate, min(solar, 60)) if minutes < 15 else
               max(operate, min(solar, 59)) if minutes < 30 else
               max(operate, min(solar, 58)) if minutes < 45 else
               max(operate, min(solar, 57)) }}
-          {%- elif hour == 9 %}
+          {% elif hour == 9 %}
             {{ max(operate, min(solar, 56)) if minutes < 15 else
               max(operate, min(solar, 55)) if minutes < 30 else
               max(operate, min(solar, 54)) if minutes < 45 else
               max(operate, min(solar, 53)) }}
-          {%- elif hour == 10 %}
+          {% elif hour == 10 %}
             {{ max(operate, min(solar, 52)) if minutes < 15 else
               max(operate, min(solar, 51)) if minutes < 30 else
               max(operate, min(solar, 50)) if minutes < 45 else
               max(operate, min(solar, 49)) }}
-          {%- elif hour == 11 %}
+          {% elif hour == 11 %}
             {{ max(operate, min(solar, 48)) if minutes < 15 else
               max(operate, min(solar, 47)) if minutes < 30 else
               max(operate, min(solar, 46)) if minutes < 45 else
               max(operate, min(solar, 45)) }}
-          {%- elif hour == 12 %}
+          {% elif hour == 12 %}
             {{ max(operate, min(solar, 44)) if minutes < 15 else
               max(operate, min(solar, 43)) if minutes < 30 else
               max(operate, min(solar, 42)) if minutes < 45 else
               max(operate, min(solar, 41)) }}
-          {%- elif hour == 13 %}
+          {% elif hour == 13 %}
             {{ max(operate, min(solar, 40)) if minutes < 15 else
               max(operate, min(solar, 39)) if minutes < 30 else
               max(operate, min(solar, 38)) if minutes < 45 else
               max(operate, min(solar, 37)) }}
-          {%- elif hour == 14 %}
+          {% elif hour == 14 %}
             {{ max(operate, min(solar, 36)) if minutes < 15 else
               max(operate, min(solar, 35)) if minutes < 30 else
               max(operate, min(solar, 34)) if minutes < 45 else
               max(operate, min(solar, 33)) }}
-          {%- elif hour == 15 %}
+          {% elif hour == 15 %}
             {{ max(operate, min(solar, 32)) if minutes < 15 else
               max(operate, min(solar, 31)) if minutes < 30 else
               max(operate, min(solar, 30)) if minutes < 45 else
               max(operate, min(solar, 29)) }}
-          {%- elif hour == 16 %}
+          {% elif hour == 16 %}
             {{ max(operate, min(solar, 28)) if minutes < 15 else
               max(operate, min(solar, 27)) if minutes < 30 else
               max(operate, min(solar, 26)) if minutes < 45 else
               max(operate, min(solar, 25)) }}
-          {%- elif hour == 17 %}
+          {% elif hour == 17 %}
             {{ max(operate, min(solar, 24)) if minutes < 15 else
               max(operate, min(solar, 23)) if minutes < 30 else
               max(operate, min(solar, 22)) if minutes < 45 else
               max(operate, min(solar, 21)) }}
-          {%- elif hour == 18 %}
+          {% elif hour == 18 %}
             {{ max(operate, min(solar, 20)) if minutes < 15 else
               max(operate, min(solar, 19)) if minutes < 30 else
               max(operate, min(solar, 18)) if minutes < 45 else
               max(operate, min(solar, 17)) }}
-          {%- elif hour == 19 %}
+          {% elif hour == 19 %}
             {{ max(operate, min(solar, 16)) if minutes < 15 else
               max(operate, min(solar, 15)) if minutes < 30 else
               max(operate, min(solar, 14)) if minutes < 45 else
               max(operate, min(solar, 13)) }}
-          {%- elif hour == 20 %}
+          {% elif hour == 20 %}
             {{ max(operate, min(solar, 12)) if minutes < 15 else
               max(operate, min(solar, 11)) if minutes < 30 else
               max(operate, min(solar, 10)) if minutes < 45 else
               max(operate, min(solar, 9)) }}
-          {%- elif hour == 21 %}
+          {% elif hour == 21 %}
             {{ max(operate, min(solar, 8)) if minutes < 15 else
               max(operate, min(solar, 7)) if minutes < 30 else
               max(operate, min(solar, 6)) if minutes < 45 else
               max(operate, min(solar, 5)) }}
-          {%- else %}
+          {% else %}
             {{ solar }}
-          {%- endif %}
-        {%- endif %}
-      # state: >
-      #   {%- set solar = state_attr('sensor.pv_power_forecast_list', 'list') | length %}
-      #   {%- set hour = now().hour %}
-      #   {%- set minutes = now().minute %}
-      #   {%- set operate = states("sensor.warmtepompboiler_uren") | float(0) * 2 %}
-      #   {%- macro min(X, Y) -%} {{X|int(0) if X|int(0) < Y|int(0) else Y|int(0) }} {%- endmacro %}
-      #   {%- macro max(X, Y) -%} {{X|int(0) if X|int(0) > Y|int(0) else Y|int(0) }} {%- endmacro %}
-      #   {%- if states("binary_sensor.boiler_temperatuur_laag") == "on" %}
-      #     {{ (states("sensor.warmtepompboiler_uren") | float(0) * 2.5) | int(0) }}
-      #   {%- else %}
-      #     {%- if hour == 7 %}
-      #       {{ max(operate, min(solar, 32)) if minutes < 30 else max(operate, min(solar, 31)) }}
-      #     {%- elif hour == 8 %}
-      #       {{ max(operate, min(solar, 30)) if minutes < 30 else max(operate, min(solar, 29)) }}
-      #     {%- elif hour == 9 %}
-      #       {{ max(operate, min(solar, 28)) if minutes < 30 else max(operate, min(solar, 27)) }}
-      #     {%- elif hour == 10 %}
-      #       {{ max(operate, min(solar, 26)) if minutes < 30 else max(operate, min(solar, 25)) }}
-      #     {%- elif hour == 11 %}
-      #       {{ max(operate, min(solar, 24)) if minutes < 30 else max(operate, min(solar, 23)) }}
-      #     {%- elif hour == 12 %}
-      #       {{ max(operate, min(solar, 22)) if minutes < 30 else max(operate, min(solar, 21)) }}
-      #     {%- elif hour == 13 %}
-      #       {{ max(operate, min(solar, 20)) if minutes < 30 else max(operate, min(solar, 19)) }}
-      #     {%- elif hour == 14 %}
-      #       {{ max(operate, min(solar, 18)) if minutes < 30 else max(operate, min(solar, 17)) }}
-      #     {%- elif hour == 15 %}
-      #       {{ max(operate, min(solar, 16)) if minutes < 30 else max(operate, min(solar, 15)) }}
-      #     {%- elif hour == 16 %}
-      #       {{ max(operate, min(solar, 14)) if minutes < 30 else max(operate, min(solar, 13)) }}
-      #     {%- elif hour == 17 %}
-      #       {{ max(operate, min(solar, 12)) if minutes < 30 else max(operate, min(solar, 11)) }}
-      #     {%- elif hour == 18 %}
-      #       {{ max(operate, min(solar, 10)) if minutes < 30 else max(operate, min(solar, 9)) }}
-      #     {%- elif hour == 19 %}
-      #       {{ max(operate, min(solar, 8)) if minutes < 30 else max(operate, min(solar, 7)) }}
-      #     {%- elif hour == 20 %}
-      #       {{ max(operate, min(solar, 6)) if minutes < 30 else max(operate, min(solar, 5)) }}
-      #     {%- elif hour == 21 %}
-      #       {{ max(operate, min(solar, 4)) if minutes < 30 else max(operate, min(solar, 3)) }}
-      #     {%- else %}
-      #       {{ solar }}
-      #     {%- endif %}
-      #   {%- endif %}
+          {% endif %}
+        {% endif %}
+
 ## emhass_timestep
     - name: Warmtepomp end timesteps
       unique_id: 2db655d5-f4d4-4687-a4e7-0029173bea99
       # unit_of_measurement: 1/2u
       unit_of_measurement: 1/4u
+      # {% set solar = state_attr('sensor.pv_power_forecast_list', 'list') | length %}
       state: >
-        {%- set solar = state_attr('sensor.pv_power_forecast_list', 'list') | length %}
-        {%- set hour = now().hour %}
-        {%- set minutes = now().minute %}
-        {%- macro min(X, Y) -%} {{X|int(0) if X|int(0) < Y|int(0) else Y|int(0) }} {%- endmacro %}
-        {%- if hour == 8 %}
+        {% set solar = state_attr('sensor.ecopower_afnameprijzen', 'prijzen') | length %}
+        {% set hour = now().hour %}
+        {% set minutes = now().minute %}
+        {% macro min(X, Y) -%} {{X|int(0) if X|int(0) < Y|int(0) else Y|int(0) }} {% endmacro %}
+        {% if hour == 8 %}
           {{ min(solar, 64) if minutes < 15 else
             min(solar, 63) if minutes < 30 else
             min(solar, 62) if minutes < 45 else
             min(solar, 61) }}
-        {%- elif hour == 9 %}
+        {% elif hour == 9 %}
           {{ min(solar, 60) if minutes < 15 else
             min(solar, 59) if minutes < 30 else
             min(solar, 58) if minutes < 45 else
             min(solar, 57) }}
-        {%- elif hour == 10 %}
+        {% elif hour == 10 %}
           {{ min(solar, 56) if minutes < 15 else
             min(solar, 55) if minutes < 30 else
             min(solar, 54) if minutes < 45 else
             min(solar, 53) }}
-        {%- elif hour == 11 %}
+        {% elif hour == 11 %}
           {{ min(solar, 52) if minutes < 15 else
             min(solar, 51) if minutes < 30 else
             min(solar, 50) if minutes < 45 else
             min(solar, 49) }}
-        {%- elif hour == 12 %}
+        {% elif hour == 12 %}
           {{ min(solar, 48) if minutes < 15 else
             min(solar, 47) if minutes < 30 else
             min(solar, 46) if minutes < 45 else
             min(solar, 45) }}
-        {%- elif hour == 13 %}
+        {% elif hour == 13 %}
           {{ min(solar, 44) if minutes < 15 else
             min(solar, 43) if minutes < 30 else
             min(solar, 42) if minutes < 45 else
             min(solar, 41) }}
-        {%- elif hour == 14 %}
+        {% elif hour == 14 %}
           {{ min(solar, 40) if minutes < 15 else
             min(solar, 39) if minutes < 30 else
             min(solar, 38) if minutes < 45 else
             min(solar, 37) }}
-        {%- elif hour == 15 %}
+        {% elif hour == 15 %}
           {{ min(solar, 36) if minutes < 15 else
             min(solar, 35) if minutes < 30 else
             min(solar, 34) if minutes < 45 else
             min(solar, 33) }}
-        {%- elif hour == 16 %}
+        {% elif hour == 16 %}
           {{ min(solar, 32) if minutes < 15 else
             min(solar, 31) if minutes < 30 else
             min(solar, 30) if minutes < 45 else
             min(solar, 29) }}
-        {%- elif hour == 17 %}
+        {% elif hour == 17 %}
           {{ min(solar, 28) if minutes < 15 else
             min(solar, 27) if minutes < 30 else
             min(solar, 26) if minutes < 45 else
             min(solar, 25) }}
-        {%- elif hour == 18 %}
+        {% elif hour == 18 %}
           {{ min(solar, 24) if minutes < 15 else
             min(solar, 23) if minutes < 30 else
             min(solar, 22) if minutes < 45 else
             min(solar, 21) }}
-        {%- elif hour == 19 %}
+        {% elif hour == 19 %}
           {{ min(solar, 20) if minutes < 15 else
             min(solar, 19) if minutes < 30 else
             min(solar, 18) if minutes < 45 else
             min(solar, 17) }}
-        {%- else %}
+        {% else %}
           {{ solar }}
-        {%- endif %}
-      # state: >
-      #   {%- set solar = state_attr('sensor.pv_power_forecast_list', 'list') | length %}
-      #   {%- set hour = now().hour %}
-      #   {%- set minutes = now().minute %}
-      #   {%- macro min(X, Y) -%} {{X|int(0) if X|int(0) < Y|int(0) else Y|int(0) }} {%- endmacro %}
-      #   {%- if hour == 8 %}
-      #     {{ min(solar, 32) if minutes < 30 else min(solar, 31) }}
-      #   {%- elif hour == 9 %}
-      #     {{ min(solar, 30) if minutes < 30 else min(solar, 29) }}
-      #   {%- elif hour == 10 %}
-      #     {{ min(solar, 28) if minutes < 30 else min(solar, 27) }}
-      #   {%- elif hour == 11 %}
-      #     {{ min(solar, 26) if minutes < 30 else min(solar, 25) }}
-      #   {%- elif hour == 12 %}
-      #     {{ min(solar, 24) if minutes < 30 else min(solar, 23) }}
-      #   {%- elif hour == 13 %}
-      #     {{ min(solar, 22) if minutes < 30 else min(solar, 21) }}
-      #   {%- elif hour == 14 %}
-      #     {{ min(solar, 20) if minutes < 30 else min(solar, 19) }}
-      #   {%- elif hour == 15 %}
-      #     {{ min(solar, 18) if minutes < 30 else min(solar, 17) }}
-      #   {%- elif hour == 16 %}
-      #     {{ min(solar, 16) if minutes < 30 else min(solar, 15) }}
-      #   {%- elif hour == 17 %}
-      #     {{ min(solar, 14) if minutes < 30 else min(solar, 13) }}
-      #   {%- elif hour == 18 %}
-      #     {{ min(solar, 12) if minutes < 30 else min(solar, 11) }}
-      #   {%- elif hour == 19 %}
-      #     {{ min(solar, 10) if minutes < 30 else min(solar, 9) }}
-      #   {%- else %}
-      #     {{ solar }}
-      #   {%- endif %}
+        {% endif %}
+
 ## emhass_timestep
     - name: Prediction horizon span
       unique_id: 4413a66d-72e7-498b-9a9d-56eb43907fae
       state: >
         {{(((states("sensor.prediction_horizon")|int(0)*15)-30)|int(0)|string + "min")|string}}
-      # state: >
-      #   {{(((states("sensor.prediction_horizon")|int(0)*30)-30)|int(0)|string + "min")|string}}
+
+
+
 
     # - name: Days to retrieve
     #   unique_id: 175a282e-93d8-428a-b702-954438886b79
     #   unit_of_measurement: days
     #   state: >
-    #     {%- from 'easy_time.jinja' import count_the_days %}
-    #     {%- set days = count_the_days("2024-04-01 00:00:00") | int(0) %}
+    #     {% from 'easy_time.jinja' import count_the_days %}
+    #     {% set days = count_the_days("2024-04-01 00:00:00") | int(0) %}
     #     {{ (days * -1) - 1 }}

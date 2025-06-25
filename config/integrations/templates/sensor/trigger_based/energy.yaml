@@ -7,9 +7,9 @@
 #     - name: Pv estimate
 #       unique_id: 3509ef1a-89c5-4d3f-ba51-0c78cea0dfb2
 #       state: >
-#         {%- set real = states('sensor.huidige_opbrengst') | float(0) %}
-#         {%- set percent = real / 3.3 %}
-#         {%- set solcast = states('sensor.solcast_solaredge_power_now') | float(0) %}
+#         {% set real = states('sensor.huidige_opbrengst') | float(0) %}
+#         {% set percent = real / 3.3 %}
+#         {% set solcast = states('sensor.solcast_solaredge_power_now') | float(0) %}
 #         {% if real and solcast > 0 %}
 #           {% if real > solcast + percent %}
 #             pv_estimate90(more)
@@ -24,7 +24,7 @@
 
 - trigger:
     - platform: state
-      entity_id: sensor.solaredge_inverter_watthours
+      entity_id: sensor.solaredge_i1_ac_energy
   sensor:
     - name: "SolarEdge energy"
       unique_id: f7e4ae3b-cb83-4e93-8955-c681d4025ea6
@@ -34,30 +34,41 @@
       state_class: total_increasing
       state: >
         {% set current_value = states('sensor.solaredge_energy') | float(0) %}
-        {% set source_state = states('sensor.solaredge_inverter_watthours') %}
+        {% set source_state = states('sensor.solaredge_i1_ac_energy') %}
         {% if source_state in ['unavailable', 'unknown', None] %}
           {{ current_value }}
         {% else %}
-          {% set new_value = (states('sensor.solaredge_inverter_watthours') | float(0) / 1000) | round(2) %}
+          {% set new_value = (states('sensor.solaredge_i1_ac_energy') | float(0)) | round(2) %}
           {{ current_value if new_value < current_value else new_value }}
         {% endif %}
+      # state: >
+      #   {% set current_value = states('sensor.solaredge_energy') | float(0) %}
+      #   {% set source_state = states('sensor.solaredge_inverter_watthours') %}
+      #   {% if source_state in ['unavailable', 'unknown', None] %}
+      #     {{ current_value }}
+      #   {% else %}
+      #     {% set new_value = (states('sensor.solaredge_inverter_watthours') | float(0) / 1000) | round(2) %}
+      #     {{ current_value if new_value < current_value else new_value }}
+      #   {% endif %}
 
 - trigger:
-    - platform: state
-      entity_id: sensor.energy_production_today
-      not_to:
-        - unknown
-        - unavailable
-    - platform: state
-      entity_id: sensor.energy_production_today_2
-      not_to:
-        - unknown
-        - unavailable
-    - platform: state
-      entity_id: sensor.energy_production_today_3
-      not_to:
-        - unknown
-        - unavailable
+    # - platform: state
+    #   entity_id: sensor.energy_production_today
+    #   not_to:
+    #     - unknown
+    #     - unavailable
+    # - platform: state
+    #   entity_id: sensor.energy_production_today_2
+    #   not_to:
+    #     - unknown
+    #     - unavailable
+    # - platform: state
+    #   entity_id: sensor.energy_production_today_3
+    #   not_to:
+    #     - unknown
+    #     - unavailable
+    - platform: time_pattern
+      minutes: /5
     - platform: homeassistant
       event: start
   sensor:
@@ -66,89 +77,113 @@
       unit_of_measurement: "kWh"
       device_class: energy
       state: >
-        {% set badkamer = states("sensor.energy_production_today_3") | float(0) %}
-        {% set huis = states("sensor.energy_production_today_2") | float(0) %}
-        {% set garage = states("sensor.energy_production_today") | float(0) %}
+        {% set badkamer = states("sensor.energy_production_today_3") | float(0) -%}
+        {% set huis = states("sensor.energy_production_today_2") | float(0) -%}
+        {% set garage = states("sensor.energy_production_today") | float(0) -%}
           {{ (garage + huis + badkamer) | round(2) }}
       attributes:
         watts: >-
-          {%- set garage = state_attr('sensor.energy_production_today', 'watts') %}
-          {%- set huis = state_attr('sensor.energy_production_today_2', 'watts') %}
-          {%- set badkamer = state_attr('sensor.energy_production_today_3', 'watts') %}
-          {%- set ns = namespace(output={}) %}
-          {%- for time, value in garage.items() %}
-            {%- set sum_value = value + huis[time] + badkamer[time] %}
-            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
-          {%- endfor %}
+          {% if (
+            state_attr('sensor.energy_production_today', 'watts') != none and
+            state_attr('sensor.energy_production_today_2', 'watts') != none and
+            state_attr('sensor.energy_production_today_3', 'watts') != none
+          ) -%}
+            {% set garage = state_attr('sensor.energy_production_today', 'watts') -%}
+            {% set huis = state_attr('sensor.energy_production_today_2', 'watts') -%}
+            {% set badkamer = state_attr('sensor.energy_production_today_3', 'watts') -%}
+            {% set ns = namespace(output={}) %}
+            {% for time, value in garage.items() %}
+              {% set sum_value = value + huis[time] + badkamer[time] %}
+              {% set ns.output = dict({time: sum_value}, **ns.output) %}
+            {% endfor -%}
             {{ ns.output }}
+          {% endif -%}
         wh_period: >-
-          {%- set garage = state_attr('sensor.energy_production_today', 'wh_period') %}
-          {%- set huis = state_attr('sensor.energy_production_today_2', 'wh_period') %}
-          {%- set badkamer = state_attr('sensor.energy_production_today_3', 'wh_period') %}
-          {%- set ns = namespace(output={}) %}
-          {%- for time, value in garage.items() %}
-            {%- set sum_value = value + huis[time] + badkamer[time] %}
-            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
-          {%- endfor %}
+          {% if (
+            state_attr('sensor.energy_production_today', 'wh_period') != none and
+            state_attr('sensor.energy_production_today_2', 'wh_period') != none and
+            state_attr('sensor.energy_production_today_3', 'wh_period') != none
+          ) -%}
+            {% set garage = state_attr('sensor.energy_production_today', 'wh_period') -%}
+            {% set huis = state_attr('sensor.energy_production_today_2', 'wh_period') -%}
+            {% set badkamer = state_attr('sensor.energy_production_today_3', 'wh_period') -%}
+            {% set ns = namespace(output={}) -%}
+            {% for time, value in garage.items() -%}
+              {% set sum_value = value + huis[time] + badkamer[time] -%}
+              {% set ns.output = dict({time: sum_value}, **ns.output) -%}
+            {% endfor -%}
             {{ ns.output }}
-    
+          {% endif -%}
+            
     - name: Open meteo voorspelling morgen
       unique_id: 026dd8288-540a-46cf-9d70-553bfb28dc61
       unit_of_measurement: "kWh"
       device_class: energy
       state: >
-        {% set badkamer = states("sensor.energy_production_tomorrow_3") | float(0) %}
-        {% set huis = states("sensor.energy_production_tomorrow_2") | float(0) %}
-        {% set garage = states("sensor.energy_production_tomorrow") | float(0) %}
+        {% set badkamer = states("sensor.energy_production_tomorrow_3") | float(0) -%}
+        {% set huis = states("sensor.energy_production_tomorrow_2") | float(0) -%}
+        {% set garage = states("sensor.energy_production_tomorrow") | float(0) -%}
           {{ (garage + huis + badkamer) | round(2) }}
       attributes:
         watts: >-
-          {%- set garage = state_attr('sensor.energy_production_tomorrow', 'watts') %}
-          {%- set huis = state_attr('sensor.energy_production_tomorrow_2', 'watts') %}
-          {%- set badkamer = state_attr('sensor.energy_production_tomorrow_3', 'watts') %}
-          {%- set ns = namespace(output={}) %}
-          {%- for time, value in garage.items() %}
-            {%- set sum_value = value + huis[time] + badkamer[time] %}
-            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
-          {%- endfor %}
+          {% if (
+            state_attr('sensor.energy_production_tomorrow', 'watts') != none and
+            state_attr('sensor.energy_production_tomorrow_2', 'watts') != none and
+            state_attr('sensor.energy_production_tomorrow_3', 'watts') != none
+          ) -%}
+            {% set garage = state_attr('sensor.energy_production_tomorrow', 'watts') -%}
+            {% set huis = state_attr('sensor.energy_production_tomorrow_2', 'watts') -%}
+            {% set badkamer = state_attr('sensor.energy_production_tomorrow_3', 'watts') -%}
+            {% set ns = namespace(output={}) -%}
+            {% for time, value in garage.items() -%}
+              {% set sum_value = value + huis[time] + badkamer[time] -%}
+              {% set ns.output = dict({time: sum_value}, **ns.output) -%}
+            {% endfor -%}
             {{ ns.output }}
+          {% endif -%}
         wh_period: >-
-          {%- set garage = state_attr('sensor.energy_production_tomorrow', 'wh_period') %}
-          {%- set huis = state_attr('sensor.energy_production_tomorrow_2', 'wh_period') %}
-          {%- set badkamer = state_attr('sensor.energy_production_tomorrow_3', 'wh_period') %}
-          {%- set ns = namespace(output={}) %}
-          {%- for time, value in garage.items() %}
-            {%- set sum_value = value + huis[time] + badkamer[time] %}
-            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
-          {%- endfor %}
+          {% if (
+            state_attr('sensor.energy_production_tomorrow', 'wh_period') != none and
+            state_attr('sensor.energy_production_tomorrow_2', 'wh_period') != none and
+            state_attr('sensor.energy_production_tomorrow_3', 'wh_period') != none
+          ) -%}
+            {% set garage = state_attr('sensor.energy_production_tomorrow', 'wh_period') -%}
+            {% set huis = state_attr('sensor.energy_production_tomorrow_2', 'wh_period') -%}
+            {% set badkamer = state_attr('sensor.energy_production_tomorrow_3', 'wh_period') -%}
+            {% set ns = namespace(output={}) -%}
+            {% for time, value in garage.items() -%}
+              {% set sum_value = value + huis[time] + badkamer[time] -%}
+              {% set ns.output = dict({time: sum_value}, **ns.output) -%}
+            {% endfor -%}
             {{ ns.output }}
-    
+          {% endif -%}
+
     - name: Open meteo voorspelling vandaag huawei
       unique_id: 5ea37fe4-b9d8-4ac6-9d06-7f0c245d2157
       unit_of_measurement: "kWh"
       device_class: energy
       state: >
-        {%- set huis = states('sensor.energy_production_today_2') | float(default=0) %}
-        {%- set badkamer = states('sensor.energy_production_today_3') | float(default=0) %}
+        {% set huis = states('sensor.energy_production_today_2') | float(default=0) %}
+        {% set badkamer = states('sensor.energy_production_today_3') | float(default=0) %}
         {{ (huis + badkamer) | round(2) }}
       attributes:
         watts: >-
-          {%- set huis = state_attr('sensor.energy_production_today_2', 'watts') %}
-          {%- set badkamer = state_attr('sensor.energy_production_today_3', 'watts') %}
-          {%- set ns = namespace(output={}) %}
-          {%- for time, value in huis.items() %}
-            {%- set sum_value = value + badkamer[time] %}
-            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
-          {%- endfor %}
+          {% set huis = state_attr('sensor.energy_production_today_2', 'watts') %}
+          {% set badkamer = state_attr('sensor.energy_production_today_3', 'watts') %}
+          {% set ns = namespace(output={}) %}
+          {% for time, value in huis.items() %}
+            {% set sum_value = value + badkamer[time] %}
+            {% set ns.output = dict({time: sum_value}, **ns.output) %}
+          {% endfor %}
             {{ ns.output }}
         wh_period: >-
-          {%- set huis = state_attr('sensor.energy_production_today_2', 'wh_period') %}
-          {%- set badkamer = state_attr('sensor.energy_production_today_3', 'wh_period') %}
-          {%- set ns = namespace(output={}) %}
-          {%- for time, value in huis.items() %}
-            {%- set sum_value = value + badkamer[time] %}
-            {%- set ns.output = dict({time: sum_value}, **ns.output) %}
-          {%- endfor %}
+          {% set huis = state_attr('sensor.energy_production_today_2', 'wh_period') %}
+          {% set badkamer = state_attr('sensor.energy_production_today_3', 'wh_period') %}
+          {% set ns = namespace(output={}) %}
+          {% for time, value in huis.items() %}
+            {% set sum_value = value + badkamer[time] %}
+            {% set ns.output = dict({time: sum_value}, **ns.output) %}
+          {% endfor %}
             {{ ns.output }}
 
     - name: Open meteo voorspelling resterend vandaag
@@ -156,7 +191,7 @@
       unit_of_measurement: "kWh"
       device_class: energy
       state: >
-        {%- set garage = states('sensor.energy_production_today_remaining') | float(default=0) %}
-        {%- set huis = states('sensor.energy_production_today_remaining_2') | float(default=0) %}
-        {%- set badkamer = states('sensor.energy_production_today_remaining_3') | float(default=0) %}
+        {% set garage = states('sensor.energy_production_today_remaining') | float(default=0) %}
+        {% set huis = states('sensor.energy_production_today_remaining_2') | float(default=0) %}
+        {% set badkamer = states('sensor.energy_production_today_remaining_3') | float(default=0) %}
         {{ (garage + huis + badkamer) | round(2) }}

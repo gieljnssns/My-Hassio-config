@@ -24,7 +24,11 @@ actions:
           - action: input_number.set_value
             data:
               value: >
-                {{ states("sensor.voorspelde_uren") | float | round(2) }}
+                {% if states("sensor.voorspelde_uren") | float | round(2) >= 0 -%}
+                  {{ states("sensor.voorspelde_uren") | float | round(2) }}
+                {% else -%}
+                  0
+                {% endif -%}
             target:
               entity_id: input_number.voorspelde_uren
       - conditions:
@@ -37,7 +41,11 @@ actions:
           - action: input_number.set_value
             data:
               value: >
-                {{ states("sensor.voorspelde_uren_adaboost") | float | round(2) }}
+                {% if states("sensor.voorspelde_uren_adaboost") | float | round(2) >= 0 -%}
+                  {{ states("sensor.voorspelde_uren_adaboost") | float | round(2) }}
+                {% else -%}
+                  0
+                {% endif -%}
             target:
               entity_id: input_number.voorspelde_uren_adaboost
       - conditions:
@@ -50,6 +58,10 @@ actions:
           - action: input_number.set_value
             data:
               value: >
-                {{ states("sensor.voorspelde_uren_gradientboosting") | float | round(2) }}
+                {% if states("sensor.voorspelde_uren_gradientboosting") | float | round(2) >= 0 -%}
+                  {{ states("sensor.voorspelde_uren_gradientboosting") | float | round(2) }}
+                {% else -%}
+                  0
+                {% endif -%}
             target:
               entity_id: input_number.voorspelde_uren_gradientboosting

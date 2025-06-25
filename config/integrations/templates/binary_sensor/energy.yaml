@@ -63,8 +63,10 @@
       unique_id: a32f0b55-9a76-4e4b-b7da-09dff675cf1d
       # availability: >-
       #   {{ has_value("sensor.solaredge_inverter_watts") }}
+      # state: >
+      #   {{ states("sensor.solaredge_inverter_watts") | float(0) > 0 }}
       state: >
-        {{ states("sensor.solaredge_inverter_watts") | float(0) > 0 }}
+        {{ states("sensor.solaredge_i1_ac_power") | float(0) > 0 }}
 
     - name: Emhass status
       unique_id: 2b1b3d6a-2b3e-435f-9582-0d3f4bfddbec
