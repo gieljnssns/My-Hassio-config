@@ -1,15 +1,10 @@
 substitutions:
   devicename: verwarming2
   upper_devicename: verwarming
-  ssid: !secret ssid
-  manual_ip: 192.168.79.162
   platform: esp32
   board: esp32dev
 
 esp32:
-  # board: esp32dev
-  # framework:
-  #   type: arduino
   framework:
     type: esp-idf
 
@@ -17,25 +12,10 @@ packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
-captive_portal:
-  
 wifi:
   # ...
   power_save_mode: light
-
-# esphome:
-#   name: ${devicename}
-
-# esp32_ble_tracker:
-#   scan_parameters:
-#     # We currently use the defaults to ensure Bluetooth
-#     # can co-exist with WiFi In the future we may be able to
-#     # enable the built-in coexistence logic in ESP-IDF
-#     active: true
-
-# bluetooth_proxy:
-#   active: true
-
+  use_address: 192.168.6.162
 
 i2c:
   - sda: 21

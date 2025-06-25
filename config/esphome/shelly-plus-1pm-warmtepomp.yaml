@@ -6,8 +6,6 @@ substitutions:
   voltage_div: "2010"
   max_power: '3600.0'
   max_temp: '80.0'
-  ssid: !secret ssid-living
-  manual_ip: 192.168.79.132
   platform: esp32
   board: esp32doit-devkit-v1
 
@@ -29,20 +27,8 @@ esp32:
       CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ: "160"
 
 packages:
-  # wifi: !include common/wifi-living.yaml
-  wifi: !include common/wifi.yaml
+  wifi: !include common/wifi-airport.yaml
   device_base: !include common/device_base_new_style.yaml
-
-captive_portal:
-  
-wifi:
-  networks:
-    - ssid: !secret ssid-esphome-airport
-      password: !secret password-esphome
-    - ssid: !secret ssid-esphome
-      password: !secret password-esphome
-    - ssid: !secret ssid-esphome-backup
-      password: !secret password-esphome
   
 output:
   - platform: gpio

@@ -2,8 +2,8 @@ substitutions:
   devicename: shelly-plug-s-7ae974
   platform: esp8266
   board: esp8285
-  upper_devicename: Shelly Keuken koffiezet
-  channel_1: Koffiezet
+  upper_devicename: Pries bureau
+  channel_1: Pries bureau
   # Higher value gives lower watt readout
   current_res: "0.000943"
   # Lower value gives lower voltage readout
@@ -13,18 +13,14 @@ substitutions:
   power_cal_real: "1685.0"
   max_power: '2000'
   max_temp: '75.0'
-  ssid: !secret ssid-slaapkamer
-  manual_ip: 192.168.79.123
 
 packages:
-  # wifi: !include common/wifi-slaapkamer.yaml
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
-
-captive_portal:
   
 wifi:
   power_save_mode: HIGH
+  use_address: 192.168.6.123
     
 binary_sensor:
   - platform: gpio
@@ -51,7 +47,7 @@ switch:
     pin: GPIO15
     id: relay
     name: '${channel_1}'
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: RESTORE_DEFAULT_ON
     on_turn_on:
       - output.turn_on: led
     on_turn_off:

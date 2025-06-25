@@ -1,11 +1,12 @@
 substitutions:
-  devicename: cam
-  upper_devicename: Cam
-  cam_devicename: cam
-  ssid: !secret ssid
-  manual_ip: 192.168.79.164
+  devicename: robot-camera
+  upper_devicename: Robot camera
+  cam_devicename: robot
   platform: esp32
   board: esp32cam
+  stop_speed: "0"
+  forward_speed: "0.03"
+  reverse_speed: "-0.03"
 
 
 esp32:
@@ -17,14 +18,13 @@ packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
+logger:
+  level: DEBUG
+
 wifi:
   # ...
   power_save_mode: light
-
-
-# esphome:
-#   name: ${devicename}
-
+  # use_address: 192.168.6.224
 
 esp32_camera:
   name: ${cam_devicename}
@@ -46,8 +46,119 @@ esp32_camera:
   vertical_flip: False
   max_framerate: 20 fps
 
-esp32_camera_web_server:
-  - port: 8080
-    mode: stream
-  - port: 8081
-    mode: snapshot
+# esp32_camera_web_server:
+#   - port: 8080
+#     mode: stream
+#   - port: 8081
+#     mode: snapshot
+
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: gpio_4
+  - platform: gpio
+    pin: GPIO2
+    id: gpio_2
+  - platform: ledc
+    id: pan
+    pin: GPIO14
+    channel: 1
+    frequency: 50 Hz
+  - platform: ledc
+    id: tilt
+    pin: GPIO15
+    channel: 2
+    frequency: 50 Hz
+
+light:
+  - platform: binary
+    output: gpio_4
+    name: ${cam_devicename} light
+  - platform: binary
+    output: gpio_2
+    name: ${cam_devicename} laser
+
+servo:
+  - id: servo_pan
+    output: pan
+    auto_detach_time: 0s
+    transition_length: 2s
+  
+  - id: servo_tilt
+    output: tilt
+    auto_detach_time: 0s
+    transition_length: 2s
+
+button:
+  # buttons for servo presets
+  - platform: template
+    name: Go up
+    id: servos_up
+    icon: "mdi:arrow-up-bold"
+    on_press:
+      then:
+        
+              - servo.write:
+                  id: servo_tilt
+                  level: ${forward_speed}
+              # the motors will run continuously unless the following code is uncommented
+              - delay: 0.98s
+              - button.press: servos_stop
+
+
+  - platform: template
+    name: Go Down
+    id: servos_down
+    icon: "mdi:arrow-down-bold"
+    on_press:
+        
+              - servo.write:
+                  id: servo_tilt
+                  level: ${reverse_speed}
+
+              # the motors will run continuously unless the following code is uncommented
+              - delay: 0.98s
+              - button.press: servos_stop
+              
+
+  - platform: template
+    name: Go Stop
+    id: servos_stop
+    icon: "mdi:stop"
+    on_press:
+      then:
+        
+              - servo.write:
+                  id: servo_tilt
+                  level: 0
+              - servo.write:
+                  id: servo_pan
+                  level: 0
+
+  - platform: template
+    name: Go Right
+    id: servos_right
+    icon: "mdi:arrow-right-top-bold"
+    on_press:
+        
+            then:
+
+              - servo.write:
+                  id: servo_pan
+                  level: ${forward_speed}
+              - delay: 0.98s
+              - button.press: servos_stop
+        
+  - platform: template
+    name: Go Left
+    id: servos_left
+    icon: "mdi:arrow-left-top-bold"
+    on_press:
+       
+
+              - servo.write:
+                  id: servo_pan
+                  level: ${reverse_speed}
+              # the motors will run continuously unless the following code is uncommented
+              - delay: 0.98s
+              - button.press: servos_stop

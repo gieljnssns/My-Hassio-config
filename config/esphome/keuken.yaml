@@ -2,15 +2,10 @@
 substitutions:
   devicename: keuken
   upper_devicename: Keuken
-  ssid: !secret ssid
-  manual_ip: 192.168.79.161
   platform: esp32
   board: esp32dev
 
 esp32:
-  # board: esp32dev
-  # framework:
-  #   type: arduino
   framework:
     type: esp-idf
 
@@ -18,24 +13,11 @@ packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
-captive_portal:
   
 wifi:
   # ...
   power_save_mode: light
-
-# esphome:
-#   name: ${devicename}
-
-esp32_ble_tracker:
-  scan_parameters:
-    # We currently use the defaults to ensure Bluetooth
-    # can co-exist with WiFi In the future we may be able to
-    # enable the built-in coexistence logic in ESP-IDF
-    active: false
-
-bluetooth_proxy:
-  active: true
+  use_address: 192.168.6.161
 
 uart:
   tx_pin: 1
@@ -250,23 +232,6 @@ sensor:
     i2c_id: bus_a
     update_interval: 60s
 
-text:
-  - platform: template
-    name: ${upper_devicename} moving trigger
-    id: moving_trigger
-    # optimistic: true
-    min_length: 0
-    max_length: 100
-    mode: text
-  
-  - platform: template
-    name: ${upper_devicename} still trigger
-    id: still_trigger
-    # optimistic: true
-    min_length: 0
-    max_length: 100
-    mode: text
-
 binary_sensor:
   - platform: ld2410
     has_target:
@@ -293,138 +258,3 @@ binary_sensor:
     name: ${upper_devicename} pir
     id: pir
     device_class: motion
-
-  - platform: template
-    name: ${upper_devicename} Moving
-    id: moving
-    device_class: motion
-    lambda: |-
-      if (id(g0_move_energy).state > id(g0_move_threshold).state) {
-        return true;
-        auto call = id(moving_trigger).make_call();
-        call.set_value("G0 Move");
-        call.perform();
-      } 
-      if (id(g1_move_energy).state > id(g1_move_threshold).state) {
-        return true;
-        auto call = id(moving_trigger).make_call();
-        call.set_value("G1 Move");
-        call.perform();
-      }
-      if (id(g2_move_energy).state > id(g2_move_threshold).state) {
-        return true;
-        auto call = id(moving_trigger).make_call();
-        call.set_value("G2 Move");
-        call.perform();
-      }
-      if (id(g3_move_energy).state > id(g3_move_threshold).state) {
-        return true;
-        auto call = id(moving_trigger).make_call();
-        call.set_value("G3 Move");
-        call.perform();
-      }
-      if (id(g4_move_energy).state > id(g4_move_threshold).state) {
-        return true;
-        auto call = id(moving_trigger).make_call();
-        call.set_value("G4 Move");
-        call.perform();
-      }
-      if (id(g5_move_energy).state > id(g5_move_threshold).state) {
-        return true;
-        auto call = id(moving_trigger).make_call();
-        call.set_value("G5 Move");
-        call.perform();
-      }
-      if (id(g6_move_energy).state > id(g6_move_threshold).state) {
-        return true;
-        auto call = id(moving_trigger).make_call();
-        call.set_value("G6 Move");
-        call.perform();
-      }
-      if (id(g7_move_energy).state > id(g7_move_threshold).state) {
-        return true;
-        auto call = id(moving_trigger).make_call();
-        call.set_value("G7 Move");
-        call.perform();
-      }
-      if (id(g8_move_energy).state > id(g8_move_threshold).state) {
-        return true;
-        auto call = id(moving_trigger).make_call();
-        call.set_value("G8 Move");
-        call.perform();
-      }
-
-  - platform: template
-    name: ${upper_devicename} Still
-    id: still
-    device_class: motion
-    lambda: |-
-      if (id(g0_still_energy).state > id(g0_still_threshold).state) {
-        return true;
-        auto call = id(still_trigger).make_call();
-        call.set_value("G0 Still");
-        call.perform();
-      }
-      if (id(g1_still_energy).state > id(g1_still_threshold).state) {
-        return true;
-        auto call = id(still_trigger).make_call();
-        call.set_value("G1 Still");
-        call.perform();
-      }
-      if (id(g2_still_energy).state > id(g2_still_threshold).state) {
-        return true;
-        auto call = id(still_trigger).make_call();
-        call.set_value("G2 Still");
-        call.perform();
-      }
-      if (id(g3_still_energy).state > id(g3_still_threshold).state) {
-        return true;
-        auto call = id(still_trigger).make_call();
-        call.set_value("G3 Still");
-        call.perform();
-      }
-      if (id(g4_still_energy).state > id(g4_still_threshold).state) {
-        return true;
-        auto call = id(still_trigger).make_call();
-        call.set_value("G4 Still");
-        call.perform();
-      }
-      if (id(g5_still_energy).state > id(g5_still_threshold).state) {
-        return true;
-        auto call = id(still_trigger).make_call();
-        call.set_value("G5 Still");
-        call.perform();
-      }
-      if (id(g6_still_energy).state > id(g6_still_threshold).state) {
-        return true;
-        auto call = id(still_trigger).make_call();
-        call.set_value("G6 Still");
-        call.perform();
-      }
-      if (id(g7_still_energy).state > id(g7_still_threshold).state) {
-        return true;
-        auto call = id(still_trigger).make_call();
-        call.set_value("G7 Still");
-        call.perform();
-      }
-      if (id(g8_still_energy).state > id(g8_still_threshold).state) {
-        return true;
-        auto call = id(still_trigger).make_call();
-        call.set_value("G8 Still");
-        call.perform();
-      }
-  
-  - platform: template
-    name: ${upper_devicename} occupancy
-    device_class: occupancy
-    lambda: |-
-      if (id(moving).state) {
-        return true;
-      if (id(still).state) {
-        return true;
-      } else {
-        return false;
-      }
-    filters:
-      - delayed_off: !lambda |-
-          return id(timeout).state

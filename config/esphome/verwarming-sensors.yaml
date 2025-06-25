@@ -3,23 +3,10 @@ substitutions:
   platform: esp8266
   board: nodemcuv2
   upper_devicename: Verwarming sensors
-  ssid: !secret ssid-waskot
-  manual_ip: 192.168.79.128
 
 packages:
-  wifi: !include common/wifi.yaml
+  wifi: !include common/wifi-airport.yaml
   device_base: !include common/device_base_new_style.yaml
-
-wifi:
-  networks:
-    - ssid: !secret ssid-esphome-airport
-      password: !secret password-esphome
-    - ssid: !secret ssid-esphome
-      password: !secret password-esphome
-    - ssid: !secret ssid-esphome-backup
-      password: !secret password-esphome
-      
-captive_portal:
   
 switch:
   - platform: homeassistant

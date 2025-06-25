@@ -3,15 +3,10 @@ substitutions:
   platform: esp8266
   board: nodemcuv2
   upper_devicename: Esp garage
-  ssid: !secret ssid-garage
-  manual_ip: 192.168.79.142
 
 packages:
-  # wifi: !include common/wifi-garage.yaml
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
-
-captive_portal:
   
 switch:
   - platform: gpio
@@ -66,19 +61,3 @@ binary_sensor:
     device_class: motion
     filters:
       - delayed_on_off: 1s
-    
-text_sensor:
-  - platform: wifi_info
-    scan_results:
-      name: "WIFIs in range"
-      icon: "mdi:wifi-marker"
-  # - platform: wifi_info
-  #   scan_results:
-  #     name: ESP Latest Scan Results
-
-api:
-  services:
-    - service: scan_wifi
-      then:
-        - lambda: |-
-            wifi::global_wifi_component->start_scanning();

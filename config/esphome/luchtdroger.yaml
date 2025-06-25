@@ -5,13 +5,10 @@
 substitutions:
   devicename: luchtdroger
   upper_devicename: Luchtdroger
-  manual_ip: 192.168.79.165
   platform: esp32
   board: esp32dev
 
 esp32:
-  # board: esp32dev
-  # board: denky32
   framework:
     type: esp-idf
 
@@ -25,41 +22,26 @@ ethernet:
   miso_pin: GPIO19
   cs_pin: GPIO33
   interrupt_pin: GPIO25
-  manual_ip:
-    static_ip: ${manual_ip}
-    gateway: 192.168.79.1
-    subnet: 255.255.255.0
-    dns1: 1.1.1.1
-    dns2: 8.8.8.8
-  # reset_pin: 
-  # use_address: 192.168.79.239
 
-# esphome:
-#   name: ${devicename}
-
-
-# esp32_ble_tracker:
-#   scan_parameters:
-#     # We currently use the defaults to ensure Bluetooth
-#     # can co-exist with WiFi In the future we may be able to
-#     # enable the built-in coexistence logic in ESP-IDF
-#     active: true
-
-# bluetooth_proxy:
-#   active: true
+logger:
+  level: DEBUG
 
 i2c:
   - id: bus_a
     sda: 21
     scl: 22
     scan: true
+    frequency: 800khz
+    timeout: 20ms
   # - id: bus_b
   #   sda: 14
   #   scl: 15
-  - id: bus_c
-    sda: 26
-    scl: 27
-    # scan: true
+  # - id: bus_c
+  #   sda: 26
+  #   scl: 27
+  #   # scan: true
+  #   frequency: 800khz
+  #   timeout: 20ms
 
 switch:
   - platform: gpio
@@ -93,10 +75,10 @@ switch:
     on_turn_on: 
       then:
         - lambda: |-
-            if ((id(living_luchtvochtigheid).state > 59) && (id(living_temperatuur).state < 21)) {
+            if ((id(living_luchtvochtigheid).state > 59) && (id(beneden_temperatuur).state < 19)) {
               id(luchtdroger).turn_on();
             }
-            if ((id(ha_temp).state > -7) && (id(ha_temp).state < 32) && (id(living_absolute_luchtvochtigheid).state > id(buiten_absolute_luchtvochtigheid).state) && (id(living_temperatuur).state < 21)) {
+            if ((id(ha_temp).state > -7) && (id(ha_temp).state < 32) && (id(living_absolute_luchtvochtigheid).state < id(buiten_absolute_luchtvochtigheid).state) && (id(beneden_temperatuur).state < 19)) {
               id(luchtdroger).turn_on();
             } 
         # - lambda: |-
@@ -148,16 +130,6 @@ binary_sensor:
 
 
 sensor:
-  # - platform: dht
-  #   pin: 32
-  #   model: DHT22
-  #   temperature:
-  #     accuracy_decimals: 1
-  #     name: "Waskot temperatuur"
-  #   humidity:
-  #     accuracy_decimals: 1
-  #     name: "Waskot luchtvochtigheid"
-  #   update_interval: 60s
     
   - platform: sht3xd
     temperature:
@@ -169,21 +141,21 @@ sensor:
     update_interval: 60s
     i2c_id: bus_a
 
-  - platform: sht3xd
-    temperature:
-      name: ${upper_devicename} ingaande temperatuur
-      id: temp_in
-      # on_value_range:
-      #   - below: 3.0
-      #     then:
-      #       - switch.turn_off: luchtdroger
-      internal: true
-    humidity:
-      name: ${upper_devicename} ingaande luchtvochtigheid
-      internal: true
-    address: 0x44
-    update_interval: 60s
-    i2c_id: bus_c
+  # - platform: sht3xd
+  #   temperature:
+  #     name: ${upper_devicename} ingaande temperatuur
+  #     id: temp_in
+  #     # on_value_range:
+  #     #   - below: 3.0
+  #     #     then:
+  #     #       - switch.turn_off: luchtdroger
+  #     # internal: true
+  #   humidity:
+  #     name: ${upper_devicename} ingaande luchtvochtigheid
+  #     # internal: true
+  #   address: 0x44
+  #   update_interval: 60s
+  #   i2c_id: bus_c
   
   - platform: homeassistant
     entity_id: sensor.living_absolute_luchtvochtigheid
@@ -206,7 +178,7 @@ sensor:
     internal: true
 
   - platform: homeassistant
-    entity_id: sensor.temperatuur_living
-    id: living_temperatuur
+    entity_id: sensor.gemiddelde_temp_beneden
+    id: beneden_temperatuur
     internal: true
 

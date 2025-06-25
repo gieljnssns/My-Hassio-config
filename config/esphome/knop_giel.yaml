@@ -3,25 +3,15 @@ substitutions:
   platform: esp8266
   board: nodemcuv2
   upper_devicename: Knop Giel
-  ssid: !secret ssid-slaapkamer
-  manual_ip: 192.168.79.140
 
 packages:
   wifi: !include common/wifi.yaml
-  # wifi: !include common/wifi-slaapkamer.yaml
   device_base: !include common/device_base_new_style.yaml
-
-captive_portal:
   
 output:
   - platform: esp8266_pwm
     pin: D0
     id: redgpio
-
-text_sensor:
-  - platform: wifi_info
-    scan_results:
-      name: ESP Latest Scan Results
 
 light:
   - platform: monochromatic

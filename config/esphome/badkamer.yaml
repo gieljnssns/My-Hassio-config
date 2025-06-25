@@ -1,15 +1,10 @@
 substitutions:
   devicename: badkamer
   upper_devicename: Badkamer
-  ssid: !secret ssid
-  manual_ip: 192.168.79.151
   platform: esp32
   board: esp32dev
 
 esp32:
-  # board: esp32dev
-  # framework:
-  #   type: arduino
   framework:
     type: esp-idf
 
@@ -17,45 +12,13 @@ packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
-captive_portal: 
-
 wifi:
   # ...
   power_save_mode: LIGHT
 
 logger:
-  # baud_rate: 0
-  # level: VERBOSE
   hardware_uart: UART1
 
-# mqtt:
-#   broker: 192.168.79.54
-#   username: !secret mqtt_user
-#   password: !secret mqtt_password
-#   discovery: false
-
-# psram:
-
-web_server:
-  
-
-# esphome:
-#   name: ${devicename}
-  # on_boot:
-  #   - priority: 600.0
-  #     then:
-  #       - switch.turn_on: ld2410_bluetooth
-        # - button.press: ld2410_query_params
-# debug:
-#   update_interval: 5s
-
-# text_sensor:
-#   - platform: debug
-#     # device:
-#     #   name: ${upper_devicename} Device Info
-#     reset_reason:
-#       name: ${upper_devicename} Reset Reason  
-    
 esp32_ble_tracker:
   scan_parameters:
     # We currently use the defaults to ensure Bluetooth
@@ -185,18 +148,6 @@ switch:
       id: ld2410_bluetooth
 
 sensor:
-  # - platform: debug
-  #   free:
-  #     name: ${upper_devicename} Heap Free
-  #   # fragmentation:
-  #   #   name: ${upper_devicename} Heap Fragmentation
-  #   block:
-  #     name: ${upper_devicename} Heap Max Block
-  #   loop_time:
-  #     name: ${upper_devicename} Loop Time
-  #   # psram:
-  #   #   name: ${upper_devicename} Free PSRAM
-
   - platform: ld2410
     moving_distance:
       name: ${upper_devicename} Moving Distance

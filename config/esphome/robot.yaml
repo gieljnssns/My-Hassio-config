@@ -1,0 +1,276 @@
+substitutions:
+  devicename: robot
+  upper_devicename: Robot
+  platform: esp32
+  board: esp32dev
+
+esp32:
+
+# mqtt:
+#   broker: 192.168.6.10
+#   username: !secret mqtt_user
+#   password: !secret mqtt_password
+
+api:
+  services:
+    - service: set_motor_speed
+      variables:
+        left_speed: float
+        right_speed: float
+      then:
+        - number.set:
+            id: snelheid_links
+            value: !lambda 'return left_speed;'
+        - number.set:
+            id: snelheid_rechts
+            value: !lambda 'return right_speed;'
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+  
+wifi:
+  # ...
+  power_save_mode: light
+
+logger:
+  level: DEBUG
+
+# PWM outputs voor snelheid
+output:
+  - platform: ledc
+    pin: GPIO18
+    id: pwm_links
+
+  - platform: ledc
+    pin: GPIO19
+    id: pwm_rechts
+
+# Richting-pinnen (2 per motor)
+switch:
+  - platform: gpio
+    pin: GPIO22
+    id: dir_links_vooruit
+
+  - platform: gpio
+    pin: GPIO23
+    id: dir_links_achteruit
+
+  - platform: gpio
+    pin: GPIO5
+    id: dir_rechts_vooruit
+
+  - platform: gpio
+    pin: GPIO21
+    id: dir_rechts_achteruit
+  
+  - platform: template
+    name: "Actieve Besturing"
+    id: active_drive
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+
+number:
+  - platform: template
+    name: "Snelheid Algemeen"
+    id: snelheid_algemeen
+    min_value: 0.0
+    max_value: 1.0
+    step: 0.01
+    optimistic: true
+    initial_value: 0.0
+  
+  - platform: template
+    name: "Snelheid Links"
+    id: snelheid_links
+    min_value: -1.0
+    max_value: 1.0
+    step: 0.01
+    optimistic: true
+    initial_value: 0.0
+
+  - platform: template
+    name: "Snelheid Rechts"
+    id: snelheid_rechts
+    min_value: -1.0
+    max_value: 1.0
+    step: 0.01
+    optimistic: true
+    initial_value: 0.0
+
+button:
+  - platform: template
+    name: "Vooruit"
+    on_press:
+      then:
+        - switch.turn_on: active_drive
+        - lambda: |-
+            id(dir_links_vooruit).turn_on();
+            id(dir_links_achteruit).turn_off();
+            id(dir_rechts_vooruit).turn_on();
+            id(dir_rechts_achteruit).turn_off();
+            id(pwm_links).set_level(id(snelheid_algemeen).state);
+            id(pwm_rechts).set_level(id(snelheid_algemeen).state);
+
+  - platform: template
+    name: "Achteruit"
+    on_press:
+      then:
+        - switch.turn_on: active_drive
+        - lambda: |-
+            id(dir_links_achteruit).turn_on();
+            id(dir_links_vooruit).turn_off();
+            id(dir_rechts_achteruit).turn_on();
+            id(dir_rechts_vooruit).turn_off();
+            id(pwm_links).set_level(id(snelheid_algemeen).state);
+            id(pwm_rechts).set_level(id(snelheid_algemeen).state);
+
+  - platform: template
+    name: "Links"
+    on_press:
+      then:
+        - switch.turn_on: active_drive
+        - lambda: |-
+            id(dir_links_achteruit).turn_on();
+            id(dir_links_vooruit).turn_off();
+            id(dir_rechts_vooruit).turn_on();
+            id(dir_rechts_achteruit).turn_off();
+            id(pwm_links).set_level(id(snelheid_algemeen).state);
+            id(pwm_rechts).set_level(id(snelheid_algemeen).state);
+
+  - platform: template
+    name: "Rechts"
+    on_press:
+      then:
+        - switch.turn_on: active_drive
+        - lambda: |-
+            id(dir_links_vooruit).turn_on();
+            id(dir_links_achteruit).turn_off();
+            id(dir_rechts_achteruit).turn_on();
+            id(dir_rechts_vooruit).turn_off();
+            id(pwm_links).set_level(id(snelheid_algemeen).state);
+            id(pwm_rechts).set_level(id(snelheid_algemeen).state);
+
+  - platform: template
+    name: "STOP"
+    on_press:
+      then:
+        - switch.turn_off: active_drive
+        - lambda: |-
+            id(dir_links_vooruit).turn_off();
+            id(dir_links_achteruit).turn_off();
+            id(dir_rechts_vooruit).turn_off();
+            id(dir_rechts_achteruit).turn_off();
+            id(pwm_links).set_level(0.0);
+            id(pwm_rechts).set_level(0.0);
+        # - number.set:
+        #     id: snelheid_algemeen
+        #     value: 0.0
+
+  - platform: template
+    name: "Preset Turtle 🐢"
+    on_press:
+      then:
+        - number.set:
+            id: snelheid_algemeen
+            value: 0.3
+
+  - platform: template
+    name: "Preset Cruise ⚙️"
+    on_press:
+      then:
+        - number.set:
+            id: snelheid_algemeen
+            value: 0.6
+
+  - platform: template
+    name: "Preset Turbo 🏎️"
+    on_press:
+      then:
+        - number.set:
+            id: snelheid_algemeen
+            value: 1.0
+
+text_sensor:
+  - platform: template
+    name: "Huidige Snelheid"
+    lambda: |-
+      return to_string(id(snelheid_algemeen).state);
+    update_interval: 1s
+
+interval:
+  - interval: 300ms
+    then:
+      - lambda: |-
+          float doel = id(snelheid_algemeen).state;
+
+          // LINKS PID
+          float huidige_links = id(snelheid_links).state;
+          float verschil_links = doel - huidige_links;
+          float correctie_links = 0.2 * verschil_links;
+          float nieuwe_links = huidige_links + correctie_links;
+          id(snelheid_links).publish_state(nieuwe_links);
+
+          // RECHTS PID
+          float huidige_rechts = id(snelheid_rechts).state;
+          float verschil_rechts = doel - huidige_rechts;
+          float correctie_rechts = 0.2 * verschil_rechts;
+          float nieuwe_rechts = huidige_rechts + correctie_rechts;
+          id(snelheid_rechts).publish_state(nieuwe_rechts);
+
+          // 🚦 Alleen sturen als "actieve besturing" aanstaat
+          if (id(active_drive).state) {
+            // MOTOR LOGICA - LINKS
+            if (nieuwe_links > 0) {
+              id(dir_links_vooruit).turn_on();
+              id(dir_links_achteruit).turn_off();
+              id(pwm_links).set_level(nieuwe_links);
+            } else if (nieuwe_links < 0) {
+              id(dir_links_achteruit).turn_on();
+              id(dir_links_vooruit).turn_off();
+              id(pwm_links).set_level(-nieuwe_links);
+            } else {
+              id(dir_links_vooruit).turn_off();
+              id(dir_links_achteruit).turn_off();
+              id(pwm_links).set_level(0);
+            }
+
+            // MOTOR LOGICA - RECHTS
+            if (nieuwe_rechts > 0) {
+              id(dir_rechts_vooruit).turn_on();
+              id(dir_rechts_achteruit).turn_off();
+              id(pwm_rechts).set_level(nieuwe_rechts);
+            } else if (nieuwe_rechts < 0) {
+              id(dir_rechts_achteruit).turn_on();
+              id(dir_rechts_vooruit).turn_off();
+              id(pwm_rechts).set_level(-nieuwe_rechts);
+            } else {
+              id(dir_rechts_vooruit).turn_off();
+              id(dir_rechts_achteruit).turn_off();
+              id(pwm_rechts).set_level(0);
+            }
+
+          } else {
+            // 🛑 Als actief uit staat: alles uitschakelen
+            id(dir_links_vooruit).turn_off();
+            id(dir_links_achteruit).turn_off();
+            id(pwm_links).set_level(0.0);
+
+            id(dir_rechts_vooruit).turn_off();
+            id(dir_rechts_achteruit).turn_off();
+            id(pwm_rechts).set_level(0.0);
+          }
+      # - lambda: |-
+      #     float doel = id(snelheid_algemeen).state;
+
+      #     // LINKS
+      #     float huidige_links = id(snelheid_links).state;
+      #     float verschil_links = doel - huidige_links;
+      #     float correctie_links = 0.2 * verschil_links;  // "P-gain"
+      #     id(snelheid_links).publish_state(huidige_links + correctie_links);
+
+      #     // RECHTS
+      #     float huidige_rechts = id(snelheid_rechts).state;
+      #     float verschil_rechts = doel - huidige_rechts;
+      #     float correctie_rechts = 0.2 * verschil_rechts;
+      #     id(snelheid_rechts).publish_state(huidige_rechts + correctie_rechts);

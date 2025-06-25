@@ -1,24 +1,19 @@
 substitutions:
   devicename: leds-drukknoppen
   upper_devicename: Leds drukknoppen
-  ssid: !secret ssid
-  manual_ip: 192.168.79.137
   platform: esp32
   board: esp32dev
 
 esp32:
-  # board: esp32dev
-  # framework:
-  #   type: arduino
   framework:
     type: esp-idf
 
 packages:
-  # wifi: !include common/wifi-waskot.yaml
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
-captive_portal:
+wifi:
+  use_address: 192.168.6.137
   
 globals:
   - id: chime
