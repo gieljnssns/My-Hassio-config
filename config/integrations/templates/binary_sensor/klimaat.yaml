@@ -3,10 +3,10 @@
       unique_id: 61efbf71-ab3f-4e70-8d0f-81eff1e49d46
       state: >
         {{ (states('sensor.gemiddelde_temp_beneden') | float(0)) > (states('sensor.buiten_temperatuur') | float(0)) and 
-            states('sensor.gemiddelde_temp_beneden') | float(0) > 24 }}
+            states('sensor.gemiddelde_temp_beneden') | float(0) > 25 }}
       icon: >
         {% if (states('sensor.gemiddelde_temp_beneden') | float(0)) > (states('sensor.buiten_temperatuur') | float(0)) and 
-            states('sensor.gemiddelde_temp_beneden') | float(0) > 24 %}
+            states('sensor.gemiddelde_temp_beneden') | float(0) > 25 %}
           mdi:fan
         {% else %}
           mdi:fan-off
