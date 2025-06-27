@@ -87,21 +87,21 @@
             + states("sensor.v3") | float(0)) | round(1) }}
         {% endif %}
 
-    - name: Eigen verbruik
-      unique_id: e4bfb06d-169c-4bc6-a269-d4a4d70665d5
-      unit_of_measurement: "W"
-      device_class: power
-      # availability: >-
-      #   {{ has_value("sensor.huidige_opbrengst") and 
-      #     has_value("sensor.huidig_verbruik") }}
-      state: >
-        {% if (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) >= 0 %}
-            {{ (states("sensor.huidig_verbruik") | float(default=0)) | round(2)  }}
-        {% elif (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) < 0 and states("sensor.huidige_opbrengst") | float(default=0) > 0 %}
-            {{ (states("sensor.huidige_opbrengst") | float(default=0)) | round(2)  }}
-        {% else  %}
-            {{ 0 | float(default=0) }}
-        {% endif %}
+    # - name: Eigen verbruik
+    #   unique_id: e4bfb06d-169c-4bc6-a269-d4a4d70665d5
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   # availability: >-
+    #   #   {{ has_value("sensor.huidige_opbrengst") and 
+    #   #     has_value("sensor.huidig_verbruik") }}
+    #   state: >
+    #     {% if (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) >= 0 %}
+    #         {{ (states("sensor.huidig_verbruik") | float(default=0)) | round(2)  }}
+    #     {% elif (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) < 0 and states("sensor.huidige_opbrengst") | float(default=0) > 0 %}
+    #         {{ (states("sensor.huidige_opbrengst") | float(default=0)) | round(2)  }}
+    #     {% else  %}
+    #         {{ 0 | float(default=0) }}
+    #     {% endif %}
 ##aanpassen
     # - name: Huidig fluvius
     #   unique_id: aa64ea1f-e88f-4126-8e0f-622faa35c8c5
