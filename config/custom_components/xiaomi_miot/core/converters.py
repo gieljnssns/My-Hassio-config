@@ -17,7 +17,7 @@ class BaseConv:
 
     def __post_init__(self):
         if self.attrs is None:
-            self.attrs = set()
+            self.attrs = []
         if self.option is None:
             self.option = {}
 
@@ -178,8 +178,12 @@ class MiotServiceConv(MiotPropConv):
         if not self.prop and self.service and self.main_props:
             self.prop = self.service.get_property(*self.main_props)
         super().__post_init__()
-        if not self.attr and self.prop:
+        if self.attr:
+            pass
+        elif self.prop:
             self.attr = self.prop.full_name
+        elif self.service:
+            self.attr = self.service.desc_name
 
 @dataclass
 class MiotSensorConv(MiotServiceConv):
@@ -214,22 +218,39 @@ class MiotBrightnessConv(MiotPropConv):
 @dataclass
 class MiotColorTempConv(MiotPropConv):
     def decode(self, device: 'Device', payload: dict, value: int):
-        if self.prop.unit not in ['kelvin']:
+        if self.prop.unit == 'percentage':
+            if not value:
+                return
+            value = self.percentage_to_kelvin(value)
+        elif self.prop.unit != 'kelvin':
             if not value:
                 return
             value = round(1000000.0 / value)
         super().decode(device, payload, value)
 
     def encode(self, device: 'Device', payload: dict, value: int):
-        if self.prop.unit not in ['kelvin']:
+        if self.prop.unit == 'percentage':
+            if not value:
+                return
+            value = self.kelvin_to_percentage(value)
+        elif self.prop.unit != 'kelvin':
             if not value:
                 return
             value = round(1000000.0 / value)
+
         if value < self.prop.range_min():
             value = self.prop.range_min()
         if value > self.prop.range_max():
             value = self.prop.range_max()
         super().encode(device, payload, value)
+
+    @staticmethod
+    def percentage_to_kelvin(p: int) -> int:
+        return 6500 - p * 40
+
+    @staticmethod
+    def kelvin_to_percentage(k: int) -> int:
+        return round((6500 - k) / 40)
 
 @dataclass
 class MiotRgbColorConv(MiotPropConv):
@@ -288,6 +309,10 @@ class MiotCoverConv(MiotServiceConv):
         if not self.main_props:
             self.main_props = ['motor_control']
         super().__post_init__()
+
+@dataclass
+class MiotCameraConv(MiotServiceConv):
+    domain: str = 'camera'
 
 @dataclass
 class MiotHumidifierConv(MiotServiceConv):

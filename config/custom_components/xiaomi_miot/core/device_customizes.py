@@ -60,6 +60,13 @@ DEVICE_CUSTOMIZES = {
         'exclude_miot_properties': 'fault,mode,name,status,temperature',
     },
 
+    'adp.motor.adswb4': {
+        'button_actions': 'toggle',
+        'sensor_properties': 'battery_percentage,charging_status,total_movement',
+        'switch_properties': 'motor_control,switch_invert,click,adaptive_movement,ad_switch',
+        'select_properties': 'mode',
+        'number_properties': 'rotate_angle,sustain_time,resistance',
+    },
     'aice.motor.kzmu3': {
         'switch_properties': 'on',
         'button_properties': 'motor_control',
@@ -661,6 +668,9 @@ DEVICE_CUSTOMIZES = {
     },
     'dmaker.fan.p15': {
         'percentage_property': 'prop.2.6',
+    },
+    'dmaker.fan.p18': {
+        'percentage_property': 'speed_level',
     },
     'dmaker.fan.p23': {
         'percentage_property': 'speed_level',
@@ -1344,6 +1354,18 @@ DEVICE_CUSTOMIZES = {
     'mrbond.airer.m1s': {
         'miot_type': 'urn:miot-spec-v2:device:airer:0000A00D:mrbond-m1pro:1',
     },
+    'mrbond.airer.m31a': {
+        'cover_position_mapping': None,
+        'disable_target_position': True,
+        'number_properties': 'target_position',
+        'append_converters': [
+            {
+                'class': MiotCoverConv,
+                'services': ['airer'],
+                'converters': [{'props': ['prop.2.10']}],
+            }
+        ],
+    },
     'mrbond.airer.m53pro': {
         'sensor_properties': 'fault,left_time',
         'select_properties': 'dryer,drying_level',
@@ -1351,6 +1373,7 @@ DEVICE_CUSTOMIZES = {
         'chunk_properties': 1,
     },
     'mrbond.airer.*': {
+        'deviated_position': 0,
         'parallel_updates': 1,
     },
     'msj.f_washer.m2': {
@@ -1368,8 +1391,9 @@ DEVICE_CUSTOMIZES = {
     },
     'mxiang.cateye.*': {
         'miio_cloud_props': 'battery_level,is_can_open_video',
-        'miio_cloud_records': 'event.human_visit_details:1',
         'miio_cloud_props_template': 'mxiang_cateye_cloud_props',
+        'miio_cloud_records': 'event.human_visit_details:1',
+        'miio_cloud_records_interval': 120,
         'miio_event_human_visit_details_template': 'mxiang_cateye_human_visit_details',
     },
 
@@ -1789,6 +1813,11 @@ DEVICE_CUSTOMIZES = {
         'stat_power_cost_key': '8.1',
         'sensor_attributes': 'power_cost_today,power_cost_month',
     },
+    'xiaomi.aircondition.c24': {
+        'stat_power_cost_type': 'stat_day_v3',
+        'stat_power_cost_key': '8.1',
+        'sensor_attributes': 'power_cost_today,power_cost_month',
+    },
     'xiaomi.aircondition.m9': {
         'interval_seconds': 90,
         'switch_properties': 'air_conditioner.on,un_straight_blowing,favorite_on',
@@ -1810,6 +1839,11 @@ DEVICE_CUSTOMIZES = {
     },
     'xiaomi.aircondition.ma4': {
         'miot_type': 'urn:miot-spec-v2:device:air-conditioner:0000A004:xiaomi-ma4:2',
+    },
+    'xiaomi.aircondition.mc8': {
+        'stat_power_cost_type': 'total_day',
+        'stat_power_cost_key': '8.1',
+        'sensor_attributes': 'power_cost_today,power_cost_month',
     },
     'xiaomi.aircondition.mc9': {
         'exclude_miot_services': 'machine_state,flag_bit',
@@ -1904,6 +1938,12 @@ DEVICE_CUSTOMIZES = {
         'select_properties': 'mode,heat_level',
         'number_properties': 'a_countdown,b_countdown',
     },
+    'xiaomi.fishbowl.m200': {
+        'sensor_properties': 'water_pump_status,temperature,light_water_use_time,today_feeded_num',
+        'switch_properties': 'on,water_pump,light_edit_on,off_flipcover_switch,feed_protect_switch,no_disturb',
+        'select_properties': 'pump_flux',
+        'number_properties': 'light_edit_color,light_edit_bright',
+    },
     'xiaomi.fryer.maf07d': {
         'interval_seconds': 120,
         'button_actions': 'air_fryer.start_cook,pause,cancel_cooking,resume_cook',
@@ -1990,7 +2030,7 @@ DEVICE_CUSTOMIZES = {
         'sensor_properties': 'status,fault,left_time,tank_status,timeout_time,boiling_point',
         'switch_properties': 'alarm,pot_lift_memory,auto_keep_warm,auto_screen_on',
         'select_properties': 'cook_mode',
-        'number_properties': 'keep_warm_time,target_temperature,working_level,target_time', 
+        'number_properties': 'keep_warm_time,target_temperature,working_level,target_time',
     },
     'xiaomi.health_pot.p1': {
         'select_actions': 'start_cook',
@@ -2048,6 +2088,22 @@ DEVICE_CUSTOMIZES = {
         'switch_properties': 'on,auto_keep_warm,no_disturb,custom_knob_temp,lift_remember_temp,'
                              'boiling_reminder,keep_warm_reminder',
         'number_properties': 'target_temperature,keep_warm_temperature,keep_warm_time,target_mode',
+    },
+    'xiaomi.pet_waterer.70m2': {
+        'binary_sensor_properties': 'water_shortage_status,usb_insert_state,low_battery,pump_block,fault',
+        'button_actions': 'reset_filter_life',
+        'switch_properties': 'no_disturb,physical_controls_locked',
+        'sensor_properties': 'status,filter_life_level,filter_left_time,battery_level,charging_state',
+        'number_properties': 'out_water_interval,time_period_start,time_period_end',
+        'select_properties': 'mode',
+        'exclude_miot_properties': 'event_time,event_mode,event_water,event_timezone'
+    },
+    'xiaomi.pet_waterer.70m2:fault': {
+         'reverse_state': True,
+    },
+    'xiaomi.pet_waterer.70m2:filter_left_time': {
+         'state_class': 'measurement',
+         'unit_of_measurement': 'days',
     },
     'xiaomi.plug.mcn003': {
         'button_actions': 'toggle',
@@ -2613,6 +2669,43 @@ DEVICE_CUSTOMIZES = {
         'number_properties': 'target_temperature,light_off_time,children_mode_temp,comfort_mode_temp,adult_mode_temp,'
                              'kitchen_mode_temp,pet_mode_temp,custom_time,boost_value',
     },
+    'zinguo.etool.tk01': {
+        'binary_sensor_properties': 'boost,feed,heat,recircle,defreeze,water_shortage,low_pressure,overflow,overload,leakage',
+        'sensor_properties': 'water_level,temperature,sensor_fault,power,energy',
+        'switch_properties': '*_enable,back_light,overload_protect',
+        'select_properties': 'mode,pre_water_level,hengshui_level,sensility,*_feed_level,exe_*',
+        'number_properties': 'pre_temperature,wenkong_temperature,hengwen_temperature,recircle_time,shortage_delay_time,*_heat_temperature',
+        'interval_seconds': 181,
+        'chunk_coordinators': [
+            {'interval': 21, 'props': 'water_level,temperature'},
+            {'interval': 31, 'props': 'boost,feed,heat,recircle,defreeze'},
+            {'interval': 41, 'props': 'water_shortage,low_pressure,overflow,overload,leakage,sensor_fault'},
+            {'interval': 51, 'props': 'power,energy'},
+            {'interval': 91, 'props': 'mode,pre_water_level,hengshui_level,*_enable'},
+            {'interval': 101, 'props': 'timer_mode.*'},
+            {'interval': 103, 'props': 'eco_mode.*'},
+            {'interval': 105, 'props': 'sunny_mode.*'},
+            {'interval': 106, 'props': 'rainy_mode.*'},
+        ],
+    },
+    'zinguo.etool.tk01:energy': {
+        **ENERGY_KWH,
+        'value_ratio': 0.1,
+    },
+    'zinguo.etool.tk01:power': {
+        'state_class': 'measurement',
+        'device_class': 'power',
+        'unit_of_measurement': 'W',
+        'value_ratio': 0.1,
+    },
+    'zinguo.etool.tk01:water_level': {
+        'unit_of_measurement': '%',
+    },
+    'zinguo.etool.tk01:temperature': {
+        'state_class': 'measurement',
+        'device_class': 'temperature',
+        'unit_of_measurement': '°C',
+    },
     'zinguo.motor.mk01': {
         'sensor_properties': 'status,fault,block_alarm,unclosed_alarm',
         'select_properties': 'mode,block_type',
@@ -2699,6 +2792,11 @@ DEVICE_CUSTOMIZES = {
     },
     '*.chair.*': {
         'binary_sensor_properties': 'seating_state',
+        'switch_properties': 'on',
+        'select_properties': 'mode',
+    },
+    '*.coffee.*': {
+        'sensor_properties': 'status,fault',
         'switch_properties': 'on',
         'select_properties': 'mode',
     },
@@ -2973,12 +3071,25 @@ DEVICE_CUSTOMIZES = {
 
 }
 
-DEVICE_CUSTOMIZES.update({
-    '*.airp.*': DEVICE_CUSTOMIZES.get('*.airpurifier.*') or {},
-    '*.door.*': DEVICE_CUSTOMIZES.get('*.lock.*') or {},
-    '*.dryer.*': DEVICE_CUSTOMIZES.get('*.dry.*') or {},
-    '*.pre_cooker.*': DEVICE_CUSTOMIZES.get('*.cooker.*') or {},
-})
+DEVICE_CUSTOMIZES.update({item: DEVICE_CUSTOMIZES[src] for src, dest in {
+    'mrbond.airer.m31a': [
+        'hyd.airer.h51a',
+        'hyd.airer.h51c',
+        'hyd.airer.hx1',
+        'hyd.airer.hx2',
+        'hyd.airer.hx3',
+        'mrbond.airer.m31a2',
+        'mrbond.airer.m31c',
+        'mrbond.airer.m31c2',
+        'mrbond.airer.m33a',
+        'mrbond.airer.m33c',
+    ],
+
+    '*.airpurifier.*': ['*.airp.*'],
+    '*.lock.*': ['*.door.*'],
+    '*.dry.*': ['*.dryer.*'],
+    '*.cooker.*': ['*.pre_cooker.*'],
+}.items() for item in dest})
 
 
 GLOBAL_CONVERTERS = [
@@ -3119,6 +3230,13 @@ GLOBAL_CONVERTERS = [
         'converters' : [
             {'props': ['status', 'motor_control', 'current_position']},
             {'props': ['target_position'], 'class': MiotTargetPositionConv},
+        ],
+    },
+    {
+        'class': MiotCameraConv,
+        'services': ['camera_control', 'video_doorbell'],
+        'converters' : [
+            {'props': ['battery_level'], 'domain': 'sensor'},
         ],
     },
     {

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import importlib.metadata
+import inspect
 import logging
 from collections import OrderedDict
 
@@ -13,7 +14,13 @@ from homeassistant.helpers.entity import DeviceInfo
 from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.client.mixin import ModbusClientMixin
 from pymodbus.exceptions import ConnectionException, ModbusIOException
-from pymodbus.pdu import ExceptionResponse
+
+try:
+    # for pymodbus 3.11.1 and newer
+    from pymodbus.pdu.pdu import ExceptionResponse
+except ImportError:
+    # or backwards compatibility
+    from pymodbus.pdu import ExceptionResponse
 
 from .const import (
     BATTERY_REG_BASE,
@@ -103,6 +110,7 @@ class DeviceInvalid(SolarEdgeException):
 
 
 class SolarEdgeModbusMultiHub:
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -253,7 +261,6 @@ class SolarEdgeModbusMultiHub:
             )
 
         for inverter_unit_id in self._inverter_list:
-
             try:
                 _LOGGER.debug(
                     f"Looking for inverter at {self.hub_host} ID {inverter_unit_id}"
@@ -502,7 +509,7 @@ class SolarEdgeModbusMultiHub:
         if self._client is not None:
             _LOGGER.debug(
                 (
-                    f"Disconnectng from {self._host}:{self._port} "
+                    f"Disconnecting from {self._host}:{self._port} "
                     f"(clear_client={clear_client})."
                 )
             )
@@ -525,11 +532,26 @@ class SolarEdgeModbusMultiHub:
         self._rr_address = address
         self._rr_count = rcount
 
-        result = await self._client.read_holding_registers(
-            address=self._rr_address, count=self._rr_count, slave=self._rr_unit
+        sig = inspect.signature(self._client.read_holding_registers)
+
+        _LOGGER.debug(
+            f"I{self._rr_unit}: modbus_read_holding_registers "
+            f"address={self._rr_address} count={self._rr_count}"
         )
 
+        if "device_id" in sig.parameters:
+            result = await self._client.read_holding_registers(
+                address=self._rr_address, count=self._rr_count, device_id=self._rr_unit
+            )
+        else:
+            result = await self._client.read_holding_registers(
+                address=self._rr_address, count=self._rr_count, slave=self._rr_unit
+            )
+
+        _LOGGER.debug(f"I{self._rr_unit}: result is error: {result.isError()} ")
+
         if result.isError():
+            _LOGGER.debug(f"I{self._rr_unit}: error result: {type(result)} ")
 
             if type(result) is ModbusIOException:
                 raise ModbusIOError(result)
@@ -575,11 +597,20 @@ class SolarEdgeModbusMultiHub:
                 if not self.is_connected:
                     await self.connect()
 
-                result = await self._client.write_registers(
-                    address=self._wr_address,
-                    values=self._wr_payload,
-                    slave=self._wr_unit,
-                )
+                sig = inspect.signature(self._client.write_registers)
+
+                if "device_id" in sig.parameters:
+                    result = await self._client.write_registers(
+                        address=self._wr_address,
+                        values=self._wr_payload,
+                        device_id=self._wr_unit,
+                    )
+                else:
+                    result = await self._client.write_registers(
+                        address=self._wr_address,
+                        values=self._wr_payload,
+                        slave=self._wr_unit,
+                    )
 
                 self.has_write = address
 
@@ -1149,7 +1180,6 @@ class SolarEdgeInverter:
                 )
 
                 if self.decoded_mmppt["mmppt_Units"] in [2, 3]:
-
                     int16_fields = [
                         "mmppt_DCA_SF",
                         "mmppt_DCV_SF",
@@ -1325,7 +1355,7 @@ class SolarEdgeInverter:
                     f"I{self.inverter_unit_id}: global power control NOT available"
                 )
 
-            except TimeoutError:
+            except (TimeoutError, ModbusIOException):
                 ir.async_create_issue(
                     self.hub._hass,
                     DOMAIN,
@@ -1345,6 +1375,10 @@ class SolarEdgeInverter:
                 raise ModbusReadError(
                     f"No response from inverter ID {self.inverter_unit_id}"
                 )
+
+            finally:
+                if not self.hub.is_connected:
+                    await self.hub.connect()
 
         """ Advanced Power Control """
         """ Power Control Block """
@@ -1567,7 +1601,7 @@ class SolarEdgeInverter:
                     )
                 )
 
-            except TimeoutError:
+            except (TimeoutError, ModbusIOException):
                 ir.async_create_issue(
                     self.hub._hass,
                     DOMAIN,
@@ -1587,6 +1621,10 @@ class SolarEdgeInverter:
                 raise ModbusReadError(
                     f"No response from inverter ID {self.inverter_unit_id}"
                 )
+
+            finally:
+                if not self.hub.is_connected:
+                    await self.hub.connect()
 
         """ Power Control Options: Site Limit Control """
         if (
@@ -1704,9 +1742,6 @@ class SolarEdgeInverter:
                 self._grid_status = False
                 _LOGGER.debug((f"I{self.inverter_unit_id}: Grid On/Off NOT available"))
 
-                if not self.hub.is_connected:
-                    await self.hub.connect()
-
             except ModbusIOException as e:
                 _LOGGER.debug(
                     f"I{self.inverter_unit_id}: A modbus I/O exception occurred "
@@ -1718,6 +1753,10 @@ class SolarEdgeInverter:
                 raise ModbusReadError(
                     f"No response from inverter ID {self.inverter_unit_id}"
                 )
+
+            finally:
+                if not self.hub.is_connected:
+                    await self.hub.connect()
 
         for name, value in iter(self.decoded_model.items()):
             if isinstance(value, float):

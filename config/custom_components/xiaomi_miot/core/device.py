@@ -401,13 +401,14 @@ class Device(CustomConfigHelper):
                     conv = None
                     if cls and hasattr(cls, 'service'):
                         conv = cls(service=service, **kwargs)
-                        if not getattr(conv, 'prop', None):
+                        if not getattr(conv, 'prop', None) and getattr(conv, 'main_props', None):
                             self.log.info('Converter has no main props: %s', conv)
                             conv = None
                         elif exists := self.find_converter(conv.full_name):
                             conv = exists  # for append_converters
                         else:
                             self.add_converter(conv, True)
+                            self.log.debug('Add converter: %s', conv)
 
                     for pc in cfg.get('converters') or []:
                         if not (props := pc.get('props')):
@@ -425,8 +426,8 @@ class Device(CustomConfigHelper):
                             d = pc.get('domain', None)
                             ac = c(attr, domain=d, prop=prop, desc=pc.get('desc'))
                             self.add_converter(ac)
-                            if conv:
-                                conv.attrs.add(ac.full_name)
+                            if conv and ac.full_name not in conv.attrs:
+                                conv.attrs.append(ac.full_name)
 
         for d in [
             'button', 'sensor', 'binary_sensor', 'switch', 'number', 'select', 'text',
@@ -502,8 +503,9 @@ class Device(CustomConfigHelper):
                 DataCoordinator(self, self.update_cloud_statistics, update_interval=timedelta(seconds=interval*10)),
             )
         if self.miio_cloud_records:
+            seconds = self.custom_config_integer('miio_cloud_records_interval') or interval*10
             lst.append(
-                DataCoordinator(self, self.update_miio_cloud_records, update_interval=timedelta(seconds=interval*10)),
+                DataCoordinator(self, self.update_miio_cloud_records, update_interval=timedelta(seconds=seconds)),
             )
         if self.miio_cloud_props:
             lst.append(
@@ -727,7 +729,7 @@ class Device(CustomConfigHelper):
                 if self.cloud and cloud_params:
                     result = await self.cloud.async_set_props(cloud_params)
                 if err := MiotResults(result).has_error:
-                    self.log.warning('Device write error: %s', [payload, err])
+                    self.log.warning('Device write error: %s', [payload, data, err])
 
             if method == 'action':
                 param = data.get('param', {})
@@ -1239,10 +1241,11 @@ class Device(CustomConfigHelper):
                     for v in rdt
                     if 'value' in v
                 ]
-            if isinstance(rls, dict) and rls.pop('_entity_attrs', False):
+            if isinstance(rls, dict) and rls.get('_entity_attrs'):
                 attrs.update(rls)
             else:
                 attrs[f'{typ}.{key}'] = rls
+            attrs.pop('_entity_attrs', None)
         if attrs:
             self.available = True
             self.props.update(attrs)

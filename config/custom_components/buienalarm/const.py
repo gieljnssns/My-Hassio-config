@@ -1,63 +1,57 @@
-"""Constants for Buienalarm."""
 # const.py
+"""Constants for Buienalarm."""
 
-import logging
+
 from datetime import timedelta
-from typing import Any, Final
+from typing import Final
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfLength, UnitOfVolumetricFlux
+from homeassistant.const import UnitOfTime, UnitOfVolumetricFlux
 
-# API
+# API Configuration
 API_ENDPOINT: Final[str] = "https://cdn.buienalarm.nl/api/4.0/nowcast/timeseries/{}/{}"
-API_TIMEOUT: Final[int] = 15
+API_TIMEOUT: Final[int] = 30
 API_TIMEZONE: Final[str] = "Europe/Amsterdam"
 API_CONF_URL: Final[str] = "https://buienalarm.nl"
 DATA_KEY: Final[str] = "data"
 
-# Base component constants.
+# Integration metadata
 NAME: Final[str] = "Buienalarm"
 DOMAIN: Final[str] = "buienalarm"
-VERSION: Final[str] = "2023.10.15"
-ATTRIBUTION: Final[str] = "Data provided by Buienalarm"
+VERSION: Final[str] = "2025.7.25"
 ATTR_ATTRIBUTION: Final[str] = "Data provided by Buienalarm"
-CONF_ATTRIBUTION: Final[str] = "Data provided by Buienalarm"
 
-# Defaults
+# Default configuration
 DEFAULT_NAME: Final[str] = NAME
-_LOGGER: logging.Logger = logging.getLogger(__name__)
 
-# API and Data Refresh
-SCAN_INTERVAL = timedelta(minutes=5)
+# API and Data Update intervals
+SCAN_INTERVAL: Final[timedelta] = timedelta(minutes=5)
 DATA_REFRESH_INTERVAL: Final[int] = 300
+DEFAULT_UPDATE_INTERVAL: Final[timedelta] = timedelta(minutes=5)
 
-# Platforms.
-#BINARY_SENSOR: Final[str] = "binary_sensor"
+# Supported platforms
+# BINARY_SENSOR: Final[str] = "binary_sensor"
 SENSOR: Final[str] = "sensor"
-#PLATFORMS: Final[list[str]] = [BINARY_SENSOR, SENSOR]
+# PLATFORMS: Final[list[str]] = [BINARY_SENSOR, SENSOR]
 PLATFORMS: Final[list[str]] = [SENSOR]
 
 # Icon templates (not in use)
 ICON_TEMPLATE: Final[str] = "mdi:weather-{}"
 
-# Sensors
-SENSORS: Final[list] = [
+# Sensor definitions
+SENSORS: Final[list[dict[str, object]]] = [
     {
-        "name": "Buienalarm",
+        "name": "Melding",
         "icon": "mdi:weather-pouring",
         "key": "nowcastmessage",
-        "attributes": [
-            {"attr_name": "attribute_name", "attr_value": "attribute_value"},
-        ],
         "unit_of_measurement": None,
         "device_class": None,
         "state_class": None,
     },
     {
-        "name": "My Buienalarm",
+        "name": "Mijn melding",
         "icon": "mdi:weather-pouring",
         "key": "mycastmessage",
-        "attributes": [],
         "unit_of_measurement": None,
         "device_class": None,
         "state_class": None,
@@ -66,7 +60,6 @@ SENSORS: Final[list] = [
         "name": "Neerslag omschrijving",
         "icon": "mdi:weather-rainy",
         "key": "precipitationrate_now_desc",
-        "attributes": [],
         "unit_of_measurement": None,
         "device_class": None,
         "state_class": None,
@@ -75,15 +68,29 @@ SENSORS: Final[list] = [
         "name": "Soort neerslag",
         "icon": "mdi:weather-pouring",
         "key": "precipitationtype_now",
-        "attributes": [],
         "unit_of_measurement": None,
         "device_class": None,
         "state_class": None,
     },
     {
+        "name": "Volgende neerslag",
+        "icon": "mdi:clock-outline",
+        "key": "next_precipitation",
+        "unit_of_measurement": UnitOfTime.MINUTES,
+        "device_class": SensorDeviceClass.DURATION,
+        "state_class": None,
+    },
+    {
+        "name": "Duur neerslag",
+        "icon": "mdi:clock-outline",
+        "key": "precipitation_duration",
+        "unit_of_measurement": UnitOfTime.MINUTES,
+        "device_class": SensorDeviceClass.DURATION,
+        "state_class": None,
+    },
+    {
         "name": "Neerslag",
         "icon": "mdi:weather-rainy",
-        "attributes": [],
         "key": "precipitationrate_now",
         "unit_of_measurement": UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         "device_class": SensorDeviceClass.PRECIPITATION_INTENSITY,
@@ -92,7 +99,6 @@ SENSORS: Final[list] = [
     {
         "name": "Neerslag komend uur",
         "icon": "mdi:weather-rainy",
-        "attributes": [],
         "key": "precipitationrate_hour",
         "unit_of_measurement": UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         "device_class": SensorDeviceClass.PRECIPITATION_INTENSITY,
@@ -101,10 +107,17 @@ SENSORS: Final[list] = [
     {
         "name": "Neerslag verwacht",
         "icon": "mdi:weather-rainy",
-        "attributes": [],
         "key": "precipitationrate_total",
         "unit_of_measurement": UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         "device_class": SensorDeviceClass.PRECIPITATION_INTENSITY,
         "state_class": SensorStateClass.MEASUREMENT,
+    },
+    {
+        "name": "Neerslag periodes",
+        "icon": "mdi:weather-rainy",
+        "key": "precipitation_periods",
+        "unit_of_measurement": None,
+        "device_class": None,
+        "state_class": None,
     },
 ]

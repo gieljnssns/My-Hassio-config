@@ -170,7 +170,7 @@ class ClimateEntity(XEntity, BaseClimateEntity):
     def on_init(self):
         BaseClimateEntity.on_init(self)
 
-        self._prop_temperature_name = self.custom_config('temperature_property') or 'indoor_temperature'
+        self._prop_temperature_name = self.custom_config('current_temp_property') or 'indoor_temperature'
 
         hvac_modes = set()
         for attr in self.conv.attrs:
@@ -335,7 +335,7 @@ class ClimateEntity(XEntity, BaseClimateEntity):
             await self.async_turn_switch(False)
             return
 
-        if self._conv_power and self._attr_is_on is False:
+        if hvac and self._conv_power and self._attr_is_on is False:
             dat[self._conv_power.full_name] = True
 
         if hvac and hvac != self._attr_hvac_mode and self._conv_mode:

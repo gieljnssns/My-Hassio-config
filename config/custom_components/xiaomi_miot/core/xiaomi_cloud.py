@@ -6,6 +6,7 @@ import time
 import string
 import random
 import base64
+import locale
 import hashlib
 import micloud
 import requests
@@ -23,7 +24,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.components import persistent_notification
 
 from .const import DOMAIN, CONF_XIAOMI_CLOUD
-from .utils import RC4, logger_filter
+from .utils import RC4, local_zone, logger_filter
 from micloud import miutils
 from micloud.micloudexception import MiCloudException
 
@@ -41,13 +42,24 @@ UA = "Android-7.1.1-1.0.0-ONEPLUS A3010-136-%s APP/xiaomi.smarthome APPV/62830"
 
 
 class MiotCloud(micloud.MiCloud):
+    user_id = None
+    cuser_id = None
+    ssecurity = None
+    pass_token = None
+    service_token = None
+    failed_logins = 0
+    session = None
     async_session: Optional[aiohttp.ClientSession] = None
 
     def __init__(self, hass, username, password, country=None, sid=None):
         try:
             super().__init__(username, password)
-        except (FileNotFoundError, KeyError):
-            self.timezone = 'GMT+00:00'
+            timezone = datetime.now(local_zone(hass)).strftime('%z')
+            self.timezone = 'GMT{0}:{1}'.format(timezone[:-2], timezone[-2:])
+            self.locale = locale.getlocale()[0]
+        except Exception:
+            self.timezone = 'GMT+08:00'
+            self.locale = 'zh_CN'
 
         self.hass = hass
         self.username = username
@@ -551,7 +563,7 @@ class MiotCloud(micloud.MiCloud):
             self.async_session = None
         return auth
 
-    def _login_step2(self, **kwargs):
+    def _login_step2(self, captcha=None, **kwargs):
         url = '/pass/serviceLoginAuth2'
         post = {
             'user': self.username,
@@ -563,6 +575,10 @@ class MiotCloud(micloud.MiCloud):
         }
         params = {'_json': 'true'}
         cookies = {}
+        if captcha:
+            post['captCode'] = captcha
+            params['_dc'] = int(time.time() * 1000)
+            cookies['ick'] = self.attrs.pop('captchaIck', '')
         response = self.account_post(url, data=post, params=params, cookies=cookies, response=True)
         auth = self.json_decode(response.text) or {}
         code = auth.get('code')
@@ -580,6 +596,11 @@ class MiotCloud(micloud.MiCloud):
                     ntf = f'{ACCOUNT_BASE}{ntf}'
                 self.attrs['verify_url'] = ntf
                 raise MiCloudNeedVerify('need_verify').with_url(ntf)
+            if cap := auth.get('captchaUrl'):
+                if cap[:4] != 'http':
+                    cap = f'{ACCOUNT_BASE}{cap}'
+                if self._get_captcha(cap):
+                    self.attrs['login_data'] = kwargs
             _LOGGER.error(
                 'Xiaomi serviceLoginAuth2: %s' %
                 [url, self.login_times, {**post, 'hash': '*'}, cookies, response.text],
@@ -616,6 +637,13 @@ class MiotCloud(micloud.MiCloud):
             }
             raise MiCloudAccessDenied(f'Login to xiaomi error: {err}')
         return response
+
+    def _get_captcha(self, url):
+        response = self.session.get(url)
+        if ick := response.cookies.get('ick'):
+            self.attrs['captchaIck'] = ick
+            self.attrs['captchaImg'] = base64.b64encode(response.content).decode()
+        return ick
 
     def check_identity_list(self, url, path='identity/authStart'):
         if path not in url:
