@@ -11,8 +11,7 @@ trigger:
     entity_id: sensor.emhass_warmtepompboiler
     below: 0.1
     for:
-      minutes: 5
-      seconds: 30
+      minutes: 4
   - platform: template
     value_template: >
       {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 60 }}

@@ -1,22 +1,4 @@
 - sensor:
-    # - name: "SolarEdge energy"
-    #   unique_id: f7e4ae3b-cb83-4e93-8955-c681d4025ea6
-    #   icon: "mdi:counter"
-    #   unit_of_measurement: "kWh"
-    #   device_class: energy
-    #   state_class: total_increasing
-    #   state: >
-    #     {% set current_value = states('sensor.solaredge_energy') | float(0) %}
-    #     {% set source_state = states('sensor.solaredge_inverter_watthours') %}
-    #     {% if source_state in ['unavailable', 'unknown', None] %}
-    #       {{ current_value }}
-    #     {% else %}
-    #       {% set new_value = (states('sensor.solaredge_inverter_watthours') | float(0) / 1000) | round(2) %}
-    #       {{ current_value if new_value < current_value else new_value }}
-    #     {% endif %}
-      # availability: >
-      #   {{ states('sensor.solaredge_inverter_watthours')|float(0) > 1 }}
-
     - name: "Huawei energy"
       unique_id: 25ef22b2-ff2f-4d79-88fb-9ab0905cfd65
       icon: "mdi:counter"
@@ -24,14 +6,14 @@
       device_class: energy
       state_class: total_increasing
       state: >
-        {% set current_value = states('sensor.huawei_energy') | float(0) %}
-        {% set source_state = states('sensor.huawei_accumulated_energy_yield') %}
-        {% if source_state in ['unavailable', 'unknown', None] %}
+        {% set current_value = states('sensor.huawei_energy') | float(0) -%}
+        {% set source_state = states('sensor.huawei_accumulated_energy_yield') -%}
+        {% if source_state in ['unavailable', 'unknown', None] -%}
           {{ current_value }}
-        {% else %}
-          {% set new_value = states('sensor.huawei_accumulated_energy_yield')|float(0) | round(2) %}
+        {% else -%}
+          {% set new_value = states('sensor.huawei_accumulated_energy_yield')|float(0) | round(2) -%}
           {{ current_value if new_value < current_value else new_value }}
-        {% endif %}
+        {% endif -%}
       availability: >
         {{ states('sensor.huawei_accumulated_energy_yield')|float(0) > 1 }}
 
@@ -39,137 +21,134 @@
       unique_id: 6502aec2-df3d-420b-b8f5-2eb09184cbed
       unit_of_measurement: "W"
       device_class: power
-      # availability: >-
-      #   {{ has_value("sensor.huawei_active_power") and 
-      #     has_value("sensor.solaredge_inverter_watts") }}
-      # state: >
-      #   {{ (states("sensor.huawei_active_power") | float(0) + states("sensor.solaredge_inverter_watts") | float(0)) | round(1) }}
       state: >
         {{ (states("sensor.huawei_active_power") | float(0) + states("sensor.solaredge_i1_ac_power") | float(0)) | round(1) }}
 
-##aanpassen
-    # - name: Huidig verbruik oud
-    #   unique_id: 675346df-e08d-44c2-86ef-d31a872671ad
-    #   unit_of_measurement: "W"
-    #   device_class: power
-    #   availability: >-
-    #     {{ has_value("sensor.v1_vermogen") and 
-    #       has_value("sensor.v2_vermogen") and
-    #       has_value("sensor.v3_vermogen") }}
-    #   state: >
-    #     {{ (states("sensor.v1_vermogen") | float(default=0) + 
-    #         states("sensor.v2_vermogen") | float(default=0) + 
-    #         states("sensor.v3_vermogen") | float(default=0)) | round(2) }}
 ##aanpassen
     - name: Huidig verbruik
       unique_id: 88576813-0ac7-4deb-9b6d-15bb99a08752
       unit_of_measurement: "W"
       device_class: power
-      # availability: >-
-      #   {{ has_value("sensor.v1") and 
-      #     has_value("sensor.v2") and
-      #     has_value("sensor.v3") and 
-      #     has_value("sensor.s1") and
-      #     has_value("sensor.s2") and 
-      #     has_value("sensor.s3") and
-      #     has_value("sensor.huidige_opbrengst") }}
-      state: >
-        {% if states("sensor.huidige_opbrengst") | float(0) == 0%}
-          {{ (states("sensor.v1") | float(0)
-            + states("sensor.v2") | float(0)
-            + states("sensor.v3") | float(0)
-            + states("sensor.s1") | float(0)
-            + states("sensor.s2") | float(0)
-            + states("sensor.s3") | float(0)) | round(1) }}
-        {% else %}
-          {{ (states("sensor.v1") | float(0)
-            + states("sensor.v2") | float(0)
-            + states("sensor.v3") | float(0)) | round(1) }}
-        {% endif %}
+      state: > 
+        {% set v = states('sensor.v1')|float(0)
+                  + states('sensor.v2')|float(0)
+                  + states('sensor.v3')|float(0) -%}
+        {% set batt = states('sensor.battery_power')|float(0) -%}
+        {% if states("sensor.huidige_opbrengst") | float(0) > 0 -%}
+          {{ (v + (batt if batt > 0 else 0)) | round(1) }}
+        {% else -%}
+          {{ states("sensor.house_consumption") | float(0) }}
+        {% endif -%}
+      # state: >
+      #   {% set v = states('sensor.v1')|float(0)
+      #             + states('sensor.v2')|float(0)
+      #             + states('sensor.v3')|float(0) -%}
+      #   {% set batt = states('sensor.battery_power')|float(0) -%}
+      #   {{ (v + (batt if batt > 0 else 0)) | round(1) }}
 
-    # - name: Eigen verbruik
-    #   unique_id: e4bfb06d-169c-4bc6-a269-d4a4d70665d5
+    # - name: Huidig verbruik met standby
+    #   unique_id: 650197c3-612c-41ec-b9f0-99ba41069d47
     #   unit_of_measurement: "W"
     #   device_class: power
-    #   # availability: >-
-    #   #   {{ has_value("sensor.huidige_opbrengst") and 
-    #   #     has_value("sensor.huidig_verbruik") }}
     #   state: >
-    #     {% if (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) >= 0 %}
-    #         {{ (states("sensor.huidig_verbruik") | float(default=0)) | round(2)  }}
-    #     {% elif (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) < 0 and states("sensor.huidige_opbrengst") | float(default=0) > 0 %}
-    #         {{ (states("sensor.huidige_opbrengst") | float(default=0)) | round(2)  }}
-    #     {% else  %}
-    #         {{ 0 | float(default=0) }}
-    #     {% endif %}
-##aanpassen
-    # - name: Huidig fluvius
-    #   unique_id: aa64ea1f-e88f-4126-8e0f-622faa35c8c5
-    #   unit_of_measurement: "W"
-    #   device_class: power
-    #   availability: >-
-    #     {{ has_value("sensor.l1_vermogen") and 
-    #       has_value("sensor.l2_vermogen") and
-    #       has_value("sensor.l3_vermogen") }}
-    #   state: >
-    #     {{ ((states("sensor.l1_vermogen") | float(default=0) + 
-    #          states("sensor.l2_vermogen") | float(default=0) + 
-    #          states("sensor.l3_vermogen") | float(default=0)) | round(2)) * -1 }}
+    #     {% if states("sensor.huidige_opbrengst") | float(0) == 0%}
+    #       {{ (states("sensor.l1") | float(0)
+    #         + states("sensor.l2") | float(0)
+    #         + states("sensor.l3") | float(0)) | round(1) }}
+    #     {% else -%}
+    #       {{ (states("sensor.v1") | float(0)
+    #         + states("sensor.v2") | float(0)
+    #         + states("sensor.v3") | float(0)) | round(1) }}
+    #     {% endif -%}
+
 
     - name: Net afname
       unique_id: dd4adeb0-ffa4-4e52-959f-a8b50d081b4f
       unit_of_measurement: "W"
       device_class: power
-      # availability: >-
-      #   {{ has_value("sensor.huidige_opbrengst") and 
-      #     has_value("sensor.huidig_verbruik") }}
-      state: >
-        {% if states("sensor.huidige_opbrengst") | float(default=0) < states("sensor.huidig_verbruik") | float(default=0) %}
-            {{ (states("sensor.huidig_verbruik") | float(default=0) - states("sensor.huidige_opbrengst") | float(default=0)) | round(2) }}
-        {% elif states("sensor.huidige_opbrengst") | float(default=0) >= states("sensor.huidig_verbruik") | float(default=0) %}
-            {{ 0 | float(default=0) }}
-        {% else  %}
-            {{ 0 | float(default=0) }}
-        {% endif %}
+      state: >-
+        {% if states('sensor.active_power') | float(0) < 0 -%}
+          {{ states('sensor.active_power') | float(0) * -1 }}
+        {% else -%}
+          {{ 0 }}
+        {% endif -%}
+      # state: >
+      #     {% set f = (states('sensor.v1')|float(0) +
+      #                 states('sensor.v2')|float(0) +
+      #                 states('sensor.v3')|float(0))
+      #               - (states('sensor.huawei_active_power')|float(0) +
+      #                 states('sensor.solaredge_i1_ac_power')|float(0)) -%}
+      #     {{ (f if f > 0 else 0) | round(1) }}
+      # state: >
+      #   {% if states("sensor.huidige_opbrengst") | float(default=0) < states("sensor.huidig_verbruik") | float(default=0) -%}
+      #       {{ (states("sensor.huidig_verbruik") | float(default=0) - states("sensor.huidige_opbrengst") | float(default=0)) | round(2) }}
+      #   {% elif states("sensor.huidige_opbrengst") | float(default=0) >= states("sensor.huidig_verbruik") | float(default=0) -%}
+      #       {{ 0 | float(default=0) }}
+      #   {% else  -%}
+      #       {{ 0 | float(default=0) }}
+      #   {% endif -%}
 
     - name: Net terugsturen
       unique_id: 328826cf-c7db-4afd-8106-ea865a801093
       unit_of_measurement: "W"
       device_class: power
-      # availability: >-
-      #   {{ has_value("sensor.huidige_opbrengst") and 
-      #     has_value("sensor.huidig_verbruik") }}
       state: >
-        {% if states("sensor.huidige_opbrengst") | float(default=0) <= states("sensor.huidig_verbruik") | float(default=0) %}
-            {{ 0 | float(default=0) }}
-        {% elif states("sensor.huidige_opbrengst") | float(default=0) > states("sensor.huidig_verbruik") | float(default=0) %}
-            {{ (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) | round(2) }}
-        {% else  %}
-            {{ 0 | float(default=0) }}
-        {% endif %}
+        {% if states('sensor.active_power') | float(0) > 0 -%}
+          {{ states('sensor.active_power') | float(0) }}
+        {% else -%}
+          {{ 0 }}
+        {% endif -%}
+      # state: >
+      #     {% set f = (states('sensor.v1')|float(0) +
+      #                 states('sensor.v2')|float(0) +
+      #                 states('sensor.v3')|float(0))
+      #               - (states('sensor.huawei_active_power')|float(0) +
+      #                 states('sensor.solaredge_i1_ac_power')|float(0)) -%}
+      #     {{ ((-f) if f < 0 else 0) | round(1) }}
+      # state: >
+      #   {% if states("sensor.huidige_opbrengst") | float(default=0) <= states("sensor.huidig_verbruik") | float(default=0) -%}
+      #       {{ 0 | float(default=0) }}
+      #   {% elif states("sensor.huidige_opbrengst") | float(default=0) > states("sensor.huidig_verbruik") | float(default=0) -%}
+      #       {{ (states("sensor.huidige_opbrengst") | float(default=0) - states("sensor.huidig_verbruik") | float(default=0)) | round(2) }}
+      #   {% else  -%}
+      #       {{ 0 | float(default=0) }}
+      #   {% endif -%}
+    
+    - name: "Huidig fluvius"
+      unit_of_measurement: "W"
+      unique_id: 569e23f1-e47a-41f4-a81b-ecf5de0ac186
+      device_class: power
+      state: >
+        {{ states("sensor.active_power") | float(0) * -1 }}
+      # state: >
+      #   {{ ((states('sensor.v1')|float(0) +
+      #         states('sensor.v2')|float(0) +
+      #         states('sensor.v3')|float(0))
+      #       - (states('sensor.huawei_active_power')|float(0) +
+      #         states('sensor.solaredge_i1_ac_power')|float(0))) | round(1) }}
     
     ###  Random watt sensor  ##
-    - name: "Random watts"
-      unique_id: 27dc873d-2129-4ad3-96b5-be4310206b54
-      state: >
-        {% set options = [-1.0, -0.5, 0.0, 0.5, 1.0] -%}
-        {% set t = now().hour * 60 + now().minute -%}
-        {% set index = t % options | length -%}
-        {{ options[index] }}
-      unit_of_measurement: "W"
-      device_class: power
-      icon: mdi:variable
+    # - name: "Random watts"
+    #   unique_id: 27dc873d-2129-4ad3-96b5-be4310206b54
+    #   state: >
+    #     {% set options = [-1.0, -0.5, 0.0, 0.5, 1.0] -%}
+    #     {% set t = now().hour * 60 + now().minute -%}
+    #     {% set index = t % options | length -%}
+    #     {{ options[index] }}
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   icon: mdi:variable
     
-    - name: "Random watts standby"
-      unique_id: e9b293f0-1f3d-4cda-aaea-55985dea5615
-      state: >
-        {% set options = [-0.1, -0.05, 0.0, 0.05, 0.1] -%}
-        {% set t = now().hour * 60 + now().minute -%}
-        {% set index = t % options | length -%}
-        {{ options[index] }}
-      unit_of_measurement: "W"
-      device_class: power
-      icon: mdi:variable
+    # - name: "Random watts standby"
+    #   unique_id: e9b293f0-1f3d-4cda-aaea-55985dea5615
+    #   state: >
+    #     {% set options = [-0.1, -0.05, 0.0, 0.05, 0.1] -%}
+    #     {% set t = now().hour * 60 + now().minute -%}
+    #     {% set index = t % options | length -%}
+    #     {{ options[index] }}
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   icon: mdi:variable
 
     ###  Combinatie  ###
     - name: Verlichting vermogen
@@ -270,24 +249,23 @@
       unit_of_measurement: "kW"
       device_class: power
       state: >
-        {% set peak = ((states("sensor.quarter_hourly_grid_consumption") | float(default=0)) * 4) %}
-        {% set max_peak = (states("input_number.max_peak_2") | float(default=0)) %}
-        {% macro max(X, Y) -%} {{X|float if X|float > Y|float else Y|float }} {% endmacro %}
+        {% set peak = ((states("sensor.quarter_hourly_grid_consumption") | float(default=0)) * 4) -%}
+        {% set max_peak = (states("input_number.max_peak_2") | float(default=0)) -%}
         {{ max(max_peak, peak) }}
 
     - name: "Kwartierpiek"
       unique_id: ac4a057e-c062-4954-863d-d1f428a584ce
       state: >
-        {% set max_value = states.sensor.kwartierpiek.state|float(0) %}
-        {% set current_month = now().strftime('%m') %}
-        {% set last_reset_month = states.sensor.kwartierpiek.attributes.last_reset_month %}
-        {% if last_reset_month is defined and current_month != last_reset_month %}
+        {% set max_value = states.sensor.kwartierpiek.state|float(0) -%}
+        {% set current_month = now().strftime('%m') -%}
+        {% set last_reset_month = states.sensor.kwartierpiek.attributes.last_reset_month -%}
+        {% if last_reset_month is defined and current_month != last_reset_month -%}
           {{ float(states.sensor.quarter_hourly_grid_consumption.state) * 4 }}
-        {% elif max_value is defined and max_value < 4 * float(states.sensor.quarter_hourly_grid_consumption.state) %}
+        {% elif max_value is defined and max_value < 4 * float(states.sensor.quarter_hourly_grid_consumption.state) -%}
           {{ float(states.sensor.quarter_hourly_grid_consumption.state) * 4 }}
-        {% else %}
+        {% else -%}
           {{ max_value }}
-        {% endif %}
+        {% endif -%}
       attributes:
         last_reset_month: >
           {{ now().strftime('%m') }}

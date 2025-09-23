@@ -104,18 +104,36 @@
             states("sensor.droogkast_vermogen") | float(default=0) -
             states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
             states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
-            states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) > 0 %}
+            states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) > 0 -%}
             {{ (states("sensor.huidig_verbruik") | float(default=0) -
                 states("sensor.wasmachien_vermogen") | float(default=0) -
                 states("sensor.droogkast_vermogen") | float(default=0) -
                 states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
                 states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
                 states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1)}}
-        {% else  %}
+        {% else  -%}
             {{ 0 | float(default=0) }}
-        {% endif %}
+        {% endif -%}
       availability: >
         {{ is_number(states('sensor.huidig_verbruik')) }}
+
+# - trigger:
+#     - platform: time_pattern
+#       minutes: /5
+#   sensor:
+#     - name: "Solar Opbrengst Buffer"
+#       unique_id: 14f8f079-dec7-4584-9a9a-396b76c4a1ab
+#       state: >
+#         {{ this.attributes.list | length if this.attributes.list is defined else 0 }}
+#       attributes:
+#         list: >
+#           {% if now().strftime('%H:%M') == '00:05' %}
+#             [{{ states("sensor.gemiddelde_opbrengst_5m") | float(0) | round(0) }}]
+#           {% else %}
+#             {% set current_list = this.attributes.list if this.attributes.list is defined else [] %}
+#             {% set new_value = states("sensor.gemiddelde_opbrengst_5m") | float(0) | round(0) %}
+#             {{ current_list + [new_value] }}
+#           {% endif %}
 
 # - trigger:
 #     - platform: state

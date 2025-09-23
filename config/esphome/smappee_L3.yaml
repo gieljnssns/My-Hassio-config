@@ -8,6 +8,9 @@ packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
+wifi:
+  use_address: 192.168.6.150
+
 logger:
   # baud_rate: 0
   level: DEBUG
@@ -71,31 +74,31 @@ sensor:
       name: "L3 cos phi"
       internal: true
     update_interval: 2s
-  - platform: pzemac
-    address: 2
-    modbus_id: mbus
-    current:
-      name: "S3 stroom"
-      id: currentS3
-      internal: true
-    voltage:
-      name: "S3 spanning"
-      id: voltageS3
-      internal: true
-    energy:
-      id: energyS3
-      internal: true
-    power:
-      name: "S3"
-      id: powerS3
-      # internal: true
-    frequency:
-      id: S3freq
-      internal: true
-    power_factor:
-      id: S3cosphi
-      internal: true
-    update_interval: 2s
+  # - platform: pzemac
+  #   address: 2
+  #   modbus_id: mbus
+  #   current:
+  #     name: "S3 stroom"
+  #     id: currentS3
+  #     internal: true
+  #   voltage:
+  #     name: "S3 spanning"
+  #     id: voltageS3
+  #     internal: true
+  #   energy:
+  #     id: energyS3
+  #     internal: true
+  #   power:
+  #     name: "S3"
+  #     id: powerS3
+  #     # internal: true
+  #   frequency:
+  #     id: S3freq
+  #     internal: true
+  #   power_factor:
+  #     id: S3cosphi
+  #     internal: true
+  #   update_interval: 2s
   - platform: pzemac
     address: 3
     modbus_id: mbus

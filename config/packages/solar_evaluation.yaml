@@ -1,0 +1,326 @@
+# ===== HELPER ENTITIES =====
+# Voeg toe aan configuration.yaml
+
+input_text:
+  best_solar_predictor:
+    name: "Beste Solar Voorspeller"
+    # initial: "openmeteo"  # Standaard tot eerste evaluatie
+    max: 50
+
+  evaluation_log:
+    name: "Evaluatie Log"
+    max: 255
+
+input_number:
+  solcast_mse:
+    name: "Solcast MSE"
+    min: 0
+    max: 10000000
+    step: 0.01
+    mode: box
+
+  solcast10_mse:
+    name: "Solcast 10% MSE"
+    min: 0
+    max: 10000000
+    step: 0.01
+    mode: box
+
+  solcast90_mse:
+    name: "Solcast 90% MSE"
+    min: 0
+    max: 10000000
+    step: 0.01
+    mode: box
+
+  openmeteo_mse:
+    name: "OpenMeteo MSE"
+    min: 0
+    max: 10000000
+    step: 0.01
+    mode: box
+
+  solcast_mae:
+    name: "Solcast MAE"
+    min: 0
+    max: 10000000
+    step: 0.01
+    mode: box
+
+  solcast10_mae:
+    name: "Solcast 10% MAE"
+    min: 0
+    max: 10000000
+    step: 0.01
+    mode: box
+
+  solcast90_mae:
+    name: "Solcast 90% MAE"
+    min: 0
+    max: 10000000
+    step: 0.01
+    mode: box
+
+  openmeteo_mae:
+    name: "OpenMeteo MAE"
+    min: 0
+    max: 10000000
+    step: 0.01
+    mode: box
+
+input_datetime:
+  last_evaluation_time:
+    name: "Laatste Evaluatie Tijd"
+    has_date: true
+    has_time: true
+
+  # next_evaluation_time:
+  #   name: "Volgende Evaluatie Tijd"
+  #   has_date: true
+  #   has_time: true
+
+input_boolean:
+  solar_evaluation_active:
+    name: "Solar Evaluatie Actief"
+    initial: true
+
+# ===== TEMPLATE SENSORS =====
+template:
+  - sensor:
+      # Huidige beste voorspeller voor gebruik
+      - name: "Current Best Solar Predictor"
+        unique_id: 23308df6-7a7b-4393-978d-c2c475a2f00d
+        state: >
+          {{ states('input_text.best_solar_predictor') }}
+  - binary_sensor:
+      # Check of we in evaluatie periode zitten
+      - name: "Solar Evaluation Period"
+        unique_id: 73557d94-39a4-4ab7-b125-2e30652045a0
+        state: >
+          {% set sunrise_today = state_attr('sun.sun', 'next_rising') | as_datetime -%}
+          {% if sunrise_today.date() != now().date() -%}
+            {% set sunrise_today = sunrise_today - timedelta(days=1) -%}
+          {% endif -%}
+          {% set sunset_today = state_attr('sun.sun', 'next_setting') | as_datetime -%}
+          {% if sunset_today.date() != now().date() -%}
+            {% set sunset_today = sunset_today - timedelta(days=1) -%}
+          {% endif -%}
+          {% set now_time = now() -%}
+          {% set evaluation_start = sunrise_today + timedelta(hours=1) -%}
+          {% if evaluation_start <= now_time <= sunset_today -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
+      
+
+
+# ===== PYTHON SCRIPT =====
+# Maak bestand: /config/python_scripts/precise_solar_evaluation.py
+
+# python_scripts:
+
+# ===== AUTOMATIONS =====
+automation:
+  # Reset naar OpenMeteo om middernacht
+  # - alias: "Reset Solar Predictor at Midnight"
+  #   description: "Reset beste voorspeller naar OpenMeteo om middernacht"
+  #   id: b490ff5c-f359-47a9-92af-2420e21e38c1
+  #   trigger:
+  #     - platform: time
+  #       at: "00:00:00"
+  #   condition:
+  #     - condition: state
+  #       entity_id: input_boolean.solar_evaluation_active
+  #       state: 'on'
+  #   action:
+  #     - service: input_text.set_value
+  #       target:
+  #         entity_id: input_text.best_solar_predictor
+  #       data:
+  #         value: "openmeteo"
+  #     - service: input_text.set_value
+  #       target:
+  #         entity_id: input_text.evaluation_log
+  #       data:
+  #         value: "Reset naar OpenMeteo om middernacht"
+  #     # Reset alle MSE/MAE waarden
+  #     - service: input_number.set_value
+  #       target:
+  #         entity_id: 
+  #           - input_number.solcast_mse
+  #           - input_number.solcast10_mse
+  #           - input_number.solcast90_mse
+  #           - input_number.openmeteo_mse
+  #           - input_number.solcast_mae
+  #           - input_number.solcast10_mae
+  #           - input_number.solcast90_mae
+  #           - input_number.openmeteo_mae
+  #       data:
+  #         value: 0
+
+  # Zet evaluatie tijd bij zonsopgang
+  # - alias: "Set Solar Evaluation Time at Sunrise"
+  #   description: "Stel eerste evaluatie tijd in bij zonsopgang + 1 uur"
+  #   id: a42bcbc0-6c1c-4097-8416-86e519350ffe
+  #   trigger:
+  #     - platform: sun
+  #       event: sunrise
+  #   condition:
+  #     - condition: state
+  #       entity_id: input_boolean.solar_evaluation_active
+  #       state: 'on'
+  #   action:
+  #     - service: input_datetime.set_datetime
+  #       target:
+  #         entity_id: input_datetime.next_evaluation_time
+  #       data:
+  #         datetime: >
+  #           {{ (now() + timedelta(hours=1)).strftime('%Y-%m-%d %H:00:00') }}
+
+  # Uurlijkse evaluatie tijdens zonneuren
+  - alias: "Hourly Solar Prediction Evaluation"
+    description: "Evalueer uurlijks welke voorspelling het beste presteert"
+    id: f611af53-ed00-44e7-a8f2-f1fcbaf6f78e
+    trigger:
+      - platform: time_pattern
+        minutes: 0  # Elk heel uur
+    condition:
+      - condition: state
+        entity_id: input_boolean.solar_evaluation_active
+        state: 'on'
+      - condition: template
+        value_template: >
+          {{ is_state('binary_sensor.solar_evaluation_period', 'on') }}
+      # - condition: template
+      #   value_template: >
+      #     {% set sunrise_plus_one = states('sensor.solar_evaluation_start_time') | as_datetime -%}
+      #     {{ now() >= sunrise_plus_one }}
+    action:
+      # Haal statistieken op van vandaag vanaf middernacht
+      - service: recorder.get_statistics
+        data:
+          start_time: "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}"
+          end_time: "{{ now() }}"
+          statistic_ids:
+            - sensor.huidige_opbrengst_gefilterd
+          period: 5minute
+          types:
+            - mean
+        response_variable: daily_stats
+      
+      # Roep Python script aan voor precieze berekening
+      - service: python_script.precise_solar_evaluation
+        data:
+          statistics_data: "{{ daily_stats }}"
+          current_time: "{{ now().isoformat() }}"
+
+  # Notificatie bij wijziging beste voorspeller
+  - alias: "Solar Predictor Changed Notification"
+    description: "Stuur notificatie als beste voorspeller wijzigt"
+    id: 0860fc90-a420-4fe3-97c8-5819100f2e6c
+    trigger:
+      - platform: state
+        entity_id: input_text.best_solar_predictor
+    condition:
+      - condition: template
+        value_template: "{{ trigger.from_state.state != trigger.to_state.state }}"
+      - condition: template
+        value_template: "{{ trigger.from_state.state not in ['unknown', 'unavailable'] }}"
+    action:
+      - service: notify.mobile_app_gphone  # Pas aan naar je notificatie service
+        data:
+          title: "🌞 Solar Voorspeller Gewijzigd"
+          message: >
+            Beste voorspeller is gewijzigd van {{ trigger.from_state.state }} naar {{ trigger.to_state.state }}.
+            
+            Huidige scores:
+            - Solcast: MSE {{ states('input_number.solcast_mse') | round(2) }}
+            - Solcast 10%: MSE {{ states('input_number.solcast10_mse') | round(2) }}  
+            - Solcast 90%: MSE {{ states('input_number.solcast90_mse') | round(2) }}
+            - OpenMeteo: MSE {{ states('input_number.openmeteo_mse') | round(2) }}
+
+# ===== DASHBOARD CARDS =====
+# Voeg toe aan je Lovelace dashboard
+
+# 1. Status Card
+# type: entities
+# title: Solar Prediction Status
+# entities:
+#   - entity: sensor.current_best_solar_predictor
+#     name: "Huidige Beste Voorspeller"
+#   - entity: input_text.evaluation_log
+#     name: "Laatste Evaluatie"
+#   - entity: input_datetime.next_evaluation_time
+#     name: "Volgende Evaluatie"
+#   - entity: sensor.solar_evaluation_period
+#     name: "In Evaluatie Periode"
+
+# 2. Scores Card
+# type: glance
+# title: Prediction Accuracy Scores (MSE - lager is beter)
+# columns: 2
+# entities:
+#   - entity: input_number.solcast_mse
+#     name: Solcast
+#   - entity: input_number.solcast10_mse
+#     name: Solcast 10%
+#   - entity: input_number.solcast90_mse
+#     name: Solcast 90%
+#   - entity: input_number.openmeteo_mse
+#     name: OpenMeteo
+
+# 3. Chart Card (vereist ApexCharts)
+# type: custom:apexcharts-card
+# title: Solar Prediction Accuracy Trend
+# graph_span: 24h
+# header:
+#   show: true
+#   title: "MSE Scores (lager is beter)"
+# yaxis:
+#   - min: 0
+# series:
+#   - entity: input_number.solcast_mse
+#     name: "Solcast MSE"
+#   - entity: input_number.solcast10_mse  
+#     name: "Solcast 10% MSE"
+#   - entity: input_number.solcast90_mse
+#     name: "Solcast 90% MSE"
+#   - entity: input_number.openmeteo_mse
+#     name: "OpenMeteo MSE"
+
+# ===== SERVICES VOOR HANDMATIGE CONTROLE =====
+script:
+  manual_solar_evaluation:
+    alias: "Handmatige Solar Evaluatie"
+    description: "Voer handmatig een evaluatie uit"
+    sequence:
+      - service: automation.trigger
+        target:
+          entity_id: automation.hourly_solar_prediction_evaluation
+        data:
+          skip_condition: true
+
+  # reset_solar_evaluation:
+  #   alias: "Reset Solar Evaluatie"  
+  #   description: "Reset alle evaluatie data"
+  #   sequence:
+  #     - service: input_text.set_value
+  #       target:
+  #         entity_id: input_text.best_solar_predictor
+  #       data:
+  #         value: "openmeteo"
+  #     - service: input_number.set_value
+  #       target:
+  #         entity_id: 
+  #           - input_number.solcast_mse
+  #           - input_number.solcast10_mse
+  #           - input_number.solcast90_mse
+  #           - input_number.openmeteo_mse
+  #           - input_number.solcast_mae
+  #           - input_number.solcast10_mae
+  #           - input_number.solcast90_mae
+  #           - input_number.openmeteo_mae
+  #       data:
+  #         value: 0

@@ -57,6 +57,18 @@ trigger:
     for:
       minutes: 2
     id: solaredge
+  - platform: template
+    value_template: >
+      {{ states("vacuum.claptrap")  is in ["unavailable", "unknown"]}}
+    for:
+      minutes: 2
+    id: claptrap
+  - platform: template
+    value_template: >
+      {{ states("camera.tuin")  is in ["unavailable", "unknown"]}}
+    for:
+      minutes: 2
+    id: camera_tuin
 actions:
   - choose:
     - conditions:
@@ -123,8 +135,37 @@ actions:
             minutes: 5
         - action: homeassistant.reload_config_entry
           target:
-            entity_id: sensor.solaredge_inverter_watts
+            entity_id: sensor.solaredge_i1_ac_power
           data:
             entry_id: >
-              {{ config_entry_id('sensor.solaredge_inverter_watts') }}
-          
+              {{ config_entry_id('sensor.solaredge_i1_ac_power') }}
+    - conditions:
+        - condition: trigger
+          id: claptrap
+      sequence:
+        - action: notify.mobile_app_gphone
+          data:
+            message: Claptrap reload
+        - action: unifi.reconnect_client
+          data:
+            device_id: 898240675928a9586b500febb0f72316
+        - delay:
+            minutes: 2
+        - action: homeassistant.reload_config_entry
+          data:
+            entry_id: |
+              {{ config_entry_id('vacuum.claptrap') }}
+          target:
+            entity_id: vacuum.claptrap
+    
+    - conditions:
+        - condition: trigger
+          id: camera_tuin
+      sequence:
+        - action: notify.mobile_app_gphone
+          data:
+            message: Camera tuin reload
+        - action: button.press
+          target:
+            entity_id: button.usw_lite_8_dahua_power_cycle
+        

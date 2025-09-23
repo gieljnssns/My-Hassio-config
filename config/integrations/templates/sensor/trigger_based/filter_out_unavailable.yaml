@@ -13,12 +13,9 @@
     - name: Buiten temperatuur
       unique_id: e04b3353-a23c-41ee-9329-b5d3b2526ca6
       state: >
-        {% macro min(X, Y) -%} {{X|float(0) if X|float(0) < Y|float(0) else Y|float(0) }} {% endmacro %}
-        {% set station = states("sensor.buiten_buiten_temperatuur") %}
-        {% set poort = states("sensor.poort_temperatuur") %}
+        {% set station = states("sensor.buiten_buiten_temperatuur") |float(0) -%}
+        {% set poort = states("sensor.poort_temperatuur") |float(0) -%}
           {{ min(station, poort) }}
-      # state: >
-      #   {{ trigger.to_state.state }}
       unit_of_measurement: "°C"
 
 - trigger:
@@ -54,26 +51,11 @@
     - name: Buiten lichtsterkte
       unique_id: 2668b502-27ec-4046-a4b7-c52444181fe1
       state: >
-        {% set list = [ states("sensor.achtergevel_lichtsterkte"),
-                        states("sensor.zonnetent_lichtsterkte"),
-                        states("sensor.zijgevel_lichtsterkte")] %}
-
-
+        {% set list = [ states("sensor.achtergevel_lichtsterkte") | float(0),
+                        states("sensor.zonnetent_lichtsterkte") | float(0),
+                        states("sensor.zijgevel_lichtsterkte") | float(0)] -%}
         {{ list | map('float') | max }}
       unit_of_measurement: "lx"
-
-# - trigger:
-#     - platform: state
-#       entity_id: sensor.temperatuur_pi3_living_2
-#       not_to:
-#         - unknown
-#         - unavailable
-#   sensor:
-#     - name: Temperatuur pi3 living
-#       unique_id: 266fbc93-dc19-4e53-942b-51184a92ed4c
-#       state: >
-#         {{ trigger.to_state.state }}
-#       unit_of_measurement: "°C"
 
 - trigger:
     - platform: state

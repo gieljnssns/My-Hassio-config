@@ -38,8 +38,8 @@ condition:
         {{ states("sensor.windvlaag") | int(0) < 40 }}
     - condition: template
       value_template: >
-        {% if states("sensor.neerslag_komend_uur_zandhoven") != "unknown" and states("sensor.neerslag_komend_uur_zandhoven") != "unavailable" %}
-          {{ states("sensor.neerslag_komend_uur_zandhoven") | float < 0.15 }}
+        {% if states("sensor.regen_komende_10_minuten") != "unknown" and states("sensor.regen_komende_10_minuten") != "unavailable" %}
+          {{ states("sensor.regen_komende_10_minuten") | float < 0.15 }}
         {% else %}
           {{ states("sensor.neerslagverwachting_gemiddeld")  | float < 0.15 }}
         {% endif %}
@@ -64,7 +64,7 @@ condition:
       above: 22 # only if indoor temperature is above x then allowed to roll out
     - condition: template
       value_template: >
-        {{ states("sensor.max_temperatuur_buiten_voorspelling_12u") | float(0) > 21 }}
+        {{ states("sensor.max_temperatuur_buiten_voorspelling_12u") | float(0) > (states("sensor.gemiddelde_temp_beneden") | float(0) - 1) }}
 
     # Time based conditions
     - condition: template

@@ -138,3 +138,17 @@
       unit_of_measurement: "DD"
       availability: >
         {{ has_value("sensor.gemiddelde_temperatuur_buiten_voorspelling_2") }}
+    
+    - name: Regen komende 10 minuten
+      unique_id: ecf2f88b-e69f-4f6e-963d-b412ef724452
+      unit_of_measurement: mm
+      state: >
+        {% set now_ts = now().timestamp() | int -%}
+        {% set data = state_attr('sensor.neerslag_verwacht_zandhoven', 'precipitation_data') -%}
+        {% set next = data | selectattr('timestamp', '>', now_ts) | list -%}
+        {% set total = next[:2] 
+            | map(attribute='precipitationrate') 
+            | map('float') 
+            | map('multiply', 1/12) 
+            | sum -%}
+        {{ total | round(2) }}

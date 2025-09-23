@@ -34,8 +34,8 @@ trigger:
 
   - platform: template
     value_template: >
-      {% if states("sensor.neerslag_komend_uur_zandhoven") != "unknown" and states("sensor.neerslag_komend_uur_zandhoven") != "unavailable" %}
-        {{ states("sensor.neerslag_komend_uur_zandhoven") | float > 0.4 }}
+      {% if states("sensor.regen_komende_10_minuten") != "unknown" and states("sensor.regen_komende_10_minuten") != "unavailable" %}
+        {{ states("sensor.regen_komende_10_minuten") | float > 0.4 }}
       {% else %}
         {{ states("sensor.neerslagverwachting_gemiddeld")  | float > 0.4 }}
       {% endif %}

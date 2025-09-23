@@ -18,6 +18,8 @@ condition:
 actions:
   - wait_template: >
       {{ states("sensor.people_arrive_count") | int(0) == 0 }}
+  - delay:
+      minutes: 10
   - action: alarm_control_panel.alarm_arm_night
     entity_id: alarm_control_panel.ha_alarm
     data:

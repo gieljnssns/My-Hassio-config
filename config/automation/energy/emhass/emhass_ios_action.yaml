@@ -40,39 +40,39 @@ trigger:
 actions:
   - variables:
       who: >
-        {% if trigger.event.context.user_id == '14a0b456772941eda81466d1807619b7' %}
+        {% if trigger.event.context.user_id == '14a0b456772941eda81466d1807619b7' -%}
           notify.mobile_app_gphone
-        {% elif trigger.event.context.user_id == 'db0ab875181d4af887c161d094fd9da4' %}
+        {% elif trigger.event.context.user_id == 'db0ab875181d4af887c161d094fd9da4' -%}
           notify.mobile_app_mphone
-        {% else %}
+        {% else -%}
           notify.iedereen
-        {% endif %}
+        {% endif -%}
       datetime: >
-        {% set wasmachien = as_timestamp(states.input_button.wasmachien.last_changed) %}
-        {% set droogkast = as_timestamp(states.input_button.droogkast.last_changed) %}
-        {% set afwasmachien = as_timestamp(states.input_button.afwasmachien.last_changed) %}
+        {% set wasmachien = as_timestamp(states.input_button.wasmachien.last_changed) -%}
+        {% set droogkast = as_timestamp(states.input_button.droogkast.last_changed) -%}
+        {% set afwasmachien = as_timestamp(states.input_button.afwasmachien.last_changed) -%}
 
-        {% set maximum = max(wasmachien, droogkast, afwasmachien) %}
-        {% if maximum == wasmachien %}
+        {% set maximum = max(wasmachien, droogkast, afwasmachien) -%}
+        {% if maximum == wasmachien -%}
           input_datetime.emhass_wasmachien_end_time
-        {% elif maximum == droogkast %}
+        {% elif maximum == droogkast -%}
           input_datetime.emhass_droogkast_end_time
-        {% else %}
+        {% else -%}
           input_datetime.emhass_afwasmachien_end_time
-        {% endif %}
+        {% endif -%}
       boolean: >
-        {% set wasmachien = as_timestamp(states.input_button.wasmachien.last_changed) %}
-        {% set droogkast = as_timestamp(states.input_button.droogkast.last_changed) %}
-        {% set afwasmachien = as_timestamp(states.input_button.afwasmachien.last_changed) %}
+        {% set wasmachien = as_timestamp(states.input_button.wasmachien.last_changed) -%}
+        {% set droogkast = as_timestamp(states.input_button.droogkast.last_changed) -%}
+        {% set afwasmachien = as_timestamp(states.input_button.afwasmachien.last_changed) -%}
 
-        {% set maximum = max(wasmachien, droogkast, afwasmachien) %}
-        {% if maximum == wasmachien %}
+        {% set maximum = max(wasmachien, droogkast, afwasmachien) -%}
+        {% if maximum == wasmachien -%}
           input_boolean.wasmachien_starten
-        {% elif maximum == droogkast %}
+        {% elif maximum == droogkast -%}
           input_boolean.droogkast_starten
-        {% else %}
+        {% else -%}
           input_boolean.afwasmachien_starten
-        {% endif %}
+        {% endif -%}
   - choose:
       - conditions:
           - condition: trigger
@@ -84,12 +84,12 @@ actions:
                 {{ datetime }}
             data:
               datetime: >
-                {% set hour = now().hour %}
-                {% if hour < 14 %}
-                  {% set date = now().strftime('%Y-%m-%d') %}
-                {% else %}
-                  {% set date = ((as_timestamp(now()) + 86400) | as_datetime | as_local).strftime('%Y-%m-%d') %}
-                {% endif %}
+                {% set hour = now().hour -%}
+                {% if hour < 14 -%}
+                  {% set date = now().strftime('%Y-%m-%d') -%}
+                {% else -%}
+                  {% set date = ((as_timestamp(now()) + 86400) | as_datetime | as_local).strftime('%Y-%m-%d') -%}
+                {% endif -%}
                 {{ date + " 16:00:00" }}
           - action: homeassistant.turn_on
             target:
@@ -106,12 +106,12 @@ actions:
                 {{ datetime }}
             data:
               datetime: >
-                {% set hour = now().hour %}
-                {% if hour < 5 %}
-                  {% set date = now().strftime('%Y-%m-%d') %}
-                {% else %}
-                  {% set date = ((as_timestamp(now()) + 86400) | as_datetime | as_local).strftime('%Y-%m-%d') %}
-                {% endif %}
+                {% set hour = now().hour -%}
+                {% if hour < 5 -%}
+                  {% set date = now().strftime('%Y-%m-%d') -%}
+                {% else -%}
+                  {% set date = ((as_timestamp(now()) + 86400) | as_datetime | as_local).strftime('%Y-%m-%d') -%}
+                {% endif -%}
                 {{ date + " 07:00:00" }}
           - action: homeassistant.turn_on
             target:
@@ -127,12 +127,20 @@ actions:
                 {{ datetime }}
             data:
               datetime: >
-                {% if datetime == "input_datetime.emhass_afwasmachien_end_time" %}
-                  {% set time = ((as_timestamp(now()) + 9600) | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:00') %}
-                {% else %}
-                  {% set time = ((as_timestamp(now()) + 7800) | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:00') %}
-                {% endif %}
-                {{ time }}
+                {% if datetime == "input_datetime.emhass_afwasmachien_end_time" -%}
+                  {% set offset = 9600 -%}
+                  {% set now_ts = as_timestamp(now()) + offset -%}
+                  {% set dt = now_ts | as_datetime | as_local -%}
+                  {% set rounded_minute = ((dt.minute + 4) // 5) * 5 -%}
+                  {% set dt = dt.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=rounded_minute) -%}
+                {% else -%}
+                  {% set offset = 7800 -%}
+                  {% set now_ts = as_timestamp(now()) + offset -%}
+                  {% set dt = now_ts | as_datetime | as_local -%}
+                  {% set rounded_minute = ((dt.minute + 4) // 5) * 5 -%}
+                  {% set dt = dt.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=rounded_minute) -%}
+                {% endif -%}
+                {{ dt.strftime('%Y-%m-%d %H:%M:%S') }}
           - action: homeassistant.turn_on
             target:
               entity_id: >
@@ -147,8 +155,12 @@ actions:
                 {{ datetime }}
             data:
               datetime: >
-                {% set time = ((as_timestamp(now()) + 77400) | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:00') %}
-                {{ time }}
+                {% set offset = 77400 -%}
+                {% set now_ts = as_timestamp(now()) + offset -%}
+                {% set dt = now_ts | as_datetime | as_local -%}
+                {% set rounded_minute = ((dt.minute + 4) // 5) * 5 -%}
+                {% set dt = dt.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=rounded_minute) -%}
+                {{ dt.strftime('%Y-%m-%d %H:%M:%S') }}
           - action: homeassistant.turn_on
             target:
               entity_id: >
@@ -182,7 +194,7 @@ actions:
                 {{ datetime }}
             data:
               datetime: >
-                {% set time = now().strftime('%Y-%m-%d %H:%M:00') %}
+                {% set time = now().strftime('%Y-%m-%d %H:%M:00') -%}
                 {{ time }}
           - action: "{{ who }}"
             data:
@@ -199,7 +211,7 @@ actions:
                 {{ datetime }}
             data:
               datetime: >
-                {% set date = ((as_timestamp(now()) + 86400) | as_datetime | as_local).strftime('%Y-%m-%d') %}
+                {% set date = ((as_timestamp(now()) + 86400) | as_datetime | as_local).strftime('%Y-%m-%d') -%}
                 {{ date + " 06:00:00" }}
           - action: "{{ who }}"
             data:

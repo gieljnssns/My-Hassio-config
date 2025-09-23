@@ -17,8 +17,8 @@ trigger:
       {{ states("sensor.windvlaag") | int(0) > 60 }}
   - platform: template
     value_template: >
-      {% if states("sensor.neerslag_komend_uur_zandhoven") != "unknown" and states("sensor.neerslag_komend_uur_zandhoven") != "unavailable" %}
-        {{ states("sensor.neerslag_komend_uur_zandhoven") | float > 0 }}
+      {% if states("sensor.regen_komende_10_minuten") != "unknown" and states("sensor.regen_komende_10_minuten") != "unavailable" %}
+        {{ states("sensor.regen_komende_10_minuten") | float > 0 }}
       {% else %}
         {{ states("sensor.neerslagverwachting_gemiddeld")  | float > 0 }}
       {% endif %}
@@ -46,12 +46,15 @@ actions:
             id: sluiten
           - condition: numeric_state
             entity_id: sensor.min_temperatuur_buiten_voorspelling_12u
-            below: 12
+            below: 10
           - condition: time
             after: "15:00:00"
           - condition: numeric_state
             entity_id: sensor.max_neerslag_volgende_12u
             below: 10
+          - condition: template
+            value_template: >
+              {{ now().month >= 9 or now().month <= 4 }}
           - condition: template
             value_template: >
               {{ states("binary_sensor.kans_op_aanvriezen") == "off" }}

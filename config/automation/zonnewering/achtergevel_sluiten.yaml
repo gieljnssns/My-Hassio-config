@@ -9,6 +9,11 @@ trigger:
   - platform: time_pattern
     minutes: "/10"
     seconds: 00
+  - platform: template
+    value_template: >
+      {{ states("sensor.buiten_lichtsterkte") | int(0) > 5000 and
+          now().hour < 9 }}
+    id: ochtend
 condition:
   condition: and # all conditions need to be TRUE before action is executed.
   conditions:
@@ -24,9 +29,13 @@ condition:
     - condition: numeric_state
       entity_id: sensor.zonne_energie_gefilterd_lowpass
       above: 580
-    - condition: numeric_state
-      entity_id: sensor.buiten_lichtsterkte
-      above: 15000
+    - condition: or
+      conditions:
+        - condition: numeric_state
+          entity_id: sensor.buiten_lichtsterkte
+          above: 15000
+        - condition: trigger
+          id: ochtend
 
     # Weather based conditions
     - condition: template
@@ -37,8 +46,8 @@ condition:
         {{ states("sensor.windvlaag") | int(0) < 60 }}
     - condition: template
       value_template: >
-        {% if states("sensor.neerslag_komend_uur_zandhoven") != "unknown" and states("sensor.neerslag_komend_uur_zandhoven") != "unavailable" %}
-          {{ states("sensor.neerslag_komend_uur_zandhoven") | float < 0.15 }}
+        {% if states("sensor.regen_komende_10_minuten") != "unknown" and states("sensor.regen_komende_10_minuten") != "unavailable" %}
+          {{ states("sensor.regen_komende_10_minuten") | float < 0.15 }}
         {% else %}
           {{ states("sensor.neerslagverwachting_gemiddeld")  | float < 0.15 }}
         {% endif %}
@@ -57,14 +66,14 @@ condition:
     # Temperature based conditions
     - condition: numeric_state
       entity_id: sensor.buitentemperatuur_gefilterd
-      above: 17 # only if outdoor temperature is above x then allowed to roll out
+      above: 15 # only if outdoor temperature is above x then allowed to roll out
     - condition: numeric_state
       entity_id: sensor.gemiddelde_temp_beneden
       above: 22 # only if indoor temperature is above x then allowed to roll out
 
     - condition: template
       value_template: >
-        {{ states("sensor.max_temperatuur_buiten_voorspelling_12u") | float(0) > 20 }}
+        {{ states("sensor.max_temperatuur_buiten_voorspelling_12u") | float(0) > (states("sensor.gemiddelde_temp_beneden") | float(0) - 2) }}
 
     # Time based conditions
     - condition: template

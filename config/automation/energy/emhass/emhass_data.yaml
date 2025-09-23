@@ -5,7 +5,7 @@ trigger:
     at: "01:31:00"
     id: "fit"
   - platform: time
-    at: "23:58:00"
+    at: "23:42:00"
     id: "dayahead"
   - platform: time
     at: "06:02:00"
@@ -31,6 +31,12 @@ actions:
           - action: rest_command.publish_data
             data:
               prefix: ""
+          - condition: state
+            entity_id: input_boolean.emhass_testen
+            state: "on"
+          - action: rest_command.publish_data_test
+            data:
+              prefix: ""
       - conditions:
           - condition: trigger
             id: dayahead
@@ -39,6 +45,15 @@ actions:
           - delay:
               seconds: 5
           - action: rest_command.publish_data
+            data:
+              prefix: "dh_"
+          - condition: state
+            entity_id: input_boolean.emhass_testen
+            state: "on"
+          - action: rest_command.dayahead_optim_test
+          - delay:
+              seconds: 5
+          - action: rest_command.publish_data_test
             data:
               prefix: "dh_"
       - conditions:
@@ -52,12 +67,19 @@ actions:
           - delay:
               seconds: 2
           - action: rest_command.naive_mpc_optim
+            data:
+              payload: >
+                {{ state_attr("sensor.emhass_mpc", "mpc") }}
           - action: input_datetime.set_datetime
             data:
               datetime: >
                 {{ now() + timedelta(seconds=5) }}
             target:
               entity_id: input_datetime.emhass_data
+          - condition: state
+            entity_id: input_boolean.emhass_testen
+            state: "on"
+          - action: rest_command.naive_mpc_optim_test
       - conditions:
           - condition: trigger
             id: day
@@ -69,12 +91,19 @@ actions:
           - delay:
               seconds: 2
           - action: rest_command.naive_mpc_optim
+            data:
+              payload: >
+                {{ state_attr("sensor.emhass_mpc", "mpc") }}
           - action: input_datetime.set_datetime
             data:
               datetime: >
                 {{ now() + timedelta(seconds=5) }}
             target:
               entity_id: input_datetime.emhass_data
+          - condition: state
+            entity_id: input_boolean.emhass_testen
+            state: "on"
+          - action: rest_command.naive_mpc_optim_test
       - conditions:
           - condition: trigger
             id: fit
@@ -84,6 +113,10 @@ actions:
           #     - mon
         sequence:
           - action: rest_command.forecast_model_fit_load_zonder_wp
+          - condition: state
+            entity_id: input_boolean.emhass_testen
+            state: "on"
+          - action: rest_command.forecast_model_fit_load_zonder_wp_test
           # - action: persistent_notification.create
           #   data:
           #     message: Forecast model fit
@@ -109,6 +142,12 @@ actions:
           - action: rest_command.publish_data
             data:
               prefix: ""
+          - condition: state
+            entity_id: input_boolean.emhass_testen
+            state: "on"
+          - action: rest_command.publish_data_test
+            data:
+              prefix: ""
       - conditions:
           - condition: trigger
             id: prediction
@@ -129,3 +168,10 @@ actions:
           - delay:
               seconds: 14
           - action: rest_command.predict_heating_hours_adaboost
+          - condition: state
+            entity_id: input_boolean.emhass_testen
+            state: "on"
+          - action: rest_command.fit_heating_hours_test
+          - delay:
+              seconds: 14
+          - action: rest_command.predict_heating_hours_test

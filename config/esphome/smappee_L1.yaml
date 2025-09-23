@@ -12,6 +12,9 @@ logger:
   # baud_rate: 0
   level: DEBUG
 
+wifi:
+  use_address: 192.168.6.149
+  
 uart:
   - id: ubus
     tx_pin: GPIO1
@@ -72,34 +75,34 @@ sensor:
       id: L1cosphi
       internal: true
     update_interval: 2s
-  - platform: pzemac
-    address: 2
-    modbus_id: mbus
-    current:
-      name: "S1 stroom"
-      id: currentS1
-      internal: true
-    voltage:
-      name: "S1 spanning"
-      id: voltageS1
-      internal: true
-    energy:
-      #name: "S1 energie"
-      id: energyS1
-      internal: true
-    power:
-      name: "S1"
-      id: powerS1
-      # internal: true
-    frequency:
-      #name: "S1 frequentie"
-      id: S1freq
-      internal: true
-    power_factor:
-      #name: "S1 cos phi"
-      id: S1cosphi
-      internal: true
-    update_interval: 2s
+  # - platform: pzemac
+  #   address: 2
+  #   modbus_id: mbus
+  #   current:
+  #     name: "S1 stroom"
+  #     id: currentS1
+  #     internal: true
+  #   voltage:
+  #     name: "S1 spanning"
+  #     id: voltageS1
+  #     internal: true
+  #   energy:
+  #     #name: "S1 energie"
+  #     id: energyS1
+  #     internal: true
+  #   power:
+  #     name: "S1"
+  #     id: powerS1
+  #     # internal: true
+  #   frequency:
+  #     #name: "S1 frequentie"
+  #     id: S1freq
+  #     internal: true
+  #   power_factor:
+  #     #name: "S1 cos phi"
+  #     id: S1cosphi
+  #     internal: true
+  #   update_interval: 2s
   - platform: pzemac
     address: 3
     modbus_id: mbus

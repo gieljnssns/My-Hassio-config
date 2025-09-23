@@ -1,0 +1,48 @@
+alias: Sonos noor
+id: 03fdc5b9-1fd1-41b8-aaf4-9def5e30760e
+mode: single
+trigger:
+  - platform: state
+    entity_id: binary_sensor.slaapkamer_noor_bezetting
+    to: "on"
+    id: aan
+  - platform: state
+    entity_id: binary_sensor.noor_bayesian
+    from: "on"
+    to: "off"
+    id: uit
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: aan
+          - condition: state
+            entity_id: device_tracker.nphone_bermuda
+            state: home
+          - condition: state
+            entity_id: input_boolean.sonos_noor
+            state: "off"
+        sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.sonos_noor
+          - action: media_player.volume_set
+            target:
+              entity_id: media_player.mass_slaapkamer_noor
+            data:
+              volume_level: 0.04
+          - delay:
+              seconds: 2
+          - action: media_player.media_play
+            target:
+              entity_id: media_player.mass_slaapkamer_noor
+          
+      - conditions:
+          - condition: trigger
+            id: uit
+        sequence:
+          - action: media_player.media_pause
+            entity_id: media_player.mass_slaapkamer_noor
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.sonos_noor

@@ -11,6 +11,18 @@
         {% else %}
           mdi:fan-off
         {% endif %}
+    
+    - name: "Kans op Aanvriezen"
+      unique_id: a562950c-c161-4617-ac9c-0eb5f6b0b745
+      state: >
+        {% set tmin = states('sensor.min_temperatuur_buiten_voorspelling_12u') | float %}
+        {% set rh = states('sensor.poort_luchtvochtigheid') | float %}
+        {% set dp = states('sensor.buiten_dauwpunt') | float %}
+        {% set wind = states('sensor.windsnelheid') | float %}
+        {% set clouds = states('sensor.tomorrow_io_home_cloud_cover') | float %}
+
+        {{ tmin < 1 and rh > 85 and (tmin - dp) < 2 and wind < 3 and clouds < 30 }}
+      device_class: cold
 
     # - name: Buiten frisser dan binnen
     #   unique_id: 54f0fc98-2bac-4e56-8427-ad0549642afa
