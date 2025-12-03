@@ -1,0 +1,32 @@
+esphome:
+  name: poort2
+  friendly_name: Poort2
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "2DAmVdBfaGrQbIK1/CZXNLAHaERdjokecwxEABpsXcQ="
+
+ota:
+  - platform: esphome
+    password: "1415b3c84d9e9494328ba738c2757dfe"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Poort2 Fallback Hotspot"
+    password: "82dnEyMcsooP"
+
+captive_portal:
+    

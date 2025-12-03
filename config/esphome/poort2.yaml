@@ -1,8 +1,8 @@
 substitutions:
-  devicename: poort
+  devicename: poort2
   upper_devicename: Poort
   platform: esp32
-  board: esp32dev
+  board: esp32-s3-devkitc-1
 
 esp32:
   framework:
@@ -18,8 +18,8 @@ wifi:
 
 i2c:
   - id: bus_a
-    sda: 21
-    scl: 22
+    sda: GPIO13
+    scl: GPIO14
 
 output:
   - platform: ledc
@@ -56,7 +56,7 @@ sensor:
     unit_of_measurement: "Signal %"
     entity_category: "diagnostic"
     device_class: ""
-    
+
   - platform: sht3xd
     temperature:
       name: ${upper_devicename} temperatuur

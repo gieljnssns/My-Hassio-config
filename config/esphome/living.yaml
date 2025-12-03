@@ -6,8 +6,20 @@ substitutions:
   platform: esp32
   board: esp32dev
 
+external_components:
+  # - source:
+  #     type: git
+  #     url: https://github.com/esphome/esphome
+  #     ref: 2025.8.0
+  #   components: [ "uart" ]
+#   - source: github://the-smart-home-maker/esphome-4cello@gc9a01
+#     components: ["gc9a01"]
+  - source: github://esphome/esphome@2025.8.0
+    components: [uart, ld2410]
+  # - source: github://esphome/esphome@2025.8.1
+  #   components: [ "uart" ]
+    
 esp32:
-  # board: esp32dev
   framework:
     type: esp-idf
 
@@ -29,6 +41,10 @@ esp32_ble_tracker:
 bluetooth_proxy:
   active: true
 
+logger:
+  level: DEBUG
+  baud_rate: 0
+
 i2c:
   - id: bus_a
     sda: 21
@@ -37,17 +53,29 @@ i2c:
 
 uart:
   - id: zithoek1
-    tx_pin: 1
-    rx_pin: 3
+    tx_pin: GPIO1
+    rx_pin: GPIO3
+    # rx_pin: 
+    #   number: GPIO3
+      #mode:
+      #  input: true
+      #  pullup: true
     baud_rate: 256000
     parity: NONE
     stop_bits: 1
+    # debug:
   - id: danszaal1
-    tx_pin: 17
+    tx_pin: GPIO17
+    # rx_pin: 
+    #   number: GPIO16
+    #   mode:
+    #     input: true
+    #     pullup: true
     rx_pin: 16
     baud_rate: 256000
     parity: NONE
     stop_bits: 1
+    # debug:
 
 ld2410:
   - id: zithoek
@@ -190,7 +218,7 @@ sensor:
     humidity:
       name: "${upper_devicename} luchtvochtigheid"
       id: bme280_humidity
-      # oversampling: 1x
+      oversampling: 1x
     pressure:
       name: "${upper_devicename} luchtdruk"
       id: bme280_pressure
@@ -205,14 +233,14 @@ sensor:
     temperature: bme280_temperature
     humidity: bme280_humidity
 
-  # - platform: template
-  #   name: "${upper_devicename} dauwpunt"
-  #   lambda:
-  #     return (243.5*(log(id(bme280_humidity).state/100)+((17.67*id(bme280_temperature).state)/
-  #     (243.5+id(bme280_temperature).state)))/(17.67-log(id(bme280_humidity).state/100)-
-  #     ((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state))));
-  #   unit_of_measurement: °C
-  #   icon: "mdi:thermometer-alert"
+  - platform: template
+    name: "${upper_devicename} dauwpunt"
+    lambda:
+      return (243.5*(log(id(bme280_humidity).state/100)+((17.67*id(bme280_temperature).state)/
+      (243.5+id(bme280_temperature).state)))/(17.67-log(id(bme280_humidity).state/100)-
+      ((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state))));
+    unit_of_measurement: °C
+    icon: "mdi:thermometer-alert"
 
   - platform: ld2410
     ld2410_id: zithoek

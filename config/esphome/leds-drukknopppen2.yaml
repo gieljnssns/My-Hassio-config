@@ -93,11 +93,15 @@ binary_sensor:
     on_press:
       # Only turn on the chime when it is active.
       then:
-        if:
-          condition:
-            - switch.is_on: deurbel_actief
-          then:
-            - switch.turn_on: deurbel
+        - homeassistant.service:
+            service: script.doorbell_notification
+        - if:
+            condition:
+              - switch.is_on: deurbel_actief
+            then:
+              - switch.turn_on: deurbel
+              # - homeassistant.service:
+              #     service: script.doorbell_notification
     on_release:
       # On release, turn of the chime.
       - switch.turn_off: deurbel

@@ -81,6 +81,9 @@ switch:
             if ((id(ha_temp).state > -7) && (id(ha_temp).state < 32) && (id(living_absolute_luchtvochtigheid).state < id(buiten_absolute_luchtvochtigheid).state) && (id(beneden_temperatuur).state < 19)) {
               id(luchtdroger).turn_on();
             } 
+            if ((id(ha_temp).state > -7) && (id(ha_temp).state < 7)) {
+              id(luchtdroger).turn_on();
+            } 
         # - lambda: |-
         #     if ((id(living_luchtvochtigheid).state > 59) && (id(living_temperatuur).state < 21)) {
         #       id(luchtdroger).turn_on();
