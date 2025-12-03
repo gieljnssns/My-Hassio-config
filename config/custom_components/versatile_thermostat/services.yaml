@@ -1,0 +1,256 @@
+reload:
+    name: Reload
+    description: Reload all Versatile Thermostat entities.
+
+set_presence:
+    name: Set presence
+    description: Force the presence mode in thermostat
+    target:
+        entity:
+            integration: versatile_thermostat
+    fields:
+        presence:
+            name: Presence
+            description: Presence setting
+            required: true
+            advanced: false
+            example: "on"
+            default: "on"
+            selector:
+                select:
+                    options:
+                        - "on"
+                        - "off"
+                        - "home"
+                        - "not_home"
+
+set_safety:
+    name: Set safety
+    description: Change the safety parameters
+    target:
+        entity:
+            integration: versatile_thermostat
+    fields:
+        delay_min:
+            name: Delay in minutes
+            description: Maximum allowed delay in minutes between two temperature mesures
+            required: false
+            advanced: false
+            example: "30"
+            selector:
+                number:
+                    min: 0
+                    max: 9999
+                    unit_of_measurement: "min"
+                    mode: box
+        min_on_percent:
+            name: Minimal on_percent
+            description: Minimal heating percent value for safety preset activation
+            required: false
+            advanced: false
+            example: "0.5"
+            default: "0.5"
+            selector:
+                number:
+                    min: 0
+                    max: 1
+                    step: 0.05
+                    unit_of_measurement: "%"
+                    mode: slider
+        default_on_percent:
+            name: on_percent used in safety mode
+            description: The default heating percent value in safety preset
+            required: false
+            advanced: false
+            example: "0.1"
+            default: "0.1"
+            selector:
+                number:
+                    min: 0
+                    max: 1
+                    step: 0.05
+                    unit_of_measurement: "%"
+                    mode: slider
+
+set_window_bypass:
+    name: Set Window ByPass
+    description: Bypass the window state to enable heating with window open.
+    target:
+        entity:
+            integration: versatile_thermostat
+    fields:
+        window_bypass:
+            name: Window ByPass
+            description: ByPass value
+            required: true
+            advanced: false
+            default: true
+            selector:
+                boolean:
+
+set_auto_regulation_mode:
+    name: Set Auto Regulation mode
+    description: Change the mode of self-regulation (only for VTherm over climate)
+    target:
+        entity:
+            integration: versatile_thermostat
+    fields:
+        auto_regulation_mode:
+            name: Auto regulation mode
+            description: Possible values
+            required: true
+            advanced: false
+            default: true
+            selector:
+                select:
+                    options:
+                        - "None"
+                        - "Light"
+                        - "Medium"
+                        - "Strong"
+                        - "Slow"
+                        - "Expert"
+
+set_auto_fan_mode:
+    name: Set Auto Fan mode
+    description: Change the mode of auto-fan (only for VTherm over climate)
+    target:
+        entity:
+            integration: versatile_thermostat
+    fields:
+        auto_fan_mode:
+            name: Auto fan mode
+            description: Possible values
+            required: true
+            advanced: false
+            default: true
+            selector:
+                select:
+                    options:
+                        - "None"
+                        - "Low"
+                        - "Medium"
+                        - "High"
+                        - "Turbo"
+
+set_hvac_mode_sleep:
+    name: Set HVAC Mode to Sleep
+    description: Turns a VTherm climate into seasonal sleep - OFF with valve 100% open (only for VTherm over climate with valve regulation).
+    target:
+        entity:
+            integration: versatile_thermostat
+
+lock:
+    name: Lock
+    description: "Locks the thermostat, preventing any changes to its configuration from UI or automations."
+    fields:
+        code:
+            name: Lock code
+            description: The optional lock code
+            required: false
+            advanced: false
+            example: "1234"
+            selector:
+                text:
+                    type: password
+
+unlock:
+    name: Unlock
+    description: "Unlocks the thermostat, allowing changes to its configuration."
+    target:
+        entity:
+            integration: versatile_thermostat
+    fields:
+        code:
+            name: Lock code
+            description: The optional lock code
+            required: false
+            advanced: false
+            example: "1234"
+            selector:
+                text:
+                    type: password
+
+set_tpi_parameters:
+    name: Set TPI parameters
+    description: Change the TPI parameters
+    target:
+        entity:
+            integration: versatile_thermostat
+    fields:
+        tpi_coef_int:
+            name: Coef Int
+            description: Coefficient Integral
+            required: false
+            advanced: false
+            example: "0.6"
+            selector:
+                number:
+                    min: 0
+                    max: 10
+                    step: 0.01
+                    mode: box
+        tpi_coef_ext:
+            name: Coef Ext
+            description: Coefficient External
+            required: false
+            advanced: false
+            example: "0.01"
+            selector:
+                number:
+                    min: 0
+                    max: 1
+                    step: 0.001
+                    mode: box
+        minimal_activation_delay:
+            name: Minimal Activation delay
+            description: Delay in seconds under which the equipment will not be activated
+            required: false
+            advanced: true
+            example: "10"
+            selector:
+                number:
+                    min: 0
+                    max: 1000
+                    step: 1
+                    mode: box
+                    unit_of_measurement: "seconds"
+        minimal_deactivation_delay:
+            name: Minimal Deactivation delay
+            description: Delay in seconds under which the equipment will be kept active
+            required: false
+            advanced: true
+            example: "10"
+            selector:
+                number:
+                    min: 0
+                    max: 1000
+                    step: 1
+                    mode: box
+                    unit_of_measurement: "seconds"
+        tpi_threshold_low:
+            name: Low TPI threshold
+            description: Threshold in ° under which the TPI algorithm will be on. 0 means no threshold
+            required: false
+            advanced: false
+            example: "0.1"
+            selector:
+                number:
+                    min: -10
+                    max: 10
+                    step: 0.1
+                    mode: box
+                    unit_of_measurement: "°"
+        tpi_threshold_high:
+            name: High TPI threshold
+            description: Threshold in ° above which the TPI algorithm will be off. 0 means no threshold
+            required: false
+            advanced: false
+            example: "0.1"
+            selector:
+                number:
+                    min: -10
+                    max: 10
+                    step: 0.1
+                    mode: box
+                    unit_of_measurement: "°"

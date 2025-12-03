@@ -100,14 +100,14 @@ class SmoothingAnalyticsOptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         """Handle options step."""
         if user_input is not None:
             # Update the device name in options flow
             return self.async_create_entry(
-                title=user_input.get("device_name", self.config_entry.title),
+                title=user_input.get("device_name", self._config_entry.title),
                 data=user_input,
             )
 
@@ -116,11 +116,11 @@ class SmoothingAnalyticsOptionsFlow(config_entries.OptionsFlow):
             {
                 vol.Optional(
                     "device_name",
-                    default=self.config_entry.options.get("device_name", NAME),
+                    default=self._config_entry.options.get("device_name", NAME),
                 ): str,
                 vol.Optional(
                     "lowpass_time_constant",
-                    default=self.config_entry.options.get(
+                    default=self._config_entry.options.get(
                         "lowpass_time_constant", DEFAULT_LOW_PASS
                     ),
                 ): selector(
@@ -135,7 +135,7 @@ class SmoothingAnalyticsOptionsFlow(config_entries.OptionsFlow):
                 ),
                 vol.Optional(
                     "median_sampling_size",
-                    default=self.config_entry.options.get(
+                    default=self._config_entry.options.get(
                         "median_sampling_size", DEFAULT_MEDIAN_SIZE
                     ),
                 ): selector(
@@ -150,7 +150,7 @@ class SmoothingAnalyticsOptionsFlow(config_entries.OptionsFlow):
                 ),
                 vol.Optional(
                     "desired_time_to_95",
-                    default=self.config_entry.options.get(
+                    default=self._config_entry.options.get(
                         "desired_time_to_95", DEFAULT_EMA_DESIRED_TIME_TO_95
                     ),
                 ): selector(

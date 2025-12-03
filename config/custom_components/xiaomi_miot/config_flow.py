@@ -33,23 +33,21 @@ from . import (
     init_integration_data,
 )
 from .core.utils import (
+    DeviceException,
     get_customize_via_entity,
     get_customize_via_model,
     in_china,
     async_analytics_track_event,
 )
 from .core.const import SUPPORTED_DOMAINS, CLOUD_SERVERS, CONF_XIAOMI_CLOUD, HA_VERSION
+from .core.device import MiioInfo
 from .core.miot_spec import MiotSpec
+from .core.mini_miio import AsyncMiIO
 from .core.xiaomi_cloud import (
     MiotCloud,
     MiCloudException,
     MiCloudAccessDenied,
     MiCloudNeedVerify,
-)
-
-from miio import (
-    Device as MiioDevice,
-    DeviceException,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,8 +69,10 @@ async def check_miio_device(hass, user_input, errors):
     host = user_input.get(CONF_HOST)
     token = user_input.get(CONF_TOKEN)
     try:
-        device = MiioDevice(host, token)
-        info = await hass.async_add_executor_job(device.info)
+        device = AsyncMiIO(host, token)
+        info = await device.info()
+        if info:
+            info = MiioInfo(info)
     except DeviceException:
         device = None
         info = None
@@ -87,7 +87,7 @@ async def check_miio_device(hass, user_input, errors):
         if not user_input.get(CONF_MODEL):
             model = str(info.model or '')
             user_input[CONF_MODEL] = model
-        user_input['miio_info'] = dict(info.raw or {})
+        user_input['miio_info'] = dict(info or {})
         miot_type = await MiotSpec.async_get_model_type(hass, model)
         if not miot_type:
             miot_type = await MiotSpec.async_get_model_type(hass, model, use_remote=True)
@@ -100,7 +100,7 @@ async def check_miio_device(hass, user_input, errors):
                     {'did': 'miot', 'siid': 2, 'piid': 2},
                     {'did': 'miot', 'siid': 3, 'piid': 1},
                 ]
-                results = device.get_properties(pms, property_getter='get_properties') or []
+                results = await device.send('get_properties', pms) or []
                 for prop in results:
                     if not isinstance(prop, dict):
                         continue
@@ -110,6 +110,9 @@ async def check_miio_device(hass, user_input, errors):
                             hass, 'miot', 'local', model,
                             firmware=info.firmware_version,
                             results=results,
+                            miot_urn=miot_type,
+                            ap_rssi=info.get('ap', {}).get('rssi', ''),
+                            wifi_fw_ver=info.get('wifi_fw_ver', ''),
                         )
                         break
             except DeviceException:
@@ -449,8 +452,6 @@ class XiaomiMiotFlowHandler(config_entries.ConfigFlow, BaseFlowHandler, domain=D
             'button_actions': cv.string,
             'select_actions': cv.string,
             'text_actions': cv.string,
-            'light_services': cv.string,
-            'fan_services': cv.string,
             'exclude_miot_services': cv.string,
             'exclude_miot_properties': cv.string,
             'configuration_entities': cv.string,
@@ -823,10 +824,6 @@ def get_customize_options(hass, options={}, bool2selects=[], entity_id='', model
             'stat_power_cost_key': cv.string,
             'stat_power_cost_type': cv.string,
         })
-        if entity_class in ['MiotSwitchActionSubEntity']:
-            options.update({
-                'feeding_measure': cv.string,
-            })
 
     if domain == 'light' or re.search(r'light', model, re.I):
         bool2selects.extend(['color_temp_reverse'])

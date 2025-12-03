@@ -3,11 +3,16 @@ from __future__ import annotations
 import enum
 import logging
 import xml.etree.ElementTree as ET
+from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Dict, Union
 
 import pytz
 import requests
+
+from custom_components.entsoe.const import DEFAULT_PERIOD
+from custom_components.entsoe.utils import get_interval_minutes
+from .utils import bucket_time
 
 _LOGGER = logging.getLogger(__name__)
 URL = "https://web-api.tp.entsoe.eu/api"
@@ -16,10 +21,11 @@ DATETIMEFORMAT = "%Y%m%d%H00"
 
 class EntsoeClient:
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, period: str = DEFAULT_PERIOD) -> None:
         if api_key == "":
             raise TypeError("API key cannot be empty")
         self.api_key = api_key
+        self.configuration_period = period
 
     def _base_request(
         self, params: Dict, start: datetime, end: datetime
@@ -48,7 +54,7 @@ class EntsoeClient:
 
     def query_day_ahead_prices(
         self, country_code: Union[Area, str], start: datetime, end: datetime
-    ) -> str:
+    ) -> dict:
         """
         Parameters
         ----------
@@ -70,60 +76,121 @@ class EntsoeClient:
 
         if response.status_code == 200:
             try:
-                root = self._remove_namespace(ET.fromstring(response.content))
-                _LOGGER.debug(f"content: {root}")
-                series = {}
-
-                # Extract TimeSeries data
-                for timeseries in root.findall(".//TimeSeries"):
-                    for period in timeseries.findall(".//Period"):
-                        resolution = period.find(".//resolution").text
-
-                        if resolution != "PT60M":
-                            continue
-
-                        response_start = period.find(".//timeInterval/start").text
-                        start_time = (
-                            datetime.strptime(response_start, "%Y-%m-%dT%H:%MZ")
-                            .replace(tzinfo=pytz.UTC)
-                            .astimezone()
-                        )
-
-                        response_end = period.find(".//timeInterval/end").text
-                        end_time = (
-                            datetime.strptime(response_end, "%Y-%m-%dT%H:%MZ")
-                            .replace(tzinfo=pytz.UTC)
-                            .astimezone()
-                        )
-
-                        _LOGGER.debug(f"Period found is from {start_time} till {end_time}")
-
-                        for point in period.findall(".//Point"):
-                            position = point.find(".//position").text
-                            price = point.find(".//price.amount").text
-                            hour = int(position) - 1
-                            series[start_time + timedelta(hours=hour)] = float(price)
-
-                        # Now fill in any missing hours 
-                        current_time = start_time
-                        last_price = series[current_time]
-
-                        while current_time < end_time:  # upto excluding! the endtime
-                            if current_time in series:
-                                last_price = series[current_time]  # Update to the current price
-                            else:
-                                _LOGGER.debug(f"Extending the price {last_price} of the previous hour to {current_time}")
-                                series[current_time] = last_price  # Fill with the last known price
-                            current_time += timedelta(hours=1)
-
+                series = self.parse_price_document(response.content)
                 return dict(sorted(series.items()))
 
             except Exception as exc:
-                _LOGGER.debug(f"Failed to parse response content:{response.content}")
+                _LOGGER.debug(
+                    f"Failed to parse response content error: {exc} content:{response.content}"
+                )
                 raise exc
         else:
-            print(f"Failed to retrieve data: {response.status_code}")
+            _LOGGER.error(f"Failed to retrieve data: {response.status_code}")
             return None
+
+    # lets process the received document
+    def parse_price_document(self, document: str) -> dict:
+
+        root = self._remove_namespace(ET.fromstring(document))
+        _LOGGER.debug(f"content: {root}")
+        series = {}
+
+        # for all given timeseries in this response
+        # There may be overlapping times in the repsonse. For now we skip timeseries which we already processed
+        for timeseries in root.findall(".//TimeSeries"):
+
+            # for all periods in this timeseries.....-> we still asume the time intervals do not overlap, and are in sequence
+            for period in timeseries.findall(".//Period"):
+                # there can be different resolutions for each period (BE casus in which historical is quarterly and future is hourly)
+                resolution = period.find(".//resolution").text
+
+                # for now supporting 60 and 15 minutes resolutions (ISO8601 defined)
+                if resolution == "PT60M" or resolution == "PT1H":
+                    resolution = "PT60M"
+                elif resolution != "PT15M":
+                    continue
+
+                response_start = period.find(".//timeInterval/start").text
+                start_time = (
+                    datetime.strptime(response_start, "%Y-%m-%dT%H:%MZ")
+                    .replace(tzinfo=pytz.UTC)
+                    .astimezone()
+                )
+                start_time.replace(minute=0)  # ensure we start from the whole hour
+
+                response_end = period.find(".//timeInterval/end").text
+                end_time = (
+                    datetime.strptime(response_end, "%Y-%m-%dT%H:%MZ")
+                    .replace(tzinfo=pytz.UTC)
+                    .astimezone()
+                )
+                _LOGGER.debug(
+                    f"Period found is from {start_time} till {end_time} with resolution {resolution}"
+                )
+                if start_time in series:
+                    _LOGGER.debug(
+                        "We found a duplicate period in the response, possibly with another resolution. We skip this period"
+                    )
+                    continue
+
+                # Parse the resolution, we only support the 'PTxM' format
+                interval = get_interval_minutes(resolution)
+                data = self.process_points(period, start_time, interval)
+                if resolution != self.configuration_period:
+                    _LOGGER.debug(
+                        f"Got {interval} minutes interval prices, but period is configured on {self.configuration_period} minutes. Averaging data into intervals of {self.configuration_period} minutes."
+                    )
+                    data = self.average_to_interval(
+                        data,
+                        expected_interval=get_interval_minutes(
+                            self.configuration_period
+                        ),
+                    )
+                series.update(data)
+        return series
+
+    # processing hourly prices info -> thats easy
+    def process_points(
+        self, period: Element, start_time: datetime, interval: int
+    ) -> dict:
+        _LOGGER.debug(f"Processing prices based on interval {interval} minutes")
+        # Extract (position, price) pairs
+        points = sorted(
+            (int(p.findtext(".//position")), float(p.findtext(".//price.amount")))
+            for p in period.findall(".//Point")
+        )
+        if not points:
+            return {}
+
+        data = {}
+        last_price = None
+        for pos in range(points[0][0], points[-1][0] + 1):
+            if points and pos == points[0][0]:
+                last_price = points.pop(0)[1]
+            data[start_time + timedelta(minutes=(pos - 1) * interval)] = last_price
+
+        return data
+
+    def average_to_interval(self, data: dict, expected_interval: int) -> dict:
+        """
+        Average prices into the expected interval buckets
+
+        args:
+            data: The data to average
+            expected_interval: The interval in minutes after transformation (e.g. 30, 60)
+        """
+
+        # Create buckets of expected_interval
+        by_hour = defaultdict(list)
+        for timestamp, price in data.items():
+            bucket = bucket_time(timestamp, expected_interval)
+            by_hour[bucket].append(price)
+
+        # Calculate the average for each bucket
+        return {
+            hour: round(sum(prices) / len(prices), 2)
+            for hour, prices in by_hour.items()
+        }
 
 
 class Area(enum.Enum):

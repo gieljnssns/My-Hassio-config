@@ -701,10 +701,11 @@ class MiotProperty(MiotSpecInstance):
             return False
         names = [
             self.name,
-            self.friendly_name,
+            self.friendly_name,  # service.prop
             self.full_name,
-            self.unique_name,
-            self.unique_prop,
+            self.unique_name,  # service-2.prop-1
+            self.unique_prop,  # prop.2.1
+            f'{self.service.name}.{self.desc_name}',
             self.desc_name,
         ]
         for name in names:
@@ -809,15 +810,17 @@ class MiotProperty(MiotSpecInstance):
                 return val
         return rls if des is None else None
 
-    def list_description(self, val):
+    def list_description(self, val, lower=False):
         rls = []
         for v in self.value_list:
             vid = v.get('value')
-            des = self.get_translation(v.get('description'), viid=vid)
+            des = str(self.get_translation(v.get('description'), viid=vid))
+            if lower:
+                des = des.lower()
             if val is None:
                 if des == '':
-                    des = vid
-                rls.append(str(des))
+                    des = str(vid)
+                rls.append(des)
             elif val == vid:
                 return des
         if rls and val is None:
@@ -830,9 +833,9 @@ class MiotProperty(MiotSpecInstance):
                 return str(val)
         return rls if val is None else None
 
-    def list_descriptions(self, max_length=200):
+    def list_descriptions(self, max_length=200, lower=False):
         if self.value_list:
-            return self.list_description(None)
+            return self.list_description(None, lower)
         elif self.value_range:
             lst = []
             cur = self.range_min()

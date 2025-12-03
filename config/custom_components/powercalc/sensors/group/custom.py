@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-import logging
-import time
 from abc import abstractmethod
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException
+import logging
+import time
 from typing import Any
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -31,17 +31,18 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Event,
     HomeAssistant,
     State,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers import start
+from homeassistant.helpers import entity_registry as er, start
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     EventStateChangedData,
+    async_call_later,
     async_track_state_change_event,
     async_track_time_interval,
 )
@@ -54,7 +55,6 @@ from homeassistant.util.unit_conversion import (
     PowerConverter,
 )
 
-from custom_components.powercalc import CONF_GROUP_UPDATE_INTERVAL
 from custom_components.powercalc.const import (
     ATTR_ENTITIES,
     ATTR_IS_GROUP,
@@ -65,12 +65,15 @@ from custom_components.powercalc.const import (
     CONF_ENERGY_SENSOR_PRECISION,
     CONF_ENERGY_SENSOR_UNIT_PREFIX,
     CONF_EXCLUDE_ENTITIES,
+    CONF_FLOOR,
     CONF_FORCE_CALCULATE_GROUP_ENERGY,
     CONF_GROUP_ENERGY_ENTITIES,
     CONF_GROUP_ENERGY_START_AT_ZERO,
+    CONF_GROUP_ENERGY_UPDATE_INTERVAL,
     CONF_GROUP_MEMBER_DEVICES,
     CONF_GROUP_MEMBER_SENSORS,
     CONF_GROUP_POWER_ENTITIES,
+    CONF_GROUP_POWER_UPDATE_INTERVAL,
     CONF_GROUP_TYPE,
     CONF_HIDE_MEMBERS,
     CONF_IGNORE_UNAVAILABLE_STATE,
@@ -81,6 +84,8 @@ from custom_components.powercalc.const import (
     CONF_UTILITY_METER_NET_CONSUMPTION,
     DATA_DOMAIN_ENTITIES,
     DEFAULT_ENERGY_SENSOR_PRECISION,
+    DEFAULT_GROUP_ENERGY_UPDATE_INTERVAL,
+    DEFAULT_GROUP_POWER_UPDATE_INTERVAL,
     DEFAULT_POWER_SENSOR_PRECISION,
     DOMAIN,
     ENTRY_DATA_ENERGY_ENTITY,
@@ -91,8 +96,9 @@ from custom_components.powercalc.const import (
     UnitPrefix,
 )
 from custom_components.powercalc.device_binding import get_device_info
-from custom_components.powercalc.group_include.filter import AreaFilter, CompositeFilter, DeviceFilter, EntityFilter, FilterOperator
+from custom_components.powercalc.group_include.filter import AreaFilter, CompositeFilter, DeviceFilter, EntityFilter, FilterOperator, FloorFilter
 from custom_components.powercalc.group_include.include import find_entities
+from custom_components.powercalc.helpers import async_cache
 from custom_components.powercalc.sensors.abstract import (
     BaseEntity,
     generate_energy_sensor_entity_id,
@@ -219,9 +225,12 @@ async def create_group_sensors_custom(
 
 def filter_entity_list_by_class(
     all_entities: list,
-    class_name: type[EnergySensor | PowerSensor],
+    class_name: type[EnergySensor | PowerSensor] | SensorDeviceClass,
     default_filters: list[Callable] | None = None,
 ) -> list[str]:
+    """Filter entity list to only include entities of the given class."""
+    if isinstance(class_name, SensorDeviceClass):
+        class_name = PowerSensor if class_name == SensorDeviceClass.POWER else EnergySensor
     filter_list = default_filters.copy() if default_filters else []
     filter_list.append(lambda elm: not isinstance(elm, GroupedSensor))
     filter_list.append(lambda elm: isinstance(elm, class_name))
@@ -234,7 +243,23 @@ def filter_entity_list_by_class(
     ]
 
 
-async def resolve_entity_ids_recursively(  # noqa: C901
+@async_cache
+async def build_entity_include_filter(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> EntityFilter:
+    """Build and cache the entity filter based on the entry data."""
+    filters: list[EntityFilter] = []
+    if CONF_AREA in entry.data:
+        filters.append(AreaFilter(hass, entry.data[CONF_AREA]))
+    if CONF_FLOOR in entry.data:
+        filters.append(FloorFilter(hass, entry.data[CONF_FLOOR]))
+    if CONF_GROUP_MEMBER_DEVICES in entry.data:
+        filters.append(DeviceFilter(set(entry.data[CONF_GROUP_MEMBER_DEVICES])))
+    return CompositeFilter(filters, FilterOperator.OR)
+
+
+async def resolve_entity_ids_recursively(
     hass: HomeAssistant,
     entry: ConfigEntry,
     device_class: SensorDeviceClass,
@@ -267,29 +292,17 @@ async def resolve_entity_ids_recursively(  # noqa: C901
         conf_key = CONF_GROUP_POWER_ENTITIES if device_class == SensorDeviceClass.POWER else CONF_GROUP_ENERGY_ENTITIES
         resolved_ids.update(entry.data.get(conf_key) or [])
 
-    async def add_device_and_area_entities() -> None:
-        """Add entities from the defined areas."""
-        if CONF_AREA not in entry.data and CONF_GROUP_MEMBER_DEVICES not in entry.data:
+    async def add_include_based_sensors() -> None:
+        """Add entities from the defined areas, devices and floors."""
+        if all(k not in entry.data for k in (CONF_AREA, CONF_FLOOR, CONF_GROUP_MEMBER_DEVICES)):
             return
 
-        filters: list[EntityFilter] = []
-        if CONF_AREA in entry.data:
-            filters.append(AreaFilter(hass, entry.data[CONF_AREA]))
-        if CONF_GROUP_MEMBER_DEVICES in entry.data:
-            filters.append(DeviceFilter(set(entry.data[CONF_GROUP_MEMBER_DEVICES])))
-        entity_filter = CompositeFilter(filters, FilterOperator.OR)
-
-        resolved_area_entities, _ = await find_entities(
+        resolved_entities, _ = await find_entities(
             hass,
-            entity_filter,
+            await build_entity_include_filter(hass, entry),
             bool(entry.data.get(CONF_INCLUDE_NON_POWERCALC_SENSORS)),
         )
-        area_entities = [
-            entity.entity_id
-            for entity in resolved_area_entities
-            if isinstance(entity, PowerSensor if device_class == SensorDeviceClass.POWER else EnergySensor)
-        ]
-        resolved_ids.update(area_entities)
+        resolved_ids.update(filter_entity_list_by_class(resolved_entities, device_class))
 
     async def add_subgroup_entities() -> None:
         """Recursively add entities from subgroups."""
@@ -308,7 +321,7 @@ async def resolve_entity_ids_recursively(  # noqa: C901
     # Process the main logic
     add_member_entry_ids()
     add_specified_sensors()
-    await add_device_and_area_entities()
+    await add_include_based_sensors()
     await add_subgroup_entities()
 
     return resolved_ids
@@ -425,12 +438,14 @@ class GroupedSensor(BaseEntity, RestoreSensor, SensorEntity):
         # Remove own entity from entities, when it happens to be there. To prevent recursion
         entities.discard(entity_id)
         self._entities = entities
+        self._sensor_config = sensor_config
         if self._is_energy_sensor:
             self._rounding_digits = int(sensor_config.get(CONF_ENERGY_SENSOR_PRECISION, DEFAULT_ENERGY_SENSOR_PRECISION))
+            self._update_interval: int = int(sensor_config.get(CONF_GROUP_ENERGY_UPDATE_INTERVAL, DEFAULT_GROUP_ENERGY_UPDATE_INTERVAL))
         else:
             self._rounding_digits = int(sensor_config.get(CONF_POWER_SENSOR_PRECISION, DEFAULT_POWER_SENSOR_PRECISION))
+            self._update_interval = int(sensor_config.get(CONF_GROUP_POWER_UPDATE_INTERVAL, DEFAULT_GROUP_POWER_UPDATE_INTERVAL))
         self._attr_suggested_display_precision = self._rounding_digits
-        self._sensor_config = sensor_config
         if unique_id:
             self._attr_unique_id = unique_id
         self.entity_id = entity_id
@@ -442,7 +457,7 @@ class GroupedSensor(BaseEntity, RestoreSensor, SensorEntity):
         self._group_type = group_type
         self._start_time: float = time.time()
         self._last_update_time: float = 0
-        self._update_interval: int = int(self._sensor_config.get(CONF_GROUP_UPDATE_INTERVAL, 60))
+        self._update_interval_exceeded_callback: CALLBACK_TYPE = lambda *args: None
 
     async def async_added_to_hass(self) -> None:
         """Register state listeners."""
@@ -452,13 +467,16 @@ class GroupedSensor(BaseEntity, RestoreSensor, SensorEntity):
             await self.restore_last_state()
 
         self._prev_state_store = await PreviousStateStore.async_get_instance(self.hass)
+        if self._update_interval > 0:
+            self.async_on_remove(self._cancel_update_interval_exceeded_callback)
 
         self.async_on_remove(start.async_at_start(self.hass, self.on_start))
 
         self._async_hide_members(self._sensor_config.get(CONF_HIDE_MEMBERS) or False)
 
     async def async_will_remove_from_hass(self) -> None:
-        """This will trigger when entity is about to be removed from HA
+        """
+        This will trigger when entity is about to be removed from HA
         Unhide the entities, when they where hidden before.
         """
         if self._sensor_config.get(CONF_HIDE_MEMBERS) is True:
@@ -552,24 +570,39 @@ class GroupedSensor(BaseEntity, RestoreSensor, SensorEntity):
             return
 
         current_time = time.time()
-        should_throttle = self._should_throttle(current_time)
+        throttled = self._should_throttle(current_time)
 
-        write_state = True
-        if should_throttle and current_time - self._last_update_time < self._update_interval:
-            write_state = False
         self._attr_available = True
-        self._set_native_value(state, write_state=write_state)
-        if should_throttle and write_state:
-            self._last_update_time = current_time
+        if throttled:
+
+            @callback
+            def _update_interval_callback(now: datetime) -> None:
+                self.async_write_ha_state()
+
+            self._update_interval_exceeded_callback = async_call_later(
+                self.hass,
+                self._update_interval,
+                _update_interval_callback,
+            )
+            self._set_native_value(state, write_state=False)
+            return
+
+        self._cancel_update_interval_exceeded_callback()
+        self._set_native_value(state, write_state=True)
+        self._last_update_time = current_time
 
     def _should_throttle(self, current_time: float) -> bool:
         if self._update_interval == 0:
             return False
 
-        if not self._is_energy_sensor:
+        # Don't throttle initial updates within first 5 seconds after startup
+        if current_time - self._start_time < 5:
             return False
 
-        return not current_time - self._start_time < 5
+        return current_time - self._last_update_time < self._update_interval
+
+    def _cancel_update_interval_exceeded_callback(self) -> None:
+        self._update_interval_exceeded_callback()
 
     def _get_state_value_in_native_unit(self, state: State) -> Decimal:
         """Convert value of member entity state to match the unit of measurement of the group sensor."""

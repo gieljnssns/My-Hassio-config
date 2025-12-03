@@ -1,6 +1,7 @@
 # sensor.py
 import logging
-from datetime import timedelta
+import random
+from datetime import datetime, timedelta, timezone
 from typing import Final
 
 import requests
@@ -26,6 +27,40 @@ from .entity import BuienalarmEntity, BuienalarmSensorEntity
 from .sensor_types import SENSOR_DESCRIPTIONS
 
 _LOGGER = logging.getLogger(__name__)
+
+# -----------------------------------------------------------------------------
+#  User Agent rotation to avoid 403 errors
+# -----------------------------------------------------------------------------
+_USER_AGENT_LIST: Final[list[str]] = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1',
+    'Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.1)',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36 Edg/87.0.664.75',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.18363',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+]
+
+
+def _get_random_user_agent() -> str:
+    """Return a random user agent from the list."""
+    return random.choice(_USER_AGENT_LIST)
+
+
+def _get_browser_headers() -> dict[str, str]:
+    """Return headers that mimic a real browser request."""
+    return {
+        "User-Agent": _get_random_user_agent(),
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "nl-NL,nl;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Referer": "https://www.buienalarm.nl/",
+        "Origin": "https://www.buienalarm.nl",
+        "DNT": "1",
+        "Connection": "keep-alive",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-site",
+    }
 
 
 old_SENSOR_DESCRIPTIONS: Final[list[SensorEntityDescription]] = [
@@ -99,7 +134,8 @@ class BuienalarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
     def __init__(self,
                  hass: HomeAssistant,
                  latitude: float,
-                 longitude: float
+                 longitude: float,
+                 config_entry: ConfigEntry
                  ) -> None:
         self.latitude = latitude
         self.longitude = longitude
@@ -111,16 +147,24 @@ class BuienalarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
             name=DOMAIN,
             update_interval=timedelta(minutes=5),  # set update interval
             always_update=True,  # of False indien __eq__ kan vergelijken
+            config_entry=config_entry,
         )
         _LOGGER.debug("[SENSOR COORD] Initialized with URL: %s", self.url)
 
     async def _async_update_data(self) -> dict[str, object]:
-        """Fetch the latest data from Buienalarm."""
+        """
+            Fetch the latest data from Buienalarm.
+            Called automatically by the DataUpdateCoordinator on schedule.
+        """
         _LOGGER.debug("[SENSOR COORD] _async_update_data called")
         try:
-            # response = await self.api.async_get_data()
+            # Get browser-like headers with random user agent
+            headers = _get_browser_headers()
+            _LOGGER.debug("[SENSOR COORD] Using User-Agent: %s", headers["User-Agent"])
+            
+            # Use lambda to properly pass headers to requests.get
             response = await self.hass.async_add_executor_job(
-                requests.get, self.url
+                lambda: requests.get(self.url, headers=headers, timeout=30)
             )
             _LOGGER.debug(
                 "[SENSOR COORD] HTTP status: %s, headers: %s",
@@ -130,6 +174,8 @@ class BuienalarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
             response.raise_for_status()
             data = response.json()
             _LOGGER.debug("[SENSOR COORD] JSON data: %s", data)
+            self.api_last_updated = datetime.now(timezone.utc)
+            _LOGGER.debug("[SENSOR COORD] Fetched new Buienalarm data at %s", self.api_last_updated.isoformat())
             return data
         except (requests.RequestException, ValueError) as error:
             _LOGGER.error("[SENSOR COORD] Error updating data: %s", error)
@@ -138,7 +184,7 @@ class BuienalarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """
@@ -147,16 +193,16 @@ async def async_setup_entry(
     This function creates a coordinator, fetches initial data,
     and adds sensor entities.
     """
-    _LOGGER.debug("[SENSOR SETUP] Setting up Buienalarm sensors for %s", entry.unique_id)
-    _LOGGER.debug("[SENSOR SETUP] async_setup_entry called for %s", entry.entry_id)
+    _LOGGER.debug("[SENSOR SETUP] Setting up Buienalarm sensors for %s", config_entry.unique_id)
+    _LOGGER.debug("[SENSOR SETUP] async_setup_entry called for %s", config_entry.entry_id)
 
-    latitude = entry.data.get("latitude")
-    longitude = entry.data.get("longitude")
+    latitude = config_entry.data.get("latitude")
+    longitude = config_entry.data.get("longitude")
 
     _LOGGER.debug(
         "[SENSOR SETUP] Coordinates from entry: lat=%s, lon=%s", latitude, longitude
     )
-    coordinator = BuienalarmDataUpdateCoordinator(hass, latitude, longitude)
+    coordinator = BuienalarmDataUpdateCoordinator(hass, latitude, longitude, config_entry)
     _LOGGER.debug("[SENSOR SETUP] Coordinator created: %s", coordinator)
 
     # Perform initial refresh to warm up data
@@ -166,7 +212,7 @@ async def async_setup_entry(
 
         # Start refresh as background task (niet awaiten!)
         task = hass.async_create_task(coordinator.async_config_entry_first_refresh())
-        entry.async_on_unload(task.cancel)
+        config_entry.async_on_unload(task.cancel)
         _LOGGER.debug(
             "[SENSOR SETUP] Initial refresh completed: success=%s",
             coordinator.last_update_success,
@@ -176,40 +222,40 @@ async def async_setup_entry(
         return False
 
     """Store the coordinator in hass.data for later access."""
-    _LOGGER.debug("[SENSOR SETUP] Storing coordinator in hass.data for entry %s", entry.entry_id)
+    _LOGGER.debug("[SENSOR SETUP] Storing coordinator in hass.data for entry %s", config_entry.entry_id)
     if DOMAIN not in hass.data:
         _LOGGER.debug("[SENSOR SETUP] Initializing hass.data[%s]", DOMAIN)
         # Persist the coordinator in hass.data
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+        hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
 
     # old_sensors
     sensors1: list[SensorEntity] = [
-        BuienalarmSensor(coordinator, entry, **sensor_data)
+        BuienalarmSensor(coordinator, config_entry, **sensor_data)
         for sensor_data in SENSORS
     ]
 
     sensors2 = [
-        BuienalarmSensorEntity(coordinator, entry, description,
-                               location_id=entry.data.get("location_id", "unknown"),
-                               location_name=entry.data.get("location_name", "unknown"))
+        BuienalarmSensorEntity(coordinator, config_entry, description,
+                               location_id=config_entry.data.get("location_id", "unknown"),
+                               location_name=config_entry.data.get("location_name", "unknown"))
         for description in SENSOR_DESCRIPTIONS
     ]
 
     sensors3: list[SensorEntity] = [
-        BuienalarmSensorEntity(coordinator, entry, description,
-                               location_id=entry.data.get("location_id", "unknown"),
-                               location_name=entry.data.get("location_name", "unknown"))
+        BuienalarmSensorEntity(coordinator, config_entry, description,
+                               location_id=config_entry.data.get("location_id", "unknown"),
+                               location_name=config_entry.data.get("location_name", "unknown"))
         for description in SENSOR_DESCRIPTIONS
     ]
 
     sensors4 = [
-        BuienalarmSensor(coordinator, entry, description.name, description.native_unit_of_measurement,
+        BuienalarmSensor(coordinator, config_entry, description.name, description.native_unit_of_measurement,
                          description.icon, description.device_class, description.state_class, description.key)
         for description in SENSOR_DESCRIPTIONS
     ]
 
     sensors5: list[SensorEntity] = [
-        BuienalarmTestSensor(coordinator, entry, description)
+        BuienalarmTestSensor(coordinator, config_entry, description)
         for description in SENSOR_DESCRIPTIONS
     ]
 
@@ -223,14 +269,14 @@ async def async_setup_entry(
 
     # await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # ValueError: Config entry Schagen (1ba2a3d11e3e38b8e768ad5ceb4df8bf) for buienalarm.sensor has already been setup!
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
 
     return True
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Reload config entry when options are changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 # class BuienalarmTestSensor(CoordinatorEntity[BuienalarmDataUpdateCoordinator], SensorEntity):
@@ -375,8 +421,26 @@ class BuienalarmSensor(BuienalarmEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, object] | None:
-        """Return the state attributes."""
-        return {
-            "precipitation_data": self.data_points_as_list,
-            "attribution": ATTR_ATTRIBUTION,
-        }
+        """
+        Return the additional state attributes for Home Assistant.
+
+        This property replaces the deprecated `device_state_attributes`.
+        It includes metadata such as the last update time and any extra
+        contextual data relevant to the entity.
+        """
+        try:
+            attributes: dict[str, object] = {}
+            # attributes["api_last_updated"] = self._api_last_updated.isoformat() if self._api_last_updated else None
+            # Add API timestamp from coordinator
+            if getattr(self.coordinator, "api_last_updated", None):
+                attributes["api_last_updated"] = self.coordinator.api_last_updated.isoformat()
+
+            # Only include precipitation_data for one specific sensor
+            if self._key == "precipitationrate_total":
+                attributes["precipitation_data"] = getattr(self, "data_points_as_list", [])
+
+            attributes["attribution"] = ATTR_ATTRIBUTION
+            return attributes
+        except Exception as exc:
+            _LOGGER.error("Failed to build extra_state_attributes: %s", exc)
+            return {}

@@ -1,6 +1,6 @@
 import logging
 from typing import TYPE_CHECKING, Optional, Callable
-from functools import partial, cached_property
+from functools import cached_property
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, EntityCategory
@@ -25,21 +25,46 @@ class BasicEntity(Entity, CustomConfigHelper):
     def custom_config(self, key=None, default=None):
         return get_customize_via_entity(self, key, default)
 
+    def global_config(self, key=None, default=None):
+        if not self.hass:
+            return default
+        cfg = self.hass.data[DOMAIN]['config'] or {}
+        return cfg if key is None else cfg.get(key, default)
+
+    def filter_state_attributes(self, dat: dict):
+        if exl := self.global_config('exclude_state_attributes'):
+            if not isinstance(exl, (list, tuple)):
+                exl = [exl]
+            dat = {
+                k: v
+                for k, v in dat.items()
+                if k not in exl
+            }
+        return dat
+
+    @cached_property
+    def extra_state_attributes(self):
+        if hasattr(self, '_attr_extra_state_attributes'):
+            return self.filter_state_attributes(self._attr_extra_state_attributes)
+        return None
+
     async def async_get_properties(self, mapping, update_entity=False, **kwargs):
         return await self.device.async_get_properties(mapping, update_entity, **kwargs)
 
     async def async_set_property(self, field, value):
-        return await self.hass.async_add_executor_job(self.device.set_property, field, value)
+        return await self.device.async_set_property(field, value)
 
     async def async_set_miot_property(self, siid, piid, value, **kwargs):
-        return await self.hass.async_add_executor_job(
-            partial(self.device.set_miot_property, siid, piid, value, **kwargs)
-        )
+        return await self.device.async_set_miot_property(siid, piid, value, **kwargs)
 
-    async def async_call_action(self, siid, aiid, params=None, **kwargs):
-        return await self.hass.async_add_executor_job(
-            partial(self.device.call_action, siid, aiid, params, **kwargs)
-        )
+    async def async_call_action(self, siid, aiid=None, params=None, **kwargs):
+        if isinstance(siid, MiotAction):
+            if params is None:
+                params = aiid
+            action = siid
+            siid = action.service.iid
+            aiid = action.iid
+        return await self.device.async_call_action(siid, aiid, params, **kwargs)
 
     async def async_miio_command(self, method, params=None, **kwargs):
         if not self.device.local:
@@ -112,7 +137,7 @@ class XEntity(BasicEntity):
         self._attr_device_class = self.custom_config('device_class') or conv.option.get('device_class')
 
         if self._attr_translation_key:
-            self._attr_translation_key = ( # hassfest
+            self._attr_translation_key = (  # hassfest
                 self._attr_translation_key
                 .replace(':', '-')
                 .replace('.', '-')
@@ -166,6 +191,11 @@ class XEntity(BasicEntity):
         elif isinstance(self.conv, InfoConv):
             self._attr_available = available = True
             self._attr_icon = data.get('icon', self._attr_icon)
+            old_data = self._attr_extra_state_attributes.copy()
+            old_data.pop('updated_at', None)
+            if data == old_data:
+                return
+            data['updated_at'] = str(self.device.data.get('updated', ''))
             self._attr_extra_state_attributes = data
         else:
             return

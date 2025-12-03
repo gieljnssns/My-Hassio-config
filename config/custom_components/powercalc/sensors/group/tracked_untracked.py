@@ -1,20 +1,20 @@
 from __future__ import annotations
 
-import logging
 from enum import StrEnum
+import logging
 from typing import Any
 
-import homeassistant.helpers.entity_registry as er
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_UNIQUE_ID, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED, EventEntityRegistryUpdatedData
 from homeassistant.helpers.typing import ConfigType
 
-from custom_components.powercalc import CONF_CREATE_ENERGY_SENSOR
 from custom_components.powercalc.const import (
+    CONF_CREATE_ENERGY_SENSOR,
     CONF_DISABLE_EXTENDED_ATTRIBUTES,
     CONF_ENERGY_SENSOR_UNIT_PREFIX,
     CONF_EXCLUDE_ENTITIES,

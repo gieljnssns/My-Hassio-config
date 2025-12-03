@@ -8,10 +8,10 @@ from homeassistant.components import persistent_notification
 from .const import *
 from .models import WasteCollectionRepository
 from .collectors import (
-    XimmioCollector, BurgerportaalCollector, OpzetCollector,
-    AfvalAlertCollector, AfvalwijzerCollector, CirculusCollector, CleanprofsCollector,
+    XimmioCollector, BurgerportaalCollector, OpzetCollector, KlikogroepCollector,
+    AfvalAlertCollector, AfvalwijzerCollector, AmsterdamCollector, CirculusCollector, CleanprofsCollector,
     DeAfvalAppCollector, LimburgNetCollector, MontferlandNetCollector, OmrinCollector,
-    RD4Collector, RecycleApp, ROVACollector, StraatbeeldCollector
+    RD4Collector, RecycleApp, ReinisCollector, ROVACollector, StraatbeeldCollector
 )
 
 
@@ -47,20 +47,23 @@ class WasteData(object):
         collector_mapping = {
             **{key: (XimmioCollector, common_args + [self.address_id, self.customer_id]) for key in XIMMIO_COLLECTOR_IDS.keys()},
             "mijnafvalwijzer": (AfvalwijzerCollector, common_args),
-            "afvalstoffendienstkalender": (AfvalwijzerCollector, common_args),
+            # "afvalstoffendienstkalender": (AfvalwijzerCollector, common_args),
             "afvalalert": (AfvalAlertCollector, common_args),
+            "amsterdam": (AmsterdamCollector, common_args),
             "deafvalapp": (DeAfvalAppCollector, common_args),
             "circulus": (CirculusCollector, common_args),
             "limburg.net": (LimburgNetCollector, common_args + [self.street_name, self.city_name]),
             "montferland": (MontferlandNetCollector, common_args),
             "omrin": (OmrinCollector, common_args),
             "recycleapp": (RecycleApp, common_args + [self.street_name]),
+            "reinis": (ReinisCollector, common_args),
             "rd4": (RD4Collector, common_args),
             "cleanprofs": (CleanprofsCollector, common_args),
             "rova": (ROVACollector, common_args),
             "drimmelen": (StraatbeeldCollector, common_args),
             **{key: (BurgerportaalCollector, common_args) for key in BURGERPORTAAL_COLLECTOR_IDS.keys()},
             **{key: (OpzetCollector, common_args) for key in OPZET_COLLECTOR_URLS.keys()},
+            **{key: (KlikogroepCollector, common_args) for key in KLIKOGROEP_COLLECTOR_IDS.keys()},
         }
 
         collector_class, args = collector_mapping.get(self.waste_collector, (None, None))
