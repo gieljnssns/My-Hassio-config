@@ -215,18 +215,18 @@ try:
             log_evaluation_results(results, best_predictor_key)
             
             # Optioneel: verstuur persistent notification
-            hass.services.call('persistent_notification', 'create', {
-                'message': f"""Solar evaluatie voltooid om {hass.states.get("sensor.time").state}
+#             hass.services.call('persistent_notification', 'create', {
+#                 'message': f"""Solar evaluatie voltooid om {hass.states.get("sensor.time").state}
 
-Beste voorspeller: **{best_predictor_name}** (MSE: {valid_results[best_predictor_key]['mse']:.2f})
+# Beste voorspeller: **{best_predictor_name}** (MSE: {valid_results[best_predictor_key]['mse']:.2f})
 
-Alle scores (MSE):
-{"".join([f"- {v['display_name']}: {v['mse']:.2f} (MAE: {v['mae']:.2f})" + chr(10) for v in valid_results.values()])}
+# Alle scores (MSE):
+# {"".join([f"- {v['display_name']}: {v['mse']:.2f} (MAE: {v['mae']:.2f})" + chr(10) for v in valid_results.values()])}
 
-Data punten gebruikt: {valid_results[best_predictor_key]['data_points']}""",
-                'title': '🌞 Solar Voorspelling Evaluatie',
-                'notification_id': 'solar_evaluation_' + hass.states.get("sensor.time_date").state
-            })
+# Data punten gebruikt: {valid_results[best_predictor_key]['data_points']}""",
+#                 'title': '🌞 Solar Voorspelling Evaluatie',
+#                 'notification_id': 'solar_evaluation_' + hass.states.get("sensor.time_date").state
+#             })
             
         else:
             logger.error("Geen geldige voorspelling data beschikbaar")
