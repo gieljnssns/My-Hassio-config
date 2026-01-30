@@ -103,7 +103,6 @@ OPZET_COLLECTOR_URLS = {
     'afval3xbeter':                 'https://afval3xbeter.nl',
     'afvalstoffendienstkalender':   'https://afvalstoffendienst.nl',
     'berkelland':                   'https://afvalkalender.gemeenteberkelland.nl',
-    'blink':                        'https://mijnblink.nl',
     'cranendonck':                  'https://afvalkalender.cranendonck.nl',
     'cyclus':                       'https://cyclusnv.nl',
     'dar':                          'https://afvalkalender.dar.nl',
@@ -126,6 +125,7 @@ OPZET_COLLECTOR_URLS = {
     'spaarnelanden':                'https://afvalwijzer.spaarnelanden.nl',
     'sudwestfryslan':               'https://afvalkalender.sudwestfryslan.nl',
     'suez':                         'https://inzamelwijzer.prezero.nl',
+    'uithoorn':                     'https://cyclusnv.nl',
     'venray':                       'https://afvalkalender.venray.nl',
     'voorschoten':                  'https://afvalkalender.voorschoten.nl',
     'waalre':                       'https://afvalkalender.waalre.nl',
@@ -138,11 +138,13 @@ XIMMIO_COLLECTOR_IDS = {
     'areareiniging':    'adc418da-d19b-11e5-ab30-625662870761',
     'avalex':           'f7a74ad1-fdbf-4a43-9f91-44644f4d4222',
     'avri':             '78cd4156-394b-413d-8936-d407e334559a',
+    'blink':            '252d30d0-2e74-469c-8f1e-c0e2e434eb58',
     'hellendoorn':      '24434f5b-7244-412b-9306-3a2bd1e22bc1',
     'meerlanden':       '800bf8d7-6dd1-4490-ba9d-b419d6dc8a45',
     'ximmio':           '800bf8d7-6dd1-4490-ba9d-b419d6dc8a45',
     'rad':              '13a2cad9-36d0-4b01-b877-efcb421a864d',
     'twentemilieu':     '8d97bb56-5afd-4cbc-a651-b4f7314264b4',
+    "venlo":            '280affe9-1428-443b-895a-b90431b8ca31',    
     'waardlanden':      '942abcf6-3775-400d-ae5d-7380d728b23c',
     'westland':         '6fc75608-126a-4a50-9241-a002ce8c8a6c',
     'woerden':          '06856f74-6826-4c6a-aabf-69bc9d20b5a6',
@@ -158,6 +160,7 @@ BURGERPORTAAL_COLLECTOR_IDS = {
     'nijkerk':          '138204213565304094',
     'rmn':              '138204213564933597',
     # 'saver':            '138204213565265087',
+    'tilburg':          '452048812597339353',
     # 'zaanstad':         '138204213564932198',
 }
 
@@ -166,10 +169,10 @@ KLIKOGROEP_COLLECTOR_IDS = {
         'id': '454',
         'url': 'cp-oudeijsselstreek.klikocontainermanager.com',
     },
-    'uithoorn': {
-        'id': '474',
-        'url': 'cp-uithoorn.klikocontainermanager.com',
-    },
+    # 'uithoorn': {
+    #     'id': '474',
+    #     'url': 'cp-uithoorn.klikocontainermanager.com',
+    # },
     'maassluis': {
         'id': '505',
         'url': 'cp-maassluis.klikocontainermanager.com',

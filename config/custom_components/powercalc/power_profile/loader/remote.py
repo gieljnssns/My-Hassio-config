@@ -9,10 +9,15 @@ import shutil
 from typing import Any, NotRequired, TypedDict, cast
 
 import aiohttp
-from aiohttp import ClientError, ClientTimeout
+from aiohttp import ClientError
+import async_timeout
+from awesomeversion import AwesomeVersion
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.loader import async_get_integration
 
+from custom_components.powercalc.const import API_URL, DOMAIN
 from custom_components.powercalc.helpers import async_cache
 from custom_components.powercalc.power_profile.error import LibraryLoadingError, ProfileDownloadError
 from custom_components.powercalc.power_profile.loader.protocol import Loader
@@ -20,9 +25,8 @@ from custom_components.powercalc.power_profile.power_profile import DeviceType
 
 _LOGGER = logging.getLogger(__name__)
 
-DOWNLOAD_PROXY = "https://api.powercalc.nl"
-ENDPOINT_LIBRARY = f"{DOWNLOAD_PROXY}/library"
-ENDPOINT_DOWNLOAD = f"{DOWNLOAD_PROXY}/download"
+ENDPOINT_LIBRARY = f"{API_URL}/library"
+ENDPOINT_DOWNLOAD = f"{API_URL}/download"
 
 TIMEOUT_SECONDS = 30
 
@@ -54,7 +58,11 @@ class RemoteLoader(Loader):
 
     async def initialize(self) -> None:
         """Initialize the loader."""
+
+        powercalc_version = (await async_get_integration(self.hass, DOMAIN)).version
+
         self.library_contents = await self.load_library_json()
+
         self.profile_hashes = await self.hass.async_add_executor_job(self.load_profile_hashes)
 
         self.model_infos.clear()
@@ -71,14 +79,37 @@ class RemoteLoader(Loader):
 
             # Store model info and group models by manufacturer
             self.model_infos.update({f"{manufacturer_name}/{model.get('id')!s}": model for model in models})
-            self.manufacturer_models[manufacturer_name] = models
+            self.manufacturer_models[manufacturer_name] = []
 
             model_lookup: dict[str, list[LibraryModel]] = {}
             for model in models:
+                min_version = model.get("min_version")
+                if min_version and powercalc_version and powercalc_version < AwesomeVersion(min_version):
+                    _LOGGER.debug(
+                        "Skipping model %s/%s as it requires powercalc version %s (current: %s)",
+                        manufacturer_name,
+                        model.get("id"),
+                        min_version,
+                        powercalc_version,
+                    )
+                    continue
+
+                self.manufacturer_models[manufacturer_name].append(model)
+
                 model_id = str(model.get("id")).lower()
-                model_lookup.setdefault(model_id, []).append(model)
+
+                # Exact match → append first (high priority)
+                bucket = model_lookup.setdefault(model_id, [])
+                bucket.append(model)
+
+                # Aliases → append after (lower priority)
                 for alias in model.get("aliases", []):
-                    model_lookup.setdefault(alias.lower(), []).append(model)
+                    bucket_alias = model_lookup.setdefault(alias.lower(), [])
+                    # Only append if it's not the exact-id bucket
+                    if bucket_alias is bucket:
+                        # alias == id → ignore, already added
+                        continue
+                    bucket_alias.append(model)
 
             self.model_lookup[manufacturer_name] = model_lookup
 
@@ -105,21 +136,29 @@ class RemoteLoader(Loader):
             If download is successful, save it to local storage to use as fallback in case of internet connection issues.
             """
             _LOGGER.debug("Loading library.json from github")
-            async with aiohttp.ClientSession(timeout=ClientTimeout(total=TIMEOUT_SECONDS)) as session, session.get(ENDPOINT_LIBRARY) as resp:
-                if resp.status != 200:
-                    raise ProfileDownloadError("Failed to download library.json, unexpected status code")
 
-                def _save_to_local_storage(data: bytes) -> None:
-                    """Save library.json to local storage"""
-                    os.makedirs(os.path.dirname(local_path), exist_ok=True)
-                    with open(local_path, "wb") as f:
-                        f.write(data)
+            session = async_get_clientsession(self.hass)
 
-                json_data = cast(dict[str, Any], await resp.json())
+            try:
+                async with async_timeout.timeout(TIMEOUT_SECONDS), session.get(ENDPOINT_LIBRARY) as resp:
+                    if resp.status != 200:
+                        raise ProfileDownloadError(
+                            f"Failed to download library.json, unexpected status code: {resp.status}",
+                        )
 
-                await self.hass.async_add_executor_job(_save_to_local_storage, await resp.read())
+                    data = await resp.read()
 
-                return json_data
+            except (TimeoutError, ClientError) as err:
+                raise ProfileDownloadError(f"Failed to download library.json: {err}") from err
+
+            def _save_to_local_storage(data: bytes) -> None:
+                os.makedirs(os.path.dirname(local_path), exist_ok=True)
+                with open(local_path, "wb") as f:
+                    f.write(data)
+
+            await self.hass.async_add_executor_job(_save_to_local_storage, data)
+
+            return cast(dict[str, Any], json.loads(data))
 
         try:
             return cast(dict[str, Any], await self.download_with_retry(_download_remote_library_json))
@@ -157,11 +196,10 @@ class RemoteLoader(Loader):
         }
 
     @async_cache
-    async def find_model(self, manufacturer: str, search: set[str]) -> set[str]:
-        """Find the model in the library."""
-
+    async def find_model(self, manufacturer: str, search: set[str]) -> list[str]:
+        """Find matching model IDs in the library."""
         models = self.model_lookup.get(manufacturer, {})
-        return {model["id"] for phrase in search if (phrase_lower := phrase.lower()) in models for model in models[phrase_lower]}
+        return [model["id"] for phrase in search if (phrase_lower := phrase.lower()) in models for model in models[phrase_lower]]
 
     @async_cache
     async def load_model(
@@ -237,7 +275,7 @@ class RemoteLoader(Loader):
         retry_count: int,
     ) -> tuple[dict, str] | None:
         """Handle JSON decode errors with retry logic."""
-        _LOGGER.error("model.json file is not valid JSON")
+        _LOGGER.error("model.json file is not valid JSON for manufacturer: %s, model: %s", manufacturer, model)
         if retry_count < 2:
             _LOGGER.debug("Retrying to load model.json file")
             return await self.load_model(manufacturer, model, True, retry_count + 1)
@@ -282,8 +320,10 @@ class RemoteLoader(Loader):
             with open(path, "wb") as f:
                 f.write(data)
 
-        async with aiohttp.ClientSession(timeout=ClientTimeout(total=TIMEOUT_SECONDS)) as session:
-            try:
+        session = async_get_clientsession(self.hass)
+
+        try:
+            async with async_timeout.timeout(TIMEOUT_SECONDS):
                 async with session.get(endpoint) as resp:
                     if resp.status != 200:
                         raise ProfileDownloadError(f"Failed to download profile: {manufacturer}/{model}")
@@ -300,8 +340,8 @@ class RemoteLoader(Loader):
 
                         contents = await resp.read()
                         await self.hass.async_add_executor_job(_save_file, contents, resource.get("path"))
-            except aiohttp.ClientError as e:
-                raise ProfileDownloadError(f"Failed to download profile: {manufacturer}/{model}") from e
+        except (TimeoutError, aiohttp.ClientError) as e:
+            raise ProfileDownloadError(f"Failed to download profile: {manufacturer}/{model}") from e
 
     def load_profile_hashes(self) -> dict[str, str]:
         """Load profile hashes from local storage"""

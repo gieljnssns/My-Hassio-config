@@ -12,10 +12,12 @@ import voluptuous as vol
 from custom_components.powercalc import DeviceType
 from custom_components.powercalc.const import (
     CONF_CREATE_ENERGY_SENSORS,
+    CONF_CREATE_STANDBY_GROUP,
     CONF_CREATE_UTILITY_METERS,
     CONF_DISABLE_EXTENDED_ATTRIBUTES,
     CONF_DISABLE_LIBRARY_DOWNLOAD,
     CONF_DISCOVERY,
+    CONF_ENABLE_ANALYTICS,
     CONF_ENERGY_SENSOR_CATEGORY,
     CONF_ENERGY_SENSOR_FRIENDLY_NAMING,
     CONF_ENERGY_SENSOR_NAMING,
@@ -31,6 +33,7 @@ from custom_components.powercalc.const import (
     CONF_POWER_SENSOR_FRIENDLY_NAMING,
     CONF_POWER_SENSOR_NAMING,
     CONF_POWER_SENSOR_PRECISION,
+    CONF_POWER_UPDATE_INTERVAL,
     CONF_UTILITY_METER_OFFSET,
     DEFAULT_ENERGY_UPDATE_INTERVAL,
     DEFAULT_GROUP_ENERGY_UPDATE_INTERVAL,
@@ -59,10 +62,12 @@ SCHEMA_GLOBAL_CONFIGURATION = vol.Schema(
         vol.Optional(CONF_POWER_SENSOR_PRECISION): selector.NumberSelector(
             selector.NumberSelectorConfig(min=0, max=6, mode=selector.NumberSelectorMode.BOX, step=1),
         ),
+        vol.Optional(CONF_ENABLE_ANALYTICS, default=True): selector.BooleanSelector(),
         vol.Optional(CONF_IGNORE_UNAVAILABLE_STATE, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_INCLUDE_NON_POWERCALC_SENSORS, default=True): selector.BooleanSelector(),
         vol.Optional(CONF_DISABLE_EXTENDED_ATTRIBUTES, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_DISABLE_LIBRARY_DOWNLOAD, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_CREATE_STANDBY_GROUP, default=True): selector.BooleanSelector(),
         vol.Optional(CONF_CREATE_ENERGY_SENSORS, default=True): selector.BooleanSelector(),
         **SCHEMA_UTILITY_METER_TOGGLE.schema,
     },
@@ -84,6 +89,9 @@ SCHEMA_GLOBAL_CONFIGURATION_DISCOVERY = vol.Schema(
 
 SCHEMA_GLOBAL_CONFIGURATION_THROTTLING = vol.Schema(
     {
+        vol.Optional(CONF_POWER_UPDATE_INTERVAL, default=0): selector.NumberSelector(
+            selector.NumberSelectorConfig(unit_of_measurement=UnitOfTime.SECONDS, mode=selector.NumberSelectorMode.BOX),
+        ),
         vol.Optional(CONF_ENERGY_UPDATE_INTERVAL, default=DEFAULT_ENERGY_UPDATE_INTERVAL): selector.NumberSelector(
             selector.NumberSelectorConfig(unit_of_measurement=UnitOfTime.SECONDS, mode=selector.NumberSelectorMode.BOX),
         ),

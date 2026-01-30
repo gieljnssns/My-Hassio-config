@@ -29,9 +29,10 @@ from .const import (
     MSG_TARGET_TEMP_ACTIVITY_DETECTED,
     MSG_TARGET_TEMP_ACTIVITY_NOT_DETECTED,
     MSG_TARGET_TEMP_ABSENCE_DETECTED,
+    MSG_TARGET_TEMP_TIMED_PRESET,
 )
 from .vtherm_state import VThermState
-from .vtherm_hvac_mode import VThermHvacMode_OFF, VThermHvacMode_FAN_ONLY, VThermHvacMode_COOL, VThermHvacMode_HEAT
+from .vtherm_hvac_mode import VThermHvacMode_OFF, VThermHvacMode_FAN_ONLY, VThermHvacMode_COOL, VThermHvacMode_HEAT, VThermHvacMode_SLEEP
 from .vtherm_preset import VThermPreset
 
 _LOGGER = logging.getLogger(__name__)
@@ -158,8 +159,10 @@ class StateManager:
             self._current_state.set_hvac_mode(self._requested_state.hvac_mode)
 
         # Calculate hvac_off_reason
-        if self._current_state.hvac_mode != VThermHvacMode_OFF and vtherm.hvac_off_reason is not None:
+        if self._current_state.hvac_mode not in [VThermHvacMode_OFF, VThermHvacMode_SLEEP] and vtherm.hvac_off_reason is not None:
             vtherm.set_hvac_off_reason(None)
+        elif self._current_state.hvac_mode == VThermHvacMode_SLEEP:
+            vtherm.set_hvac_off_reason(HVAC_OFF_REASON_SLEEP_MODE)
 
         return self._current_state.is_hvac_mode_changed
 
@@ -168,6 +171,7 @@ class StateManager:
 
         - check if power manager is detected has an impact on preset
         - if not check if safety manager has an impact on preset
+        - if not check if timed preset manager has a timed preset active
         - else set preset to requested_state.preset
 
         Send an event if preset has changed
@@ -193,6 +197,13 @@ class StateManager:
             if VThermPreset.FROST in vtherm.vtherm_preset_modes and vtherm.vtherm_hvac_mode == VThermHvacMode_HEAT:
                 self._current_state.set_preset(VThermPreset.FROST)
                 vtherm.set_temperature_reason(MSG_TARGET_TEMP_CENTRAL_MODE)
+
+        # then check if a timed preset is active
+        elif vtherm.timed_preset_manager.is_timed_preset_active and self._current_state.hvac_mode != VThermHvacMode_OFF:
+            timed_preset = vtherm.timed_preset_manager.timed_preset
+            if timed_preset:
+                self._current_state.set_preset(timed_preset)
+                vtherm.set_temperature_reason(MSG_TARGET_TEMP_TIMED_PRESET)
 
         # all is fine set current_state = requested_state
         else:
@@ -249,8 +260,9 @@ class StateManager:
             self.update_current_temp_from_requested(vtherm)
 
         # update requested state temperature to set it in concordance with preset
-        if self._requested_state.preset != VThermPreset.NONE:
-            self._requested_state.set_target_temperature(vtherm.find_preset_temp(self._requested_state.preset))
+        # 1379 - do not overwrite requested_target_temp to keep the last manual tempe.
+        # if self._requested_state.preset != VThermPreset.NONE:
+        #     self._requested_state.set_target_temperature(vtherm.find_preset_temp(self._requested_state.preset))
 
         return self._current_state.is_target_temperature_changed
 

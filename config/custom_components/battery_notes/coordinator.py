@@ -3,64 +3,66 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import cast
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.const import (
-    PERCENTAGE,
-    STATE_UNKNOWN,
-    CONF_DEVICE_ID,
-    STATE_UNAVAILABLE,
-)
-from homeassistant.helpers import (
-    issue_registry as ir,
-    device_registry as dr,
-    entity_registry as er,
-)
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.util.hass_dict import HassKey
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.hass_dict import HassKey
 
+from .common import utcnow_no_timezone, validate_is_float
 from .const import (
-    DOMAIN,
-    ATTR_REMOVE,
-    LAST_REPLACED,
-    LAST_REPORTED,
-    ATTR_DEVICE_ID,
-    ATTR_BATTERY_LOW,
-    ATTR_DEVICE_NAME,
-    ATTR_BATTERY_TYPE,
-    CONF_BATTERY_TYPE,
+    ATTR_BATTERY_LAST_REPLACED,
     ATTR_BATTERY_LEVEL,
-    LAST_REPORTED_LEVEL,
-    CONF_FILTER_OUTLIERS,
+    ATTR_BATTERY_LOW,
+    ATTR_BATTERY_LOW_THRESHOLD,
     ATTR_BATTERY_QUANTITY,
+    ATTR_BATTERY_THRESHOLD_REMINDER,
+    ATTR_BATTERY_TYPE,
+    ATTR_BATTERY_TYPE_AND_QUANTITY,
+    ATTR_DEVICE_ID,
+    ATTR_DEVICE_NAME,
+    ATTR_PREVIOUS_BATTERY_LEVEL,
+    ATTR_REMOVE,
     ATTR_SOURCE_ENTITY_ID,
+    CONF_ADVANCED_SETTINGS,
+    CONF_BATTERY_LOW_TEMPLATE,
+    CONF_BATTERY_LOW_THRESHOLD,
+    CONF_BATTERY_PERCENTAGE_TEMPLATE,
     CONF_BATTERY_QUANTITY,
+    CONF_BATTERY_TYPE,
+    CONF_FILTER_OUTLIERS,
     CONF_SOURCE_ENTITY_ID,
+    DEFAULT_BATTERY_INCREASE_THRESHOLD,
+    DEFAULT_BATTERY_LOW_THRESHOLD,
+    DOMAIN,
     EVENT_BATTERY_INCREASED,
     EVENT_BATTERY_THRESHOLD,
-    CONF_BATTERY_LOW_TEMPLATE,
-    ATTR_BATTERY_LAST_REPLACED,
-    ATTR_BATTERY_LOW_THRESHOLD,
-    CONF_BATTERY_LOW_THRESHOLD,
-    ATTR_PREVIOUS_BATTERY_LEVEL,
-    DEFAULT_BATTERY_LOW_THRESHOLD,
-    ATTR_BATTERY_TYPE_AND_QUANTITY,
-    ATTR_BATTERY_THRESHOLD_REMINDER,
-    DEFAULT_BATTERY_INCREASE_THRESHOLD,
+    LAST_REPLACED,
+    LAST_REPORTED,
+    LAST_REPORTED_LEVEL,
 )
-from .store import BatteryNotesStorage
-from .common import validate_is_float, utcnow_no_timezone
 from .filters import LowOutlierFilter
+from .store import BatteryNotesStorage
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,9 +109,13 @@ class BatteryNotesSubentryCoordinator(DataUpdateCoordinator[None]):
     battery_quantity: int
     battery_low_threshold: int
     battery_low_template: str | None
+    battery_percentage_template: str | None
     wrapped_battery: RegistryEntry | None = None
     wrapped_battery_low: RegistryEntry | None = None
     is_orphaned: bool = False
+    last_wrapped_battery_state_write: datetime = utcnow_no_timezone() - timedelta(
+        hours=2
+    )
     _current_battery_level: str | None = None
     _previous_battery_low: bool | None = None
     _previous_battery_level: str | None = None
@@ -157,11 +163,15 @@ class BatteryNotesSubentryCoordinator(DataUpdateCoordinator[None]):
             if self.battery_low_threshold == 0:
                 self.battery_low_threshold = self.config_entry.runtime_data.domain_config.default_battery_low_threshold
 
-        self.battery_low_template = self.subentry.data.get(
+        self.battery_low_template = self.subentry.data[CONF_ADVANCED_SETTINGS].get(
             CONF_BATTERY_LOW_TEMPLATE, None
         )
 
-        if self.subentry.data.get(CONF_FILTER_OUTLIERS, False):
+        self.battery_percentage_template = self.subentry.data[
+            CONF_ADVANCED_SETTINGS
+        ].get(CONF_BATTERY_PERCENTAGE_TEMPLATE, None)
+
+        if self.subentry.data[CONF_ADVANCED_SETTINGS].get(CONF_FILTER_OUTLIERS, False):
             self._outlier_filter = LowOutlierFilter(window_size=3, radius=80)
             _LOGGER.debug("Outlier filter enabled")
 
@@ -657,13 +667,11 @@ class BatteryNotesSubentryCoordinator(DataUpdateCoordinator[None]):
                 self.device_id
             )
 
-        if entry:
-            if LAST_REPORTED in entry:
-                if entry[LAST_REPORTED]:
-                    last_reported_date = datetime.fromisoformat(
-                        str(entry[LAST_REPORTED]) + "+00:00"
-                    )
-                    return last_reported_date
+        if entry and LAST_REPORTED in entry and entry[LAST_REPORTED] is not None:
+            entry_last_reported = str(entry[LAST_REPORTED])
+            if not entry_last_reported.endswith("+00:00"):
+                entry_last_reported += "+00:00"
+            return datetime.fromisoformat(entry_last_reported)
 
         return None
 
@@ -720,7 +728,7 @@ class BatteryNotesSubentryCoordinator(DataUpdateCoordinator[None]):
         """Check if battery low against threshold."""
         if self.battery_low_template:
             return self.battery_low_template_state
-        elif self.wrapped_battery:
+        elif self.battery_percentage_template or self.wrapped_battery:
             if validate_is_float(self.current_battery_level):
                 return bool(
                     float(self.current_battery_level) < self.battery_low_threshold

@@ -8,7 +8,7 @@ from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.device_registry import DeviceInfo, DeviceEntryType
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_state_change_event, async_call_later
 
 
@@ -56,7 +56,7 @@ class VersatileThermostatBaseEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
+            entry_type=None,
             identifiers={(DOMAIN, self._config_id)},
             name=self._device_name,
             manufacturer=DEVICE_MANUFACTURER,
@@ -67,7 +67,7 @@ class VersatileThermostatBaseEntity(Entity):
         """Find the underlying climate entity"""
         try:
             component: EntityComponent[ClimateEntity] = self.hass.data[CLIMATE_DOMAIN]
-            for entity in component.entities:
+            for entity in list(component.entities):
                 # _LOGGER.debug("Device_info is %s", entity.device_info)
                 if entity.device_info == self.device_info:
                     _LOGGER.debug("Found %s!", entity)

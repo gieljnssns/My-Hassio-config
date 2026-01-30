@@ -5,6 +5,7 @@
     "step": {
       "user": {
         "title": "Type of Versatile Thermostat",
+        "description": "Choose thermostat type you want to create&nbsp;[![?](https://img.icons8.com/color/18/help.png)](https://github.com/jmcollin78/versatile_thermostat/blob/main/documentation/en/creation.md)",
         "data": {
           "thermostat_type": "Thermostat type"
         },
@@ -29,7 +30,12 @@
           "advanced": "Advanced parameters",
           "auto_start_stop": "Auto start and stop",
           "valve_regulation": "Valve regulation configuration",
+          "sync_device_internal_temp": "Synchronize device temperature",
           "lock": "Lock",
+          "heating_failure_detection": "Heating failure detection",
+          "auto_tpi_configuration": "Auto TPI - Configuration",
+          "auto_tpi_avg_settings": "Auto TPI - Weighted Average",
+          "auto_tpi_ema_settings": "Auto TPI - EWMA",
           "finalize": "All done",
           "configuration_not_complete": "Configuration not complete"
         }
@@ -66,6 +72,10 @@
           "used_by_controls_central_boiler": "Used by central boiler. Check if this VTherm should have control on the central boiler"
         },
         "data_description": {
+          "cycle_min": "Minimum duration of one heating/cooling cycle in minutes to avoid too frequent switching",
+          "temp_min": "Minimum temperature allowed for the thermostat",
+          "temp_max": "Maximum temperature allowed for the thermostat",
+          "step_temperature": "Temperature step for setting the target temperature",
           "temperature_sensor_entity_id": "Room temperature sensor entity id",
           "last_seen_temperature_sensor_entity_id": "Last seen room temperature sensor entity id. Should be datetime sensor",
           "external_temperature_sensor_entity_id": "Outdoor temperature sensor entity id. Not used if central configuration is selected"
@@ -80,7 +90,8 @@
           "use_power_feature": "Use power management",
           "use_presence_feature": "Use presence detection",
           "use_central_boiler_feature": "Use a central boiler. Check to add a control to your central boiler. You will have to configure the VTherm which will have a control of the central boiler after selecting this checkbox to take effect. If one VTherm requires heating, the boiler will be turned on. If no VTherm requires heating, the boiler will be turned off. Commands for turning on/off the central boiler are given in the related configuration page",
-          "use_auto_start_stop_feature": "Use the auto start and stop feature"
+          "use_auto_start_stop_feature": "Use the auto start and stop feature",
+          "use_heating_failure_detection_feature": "Use heating failure detection"
         }
       },
       "type": {
@@ -91,6 +102,7 @@
           "heater_keep_alive": "Switch keep-alive interval in seconds",
           "proportional_function": "Algorithm",
           "ac_mode": "AC mode",
+          "sync_device_internal_temp": "Synchronize device internal temperature",
           "auto_regulation_mode": "Self-regulation",
           "auto_regulation_dtemp": "Regulation threshold",
           "auto_regulation_periode_min": "Regulation minimum period",
@@ -107,10 +119,11 @@
           "heater_keep_alive": "Optional heater switch state refresh interval. Leave empty if not required.",
           "proportional_function": "Algorithm to use (TPI is the only one for now)",
           "ac_mode": "Use the Air Conditioning (AC) mode",
+          "sync_device_internal_temp": "Check to synchronize the internal temperature of the underlying device (fill the new menu item 'Synchronize device temperature' to configure it)",
           "auto_regulation_mode": "Auto adjustment of the target temperature",
           "auto_regulation_dtemp": "The threshold in ° (or % for valve) under which the temperature change will not be sent",
           "auto_regulation_periode_min": "Duration in minutes between two regulation update",
-          "auto_regulation_use_device_temp": "Use the eventual internal temperature sensor of the underlying to speedup the self-regulation",
+          "auto_regulation_use_device_temp": "Use the eventual internal temperature sensor of the underlying to speedup the self-regulation (not needed in most cases)",
           "inverse_switch_command": "For switch with pilot wire and diode you may need to inverse the command",
           "auto_fan_mode": "Automatically activate fan when huge heating/cooling is necessary",
           "on_command_text": "For underlying of type `select` or `climate` you have to customize the commands."
@@ -126,7 +139,8 @@
           "tpi_threshold_high": "High TPI threshold",
           "use_tpi_central_config": "Use central TPI configuration",
           "minimal_activation_delay": "Minimum activation delay",
-          "minimal_deactivation_delay": "Minimum deactivation delay"
+          "minimal_deactivation_delay": "Minimum deactivation delay",
+          "auto_tpi_mode": "Enable Auto TPI Learning"
         },
         "data_description": {
           "tpi_coef_int": "Coefficient to use for internal temperature delta",
@@ -135,7 +149,8 @@
           "tpi_threshold_high": "Threshold in ° above which the TPI algorithm will be off. 0 means no threshold",
           "use_tpi_central_config": "Check to use the central TPI configuration. Uncheck to use a specific TPI configuration for this VTherm",
           "minimal_activation_delay": "Delay in seconds under which the equipment will not be activated",
-          "minimal_deactivation_delay": "Delay in seconds under which the equipment will be kept active"
+          "minimal_deactivation_delay": "Delay in seconds under which the equipment will be kept active",
+          "auto_tpi_mode": "Check to enable Auto TPI feature. TPI learning session are manually started, read the doc first."
         }
       },
       "presets": {
@@ -237,16 +252,18 @@
         "description": "Enter the services to call to turn on/off the central boiler. The service called must be formatted as follows: `entity_id/service_name[/attribute:value]` (/attribute:value is optional)\nFor example:\n- to turn on a switch: `switch.controle_chaudiere/switch.turn_on`\n- to turn off a switch: `switch.controle_chaudiere/switch.turn_off`\n- to program the boiler to 25° and thus force its ignition: `climate.thermostat_chaudiere/climate.set_temperature/temperature:25`\n- to send 10° to the boiler and thus force its extinction: `climate.thermostat_chaudiere/climate.set_temperature/temperature:10`&nbsp;[![?](https://img.icons8.com/color/18/help.png)](https://github.com/jmcollin78/versatile_thermostat/blob/main/documentation/fr/feature-central-boiler.md)",
         "data": {
           "central_boiler_activation_service": "Command to turn-on",
-          "central_boiler_deactivation_service": "Command to turn-off"
+          "central_boiler_deactivation_service": "Command to turn-off",
+          "central_boiler_activation_delay_sec": "Activation delay (seconds)"
         },
         "data_description": {
           "central_boiler_activation_service": "Command to turn-on the central boiler formatted like entity_id/service_name[/attribut:valeur]",
-          "central_boiler_deactivation_service": "Command to turn-off the central boiler formatted like entity_id/service_name[/attribut:valeur]"
+          "central_boiler_deactivation_service": "Command to turn-off the central boiler formatted like entity_id/service_name[/attribut:valeur]",
+          "central_boiler_activation_delay_sec": "Delay in seconds before activating the central boiler when it needs to be turned on"
         }
       },
       "valve_regulation": {
         "title": "Self-regulation with valve",
-        "description": "Configuration for self-regulation with direct control of the valve&nbsp;[![?](https://img.icons8.com/color/18/help.png)](https://github.com/jmcollin78/versatile_thermostat/blob/main/documentation/fr/self-regulation.md#auto-régulation-par-contrôle-direct-de-la-vanne)",
+        "description": "Configuration for self-regulation with direct control of the valve&nbsp;[![?](https://img.icons8.com/color/18/help.png)](https://github.com/jmcollin78/versatile_thermostat/blob/main/documentation/en/self-regulation.md#auto-régulation-par-contrôle-direct-de-la-vanne)",
         "data": {
           "offset_calibration_entity_ids": "Offset calibration entities",
           "opening_degree_entity_ids": "Opening degree entities",
@@ -254,6 +271,7 @@
           "proportional_function": "Algorithm",
           "opening_threshold_degree": "Opening threshold degree",
           "min_opening_degrees": "Min opening degrees",
+          "max_opening_degrees": "Max opening degrees",
           "max_closing_degree": "Max closing degree"
         },
         "data_description": {
@@ -263,7 +281,87 @@
           "proportional_function": "Algorithm to use (TPI is the only one for now)",
           "opening_threshold_degree": "Valve opening value under which the valve should be considered as closed (and then 'max_closing_degree' will apply)",
           "min_opening_degrees": "Opening degree minimum value for each underlying device when previous threshold is exceeded, comma separated. Default to 0. Example: 20, 25, 30",
+          "max_opening_degrees": "Opening degree maximum value. The valve will never open more than this value",
           "max_closing_degree": "Closing degree maximum value. The valve will never be closed above this value. Set it to 100 to fully close the valve"
+        }
+      },
+      "auto_tpi_configuration": {
+        "title": "Auto TPI - Configuration",
+        "description": "General parameters for Auto TPI learning.",
+        "data": {
+          "auto_tpi_enable_update_config": "Update configuration",
+          "auto_tpi_enable_notification": "Notifications",
+          "auto_tpi_keep_ext_learning": "Keep external coefficient learning",
+          "auto_tpi_continuous_learning": "Continuous learning",
+          "heater_heating_time": "Heater warm-up time (min)",
+          "heater_cooling_time": "Heater cool-down time (min)",
+          "auto_tpi_max_coef_int": "Max Internal Coefficient",
+          "auto_tpi_heating_rate": "Heating rate ({unit}/h)"
+        },
+        "data_description": {
+          "auto_tpi_enable_update_config": "Automatically update the configuration with learned coefficients",
+          "auto_tpi_enable_notification": "Send a notification when learning is complete",
+          "auto_tpi_keep_ext_learning": "If set, the external coefficient will continue learning even after reaching 50 cycles, as long as the internal coefficient has not reached stability.",
+          "auto_tpi_continuous_learning": "If set, the system will continue calculating and applying new coefficients silently after learning is finished (EMA method recommended).",
+          "heater_heating_time": "Time to reach full power (minutes)",
+          "heater_cooling_time": "Time to cool down after stop (minutes)\n\n| Type | Heating time | Cooling time |\n| :--- | :--- | :--- |\n| Electric radiator | 5min | 7min |\n| Water radiator | 15min | 20min |\n| Floor heating | 30min | 45min |",
+          "auto_tpi_max_coef_int": "Maximum allowed value for the internal coefficient (Coeff Int)"
+        }
+      },
+      "auto_tpi_avg_settings": {
+        "title": "Auto TPI - Weighted Average",
+        "description": "Parameters for the Average method.",
+        "data": {
+          "auto_tpi_avg_initial_weight": "Initial Weight"
+        },
+        "data_description": {
+          "auto_tpi_avg_initial_weight": "Weight of the initial/previous value in the average calculation"
+        }
+      },
+      "auto_tpi_ema_settings": {
+        "title": "Auto TPI - EWMA",
+        "description": "Parameters for the EMA method.\n\nRecommendations:\n| Situation | Alpha (ema_alpha) | Decay Rate (ema_decay_rate) |\n| :--- | :--- | :--- |\n| Initial learning | 0.15 | 0.08 |\n| Fine learning | 0.08 | 0.12 |\n| Continuous learning | 0.05 | 0.02 |",
+        "data": {
+          "auto_tpi_ema_alpha": "Alpha",
+          "auto_tpi_ema_decay_rate": "Decay Rate"
+        },
+        "data_description": {
+          "auto_tpi_ema_alpha": "Smoothing factor (0-1). Higher = faster adaptation",
+          "auto_tpi_ema_decay_rate": "Rate at which Alpha decreases over time (stabilization)"
+        }
+      },
+      "sync_device_internal_temp": {
+        "title": "Synchronize device internal temperature",
+        "description": "Configuration to synchronize the internal temperature of the underlying devices with selected entities&nbsp;[![?](https://img.icons8.com/color/18/help.png)](https://github.com/jmcollin78/versatile_thermostat/blob/main/documentation/en/feature-sync_device_temp.md)",
+        "data": {
+          "sync_with_calibration": "Apply offset calibration",
+          "sync_entity_ids": "Entities id used for synchronization"
+        },
+        "data_description": {
+          "sync_with_calibration": "Check to apply the offset calibration when synchronizing the internal temperature. Uncheck to directly copy the temperature from the selected entities",
+          "sync_entity_ids": "The list of the entities used to synchronize the internal temperature of the underlying devices. There should be one per underlying device. Should be a calibration entity if checkbox is selected or a temperature entity otherwise. Both are `number` entities."
+        }
+      },
+      "heating_failure_detection": {
+        "title": "Heating failure detection",
+        "description": "Configure the heating failure detection feature. This detects anomalies when heating is expected but temperature doesn't increase, or when heating is off but temperature keeps rising.",
+        "data": {
+          "use_heating_failure_detection_feature": "Enable heating failure detection",
+          "use_heating_failure_detection_central_config": "Use central heating failure detection configuration",
+          "heating_failure_threshold": "Heating failure threshold",
+          "cooling_failure_threshold": "Cooling failure threshold",
+          "heating_failure_detection_delay": "Detection delay (minutes)",
+          "temperature_change_tolerance": "Temperature change tolerance (°C)",
+          "failure_detection_enable_template": "Detection enable template"
+        },
+        "data_description": {
+          "use_heating_failure_detection_feature": "Enable the detection of heating anomalies for VTherms with TPI",
+          "use_heating_failure_detection_central_config": "Check to use the central heating failure detection configuration. Uncheck to use specific parameters for this VTherm",
+          "heating_failure_threshold": "On percent threshold above which heating should cause temperature increase (0.9 = 90%)",
+          "cooling_failure_threshold": "On percent threshold below which temperature should not increase (0.0 = 0%)",
+          "heating_failure_detection_delay": "Time in minutes to wait before checking if temperature has changed as expected",
+          "temperature_change_tolerance": "Minimum temperature change in degrees to consider significant. Smaller changes are ignored to filter sensor noise (default: 0.5°C)",
+          "failure_detection_enable_template": "An optional Jinja2 template that must return True to enable detection. Useful to temporarily disable detection when an external heat source is active (e.g., `is_state('binary_sensor.wood_stove', 'off')` in double curly braces). If empty, detection is always enabled."
         }
       }
     },
@@ -271,7 +369,12 @@
       "unknown": "Unexpected error",
       "unknown_entity": "Unknown entity id",
       "window_open_detection_method": "Only one window open detection method should be used. Use either window sensor or automatic detection through temperature threshold but not both",
-      "no_central_config": "You cannot select 'use central configuration' because no central configuration was found. You need to create a Versatile Thermostat of type 'Central Configuration' to use it."
+      "no_central_config": "You cannot check 'use central configuration' because no central configuration was found. You need to create a Versatile Thermostat of type 'Central Configuration' to use it.",
+      "service_configuration_format": "The format of the service configuration is wrong",
+      "valve_regulation_nb_entities_incorrect": "The number of valve entities for valve regulation should be equal to the number of underlyings",
+      "sync_device_internal_temp_nb_entities_incorrect": "The number of entities for synchronize device internal temperature should be equal to the number of underlyings",
+      "min_opening_degrees_format": "A comma separated list of positive integer is expected. Example: 20, 25, 30",
+      "vswitch_configuration_incorrect": "The command customization configuration is incorrect. It is required for underlying entities that are not switches, and the format must be service_name[/attribute:value]. More information is available in the README"
     },
     "abort": {
       "already_configured": "Device is already configured"
@@ -282,6 +385,7 @@
     "step": {
       "user": {
         "title": "Type - {name}",
+        "description": "Choose thermostat type you want to create&nbsp;[![?](https://img.icons8.com/color/18/help.png)](https://github.com/jmcollin78/versatile_thermostat/blob/main/documentation/en/creation.md)",
         "data": {
           "thermostat_type": "Thermostat type"
         },
@@ -306,7 +410,12 @@
           "advanced": "Advanced parameters",
           "auto_start_stop": "Auto start and stop",
           "valve_regulation": "Valve regulation configuration",
+          "sync_device_internal_temp": "Synchronize device temperature",
           "lock": "Lock",
+          "heating_failure_detection": "Heating failure detection",
+          "auto_tpi_configuration": "Auto TPI - Configuration",
+          "auto_tpi_avg_settings": "Auto TPI - Weighted Average",
+          "auto_tpi_ema_settings": "Auto TPI - EWMA",
           "finalize": "All done",
           "configuration_not_complete": "Configuration not complete"
         }
@@ -343,6 +452,10 @@
           "used_by_controls_central_boiler": "Used by central boiler. Check if this VTherm should have control on the central boiler"
         },
         "data_description": {
+          "cycle_min": "Minimum duration of one heating/cooling cycle in minutes to avoid too frequent switching",
+          "temp_min": "Minimum temperature allowed for the thermostat",
+          "temp_max": "Maximum temperature allowed for the thermostat",
+          "step_temperature": "Temperature step for setting the target temperature",
           "temperature_sensor_entity_id": "Room temperature sensor entity id",
           "last_seen_temperature_sensor_entity_id": "Last seen room temperature sensor entity id. Should be datetime sensor",
           "external_temperature_sensor_entity_id": "Outdoor temperature sensor entity id. Not used if central configuration is selected"
@@ -357,7 +470,8 @@
           "use_power_feature": "Use power management",
           "use_presence_feature": "Use presence detection",
           "use_central_boiler_feature": "Use a central boiler. Check to add a control to your central boiler. You will have to configure the VTherm which will have a control of the central boiler after selecting this checkbox to take effect. If one VTherm requires heating, the boiler will be turned on. If no VTherm requires heating, the boiler will be turned off. Commands for turning on/off the central boiler are given in the related configuration page",
-          "use_auto_start_stop_feature": "Use the auto start and stop feature"
+          "use_auto_start_stop_feature": "Use the auto start and stop feature",
+          "use_heating_failure_detection_feature": "Use heating failure detection"
         }
       },
       "type": {
@@ -368,6 +482,7 @@
           "heater_keep_alive": "Switch keep-alive interval in seconds",
           "proportional_function": "Algorithm",
           "ac_mode": "AC mode",
+          "sync_device_internal_temp": "Synchronize device temperature",
           "auto_regulation_mode": "Self-regulation",
           "auto_regulation_dtemp": "Regulation threshold",
           "auto_regulation_periode_min": "Regulation minimum period",
@@ -384,10 +499,11 @@
           "heater_keep_alive": "Optional heater switch state refresh interval. Leave empty if not required.",
           "proportional_function": "Algorithm to use (TPI is the only one for now)",
           "ac_mode": "Use the Air Conditioning (AC) mode",
+          "sync_device_internal_temp": "Check to synchronize the internal temperature of the underlying device (fill the new menu item 'Synchronize device temperature' to configure it)",
           "auto_regulation_mode": "Auto adjustment of the target temperature",
           "auto_regulation_dtemp": "The threshold in ° (or % for valve) under which the temperature change will not be sent",
           "auto_regulation_periode_min": "Duration in minutes between two regulation update",
-          "auto_regulation_use_device_temp": "Use the eventual internal temperature sensor of the underlying to speedup the self-regulation",
+          "auto_regulation_use_device_temp": "Use the eventual internal temperature sensor of the underlying to speedup the self-regulation (not needed in most cases)",
           "inverse_switch_command": "For switch with pilot wire and diode you may need to inverse the command",
           "auto_fan_mode": "Automatically activate fan when huge heating/cooling is necessary",
           "on_command_text": "For underlying of type `select` or `climate` you have to customize the commands."
@@ -403,7 +519,8 @@
           "tpi_threshold_high": "High TPI threshold",
           "use_tpi_central_config": "Use central TPI configuration",
           "minimal_activation_delay": "Minimum activation delay",
-          "minimal_deactivation_delay": "Minimum deactivation delay"
+          "minimal_deactivation_delay": "Minimum deactivation delay",
+          "auto_tpi_mode": "Enable Auto TPI Learning"
         },
         "data_description": {
           "tpi_coef_int": "Coefficient to use for internal temperature delta",
@@ -412,7 +529,8 @@
           "tpi_threshold_high": "Threshold in ° above which the TPI algorithm will be off. 0 means no threshold",
           "use_tpi_central_config": "Check to use the central TPI configuration. Uncheck to use a specific TPI configuration for this VTherm",
           "minimal_activation_delay": "Delay in seconds under which the equipment will not be activated",
-          "minimal_deactivation_delay": "Delay in seconds under which the equipment will be kept active"
+          "minimal_deactivation_delay": "Delay in seconds under which the equipment will be kept active",
+          "auto_tpi_mode": "Check to enable Auto TPI feature. TPI learning session are manually started, read the doc first."
         }
       },
       "presets": {
@@ -439,6 +557,7 @@
           "window_sensor_entity_id": "Leave empty if no window sensor should be used and to use the automatic detection",
           "window_delay": "The delay in seconds before sensor 'on' detection is taken into account",
           "window_off_delay": "The delay in seconds before sensor 'off' detection is taken into account. Leave it empty to use the same value as window on delay",
+          "window_auto_open_threshold": "Recommended value: between 3 and 10. Leave empty if automatic window open detection is not used",
           "window_auto_close_threshold": "Recommended value: 0. Leave empty if automatic window open detection is not used",
           "window_auto_max_duration": "Recommended value: 60 (one hour). Leave empty if automatic window open detection is not used",
           "use_window_central_config": "Check to use the central window configuration. Uncheck to use a specific window configuration for this VTherm",
@@ -517,11 +636,13 @@
         "description": "Enter the services to call to turn on/off the central boiler. The service called must be formatted as follows: `entity_id/service_name[/attribute:value]` (/attribute:value is optional)\nFor example:\n- to turn on a switch: `switch.controle_chaudiere/switch.turn_on`\n- to turn off a switch: `switch.controle_chaudiere/switch.turn_off`\n- to program the boiler to 25° and thus force its ignition: `climate.thermostat_chaudiere/climate.set_temperature/temperature:25`\n- to send 10° to the boiler and thus force its extinction: `climate.thermostat_chaudiere/climate.set_temperature/temperature:10`&nbsp;[![?](https://img.icons8.com/color/18/help.png)](https://github.com/jmcollin78/versatile_thermostat/blob/main/documentation/fr/feature-central-boiler.md)",
         "data": {
           "central_boiler_activation_service": "Command to turn-on",
-          "central_boiler_deactivation_service": "Command to turn-off"
+          "central_boiler_deactivation_service": "Command to turn-off",
+          "central_boiler_activation_delay_sec": "Activation delay (seconds)"
         },
         "data_description": {
           "central_boiler_activation_service": "Command to turn-on the central boiler formatted like entity_id/service_name[/attribut:valeur]",
-          "central_boiler_deactivation_service": "Command to turn-off the central boiler formatted like entity_id/service_name[/attribut:valeur]"
+          "central_boiler_deactivation_service": "Command to turn-off the central boiler formatted like entity_id/service_name[/attribut:valeur]",
+          "central_boiler_activation_delay_sec": "Delay in seconds before activating the central boiler when it needs to be turned on"
         }
       },
       "valve_regulation": {
@@ -534,6 +655,7 @@
           "proportional_function": "Algorithm",
           "opening_threshold_degree": "Opening threshold degree",
           "min_opening_degrees": "Min opening degrees",
+          "max_opening_degrees": "Max opening degrees",
           "max_closing_degree": "Max closing degree"
         },
         "data_description": {
@@ -543,7 +665,88 @@
           "proportional_function": "Algorithm to use (TPI is the only one for now)",
           "opening_threshold_degree": "Valve opening value under which the valve should be considered as closed (and then 'max_closing_degree' will apply)",
           "min_opening_degrees": "Opening degree minimum value for each underlying device when previous threshold is exceeded, comma separated. Default to 0. Example: 20, 25, 30",
+          "max_opening_degrees": "Opening degree maximum value. The valve will never open more than this value",
           "max_closing_degree": "Closing degree maximum value. The valve will never be closed above this value. Set it to 100 to fully close the valve"
+        }
+      },
+      "sync_device_internal_temp": {
+        "title": "Synchronize device internal temperature",
+        "description": "Configuration to synchronize the internal temperature of the underlying devices with selected entities&nbsp;[![?](https://img.icons8.com/color/18/help.png)](https://github.com/jmcollin78/versatile_thermostat/blob/main/documentation/en/feature-sync_device_temp.md)",
+        "data": {
+          "sync_with_calibration": "Apply offset calibration",
+          "sync_entity_ids": "Entities id used for synchronization"
+        },
+        "data_description": {
+          "sync_with_calibration": "Check to apply the offset calibration when synchronizing the internal temperature. Uncheck to directly copy the temperature from the selected entities",
+          "sync_entity_ids": "The list of the entities used to synchronize the internal temperature of the underlying devices. There should be one per underlying device. Should be a calibration entity if checkbox is selected or a temperature entity otherwise. Both are `number` entities."
+        }
+      },
+      "auto_tpi_configuration": {
+        "title": "Auto TPI - Configuration - {name}",
+        "description": "General parameters for Auto TPI learning.",
+        "data": {
+          "auto_tpi_enable_update_config": "Update configuration",
+          "auto_tpi_enable_notification": "Notifications",
+          "auto_tpi_keep_ext_learning": "Keep external coefficient learning",
+          "auto_tpi_continuous_learning": "Continuous learning",
+          "heater_heating_time": "Heater warm-up time (min)",
+          "heater_cooling_time": "Heater cool-down time (min)",
+          "auto_tpi_max_coef_int": "Max Internal Coefficient",
+          "auto_tpi_heating_rate": "Heating rate (°C/h)",
+          "auto_tpi_cooling_rate": "Cooling rate (°C/h)"
+        },
+        "data_description": {
+          "auto_tpi_enable_update_config": "Automatically update the configuration with learned coefficients",
+          "auto_tpi_enable_notification": "Send a notification when learning is complete",
+          "auto_tpi_keep_ext_learning": "If set, the external coefficient will continue learning even after reaching 50 cycles, as long as the internal coefficient has not reached stability.",
+          "auto_tpi_continuous_learning": "If set, the system will continue calculating and applying new coefficients silently after learning is finished (EMA method recommended).",
+          "heater_heating_time": "Time to reach full power (minutes)",
+          "heater_cooling_time": "Time to cool down after stop (minutes)",
+          "auto_tpi_max_coef_int": "Maximum allowed value for the internal coefficient (Coeff Int)"
+        }
+      },
+      "auto_tpi_avg_settings": {
+        "title": "Auto TPI - Weighted Average - {name}",
+        "description": "Parameters for the Average method.",
+        "data": {
+          "auto_tpi_avg_initial_weight": "Initial Weight"
+        },
+        "data_description": {
+          "auto_tpi_avg_initial_weight": "Weight of the initial/previous value in the average calculation"
+        }
+      },
+      "auto_tpi_ema_settings": {
+        "title": "Auto TPI - EWMA - {name}",
+        "description": "Parameters for the EMA method.\n\nRecommendations:\n| Situation | Alpha (ema_alpha) | Decay Rate (ema_decay_rate) |\n| :--- | :--- | :--- |\n| Initial learning | 0.15 | 0.08 |\n| Fine learning | 0.08 | 0.12 |\n| Continuous learning | 0.05 | 0.02 |",
+        "data": {
+          "auto_tpi_ema_alpha": "Alpha",
+          "auto_tpi_ema_decay_rate": "Decay Rate"
+        },
+        "data_description": {
+          "auto_tpi_ema_alpha": "Smoothing factor (0-1). Higher = faster adaptation",
+          "auto_tpi_ema_decay_rate": "Rate at which Alpha decreases over time (stabilization)"
+        }
+      },
+      "heating_failure_detection": {
+        "title": "Heating failure detection - {name}",
+        "description": "Configure the heating failure detection feature. This detects anomalies when heating is expected but temperature doesn't increase, or when heating is off but temperature keeps rising.",
+        "data": {
+          "use_heating_failure_detection_feature": "Enable heating failure detection",
+          "use_heating_failure_detection_central_config": "Use central heating failure detection configuration",
+          "heating_failure_threshold": "Heating failure threshold",
+          "cooling_failure_threshold": "Cooling failure threshold",
+          "heating_failure_detection_delay": "Detection delay (minutes)",
+          "temperature_change_tolerance": "Temperature change tolerance (°C)",
+          "failure_detection_enable_template": "Detection enable template"
+        },
+        "data_description": {
+          "use_heating_failure_detection_feature": "Enable the detection of heating anomalies for VTherms with TPI",
+          "use_heating_failure_detection_central_config": "Check to use the central heating failure detection configuration. Uncheck to use specific parameters for this VTherm",
+          "heating_failure_threshold": "On percent threshold above which heating should cause temperature increase (0.9 = 90%)",
+          "cooling_failure_threshold": "On percent threshold below which temperature should not increase (0.0 = 0%)",
+          "heating_failure_detection_delay": "Time in minutes to wait before checking if temperature has changed as expected",
+          "temperature_change_tolerance": "Minimum temperature change in degrees to consider significant. Smaller changes are ignored to filter sensor noise (default: 0.5°C)",
+          "failure_detection_enable_template": "An optional Jinja2 template that must return True to enable detection. Useful to temporarily disable detection when an external heat source is active (e.g., `is_state('binary_sensor.wood_stove', 'off')` in double curly braces). If empty, detection is always enabled."
         }
       }
     },
@@ -554,7 +757,9 @@
       "no_central_config": "You cannot check 'use central configuration' because no central configuration was found. You need to create a Versatile Thermostat of type 'Central Configuration' to use it.",
       "service_configuration_format": "The format of the service configuration is wrong",
       "valve_regulation_nb_entities_incorrect": "The number of valve entities for valve regulation should be equal to the number of underlyings",
-      "min_opening_degrees_format": "A comma separated list of positive integer is expected. Example: 20, 25, 30"
+      "sync_device_internal_temp_nb_entities_incorrect": "The number of entities for synchronize device internal temperature should be equal to the number of underlyings",
+      "min_opening_degrees_format": "A comma separated list of positive integer is expected. Example: 20, 25, 30",
+      "vswitch_configuration_incorrect": "The command customization configuration is incorrect. It is required for underlying entities that are not switches, and the format must be service_name[/attribute:value]. More information is available in the README"
     },
     "abort": {
       "already_configured": "Device is already configured"
@@ -613,6 +818,12 @@
         "auto_start_stop_medium": "Medium detection",
         "auto_start_stop_fast": "Fast detection"
       }
+    },
+    "auto_tpi_calculation_method": {
+      "options": {
+        "average": "Average",
+        "ema": "Exponential Moving Average (EMA)"
+      }
     }
   },
   "entity": {
@@ -628,6 +839,32 @@
             }
           }
         }
+      }
+    },
+    "binary_sensor": {
+      "safety_state": {
+        "name": "Safety state"
+      },
+      "heating_failure_state": {
+        "name": "Heating failure state"
+      },
+      "overpowering_state": {
+        "name": "Overpowering state"
+      },
+      "window_state": {
+        "name": "Window state"
+      },
+      "motion_state": {
+        "name": "Motion state"
+      },
+      "presence_state": {
+        "name": "Presence state"
+      },
+      "window_bypass_state": {
+        "name": "Window bypass"
+      },
+      "central_boiler_state": {
+        "name": "Central boiler"
       }
     },
     "number": {
@@ -676,6 +913,99 @@
       "boost_ac_away_temp": {
         "name": "Boost ac away"
       }
+    }
+  },
+  "services": {
+    "set_auto_tpi_mode": {
+      "name": "Set Auto TPI mode",
+      "description": "Enable or disable the Auto TPI learning mode",
+      "fields": {
+        "auto_tpi_mode": {
+          "name": "Auto TPI mode",
+          "description": "Enable (true) or disable (false) the Auto TPI learning"
+        },
+        "reinitialise": {
+          "name": "Reset learning data",
+          "description": "Reset all learning data when enabling Auto TPI mode (default is true)"
+        }
+      }
+    },
+    "reset_auto_tpi_capacities": {
+      "name": "Reset Auto TPI Capacities",
+      "description": "Reset the learned maximum heating and cooling capacities to 1.0 °C/h. Learned coefficients are NOT reset."
+    },
+    "auto_tpi_calibrate_capacity": {
+      "name": "Auto Tpi Calibrate Capacity",
+      "description": "Calibrate the heating/cooling capacity (in °C/hour) using linear regression on the entity's history data. Learned coefficients are NOT updated.",
+      "fields": {
+        "start_date": {
+          "name": "History from date",
+          "description": "Date from which to retrieve history (default is 30 days ago)"
+        },
+        "end_date": {
+          "name": "History to date",
+          "description": "Date until which to retrieve history (default is now)"
+        },
+        "hvac_mode": {
+          "name": "HVAC Mode",
+          "description": "Which mode to calibrate (heat or cool)."
+        },
+        "save_to_config": {
+          "name": "Save to Config",
+          "description": "Apply the calculated capacity to the Auto TPI configuration."
+        },
+        "min_power_threshold": {
+          "name": "Minimum Power Threshold",
+          "description": "Minimum power percentage to consider a cycle as saturated (default 95%). Lower values will include more cycles but may be less accurate."
+        }
+      }
+    },
+    "set_tpi_parameters": {
+      "name": "Set TPI parameters",
+      "description": "Change the TPI parameters",
+      "fields": {
+        "minimal_activation_delay": {
+          "name": "Minimal Activation delay",
+          "description": "Delay in seconds under which the equipment will not be activated"
+        },
+        "minimal_deactivation_delay": {
+          "name": "Minimal Deactivation delay",
+          "description": "Delay in seconds under which the equipment will be kept active"
+        },
+        "tpi_threshold_low": {
+          "name": "Low TPI threshold",
+          "description": "Threshold in ° under which the TPI algorithm will be on. 0 means no threshold"
+        },
+        "tpi_threshold_high": {
+          "name": "High TPI threshold",
+          "description": "Threshold in ° above which the TPI algorithm will be off. 0 means no threshold"
+        }
+      }
+    },
+    "lock": {
+      "name": "Lock",
+      "description": "Locks the thermostat, preventing any changes to its configuration from UI or automations.",
+      "fields": {
+        "code": {
+          "name": "Lock code",
+          "description": "The optional lock code"
+        }
+      }
+    },
+    "unlock": {
+      "name": "Unlock",
+      "description": "Unlocks the thermostat, allowing changes to its configuration.",
+      "fields": {
+        "code": {
+          "name": "Lock code",
+          "description": "The optional lock code"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "auto_tpi_learning_stopped": {
+      "message": "Auto TPI learning for {name} has been stopped due to 3 consecutive failures. Reason: {reason}. Please check your configuration."
     }
   }
 }

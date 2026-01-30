@@ -143,6 +143,10 @@ set_hvac_mode_sleep:
 lock:
     name: Lock
     description: "Locks the thermostat, preventing any changes to its configuration from UI or automations."
+    target:
+        entity:
+            integration: versatile_thermostat
+
     fields:
         code:
             name: Lock code
@@ -254,3 +258,156 @@ set_tpi_parameters:
                     step: 0.1
                     mode: box
                     unit_of_measurement: "°"
+
+set_auto_tpi_mode:
+    name: Set Auto TPI mode
+    description: Enable or disable the Auto TPI learning mode.
+    target:
+        entity:
+            integration: versatile_thermostat
+            domain:
+                - climate
+    fields:
+        auto_tpi_mode:
+            name: Auto TPI mode
+            description: Enable (true) or disable (false) the Auto TPI learning
+            required: true
+            advanced: false
+            default: true
+            selector:
+                boolean:
+        reinitialise:
+            name: Reset learning data
+            description: Reset all learning data when enabling Auto TPI mode (default is true)
+            required: false
+            advanced: false
+            default: true
+            selector:
+                boolean:
+        allow_kint_boost_on_stagnation:
+            name: Allow Kint boost
+            description: Allow boosting Kint when temperature stagnates despite demand (default false)
+            required: true
+            advanced: false
+            default: false
+            selector:
+                boolean:
+        allow_kext_compensation_on_overshoot:
+            name: Allow Kext compensation
+            description: Allow adjusting Kext when temperature overshoots (default false)
+            required: true
+            advanced: false
+            default: false
+            selector:
+                boolean:
+
+
+auto_tpi_calibrate_capacity:
+    name: Auto Tpi Calibrate Capacity
+    description: Calibrate the heating/cooling capacity (in min/°) using linear regression on the entity's history data.
+    target:
+        entity:
+            integration: versatile_thermostat
+            domain:
+                - climate
+    fields:
+        start_date:
+            name: History from date
+            description: Date from which to retrieve history (default is 30 days ago)
+            required: false
+            advanced: false
+            example: "2023-11-01"
+            selector:
+                date:
+        end_date:
+            name: History to date
+            description: Date until which to retrieve history (default is now)
+            required: false
+            advanced: false
+            example: "2023-12-01"
+            selector:
+                date:
+        min_power_threshold:
+            name: Minimum Power Threshold
+            description: Minimum power percentage to consider a cycle as saturated (default 95%). Lower values (e.g., 90%) will include more cycles but may be less accurate.
+            required: true
+            default: 95
+            advanced: true
+            example: 95
+            selector:
+                number:
+                    min: 80
+                    max: 100
+                    step: 1
+                    unit_of_measurement: "%"
+                    mode: slider
+        save_to_config:
+            name: Save to Config
+            description: Whether to apply the calculated capacity to the entity's configuration
+            required: true
+            advanced: false
+            example: true
+            selector:
+                boolean:
+
+set_timed_preset:
+    name: Set Timed Preset
+    description: Force a preset for a given duration. After the duration expires, the original preset will be restored.
+    target:
+        entity:
+            integration: versatile_thermostat
+            domain:
+                - climate
+    fields:
+        preset:
+            name: Preset
+            description: The preset to apply temporarily
+            required: true
+            advanced: false
+            example: "boost"
+            selector:
+                text:
+        duration_minutes:
+            name: Duration (minutes)
+            description: Duration in minutes for which the preset will be active
+            required: true
+            advanced: false
+            example: 30
+            default: 30
+            selector:
+                number:
+                    min: 1
+                    max: 1440
+                    step: 1
+                    unit_of_measurement: "min"
+                    mode: box
+
+cancel_timed_preset:
+    name: Cancel Timed Preset
+    description: Cancel any active timed preset and restore the original preset.
+    target:
+        entity:
+            integration: versatile_thermostat
+            domain:
+                - climate
+
+recalibrate_valves:
+    name: Recalibrate valves
+    description: Recalibrate opening/closing degrees for all valve underlyings of a VTherm (only over_climate_valve).
+    target:
+        entity:
+            integration: versatile_thermostat
+            domain:
+                - climate
+    fields:
+        delay_seconds:
+            name: Delay seconds
+            description: Delay in seconds between open and close step for each valve
+            required: true
+            example: 5
+            default: 60
+            selector:
+                number:
+                    min: 30
+                    max: 300
+                    step: 1

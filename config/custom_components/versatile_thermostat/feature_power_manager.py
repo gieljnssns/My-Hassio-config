@@ -17,7 +17,7 @@ from homeassistant.core import (
 )
 
 from .const import *  # pylint: disable=wildcard-import, unused-wildcard-import
-from .commons import write_event_log
+from .commons import write_event_log, round_to_nearest
 from .commons_type import ConfigData
 
 from .base_manager import BaseFeatureManager
@@ -111,6 +111,15 @@ class FeaturePowerManager(BaseFeatureManager):
                     }
                 }
             )
+        else:
+            extra_state_attributes.update(
+                {
+                    "power_manager": {
+                        "device_power": self._device_power,
+                        "mean_cycle_power": self.mean_cycle_power,
+                    }
+                }
+            )
 
     async def check_power_available(self) -> bool:
         """Check if the Vtherm can be started considering overpowering.
@@ -168,9 +177,11 @@ class FeaturePowerManager(BaseFeatureManager):
             if self._vtherm.is_over_climate:
                 power_consumption_max = self._device_power
             else:
+                on_percent = self._vtherm.safe_on_percent
+
                 power_consumption_max = max(
                     self._device_power / self._vtherm.nb_underlying_entities,
-                    self._device_power * self._vtherm.proportional_algorithm.on_percent,
+                    self._device_power * on_percent,
                 )
         return power_consumption_max
 
@@ -199,9 +210,11 @@ class FeaturePowerManager(BaseFeatureManager):
             if self._vtherm.is_over_climate:
                 power_consumption_max = self._device_power
             else:
+                on_percent = self._vtherm.safe_on_percent
+
                 power_consumption_max = max(
                     self._device_power / self._vtherm.nb_underlying_entities,
-                    self._device_power * self._vtherm.proportional_algorithm.on_percent,
+                    self._device_power * on_percent,
                 )
 
         vtherm_api.central_power_manager.add_started_vtherm_total_power(-power_consumption_max)
@@ -284,12 +297,16 @@ class FeaturePowerManager(BaseFeatureManager):
     @property
     def mean_cycle_power(self) -> float | None:
         """Returns the mean power consumption during the cycle"""
-        if not self._device_power or not self._vtherm.proportional_algorithm:
+        if not self._device_power:
             return None
 
-        return float(
-            self._device_power * self._vtherm.proportional_algorithm.on_percent
-        )
+        if self._vtherm.proportional_algorithm:
+            return float(round_to_nearest(self._device_power * self._vtherm.proportional_algorithm.on_percent, 0.01)) if self._vtherm.is_device_active else 0.0
+
+        if self._vtherm.is_over_climate:
+            return self._device_power if self._vtherm.is_device_active else 0.0
+
+        return None
 
     def __str__(self):
         return f"PowerManager-{self.name}"

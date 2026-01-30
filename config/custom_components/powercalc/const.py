@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Literal
 
+from homeassistant.components import cover, device_tracker
 from homeassistant.components.utility_meter.const import DAILY, MONTHLY, WEEKLY
 from homeassistant.const import (
     STATE_CLOSED,
@@ -27,6 +29,17 @@ DATA_ENTITIES = "entities"
 DATA_GROUP_ENTITIES = "group_entities"
 DATA_USED_UNIQUE_IDS = "used_unique_ids"
 DATA_STANDBY_POWER_SENSORS = "standby_power_sensors"
+DATA_ANALYTICS = "analytics"
+DATA_ANALYTICS_SEEN_ENTRIES = "analytics_seen_entries"
+DATA_POWER_PROFILES: Literal["power_profiles"] = "power_profiles"
+DATA_SENSOR_TYPES: Literal["sensor_types"] = "sensor_types"
+DATA_CONFIG_TYPES: Literal["config_types"] = "config_types"
+DATA_SOURCE_DOMAINS: Literal["source_domains"] = "source_domains"
+DATA_GROUP_TYPES: Literal["group_types"] = "group_types"
+DATA_ENTITY_TYPES: Literal["entity_types"] = "entity_types"
+DATA_STRATEGIES: Literal["strategies"] = "strategies"
+DATA_GROUP_SIZES: Literal["group_sizes"] = "group_sizes"
+DATA_HAS_GROUP_INCLUDE: Literal["has_group_include"] = "has_group_include"
 
 ENTRY_DATA_ENERGY_ENTITY = "_energy_entity"
 ENTRY_DATA_POWER_ENTITY = "_power_entity"
@@ -36,6 +49,7 @@ DUMMY_ENTITY_ID = "sensor.dummy"
 
 CONF_ALL = "all"
 CONF_AND = "and"
+CONF_ENABLE_ANALYTICS = "enable_analytics"
 CONF_AREA = "area"
 CONF_AUTOSTART = "autostart"
 CONF_AVAILABILITY_ENTITY = "availability_entity"
@@ -47,6 +61,7 @@ CONF_CREATE_DOMAIN_GROUPS = "create_domain_groups"
 CONF_CREATE_ENERGY_SENSOR = "create_energy_sensor"
 CONF_CREATE_ENERGY_SENSORS = "create_energy_sensors"
 CONF_CREATE_GROUP = "create_group"
+CONF_CREATE_STANDBY_GROUP = "create_standby_group"
 CONF_CREATE_UTILITY_METERS = "create_utility_meters"
 CONF_CUSTOM_MODEL_DIRECTORY = "custom_model_directory"
 CONF_DAILY_FIXED_ENERGY = "daily_fixed_energy"
@@ -109,6 +124,7 @@ CONF_MULTI_SWITCH = "multi_switch"
 CONF_MULTIPLY_FACTOR = "multiply_factor"
 CONF_MULTIPLY_FACTOR_STANDBY = "multiply_factor_standby"
 CONF_NEW_GROUP = "new_group"
+CONF_NOT = "not"
 CONF_ON_TIME = "on_time"
 CONF_OR = "or"
 CONF_PLAYBOOK = "playbook"
@@ -122,6 +138,7 @@ CONF_POWER_SENSOR_ID = "power_sensor_id"
 CONF_POWER_SENSOR_NAMING = "power_sensor_naming"
 CONF_POWER_SENSOR_PRECISION = "power_sensor_precision"
 CONF_POWER_TEMPLATE = "power_template"
+CONF_POWER_UPDATE_INTERVAL = "power_update_interval"
 CONF_REPEAT = "repeat"
 CONF_SELF_USAGE_INCLUDED = "self_usage_included"
 CONF_SENSOR_TYPE = "sensor_type"
@@ -195,6 +212,7 @@ DISCOVERY_POWER_PROFILES = "power_profiles"
 DISCOVERY_TYPE = "discovery_type"
 
 LIBRARY_URL = "https://library.powercalc.nl"
+API_URL = "https://api.powercalc.nl"
 
 MANUFACTURER_WLED = "WLED"
 
@@ -221,7 +239,11 @@ SERVICE_RELOAD = "reload"
 
 SIGNAL_POWER_SENSOR_STATE_CHANGE = "powercalc_power_sensor_state_change"
 
-OFF_STATES = (STATE_OFF, STATE_NOT_HOME, STATE_STANDBY, STATE_UNAVAILABLE, STATE_OPEN, STATE_CLOSED)
+OFF_STATES = {STATE_OFF, STATE_STANDBY, STATE_UNAVAILABLE}
+OFF_STATES_BY_DOMAIN: dict[str, set[str]] = {
+    cover.DOMAIN: {STATE_CLOSED, STATE_OPEN},
+    device_tracker.DOMAIN: {STATE_NOT_HOME},
+}
 
 
 class CalculationStrategy(StrEnum):
@@ -263,3 +285,13 @@ class GroupType(StrEnum):
     STANDBY = "standby"
     SUBTRACT = "subtract"
     TRACKED_UNTRACKED = "tracked_untracked"
+
+
+class EntityType(StrEnum):
+    """Possible powercalc entity types."""
+
+    POWER_SENSOR = "power_sensor"
+    ENERGY_SENSOR = "energy_sensor"
+    UTILITY_METER = "utility_meter"
+    TARIFF_SELECT = "tariff_select"
+    UNKNOWN = "unknown"

@@ -21,26 +21,30 @@ from homeassistant.const import (
     Platform,
     __version__ as HA_VERSION,  # noqa: N812
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity_platform import async_get_platforms
 import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
 import voluptuous as vol
 
+from .analytics.analytics import ANALYTICS_INTERVAL, Analytics
 from .common import validate_name_pattern
 from .configuration.global_config import FLAG_HAS_GLOBAL_GUI_CONFIG, get_global_configuration, get_global_gui_configuration
 from .const import (
     CONF_CREATE_DOMAIN_GROUPS,
     CONF_CREATE_ENERGY_SENSORS,
+    CONF_CREATE_STANDBY_GROUP,
     CONF_CREATE_UTILITY_METERS,
     CONF_DISABLE_EXTENDED_ATTRIBUTES,
     CONF_DISABLE_LIBRARY_DOWNLOAD,
     CONF_DISCOVERY,
     CONF_DISCOVERY_EXCLUDE_DEVICE_TYPES_DEPRECATED,
     CONF_DISCOVERY_EXCLUDE_SELF_USAGE_DEPRECATED,
+    CONF_ENABLE_ANALYTICS,
     CONF_ENABLE_AUTODISCOVERY_DEPRECATED,
     CONF_ENERGY_INTEGRATION_METHOD,
     CONF_ENERGY_SENSOR_CATEGORY,
@@ -62,12 +66,14 @@ from .const import (
     CONF_POWER_SENSOR_FRIENDLY_NAMING,
     CONF_POWER_SENSOR_NAMING,
     CONF_POWER_SENSOR_PRECISION,
+    CONF_POWER_UPDATE_INTERVAL,
     CONF_SENSOR_TYPE,
     CONF_SENSORS,
     CONF_UNAVAILABLE_POWER,
     CONF_UTILITY_METER_OFFSET,
     CONF_UTILITY_METER_TARIFFS,
     CONF_UTILITY_METER_TYPES,
+    DATA_ANALYTICS,
     DATA_CONFIGURED_ENTITIES,
     DATA_DISCOVERY_MANAGER,
     DATA_DOMAIN_ENTITIES,
@@ -101,7 +107,7 @@ from .sensors.group.config_entry_utils import (
 )
 from .service.gui_configuration import SERVICE_SCHEMA, change_gui_configuration
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.SELECT]
 
 DISCOVERY_SCHEMA = vol.Schema(
     {
@@ -123,6 +129,7 @@ CONFIG_SCHEMA = vol.Schema(
             cv.deprecated(CONF_FORCE_UPDATE_FREQUENCY_DEPRECATED),
             vol.Schema(
                 {
+                    vol.Optional(CONF_ENABLE_ANALYTICS): cv.boolean,
                     vol.Optional(
                         CONF_FORCE_UPDATE_FREQUENCY_DEPRECATED,
                     ): cv.time_period,
@@ -130,6 +137,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_GROUP_POWER_UPDATE_INTERVAL): cv.positive_int,
                     vol.Optional(CONF_GROUP_ENERGY_UPDATE_INTERVAL): cv.positive_int,
                     vol.Optional(CONF_ENERGY_UPDATE_INTERVAL): cv.positive_int,
+                    vol.Optional(CONF_POWER_UPDATE_INTERVAL): cv.positive_int,
                     vol.Optional(CONF_POWER_SENSOR_NAMING): validate_name_pattern,
                     vol.Optional(CONF_POWER_SENSOR_FRIENDLY_NAMING): validate_name_pattern,
                     vol.Optional(CONF_POWER_SENSOR_CATEGORY): vol.In(ENTITY_CATEGORIES),
@@ -161,6 +169,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_UNAVAILABLE_POWER): vol.Coerce(float),
                     vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_CONFIG]),
                     vol.Optional(CONF_INCLUDE_NON_POWERCALC_SENSORS): cv.boolean,
+                    vol.Optional(CONF_CREATE_STANDBY_GROUP): cv.boolean,
                 },
             ),
         ),
@@ -194,9 +203,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_ENTITIES: {},
         DATA_USED_UNIQUE_IDS: [],
         DATA_STANDBY_POWER_SENSORS: {},
+        DATA_ANALYTICS: {},
     }
 
     await register_services(hass)
+
+    await async_load_platform(hass, Platform.SELECT, DOMAIN, {}, config)
     await setup_yaml_sensors(hass, config, global_config)
 
     setup_domain_groups(hass, global_config)
@@ -207,7 +219,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     except Exception as e:  # noqa: BLE001  # pragma: no cover
         _LOGGER.error("problem while cleaning up None entities", exc_info=e)  # pragma: no cover
 
+    await init_analytics(hass)
+
     return True
+
+
+async def init_analytics(hass: HomeAssistant) -> None:
+    """Initialize the Analytics manager and schedule daily submission"""
+    analytics = Analytics(hass)
+    await analytics.load()
+
+    @callback
+    def start_schedule(_event: Event) -> None:
+        """Start the send schedule after the started event."""
+        async_call_later(
+            hass,
+            10,
+            HassJob(
+                analytics.send_analytics,
+                name="powercalc analytics startup",
+                cancel_on_shutdown=True,
+            ),
+        )
+
+        async_track_time_interval(
+            hass,
+            analytics.send_analytics,
+            ANALYTICS_INTERVAL,
+            name="powercalc analytics daily",
+            cancel_on_shutdown=True,
+        )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_schedule)
 
 
 async def create_discovery_manager_instance(
@@ -266,6 +309,7 @@ async def register_services(hass: HomeAssistant) -> None:
 
         hass.data[DOMAIN][DATA_USED_UNIQUE_IDS] = []
         hass.data[DOMAIN][DATA_CONFIGURED_ENTITIES] = {}
+        hass.data[DOMAIN][DATA_ANALYTICS] = {}
         hass.data[DOMAIN][DOMAIN_CONFIG] = await get_global_configuration(hass, reload_config)
 
         # Reload YAML sensors if any
@@ -301,6 +345,8 @@ async def create_standby_group(
     domain_config: ConfigType,
     event: Event[Any] | None = None,
 ) -> None:
+    if not bool(domain_config.get(CONF_CREATE_STANDBY_GROUP, True)):
+        return
     hass.async_create_task(
         async_load_platform(
             hass,
@@ -395,7 +441,8 @@ async def setup_yaml_sensors(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Powercalc integration from a config entry."""
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR, Platform.SELECT])
+    # await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
 
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
 

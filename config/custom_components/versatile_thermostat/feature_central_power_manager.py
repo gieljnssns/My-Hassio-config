@@ -1,6 +1,7 @@
 """ Implements a central Power Feature Manager for Versatile Thermostat """
 
 import logging
+
 from typing import Any
 from functools import cmp_to_key
 
@@ -33,7 +34,7 @@ MIN_DTEMP_SECS = 20
 _LOGGER = logging.getLogger(__name__)
 
 
-class CentralFeaturePowerManager(BaseFeatureManager):
+class FeatureCentralPowerManager(BaseFeatureManager):
     """A central Power feature manager"""
 
     def __init__(self, hass: HomeAssistant, vtherm_api: Any):
@@ -249,7 +250,7 @@ class CentralFeaturePowerManager(BaseFeatureManager):
             CLIMATE_DOMAIN, None
         )
         if component:
-            for entity in component.entities:
+            for entity in list(component.entities):
                 # A little hack to test if the climate is a VTherm. Cannot use isinstance
                 # due to circular dependency of BaseThermostat
                 if (

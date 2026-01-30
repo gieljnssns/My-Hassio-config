@@ -128,6 +128,7 @@ class FeatureSafetyManager(BaseFeatureManager):
         )
         switch_cond: bool = (
             not self._vtherm.is_over_climate
+            and self._vtherm.has_tpi
             and self._vtherm.proportional_algorithm is not None
             and self._vtherm.proportional_algorithm.calculated_on_percent
             >= self._safety_min_on_percent
@@ -196,7 +197,7 @@ class FeatureSafetyManager(BaseFeatureManager):
             self._safety_state = STATE_ON
             # self._vtherm.save_hvac_mode()
             # self._vtherm.save_preset_mode()
-            if self._vtherm.proportional_algorithm:
+            if self._vtherm.has_tpi:
                 self._vtherm.proportional_algorithm.set_safety(self._safety_default_on_percent)
 
             self._vtherm.send_event(
@@ -216,7 +217,7 @@ class FeatureSafetyManager(BaseFeatureManager):
             write_event_log(_LOGGER, self._vtherm, "Ending safety mode")
             _LOGGER.warning("%s - End of safety mode.", self)
             self._safety_state = STATE_OFF
-            if self._vtherm.proportional_algorithm:
+            if self._vtherm.has_tpi and self._vtherm.proportional_algorithm:
                 self._vtherm.proportional_algorithm.unset_safety()
             self._vtherm.send_event(
                 EventType.SAFETY_EVENT,
@@ -236,13 +237,18 @@ class FeatureSafetyManager(BaseFeatureManager):
 
         return self._safety_state == STATE_ON
 
+    async def _async_update_states_later(self, _=None):
+        """Called at next tick to update states without recursion"""
+        self._vtherm.requested_state.force_changed()
+        await self._vtherm.update_states(force=True)
+
     async def refresh_and_update_if_changed(self) -> bool:
         """Refresh the safety state and update_states of VTherm if changed
         Returns True if the state has changed, False otherwise"""
         old_safety: bool = self.is_safety_detected
         if old_safety != await self.refresh_state():
-            self._vtherm.requested_state.force_changed()
-            await self._vtherm.update_states(force=True)
+            # issue 1450 - schedule update_states at next tick to avoid recursion
+            self._hass.async_create_task(self._async_update_states_later())
             return True
 
         return False

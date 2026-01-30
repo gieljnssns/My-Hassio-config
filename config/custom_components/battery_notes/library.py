@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-import os
+import asyncio
 import json
 import logging
-from typing import Any, Final, NamedTuple, cast
+import os
 from dataclasses import dataclass
+from typing import Any, Final, NamedTuple, cast
 
 from homeassistant.core import HomeAssistant
-from homeassistant.util.hass_dict import HassKey
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 from .coordinator import MY_KEY
@@ -64,14 +65,31 @@ class Library:  # pylint: disable=too-few-public-methods
     def __init__(self, hass: HomeAssistant) -> None:
         """Init."""
         self.hass = hass
+        self._load_lock = asyncio.Lock()
+        self._is_loading = False
 
     async def load_libraries(self):
         """Load the user and default libraries."""
+        async with self._load_lock:
+            if self._is_loading:
+                _LOGGER.debug("Library already loading, skipping duplicate load")
+                return
+
+            self._is_loading = True
+            try:
+                await self._do_load_libraries()
+            finally:
+                self._is_loading = False
+
+    async def _do_load_libraries(self):
+        """Load libraries internally (must be called with lock held)."""
 
         def _load_library_json(library_file: str) -> dict[str, Any]:
             """Load library json file."""
             with open(library_file, encoding="utf-8") as file:
                 return cast(dict[str, Any], json.load(file))
+
+        new_manufacturer_devices: dict[str, list[LibraryDevice]] = {}
 
         # User Library
         domain_config = self.hass.data.get(MY_KEY)
@@ -89,9 +107,9 @@ class Library:  # pylint: disable=too-few-public-methods
                 for json_device in user_json_data["devices"]:
                     library_device = LibraryDevice.from_json(json_device)
                     manufacturer = library_device.manufacturer.casefold()
-                    if manufacturer not in self._manufacturer_devices:
-                        self._manufacturer_devices[manufacturer] = []
-                    self._manufacturer_devices[manufacturer].append(library_device)
+                    if manufacturer not in new_manufacturer_devices:
+                        new_manufacturer_devices[manufacturer] = []
+                    new_manufacturer_devices[manufacturer].append(library_device)
                 _LOGGER.debug("Loaded %s user devices", len(user_json_data["devices"]))
 
             except FileNotFoundError:
@@ -115,6 +133,12 @@ class Library:  # pylint: disable=too-few-public-methods
                         "User library file not found at %s",
                         json_user_path,
                     )
+            except (json.JSONDecodeError, KeyError, ValueError) as err:
+                _LOGGER.error(
+                    "Failed to parse user library file at %s: %s",
+                    json_user_path,
+                    err,
+                )
 
         # Default Library
         json_default_path = self.hass.config.path(
@@ -130,17 +154,25 @@ class Library:  # pylint: disable=too-few-public-methods
             for json_device in default_json_data["devices"]:
                 library_device = LibraryDevice.from_json(json_device)
                 manufacturer = library_device.manufacturer.casefold()
-                if manufacturer not in self._manufacturer_devices:
-                    self._manufacturer_devices[manufacturer] = []
-                self._manufacturer_devices[manufacturer].append(library_device)
+                if manufacturer not in new_manufacturer_devices:
+                    new_manufacturer_devices[manufacturer] = []
+                new_manufacturer_devices[manufacturer].append(library_device)
             _LOGGER.debug(
                 "Loaded %s default devices", len(default_json_data[LIBRARY_DEVICES])
             )
+
+            self._manufacturer_devices = new_manufacturer_devices
 
         except FileNotFoundError:
             _LOGGER.error(
                 "library.json file not found at %s",
                 json_default_path,
+            )
+        except (json.JSONDecodeError, KeyError, ValueError) as err:
+            _LOGGER.error(
+                "Failed to parse library file at %s: %s",
+                json_default_path,
+                err,
             )
 
     async def get_device_battery_details(
@@ -159,6 +191,7 @@ class Library:  # pylint: disable=too-few-public-methods
         # device_to_find = ModelInfo("Philips", "Hue dimmer switch (929002398602)", None, None)
         # device_to_find = ModelInfo("Philips", "Hue dimmer switch", "929002398602", None)
         # device_to_find = ModelInfo("Philips", "Hue dimmer switch", "929002398602", "1")
+        # device_to_find = ModelInfo("LUMI", "lumi.sensor_magnet.aq2", None, None)
 
         # Get all devices matching manufacturer & model
         matching_devices = None
@@ -198,24 +231,37 @@ class Library:  # pylint: disable=too-few-public-methods
         if not matching_devices:
             return None
 
-        if len(matching_devices) > 1:
-            return None
+        first_matched_device = matching_devices[0]
 
-        matched_device = matching_devices[0]
+        if len(matching_devices) > 1:
+            # Check if all matching devices are duplicates (all fields identical)
+            all_same = all(
+                device.manufacturer == first_matched_device.manufacturer
+                and device.model == first_matched_device.model
+                and device.model_id == first_matched_device.model_id
+                and device.hw_version == first_matched_device.hw_version
+                and device.model_match_method == first_matched_device.model_match_method
+                and device.battery_type == first_matched_device.battery_type
+                and device.battery_quantity == first_matched_device.battery_quantity
+                for device in matching_devices[1:]
+            )
+            if not all_same:
+                return None
 
         return DeviceBatteryDetails(
-            manufacturer=matched_device.manufacturer,
-            model=matched_device.model,
-            model_id=matched_device.model_id or "",
-            hw_version=matched_device.hw_version or "",
-            battery_type=matched_device.battery_type,
-            battery_quantity=matched_device.battery_quantity,
+            manufacturer=first_matched_device.manufacturer,
+            model=first_matched_device.model,
+            model_id=first_matched_device.model_id or "",
+            hw_version=first_matched_device.hw_version or "",
+            battery_type=first_matched_device.battery_type,
+            battery_quantity=first_matched_device.battery_quantity,
         )
 
     @property
     def is_loaded(self) -> bool:
         """Library loaded successfully."""
-        return bool(self._manufacturer_devices)
+
+        return bool(self._manufacturer_devices) and not self._is_loading
 
     def device_basic_match(
         self, library_device: LibraryDevice, device_to_find: ModelInfo

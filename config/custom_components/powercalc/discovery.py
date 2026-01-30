@@ -133,7 +133,7 @@ class DiscoveryManager:
         """Build a list of config entries which are already setup, to prevent duplicate discovery flows"""
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if not entry.unique_id:
-                continue
+                continue  # pragma: no cover
 
             self.initialized_flows.add(entry.unique_id)
             entity_id = entry.data.get(CONF_ENTITY_ID)
@@ -259,6 +259,14 @@ class DiscoveryManager:
             if profile.device_type in self._exclude_device_types:
                 continue
             if self._exclude_self_usage_profiles and profile.only_self_usage:
+                continue
+            # Check if the entity's integration is compatible with the profile
+            if (
+                discovery_type == DiscoveryBy.ENTITY
+                and source_entity.entity_entry
+                and profile.compatible_integrations
+                and source_entity.entity_entry.platform not in profile.compatible_integrations
+            ):
                 continue
             power_profiles.append(profile)
 

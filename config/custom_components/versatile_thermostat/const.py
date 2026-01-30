@@ -38,7 +38,7 @@ from .vtherm_state import VThermState  # pylint: disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_VERSION = 2
-CONFIG_MINOR_VERSION = 1
+CONFIG_MINOR_VERSION = 3
 
 DEVICE_MANUFACTURER = "JMCOLLIN"
 DEVICE_MODEL = "Versatile Thermostat"
@@ -125,13 +125,26 @@ CONF_OFFSET_CALIBRATION_LIST = "offset_calibration_entity_ids"
 CONF_OPENING_DEGREE_LIST = "opening_degree_entity_ids"
 CONF_CLOSING_DEGREE_LIST = "closing_degree_entity_ids"
 CONF_MIN_OPENING_DEGREES = "min_opening_degrees"
+CONF_MAX_OPENING_DEGREES = "max_opening_degrees"
 CONF_MAX_CLOSING_DEGREE = "max_closing_degree"
 CONF_OPENING_THRESHOLD_DEGREE = "opening_threshold_degree"
+
+CONF_SYNC_DEVICE_INTERNAL_TEMP = "sync_device_internal_temp"
+CONF_SYNC_WITH_CALIBRATION = "sync_with_calibration"
+CONF_SYNC_ENTITY_LIST = "sync_entity_ids"
+
+CONF_USE_HEATING_FAILURE_DETECTION_FEATURE = "use_heating_failure_detection_feature"
+CONF_USE_HEATING_FAILURE_DETECTION_CENTRAL_CONFIG = "use_heating_failure_detection_central_config"
+CONF_HEATING_FAILURE_THRESHOLD = "heating_failure_threshold"
+CONF_COOLING_FAILURE_THRESHOLD = "cooling_failure_threshold"
+CONF_HEATING_FAILURE_DETECTION_DELAY = "heating_failure_detection_delay"
+CONF_TEMPERATURE_CHANGE_TOLERANCE = "temperature_change_tolerance"
+CONF_FAILURE_DETECTION_ENABLE_TEMPLATE = "failure_detection_enable_template"
 
 CONF_LOCK_CODE = "lock_code"
 CONF_LOCK_USERS = "lock_users"
 CONF_LOCK_AUTOMATIONS = "lock_automations"
- 
+
 CONF_VSWITCH_ON_CMD_LIST = "vswitch_on_command"
 CONF_VSWITCH_OFF_CMD_LIST = "vswitch_off_command"
 
@@ -148,6 +161,31 @@ CONF_VALVE = "valve_entity_id"
 CONF_VALVE_2 = "valve_entity2_id"
 CONF_VALVE_3 = "valve_entity3_id"
 CONF_VALVE_4 = "valve_entity4_id"
+
+CONF_AUTO_TPI_MODE = "auto_tpi_mode"
+CONF_AUTO_TPI_LEARNING_TYPE = "auto_tpi_learning_type"
+AUTO_TPI_LEARNING_TYPE_DISCOVERY = "discovery"
+AUTO_TPI_LEARNING_TYPE_FINE_TUNING = "fine_tuning"
+CONF_AUTO_TPI_LEARNING_TYPES = [
+    AUTO_TPI_LEARNING_TYPE_DISCOVERY,
+    AUTO_TPI_LEARNING_TYPE_FINE_TUNING,
+]
+CONF_AUTO_TPI_ENABLE_ADVANCED_SETTINGS = "auto_tpi_enable_advanced_settings"
+CONF_AUTO_TPI_HEATER_HEATING_TIME = "heater_heating_time"
+CONF_AUTO_TPI_HEATER_COOLING_TIME = "heater_cooling_time"
+CONF_AUTO_TPI_CALCULATION_METHOD = "auto_tpi_calculation_method"
+AUTO_TPI_METHOD_AVG = "average"
+AUTO_TPI_METHOD_EMA = "ema"
+CONF_AUTO_TPI_CALCULATION_METHODS = [AUTO_TPI_METHOD_AVG, AUTO_TPI_METHOD_EMA]
+CONF_AUTO_TPI_EMA_ALPHA = "auto_tpi_ema_alpha"
+CONF_AUTO_TPI_AVG_INITIAL_WEIGHT = "auto_tpi_avg_initial_weight"
+
+CONF_AUTO_TPI_HEATING_POWER = "auto_tpi_heating_rate"
+CONF_AUTO_TPI_COOLING_POWER = "auto_tpi_cooling_rate"
+CONF_AUTO_TPI_AGGRESSIVENESS = "auto_tpi_aggressiveness"
+
+CONF_AUTO_TPI_EMA_DECAY_RATE = "auto_tpi_ema_decay_rate"
+
 
 # Global params into configuration.yaml
 CONF_SHORT_EMA_PARAMS = "short_ema_params"
@@ -168,6 +206,7 @@ CONF_USE_CENTRAL_MODE = "use_central_mode"
 
 CONF_CENTRAL_BOILER_ACTIVATION_SRV = "central_boiler_activation_service"
 CONF_CENTRAL_BOILER_DEACTIVATION_SRV = "central_boiler_deactivation_service"
+CONF_CENTRAL_BOILER_ACTIVATION_DELAY_SEC = "central_boiler_activation_delay_sec"
 
 CONF_USED_BY_CENTRAL_BOILER = "used_by_controls_central_boiler"
 CONF_WINDOW_ACTION = "window_action"
@@ -294,6 +333,10 @@ ALL_CONF = (
         CONF_PROP_FUNCTION,
         CONF_TPI_COEF_INT,
         CONF_TPI_COEF_EXT,
+        CONF_TPI_THRESHOLD_LOW,
+        CONF_TPI_THRESHOLD_HIGH,
+        CONF_AUTO_TPI_HEATER_HEATING_TIME,
+        CONF_AUTO_TPI_HEATER_COOLING_TIME,
         CONF_PRESENCE_SENSOR,
         CONF_MINIMAL_ACTIVATION_DELAY,
         CONF_MINIMAL_DEACTIVATION_DELAY,
@@ -329,11 +372,30 @@ ALL_CONF = (
         CONF_USED_BY_CENTRAL_BOILER,
         CONF_CENTRAL_BOILER_ACTIVATION_SRV,
         CONF_CENTRAL_BOILER_DEACTIVATION_SRV,
+        CONF_CENTRAL_BOILER_ACTIVATION_DELAY_SEC,
         CONF_WINDOW_ACTION,
         CONF_STEP_TEMPERATURE,
         CONF_MIN_OPENING_DEGREES,
+        CONF_MAX_OPENING_DEGREES,
         CONF_MAX_CLOSING_DEGREE,
         CONF_OPENING_THRESHOLD_DEGREE,
+        CONF_AUTO_TPI_CALCULATION_METHOD,
+        CONF_AUTO_TPI_EMA_ALPHA,
+        CONF_AUTO_TPI_AVG_INITIAL_WEIGHT,
+        CONF_AUTO_TPI_HEATING_POWER,
+        CONF_AUTO_TPI_COOLING_POWER,
+        CONF_AUTO_TPI_EMA_DECAY_RATE,
+        CONF_AUTO_TPI_LEARNING_TYPE,
+        CONF_AUTO_TPI_ENABLE_ADVANCED_SETTINGS,
+        CONF_SYNC_DEVICE_INTERNAL_TEMP,
+        CONF_SYNC_WITH_CALIBRATION,
+        CONF_USE_HEATING_FAILURE_DETECTION_FEATURE,
+        CONF_USE_HEATING_FAILURE_DETECTION_CENTRAL_CONFIG,
+        CONF_HEATING_FAILURE_THRESHOLD,
+        CONF_COOLING_FAILURE_THRESHOLD,
+        CONF_HEATING_FAILURE_DETECTION_DELAY,
+        CONF_TEMPERATURE_CHANGE_TOLERANCE,
+        CONF_FAILURE_DETECTION_ENABLE_TEMPLATE,
     ]
     + CONF_PRESETS_VALUES
     + CONF_PRESETS_AWAY_VALUES
@@ -397,15 +459,26 @@ SERVICE_SET_HVAC_MODE_SLEEP = "set_hvac_mode_sleep"
 SERVICE_LOCK = "lock"
 SERVICE_UNLOCK = "unlock"
 SERVICE_SET_TPI_PARAMETERS = "set_tpi_parameters"
+SERVICE_SET_AUTO_TPI_MODE = "set_auto_tpi_mode"
+SERVICE_AUTO_TPI_CALIBRATE_CAPACITY = "auto_tpi_calibrate_capacity"
+SERVICE_SET_TIMED_PRESET = "set_timed_preset"
+SERVICE_CANCEL_TIMED_PRESET = "cancel_timed_preset"
+SERVICE_RECALIBRATE_VALVES = "recalibrate_valves"
 
 DEFAULT_SAFETY_MIN_ON_PERCENT = 0.5
 DEFAULT_SAFETY_DEFAULT_ON_PERCENT = 0.1
+
+# Heating failure detection defaults
+DEFAULT_HEATING_FAILURE_THRESHOLD = 0.9  # 90%
+DEFAULT_COOLING_FAILURE_THRESHOLD = 0.0  # 0%
+DEFAULT_HEATING_FAILURE_DETECTION_DELAY = 15  # 15 minutes
+DEFAULT_TEMPERATURE_CHANGE_TOLERANCE = 0.5  # 0.5°C
 
 ATTR_TOTAL_ENERGY = "total_energy"
 ATTR_MEAN_POWER_CYCLE = "mean_cycle_power"
 
 AUTO_FAN_DTEMP_THRESHOLD = 2
-AUTO_FAN_DEACTIVATED_MODES = ["mute", "auto", "low"]
+AUTO_FAN_DEACTIVATED_MODES = ["mute", "quiet", "low", "quiet", "1", "auto"]
 
 CENTRAL_CONFIG_NAME = "Central configuration"
 
@@ -434,6 +507,7 @@ MSG_TARGET_TEMP_CENTRAL_MODE = "target_temp_central_mode"
 MSG_TARGET_TEMP_ACTIVITY_DETECTED = "target_temp_activity_detected"
 MSG_TARGET_TEMP_ACTIVITY_NOT_DETECTED = "target_temp_activity_not_detected"
 MSG_TARGET_TEMP_ABSENCE_DETECTED = "target_temp_absence_detected"
+MSG_TARGET_TEMP_TIMED_PRESET = "target_temp_timed_preset"
 
 #  A special regulation parameter suggested by @Maia here: https://github.com/jmcollin78/versatile_thermostat/discussions/154
 class RegulationParamSlow:
@@ -449,13 +523,10 @@ class RegulationParamSlow:
         1.0 / 25.0
     )  # this will add 1°C to the offset when it's 25°C colder outdoor than indoor
     offset_max: float = 2.0  # limit to a final offset of -2°C to +2°C
-    stabilization_threshold: float = (
-        0.0  # this needs to be disabled as otherwise the long term accumulated error will always be reset when the temp briefly crosses from/to below/above the target
-    )
     accumulated_error_threshold: float = (
         2.0 * 288
     )  # this allows up to 2°C long term offset in both directions
-
+    overheat_protection: bool = True
 
 class RegulationParamLight:
     """Light parameters for regulation"""
@@ -464,8 +535,8 @@ class RegulationParamLight:
     ki: float = 0.05
     k_ext: float = 0.05
     offset_max: float = 1.5
-    stabilization_threshold: float = 0.1
     accumulated_error_threshold: float = 10
+    overheat_protection: bool = True
 
 
 class RegulationParamMedium:
@@ -475,8 +546,8 @@ class RegulationParamMedium:
     ki: float = 0.05
     k_ext: float = 0.1
     offset_max: float = 2
-    stabilization_threshold: float = 0.1
     accumulated_error_threshold: float = 20
+    overheat_protection: bool = True
 
 
 class RegulationParamStrong:
@@ -490,8 +561,8 @@ class RegulationParamStrong:
     ki: float = 0.08
     k_ext: float = 0.0
     offset_max: float = 5
-    stabilization_threshold: float = 0.1
     accumulated_error_threshold: float = 50
+    overheat_protection: bool = True
 
 
 # Not used now
@@ -502,8 +573,8 @@ class RegulationParamVeryStrong:
     ki: float = 0.1
     k_ext: float = 0.2
     offset_max: float = 8
-    stabilization_threshold: float = 0.1
     accumulated_error_threshold: float = 80
+    overheat_protection: bool = True
 
 
 class EventType(Enum):
@@ -517,6 +588,9 @@ class EventType(Enum):
     PRESET_EVENT = "versatile_thermostat_preset_event"
     WINDOW_AUTO_EVENT = "versatile_thermostat_window_auto_event"
     AUTO_START_STOP_EVENT = "versatile_thermostat_auto_start_stop_event"
+    AUTO_TPI_EVENT = "versatile_thermostat_auto_tpi_event"
+    TIMED_PRESET_EVENT = "versatile_thermostat_timed_preset_event"
+    HEATING_FAILURE_EVENT = "versatile_thermostat_heating_failure_event"
 
 
 def send_vtherm_event(hass, event_type: EventType, entity, data: dict):
@@ -587,8 +661,21 @@ class ValveRegulationNbEntitiesIncorrect(HomeAssistantError):
     The number of specific entities is incorrect."""
 
 
+class SyncDeviceInternalTempNbEntitiesIncorrect(HomeAssistantError):
+    """Error to indicate there is an error in the configuration of the TRV with synchronize device internal temperature.
+    The number of specific entities is incorrect."""
+
+
 class ValveRegulationMinOpeningDegreesIncorrect(HomeAssistantError):
     """Error to indicate that the minimal opening degrees is not a list of int separated by coma"""
+
+
+class ValveRegulationMaxOpeningDegreesIncorrect(HomeAssistantError):
+    """Error to indicate that the maximal opening degrees is not a list of int separated by coma"""
+
+
+class ValveRegulationMinMaxOpeningDegreesIncorrect(HomeAssistantError):
+    """Error to indicate that max_opening_degrees must be greater than min_opening_degrees for each underlying"""
 
 
 class VirtualSwitchConfigurationIncorrect(HomeAssistantError):

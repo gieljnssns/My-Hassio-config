@@ -1,6 +1,7 @@
 # pylint: disable=line-too-long, too-many-lines, abstract-method
 """ A climate over climate classe """
 import logging
+
 from datetime import timedelta, datetime
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -62,6 +63,8 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
         self._auto_deactivated_fan_mode: str | None = None
         self._follow_underlying_temp_change: bool = False
         self._last_regulation_change = None  # NowClass.get_now(hass)
+        self._sync_entity_list: list[str] = []
+        self._sync_with_calibration: bool = False
 
         # super.__init__ calls post_init at the end. So it must be called after regulation initialization
         super().__init__(hass, unique_id, name, entry_infos)
@@ -88,6 +91,9 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                 climate_entity_id=climate,
             )
             self._underlyings.append(under)
+
+        self._sync_entity_list = config_entry.get(CONF_SYNC_ENTITY_LIST, [])
+        self._sync_with_calibration = config_entry.get(CONF_SYNC_WITH_CALIBRATION, False)
 
         self.choose_auto_regulation_mode(
             config_entry.get(CONF_AUTO_REGULATION_MODE)
@@ -154,6 +160,8 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
             _LOGGER.debug(
                 "%s - don't send regulated temperature cause VTherm is off ", self
             )
+            # In this case, reset the timer of last regulation change to avoid time delta too high
+            self._last_regulation_change = self.now
             return
 
         if self.target_temperature is None:
@@ -185,11 +193,17 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
         regulation_step = self._auto_regulation_dtemp if self._auto_regulation_dtemp else self._attr_target_temperature_step
         _LOGGER.debug("%s - usage regulation_step: %.2f ", self, regulation_step)
 
+        # Find time delta since last regulation change
+        time_delta: float = (
+            (self.now - self._last_regulation_change).total_seconds() / 60.0 / self._auto_regulation_period_min
+            if self._last_regulation_change and self._auto_regulation_period_min
+            else 1.0
+        )
+        _LOGGER.debug("%s - usage time_delta: %.2f ", self, time_delta)
+
         if self.current_temperature is not None:
             new_regulated_temp = round_to_nearest(
-                self._regulation_algo.calculate_regulated_temperature(
-                    self.current_temperature, self._cur_ext_temp
-                ),
+                self._regulation_algo.calculate_regulated_temperature(self.current_temperature, self._cur_ext_temp, time_delta),
                 regulation_step,
             )
         else:
@@ -222,14 +236,13 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
 
             if not force and abs(dtemp) < (self._auto_regulation_dtemp or 0):
                 _LOGGER.info(
-                    "%s - dtemp (%.1f) is < %.1f -> forget the regulation send",
+                    "%s - dtemp (%.1f) is < %.1f -> forget the regulation send for %s",
                     self,
                     dtemp,
                     self._auto_regulation_dtemp,
+                    under.entity_id,
                 )
-                return
-
-            self._regulated_target_temp = new_regulated_temp
+                continue
 
             _LOGGER.debug(
                 "%s - The device offset temp for regulation is %.2f - internal temp is %.2f. New target is %.2f",
@@ -244,6 +257,9 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                 self._attr_max_temp,
                 self._attr_min_temp,
             )
+
+        # Update regulated_target_temp after the loop to avoid affecting dtemp calculation for other underlyings
+        self._regulated_target_temp = new_regulated_temp
 
     def do_send_regulated_temp_later(self):
         """A utility function to set the temperature later on an underlying"""
@@ -335,8 +351,8 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                 RegulationParamLight.ki,
                 RegulationParamLight.k_ext,
                 RegulationParamLight.offset_max,
-                RegulationParamLight.stabilization_threshold,
                 RegulationParamLight.accumulated_error_threshold,
+                RegulationParamLight.overheat_protection,
             )
         elif self._auto_regulation_mode == CONF_AUTO_REGULATION_MEDIUM:
             self._regulation_algo = PITemperatureRegulator(
@@ -345,8 +361,8 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                 RegulationParamMedium.ki,
                 RegulationParamMedium.k_ext,
                 RegulationParamMedium.offset_max,
-                RegulationParamMedium.stabilization_threshold,
                 RegulationParamMedium.accumulated_error_threshold,
+                RegulationParamMedium.overheat_protection,
             )
         elif self._auto_regulation_mode == CONF_AUTO_REGULATION_STRONG:
             self._regulation_algo = PITemperatureRegulator(
@@ -355,8 +371,8 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                 RegulationParamStrong.ki,
                 RegulationParamStrong.k_ext,
                 RegulationParamStrong.offset_max,
-                RegulationParamStrong.stabilization_threshold,
                 RegulationParamStrong.accumulated_error_threshold,
+                RegulationParamStrong.overheat_protection,
             )
         elif self._auto_regulation_mode == CONF_AUTO_REGULATION_SLOW:
             self._regulation_algo = PITemperatureRegulator(
@@ -365,14 +381,14 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                 RegulationParamSlow.ki,
                 RegulationParamSlow.k_ext,
                 RegulationParamSlow.offset_max,
-                RegulationParamSlow.stabilization_threshold,
                 RegulationParamSlow.accumulated_error_threshold,
+                RegulationParamSlow.overheat_protection,
             )
         elif self._auto_regulation_mode == CONF_AUTO_REGULATION_EXPERT:
             api: VersatileThermostatAPI = VersatileThermostatAPI.get_vtherm_api(
                 self._hass
             )
-            if api is not None:
+            if api:
                 if (expert_param := api.self_regulation_expert) is not None:
                     self._regulation_algo = PITemperatureRegulator(
                         self.target_temperature,
@@ -380,8 +396,8 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                         expert_param.get("ki"),
                         expert_param.get("k_ext"),
                         expert_param.get("offset_max"),
-                        expert_param.get("stabilization_threshold"),
                         expert_param.get("accumulated_error_threshold"),
+                        expert_param.get("overheat_protection", True),
                     )
                 else:
                     _LOGGER.error(
@@ -397,9 +413,7 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
 
         if not self._regulation_algo:
             # A default empty algo (which does nothing)
-            self._regulation_algo = PITemperatureRegulator(
-                self.target_temperature, 0, 0, 0, 0, 0.1, 0
-            )
+            self._regulation_algo = PITemperatureRegulator(self.target_temperature, 0, 0, 0, 0, 0, True)
 
     def choose_auto_fan_mode(self, auto_fan_mode: str):
         """Choose the correct fan mode depending of the underlying capacities and the configuration"""
@@ -420,17 +434,91 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
             except ValueError:
                 return None
 
-        fan_modes = self.fan_modes
+        def determine_fan_mode_contains_speed(fan_modes: list[str]) -> bool:
+            """Determine if the fan_modes contains speed modes by searching for the keywords "low"/"1"."""
+            for val in ["low", "1"]:
+                if find_fan_mode(fan_modes, val):
+                    return True
+            return False
+
+        def fix_order_speed_modes(speed_modes: list) -> list:
+            """Determine if speed_modes list is ordered from high to low speed and reverse it"""
+            index = -1
+            if "low" in speed_modes:
+                index = speed_modes.index("low")
+            elif "1" in speed_modes:
+                index = speed_modes.index("1")
+
+            if index > -1 and index >= len(speed_modes) / 2:
+                speed_modes.reverse()
+
+            return speed_modes
+
+        # Remove special modes like "auto"
+        fan_modes = self.fan_modes or []
+        speed_modes = [
+            mode for mode in fan_modes
+            if mode not in ["auto"]
+        ]
+
+        num_speeds = len(speed_modes)
+        if num_speeds == 0:
+            self._auto_activated_fan_mode = None
+            return
+
+        # We suppose speed_modes are ordered from low to high speed
+        speed_modes = fix_order_speed_modes(speed_modes)
+
+        # We suppose that the speed modes contains at least 3 values
+        # fan_modes = low, medium, high :
+        #    |CONF_AUTO_FAN_LOW     |low    |
+        #    |CONF_AUTO_FAN_MEDIUM  |medium |
+        #    |CONF_AUTO_FAN_HIGH    |high   |
+        #    |CONF_AUTO_FAN_TURBO   |high   |
+        # fan_modes =  low, medium, high, turbo :
+        #    |CONF_AUTO_FAN_LOW     |low  |
+        #    |CONF_AUTO_FAN_MEDIUM  |medium    |
+        #    |CONF_AUTO_FAN_HIGH    |high |
+        #    |CONF_AUTO_FAN_TURBO   |turbo   |
+        # fan_modes = low, medium_low, medium, medium_high, high :
+        #    |CONF_AUTO_FAN_LOW     |medium_low  |
+        #    |CONF_AUTO_FAN_MEDIUM  |medium      |
+        #    |CONF_AUTO_FAN_HIGH    |medium_high |
+        #    |CONF_AUTO_FAN_TURBO   |high        |
+        target_index = -1
+
+        if determine_fan_mode_contains_speed(fan_modes) is False:
+            self._auto_activated_fan_mode = None
+            _LOGGER.warning(
+                "%s - #1419 - choose_auto_fan_mode cannot define value because fan_modes=%s doesn't contains speed values",
+                self,
+                self.fan_modes,
+            )
+
+            return
+
         if auto_fan_mode == CONF_AUTO_FAN_LOW:
-            self._auto_activated_fan_mode = find_fan_mode(fan_modes, "low")
+            if num_speeds >= 4:
+                target_index = num_speeds - 4
+            else:
+                target_index = 0
         elif auto_fan_mode == CONF_AUTO_FAN_MEDIUM:
-            self._auto_activated_fan_mode = find_fan_mode(fan_modes, "mid")
+            if num_speeds >= 4:
+                target_index = num_speeds - 3
+            else:
+                target_index = 1
         elif auto_fan_mode == CONF_AUTO_FAN_HIGH:
-            self._auto_activated_fan_mode = find_fan_mode(fan_modes, "high")
+            if num_speeds >= 4:
+                target_index = num_speeds - 2
+            else:
+                target_index = 2
         elif auto_fan_mode == CONF_AUTO_FAN_TURBO:
-            self._auto_activated_fan_mode = find_fan_mode(
-                fan_modes, "turbo"
-            ) or find_fan_mode(fan_modes, "high")
+            target_index = num_speeds - 1
+
+        if target_index >= 0:
+            self._auto_activated_fan_mode = speed_modes[target_index]
+        else:
+            self._auto_activated_fan_mode = None
 
         for val in AUTO_FAN_DEACTIVATED_MODES:
             if find_fan_mode(fan_modes, val):
@@ -470,6 +558,9 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
             )
         )
 
+        # Synchronize temperature if activated
+        await self.synchronize_device_temperature()
+
     @overrides
     def restore_specific_previous_state(self, old_state: State):
         """Restore my specific attributes from previous state"""
@@ -487,12 +578,15 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
         """Custom attributes"""
         super().update_custom_attributes()
 
+        self._attr_extra_state_attributes["fan_mode"] = self.fan_mode
+        self._attr_extra_state_attributes["fan_modes"] = self.fan_modes
         self._attr_extra_state_attributes["is_over_climate"] = self.is_over_climate
         # the attr is 2 times in custom_attributes, because it need to be restored, so it must be at root
         self._attr_extra_state_attributes["regulation_accumulated_error"] = self._regulation_algo.accumulated_error
         self._attr_extra_state_attributes["regulated_target_temperature"] = self.regulated_target_temp
         vtherm_over_climate_data = {
             "start_hvac_action_date": self._underlying_climate_start_hvac_action_date,
+            "last_mean_power_cycle": self._underlying_climate_mean_power_cycle,
             "underlying_entities": [underlying.entity_id for underlying in self._underlyings],
             "is_regulated": self.is_regulated,
             "auto_fan_mode": self.auto_fan_mode,
@@ -510,6 +604,27 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                 "regulation_accumulated_error": self._regulation_algo.accumulated_error,
             }
 
+        if self.has_sync_entities:
+            under_attributes = {}
+            for idx, under in enumerate(self._underlyings):
+                try:
+                    state = self.hass.states.get(self._sync_entity_list[idx])
+                    value = float(state.state) if state is not None else None
+                except (ValueError, AttributeError, TypeError):
+                    value = None
+
+                under_attributes[self._sync_entity_list[idx]] = {
+                    "value": value,
+                    "min_sync_entity": under.min_sync_entity,
+                    "max_sync_entity": under.max_sync_entity,
+                    "step_sync_entity": under.step_sync_entity,
+                }
+            vtherm_over_climate_data["temp_synchronisation"] = {
+                "sync_entity_ids": self._sync_entity_list,
+                "sync_with_calibration": self._sync_with_calibration,
+                "sync_attributes": under_attributes,
+            }
+
         self._attr_extra_state_attributes.update({"vtherm_over_climate": vtherm_over_climate_data})
 
         _LOGGER.debug("%s - Calling update_custom_attributes: %s", self, self._attr_extra_state_attributes)
@@ -524,16 +639,18 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
     def incremente_energy(self):
         """increment the energy counter if device is active"""
 
-        if self.vtherm_hvac_mode == VThermHvacMode_OFF:
-            return
+        # if self.vtherm_hvac_mode == VThermHvacMode_OFF:
+        #     return
 
-        device_power = self.power_manager.device_power
+        device_power = self._underlying_climate_mean_power_cycle
+
         added_energy = 0
-        if (
-            self.is_over_climate
-            and self._underlying_climate_delta_t is not None
-            and device_power
-        ):
+        self._underlying_climate_delta_t = 0
+        if self._underlying_climate_start_hvac_action_date:
+            delta = self.now - self._underlying_climate_start_hvac_action_date
+            self._underlying_climate_delta_t = delta.total_seconds() / 3600.0
+
+        if self.is_over_climate and self._underlying_climate_delta_t > 0 and device_power is not None and device_power > 0:
             added_energy = device_power * self._underlying_climate_delta_t
 
         if self._total_energy is None:
@@ -550,6 +667,8 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                 self,
                 self._total_energy,
             )
+
+        self._underlying_climate_start_hvac_action_date = self.now if self.is_device_active else None
 
         _LOGGER.debug(
             "%s - added energy is %.3f . Total energy is now: %.3f",
@@ -704,6 +823,7 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
             self._underlying_climate_start_hvac_action_date = (
                 self.get_last_updated_date_or_now(new_state)
             )
+            self._underlying_climate_mean_power_cycle = self.power_manager.mean_cycle_power
             _LOGGER.info(
                 "%s - underlying just switch ON. Set power and energy start date %s",
                 self,
@@ -712,24 +832,24 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
             changes = True
 
         if old_hvac_action in HVAC_ACTION_ON and new_hvac_action not in HVAC_ACTION_ON:
-            stop_power_date = self.get_last_updated_date_or_now(new_state)
-            if self._underlying_climate_start_hvac_action_date:
-                delta = (
-                    stop_power_date - self._underlying_climate_start_hvac_action_date
-                )
-                self._underlying_climate_delta_t = delta.total_seconds() / 3600.0
+            # stop_power_date = self.get_last_updated_date_or_now(new_state)
+            # if self._underlying_climate_start_hvac_action_date:
+            #     delta = (
+            #         stop_power_date - self._underlying_climate_start_hvac_action_date
+            #     )
+            #     self._underlying_climate_delta_t = delta.total_seconds() / 3600.0
 
-                # increment energy at the end of the cycle
-                self.incremente_energy()
+            # increment energy at the end of the cycle
+            self.incremente_energy()
 
-                self._underlying_climate_start_hvac_action_date = None
+            #    self._underlying_climate_start_hvac_action_date = None
 
-            _LOGGER.info(
-                "%s - underlying just switch OFF at %s. delta_h=%.3f h",
-                self,
-                stop_power_date.isoformat(),
-                self._underlying_climate_delta_t,
-            )
+            # _LOGGER.info(
+            #     "%s - underlying just switch OFF at %s. delta_h=%.3f h",
+            #     self,
+            #     stop_power_date.isoformat(),
+            #     self._underlying_climate_delta_t,
+            # )
             changes = True
 
         # Filter new state when received just after a change from VTherm
@@ -837,12 +957,119 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
 
         ret = await super().async_control_heating(timestamp=timestamp, force=force)
 
+        self.incremente_energy()
+
         return ret
 
     def set_follow_underlying_temp_change(self, follow: bool):
         """Set the flaf follow the underlying temperature changes"""
         self._follow_underlying_temp_change = follow
         self.update_custom_attributes()
+        self.async_write_ha_state()
+
+    @overrides
+    async def _async_temperature_changed(self, event: Event) -> callable:
+        """Handle temperature of the temperature sensor changes.
+        Return the function to dearm (clear) the window auto check"""
+
+        ret = await super()._async_temperature_changed(event)
+
+        # Synchronize the device temperature if needed
+        await self.synchronize_device_temperature()
+
+        return ret
+
+    async def synchronize_device_temperature(self):
+        """Synchronize the device temperature by sending the offset calibration"""
+
+        if not self.has_sync_entities:
+            return
+
+        for idx, sync_entity_id in enumerate(self._sync_entity_list):
+            sync_entity_state = self._hass.states.get(sync_entity_id)
+            if not sync_entity_state:
+                _LOGGER.warning(
+                    "%s - Cannot synchronize device temperature because sync entity %s not found",
+                    self,
+                    sync_entity_id,
+                )
+                continue
+
+            under = self.underlying_entity(idx)
+            if not under:
+                _LOGGER.warning(
+                    "%s - Cannot synchronize device temperature because underlying index %d not found",
+                    self,
+                    idx,
+                )
+                continue
+
+            if (
+                (min_sync_entity := under.min_sync_entity) is not None
+                and (max_sync_entity := under.max_sync_entity) is not None
+                and (step_sync_entity := under.step_sync_entity) is not None
+            ):
+                pass
+            else:
+                # get min, max, step from sync entity attributes
+                min_sync_entity = sync_entity_state.attributes.get("min")
+                max_sync_entity = sync_entity_state.attributes.get("max")
+                step_sync_entity = sync_entity_state.attributes.get("step") or 0.1  # default step is 0.1
+
+                # save the min, max and step
+                under.set_min_max_step_sync_entity(
+                    min_sync_entity,
+                    max_sync_entity,
+                    step_sync_entity,
+                )
+
+            room_temp = self.current_temperature
+            if self._sync_with_calibration:
+                # send offset_calibration to the difference between target temp and local temp
+                offset = None
+                local_temp = under.underlying_current_temperature
+                current_offset = get_safe_float(self._hass, sync_entity_id)
+                if local_temp is not None and room_temp is not None and current_offset is not None:
+                    val = round_to_nearest(room_temp - (local_temp - current_offset), step_sync_entity)
+                    offset = min(max_sync_entity, max(min_sync_entity, val))
+
+                    _LOGGER.debug(
+                        "%s - Synchronize device temperature for entity %s: local_temp=%.2f, room_temp=%.2f, current_offset=%.2f -> new offset=%.2f",
+                        self,
+                        sync_entity_id,
+                        local_temp,
+                        room_temp,
+                        current_offset,
+                        offset,
+                    )
+                    await under.send_value_to_number(sync_entity_id, offset)
+            elif room_temp is not None:
+                # Send the new temperature directly
+                val = round_to_nearest(room_temp, step_sync_entity)
+                val = min(max_sync_entity, max(min_sync_entity, val))
+                _LOGGER.debug(
+                    "%s - Synchronize device temperature for entity %s: room_temp=%.2f -> new temp=%.2f",
+                    self,
+                    sync_entity_id,
+                    room_temp,
+                    val,
+                )
+                await under.send_value_to_number(sync_entity_id, val)
+
+    @property
+    def has_sync_entities(self) -> bool:
+        """Return True if the underlying have a sync entity"""
+        return self._sync_entity_list is not None and len(self._sync_entity_list) > 0
+
+    @property
+    def is_sync_with_calibration(self) -> bool:
+        """Return True if the underlying is synchronized with calibration (or with temperature copying)"""
+        return self._sync_with_calibration
+
+    @property
+    def sync_entity_ids(self) -> list[str] | None:
+        """Get the sync entity ids"""
+        return self._sync_entity_list
 
     @property
     def auto_regulation_mode(self) -> str | None:
@@ -890,11 +1117,6 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
         return [VThermHvacMode_HEAT, VThermHvacMode_OFF]
 
     @property
-    def mean_cycle_power(self) -> float | None:
-        """Returns the mean power consumption during the cycle"""
-        return None
-
-    @property
     def fan_mode(self) -> str | None:
         """Return the fan setting.
 
@@ -936,6 +1158,28 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
         """
         if self.underlying_entity(0):
             return self.underlying_entity(0).swing_modes
+
+        return None
+
+    @property
+    def swing_horizontal_mode(self) -> str | None:
+        """Return the swing horizontal setting.
+
+        Requires ClimateEntityFeature.SWING_HORIZONTAL_MODE.
+        """
+        if self.underlying_entity(0):
+            return self.underlying_entity(0).swing_horizontal_mode
+
+        return None
+
+    @property
+    def swing_horizontal_modes(self) -> list[str] | None:
+        """Return the list of available swing horizontal modes.
+
+        Requires ClimateEntityFeature.SWING_HORIZONTAL_MODE.
+        """
+        if self.underlying_entity(0):
+            return self.underlying_entity(0).swing_horizontal_modes
 
         return None
 
@@ -1089,6 +1333,17 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
         self._swing_mode = swing_mode
         self.async_write_ha_state()
 
+    @overrides
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode):
+        """Set new target swing horizontal operation."""
+        _LOGGER.info("%s - Set swing horizontal mode: %s", self, swing_horizontal_mode)
+        if swing_horizontal_mode is None:
+            return
+        for under in self._underlyings:
+            await under.set_swing_horizontal_mode(swing_horizontal_mode)
+        self._swing_horizontal_mode = swing_horizontal_mode
+        self.async_write_ha_state()
+
     async def service_set_auto_regulation_mode(self, auto_regulation_mode: str):
         """Called by a service call:
         service: versatile_thermostat.set_auto_regulation_mode
@@ -1124,6 +1379,7 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
 
         await self._send_regulated_temperature()
         self.update_custom_attributes()
+        self.async_write_ha_state()
 
     async def service_set_auto_fan_mode(self, auto_fan_mode: str):
         """Called by a service call:
@@ -1150,6 +1406,7 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
             self.choose_auto_fan_mode(CONF_AUTO_FAN_TURBO)
 
         self.update_custom_attributes()
+        self.async_write_ha_state()
 
     @overrides
     async def async_turn_off(self) -> None:

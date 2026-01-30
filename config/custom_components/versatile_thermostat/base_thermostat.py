@@ -4,6 +4,12 @@
 """ Implements the VersatileThermostat climate component """
 import math
 import logging
+import asyncio
+from datetime import datetime, timedelta
+from functools import partial
+
+from homeassistant.components.recorder import history, get_instance
+from homeassistant.util import dt as dt_util
 from typing import Any, Generic
 from collections.abc import Callable
 
@@ -23,7 +29,7 @@ from homeassistant.helpers.restore_state import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceInfo, DeviceEntryType
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -53,7 +59,6 @@ from .config_schema import *  # pylint: disable=wildcard-import, unused-wildcard
 from .vtherm_api import VersatileThermostatAPI
 from .underlyings import UnderlyingEntity, T
 
-from .prop_algorithm import PropAlgorithm
 from .ema import ExponentialMovingAverage
 
 from .base_manager import BaseFeatureManager
@@ -64,10 +69,12 @@ from .feature_window_manager import FeatureWindowManager
 from .feature_safety_manager import FeatureSafetyManager
 from .feature_auto_start_stop_manager import FeatureAutoStartStopManager
 from .feature_lock_manager import FeatureLockManager
+from .feature_timed_preset_manager import FeatureTimedPresetManager
+from .feature_heating_failure_detection_manager import FeatureHeatingFailureDetectionManager
 from .state_manager import StateManager
 from .vtherm_state import VThermState
 from .vtherm_preset import VThermPreset, HIDDEN_PRESETS, PRESET_AC_SUFFIX
-from .vtherm_hvac_mode import VThermHvacMode, VThermHvacMode_OFF
+from .vtherm_hvac_mode import VThermHvacMode, VThermHvacMode_OFF, to_legacy_ha_hvac_mode
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,6 +111,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
 
         # To remove some silly warning event if code is fixed
         self._enable_turn_on_off_backwards_compatibility = False
+        self._is_removed = False
 
         self._hass = hass
         self._entry_infos = None
@@ -111,8 +119,11 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
 
         self._unique_id = unique_id
         self._name = name
-        self._prop_algorithm = None
+
         self._async_cancel_cycle = None
+
+        # Callbacks for TPI cycle events
+        self._on_cycle_start_callbacks: list[Callable] = []
 
         self._state_manager = StateManager()
         # self._hvac_mode = None
@@ -124,6 +135,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         self._fan_mode = None
         self._humidity = None
         self._swing_mode = None
+        self._swing_horizontal_mode = None
         self._ac_mode = None
 
         self._cur_temp = None
@@ -146,6 +158,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         # that here and not in underlying entity
         self._underlying_climate_start_hvac_action_date = None
         self._underlying_climate_delta_t = 0
+        self._underlying_climate_mean_power_cycle = 0.0
 
         self._current_tz = dt_util.get_time_zone(self._hass.config.time_zone)
 
@@ -158,6 +171,14 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
 
         self._ema_temp = None
         self._ema_algo = None
+        self._prop_algorithm = None
+        self._proportional_function = None
+        self._tpi_coef_int = None
+        self._tpi_coef_ext = None
+        self._minimal_activation_delay = None
+        self._minimal_deactivation_delay = None
+        self._tpi_threshold_low = None
+        self._tpi_threshold_high = None
 
         self._attr_fan_mode = None
 
@@ -193,23 +214,19 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         # Auto start/stop is only for over_climate
         self._auto_start_stop_manager: FeatureAutoStartStopManager | None = None
         self._lock_manager: FeatureLockManager = FeatureLockManager(self, hass)
+        self._timed_preset_manager: FeatureTimedPresetManager = FeatureTimedPresetManager(self, hass)
+        self._heating_failure_detection_manager: FeatureHeatingFailureDetectionManager = FeatureHeatingFailureDetectionManager(self, hass)
 
         self.register_manager(self._presence_manager)
         self.register_manager(self._power_manager)
         self.register_manager(self._motion_manager)
         self.register_manager(self._window_manager)
         self.register_manager(self._safety_manager)
-        self.register_manager(self._safety_manager)
         self.register_manager(self._lock_manager)
+        self.register_manager(self._timed_preset_manager)
+        self.register_manager(self._heating_failure_detection_manager)
 
         self._cancel_recalculate_later: Callable[[], None] | None = None
-
-        self._tpi_coef_int: float = 0
-        self._tpi_coef_ext: float = 0
-        self._minimal_activation_delay: int = 0
-        self._minimal_deactivation_delay: int = 0
-        self._tpi_threshold_low: float = 0
-        self._tpi_threshold_high: float = 0
 
         self.post_init(entry_infos)
 
@@ -224,7 +241,9 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
 
         def clean_one(cfg, schema: vol.Schema):
             """Clean one schema"""
-            for key, _ in schema.schema.items():
+            for marker in schema.schema:
+                # Extract the actual key from Voluptuous Marker objects
+                key = marker.schema if hasattr(marker, 'schema') else marker
                 if key in cfg:
                     del cfg[key]
 
@@ -307,21 +326,11 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         # Initialize underlying entities (will be done in subclasses)
         self._underlyings = []
 
-        self._proportional_function = entry_infos.get(CONF_PROP_FUNCTION)
         self._temp_sensor_entity_id = entry_infos.get(CONF_TEMP_SENSOR)
         self._last_seen_temp_sensor_entity_id = entry_infos.get(
             CONF_LAST_SEEN_TEMP_SENSOR
         )
         self._ext_temp_sensor_entity_id = entry_infos.get(CONF_EXTERNAL_TEMP_SENSOR)
-
-        self._tpi_coef_int = entry_infos.get(CONF_TPI_COEF_INT)
-        self._tpi_coef_ext = entry_infos.get(CONF_TPI_COEF_EXT)
-        self._tpi_threshold_low = entry_infos.get(CONF_TPI_THRESHOLD_LOW, 0.0)
-        self._tpi_threshold_high = entry_infos.get(CONF_TPI_THRESHOLD_HIGH, 0.0)
-        # If one is 0 then both are 0
-        if self._tpi_threshold_low == 0.0 or self._tpi_threshold_high == 0.0:
-            self._tpi_threshold_low = 0.0
-            self._tpi_threshold_high = 0.0
 
         self.set_hvac_list()
 
@@ -339,36 +348,19 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         self._humidity = None
         self._fan_mode = None
         self._swing_mode = None
+        self._swing_horizontal_mode = None
         self._cur_temp = None
         self._cur_ext_temp = None
 
-        # Fix parameters for TPI
-        if (
-            self._proportional_function == PROPORTIONAL_FUNCTION_TPI
-            and self._ext_temp_sensor_entity_id is None
-        ):
-            _LOGGER.warning(
-                "Using TPI function but not external temperature sensor is set. "
-                "Removing the delta temp ext factor. "
-                "Thermostat will not be fully operational."
-            )
-            self._tpi_coef_ext = 0
-
-        self._minimal_activation_delay = entry_infos.get(CONF_MINIMAL_ACTIVATION_DELAY, 0)
-        self._minimal_deactivation_delay = entry_infos.get(CONF_MINIMAL_DEACTIVATION_DELAY, 0)
         self._last_temperature_measure = self.now
         self._last_ext_temperature_measure = self.now
-
-        # Initiate the ProportionalAlgorithm
-        if self._prop_algorithm is not None:
-            del self._prop_algorithm
 
         self._total_energy = None
         _LOGGER.debug("%s - post_init_ resetting energy to None", self)
 
         # Read the parameter from configuration.yaml if it exists
         short_ema_params = DEFAULT_SHORT_EMA_PARAMS
-        if api is not None and api.short_ema_params:
+        if api and api.short_ema_params:
             short_ema_params = api.short_ema_params
 
         self._ema_algo = ExponentialMovingAverage(
@@ -390,18 +382,6 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         )
 
         self._max_on_percent = api.max_on_percent
-
-        # Add a warning if minimal_deactivation_delay or minimal_activation_delay os greater than cycle_min
-        if (self._minimal_activation_delay + self._minimal_deactivation_delay) / 60 > self._cycle_min:
-            _LOGGER.warning(
-                "%s - The sum of minimal_activation_delay (%s sec) and "
-                "minimal_deactivation_delay (%s sec) is greater than cycle_min (%s). "
-                "This can create some unexpected behavior. Please review your configuration",
-                self,
-                self._minimal_activation_delay,
-                self._minimal_deactivation_delay,
-                self._cycle_min,
-            )
 
         _LOGGER.debug(
             "%s - Creation of a new VersatileThermostat entity: unique_id=%s",
@@ -448,6 +428,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
 
     async def async_will_remove_from_hass(self):
         """Try to force backup of entity"""
+        self._is_removed = True
         _LOGGER.debug(
             "%s - force write before remove. Energy is %s", self, self.total_energy
         )
@@ -466,6 +447,40 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
 
         for under in self._underlyings:
             under.remove_entity()
+
+    def register_cycle_callback(
+        self,
+        on_start: Callable | None = None,
+    ):
+        """Register callbacks for TPI cycle events.
+
+        Args:
+            on_start: Callback called at the start of each TPI cycle
+                      Signature: async def callback(on_time_sec, off_time_sec, on_percent, hvac_mode)
+        """
+        if on_start:
+            self._on_cycle_start_callbacks.append(on_start)
+            _LOGGER.debug("%s - Registered cycle start callback: %s", self, on_start)
+            # Register to existing underlyings
+            if self._underlyings:
+                for under in self._underlyings:
+                    under.register_cycle_callback(on_start)
+
+    async def _fire_cycle_start_callbacks(self, on_time_sec, off_time_sec, on_percent, hvac_mode):
+        """Fire cycle start callbacks."""
+        for callback in self._on_cycle_start_callbacks:
+            try:
+                if is_async := (
+                    asyncio.iscoroutinefunction(callback)
+                    or (hasattr(callback, "__call__") and asyncio.iscoroutinefunction(callback.__call__))
+                ):
+                    await callback(on_time_sec, off_time_sec, on_percent, hvac_mode)
+                else:
+                    await self.hass.async_add_executor_job(
+                        callback, on_time_sec, off_time_sec, on_percent, hvac_mode
+                    )
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.error("%s - Error calling cycle start callback: %s", self, ex)
 
     def stop_recalculate_later(self):
         """Stop any scheduled call later tasks if any."""
@@ -489,6 +504,11 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
 
         # Initialize all UnderlyingEntities
         self.init_underlyings()
+
+        # Register callbacks to new underlyings
+        for under in self._underlyings:
+            for callback in self._on_cycle_start_callbacks:
+                under.register_cycle_callback(callback)
 
         # init presets. Should be after underlyings init because for over_climate it uses the hvac_modes
         await self.init_presets(central_configuration)
@@ -545,14 +565,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
 
         await self.update_states(force=True)
         # self.async_write_ha_state()
-        if self._prop_algorithm:
-            self._prop_algorithm.calculate(
-                self.target_temperature,
-                self._cur_temp,
-                self._cur_ext_temp,
-                self.last_temperature_slope,
-                self.vtherm_hvac_mode or VThermHvacMode_OFF,
-            )
+        self.recalculate()
 
         # check initial state should be done after the current state has been calculated and so after the manager has been updated
         await self._check_initial_state()
@@ -617,7 +630,12 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
 
             self._hvac_off_reason = old_state.attributes.get(HVAC_OFF_REASON_NAME, None)
 
-            old_total_energy = old_state.attributes.get(ATTR_TOTAL_ENERGY)
+            # Try to get total_energy from specific_states (new format) or root level (old format)
+            specific_states = old_state.attributes.get("specific_states", {})
+            old_total_energy = specific_states.get(ATTR_TOTAL_ENERGY)
+            if old_total_energy is None:
+                # Fallback to root level for backward compatibility
+                old_total_energy = old_state.attributes.get(ATTR_TOTAL_ENERGY)
             self._total_energy = old_total_energy if old_total_energy is not None else 0
             _LOGGER.debug(
                 "%s - get_my_previous_state restored energy is %s",
@@ -789,6 +807,16 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         return False
 
     @property
+    def has_tpi(self) -> bool:
+        """True if the Thermostat has TPI"""
+        return False
+
+    @property
+    def safe_on_percent(self) -> float:
+        """Return the on_percent safe value"""
+        return 0
+
+    @property
     def is_over_valve(self) -> bool:
         """True if the Thermostat is over_valve"""
         return False
@@ -797,7 +825,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
+            entry_type=None,
             identifiers={(DOMAIN, self._unique_id)},
             name=self._name,
             manufacturer=DEVICE_MANUFACTURER,
@@ -822,38 +850,6 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         return self._ac_mode
 
     @property
-    def fan_mode(self) -> str | None:
-        """Return the fan setting.
-
-        Requires ClimateEntityFeature.FAN_MODE.
-        """
-        return None
-
-    @property
-    def fan_modes(self) -> list[str] | None:
-        """Return the list of available fan modes.
-
-        Requires ClimateEntityFeature.FAN_MODE.
-        """
-        return []
-
-    @property
-    def swing_mode(self) -> str | None:
-        """Return the swing setting.
-
-        Requires ClimateEntityFeature.SWING_MODE.
-        """
-        return None
-
-    @property
-    def swing_modes(self) -> list[str] | None:
-        """Return the list of available swing modes.
-
-        Requires ClimateEntityFeature.SWING_MODE.
-        """
-        return None
-
-    @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return self._unit
@@ -866,7 +862,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation."""
-        return to_ha_hvac_mode(self._state_manager.current_state.hvac_mode)
+        return to_legacy_ha_hvac_mode(self._state_manager.current_state.hvac_mode)
 
     @property
     def vtherm_hvac_mode(self) -> VThermHvacMode | None:
@@ -927,14 +923,6 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         return self._cur_ext_temp
 
     @property
-    def is_aux_heat(self) -> bool | None:
-        """Return true if aux heater.
-
-        Requires ClimateEntityFeature.AUX_HEAT.
-        """
-        return None
-
-    @property
     def total_energy(self) -> float | None:
         """Returns the total energy calculated for this thermostat"""
         if self._total_energy is not None:
@@ -983,6 +971,16 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         return self._lock_manager
 
     @property
+    def timed_preset_manager(self) -> FeatureTimedPresetManager:
+        """Get the timed preset manager"""
+        return self._timed_preset_manager
+
+    @property
+    def heating_failure_detection_manager(self) -> FeatureHeatingFailureDetectionManager:
+        """Get the heating failure detection manager"""
+        return self._heating_failure_detection_manager
+
+    @property
     def current_state(self) -> VThermState | None:
         """Get the current state"""
         return self._state_manager.current_state
@@ -1023,9 +1021,9 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         return self._presence_manager.presence_state
 
     @property
-    def proportional_algorithm(self) -> PropAlgorithm | None:
+    def proportional_algorithm(self):
         """Get the eventual ProportionalAlgorithm"""
-        return self._prop_algorithm
+        return None
 
     @property
     def last_temperature_measure(self) -> datetime | None:
@@ -1137,16 +1135,18 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
     def power_percent(self) -> float | None:
         """Get the current on_percent as a percentage value. valid only for Vtherm with a TPI algo
         Get the current on_percent value"""
-        if self._prop_algorithm and self._prop_algorithm.on_percent is not None:
-            return round(self._prop_algorithm.on_percent * 100, 0)
+        prop_algo = getattr(self, '_prop_algorithm', None)
+        if prop_algo and prop_algo.on_percent is not None:
+            return round(prop_algo.on_percent * 100, 0)
         else:
             return None
 
     @property
     def on_percent(self) -> float | None:
         """Get the current on_percent value. valid only for Vtherm with a TPI algo"""
-        if self._prop_algorithm and self._prop_algorithm.on_percent is not None:
-            return self._prop_algorithm.on_percent
+        prop_algo = getattr(self, '_prop_algorithm', None)
+        if prop_algo and prop_algo.on_percent is not None:
+            return prop_algo.on_percent
         else:
             return None
 
@@ -1154,6 +1154,11 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
     def vtherm_type(self) -> str | None:
         """Return the type of thermostat"""
         return None
+
+    @property
+    def config_entry(self) -> ConfigEntry | None:
+        """Return the config entry associated with the thermostat."""
+        return self._hass.config_entries.async_get_entry(self.unique_id)
 
     def underlying_entity_id(self, index=0) -> str | None:
         """The climate_entity_id. Added for retrocompatibility reason"""
@@ -1266,11 +1271,6 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         write_event_log(_LOGGER, self, f"Set humidity: {humidity}")
         return
 
-    async def async_set_swing_mode(self, swing_mode: str):
-        """Set new target swing operation."""
-        write_event_log(_LOGGER, self, f"Set swing mode: {swing_mode}")
-        return
-
     @check_lock
     async def async_set_temperature(self, **kwargs):
         """Set new requested target temperature and turn off any active presets."""
@@ -1341,11 +1341,17 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
                     self.send_event(EventType.PRESET_EVENT, {"preset": self.preset_mode})
                     if self.preset_mode not in HIDDEN_PRESETS:
                         self._attr_preset_mode = self.preset_mode
+                    # Reset auto_start_stop switch delay to allow immediate restart when preset changes
+                    if self.auto_start_stop_manager:
+                        self.auto_start_stop_manager.reset_switch_delay()
 
                 # Apply temperature
                 if self._state_manager.current_state.is_target_temperature_changed:
                     _LOGGER.info("%s - Applying new target temperature: %s", self, self.target_temperature)
                     self._attr_target_temperature = self.target_temperature
+                    # Reset auto_start_stop switch delay to allow immediate restart when target temp changes
+                    if self.auto_start_stop_manager:
+                        self.auto_start_stop_manager.reset_switch_delay()
 
                 # Apply hvac_mode
                 if self._state_manager.current_state.is_hvac_mode_changed:
@@ -1353,10 +1359,10 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
                     # Delegate to all underlying
                     for under in self._underlyings:
                         sub_need_control_heating = await under.set_hvac_mode(self.vtherm_hvac_mode) or sub_need_control_heating
-                    self._attr_hvac_mode = str(self.vtherm_hvac_mode)
+                    self._attr_hvac_mode = to_legacy_ha_hvac_mode(self.vtherm_hvac_mode)
                     self.send_event(EventType.HVAC_MODE_EVENT, {"hvac_mode": str(self.vtherm_hvac_mode)})
                     # Remove eventual overpowering if we want to turn-off
-                    if self.hvac_mode == VThermHvacMode_OFF and self.power_manager.is_overpowering_detected:
+                    if self.hvac_mode in [VThermHvacMode_OFF, VThermHvacMode_SLEEP] and self.power_manager.is_overpowering_detected:
                         await self.power_manager.set_overpowering(False)
 
                 if changed:
@@ -1402,7 +1408,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
                 # still not found, we an stop here
                 return False
 
-        if await self._safety_manager.refresh_and_update_if_changed():
+        if timestamp and await self._safety_manager.refresh_and_update_if_changed():
             return False
 
         if self._safety_manager.is_safety_detected and self.is_over_climate:
@@ -1410,26 +1416,20 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
 
             return True
 
-        # Stop here if we are off
-        if self.vtherm_hvac_mode == VThermHvacMode_OFF:
-            _LOGGER.debug("%s - End of cycle (HVAC_MODE_OFF)", self)
-            # A security to force stop heater if still active
-            if self.is_device_active:
-                await self.async_underlying_entity_turn_off()
-        else:
-            for under in self._underlyings:
-                await under.start_cycle(
-                    self.vtherm_hvac_mode,
-                    self._prop_algorithm.on_time_sec if self._prop_algorithm else None,
-                    self._prop_algorithm.off_time_sec if self._prop_algorithm else None,
-                    self._prop_algorithm.on_percent if self._prop_algorithm else None,
-                    force,
-                )
+        # Call specific control heating
+        await self._control_heating_specific(force)
+
+        # Check for heating/cooling failures (only for TPI VTherms)
+        await self._heating_failure_detection_manager.refresh_state()
 
         self.calculate_hvac_action()
         self.update_custom_attributes()
         self.async_write_ha_state()
         return True
+
+    async def _control_heating_specific(self, force=False):
+        """To be overridden by subclasses"""
+        pass
 
     def reset_last_change_time_from_vtherm(self, old_preset_mode: VThermPreset | None = None):  # pylint: disable=unused-argument
         """Reset to now the last change time"""
@@ -1623,8 +1623,6 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
                 "type": self.vtherm_type,
                 "is_controlled_by_central_mode": self.is_controlled_by_central_mode,
                 "target_temperature_step": self.target_temperature_step,
-                "minimal_activation_delay_sec": self._minimal_activation_delay,
-                "minimal_deactivation_delay_sec": self._minimal_deactivation_delay,
                 "timezone": str(self._current_tz),
                 "temperature_unit": self.temperature_unit,
                 "is_used_by_central_boiler": self.is_used_by_central_boiler,
@@ -1851,13 +1849,9 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         if default_on_percent:
             self._safety_manager.set_safety_default_on_percent(default_on_percent)
 
-        if self._prop_algorithm:
-            self._prop_algorithm.set_safety(
-                self._safety_manager.safety_default_on_percent
-            )
-
         await self.async_control_heating()
         self.update_custom_attributes()
+        self.async_write_ha_state()
 
     async def service_set_window_bypass_state(self, window_bypass: bool):
         """Called by a service call:
@@ -1885,80 +1879,6 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         write_event_log(_LOGGER, self, "Calling SERVICE_SET_HVAC_MODE_SLEEP")
         raise NotImplementedError("service_set_hva_mode_sleep not implemented for this kind of thermostat. Only for over_climate with valve regulation is supported")
 
-    async def service_set_tpi_parameters(
-        self,
-        tpi_coef_int: float | None = None,
-        tpi_coef_ext: float | None = None,
-        minimal_activation_delay: int | None = None,
-        minimal_deactivation_delay: int | None = None,
-        tpi_threshold_low: float | None = None,
-        tpi_threshold_high: float | None = None,
-    ):
-        """Called by a service call:
-        service: versatile_thermostat.set_tpi_parameters
-        data:
-            tpi_coef_int: 0.6
-            tpi_coef_ext: 0.01
-            minimal_activation_delay: 30
-            minimal_deactivation_delay: 30
-            tpi_threshold_low: 0.1
-            tpi_threshold_high: 0.9
-        target:
-            entity_id: climate.thermostat_1
-        """
-
-        if self.lock_manager.check_is_locked("service_set_tpi_parameters"):
-            return
-
-        write_event_log(
-            _LOGGER,
-            self,
-            f"Calling SERVICE_SET_TPI_PARAMETERS, tpi_coef_int: {tpi_coef_int}, "
-            f"tpi_coef_ext: {tpi_coef_ext}"
-            f"minimal_activation_delay: {minimal_activation_delay}, "
-            f"minimal_deactivation_delay: {minimal_deactivation_delay}, "
-            f"tpi_threshold_low: {tpi_threshold_low}, "
-            f"tpi_threshold_high: {tpi_threshold_high}",
-        )
-
-        if self._prop_algorithm is None:
-            raise ServiceValidationError(f"{self} - No TPI algorithm configured for this thermostat.")
-
-        entry = self.hass.config_entries.async_get_entry(self._unique_id)
-        if not entry:
-            raise ServiceValidationError(f"{self} - No config entry has been found for this thermostat.")
-
-        if entry.data.get(CONF_USE_TPI_CENTRAL_CONFIG, False):
-            raise ServiceValidationError(f"{self} - Impossible to set TPI parameters when using central TPI configuration.")
-
-        self._prop_algorithm.update_parameters(
-            tpi_coef_int,
-            tpi_coef_ext,
-            minimal_activation_delay,
-            minimal_deactivation_delay,
-            tpi_threshold_low,
-            tpi_threshold_high,
-        )
-        self._tpi_coef_int = self._prop_algorithm.tpi_coef_int
-        self._tpi_coef_ext = self._prop_algorithm.tpi_coef_ext
-        self._minimal_activation_delay = self._prop_algorithm.minimal_activation_delay
-        self._minimal_deactivation_delay = self._prop_algorithm.minimal_deactivation_delay
-        self._tpi_threshold_low = self._prop_algorithm.tpi_threshold_low
-        self._tpi_threshold_high = self._prop_algorithm.tpi_threshold_high
-
-        # Update the configuration attributes
-        data = {**entry.data, CONF_TPI_COEF_INT: self._tpi_coef_int}
-        data = {**data, CONF_TPI_COEF_EXT: self._tpi_coef_ext}
-        data = {**data, CONF_TPI_THRESHOLD_LOW: self._tpi_threshold_low}
-        data = {**data, CONF_TPI_THRESHOLD_HIGH: self._tpi_threshold_high}
-        data = {**data, CONF_MINIMAL_ACTIVATION_DELAY: self._minimal_activation_delay}
-        data = {**data, CONF_MINIMAL_DEACTIVATION_DELAY: self._minimal_deactivation_delay}
-
-        self.hass.config_entries.async_update_entry(entry, data=data)
-
-        self.recalculate()
-        await self.async_control_heating(force=True)
-
     async def service_lock(self, code: str | None = None):
         """Handle the lock service call."""
 
@@ -1975,6 +1895,124 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         if self.lock_manager.change_lock_state(False, code):
             self.update_custom_attributes()
             self.async_write_ha_state()
+
+    async def service_set_tpi_parameters(
+        self,
+        tpi_coef_int: float | None = None,
+        tpi_coef_ext: float | None = None,
+        minimal_activation_delay: int | None = None,
+        minimal_deactivation_delay: int | None = None,
+        tpi_threshold_low: float | None = None,
+        tpi_threshold_high: float | None = None,
+    ):
+        """Stub method for TPI parameter service on non-TPI thermostats.
+
+        This service is only available for switch/valve type thermostats that use TPI algorithm.
+        For over_climate thermostats, this service is not supported.
+
+        Raises:
+            ServiceValidationError: Always raised to indicate the service is not available
+        """
+        raise ServiceValidationError(
+            f"{self} - The set_tpi_parameters service is only available for switch/valve type thermostats. "
+            "This thermostat does not use TPI algorithm."
+        )
+
+    async def service_set_auto_tpi_mode(self, auto_tpi_mode: bool):
+        """Stub method for Auto TPI mode service on non-TPI thermostats.
+
+        This service is only available for switch/valve type thermostats that use TPI algorithm.
+        For over_climate thermostats, this service is not supported.
+
+        Raises:
+            ServiceValidationError: Always raised to indicate the service is not available
+        """
+        raise ServiceValidationError(
+            f"{self} - The set_auto_tpi_mode service is only available for switch/valve type thermostats. "
+            "This thermostat does not use TPI algorithm."
+        )
+
+    async def service_auto_tpi_calibrate_capacity(
+        self,
+        save_to_config: bool,
+        min_power_threshold: int,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ):
+        """Stub method for Auto TPI capacity calibration service on non-TPI thermostats.
+
+        This service is only available for switch/valve type thermostats that use TPI algorithm.
+        For over_climate thermostats, this service is not supported.
+
+        Raises:
+            ServiceValidationError: Always raised to indicate the service is not available
+        """
+        raise ServiceValidationError(
+            f"{self} - The auto_tpi_calibrate_capacity service is only available for switch/valve type thermostats. "
+            "This thermostat does not use TPI algorithm."
+        )
+
+    async def service_set_timed_preset(self, preset: str, duration_minutes: float):
+        """Called by a service call:
+        service: versatile_thermostat.set_timed_preset
+        data:
+            preset: "boost"
+            duration_minutes: 30
+        target:
+            entity_id: climate.thermostat_1
+
+        Force a preset for a given duration. After the duration expires,
+        the original preset (from requested_state) will be restored.
+        """
+        if self.lock_manager.check_is_locked("service_set_timed_preset"):
+            return
+
+        write_event_log(
+            _LOGGER,
+            self,
+            f"Calling SERVICE_SET_TIMED_PRESET, preset: {preset}, duration: {duration_minutes} min",
+        )
+
+        # Validate that the preset is in the list of accepted presets
+        preset_enum = VThermPreset(preset) if preset else None
+        if preset_enum not in self._vtherm_preset_modes:
+            raise ServiceValidationError(
+                f"{self} - The preset '{preset}' is not available for this thermostat. " f"Available presets are: {[str(p) for p in self._vtherm_preset_modes]}"
+            )
+
+        # Validate duration
+        if duration_minutes <= 0:
+            raise ServiceValidationError(f"{self} - The duration must be a positive number, got {duration_minutes}")
+
+        # Set the timed preset
+        success = await self._timed_preset_manager.set_timed_preset(preset_enum, duration_minutes)
+        if not success:
+            raise ServiceValidationError(f"{self} - Failed to set timed preset '{preset}' for {duration_minutes} minutes")
+
+    async def service_cancel_timed_preset(self):
+        """Called by a service call:
+        service: versatile_thermostat.cancel_timed_preset
+        target:
+            entity_id: climate.thermostat_1
+
+        Cancel any active timed preset and restore the original preset.
+        """
+        if self.lock_manager.check_is_locked("service_cancel_timed_preset"):
+            return
+
+        write_event_log(_LOGGER, self, "Calling SERVICE_CANCEL_TIMED_PRESET")
+
+        await self._timed_preset_manager.cancel_timed_preset()
+
+    async def service_recalibrate_valves(self, delay_seconds: int):
+        """Stub method for recalibrate_valves service on unsupported thermostat types.
+
+        Raises:
+            ServiceValidationError: Always raised to indicate the service is not available
+        """
+        raise ServiceValidationError(
+            f"{self} - The recalibrate_valves service is only available for ThermostatClimateValve thermostats."
+        )
 
     ##
     ## For testing purpose

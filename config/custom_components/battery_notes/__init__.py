@@ -6,72 +6,74 @@ https://github.com/andrew-codechimp/ha-battery-notes
 
 from __future__ import annotations
 
-import re
 import logging
-from types import MappingProxyType
+import re
 from datetime import datetime
+from types import MappingProxyType
 
 import voluptuous as vol
 from awesomeversion.awesomeversion import AwesomeVersion
 
-from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry, ConfigSubentry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     __version__ as HA_VERSION,  # noqa: N812
 )
+from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers import (
-    issue_registry as ir,
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
-    config_validation as cv,
+    issue_registry as ir,
 )
-from homeassistant.helpers.event import async_call_later
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry, ConfigSubentry
 from homeassistant.helpers.device import async_entity_id_to_device_id
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.helper_integration import (
     async_remove_helper_config_entry_from_source_device,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    NAME as INTEGRATION_NAME,
-    DOMAIN,
-    PLATFORMS,
+    CONF_ADVANCED_SETTINGS,
+    CONF_BATTERY_INCREASE_THRESHOLD,
+    CONF_BATTERY_LOW_TEMPLATE,
+    CONF_BATTERY_QUANTITY,
+    CONF_BATTERY_TYPE,
+    CONF_DEFAULT_BATTERY_LOW_THRESHOLD,
+    CONF_DEVICE_NAME,
+    CONF_ENABLE_AUTODISCOVERY,
+    CONF_ENABLE_REPLACED,
+    CONF_FILTER_OUTLIERS,
+    CONF_HIDE_BATTERY,
+    CONF_HW_VERSION,
+    CONF_MANUFACTURER,
     CONF_MODEL,
     CONF_MODEL_ID,
-    MIN_HA_VERSION,
-    CONF_HW_VERSION,
-    CONF_DEVICE_NAME,
-    CONF_BATTERY_TYPE,
-    CONF_HIDE_BATTERY,
-    CONF_MANUFACTURER,
-    CONF_USER_LIBRARY,
     CONF_ROUND_BATTERY,
-    CONF_ENABLE_REPLACED,
-    CONF_BATTERY_QUANTITY,
     CONF_SHOW_ALL_DEVICES,
-    ISSUE_DEPRECATED_YAML,
-    SUBENTRY_BATTERY_NOTE,
-    CONF_ADVANCED_SETTINGS,
-    CONF_ENABLE_AUTODISCOVERY,
-    DEFAULT_BATTERY_LOW_THRESHOLD,
-    CONF_BATTERY_INCREASE_THRESHOLD,
-    CONF_DEFAULT_BATTERY_LOW_THRESHOLD,
+    CONF_USER_LIBRARY,
     DEFAULT_BATTERY_INCREASE_THRESHOLD,
+    DEFAULT_BATTERY_LOW_THRESHOLD,
+    DOMAIN,
+    ISSUE_DEPRECATED_YAML,
+    MIN_HA_VERSION,
+    NAME as INTEGRATION_NAME,
+    PLATFORMS,
+    SUBENTRY_BATTERY_NOTE,
 )
-from .store import async_get_registry
-from .library import DATA_LIBRARY, Library
-from .services import async_setup_services
-from .discovery import DiscoveryManager
 from .coordinator import (
     MY_KEY,
-    BatteryNotesData,
     BatteryNotesConfigEntry,
+    BatteryNotesData,
     BatteryNotesDomainConfig,
     BatteryNotesSubentryCoordinator,
 )
+from .discovery import DiscoveryManager
+from .library import DATA_LIBRARY, Library
 from .library_updater import LibraryUpdater
+from .services import async_setup_services
+from .store import async_get_registry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -188,8 +190,10 @@ async def async_setup_entry(
     async def _async_delayed_discovery(now: datetime) -> None:  # noqa: ARG001
         """Update the library and do discovery."""
         library_updater = LibraryUpdater(hass)
+
         await library_updater.copy_schema()
         await library_updater.get_library_updates(startup=True)
+        await hass.data[DATA_LIBRARY].load_libraries()
 
         if domain_config.enable_autodiscovery:
             await discovery_manager.start_discovery()
@@ -260,8 +264,8 @@ async def async_migrate_integration(hass: HomeAssistant, config: ConfigType) -> 
         return
 
     for entry in entries:
-        if entry.version == 3 and entry.unique_id == DOMAIN:
-            # We have a V3 entry, so we can use this as the base
+        if entry.version >= 3 and entry.unique_id == DOMAIN:
+            # We have a V3 or greater entry, so we can use this as the base
             migrate_base_entry = entry
             break
 
@@ -417,9 +421,15 @@ async def async_migrate_entry(
         config_entry.minor_version,
     )
 
-    if config_entry.version > 3:
+    if config_entry.version > 4:
         # This means the user has downgraded from a future version
         return False
+
+    if config_entry.version < 4 and config_entry.source == SOURCE_IGNORE:
+        hass.config_entries.async_update_entry(
+            config_entry, version=4, title=config_entry.title
+        )
+        return True
 
     if config_entry.version == 1:
         # Version 1 had a single config for qty & type, split them
@@ -449,9 +459,30 @@ async def async_migrate_entry(
             2,
         )
 
-    if config_entry.version == 2 and config_entry.source == SOURCE_IGNORE:
+    if config_entry.version == 3:
+        for subentry in config_entry.subentries.values():
+            # Migrate subentry settings to advanced_settings
+            subentry_data_dict = dict(subentry.data)
+            advanced_settings = {}
+
+            advanced_settings[CONF_BATTERY_LOW_TEMPLATE] = subentry_data_dict.pop(
+                CONF_BATTERY_LOW_TEMPLATE, None
+            )
+
+            advanced_settings[CONF_FILTER_OUTLIERS] = subentry_data_dict.pop(
+                CONF_FILTER_OUTLIERS, False
+            )
+
+            subentry_data_dict[CONF_ADVANCED_SETTINGS] = advanced_settings
+
+            hass.config_entries.async_update_subentry(
+                config_entry,
+                subentry,
+                data=MappingProxyType(subentry_data_dict),
+            )
+
         hass.config_entries.async_update_entry(
-            config_entry, version=3, title=config_entry.title
+            config_entry, version=4, title=config_entry.title
         )
 
     return True
