@@ -1,0 +1,36 @@
+emhass_tune_models:
+  alias: "EMHASS: tune models"
+  sequence:
+    # Tune: Ridge
+    - action: rest_command.forecast_model_tune_load_zonder_wp
+      data:
+        model_type: "load_forecast_ridge"
+        n_trials: 10
+        lags: 348
+        # split: "864h"
+        days: >
+          {{ states("sensor.days_to_retrieve")}}
+    - delay:
+        seconds: 5
+    # Tune: LinearRegression
+    - action: rest_command.forecast_model_tune_load_zonder_wp
+      data:
+        model_type: "load_forecast_linear"
+        n_trials: 10
+        lags: 348
+        # split: "864h"
+        days: >
+          {{ states("sensor.days_to_retrieve")}}
+    - delay:
+        seconds: 5
+    # # Tune: Lasso
+    - action: rest_command.forecast_model_tune_load_zonder_wp
+      data:
+        model_type: "load_forecast_lasso"
+        n_trials: 10
+        lags: 348
+        # split: "864h"
+        days: >
+          {{ states("sensor.days_to_retrieve")}}
+
+

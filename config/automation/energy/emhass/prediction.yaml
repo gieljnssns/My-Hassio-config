@@ -3,65 +3,37 @@ id: b81cb250-5e2b-46e0-984b-f09c1a4eec92
 mode: parallel
 trigger:
   - platform: state
-    entity_id: sensor.voorspelde_uren
-    id: prediction
-  - platform: state
-    entity_id: sensor.voorspelde_uren_adaboost
-    id: prediction_adaboost
-  - platform: state
-    entity_id: sensor.voorspelde_uren_gradientboosting
-    id: prediction_gradientboosting
+    entity_id:
+      - sensor.voorspelde_uren_randomforest
+      - sensor.voorspelde_uren_adaboost
+      - sensor.voorspelde_uren_gradientboosting
+      - sensor.voorspelde_uren_extratrees
+      - sensor.voorspelde_uren_svr
+      - sensor.voorspelde_uren_decisiontree
+      - sensor.voorspelde_uren_kneighbors
+      - sensor.voorspelde_uren_elasticnet
+      - sensor.voorspelde_uren_lasso
+      - sensor.voorspelde_uren_ridge
+      - sensor.voorspelde_uren_linear
+
 
 actions:
+  - variables:
+      sensor: "{{ trigger.entity_id }}"
+      value: "{{ states(sensor) | float(0) }}"
+      clean_value: "{{ [value, 0] | max | round(2) }}"
+      input_number: >
+        {{ sensor.replace('sensor.', 'input_number.') }}
+
   - choose:
-      - conditions:
-          - condition: trigger
-            id: prediction
-          - condition: template
-            value_template: >
-              {{ has_value("sensor.voorspelde_uren") }}
+      - conditions: "{{ sensor == 'sensor.voorspelde_uren_randomforest' }}"
         sequence:
-          - action: input_number.set_value
-            data:
-              value: >
-                {% if states("sensor.voorspelde_uren") | float | round(2) >= 0 -%}
-                  {{ states("sensor.voorspelde_uren") | float | round(2) }}
-                {% else -%}
-                  0
-                {% endif -%}
+          - service: input_boolean.turn_on
             target:
-              entity_id: input_number.voorspelde_uren
-      - conditions:
-          - condition: trigger
-            id: prediction_adaboost
-          - condition: template
-            value_template: >
-              {{ has_value("sensor.voorspelde_uren_adaboost") }}
-        sequence:
-          - action: input_number.set_value
-            data:
-              value: >
-                {% if states("sensor.voorspelde_uren_adaboost") | float | round(2) >= 0 -%}
-                  {{ states("sensor.voorspelde_uren_adaboost") | float | round(2) }}
-                {% else -%}
-                  0
-                {% endif -%}
-            target:
-              entity_id: input_number.voorspelde_uren_adaboost
-      - conditions:
-          - condition: trigger
-            id: prediction_gradientboosting
-          - condition: template
-            value_template: >
-              {{ has_value("sensor.voorspelde_uren_gradientboosting") }}
-        sequence:
-          - action: input_number.set_value
-            data:
-              value: >
-                {% if states("sensor.voorspelde_uren_gradientboosting") | float | round(2) >= 0 -%}
-                  {{ states("sensor.voorspelde_uren_gradientboosting") | float | round(2) }}
-                {% else -%}
-                  0
-                {% endif -%}
-            target:
-              entity_id: input_number.voorspelde_uren_gradientboosting
+              entity_id: input_boolean.verwarming_starten
+
+  - service: input_number.set_value
+    target:
+      entity_id: "{{ input_number }}"
+    data:
+      value: "{{ clean_value }}"

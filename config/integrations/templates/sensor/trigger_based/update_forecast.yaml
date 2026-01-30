@@ -22,15 +22,15 @@
             | average 
             | round(1) }}
 
-    - name: Max neerslag volgende 12u
-      unique_id: 5f39ce6f-f064-4252-8aa2-e23921b90924
-      unit_of_measurement: "%"
-      state: >
-        {% set forecast = hourly %}
-        {{ forecast["weather.home"].forecast[:12] 
-              | map(attribute='precipitation_probability') 
-              | max
-              | round(1) }}
+    # - name: Max neerslag volgende 12u
+    #   unique_id: 5f39ce6f-f064-4252-8aa2-e23921b90924
+    #   unit_of_measurement: "%"
+    #   state: >
+    #     {% set forecast = hourly %}
+    #     {{ forecast["weather.home"].forecast[:12] 
+    #           | map(attribute='precipitation_probability') 
+    #           | max
+    #           | round(1) }}
 
     - name: Max temperatuur buiten voorspelling 12u
       unique_id: 0db3033c-4643-428e-a38d-8be6d0139c80
@@ -51,3 +51,103 @@
             | map(attribute='temperature') 
             | min
             | round(1) }}
+    
+    - name: Maximum temperatuur morgen
+      unique_id: aac3691b-e083-48a2-9ea9-d9687341ea35
+      unit_of_measurement: "°C"
+      state: >
+        {% set forecast = hourly["weather.home"].forecast %}
+        {% set tomorrow = (now().date() + timedelta(days=1)) %}
+        {% set temps = forecast 
+            | selectattr('datetime','defined') 
+            | selectattr('temperature','defined') 
+            | selectattr('datetime','search', tomorrow.isoformat()) 
+            | map(attribute='temperature') 
+            | list %}
+        {{ temps | max if temps|count > 0 else none }}
+
+
+- trigger:
+    - platform: event
+      event_type: refresh_5m
+    - platform: event
+      event_type: event_template_reloaded
+  action:
+    - action: weather.get_forecasts
+      data:
+        type: hourly
+      target:
+        entity_id: weather.home_2
+      response_variable: open_meteo
+    - action: weather.get_forecasts
+      data:
+        type: hourly
+      target:
+        entity_id: weather.home
+      response_variable: kmi
+  sensor:
+    - name: Openmeteo interpolated temperatures
+      unique_id: 2c2d8482-dc0d-483a-b8e8-a0d1dae8ed9f
+      state: >
+        {{ state_attr("weather.home_2", "temperature") }}
+      attributes:
+        list: >  
+          {% set forecast = open_meteo['weather.home_2'].forecast -%}
+          {% set now_ts = as_timestamp(now()) -%}
+          {% set current_5min_ts = ((now_ts // 300) | int) * 300 -%}
+          {% set end_ts = as_timestamp(today_at("00:00") + timedelta(days=2)) -%}
+          {% set ns = namespace(result=[]) -%}
+          {% for i in range(forecast | length - 1) -%}
+            {% set t1 = as_timestamp(forecast[i].datetime) -%}
+            {% set t2 = as_timestamp(forecast[i+1].datetime) -%}
+            {% set temp1 = forecast[i].temperature -%}
+            {% set temp2 = forecast[i+1].temperature -%}
+            {% if t2 > current_5min_ts and t1 < end_ts and (t2 - t1) == 3600 -%}
+              {% set start_slot = 0 -%}
+              {% if t1 < current_5min_ts -%}
+                {% set start_slot = (((current_5min_ts - t1) / 300) | int) -%}
+              {% endif -%}
+              {% for j in range(start_slot, 12) -%}
+                {% set slot_ts = t1 + (j * 300) -%}
+                {% if slot_ts >= current_5min_ts and slot_ts < end_ts -%}
+                  {% set frac = j / 12 -%}
+                  {% set interp_temp = temp1 + ((temp2 - temp1) * frac) -%}
+                  {% set ns.result = ns.result + [interp_temp | round(1)] -%}
+                {% endif -%}
+              {% endfor -%}
+            {% endif -%}
+          {% endfor -%}
+          {{ ns.result }}
+    
+    - name: Kmi interpolated temperatures
+      unique_id: 78e5598b-3b4b-4c99-8c84-548ae6616981
+      state: >
+        {{ state_attr("weather.home", "temperature") }} 
+      attributes:
+        list: >
+          {% set forecast = kmi['weather.home'].forecast -%}
+          {% set now_ts = as_timestamp(now()) -%}
+          {% set current_5min_ts = ((now_ts // 300) | int) * 300 -%}
+          {% set end_ts = as_timestamp(today_at("00:00") + timedelta(days=2)) -%}
+          {% set ns = namespace(result=[]) -%}
+          {% for i in range(forecast | length - 1) -%}
+            {% set t1 = as_timestamp(forecast[i].datetime) -%}
+            {% set t2 = as_timestamp(forecast[i+1].datetime) -%}
+            {% set temp1 = forecast[i].temperature -%}
+            {% set temp2 = forecast[i+1].temperature -%}
+            {% if t2 > current_5min_ts and t1 < end_ts and (t2 - t1) == 3600 -%}
+              {% set start_slot = 0 -%}
+              {% if t1 < current_5min_ts -%}
+                {% set start_slot = (((current_5min_ts - t1) / 300) | int) -%}
+              {% endif -%}
+              {% for j in range(start_slot, 12) -%}
+                {% set slot_ts = t1 + (j * 300) -%}
+                {% if slot_ts >= current_5min_ts and slot_ts < end_ts -%}
+                  {% set frac = j / 12 -%}
+                  {% set interp_temp = temp1 + ((temp2 - temp1) * frac) -%}
+                  {% set ns.result = ns.result + [interp_temp | round(1)] -%}
+                {% endif -%}
+              {% endfor -%}
+            {% endif -%}
+          {% endfor -%}
+          {{ ns.result }}

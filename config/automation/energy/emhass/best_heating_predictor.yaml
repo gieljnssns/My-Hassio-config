@@ -1,0 +1,72 @@
+alias: Best Heating Predictor - Daily Evaluation
+id: 187308a7-0b8d-4b86-b241-5ae15e3095ea
+mode: single
+
+trigger:
+  - platform: time
+    at: "23:00:00"
+
+variables:
+  actual: "{{ states('sensor.branduren_warmtepomp') | float(0) }}"
+
+  # Verzamel ALLE input_numbers die beginnen met voorspelde_uren
+  predictions: >
+    {% set ns = namespace(data={}) -%}
+    {% for entity in states.input_number
+        if entity.entity_id.startswith('input_number.voorspelde_uren_') -%}
+      {% set ns.data = ns.data | combine({
+        entity.entity_id: entity.state | float(0)
+      }) -%}
+    {% endfor -%}
+    {{ ns.data }}
+
+  # Bereken absolute fout t.o.v. echte branduren
+  errors: >
+    {% set ns = namespace(out={}) -%}
+    {% for name, value in predictions.items() -%}
+      {% set diff = (value - actual) | abs -%}
+      {% set ns.out = ns.out | combine({ name: diff }) -%}
+    {% endfor -%}
+    {{ ns.out }}
+
+  sorted: "{{ errors.items() | list | sort(attribute=1) }}"
+
+  best_today_full: "{{ sorted[0][0] }}"
+  best_today: "{{ best_today_full.replace('input_number.voorspelde_uren_', '') }}"
+  best_error: "{{ sorted[0][1] | round(3) }}"
+
+  # formatted_table: >
+  #   {% set items = errors.items() | list -%}
+  #   {% set sorted = items | sort(attribute=1) -%}
+  #   {% set lines = [] -%}
+  #   {% for name, err in sorted -%}
+  #     {% set clean = name.replace('input_number.', '') -%}
+  #     {% set lines = lines + [ clean ~ ': ' ~ (err | round(3)) ~ ' h' ] -%}
+  #   {% endfor -%}
+  #   {{ lines | join('\n') }}
+
+actions:
+  - service: input_text.set_value
+    target:
+      entity_id: input_text.best_heating_predictor
+    data:
+      value: "{{ best_today }}"
+  
+  - repeat:
+      for_each: "{{ errors.items() | list }}"
+      sequence:
+        - service: input_number.set_value
+          target:
+            entity_id: >
+              {{ 'input_number.error_' ~
+                  repeat.item[0].replace('input_number.voorspelde_uren_', '') }}
+          data:
+            value: "{{ repeat.item[1] | round(3) }}"
+
+  - service: persistent_notification.create
+    data:
+      title: "Dagelijkse Predictor Evaluatie"
+      message: >
+        🏠 **Werkelijke branduren:** {{ actual | round(3) }} h  
+        🥇 **Beste vandaag:** {{ best_today }}  
+        📉 **Fout:** {{ best_error }} h

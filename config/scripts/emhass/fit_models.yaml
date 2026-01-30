@@ -1,0 +1,37 @@
+emhass_fit_models:
+  alias: "EMHASS: fit models"
+  sequence:
+    # Fit: Ridge
+    - action: rest_command.forecast_model_fit_load_zonder_wp
+      data:
+        model_type: "load_forecast_ridge"
+        model: "RidgeRegression"
+        lags: 348
+        split: "864h"
+        days: >
+          {{ states("sensor.days_to_retrieve")}}
+    - delay:
+        seconds: 5
+    # Fit: LinearRegression
+    - action: rest_command.forecast_model_fit_load_zonder_wp
+      data:
+        model_type: "load_forecast_linear"
+        model: "LinearRegression"
+        lags: 348
+        split: "864h"
+        days: >
+          {{ states("sensor.days_to_retrieve")}}
+    - delay:
+        seconds: 5
+    # Fit: Lasso
+    - action: rest_command.forecast_model_fit_load_zonder_wp
+      data:
+        model_type: "load_forecast_lasso"
+        model: "LassoRegression"
+        lags: 348
+        split: "864h"
+        days: >
+          {{ states("sensor.days_to_retrieve")}}
+
+
+

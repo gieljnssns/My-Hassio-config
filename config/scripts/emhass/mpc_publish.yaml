@@ -1,0 +1,12 @@
+emhass_mpc_publish:
+  alias: EMHASS mpc publish
+  mode: single
+  sequence:
+    - action: rest_command.naive_mpc_optim
+      data:
+        payload: >
+          {{ state_attr("sensor.emhass_mpc", "mpc") }}
+    - delay: "00:00:03"
+    - action: rest_command.publish_data
+      data:
+        prefix: ""

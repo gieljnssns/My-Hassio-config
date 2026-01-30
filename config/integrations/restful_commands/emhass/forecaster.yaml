@@ -1,0 +1,80 @@
+## emhass_timestep
+forecast_model_fit_load_zonder_wp:
+  url: http://localhost:5003/action/forecast-model-fit
+  method: POST
+  content_type: "application/json"
+  timeout: 10000
+  payload: >-
+    {
+      "historic_days_to_retrieve": {{ days }},
+      "model_type": "{{ model_type }}",
+      "var_model": "sensor.huidig_verbruik_zonder_wp",
+      "sklearn_model": "{{ model }}",
+      "num_lags": {{ lags }},
+      "split_date_delta": "{{ split }}",
+      "perform_backtest": "True"
+    }
+
+forecast_model_tune_load_zonder_wp:
+  url: http://localhost:5003/action/forecast-model-tune
+  method: POST
+  content_type: "application/json"
+  timeout: 10000
+  payload: >-
+    {
+      "model_type": "{{ model_type }}",
+      "historic_days_to_retrieve": {{ days }},
+      "var_model": "sensor.huidig_verbruik_zonder_wp",
+      "num_lags": {{ lags }},
+      "n_trials": {{ n_trials }}
+    }
+# # "split_date_delta": "{{ split }}",
+# forecast_model_fit_load_zonder_wp_test:
+#   url: http://192.168.5.21:5000/action/forecast-model-fit
+#   method: POST
+#   content_type: "application/json"
+#   timeout: 10000
+#   payload: >-
+#     {
+#       "historic_days_to_retrieve": {{ states("sensor.days_to_retrieve")}},
+#       "model_type": "{{ model_type }}",
+#       "var_model": "sensor.huidig_verbruik_zonder_wp",
+#       "sklearn_model": "{{ model }}",
+#       "num_lags": 348,
+#       "split_date_delta": "864h",
+#       "perform_backtest": "True"
+#     }
+
+# forecast_model_tune_load_zonder_wp_test:
+#   url: http://192.168.5.21:5000/action/forecast-model-tune
+#   method: POST
+#   content_type: "application/json"
+#   timeout: 10000
+#   payload: >-
+#     {
+#       "model_type": "{{ model_type }}",
+#       "var_model": "sensor.huidig_verbruik_zonder_wp",
+#       "n_trials": {{ n_trials }}
+#     }
+
+# forecast_model_predict_load_zonder_wp:
+#   url: http://localhost:5003/action/forecast-model-predict
+#   method: POST
+#   timeout: 300
+#   content_type: "application/json"
+#   payload: >-
+#     {
+#       "model_type": "load_forecast"
+#     }
+
+# forecast_model_predict_load_zonder_wp_test:
+#   url: http://192.168.5.21:5000/action/forecast-model-predict
+#   method: POST
+#   timeout: 300
+#   content_type: "application/json"
+#   payload: >-
+#     {
+#       "model_type": "{{ model_type }}"
+#     }
+
+

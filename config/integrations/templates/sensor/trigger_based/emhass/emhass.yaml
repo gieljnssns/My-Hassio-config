@@ -1,0 +1,275 @@
+- trigger:
+    - platform: state
+      entity_id: input_boolean.emhass_droogkast
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Droogkast is gestart op…"
+      unique_id: 37bd2a8b-a5eb-4428-aad3-d2571d21065a
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_droogkast.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: input_boolean.emhass_wasmachien
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Wasmachien is gestart op…"
+      unique_id: bbcf11b2-a7e6-4a2e-a45e-00bea49447b0
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_wasmachien.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: input_boolean.emhass_afwasmachien
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Afwasmachien is gestart op…"
+      unique_id: c02023fb-05c4-45c3-a82c-9b69b9424ad7
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_afwasmachien.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: binary_sensor.warmtepomp_aan
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Warmtepomp is gestart op…"
+      unique_id: 80b7a7bd-0a7c-4dd2-bf0a-c277e273cc2f
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepomp_aan.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: binary_sensor.warmtepompboiler_aan
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Warmtepompboiler is gestart op…"
+      unique_id: 5bc4af6d-8e99-4ee3-9131-66f41132d66f
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepompboiler_aan.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: input_boolean.emhass_warmtepompboiler
+      from: "on"
+      to: "off"
+  sensor:
+    - name: "Warmtepompboiler is uitgezet op…"
+      unique_id: 9ddf6b51-d728-4264-b1ec-7ed93afd5185
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_warmtepompboiler.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: binary_sensor.warmtepompboiler_aan
+      from: "on"
+      to: "off"
+  sensor:
+    - name: "Warmtepompboiler is gestopt op…"
+      unique_id: 1a5fb0a2-f6ca-4abb-b838-6aac508bd4e6
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepompboiler_aan.last_changed) }}
+- trigger:
+    - platform: state
+      entity_id: binary_sensor.warmtepomp_aan
+      from: "on"
+      to: "off"
+  sensor:
+    - name: "Warmtepomp is gestopt op…"
+      unique_id: d427fb27-4606-4cc7-a30a-e3421c367f60
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepomp_aan.last_changed) }}
+
+
+- trigger:
+    - platform: state
+      entity_id: sensor.emhass_load_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass load
+      unique_id: 9fdc600a-94c4-4bfc-b11a-2cad784faa46
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ trigger.to_state.state }}
+      attributes:
+        list: >
+          {% set forecasts = state_attr('sensor.emhass_load_forecast', 'forecasts') -%}
+          {% set values = namespace(list=[]) -%}
+
+          {% if forecasts -%}
+            {% for forecast in forecasts -%}
+              {% set values.list = values.list + [forecast.emhass_load_forecast | float] -%}
+            {% endfor -%}
+          {% endif -%}
+
+          {{ values.list }}
+
+- trigger:
+    - platform: state
+      entity_id: sensor.emhass_grid_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass grid
+      unique_id: bdc5bbc2-fa72-4dbd-9def-b44008a80721
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ trigger.to_state.state }}
+
+- trigger:
+    - platform: state
+      entity_id: sensor.emhass_pv_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass PV
+      unique_id: 66061a80-e5c9-45bc-b5d8-772e532f6896
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ trigger.to_state.state }}
+
+- trigger:
+    - platform: state
+      entity_id: sensor.p_batt_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass battery
+      unique_id: 187c40b2-a247-4ec3-884e-7ce5e9f902c6
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ trigger.to_state.state }}
+
+- trigger:
+    - platform: state
+      entity_id: sensor.soc_batt_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass soc
+      unique_id: 79a3b8cb-e434-4132-a6ba-0f56b9580c26
+      unit_of_measurement: "%"
+      state: >
+        {{ trigger.to_state.state }}
+
+- trigger:
+    - platform: state
+      entity_id: sensor.emhass_load_cost
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass cost
+      unique_id: dfd183d6-d8da-46e8-962c-b980e54e84d0
+      unit_of_measurement: "EUR/kWh"
+      state: >
+        {{ trigger.to_state.state }}
+
+- trigger:
+    - platform: state
+      entity_id: sensor.emhass_prod_price
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass price
+      unique_id: 16995e34-99e3-4c59-b2d0-489011ce6698
+      unit_of_measurement: "EUR/kWh"
+      state: >
+        {{ trigger.to_state.state }}
+
+
+#####  Emhass test  #######
+- trigger:
+    - platform: state
+      entity_id: sensor.lasso_p_load_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass load lasso
+      unique_id: 15a91351-f3f0-4b18-9578-7bc133f30d20
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ trigger.to_state.state }}
+
+- trigger:
+    - platform: state
+      entity_id: sensor.lasso_p_grid_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass grid lasso
+      unique_id: f54f5e92-e74a-4847-b6f5-4cad39c1f516
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ trigger.to_state.state }}
+
+
+- trigger:
+    - platform: state
+      entity_id: sensor.ridge_p_load_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass load ridge
+      unique_id: 85246631-b80b-42b6-aa29-330df3a070a2
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ trigger.to_state.state }}
+
+- trigger:
+    - platform: state
+      entity_id: sensor.ridge_p_grid_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass grid ridge
+      unique_id: b75b2736-cf8c-4e02-88b0-eb006d670547
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ trigger.to_state.state }}
+
+- trigger:
+    - platform: state
+      entity_id: sensor.linear_p_load_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass load linear
+      unique_id: fa1ff7b0-9965-4842-b798-7f96af7a33bc
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ trigger.to_state.state }}
+
+- trigger:
+    - platform: state
+      entity_id: sensor.linear_p_grid_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass grid linear
+      unique_id: e1426666-c254-42b0-93b7-9fc846e70f3b
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ trigger.to_state.state }}

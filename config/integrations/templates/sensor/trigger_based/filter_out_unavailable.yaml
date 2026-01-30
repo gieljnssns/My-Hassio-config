@@ -14,9 +14,21 @@
       unique_id: e04b3353-a23c-41ee-9329-b5d3b2526ca6
       state: >
         {% set station = states("sensor.buiten_buiten_temperatuur") |float(0) -%}
-        {% set poort = states("sensor.poort_temperatuur") |float(0) -%}
+        {% if states("sensor.poort_temperatuur") not in ["unavailable", "unknown"] -%}
+          {% set poort = states("sensor.poort_temperatuur") |float(0) -%}
           {{ min(station, poort) }}
+        {% else -%}
+          {% set kmi = state_attr("weather.home", "temperature") -%}
+          {% set openmeteo = state_attr("weather.home_2", "temperature") -%}
+          {% set temp = (kmi + openmeteo) / 2 -%}
+          {{ temp }}
+        {% endif -%}
+      # state: >
+      #   {% set station = states("sensor.buiten_buiten_temperatuur") |float(0) -%}
+      #   {% set poort = states("sensor.poort_temperatuur") |float(0) -%}
+      #     {{ min(station, poort) }}
       unit_of_measurement: "°C"
+      device_class: temperature
 
 - trigger:
     - platform: state

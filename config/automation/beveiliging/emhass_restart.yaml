@@ -1,0 +1,24 @@
+alias: Emhass herstarten
+description: "Emhass herstarten als emhass load niet wijzigd."
+id: b611ea93-ba0c-474c-9037-7781534e89d2
+mode: single
+triggers:
+  - trigger: state
+    entity_id:
+      - sensor.emhass_load
+    for:
+      hours: 0
+      minutes: 12
+      seconds: 0
+conditions: []
+actions:
+  - action: notify.mobile_app_gphone
+    data:
+      title: Emhass
+      message: Emhass wordt herstart.
+      data:
+        url: /app/5b918bf2_emhass
+  - action: hassio.addon_restart
+    metadata: {}
+    data:
+      addon: 5b918bf2_emhass

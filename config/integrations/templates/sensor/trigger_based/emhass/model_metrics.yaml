@@ -1,0 +1,250 @@
+# =============================================================================
+# ERROR METRICS PER MODEL
+# =============================================================================
+# RIDGE MODEL
+- trigger:
+    - platform: state
+      entity_id: sensor.emhass_load_ridge
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: "Emhass Load Error Ridge"
+      unique_id: emhass_load_error_ridge
+      unit_of_measurement: "W"
+      state_class: measurement
+      state: >
+        {% set actual = states('sensor.huidig_verbruik_zonder_wp_gefilterd') | float(0) -%}
+        {% set forecast = states('sensor.emhass_load_ridge') | float(0) -%}
+        {{ (actual - forecast) | abs }}
+      attributes:
+        actual: "{{ states('sensor.huidig_verbruik_zonder_wp_gefilterd') | float(0) }}"
+        forecast: "{{ states('sensor.emhass_load_ridge') | float(0) }}"
+        error_percentage: >
+          {% set actual = states('sensor.huidig_verbruik_zonder_wp_gefilterd') | float(0) -%}
+          {% set forecast = states('sensor.emhass_load_ridge') | float(0) -%}
+          {% if actual > 0 -%}
+            {{ ((actual - forecast) | abs / actual * 100) | round(2) }}
+          {% else -%}
+            0
+          {% endif -%}
+    
+- trigger:
+    - platform: state
+      entity_id: sensor.emhass_grid_ridge
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: "Emhass Grid Error Ridge"
+      unique_id: emhass_grid_error_ridge
+      unit_of_measurement: "W"
+      state_class: measurement
+      state: >
+        {% set actual = states('sensor.huidig_fluvius') | float(0) -%}
+        {% set forecast = states('sensor.emhass_grid_ridge') | float(0) -%}
+        {{ (actual - forecast) | abs }}
+
+# LASSO MODEL
+- trigger:
+    - platform: state
+      entity_id: sensor.emhass_load_lasso
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: "Emhass Load Error Lasso"
+      unique_id: emhass_load_error_lasso
+      unit_of_measurement: "W"
+      state_class: measurement
+      state: >
+        {% set actual = states('sensor.huidig_verbruik_zonder_wp_gefilterd') | float(0) -%}
+        {% set forecast = states('sensor.emhass_load_lasso') | float(0) -%}
+        {{ (actual - forecast) | abs }}
+      attributes:
+        actual: "{{ states('sensor.huidig_verbruik_zonder_wp_gefilterd') | float(0) }}"
+        forecast: "{{ states('sensor.emhass_load_lasso') | float(0) }}"
+        error_percentage: >
+          {% set actual = states('sensor.huidig_verbruik_zonder_wp_gefilterd') | float(0) -%}
+          {% set forecast = states('sensor.emhass_load_lasso') | float(0) -%}
+          {% if actual > 0 -%}
+            {{ ((actual - forecast) | abs / actual * 100) | round(2) }}
+          {% else -%}
+            0
+          {% endif -%}
+    
+- trigger:
+    - platform: state
+      entity_id: sensor.emhass_grid_lasso
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: "Emhass Grid Error Lasso"
+      unique_id: emhass_grid_error_lasso
+      unit_of_measurement: "W"
+      state_class: measurement
+      state: >
+        {% set actual = states('sensor.huidig_fluvius') | float(0) -%}
+        {% set forecast = states('sensor.emhass_grid_lasso') | float(0) -%}
+        {{ (actual - forecast) | abs }}
+
+
+# LINEAR MODEL
+- trigger:
+    - platform: state
+      entity_id: sensor.emhass_load_linear
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: "Emhass Load Error Linear"
+      unique_id: emhass_load_error_linear
+      unit_of_measurement: "W"
+      state_class: measurement
+      state: >
+        {% set actual = states('sensor.huidig_verbruik_zonder_wp_gefilterd') | float(0) -%}
+        {% set forecast = states('sensor.emhass_load_linear') | float(0) -%}
+        {{ (actual - forecast) | abs }}
+      attributes:
+        actual: "{{ states('sensor.huidig_verbruik_zonder_wp_gefilterd') | float(0) }}"
+        forecast: "{{ states('sensor.emhass_load_linear') | float(0) }}"
+        error_percentage: >
+          {% set actual = states('sensor.huidig_verbruik_zonder_wp_gefilterd') | float(0) -%}
+          {% set forecast = states('sensor.emhass_load_linear') | float(0) -%}
+          {% if actual > 0 -%}
+            {{ ((actual - forecast) | abs / actual * 100) | round(2) }}
+          {% else -%}
+            0
+          {% endif -%}
+    
+- trigger:
+    - platform: state
+      entity_id: sensor.emhass_grid_linear
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: "Emhass Grid Error Linear"
+      unique_id: emhass_grid_error_linear
+      unit_of_measurement: "W"
+      state_class: measurement
+      state: >
+        {% set actual = states('sensor.huidig_fluvius') | float(0) -%}
+        {% set forecast = states('sensor.emhass_grid_linear') | float(0) -%}
+        {{ (actual - forecast) | abs }}
+
+
+# =============================================================================
+# BESTE MODEL SENSOREN
+# =============================================================================
+
+# BESTE MODEL - 24H
+- trigger:
+    - platform: time_pattern
+      minutes: /30
+  sensor:
+    - name: "Best EMHASS Model Load (24h)"
+      unique_id: best_emhass_model_load_24h
+      state: >
+        {% set errors = {
+          'Ridge': states('sensor.emhass_load_error_ridge_daily_avg') | float(9999),
+          'Lasso': states('sensor.emhass_load_error_lasso_daily_avg') | float(9999),
+          'Linear': states('sensor.emhass_load_error_linear_daily_avg') | float(9999)
+        } -%}
+        {{ errors.items() | selectattr('1', 'equalto', errors.values() | list | min) | map(attribute='0') | first }}
+      attributes:
+        ridge_error: "{{ states('sensor.emhass_load_error_ridge_daily_avg') }}"
+        lasso_error: "{{ states('sensor.emhass_load_error_lasso_daily_avg') }}"
+        linear_error: "{{ states('sensor.emhass_load_error_linear_daily_avg') }}"
+        ranking: >
+          {% set errors = {
+            'Ridge': states('sensor.emhass_load_error_ridge_daily_avg') | float(9999),
+            'Lasso': states('sensor.emhass_load_error_lasso_daily_avg') | float(9999),
+            'Linear': states('sensor.emhass_load_error_linear_daily_avg') | float(9999)
+          } -%}
+          {{ errors | dictsort(by='value') | map(attribute='0') | list }}
+    
+    - name: "Best EMHASS Model Grid (24h)"
+      unique_id: best_emhass_model_grid_24h
+      state: >
+        {% set errors = {
+          'Ridge': states('sensor.emhass_grid_error_ridge_daily_avg') | float(9999),
+          'Lasso': states('sensor.emhass_grid_error_lasso_daily_avg') | float(9999),
+          'Linear': states('sensor.emhass_grid_error_linear_daily_avg') | float(9999)
+        } -%}
+        {{ errors.items() | selectattr('1', 'equalto', errors.values() | list | min) | map(attribute='0') | first }}
+      attributes:
+        ridge_error: "{{ states('sensor.emhass_grid_error_ridge_daily_avg') }}"
+        lasso_error: "{{ states('sensor.emhass_grid_error_lasso_daily_avg') }}"
+        linear_error: "{{ states('sensor.emhass_grid_error_linear_daily_avg') }}"
+        ranking: >
+          {% set errors = {
+            'Ridge': states('sensor.emhass_grid_error_ridge_daily_avg') | float(9999),
+            'Lasso': states('sensor.emhass_grid_error_lasso_daily_avg') | float(9999),
+            'Linear': states('sensor.emhass_grid_error_linear_daily_avg') | float(9999)
+          } -%}
+          {{ errors | dictsort(by='value') | map(attribute='0') | list }}
+
+# BESTE MODEL - 7 DAGEN
+- trigger:
+    - platform: time_pattern
+      hours: /1
+  sensor:
+    - name: "Best EMHASS Model Load (7d)"
+      unique_id: best_emhass_model_load_7d
+      state: >
+        {% set errors = {
+          'Ridge': states('sensor.emhass_load_error_ridge_weekly_avg') | float(9999),
+          'Lasso': states('sensor.emhass_load_error_lasso_weekly_avg') | float(9999),
+          'Linear': states('sensor.emhass_load_error_linear_weekly_avg') | float(9999)
+        } -%}
+        {{ errors.items() | selectattr('1', 'equalto', errors.values() | list | min) | map(attribute='0') | first }}
+      attributes:
+        ridge_error: "{{ states('sensor.emhass_load_error_ridge_weekly_avg') }}"
+        lasso_error: "{{ states('sensor.emhass_load_error_lasso_weekly_avg') }}"
+        linear_error: "{{ states('sensor.emhass_load_error_linear_weekly_avg') }}"
+        ranking: >
+          {% set errors = {
+            'Ridge': states('sensor.emhass_load_error_ridge_weekly_avg') | float(9999),
+            'Lasso': states('sensor.emhass_load_error_lasso_weekly_avg') | float(9999),
+            'Linear': states('sensor.emhass_load_error_linear_weekly_avg') | float(9999)
+          } -%}
+          {{ errors | dictsort(by='value') | map(attribute='0') | list }}
+        improvement_vs_24h: >
+          {% set model_24h = states('sensor.best_emhass_model_load_24h') -%}
+          {% set model_7d = states('sensor.best_emhass_model_load_7d') -%}
+          {% if model_24h == model_7d -%}
+            Consistent winner
+          {% else -%}
+            Different: 24h={{ model_24h }}, 7d={{ model_7d }}
+          {% endif -%}
+    
+    - name: "Best EMHASS Model Grid (7d)"
+      unique_id: best_emhass_model_grid_7d
+      state: >
+        {% set errors = {
+          'Ridge': states('sensor.emhass_grid_error_ridge_weekly_avg') | float(9999),
+          'Lasso': states('sensor.emhass_grid_error_lasso_weekly_avg') | float(9999),
+          'Linear': states('sensor.emhass_grid_error_linear_weekly_avg') | float(9999)
+        } -%}
+        {{ errors.items() | selectattr('1', 'equalto', errors.values() | list | min) | map(attribute='0') | first }}
+      attributes:
+        ridge_error: "{{ states('sensor.emhass_grid_error_ridge_weekly_avg') }}"
+        lasso_error: "{{ states('sensor.emhass_grid_error_lasso_weekly_avg') }}"
+        linear_error: "{{ states('sensor.emhass_grid_error_linear_weekly_avg') }}"
+        ranking: >
+          {% set errors = {
+            'Ridge': states('sensor.emhass_grid_error_ridge_weekly_avg') | float(9999),
+            'Lasso': states('sensor.emhass_grid_error_lasso_weekly_avg') | float(9999),
+            'Linear': states('sensor.emhass_grid_error_linear_weekly_avg') | float(9999)
+          } -%}
+          {{ errors | dictsort(by='value') | map(attribute='0') | list }}
+        improvement_vs_24h: >
+          {% set model_24h = states('sensor.best_emhass_model_grid_24h') -%}
+          {% set model_7d = states('sensor.best_emhass_model_grid_7d') -%}
+          {% if model_24h == model_7d -%}
+            Consistent winner
+          {% else -%}
+            Different: 24h={{ model_24h }}, 7d={{ model_7d }}
+          {% endif -%}

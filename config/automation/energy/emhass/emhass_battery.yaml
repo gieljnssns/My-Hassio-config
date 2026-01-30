@@ -1,0 +1,309 @@
+alias: EMHASS battery
+id: 66809bb1-c454-43a5-899a-c354840b11b6
+trigger:
+  - platform: template
+    value_template: >-
+      {{ now().minute % 5 == 0 and now().second == 30 }}
+  - platform: state
+    entity_id: sensor.p_batt_forecast
+  - platform: time_pattern
+    minutes: /5
+    seconds: 30
+
+condition:
+  # Controleer of EMHASS sensoren beschikbaar zijn
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: sensor.p_batt_forecast
+        state: "unavailable"
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: sensor.emhass_grid_forecast
+        state: "unavailable"
+
+variables:
+  # Zoek de juiste p_batt forecast voor huidige tijd
+  p_batt: >-
+    {% set forecasts = state_attr('sensor.p_batt_forecast', 'battery_scheduled_power') -%}
+    {% set current_timestamp = now() -%}
+    {% set closest_forecast = namespace(value=0, time_diff=86400) -%}
+    {% if forecasts -%}
+      {% for forecast in forecasts -%}
+        {% set forecast_time = strptime(forecast.date, '%Y-%m-%dT%H:%M:%S%z') -%}
+        {% set time_diff = (current_timestamp - forecast_time).total_seconds() | abs -%}
+        {% if time_diff < closest_forecast.time_diff -%}
+          {% set closest_forecast.value = forecast.p_batt_forecast | float -%}
+          {% set closest_forecast.time_diff = time_diff -%}
+        {% endif -%}
+      {% endfor -%}
+    {% endif -%}
+    {{ closest_forecast.value }}
+  
+  # Zoek de juiste p_grid forecast voor huidige tijd  
+  p_grid: >-
+    {% set forecasts = state_attr('sensor.emhass_grid_forecast', 'forecasts') -%}
+    {% set current_timestamp = now() -%}
+    {% set closest_forecast = namespace(value=0, time_diff=86400) -%}
+    {% if forecasts -%}
+      {% for forecast in forecasts -%}
+        {% set forecast_time = strptime(forecast.date, '%Y-%m-%dT%H:%M:%S%z') -%}
+        {% set time_diff = (current_timestamp - forecast_time).total_seconds() | abs -%}
+        {% if time_diff < closest_forecast.time_diff -%}
+          {% set closest_forecast.value = forecast.emhass_grid_forecast | float -%}
+          {% set closest_forecast.time_diff = time_diff -%}
+        {% endif -%}
+      {% endfor -%}
+    {% endif -%}
+    {{ closest_forecast.value }}
+  
+  # Huidige SOC van batterij
+  soc: "{{ states('sensor.battery_state_of_charge') | float(0) }}"
+  
+  # Bepaal EMHASS batterij modus met originele logica
+  emhass_battery_mode: >-
+    {% if p_batt == 'unavailable' or p_grid == 'unavailable' -%}
+      Unknown
+    {% else -%}
+      {% set p_batt_val = p_batt | float(0) -%}
+      {% set p_grid_val = p_grid | float(0) -%}
+      {% set soc_val = soc | float(0) -%}
+      {% if p_grid_val == 0  -%}
+        Follow Grid
+      {% elif p_batt_val == 0 -%}
+        Forcible Discharge
+      {% elif p_batt_val < 0 -%}
+        {% if soc_val >= 95 -%}
+          Idle
+        {% else -%}
+          Forcible Charge
+        {% endif -%}
+      {% elif p_batt_val > 0 -%}
+        {% if soc_val <= 10 -%}
+          Idle
+        {% else -%}
+          Forcible Discharge
+        {% endif -%}
+      {% else -%}
+        Unknown
+      {% endif -%}
+    {% endif -%}
+
+  
+  # Converteer EMHASS mode naar GoodWe modes
+  goodwe_mode: >-
+    {% if emhass_battery_mode == 'Forcible Charge' -%}
+      eco_charge
+    {% elif emhass_battery_mode == 'Forcible Discharge' -%}
+      eco_discharge  
+    {% else -%}
+      general
+    {% endif -%}
+  
+  # Bereken power percentage voor GoodWe (alleen bij force charge/discharge)
+  power_percentage: >-
+    {% set abs_power = (p_batt | float) | abs -%}
+    {% if emhass_battery_mode in ['Forcible Charge', 'Forcible Discharge'] -%}
+      {% if abs_power > 8000 -%}
+        100
+      {% else -%}
+        {{ (abs_power / 80) | round(0) }}
+      {% endif -%}
+    {% else -%}
+      0
+    {% endif -%}
+
+
+action:
+  # Stel GoodWe batterij mode in op basis van EMHASS mode
+  - choose:
+      # FORCIBLE CHARGE
+      - conditions:
+          - condition: template
+            value_template: "{{ emhass_battery_mode == 'Forcible Charge' }}"
+        sequence:
+          # Controleer of mode wijziging nodig is
+          - if:
+              - condition: template
+                value_template: "{{ states('select.goodwe_inverter_operation_mode') != 'eco_charge' }}"
+            then:
+              - service: select.select_option
+                target:
+                  entity_id: select.goodwe_inverter_operation_mode
+                data:
+                  option: "eco_charge"
+          
+          # Controleer of power wijziging nodig is
+          - if:
+              - condition: template
+                value_template: "{{ (states('number.goodwe_eco_mode_power') | float) != (power_percentage | float) }}"
+            then:
+              - service: number.set_value
+                target:
+                  entity_id: number.goodwe_eco_mode_power
+                data:
+                  value: "{{ power_percentage }}"
+      
+      # FORCIBLE DISCHARGE
+      - conditions:
+          - condition: template
+            value_template: "{{ emhass_battery_mode == 'Forcible Discharge' }}"
+        sequence:
+          # Controleer of mode wijziging nodig is
+          - if:
+              - condition: template
+                value_template: "{{ states('select.goodwe_inverter_operation_mode') != 'eco_discharge' }}"
+            then:
+              - service: select.select_option
+                target:
+                  entity_id: select.goodwe_inverter_operation_mode
+                data:
+                  option: "eco_discharge"
+          
+          # Controleer of power wijziging nodig is
+          - if:
+              - condition: template
+                value_template: "{{ (states('number.goodwe_eco_mode_power') | float) != (power_percentage | float) }}"
+            then:
+              - service: number.set_value
+                target:
+                  entity_id: number.goodwe_eco_mode_power
+                data:
+                  value: "{{ power_percentage }}"
+      
+      # FOLLOW GRID / IDLE (general mode)
+      - conditions:
+          - condition: template
+            value_template: "{{ emhass_battery_mode in ['Follow Grid', 'Idle'] }}"
+        sequence:
+          # Controleer of mode wijziging nodig is
+          - if:
+              - condition: template
+                value_template: "{{ states('select.goodwe_inverter_operation_mode') != 'general' }}"
+            then:
+              - service: select.select_option
+                target:
+                  entity_id: select.goodwe_inverter_operation_mode
+                data:
+                  option: "general"
+    
+    default:
+      - service: logbook.log
+        data:
+          name: "EMHASS GoodWe Control"
+          message: "Onbekende EMHASS mode: {{ emhass_battery_mode }}"
+
+mode: single
+
+
+
+# variables:
+#   # Zoek de juiste p_batt forecast voor huidige tijd
+#   p_batt: >-
+#     {% set forecasts = state_attr('sensor.p_batt_forecast', 'battery_scheduled_power') -%}
+#     {% set current_timestamp = now() -%}
+#     {% set closest_forecast = namespace(value=0, time_diff=86400) -%}
+#     {% if forecasts -%}
+#       {% for forecast in forecasts -%}
+#         {% set forecast_time = strptime(forecast.date, '%Y-%m-%dT%H:%M:%S%z') -%}
+#         {% set time_diff = (current_timestamp - forecast_time).total_seconds() | abs -%}
+#         {% if time_diff < closest_forecast.time_diff -%}
+#           {% set closest_forecast.value = forecast.p_batt_forecast | float -%}
+#           {% set closest_forecast.time_diff = time_diff -%}
+#         {% endif -%}
+#       {% endfor -%}
+#     {% endif -%}
+#     {{ closest_forecast.value }}
+#     {% set p_batt = closest_forecast.value %}
+    
+  
+#   # Zoek de juiste p_grid forecast voor huidige tijd  
+#   p_grid: >-
+#     {% set forecasts = state_attr('sensor.emhass_grid_forecast', 'forecasts') -%}
+#     {% set current_timestamp = now() -%}
+#     {% set closest_forecast = namespace(value=0, time_diff=86400) -%}
+#     {% if forecasts -%}
+#       {% for forecast in forecasts -%}
+#         {% set forecast_time = strptime(forecast.date, '%Y-%m-%dT%H:%M:%S%z') -%}
+#         {% set time_diff = (current_timestamp - forecast_time).total_seconds() | abs -%}
+#         {% if time_diff < closest_forecast.time_diff -%}
+#           {% set closest_forecast.value = forecast.emhass_grid_forecast | float -%}
+#           {% set closest_forecast.time_diff = time_diff -%}
+#         {% endif -%}
+#       {% endfor -%}
+#     {% endif -%}
+#     {{ closest_forecast.value }}
+#     {% set p_grid = closest_forecast.value %}
+  
+#   # Huidige SOC van batterij
+#   soc: "{{ states('sensor.battery_state_of_charge') | float(0) }}"
+#   {% set soc = states('sensor.battery_state_of_charge') | float(0) %}
+  
+#   # Bepaal EMHASS batterij modus met originele logica
+#   emhass_battery_mode: >-
+#     {% if p_batt == 'unavailable' or p_grid == 'unavailable' -%}
+#       Unknown
+#     {% else -%}
+#       {% set p_batt_val = p_batt | float(0) -%}
+#       {% set p_grid_val = p_grid | float(0) -%}
+#       {% set soc_val = soc | float(0) -%}
+#       {% if p_batt_val == 0 -%}
+#         Forcible Discharge
+#         {% set emhass_battery_mode = "Forcible Discharge" %}
+#       {% elif p_grid_val == 0  and  p_batt < 0 -%}
+#         Forcible Charge
+#         {% set emhass_battery_mode = "Forcible Charge" %}
+#       {% elif p_grid_val == 0 -%}
+#         Follow Grid
+#         {% set emhass_battery_mode = "Follow Grid" %}
+#       {% elif p_batt_val < 0 -%}
+#         {% if soc_val >= 95 -%}
+#           Idle
+#           {% set emhass_battery_mode = "Idle" %}
+#         {% else -%}
+#           Forcible Charge
+#           {% set emhass_battery_mode = "Forcible Charge" %}
+#         {% endif -%}
+#       {% elif p_batt_val > 0 -%}
+#         {% if soc_val <= 10 -%}
+#           Idle
+#           {% set emhass_battery_mode = "Idle" %}
+#         {% else -%}
+#           Forcible Discharge
+#           {% set emhass_battery_mode = "Forcible Discharge" %}
+#         {% endif -%}
+#       {% else -%}
+#         Unknown
+#         {% set emhass_battery_mode = "Unknown" %}
+#       {% endif -%}
+#     {% endif -%}
+#   # Converteer EMHASS mode naar GoodWe modes
+#   goodwe_mode: >-
+#     {% if emhass_battery_mode == 'Forcible Charge' -%}
+#       eco_charge
+#       {% set goodwe_mode = "eco_charge" %}
+#     {% elif emhass_battery_mode == 'Forcible Discharge' -%}
+#       eco_discharge
+#       {% set goodwe_mode = "eco_discharge" %}
+#     {% else -%}
+#       general
+#       {% set goodwe_mode = "general" %}
+#     {% endif -%}
+  
+#   # Bereken power percentage voor GoodWe (alleen bij force charge/discharge)
+#   power_percentage: >-
+#     {% set abs_power = (p_batt | float) | abs -%}
+#     {% if emhass_battery_mode in ['Forcible Charge', 'Forcible Discharge'] -%}
+#       {% if abs_power > 8000 -%}
+      
+#         100
+#         {% set power_percentage = 100 %}
+#       {% else -%}
+#         {{ (abs_power / 80) | round(0) }}
+#         {% set power_percentage = (abs_power / 80) | round(0) %}
+#       {% endif -%}
+#     {% else -%}
+#       0
+#       {% set power_percentage = 0 %}
+#     {% endif -%}

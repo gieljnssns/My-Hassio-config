@@ -1,0 +1,257 @@
+## emhass_timestep
+naive_mpc_optim:
+  url: http://localhost:5003/action/naive-mpc-optim
+  method: POST
+  timeout: 300
+  content_type: "application/json"
+  payload: "{{ payload }}"
+
+publish_data:
+  url: http://localhost:5003/action/publish-data
+  method: POST
+  timeout: 300
+  content_type: "application/json"
+  payload: >-
+    {
+      "custom_deferrable_forecast_id": [
+        {"entity_id": "sensor.emhass_wasmachien",
+          "unit_of_measurement": "W",
+          "friendly_name": "Emhass wasmachien"},
+        {"entity_id": "sensor.emhass_droogkast",
+          "unit_of_measurement": "W",
+          "friendly_name": "Emhass droogkast"},
+        {"entity_id": "sensor.emhass_afwasmachien",
+          "unit_of_measurement": "W",
+          "friendly_name": "Emhass afwasmachien"},
+        {"entity_id": "sensor.emhass_warmtepompboiler",
+          "unit_of_measurement": "W",
+          "friendly_name": "Emhass warmtepompboiler"},
+        {"entity_id": "sensor.emhass_warmtepomp",
+          "unit_of_measurement": "W",
+          "friendly_name": "Emhass warmtepomp"}],
+      "custom_pv_forecast_id": {
+        "entity_id": "sensor.emhass_pv_forecast",
+        "unit_of_measurement": "W",
+        "friendly_name": "Emhass pv forecast"},
+      "custom_load_forecast_id": {
+        "entity_id": "sensor.emhass_load_forecast",
+        "unit_of_measurement": "W",
+        "friendly_name": "Emhass load forecast"},
+      "custom_grid_forecast_id": {
+        "entity_id": "sensor.emhass_grid_forecast",
+        "unit_of_measurement": "W",
+        "friendly_name": "Emhass grid forecast"},
+      "custom_unit_load_cost_id": {
+        "entity_id": "sensor.emhass_load_cost",
+        "unit_of_measurement": "€/kWh",
+        "friendly_name": "Emhass load cost"},
+      "custom_unit_prod_price_id": {
+        "entity_id": "sensor.emhass_prod_price",
+        "unit_of_measurement": "€/kWh",
+        "friendly_name": "Emhass production price"},
+      "custom_pv_curtailment_id": {
+        "entity_id": "sensor.emhass_curtailment",
+        "unit_of_measurement": "W",
+        "friendly_name": "Emhass curtailment"},
+      "custom_cost_fun_id": {
+        "entity_id": "sensor.emhass_cost_fun_id",
+        "unit_of_measurement": "€",
+        "friendly_name": "Emhass cost"},
+      "custom_optim_status_id": {
+        "entity_id": "sensor.emhass_optim_status",
+        "friendly_name": "Emhass optim status"},
+      "publish_prefix": "{{ prefix }}"
+    }
+    
+# naive_mpc_optim_test:
+#   url: http://192.168.5.21:5000/action/naive-mpc-optim
+#   method: POST
+#   timeout: 300
+#   content_type: "application/json"
+#   payload: "{{ payload }}"
+
+# dayahead_optim:
+#   url: http://localhost:5003/action/dayahead-optim
+#   method: POST
+#   timeout: 300
+#   content_type: "application/json"
+#   payload: >-
+# {
+#   "entity_save": true,
+#   "publish_prefix":"dh_",
+#   "prod_price_forecast": {{
+#     (state_attr('sensor.ecopower_injectieprijzen', 'prijzen')[:288]) | tojson
+#     }},
+#   "load_cost_forecast": {{
+#     (state_attr('sensor.ecopower_afnameprijzen', 'prijzen')[:288]) | tojson
+#     }},
+#   "pv_power_forecast": {{
+#     (state_attr('sensor.pv_power_forecast_list_interpolated', 'list')[:288]) | tojson
+#     }},
+#   "model_type": "load_forecast",
+#   "num_def_loads": 5,
+#   "p_deferrable_nom": [2000, 2000, 1700, 900, 2000],
+#   "def_total_hours": [
+#     {{  (states('sensor.wasmachien_uren')|float * 4) | round(0) / 4 }},
+#     {{  (states('sensor.droogkast_uren')|float * 4) | round(0) / 4 }},
+#     {{  (states('sensor.afwasmachien_uren')|float * 4) | round(0) / 4 }},
+#     {{  (states('sensor.warmtepompboiler_uren')|float * 4) | round(0) / 4}},
+#     {{  (0 |float * 4) | round(0) / 4 }}],
+#   "set_def_constant":[true, true, true, true, true],
+#   "def_start_timestep": [
+#     0,
+#     0,
+#     0,
+#     {% if (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestopt_op")|float(0)) < 1500 -%}
+#       6
+#     {% else -%}
+#       0
+#     {% endif -%},
+#     0],
+#   "def_end_timestep": [
+#     {{  states('sensor.wasmachien_end_timesteps') | int(0) }},
+#     {{  states('sensor.droogkast_end_timesteps') | int(0) }},
+#     {{  states('sensor.afwasmachien_end_timesteps') | int(0) }},
+#     {{  states('sensor.warmtepompboiler_end_timesteps') | int(0) }},
+#     0],
+#   "def_current_state": [
+#     {{  "true" if is_state('input_boolean.emhass_wasmachien', "on") else "false" }},
+#     {{  "true" if is_state('input_boolean.emhass_droogkast', "on") else "false" }},
+#     {{  "true" if is_state('input_boolean.emhass_afwasmachien', "on") else "false" }},
+#     {{  "true" if is_state('binary_sensor.warmtepompboiler_aan', "on") else "false" }},
+#     {{  "true" if is_state('input_boolean.emhass_warmtepomp', "on") else "false" }}]
+# }
+# payload: >-
+#   {
+#     "entity_save": true,
+#     "publish_prefix":"dh_",
+#     "prod_price_forecast": {{
+#       (state_attr('sensor.ecopower_injectieprijzen', 'prijzen')[:96]) | tojson
+#       }},
+#     "load_cost_forecast": {{
+#       (state_attr('sensor.ecopower_afnameprijzen', 'prijzen')[:96]) | tojson
+#       }},
+#     "pv_power_forecast": {{
+#       (state_attr('sensor.pv_power_forecast_list_interpolated', 'list')[:96]) | tojson
+#       }},
+#     "model_type": "load_forecast",
+#     "num_def_loads": 5,
+#     "p_deferrable_nom": [2000, 2000, 1700, 900, 2000],
+#     "def_total_hours": [
+#       {{  (states('sensor.wasmachien_uren')|float * 4) | round(0) / 4 }},
+#       {{  (states('sensor.droogkast_uren')|float * 4) | round(0) / 4 }},
+#       {{  (states('sensor.afwasmachien_uren')|float * 4) | round(0) / 4 }},
+#       {{  (states('sensor.warmtepompboiler_uren')|float * 4) | round(0) / 4}},
+#       {{  (0 |float * 4) | round(0) / 4 }}],
+#     "set_def_constant":[true, true, true, true, true]
+#   }
+# dayahead_optim_test:
+#   url: http://192.168.5.21:5000/action/dayahead-optim
+#   method: POST
+#   timeout: 300
+#   content_type: "application/json"
+#   payload: >-
+#     {
+#       "entity_save": true,
+#       "publish_prefix":"dh_",
+#       "prod_price_forecast": {{
+#         (state_attr('sensor.ecopower_injectieprijzen', 'prijzen')[:288]) | tojson
+#         }},
+#       "load_cost_forecast": {{
+#         (state_attr('sensor.ecopower_afnameprijzen', 'prijzen')[:288]) | tojson
+#         }},
+#       "pv_power_forecast": {{
+#         (state_attr('sensor.pv_power_forecast_list_interpolated', 'list')[:288]) | tojson
+#         }},
+#       "model_type": "load_forecast",
+#       "num_def_loads": 5,
+#       "p_deferrable_nom": [2000, 2000, 1700, 900, 2000],
+#       "def_total_hours": [
+#         {{  (states('sensor.wasmachien_uren')|float * 4) | round(0) / 4 }},
+#         {{  (states('sensor.droogkast_uren')|float * 4) | round(0) / 4 }},
+#         {{  (states('sensor.afwasmachien_uren')|float * 4) | round(0) / 4 }},
+#         {{  (states('sensor.warmtepompboiler_uren')|float * 4) | round(0) / 4}},
+#         {{  (0 |float * 4) | round(0) / 4 }}],
+#       "set_def_constant":[true, true, true, true, true],
+#       "def_start_timestep": [
+#         0,
+#         0,
+#         0,
+#         {% if (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestopt_op")|float(0)) < 1500 -%}
+#           6
+#         {% else -%}
+#           0
+#         {% endif -%},
+#         0],
+#       "def_end_timestep": [
+#         {{  states('sensor.wasmachien_end_timesteps') | int(0) }},
+#         {{  states('sensor.droogkast_end_timesteps') | int(0) }},
+#         {{  states('sensor.afwasmachien_end_timesteps') | int(0) }},
+#         {{  states('sensor.warmtepompboiler_end_timesteps') | int(0) }},
+#         0],
+#       "def_current_state": [
+#         {{  "true" if is_state('input_boolean.emhass_wasmachien', "on") else "false" }},
+#         {{  "true" if is_state('input_boolean.emhass_droogkast', "on") else "false" }},
+#         {{  "true" if is_state('input_boolean.emhass_afwasmachien', "on") else "false" }},
+#         {{  "true" if is_state('binary_sensor.warmtepompboiler_aan', "on") else "false" }},
+#         {{  "true" if is_state('input_boolean.emhass_warmtepomp', "on") else "false" }}]
+#     }
+
+
+
+# publish_data_test:
+#   url: http://192.168.5.21:5000/action/publish-data
+#   method: POST
+#   timeout: 300
+#   content_type: "application/json"
+#   payload: >-
+#     {
+#       "custom_deferrable_forecast_id": [
+#         {"entity_id": "sensor.emhass_wasmachien_{{ model_suffix }}",
+#           "unit_of_measurement": "W",
+#           "friendly_name": "Emhass wasmachien {{ model_suffix }}"},
+#         {"entity_id": "sensor.emhass_droogkast_{{ model_suffix }}",
+#           "unit_of_measurement": "W",
+#           "friendly_name": "Emhass droogkast {{ model_suffix }}"},
+#         {"entity_id": "sensor.emhass_afwasmachien_{{ model_suffix }}",
+#           "unit_of_measurement": "W",
+#           "friendly_name": "Emhass afwasmachien {{ model_suffix }}"},
+#         {"entity_id": "sensor.emhass_warmtepompboiler_{{ model_suffix }}",
+#           "unit_of_measurement": "W",
+#           "friendly_name": "Emhass warmtepompboiler {{ model_suffix }}"},
+#         {"entity_id": "sensor.emhass_warmtepomp_{{ model_suffix }}",
+#           "unit_of_measurement": "W",
+#           "friendly_name": "Emhass warmtepomp {{ model_suffix }}"}],
+#       "custom_pv_forecast_id": {
+#         "entity_id": "sensor.emhass_pv_forecast_{{ model_suffix }}",
+#         "unit_of_measurement": "W",
+#         "friendly_name": "Emhass pv forecast {{ model_suffix }}"},
+#       "custom_load_forecast_id": {
+#         "entity_id": "sensor.emhass_load_forecast_{{ model_suffix }}",
+#         "unit_of_measurement": "W",
+#         "friendly_name": "Emhass load forecast {{ model_suffix }}"},
+#       "custom_grid_forecast_id": {
+#         "entity_id": "sensor.emhass_grid_forecast_{{ model_suffix }}",
+#         "unit_of_measurement": "W",
+#         "friendly_name": "Emhass grid forecast {{ model_suffix }}"},
+#       "custom_unit_load_cost_id": {
+#         "entity_id": "sensor.emhass_load_cost_{{ model_suffix }}",
+#         "unit_of_measurement": "€/kWh",
+#         "friendly_name": "Emhass load cost {{ model_suffix }}"},
+#       "custom_unit_prod_price_id": {
+#         "entity_id": "sensor.emhass_prod_price_{{ model_suffix }}",
+#         "unit_of_measurement": "€/kWh",
+#         "friendly_name": "Emhass production price {{ model_suffix }}"},
+#       "custom_pv_curtailment_id": {
+#         "entity_id": "sensor.emhass_curtailment_{{ model_suffix }}",
+#         "unit_of_measurement": "W",
+#         "friendly_name": "Emhass curtailment {{ model_suffix }}"},
+#       "custom_cost_fun_id": {
+#         "entity_id": "sensor.emhass_cost_fun_id_{{ model_suffix }}",
+#         "unit_of_measurement": "€",
+#         "friendly_name": "Emhass cost {{ model_suffix }}"},
+#       "custom_optim_status_id": {
+#         "entity_id": "sensor.emhass_optim_status_{{ model_suffix }}",
+#         "friendly_name": "Emhass optim status {{ model_suffix }}"},
+#       "publish_prefix": ""
+#     }

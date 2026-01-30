@@ -1,0 +1,43 @@
+alias: EMHASS infesable
+id: f0644c64-883d-48d9-9890-bef1538677e3
+description: battery to general
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.emhass_status
+    from: "off"
+    to: "on"
+    id: infesable
+    
+  - trigger: state
+    entity_id: binary_sensor.emhass_status
+    to: "off"
+    from: "on"
+    id: Optimal
+    
+conditions: []
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id:
+              - infesable
+        sequence:
+          - action: notify.mobile_app_gphone
+            data:
+              title: EMHASS
+              message: System has become infeasible
+          - action: select.select_option
+            target:
+              entity_id: select.goodwe_inverter_operation_mode
+            data:
+              option: "general"
+      - conditions:
+          - condition: trigger
+            id: Optimal
+        sequence:
+          - action: notify.mobile_app_gphone
+            data:
+              title: EMHASS
+              message: System has become optimal
+mode: parallel
+max: 10

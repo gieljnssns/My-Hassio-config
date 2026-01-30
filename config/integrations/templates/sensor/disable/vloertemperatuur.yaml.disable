@@ -1,0 +1,340 @@
+- sensor:
+    - name: "Vloer Temperatuur Dynamisch"
+      unique_id: vloer_temperatuur_dynamisch
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      state: >
+        {% set heen = float(states('sensor.vloerverwarming_heen'), 0) -%}
+        {% set terug = float(states('sensor.vloerverwarming_terug'), 0) -%}
+        {% set kamer = float(states('sensor.gemiddelde_temp_beneden'), 0) -%}
+        {% set buiten = float(states('sensor.buiten_temperatuur'), 0) -%}
+        {% set pomp_aan = is_state('switch.vloerverwarming', 'on') -%}
+        {% set warmtepomp_aan = is_state('binary_sensor.warmtepomp_aan', 'on') -%}
+        
+        {# Haal delta_t op -#}
+        {% if states('sensor.vloerverwarming_delta_t') not in ['unknown', 'unavailable'] -%}
+          {% set delta_t = float(states('sensor.vloerverwarming_delta_t'), 0) -%}
+        {% else -%}
+          {% set delta_t = heen - terug -%}
+        {% endif -%}
+        
+        {# Fysische constanten voor 6cm chape, 80m2 -#}
+        {% set chape_dikte = 0.06 -%}  {# meter -#}
+        {% set oppervlakte = 80 -%}  {# m2 -#}
+        {% set volume = oppervlakte * chape_dikte -%}  {# 4.8 m3 -#}
+        {% set dichtheid_beton = 2300 -%}  {# kg/m3 -#}
+        {% set warmtecapaciteit = 880 -%}  {# J/(kg·K) -#}
+        {% set massa = volume * dichtheid_beton -%}  {# ~11040 kg -#}
+        {% set thermische_massa_MJ = massa * warmtecapaciteit / 1000000 -%}  {# 9.7 MJ/K -#}
+        
+        {# Warmteoverdracht coëfficiënten -#}
+        {% set h_vloer_lucht = 8 -%}  {# W/(m2·K) - convectie + straling naar kamer -#}
+        {% set h_water_chape = 200 -%}  {# W/(m2·K) - overdracht water naar chape -#}
+        
+        {# Watertemperatuur en vermogen -#}
+        {% set water_temp = (heen + terug) / 2 -%}
+        {% set debiet_kg_s = 1.0 * 1000 / 3600 -%}  {# 1 m3/h = 0.278 kg/s -#}
+        {% set cp_water = 4186 -%}  {# J/(kg·K) -#}
+        
+        {# Bereken thermisch vermogen van water naar vloer -#}
+        {% if pomp_aan and delta_t > 0.1 -%}
+          {% set Q_water_W = debiet_kg_s * cp_water * delta_t -%}  {# Watt -#}
+        {% else -%}
+          {% set Q_water_W = 0 -%}
+        {% endif -%}
+        
+        {# Schat huidige vloertemperatuur op basis van energiebalans en thermische massa -#}
+        {% if pomp_aan and delta_t > 0.5 -%}
+          {# ACTIEF VERWARMEN - Dynamische energiebalans -#}
+          {# dT/dt = (Q_in - Q_uit) / (massa × cp) -#}
+          {# Bij evenwicht (dT/dt = 0): Q_in = Q_uit -#}
+          {# Q_uit = h × A × (T_vloer - T_kamer) -#}
+          {# Dus: T_vloer_evenwicht = T_kamer + Q_in / (h × A) -#}
+          
+          {% set Q_uit_coeff = h_vloer_lucht * oppervlakte -%}  {# W/K -#}
+          {% set delta_T_evenwicht = Q_water_W / Q_uit_coeff -%}
+          {% set T_vloer_evenwicht = kamer + delta_T_evenwicht -%}
+          
+          {# Bereken opwarmsnelheid: dT/dt = Q_netto / (m × cp) -#}
+          {# Schat huidige T_vloer door iteratief te berekenen -#}
+          {# Start met aanname dat vloer nog niet op evenwicht is -#}
+          {% set T_vloer_schatting = (water_temp + T_vloer_evenwicht) / 2 -%}
+          {% set Q_uit_nu = Q_uit_coeff * (T_vloer_schatting - kamer) -%}
+          {% set Q_netto = Q_water_W - Q_uit_nu -%}
+          
+          {# Als Q_netto > 0: vloer warmt nog op -#}
+          {# Als Q_netto ≈ 0: vloer op evenwicht -#}
+          {# Als Q_netto < 0: onmogelijk, gebruik evenwicht -#}
+          
+          {% if Q_netto > 100 -%}
+            {# Nog aan het opwarmen, schat tussen huidige water temp en evenwicht -#}
+            {% set tau_seconden = thermische_massa_MJ * 1000000 / Q_uit_coeff -%}
+            {% set tau_uren = tau_seconden / 3600 -%}
+            {# Schatting: na 1 tau bereikt ~63% van evenwicht vanaf start -#}
+            {# Gebruik 70% van verschil tussen kamer en evenwicht als praktische schatting -#}
+            {% set T_vloer = kamer + delta_T_evenwicht * 0.70 -%}
+          {% else -%}
+            {# Bijna of op evenwicht -#}
+            {% set T_vloer = T_vloer_evenwicht -%}
+          {% endif -%}
+          
+          {# Limiet: vloer kan niet warmer zijn dan watertemperatuur -#}
+          {% if T_vloer > water_temp -%}
+            {% set T_vloer = water_temp * 0.90 -%}
+          {% endif -%}
+          
+          {{ T_vloer | round(1) }}
+          
+        {% elif pomp_aan and delta_t > 0.1 -%}
+          {# CIRCULEREN MET WEINIG VERWARMING -#}
+          {# Kleine Q_in, vloer benadert langzaam watertemperatuur -#}
+          {% set Q_uit_coeff = h_vloer_lucht * oppervlakte -%}
+          {% set delta_T_evenwicht = Q_water_W / Q_uit_coeff -%}
+          {% set T_vloer_evenwicht = kamer + delta_T_evenwicht -%}
+          
+          {# Gewogen gemiddelde tussen water en evenwicht -#}
+          {% set T_vloer = T_vloer_evenwicht * 0.6 + water_temp * 0.4 -%}
+          {{ T_vloer | round(1) }}
+          
+        {% elif pomp_aan -%}
+          {# STAND-BY: pomp draait maar geen delta_t -#}
+          {# Geen netto warmte-input, vloer in evenwicht met omgeving -#}
+          {# Maar door thermische massa nog iets warmer dan kamer -#}
+          {% set T_vloer = kamer + 0.5 -%}
+          {{ T_vloer | round(1) }}
+          
+        {% else -%}
+          {# SYSTEEM UIT: exponentiële afkoeling met thermische massa -#}
+          {# dT/dt = -h×A×(T_vloer - T_kamer) / (m × cp) -#}
+          {# Oplossing: T(t) = T_kamer + (T_start - T_kamer) × e^(-t/tau) -#}
+          {# tau = (m × cp) / (h × A) -#}
+          
+          {% set tau_seconden = thermische_massa_MJ * 1000000 / (h_vloer_lucht * oppervlakte) -%}
+          {% set tau_uren = tau_seconden / 3600 -%}  {# ~3.4 uur voor deze vloer -#}
+          
+          {# Schat hoe lang systeem al uit is (onbekend in template) -#}
+          {# Conservatieve aanname: 30-60 minuten uit -#}
+          {% set tijd_uit_uren = 0.75 -%}  {# 45 minuten schatting -#}
+          {% set afkoel_factor = 2.71828 ** (-tijd_uit_uren / tau_uren) -%}  {# e^(-t/tau) -#}
+          
+          {# T_start schatting: laatste watertemperatuur + offset -#}
+          {% set T_start_schatting = water_temp + 2 -%}
+          {% set T_vloer = kamer + (T_start_schatting - kamer) * afkoel_factor -%}
+          
+          {# Praktische limieten -#}
+          {% if T_vloer < kamer -%}
+            {% set T_vloer = kamer + 0.1 -%}
+          {% elif T_vloer > water_temp + 3 -%}
+            {% set T_vloer = water_temp + 2 -%}
+          {% endif -%}
+          
+          {{ T_vloer | round(1) }}
+        {% endif -%}
+      
+      attributes:
+        delta_t: >
+          {% if states('sensor.vloerverwarming_delta_t') not in ['unknown', 'unavailable'] -%}
+            {{ float(states('sensor.vloerverwarming_delta_t'), 0) | round(2) }}
+          {% else -%}
+            {{ (float(states('sensor.vloerverwarming_heen'), 0) - float(states('sensor.vloerverwarming_terug'), 0)) | round(2) }}
+          {% endif -%}
+        
+        thermisch_vermogen_naar_vloer_kW: >
+          {% set heen = float(states('sensor.vloerverwarming_heen'), 0) -%}
+          {% set terug = float(states('sensor.vloerverwarming_terug'), 0) -%}
+          {% if states('sensor.vloerverwarming_delta_t') not in ['unknown', 'unavailable'] -%}
+            {% set delta_t = float(states('sensor.vloerverwarming_delta_t'), 0) -%}
+          {% else -%}
+            {% set delta_t = heen - terug -%}
+          {% endif -%}
+          {% set pomp_aan = is_state('switch.vloerverwarming', 'on') -%}
+          {% if pomp_aan and delta_t > 0.1 -%}
+            {% set debiet_kg_s = 1.0 * 1000 / 3600 -%}
+            {% set Q_kW = (debiet_kg_s * 4.186 * delta_t) -%}
+            {{ Q_kW | round(2) }}
+          {% else -%}
+            0
+          {% endif -%}
+        
+        warmteverlies_naar_kamer_kW: >
+          {% set kamer = float(states('sensor.gemiddelde_temp_beneden'), 0) -%}
+          {% set vloer = float(states('sensor.vloer_temperatuur_dynamisch'), kamer + 1) -%}
+          {% set h = 8 -%}  {# W/(m2·K) -#}
+          {% set A = 80 -%}  {# m2 -#}
+          {% set Q_verlies_W = h * A * (vloer - kamer) -%}
+          {{ (Q_verlies_W / 1000) | round(2) }}
+        
+        thermische_massa_MJ_K: >
+          {{ (80 * 0.06 * 2300 * 880 / 1000000) | round(2) }}
+        
+        thermische_tijdconstante_uren: >
+          {# tau = (m × cp) / (h × A) -#}
+          {% set massa = 80 * 0.06 * 2300 -%}
+          {% set cp = 880 -%}
+          {% set h = 8 -%}
+          {% set A = 80 -%}
+          {% set tau_sec = (massa * cp) / (h * A) -%}
+          {{ (tau_sec / 3600) | round(1) }}
+        
+        warmtepomp_verbruik_W: >
+          {{ float(states('sensor.warmtepomp_huidig_verbruik'), 0) | round(0) }}
+        
+        warmtepomp_actief: >
+          {{ float(states('sensor.warmtepomp_huidig_verbruik'), 0) > 100 }}
+        
+        water_temperatuur: >
+          {{ ((float(states('sensor.vloerverwarming_heen'), 0) + float(states('sensor.vloerverwarming_terug'), 0)) / 2) | round(1) }}
+        
+        status: >
+          {% set pomp_aan = is_state('switch.vloerverwarming', 'on') -%}
+          {% set warmtepomp_aan = is_state('binary_sensor.warmtepomp_aan', 'on') -%}
+          {% if states('sensor.vloerverwarming_delta_t') not in ['unknown', 'unavailable'] -%}
+            {% set delta_t = float(states('sensor.vloerverwarming_delta_t'), 0) -%}
+          {% else -%}
+            {% set delta_t = float(states('sensor.vloerverwarming_heen'), 0) - float(states('sensor.vloerverwarming_terug'), 0) -%}
+          {% endif -%}
+          {% set verbruik_W = float(states('sensor.warmtepomp_huidig_verbruik'), 0) -%}
+          {% if pomp_aan and warmtepomp_aan and delta_t > 0.5 and verbruik_W > 500 -%}
+            Actief verwarmen
+          {% elif pomp_aan and delta_t > 0.1 -%}
+            Circuleren
+          {% elif pomp_aan -%}
+            Stand-by
+          {% elif verbruik_W > 100 -%}
+            Warmtepomp voorverwarmen
+          {% else -%}
+            Uit (afkoelend)
+          {% endif -%}
+        
+        energiebalans: >
+          {% set Q_in = float(state_attr('sensor.vloer_temperatuur_dynamisch', 'thermisch_vermogen_naar_vloer_kW') or 0) -%}
+          {% set Q_uit = float(state_attr('sensor.vloer_temperatuur_dynamisch', 'warmteverlies_naar_kamer_kW') or 0) -%}
+          {% set balans = Q_in - Q_uit -%}
+          {{ balans | round(2) }}
+        
+        energiebalans_eenheid: "kW"
+        
+        energiebalans_interpretatie: >
+          {% set Q_in = float(state_attr('sensor.vloer_temperatuur_dynamisch', 'thermisch_vermogen_naar_vloer_kW') or 0) -%}
+          {% set Q_uit = float(state_attr('sensor.vloer_temperatuur_dynamisch', 'warmteverlies_naar_kamer_kW') or 0) -%}
+          {% set balans = Q_in - Q_uit -%}
+          {% if balans > 0.5 -%}
+            Vloer warmt op
+          {% elif balans < -0.5 -%}
+            Vloer koelt af
+          {% else -%}
+            Thermisch evenwicht
+          {% endif -%}
+
+    - name: "Vloer Temperatuur Oppervlak"
+      unique_id: vloer_temperatuur_oppervlak
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      state: >
+        {% set heen = float(states('sensor.vloerverwarming_heen'), 0) -%}
+        {% set terug = float(states('sensor.vloerverwarming_terug'), 0) -%}
+        {% set kamer = float(states('sensor.gemiddelde_temp_beneden'), 0) -%}
+        {% set pomp_aan = is_state('switch.vloerverwarming', 'on') -%}
+        {% if states('sensor.vloerverwarming_delta_t') not in ['unknown', 'unavailable'] -%}
+          {% set delta_t = float(states('sensor.vloerverwarming_delta_t'), 0) -%}
+        {% else -%}
+          {% set delta_t = heen - terug -%}
+        {% endif -%}
+        {% set water_temp = (heen + terug) / 2 -%}
+        
+        {% if pomp_aan and delta_t > 0.5 -%}
+          {# Temperatuurgradiënt door chape: oppervlak is koeler dan gemiddelde -#}
+          {% set vloer_gemiddeld = float(states('sensor.vloer_temperatuur_dynamisch'), kamer + 2) -%}
+          {% set T_oppervlak = vloer_gemiddeld - 1.5 -%}
+          {{ T_oppervlak | round(1) }}
+        {% elif pomp_aan -%}
+          {{ (kamer + 1.0) | round(1) }}
+        {% else -%}
+          {{ (kamer + 0.2) | round(1) }}
+        {% endif -%}
+
+    - name: "Warmtepomp COP Real-time"
+      unique_id: warmtepomp_cop_realtime
+      state_class: measurement
+      state: >
+        {% set heen = float(states('sensor.vloerverwarming_heen'), 0) -%}
+        {% set terug = float(states('sensor.vloerverwarming_terug'), 0) -%}
+        {% if states('sensor.vloerverwarming_delta_t') not in ['unknown', 'unavailable'] -%}
+          {% set delta_t = float(states('sensor.vloerverwarming_delta_t'), 0) -%}
+        {% else -%}
+          {% set delta_t = heen - terug -%}
+        {% endif -%}
+        {% set verbruik_W = float(states('sensor.warmtepomp_huidig_verbruik'), 0) -%}
+        {% set pomp_aan = is_state('switch.vloerverwarming', 'on') -%}
+        
+        {% if pomp_aan and delta_t > 0.1 and verbruik_W > 100 -%}
+          {% set debiet_kg_s = 1.0 * 1000 / 3600 -%}
+          {% set thermisch_vermogen_W = debiet_kg_s * 4186 * delta_t -%}
+          {% set cop = thermisch_vermogen_W / verbruik_W -%}
+          {{ cop | round(2) }}
+        {% else -%}
+          0
+        {% endif -%}
+      
+      attributes:
+        thermisch_vermogen_kW: >
+          {% set heen = float(states('sensor.vloerverwarming_heen'), 0) -%}
+          {% set terug = float(states('sensor.vloerverwarming_terug'), 0) -%}
+          {% if states('sensor.vloerverwarming_delta_t') not in ['unknown', 'unavailable'] -%}
+            {% set delta_t = float(states('sensor.vloerverwarming_delta_t'), 0) -%}
+          {% else -%}
+            {% set delta_t = heen - terug -%}
+          {% endif -%}
+          {% set pomp_aan = is_state('switch.vloerverwarming', 'on') -%}
+          {% if pomp_aan and delta_t > 0.1 -%}
+            {% set debiet_kg_s = 1.0 * 1000 / 3600 -%}
+            {{ (debiet_kg_s * 4.186 * delta_t) | round(2) }}
+          {% else -%}
+            0
+          {% endif -%}
+        
+        elektrisch_verbruik_kW: >
+          {{ (float(states('sensor.warmtepomp_huidig_verbruik'), 0) / 1000) | round(2) }}
+        
+        efficiency_rating: >
+          {% set heen = float(states('sensor.vloerverwarming_heen'), 0) -%}
+          {% set terug = float(states('sensor.vloerverwarming_terug'), 0) -%}
+          {% if states('sensor.vloerverwarming_delta_t') not in ['unknown', 'unavailable'] -%}
+            {% set delta_t = float(states('sensor.vloerverwarming_delta_t'), 0) -%}
+          {% else -%}
+            {% set delta_t = heen - terug -%}
+          {% endif -%}
+          {% set verbruik_W = float(states('sensor.warmtepomp_huidig_verbruik'), 0) -%}
+          {% set pomp_aan = is_state('switch.vloerverwarming', 'on') -%}
+          {% if pomp_aan and delta_t > 0.1 and verbruik_W > 100 -%}
+            {% set debiet_kg_s = 1.0 * 1000 / 3600 -%}
+            {% set thermisch_vermogen_W = debiet_kg_s * 4186 * delta_t -%}
+            {% set cop = thermisch_vermogen_W / verbruik_W -%}
+            {% if cop > 4.5 -%}
+              Uitstekend
+            {% elif cop > 3.5 -%}
+              Goed
+            {% elif cop > 2.5 -%}
+              Redelijk
+            {% elif cop > 1.5 -%}
+              Matig
+            {% else -%}
+              Laag
+            {% endif -%}
+          {% else -%}
+            Niet actief
+          {% endif -%}
+        
+        buitentemperatuur_invloed: >
+          {% set buiten = float(states('sensor.buiten_temperatuur'), 0) -%}
+          {% if buiten > 10 -%}
+            Gunstig voor hoge COP
+          {% elif buiten > 0 -%}
+            Normaal
+          {% elif buiten > -5 -%}
+            Matig (lagere COP verwacht)
+          {% else -%}
+            Uitdagend (lage COP verwacht)
+          {% endif -%}

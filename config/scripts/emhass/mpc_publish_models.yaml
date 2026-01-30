@@ -1,0 +1,45 @@
+emhass_mpc_publish_models:
+  alias: EMHASS mpc publish models
+  mode: single
+  sequence:
+    # --- RIDGE ---
+    - action: rest_command.naive_mpc_optim
+      data:
+        payload: >
+          {{ state_attr("sensor.emhass_mpc", "mpc")
+              | replace('"model_type": "load_forecast"',
+                        '"model_type": "load_forecast_ridge"')
+              | replace('"publish_prefix": ""',
+                        '"publish_prefix": "ridge_"') }}
+    - delay: "00:00:03"
+    - action: rest_command.publish_data
+      data:
+        prefix: "ridge_"
+    - delay: "00:00:05"
+    # --- LASSO ---
+    - action: rest_command.naive_mpc_optim
+      data:
+        payload: >
+          {{ state_attr("sensor.emhass_mpc", "mpc")
+              | replace('"model_type": "load_forecast"',
+                        '"model_type": "load_forecast_lasso"')
+              | replace('"publish_prefix": ""',
+                        '"publish_prefix": "lasso_"') }}
+    - delay: "00:00:03"
+    - action: rest_command.publish_data
+      data:
+        prefix: "lasso_"
+    - delay: "00:00:05"
+    # --- LINEAR ---
+    - action: rest_command.naive_mpc_optim
+      data:
+        payload: >
+          {{ state_attr("sensor.emhass_mpc", "mpc")
+              | replace('"model_type": "load_forecast"',
+                        '"model_type": "load_forecast_linear"')
+              | replace('"publish_prefix": ""',
+                        '"publish_prefix": "linear_"') }}
+    - delay: "00:00:03"
+    - action: rest_command.publish_data
+      data:
+        prefix: "linear_"

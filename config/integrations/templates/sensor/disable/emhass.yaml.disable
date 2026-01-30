@@ -123,6 +123,31 @@
           {% set prices = ns.z[start:start + 288] -%}
           {{ prices | map('float') | map('multiply', factor_C) | map('add', factor_D) | map('round', 5) | list }}
     
+    - name: "Price list length"
+      unique_id: 3ac05511-a002-4d3a-b104-2d57ada50d07
+      unit_of_measurement: "st"
+      state: >
+        {% set today = now().strftime('%Y-%m-%d') -%}
+        {% set tomorrow = (now().timestamp() + 86400) | timestamp_custom('%Y-%m-%d') -%}
+        {% set quarter_index = (now().minute // 5) -%}
+        {% set current_hour = now().hour -%}
+        {% set today_prices = (state_attr('sensor.average_electricity_price', 'prices')
+            | selectattr('time', 'search', today)
+            | map(attribute='price')
+            | list)[current_hour:] -%}
+        {% set tomorrow_prices = (state_attr('sensor.average_electricity_price', 'prices')
+            | selectattr('time', 'search', tomorrow)
+            | map(attribute='price')
+            | list) -%}
+        {% set all_prices = today_prices + tomorrow_prices -%}
+        {% set ns = namespace(z=[]) -%}
+        {% for price in all_prices -%}
+          {% set ns.z = ns.z + [price] * 12 -%}
+        {% endfor -%}
+        {% set start = quarter_index -%}
+        {% set prices = ns.z[start:] -%}
+        {{ prices | length }}
+    
     - name: "Wasmachien uren"
       unique_id: c7278411-c766-4fcd-81ea-0604db1b1f76
       unit_of_measurement: "uur"
@@ -320,14 +345,18 @@
         {% if states("input_boolean.warm_water_starten") == 'on' -%}
             {% if states("input_boolean.op_verlof") == 'off' -%}
               {% if (states("sensor.open_meteo_voorspelling_resterend_vandaag") | float(0)) > 2 -%}
-                {% set hours = max(0, (51 - temp) / 5) -%}
+                {% set hours = (max(0, (51 - temp) / 5) * 4) | round(0) / 4 -%}
               {% else -%}
-                {% set hours = max(0, (50 - temp) / 5) -%}
+                {% set hours = (max(0, (50 - temp) / 5) * 4) | round(0) / 4 -%}
               {% endif -%}
             {% else -%}
-              {% set hours = max(0, (46 - temp) / 5) -%}
+              {% set hours = (max(0, (46 - temp) / 5) * 4) | round(0) / 4 -%}
             {% endif -%}
-          {{ (hours|float * 4) | round(0) / 4 }}
+            {% if is_state("binary_sensor.warmtepompboiler_aan", "on") -%}
+              {{ hours }}
+            {% else -%}
+              {{ hours if hours >= 1 else 0 }}
+            {% endif -%}
         {% else -%}
           0
         {% endif -%}
@@ -604,7 +633,10 @@
               {{  "true" if is_state('input_boolean.emhass_droogkast', "on") else "false" }}, 
               {{  "true" if is_state('input_boolean.emhass_afwasmachien', "on") else "false" }}, 
               {{  "true" if is_state('binary_sensor.warmtepompboiler_aan', "on") else "false" }}, 
-              {{  "true" if is_state('input_boolean.emhass_warmtepomp', "on") else "false" }}]
+              {{  "true" if is_state('input_boolean.emhass_warmtepomp', "on") else "false" }}],
+            "soc_init": {{ states("sensor.battery_state_of_charge") | float(0) / 100 }},
+            "soc_final": 0.5,
+            "Pc_max": 7000
           }
 # ,
 #             "soc_init": {{ states("sensor.battery_state_of_charge") | float(0) / 100 }},
@@ -631,6 +663,75 @@
         {% set days = count_the_days("2025-07-16 00:00:00") | int(0) -%}
         {{ (days * -1) - 1 }}
     
+    - name: Dynamische maximum laadvermogen batterij
+      unique_id: 61f8749c-834a-4dbe-b43d-fd516d4d5575
+      unit_of_measurement: W
+      state: >
+        {% set pv_power = states('sensor.huidige_opbrengst') | float(0) -%}
+        {% set house_load = states('sensor.huidig_verbruik') | float(0) -%}
+        {% set max_grid_import = 3000 -%}
+        {% set max_battery_power = 8000 -%}
+        {% set available_pv = pv_power - house_load -%}
+        {% set max_charge_power = available_pv + max_grid_import -%}
+        {% if max_charge_power > max_battery_power -%}
+          {{ max_battery_power }}
+        {% elif max_charge_power < 0 -%}
+          0
+        {% else -%}
+          {{ max_charge_power | round(0) }}
+        {% endif -%}
+    
+    - name: Soc final
+      unique_id: 688b6bb9-f43d-4c15-b4b5-6b951525da9b
+      state: >
+        {% set tomorrow_pv_forecast = (states('sensor.open_meteo_voorspelling_morgen') | float(0) + states("sensor.solcast_solaredge_forecast_tomorrow") | float ) / 2 -%}
+          {% set tomorrow_max_temp = states('sensor.maximum_temperatuur_morgen') -%}
+          {% if tomorrow_max_temp != 'unknown' and tomorrow_max_temp != 'unavailable' -%}
+            {% set weather_data = state_attr('sensor.weather_forecast_daily', 'forecast') -%}
+            {% if weather_data and weather_data|length > 0 -%}
+              {% set tomorrow_temp = weather_data[0].temperature | float(15) -%}
+            {% else -%}
+              {% set tomorrow_temp = states('sensor.openweathermap_forecast_temperature') | float(15) -%}
+            {% endif -%}
+          {% else -%}
+            {% set tomorrow_temp = 15 -%}
+          {% endif -%}
+          {% if tomorrow_pv_forecast > 33 -%}
+            {% set pv_category = 'hoog' -%}
+          {% elif tomorrow_pv_forecast > 18 -%}
+            {% set pv_category = 'medium' -%}
+          {% else -%}
+            {% set pv_category = 'laag' -%}
+          {% endif -%}
+          {% if tomorrow_temp > 20 -%}
+            {% set temp_category = 'warm' -%}
+          {% elif tomorrow_temp > 10 -%}
+            {% set temp_category = 'mild' -%}
+          {% else -%}
+            {% set temp_category = 'koud' -%}
+          {% endif -%}
+          {# Beslissingslogica voor final SOC #}
+          {% if pv_category == 'hoog' and temp_category in ['warm', 'mild'] -%}
+            {# Veel zon morgen + niet koud = lage SOC, ruimte voor PV opslag #}
+            {{ 0.85 }}
+          {% elif pv_category == 'hoog' and temp_category == 'koud' -%}
+            {# Veel zon + koud = medium SOC, balans tussen PV en warmtepomp #}
+            {{ 0.45 }}
+          {% elif pv_category == 'medium' and temp_category == 'warm' -%}
+            {# Medium zon + warm = lage SOC #}
+            {{ 0.55 }}
+          {% elif pv_category == 'medium' and temp_category in ['mild', 'koud'] -%}
+            {# Medium zon + koud = medium-hoge SOC voor warmtepomp #}
+            {{ 0.25 }}
+          {% elif pv_category == 'laag' and temp_category in ['warm', 'mild'] -%}
+            {# Weinig zon + niet zo koud = medium SOC #}
+            {{ 0.35 }}
+          {% elif pv_category == 'laag' and temp_category == 'koud' -%}
+            {# Weinig zon + koud = hoge SOC, veel energie voor warmtepomp #}
+            {{ 0.15 }}
+          {% else -%}
+            {{ 0.50 }}
+          {% endif -%}
 
     - name: Solcast pv list
       unique_id: 51dacdf6-b9c7-4497-b4c0-25fb2ac5c11c

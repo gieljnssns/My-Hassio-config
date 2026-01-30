@@ -1,0 +1,22 @@
+emhass_fit_tune_model:
+  alias: "EMHASS: Fit&tune Model"
+  sequence:
+    # Fit: Ridge
+    - action: rest_command.forecast_model_fit_load_zonder_wp
+      data:
+        model_type: "load_forecast"
+        model: "RidgeRegression"
+        lags: 348
+        split: "864h"
+        days: >
+          {{ states("sensor.days_to_retrieve")}}
+    - delay:
+        seconds: 5
+    
+    # # Tune: Ridge
+    # - action: rest_command.forecast_model_tune_load_zonder_wp
+    #   data:
+    #     model_type: "load_forecast"
+    #     n_trials: 40
+
+

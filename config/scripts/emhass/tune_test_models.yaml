@@ -1,0 +1,32 @@
+emhass_tune_test_models:
+  alias: "EMHASS: Tune Models"
+  sequence:
+    # Test 1: ElasticNet
+    # - action: rest_command.forecast_model_tune_load_zonder_wp_test
+    #   data:
+    #     model_type: "load_forecast_elasticnet"
+    # - delay:
+    #     seconds: 5
+    
+    # Test 2: LinearRegression
+    - action: rest_command.forecast_model_tune_load_zonder_wp_test
+      data:
+        model_type: "load_forecast_linear"
+        n_trials: 40
+    - delay:
+        seconds: 5
+    
+    # Test 3: Ridge
+    - action: rest_command.forecast_model_tune_load_zonder_wp_test
+      data:
+        model_type: "load_forecast_ridge"
+        n_trials: 40
+    - delay:
+        seconds: 5
+    
+    # Test 4: Lasso
+    - action: rest_command.forecast_model_tune_load_zonder_wp_test
+      data:
+        model_type: "load_forecast_lasso"
+        n_trials: 10
+

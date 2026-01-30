@@ -1,0 +1,20 @@
+alias: Heating Predictor Rankings
+id: 3f2e12bc-ddf7-4787-bc01-4c57dbea3c9d
+mode: single
+
+trigger:
+  - platform: time
+    at: "23:05:00"
+
+action:
+  - service: persistent_notification.create
+    data:
+      title: "🥇 Heating Predictor Ranking"
+      message: >
+        📊 **Beste voorspellers (laagste gemiddelde fout)**
+
+        🥇 **Week:**  
+        {{ states('sensor.best_heating_predictor_7d') }}
+
+        🏆 **Maand:**  
+        {{ states('sensor.best_heating_predictor_30d') }}
