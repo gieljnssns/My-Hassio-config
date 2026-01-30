@@ -75,6 +75,18 @@ switch:
     on_turn_on: 
       then:
         - lambda: |-
+            if (id(condensatie_marge_keuken).state < 3) {
+              id(luchtdroger).turn_on();
+            }
+            if (id(condensatie_marge_slaapkamer).state < 3) {
+              id(luchtdroger).turn_on();
+            }
+            if (id(condensatie_marge_noor).state < 3) {
+              id(luchtdroger).turn_on();
+            }
+            if (id(condensatie_marge_fien).state < 3) {
+              id(luchtdroger).turn_on();
+            }
             if ((id(living_luchtvochtigheid).state > 59) && (id(beneden_temperatuur).state < 19)) {
               id(luchtdroger).turn_on();
             }
@@ -105,31 +117,31 @@ switch:
     id: reserve
     restore_mode: RESTORE_DEFAULT_OFF
 
-binary_sensor:
-  - platform: homeassistant
-    id: u
-    internal: true
-    entity_id: script.verluchting_1_uur
-    on_press:
-      then:
-        - delay: 110min
-        - switch.turn_off: luchtdroger
-        # - delay: 2h
-        - delay: 10min
-        - switch.turn_off: ventilator
+# binary_sensor:
+#   - platform: homeassistant
+#     id: u
+#     internal: true
+#     entity_id: script.verluchting_1_uur
+#     on_press:
+#       then:
+#         - delay: 110min
+#         - switch.turn_off: luchtdroger
+#         # - delay: 2h
+#         - delay: 10min
+#         - switch.turn_off: ventilator
 
 
-  - platform: homeassistant
-    id: uu
-    internal: true
-    entity_id: script.verluchting_2_uur
-    on_press:
-      then:
-        - delay: 170min
-        - switch.turn_off: luchtdroger
-        # - delay: 3h
-        - delay: 10min
-        - switch.turn_off: ventilator
+#   - platform: homeassistant
+#     id: uu
+#     internal: true
+#     entity_id: script.verluchting_2_uur
+#     on_press:
+#       then:
+#         - delay: 170min
+#         - switch.turn_off: luchtdroger
+#         # - delay: 3h
+#         - delay: 10min
+#         - switch.turn_off: ventilator
 
 
 sensor:
@@ -137,9 +149,11 @@ sensor:
   - platform: sht3xd
     temperature:
       name: ${upper_devicename} uitgaande temperatuur
+      id: air_temperature
       # internal: true
     humidity:
       name: ${upper_devicename} uitgaande luchtvochtigheid
+      id: relative_humidity
     # address: 0x44
     update_interval: 60s
     i2c_id: bus_a
@@ -159,7 +173,11 @@ sensor:
   #   address: 0x44
   #   update_interval: 60s
   #   i2c_id: bus_c
-  
+  - platform: absolute_humidity
+    name: ${upper_devicename} uitgaande absolute luchtvochtigheid
+    temperature: air_temperature
+    humidity: relative_humidity
+
   - platform: homeassistant
     entity_id: sensor.living_absolute_luchtvochtigheid
     id: living_absolute_luchtvochtigheid
@@ -183,5 +201,26 @@ sensor:
   - platform: homeassistant
     entity_id: sensor.gemiddelde_temp_beneden
     id: beneden_temperatuur
+    internal: true
+  
+
+  - platform: homeassistant
+    entity_id: sensor.condensatie_marge_keuken
+    id: condensatie_marge_keuken
+    internal: true
+  
+  - platform: homeassistant
+    entity_id: sensor.condensatie_marge_slaapkamer
+    id: condensatie_marge_slaapkamer
+    internal: true
+  
+  - platform: homeassistant
+    entity_id: sensor.condensatie_marge_noor
+    id: condensatie_marge_noor
+    internal: true
+
+  - platform: homeassistant
+    entity_id: sensor.condensatie_marge_fien
+    id: condensatie_marge_fien
     internal: true
 

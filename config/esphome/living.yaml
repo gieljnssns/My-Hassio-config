@@ -6,7 +6,11 @@ substitutions:
   platform: esp32
   board: esp32dev
 
-external_components:
+# external_components:
+#   - source: github://esphome/esphome@2025.7.1
+#     components: [i2c, uart, ld2410]
+  # - source: github://esphome/esphome@2025.10.5
+  #   components: [uart]
   # - source:
   #     type: git
   #     url: https://github.com/esphome/esphome
@@ -14,14 +18,19 @@ external_components:
   #   components: [ "uart" ]
 #   - source: github://the-smart-home-maker/esphome-4cello@gc9a01
 #     components: ["gc9a01"]
-  - source: github://esphome/esphome@2025.8.0
-    components: [uart, ld2410]
+  # - source: github://esphome/esphome@2025.8.0
+  #   components: [uart, ld2410]
   # - source: github://esphome/esphome@2025.8.1
   #   components: [ "uart" ]
-    
+
+web_server:
+  port: 80
+
 esp32:
   framework:
     type: esp-idf
+    # version: 5.3.2
+    # platform_version: 53.3.13
 
 packages:
   wifi: !include common/wifi.yaml
@@ -29,7 +38,7 @@ packages:
   
 wifi:
   # ...
-  power_save_mode: light
+  power_save_mode: NONE
 
 esp32_ble_tracker:
   scan_parameters:
@@ -42,7 +51,7 @@ bluetooth_proxy:
   active: true
 
 logger:
-  level: DEBUG
+  # level: DEBUG
   baud_rate: 0
 
 i2c:
@@ -65,7 +74,7 @@ uart:
     stop_bits: 1
     # debug:
   - id: danszaal1
-    tx_pin: GPIO17
+    tx_pin: 17
     # rx_pin: 
     #   number: GPIO16
     #   mode:
@@ -84,6 +93,48 @@ ld2410:
   - id: danszaal
     uart_id: danszaal1
     # throttle: 1500ms
+
+button:
+  - platform: ld2410
+    ld2410_id: zithoek
+    factory_reset:
+      name: ${zithoek} factory reset
+    restart:
+      name: ${zithoek} ld2410 restart
+    query_params:
+      name: ${zithoek} ld2410 query params
+  
+  - platform: ld2410
+    ld2410_id: danszaal
+    factory_reset:
+      name: ${danszaal} factory reset
+    restart:
+      name: ${danszaal} ld2410 restart
+    query_params:
+      name: ${danszaal} ld2410 query params
+
+select:
+  - platform: ld2410
+    ld2410_id: zithoek
+    distance_resolution:
+      name: ${zithoek} distance resolution
+    baud_rate:
+      name: ${zithoek} baud rate
+    light_function:
+      name: ${zithoek} light function
+    out_pin_level:
+      name: ${zithoek} out pin level
+  
+  - platform: ld2410
+    ld2410_id: danszaal
+    distance_resolution:
+      name: ${danszaal} distance resolution
+    baud_rate:
+      name: ${danszaal} baud rate
+    light_function:
+      name: ${danszaal} light function
+    out_pin_level:
+      name: ${danszaal} out pin level
 
 number:
   - platform: ld2410
@@ -199,15 +250,19 @@ switch:
     ld2410_id: zithoek
     engineering_mode:
       name: ${zithoek} engineering mode
+      restore_mode: ALWAYS_ON
     bluetooth:
       name: ${zithoek} bluetooth
+      restore_mode: ALWAYS_ON
 
   - platform: ld2410
     ld2410_id: danszaal
     engineering_mode:
       name: ${danszaal} engineering mode
+      restore_mode: ALWAYS_ON
     bluetooth:
       name: ${danszaal} bluetooth
+      restore_mode: ALWAYS_ON
 
 sensor:
   - platform: bme280_i2c
@@ -232,6 +287,7 @@ sensor:
     name: "${upper_devicename} absolute luchtvochtigheid"
     temperature: bme280_temperature
     humidity: bme280_humidity
+    equation: Buck
 
   - platform: template
     name: "${upper_devicename} dauwpunt"

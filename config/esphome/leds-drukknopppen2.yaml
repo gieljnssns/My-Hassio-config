@@ -12,8 +12,19 @@ packages:
   wifi: !include common/wifi.yaml
   device_base: !include common/device_base_new_style.yaml
 
+esp32_ble_tracker:
+  scan_parameters:
+    # We currently use the defaults to ensure Bluetooth
+    # can co-exist with WiFi In the future we may be able to
+    # enable the built-in coexistence logic in ESP-IDF
+    active: false
+
+bluetooth_proxy:
+  active: true
+
 wifi:
-  use_address: 192.168.6.137
+  # use_address: 192.168.6.137
+  power_save_mode: LIGHT
   
 globals:
   - id: chime

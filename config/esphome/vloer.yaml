@@ -1,0 +1,36 @@
+substitutions:
+  devicename: vloer
+  upper_devicename: Vloer
+  platform: esp32
+  board: esp32dev
+
+esp32:
+  framework:
+    type: esp-idf
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+logger:
+  level: DEBUG
+
+wifi:
+  # ...
+  power_save_mode: light
+
+one_wire:
+  - platform: gpio
+    pin: 
+      number: 22
+    id: dallas
+    # 0x103c01d607dfc128
+
+sensor:
+  - platform: dallas_temp
+    address: 0x103c01d607dfc128
+    name: "Vloertemperatuur"
+    one_wire_id: dallas
+    id: one
+    filters:
+        - filter_out: nan

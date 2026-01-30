@@ -2,7 +2,7 @@ substitutions:
   devicename: poort2
   upper_devicename: Poort
   platform: esp32
-  board: esp32-s3-devkitc-1
+  board: esp32dev
 
 esp32:
   framework:
@@ -16,21 +16,28 @@ wifi:
   # ...
   power_save_mode: light
 
+esp32_ble_tracker:
+  scan_parameters:
+    # We currently use the defaults to ensure Bluetooth
+    # can co-exist with WiFi In the future we may be able to
+    # enable the built-in coexistence logic in ESP-IDF
+    active: false
+
+bluetooth_proxy:
+  active: true
+
 i2c:
   - id: bus_a
-    sda: GPIO13
-    scl: GPIO14
-
-output:
-  - platform: ledc
-    pin: GPIO19
-    id: led_knop
-
+    sda: 21
+    scl: 22
+    
+logger:
+  level: DEBUG
 
 binary_sensor:
   - platform: gpio
     pin:
-      number: GPIO17
+      number: GPIO18
       inverted: true
       mode:
         input: true
@@ -45,7 +52,7 @@ sensor:
   - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
     name: "WiFi Signal dB"
     id: wifi_signal_db
-    update_interval: 3s
+    update_interval: 60s
     entity_category: "diagnostic"
 
   - platform: copy # Reports the WiFi signal strength in %
@@ -56,7 +63,7 @@ sensor:
     unit_of_measurement: "Signal %"
     entity_category: "diagnostic"
     device_class: ""
-
+    
   - platform: sht3xd
     temperature:
       name: ${upper_devicename} temperatuur
