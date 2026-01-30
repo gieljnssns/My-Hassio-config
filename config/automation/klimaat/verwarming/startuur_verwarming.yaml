@@ -1,0 +1,24 @@
+alias: "Startuur verwarming"
+id: 499ac771-b291-42c4-a57b-fb7ff8017161
+trigger:
+  - platform: template
+    value_template: "{{ now().weekday() == 5 and now().hour == 1 }}"
+  - platform: template
+    value_template: "{{ now().weekday() == 0 and now().hour == 1 }}"
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ now().weekday() == 5 and now().hour == 1 }}"
+        sequence:
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.starttijd_verwarming
+            data:
+              time: "09:00:00"
+    default:
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.starttijd_verwarming
+        data:
+          time: "12:00:00"

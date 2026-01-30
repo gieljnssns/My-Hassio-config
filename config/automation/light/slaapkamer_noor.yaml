@@ -5,13 +5,13 @@ mode: restart
 max_exceeded: silent
 
 trigger:
+  # - platform: state
+  #   entity_id: binary_sensor.slaapkamer_noor_aqara_pir
+  #   from: "off"
+  #   to: "on"
+  #   id: presence
   - platform: state
-    entity_id: binary_sensor.slaapkamer_noor_aqara_pir
-    from: "off"
-    to: "on"
-    id: presence
-  - platform: state
-    entity_id: binary_sensor.slaapkamer_noor_bezetting
+    entity_id: binary_sensor.noor_bezetting
     from: "off"
     to: "on"
     id: presence
@@ -27,6 +27,8 @@ trigger:
     entity_id: light.noor
     from: "off"
     to: "on"
+    id: light
+
   - platform: state
     entity_id: binary_sensor.nphone_focus
     from: "off"
@@ -177,9 +179,35 @@ actions:
                 brightness: 255
                 rgb_color: [255, 236, 182]
     default:
-      - action: input_datetime.set_datetime
-        data:
-          datetime: >
-            {{ now() + timedelta(seconds=120) }}
-        target:
-          entity_id: input_datetime.slaapkamer_noor_verlichting_end_time
+      # - action: input_datetime.set_datetime
+      #   data:
+      #     datetime: >
+      #       {{ now() + timedelta(seconds=120) }}
+      #   target:
+      #     entity_id: input_datetime.slaapkamer_noor_verlichting_end_time
+      - choose:
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.noor_bezetting
+              state: "on"
+            - condition: trigger
+              id: light
+          sequence:
+            - wait_for_trigger:
+                - platform: state
+                  entity_id: binary_sensor.noor_bezetting
+                  from: "on"
+                  to: "off"
+            - action: input_datetime.set_datetime
+              data:
+                datetime: >
+                  {{ now() + timedelta(seconds=60) }}
+              target:
+                entity_id: input_datetime.slaapkamer_noor_verlichting_end_time
+        default:
+          - action: input_datetime.set_datetime
+            data:
+              datetime: >
+                {{ now() + timedelta(seconds=120) }}
+            target:
+              entity_id: input_datetime.slaapkamer_noor_verlichting_end_time

@@ -16,37 +16,54 @@
       unique_id: a562950c-c161-4617-ac9c-0eb5f6b0b745
       state: >
         {% set tmin = states('sensor.min_temperatuur_buiten_voorspelling_12u') | float %}
-        {% set rh = states('sensor.poort_luchtvochtigheid') | float %}
-        {% set dp = states('sensor.buiten_dauwpunt') | float %}
+        {% if states("sensor.poort_luchtvochtigheid") not in ["unavailable", "unknown"] -%}
+          {% set rh = states('sensor.poort_luchtvochtigheid') | float(0) %}
+        {% else -%}
+          {% set rh = states('sensor.luchtvochtigheid') | float(0) %}
+        {% endif %}
+        {% if states("sensor.buiten_dauwpunt") not in ["unavailable", "unknown"] -%}
+          {% set dp = states('sensor.buiten_dauwpunt') | float(0) %}
+        {% else -%}
+          {% set dp = states('sensor.tomorrow_io_home_dew_point') | float(0) %}
+        {% endif %}
         {% set wind = states('sensor.windsnelheid') | float %}
         {% set clouds = states('sensor.tomorrow_io_home_cloud_cover') | float %}
 
         {{ tmin < 1 and rh > 85 and (tmin - dp) < 2 and wind < 3 and clouds < 30 }}
       device_class: cold
 
-    # - name: Buiten frisser dan binnen
-    #   unique_id: 54f0fc98-2bac-4e56-8427-ad0549642afa
-    #   device_class: cold
-    #   state: >
-    #     {{  (states('sensor.binnen_lowpass') | float(default=0) > states('sensor.buitentemperatuur_gefilterd') | float(default=0)) }}
+    - name: Thermostat day mode
+      unique_id: 78310cea-5406-404f-a065-fc7bcd579dc1
+      state: >
+        {{ states("alarm_control_panel.ha_alarm") is not in ["armed_night", "armed_away"] }}
 
-    # - name: Buiten frisser dan binnen old
-    #   unique_id: 56947e08-4306-434e-9064-7e8e99e89b9e
-    #   device_class: cold
-    #   state: >
-    #     {{ (states('sensor.binnen_lowpass') | float(default=0) > states('sensor.buitentemperatuur_gefilterd') | float(default=0)) }}
-
-    # - name: binnen_warm
-    #   unique_id: 28fb2228-ffdc-423c-b835-4413f6af9fbe
-    #   device_class: heat
-    #   state : >
-    #     {{ states('sensor.binnen_lowpass') | float(default=0)> 26 }}
-
-    # - name: buiten_warm
-    #   unique_id: b33a6fb4-69a3-4bc9-b69f-d6e1e734f6da
-    #   device_class: heat
-    #   state : >
-    #     {{ states('sensor.buitentemperatuur_gefilterd') | float(default=0)> 25 }}
+    - name: "Condensatie Alarm Keuken"
+      unique_id: cond_alarm_keuken
+      state: >
+        {% set marge = states('sensor.condensatie_marge_keuken') | float(99) %}
+        {{ marge < 1 }}
+      device_class: moisture
+    
+    - name: "Condensatie Alarm Noor"
+      unique_id: cond_alarm_noor
+      state: >
+        {% set marge = states('sensor.condensatie_marge_noor') | float(99) %}
+        {{ marge < 1 }}
+      device_class: moisture
+    
+    - name: "Condensatie Alarm Slaapkamer"
+      unique_id: cond_alarm_slaapkamer
+      state: >
+        {% set marge = states('sensor.condensatie_marge_slaapkamer') | float(99) %}
+        {{ marge < 1 }}
+      device_class: moisture
+    
+    - name: "Condensatie Alarm Fien"
+      unique_id: cond_alarm_fien
+      state: >
+        {% set marge = states('sensor.condensatie_marge_fien') | float(99) %}
+        {{ marge < 1 }}
+      device_class: moisture
 
     - name: Buiten fris genoeg
       unique_id: 5c88bc6c-e453-4ea6-acbb-1eb5bbff493e

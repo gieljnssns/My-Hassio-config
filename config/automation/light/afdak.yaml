@@ -4,6 +4,8 @@ mode: restart
 trigger:
   - platform: state
     entity_id: binary_sensor.afdak_deur
+  - platform: state
+    entity_id: binary_sensor.afdak_pir
 condition:
   - condition: template
     value_template: >
@@ -17,9 +19,9 @@ actions:
           - condition: state
             entity_id: binary_sensor.afdak_deur
             state: "on"
-          # - condition: state
-          #   entity_id: sensor.dark_outside
-          #   state: "true"
+          - condition: state
+            entity_id: binary_sensor.afdak_pir
+            state: "on"
         sequence:
           - action: light.turn_on
             target:
@@ -27,7 +29,7 @@ actions:
           - action: input_datetime.set_datetime
             data:
               datetime: >
-                {{ now() + timedelta(seconds=300) }}
+                {{ now() + timedelta(seconds=180) }}
             target:
               entity_id: input_datetime.afdak_verlichting_end_time
           # - action: light.turn_off
@@ -40,7 +42,7 @@ actions:
       - action: input_datetime.set_datetime
         data:
           datetime: >
-            {{ now() + timedelta(seconds=120) }}
+            {{ now() + timedelta(seconds=60) }}
         target:
           entity_id: input_datetime.afdak_verlichting_end_time
       # - action: light.turn_off

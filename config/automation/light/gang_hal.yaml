@@ -1,6 +1,8 @@
 alias: Light gang hal
 id: 169e30a6-8d76-4193-83db-a362b6ebca25
 description: ""
+mode: restart
+max_exceeded: silent
 trigger:
   - platform: state
     entity_id: light.gang_boven
@@ -11,6 +13,14 @@ trigger:
     entity_id: light.gang_boven
     from: "off"
     to: "on"
+    id: aan
+  - platform: time
+    at: input_datetime.gang_hal_end_time
+    id: uit
+  - platform: state
+    entity_id: binary_sensor.gang_hal_pir
+    from: 'off'
+    to: 'on'
     id: aan
 
 actions:
@@ -39,6 +49,23 @@ actions:
               brightness_pct: 1
             target:
               entity_id: light.gang_hal
+          - action: input_datetime.set_datetime
+            data:
+              datetime: |
+                {{ now() + timedelta(hours=1) }}
+            target:
+              entity_id: input_datetime.gang_hal_end_time
+          - wait_for_trigger:
+              - platform: state
+                entity_id: binary_sensor.gang_hal_bezetting
+                from: 'on'
+                to: 'off'
+          - action: input_datetime.set_datetime
+            data:
+              datetime: >
+                {{ now() + timedelta(seconds=30) }}
+            target:
+              entity_id: input_datetime.gang_hal_end_time
     default:
       - action: light.turn_on
         data:

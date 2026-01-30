@@ -69,38 +69,29 @@ condition:
                 entity_id: device_tracker.noor_not_so_binary
                 state: "Juist Aangekomen"
 actions:
-  - action: light.turn_on
-    data:
-      brightness: 255
-      rgb_color: [255, 236, 182]
-      entity_id: light.slaapkamer_spot
-  # - action: light.turn_on
-  #   data:
-  #     entity_id: light.slaapkamer_hoog
+  - action: automation.turn_off
+    entity_id: automation.welkom_allemaal_sonos_paused, automation.welkom_allemaal_sonos_playing, automation.welkom_sonos_paused, automation.welkom_sonos_playing
+  
+  - if:
+      - condition: template
+        value_template: >
+          {{ is_state("binary_sensor.mphone_focus", "off") and is_state("binary_sensor.gphone_focus", "off") }}
+    then:
+      - action: light.turn_on
+        data:
+          brightness: 255
+          rgb_color: [255, 236, 182]
+          entity_id: light.slaapkamer_spot
+
   - delay:
       seconds: 5
   - action: alarm_control_panel.alarm_arm_night
     entity_id: alarm_control_panel.ha_alarm
     data:
       code: !secret alarm_code
-  # - action: homeassistant.turn_off
-  #   entity_id: script.mqtt_arrive_script, script.mqtt_depart_script
-  # - action: script.mqtt_arrive_script
-  #   data_template:
-  #     identity: >
-  #       Alarm night {{ now().strftime("%H:%M") }}
+  
   - delay:
       minutes: 20
-  # - choose:
-  #     - conditions:
-  #         - condition: template
-  #           value_template: >
-  #             {{ states("button.brouwerij_shutdown") != "unavailable" and 
-  #                 states("binary_sensor.garage_bezetting") != "on" }}
-  #       sequence:
-  #         - action: button.press
-  #           target:
-  #             entity_id: button.brouwerij_shutdown
   - choose:
       - conditions:
           - condition: state

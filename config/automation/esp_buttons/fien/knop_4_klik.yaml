@@ -4,9 +4,10 @@ trigger:
   - platform: state
     entity_id: binary_sensor.knop_fien_4_klik
     to: 'on'
-  - platform: state
-    entity_id: input_button.verwarming_1u_fien
-    to: "on"
+  - platform: event
+    event_type: state_changed
+    event_data:
+      entity_id: input_button.verwarming_1u_fien
     id: aan
   - platform: time
     at: input_datetime.slaapkamer_fien_verwarming_end_time
@@ -19,9 +20,9 @@ actions:
         sequence:
           - action: climate.set_preset_mode
             target:
-              entity_id: climate.fien
+              entity_id: climate.slaapkamer_fien
             data:
-              preset_mode: comfort
+              preset_mode: boost
           - action: input_datetime.set_datetime
             data:
               datetime: >
@@ -34,6 +35,7 @@ actions:
         sequence:
           - action: climate.set_preset_mode
             target:
-              entity_id: climate.fien
+              entity_id: climate.slaapkamer_fien
             data:
-              preset_mode: away
+              preset_mode: >
+                {{ state_attr('climate.slaapkamer', 'preset_mode') }}

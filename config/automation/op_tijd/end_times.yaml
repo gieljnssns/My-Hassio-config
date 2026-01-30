@@ -36,14 +36,28 @@ action:
         id: verluchting
     sequence:
       - action: switch.turn_off
-        entity_id: switch.verluchting
-      - action: switch.turn_off
         entity_id: switch.badkamer_verluchting
       - action: switch.turn_off
         entity_id: switch.zolder_verluchting
+      - condition: template
+        value_template: >
+          {% set keuken = states("sensor.condensatie_marge_keuken") | float (0) -%}
+          {% set slaapkamer = states("sensor.condensatie_marge_slaapkamer") | float (0) -%}
+          {% set noor = states("sensor.condensatie_marge_noor") | float (0) -%}
+          {% set fien = states("sensor.condensatie_marge_fien") | float (0) -%}
+          {{ [keuken, slaapkamer, noor, fien] | min > 3 }}
+      - action: switch.turn_off
+        entity_id: switch.verluchting
   - conditions:
       - condition: trigger
         id: luchtdroger
+      - condition: template
+        value_template: >
+          {% set keuken = states("sensor.condensatie_marge_keuken") | float (0) -%}
+          {% set slaapkamer = states("sensor.condensatie_marge_slaapkamer") | float (0) -%}
+          {% set noor = states("sensor.condensatie_marge_noor") | float (0) -%}
+          {% set fien = states("sensor.condensatie_marge_fien") | float (0) -%}
+          {{ [keuken, slaapkamer, noor, fien] | min > 3 }}
     sequence:
       - action: switch.turn_off
         entity_id: switch.luchtdroger

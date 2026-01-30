@@ -43,6 +43,14 @@ actions:
       - conditions:
           - condition: trigger
             id: binnen
+          - condition: or
+            conditions:
+              - condition: numeric_state
+                entity_id: sensor.solcast_solaredge_forecast_remaining_today
+                above: 0.5
+              - condition: numeric_state
+                entity_id: sensor.energy_production_today_remaining
+                above: 0.5
           # - condition: state
           #   entity_id: input_boolean.donker_binnen_lowpass
           #   state: "on"
@@ -51,8 +59,8 @@ actions:
           # - condition: numeric_state
           #   entity_id: sensor.sun_elevation
           #   above: 8
-          - condition: time
-            before: " 17:00:00"
+          # - condition: time
+          #   before: " 17:00:00"
         sequence:
           - action: input_boolean.turn_off
             entity_id:

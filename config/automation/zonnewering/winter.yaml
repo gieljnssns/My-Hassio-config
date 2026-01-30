@@ -49,9 +49,9 @@ actions:
             below: 10
           - condition: time
             after: "15:00:00"
-          - condition: numeric_state
-            entity_id: sensor.max_neerslag_volgende_12u
-            below: 10
+          - condition: template
+            value_template: >
+              {{ states("sensor.regen_komende_10_minuten")|float(0) == 0 }}
           - condition: template
             value_template: >
               {{ now().month >= 9 or now().month <= 4 }}
@@ -65,23 +65,27 @@ actions:
             value_template: >
               {{ states("sensor.windvlaag") | int(0) < 60 }}
         sequence:
-          - action: cover.close_cover
-            target:
-              entity_id:
-                - cover.keuken_1
-                - cover.keuken_2
-                - cover.living
-                - cover.slaapkamer
-                - cover.slaapkamer_noor
+          - action: script.achtergevel_sluiten
+          - delay:
+              seconds: 10
+          - action: script.zijgevel_sluiten
+          # - action: cover.close_cover
+          #   target:
+          #     entity_id:
+          #       - cover.keuken_1
+          #       - cover.keuken_2
+          #       - cover.living
+          #       - cover.slaapkamer
+          #       - cover.slaapkamer_noor
           - action: input_boolean.turn_on
             target:
               entity_id: input_boolean.nacht_closed
       - conditions:
           - condition: trigger
             id: openen
-          - condition: numeric_state
-            entity_id: sensor.min_temperatuur_buiten_voorspelling_12u
-            below: 12
+          # - condition: numeric_state
+          #   entity_id: sensor.min_temperatuur_buiten_voorspelling_12u
+          #   below: 12
           - condition: template
             value_template: >
               {{ states("cover.keuken_1") != "open" or
@@ -90,14 +94,24 @@ actions:
                 states("cover.slaapkamer") != "open" or
                 states("cover.slaapkamer_noor") != "open" }}
         sequence:
-          - action: cover.open_cover
-            target:
-              entity_id:
-                - cover.keuken_1
-                - cover.keuken_2
-                - cover.living
-                - cover.slaapkamer
-                - cover.slaapkamer_noor
+          - action: script.achtergevel_openen
+          - delay:
+              seconds: 10
+          - action: script.zijgevel_openen
+          - delay:
+              minutes: 3
+          - action: script.achtergevel_openen
+          - delay:
+              seconds: 10
+          - action: script.zijgevel_openen
+          # - action: cover.open_cover
+          #   target:
+          #     entity_id:
+          #       - cover.keuken_1
+          #       - cover.keuken_2
+          #       - cover.living
+          #       - cover.slaapkamer
+          #       - cover.slaapkamer_noor
           - action: input_boolean.turn_off
             target:
               entity_id: input_boolean.nacht_closed

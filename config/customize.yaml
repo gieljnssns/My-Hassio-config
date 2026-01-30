@@ -16,6 +16,15 @@ device_tracker.nphone:
 device_tracker.noor_not_so_binary:
   entity_picture: /local/images/njnssns.png
 
+### Device_class ###
+sensor.gemiddelde_temp_beneden:
+  device_class: temperature
+  state_class: measurement
+sensor.gemiddelde_temp_binnen:
+  device_class: temperature
+sensor.gemiddelde_temp_boven:
+  device_class: temperature
+
 ###  Statistics  ###
 sensor.buiten_lichtsterkte:
   state_class: measurement
@@ -31,20 +40,22 @@ sensor.huidig_verbruik_zonder_wp:
   state_class: measurement
 sensor.warmtepompboiler_huidig_verbruik:
   state_class: measurement
-sensor.gemiddelde_temp_beneden:
-  state_class: measurement
 sensor.warmtepomp_huidig_verbruik:
   state_class: measurement
-sensor.emhass_huidig_verbruik:
+sensor.battery_power:
   state_class: measurement
-sensor.emhass_huidige_opbrengst:
+sensor.emhass_battery:
   state_class: measurement
+# sensor.emhass_huidige_opbrengst:
+#   state_class: measurement
 sensor.afwasmachien_vermogen:
   state_class: measurement
 sensor.wasmachien_vermogen:
   state_class: measurement
 sensor.droogkast_vermogen:
   state_class: measurement
+# sensor.emhass_pv_forecast:
+#   state_class: measurement
 ################
 
 ###  No Statistics  ###
@@ -57,10 +68,10 @@ sensor.temperatuur_living:
   state_class: none
 sensor.luchtvochtigheid_living:
   state_class: none
-sensor.gemiddelde_temp_binnen:
-  state_class: none
-sensor.gemiddelde_temp_boven:
-  state_class: none
+# sensor.gemiddelde_temp_binnen:
+#   state_class: none
+# sensor.gemiddelde_temp_boven:
+#   state_class: none
 sensor.bompa_bt_aanwezig:
   state_class: none
 sensor.oma_bt_aanwezig:
@@ -79,24 +90,24 @@ sensor.music_assistant_beta_geheugenpercentage:
   state_class: none
 sensor.home_assistant_v2_db_size:
   state_class: none
-sensor.kwartierpiek:
-  state_class: none
+# sensor.kwartierpiek:
+#   state_class: none
 sensor.co2_intensity:
   state_class: none
 sensor.grid_fossil_fuel_percentage:
   state_class: none
-sensor.current_uv_index:
-  state_class: none
-sensor.max_uv_index:
-  state_class: none
+# sensor.current_uv_index:
+#   state_class: none
+# sensor.max_uv_index:
+#   state_class: none
 sensor.wled_noor_estimated_current:
   state_class: none
 sensor.wled_fien_estimated_current_2:
   state_class: none
-sensor.day_active_power_peak:
-  state_class: none
-sensor.huawei_active_power:
-  state_class: none
+# sensor.day_active_power_peak:
+#   state_class: none
+# sensor.huawei_active_power:
+#   state_class: none
 sensor.slaapkamer_fien_verwarming_vermogen_2:
   state_class: none
 sensor.slaapkamer_noor_verwarming_vermogen_2:
@@ -201,18 +212,18 @@ sensor.shelly_warmtepomp_temperature:
   state_class: none
 # sensor.slaapkamer_fien_temperatuur_2:
 #   state_class: none
-sensor.vloerverwarming_heen:
-  state_class: none
-sensor.boiler_uit:
-  state_class: none
-sensor.boiler_in:
-  state_class: none
-sensor.vloerverwarming_terug:
-  state_class: none
-sensor.kelder:
-  state_class: none
-sensor.thermostaat:
-  state_class: none
+# sensor.vloerverwarming_heen:
+#   state_class: none
+# sensor.boiler_uit:
+#   state_class: none
+# sensor.boiler_in:
+#   state_class: none
+# sensor.vloerverwarming_terug:
+#   state_class: none
+# sensor.kelder:
+#   state_class: none
+# sensor.thermostaat:
+#   state_class: none
 sensor.koffiezet_vermogen_2:
   state_class: none
 sensor.garage_oplader_vermogen_2:
@@ -235,8 +246,8 @@ sensor.all_standby_power:
   state_class: none
 # sensor.solaredge_inverter_watts:
 #   state_class: none
-sensor.solaredge_i1_ac_power:
-  state_class: none
+# sensor.solaredge_i1_ac_power:
+#   state_class: none
 # sensor.nordpool_kwh_be_eur:
 #   state_class: none
 sensor.gemiddelde_buitentemperatuur:
@@ -263,8 +274,10 @@ sensor.huawei_accumulated_energy_yield:
 #   state_class: none
 sensor.buiten_buiten_lichtsterkte:
   state_class: none
-
-
+sensor.buitentemperatuur_gefilterd:
+  state_class: none
+sensor.zonne_energie_gefilterd_lowpass:
+  state_class: none
 sensor.brewpi_verbruik:
   state_class: none
 sensor.keukenpi_verbruik:
@@ -404,28 +417,7 @@ sensor.paddeke_2_verbruik:
 sensor.paddeke_1_verbruik:
   state_class: none
 
-# sensor.v3_stroom:
-#   state_class: none
-# sensor.v3_spanning:
-#   state_class: none
-# sensor.v2_stroom:
-#   state_class: none
-# sensor.v2_spanning:
-#   state_class: none
-# sensor.v1_stroom:
-#   state_class: none
-# sensor.s3_stroom:
-#   state_class: none
-# sensor.s2_stroom:
-#   state_class: none
-# sensor.s1_stroom:
-#   state_class: none
-# sensor.l3_stroom:
-#   state_class: none
-# sensor.l2_stroom:
-#   state_class: none
-# sensor.l1_stroom:
-#   state_class: none
+
 sensor.keuken_ijskast_stroom:
   state_class: none
 sensor.keuken_ijskast_spanning:
@@ -562,8 +554,8 @@ sensor.tomorrow_io_home_cloud_ceiling:
   state_class: none
 sensor.tomorrow_io_home_wind_gust:
   state_class: none
-sensor.tomorrow_io_home_uv_index:
-  state_class: none
+# sensor.tomorrow_io_home_uv_index:
+#   state_class: none
 sensor.windsnelheid:
   state_class: none
 sensor.neerslagintensiteit:

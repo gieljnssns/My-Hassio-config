@@ -5,20 +5,62 @@ trigger:
   entity_id: switch.deurbel
   to: "on"
 actions:
-  - action: media_player.play_media
-    continue_on_error: true
+  - action: music_assistant.play_announcement
     target:
-      entity_id:
+      entity_id: 
         - media_player.mass_keuken
-        - media_player.mass_2c
-        - media_player.mass_move
-        - media_player.mass_living_2
+        - media_player.mass_badkamer
     data:
-      announce: true
-      media_content_type: music
-      extra:
-        volume: 65
-      media_content_id: https://www.soundjay.com/door/doorbell-1.mp3
+      announce_volume: 49
+      url: https://www.soundjay.com/door/doorbell-1.mp3
+
+  - if:
+      - condition: state
+        entity_id: binary_sensor.garage_bezetting
+        state: "on"
+    then:
+      - service: light.toggle
+        target:
+          entity_id: 
+            - light.garage
+            - light.garage_werkbank
+      - delay:
+          seconds: 1
+      - service: light.toggle
+        target:
+          entity_id: 
+            - light.garage
+            - light.garage_werkbank
+    
+  - if:
+      - condition: state
+        entity_id: binary_sensor.tuin_bezetting
+        state: "on"
+    then:
+      - service: light.toggle
+        target:
+          entity_id: 
+            - light.alle_tuinverlichting
+      - delay:
+          seconds: 1
+      - service: light.toggle
+        target:
+          entity_id: 
+            - light.alle_tuinverlichting
+  # - action: media_player.play_media
+  #   continue_on_error: true
+  #   target:
+  #     entity_id:
+  #       - media_player.mass_keuken
+  #       - media_player.mass_2c
+  #       - media_player.mass_move
+  #       - media_player.mass_living_2
+  #   data:
+  #     announce: true
+  #     media_content_type: music
+  #     extra:
+  #       volume: 65
+  #     media_content_id: https://www.soundjay.com/door/doorbell-1.mp3
   # - action: notify.mobile_app_gphone
   #   data:
   #     title: Deurbel

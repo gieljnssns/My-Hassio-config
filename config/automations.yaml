@@ -46,35 +46,6 @@
     data:
       message: Unifi nazien!!!
   mode: single
-- id: '1675907714800'
-  alias: Max piek notificatie 3
-  description: ''
-  trigger:
-  - platform: time_pattern
-    minutes: '15'
-  condition:
-  - condition: template
-    value_template: '{{ as_timestamp(now()) - as_timestamp(states.input_number.max_peak_2.last_changed.timestamp()
-      | timestamp_local()) < 900 }}
-
-      '
-  - condition: template
-    value_template: '{{ as_timestamp(now()) - as_timestamp(states("sensor.uptime"))
-      > 900 }}
-
-      '
-  actions:
-  - action: persistent_notification.create
-    data:
-      message: "Op kwartierbasis:\n{% for state in states.sensor -%} {% if \"quarter\"
-        in state.entity_id -%} {% if state.attributes.last_period | float(0) > 0
-        -%}\n  {{ state.attributes.friendly_name }} = {{ state.attributes.last_period
-        }} kWh\n{% endif -%} {% endif -%} {% endfor %}\nOp uurbasis:\n{% for state
-        in states.sensor -%} {% if \"quarter\" in state.entity_id -%} {% if state.attributes.last_period
-        | float(0) > 0 -%}\n  {{ state.attributes.friendly_name | replace(\"kwartierverbruik\",
-        \"uurverbruik\") }} = {{ state.attributes.last_period | float * 4}} kWh\n{%
-        endif -%} {% endif -%} {% endfor -%}"
-  mode: single
 - id: '1685887833753'
   alias: Beweging poort
   description: ''

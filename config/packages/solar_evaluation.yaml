@@ -2,82 +2,76 @@
 # Voeg toe aan configuration.yaml
 
 input_text:
-  best_solar_predictor:
-    name: "Beste Solar Voorspeller"
-    # initial: "openmeteo"  # Standaard tot eerste evaluatie
+  best_solar_predictor_interpolated:
+    name: "Beste Solar Voorspeller (5m)"
     max: 50
 
-  evaluation_log:
-    name: "Evaluatie Log"
+  evaluation_log_interpolated:
+    name: "Evaluatie Log (5m)"
     max: 255
 
 input_number:
-  solcast_mse:
-    name: "Solcast MSE"
+  solcast_interp_mse:
+    name: "Solcast MSE (5m)"
     min: 0
     max: 10000000
     step: 0.01
     mode: box
 
-  solcast10_mse:
-    name: "Solcast 10% MSE"
+  solcast10_interp_mse:
+    name: "Solcast 10% MSE (5m)"
     min: 0
     max: 10000000
     step: 0.01
     mode: box
 
-  solcast90_mse:
-    name: "Solcast 90% MSE"
+  solcast90_interp_mse:
+    name: "Solcast 90% MSE (5m)"
     min: 0
     max: 10000000
     step: 0.01
     mode: box
 
-  openmeteo_mse:
-    name: "OpenMeteo MSE"
+  openmeteo_interp_mse:
+    name: "OpenMeteo MSE (5m)"
     min: 0
     max: 10000000
     step: 0.01
     mode: box
 
-  solcast_mae:
-    name: "Solcast MAE"
+  solcast_interp_mae:
+    name: "Solcast MAE (5m)"
     min: 0
     max: 10000000
     step: 0.01
     mode: box
 
-  solcast10_mae:
-    name: "Solcast 10% MAE"
+  solcast10_interp_mae:
+    name: "Solcast 10% MAE (5m)"
     min: 0
     max: 10000000
     step: 0.01
     mode: box
 
-  solcast90_mae:
-    name: "Solcast 90% MAE"
+  solcast90_interp_mae:
+    name: "Solcast 90% MAE (5m)"
     min: 0
     max: 10000000
     step: 0.01
     mode: box
 
-  openmeteo_mae:
-    name: "OpenMeteo MAE"
+  openmeteo_interp_mae:
+    name: "OpenMeteo MAE (5m)"
     min: 0
     max: 10000000
     step: 0.01
     mode: box
 
 input_datetime:
-  last_evaluation_time:
-    name: "Laatste Evaluatie Tijd"
+  last_evaluation_time_interpolated:
+    name: "Laatste Evaluatie Tijd (5m)"
     has_date: true
     has_time: true
-
-  # next_evaluation_time:
-  #   name: "Volgende Evaluatie Tijd"
-  #   has_date: true
-  #   has_time: true
 
 input_boolean:
   solar_evaluation_active:
@@ -91,7 +85,7 @@ template:
       - name: "Current Best Solar Predictor"
         unique_id: 23308df6-7a7b-4393-978d-c2c475a2f00d
         state: >
-          {{ states('input_text.best_solar_predictor') }}
+          {{ states('input_text.best_solar_predictor_interpolated') }}
   - binary_sensor:
       # Check of we in evaluatie periode zitten
       - name: "Solar Evaluation Period"
@@ -180,12 +174,48 @@ automation:
   #           {{ (now() + timedelta(hours=1)).strftime('%Y-%m-%d %H:00:00') }}
 
   # Uurlijkse evaluatie tijdens zonneuren
-  - alias: "Hourly Solar Prediction Evaluation"
-    description: "Evalueer uurlijks welke voorspelling het beste presteert"
-    id: f611af53-ed00-44e7-a8f2-f1fcbaf6f78e
+  # - alias: "Hourly Solar Prediction Evaluation"
+  #   description: "Evalueer uurlijks welke voorspelling het beste presteert"
+  #   id: f611af53-ed00-44e7-a8f2-f1fcbaf6f78e
+  #   trigger:
+  #     - platform: time_pattern
+  #       minutes: 59  # Elk heel uur
+  #   condition:
+  #     - condition: state
+  #       entity_id: input_boolean.solar_evaluation_active
+  #       state: 'on'
+  #     - condition: template
+  #       value_template: >
+  #         {{ is_state('binary_sensor.solar_evaluation_period', 'on') }}
+  #     # - condition: template
+  #     #   value_template: >
+  #     #     {% set sunrise_plus_one = states('sensor.solar_evaluation_start_time') | as_datetime -%}
+  #     #     {{ now() >= sunrise_plus_one }}
+  #   action:
+  #     # Haal statistieken op van vandaag vanaf middernacht
+  #     - service: recorder.get_statistics
+  #       data:
+  #         start_time: "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}"
+  #         end_time: "{{ now() }}"
+  #         statistic_ids:
+  #           - sensor.huidige_opbrengst_gefilterd
+  #         period: 5minute
+  #         types:
+  #           - mean
+  #       response_variable: daily_stats
+      
+  #     # Roep Python script aan voor precieze berekening
+  #     - service: python_script.precise_solar_evaluation
+  #       data:
+  #         statistics_data: "{{ daily_stats }}"
+  #         current_time: "{{ now().isoformat() }}"
+
+  - alias: "Hourly Solar Prediction Evaluation (5m)"
+    description: "Evalueer uurlijks welke 5m-voorspelling het beste presteert"
+    id: 54877c8c-46d8-4c01-a220-6f28f05a0cce
     trigger:
       - platform: time_pattern
-        minutes: 0  # Elk heel uur
+        minutes: 59
     condition:
       - condition: state
         entity_id: input_boolean.solar_evaluation_active
@@ -193,12 +223,7 @@ automation:
       - condition: template
         value_template: >
           {{ is_state('binary_sensor.solar_evaluation_period', 'on') }}
-      # - condition: template
-      #   value_template: >
-      #     {% set sunrise_plus_one = states('sensor.solar_evaluation_start_time') | as_datetime -%}
-      #     {{ now() >= sunrise_plus_one }}
     action:
-      # Haal statistieken op van vandaag vanaf middernacht
       - service: recorder.get_statistics
         data:
           start_time: "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}"
@@ -208,12 +233,11 @@ automation:
           period: 5minute
           types:
             - mean
-        response_variable: daily_stats
-      
-      # Roep Python script aan voor precieze berekening
-      - service: python_script.precise_solar_evaluation
+        response_variable: daily_stats_interpolated
+
+      - service: python_script.precise_solar_evaluation_interpolated
         data:
-          statistics_data: "{{ daily_stats }}"
+          statistics_data: "{{ daily_stats_interpolated }}"
           current_time: "{{ now().isoformat() }}"
 
   # Notificatie bij wijziging beste voorspeller
@@ -222,7 +246,7 @@ automation:
     id: 0860fc90-a420-4fe3-97c8-5819100f2e6c
     trigger:
       - platform: state
-        entity_id: input_text.best_solar_predictor
+        entity_id: input_text.best_solar_predictor_interpolated
     condition:
       - condition: template
         value_template: "{{ trigger.from_state.state != trigger.to_state.state }}"
@@ -233,13 +257,13 @@ automation:
         data:
           title: "🌞 Solar Voorspeller Gewijzigd"
           message: >
-            Beste voorspeller is gewijzigd van {{ trigger.from_state.state }} naar {{ trigger.to_state.state }}.
-            
+            Beste voorspeller is gewijzigd van
+            {{ trigger.from_state.state }} naar {{ trigger.to_state.state }}.
             Huidige scores:
-            - Solcast: MSE {{ states('input_number.solcast_mse') | round(2) }}
-            - Solcast 10%: MSE {{ states('input_number.solcast10_mse') | round(2) }}  
-            - Solcast 90%: MSE {{ states('input_number.solcast90_mse') | round(2) }}
-            - OpenMeteo: MSE {{ states('input_number.openmeteo_mse') | round(2) }}
+            - Solcast: MSE {{ states('input_number.solcast_interp_mse') | round(2) }}
+            - Solcast 10%: MSE {{ states('input_number.solcast10_interp_mse') | round(2) }}  
+            - Solcast 90%: MSE {{ states('input_number.solcast90_interp_mse') | round(2) }}
+            - OpenMeteo: MSE {{ states('input_number.openmeteo_interp_mse') | round(2) }}
 
 # ===== DASHBOARD CARDS =====
 # Voeg toe aan je Lovelace dashboard
@@ -291,16 +315,16 @@ automation:
 #     name: "OpenMeteo MSE"
 
 # ===== SERVICES VOOR HANDMATIGE CONTROLE =====
-script:
-  manual_solar_evaluation:
-    alias: "Handmatige Solar Evaluatie"
-    description: "Voer handmatig een evaluatie uit"
-    sequence:
-      - service: automation.trigger
-        target:
-          entity_id: automation.hourly_solar_prediction_evaluation
-        data:
-          skip_condition: true
+# script:
+#   manual_solar_evaluation:
+#     alias: "Handmatige Solar Evaluatie"
+#     description: "Voer handmatig een evaluatie uit"
+#     sequence:
+#       - service: automation.trigger
+#         target:
+#           entity_id: automation.hourly_solar_prediction_evaluation
+#         data:
+#           skip_condition: true
 
   # reset_solar_evaluation:
   #   alias: "Reset Solar Evaluatie"  

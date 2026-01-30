@@ -9,12 +9,12 @@ trigger:
     to: "off"
     for:
       minutes: 10
-  # - platform: state
-  #   entity_id: switch.kelder_warmtepomp
-  #   id: warmtepomp
-  #   to: "off"
-  #   for:
-  #     minutes: 10
+  - platform: state
+    entity_id: switch.kelder_warmtepomp
+    id: warmtepomp
+    to: "off"
+    for:
+      minutes: 10
   - platform: state
     entity_id: switch.kelder_warmtepompboiler
     id: boiler
@@ -42,7 +42,7 @@ actions:
         sequence:
           - action: notify.mobile_app_gphone
             data:
-              message: De warmetepomp staat al 10min uit.
+              message: De warmtepomp staat al 10min uit.
               data:
                 push:
                   sound: default

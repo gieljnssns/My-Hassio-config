@@ -22,17 +22,19 @@ random_radio:
       target:
         entity_id: >
           {{ sonos_entity }}
+    - action: media_player.unjoin
+      target:
+        entity_id: media_player.mass_badkamer
     - action: music_assistant.play_media
       data:
         enqueue: replace
+        media_type: radio
         media_id: >
           {{ radio.summary }}
       target:
         entity_id: >
           {{ sonos_entity }}
-    - action: media_player.unjoin
-      target:
-        entity_id: media_player.mass_badkamer
+    
     - action: todo.update_item
       target:
         entity_id:

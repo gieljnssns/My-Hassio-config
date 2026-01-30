@@ -32,8 +32,13 @@ trigger:
   #   to: "off"
   #   for:
   #     minutes: 2
+  # - platform: state
+  #   entity_id: binary_sensor.slaapkamer_fien_bezetting
+  #   to: "off"
+  #   for:
+  #     minutes: 2
   - platform: state
-    entity_id: binary_sensor.slaapkamer_fien_bezetting
+    entity_id: binary_sensor.fien_bezetting
     to: "off"
     for:
       minutes: 2
@@ -51,7 +56,7 @@ actions:
           light.zithoek_luster
         {% elif trigger.entity_id == 'binary_sensor.danszaal_bezetting' %}
           light.danszaal_luster, light.danszaal_spots
-        {% elif trigger.entity_id == 'binary_sensor.slaapkamer_fien_bezetting' %}
+        {% elif trigger.entity_id == 'binary_sensor.fien_bezetting' %}
           light.fien
         {% elif trigger.entity_id == 'binary_sensor.garage_bezetting' %}
           light.garage, light.garage_werkbank, light.vogelpik, light.garage_sjotterbak, light.garage_sfeerverlichting
