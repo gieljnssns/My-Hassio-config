@@ -14,7 +14,7 @@ CONF_ENABLE_PARAMETER_CONFIGURATION = "enable_parameter_configuration"
 
 DATA_UPDATE_COORDINATORS = "update_coordinators"
 
-INVERTER_UPDATE_INTERVAL = timedelta(seconds=30)
+INVERTER_UPDATE_INTERVAL = timedelta(seconds=2)
 POWER_METER_UPDATE_INTERVAL = timedelta(seconds=30)
 ENERGY_STORAGE_UPDATE_INTERVAL = timedelta(seconds=30)
 UPDATE_TIMEOUT = timedelta(seconds=29)

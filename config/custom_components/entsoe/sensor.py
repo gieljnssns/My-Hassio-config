@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
-    DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntityDescription,
@@ -22,7 +21,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import utcnow
+from homeassistant.util import utcnow, slugify
 
 from .utils import bucket_time
 from .const import (
@@ -174,12 +173,12 @@ class EntsoeSensor(CoordinatorEntity, RestoreSensor):
 
         if name not in (None, ""):
             # The Id used for addressing the entity in the ui, recorder history etc.
-            self.entity_id = f"{DOMAIN}.{name}_{description.name}"
+            self.entity_id = f"{DOMAIN}.{slugify(name)}_{slugify(description.name)}"
             # unique id in .storage file for ui configuration.
             self._attr_unique_id = f"entsoe.{name}_{description.key}"
             self._attr_name = f"{description.name} ({name})"
         else:
-            self.entity_id = f"{DOMAIN}.{description.name}"
+            self.entity_id = f"{DOMAIN}.{slugify(description.name)}"
             self._attr_unique_id = f"entsoe.{description.key}"
             self._attr_name = f"{description.name}"
 
@@ -208,6 +207,19 @@ class EntsoeSensor(CoordinatorEntity, RestoreSensor):
         self._unsub_update = None
 
         super().__init__(coordinator)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last known state on startup."""
+        await super().async_added_to_hass()
+        if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = last_sensor_data.native_value
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel scheduled updates when entity is removed."""
+        if self._unsub_update:
+            self._unsub_update()
+            self._unsub_update = None
+        await super().async_will_remove_from_hass()
 
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""
@@ -253,25 +265,18 @@ class EntsoeSensor(CoordinatorEntity, RestoreSensor):
                 f"Unable to update entity '{self.entity_id}': No valid data for today available."
             )
             self.last_update_success = False
-
-        try:
-            if (
-                self.description.key == "avg_price"
-                and self._attr_native_value is not None
-                and self.coordinator.data is not None
-            ):
-                self._attr_extra_state_attributes = {
-                    "prices_today": self.coordinator.get_prices_today(),
-                    "prices_tomorrow": self.coordinator.get_prices_tomorrow(),
-                    "prices": self.coordinator.get_prices(),
-                }
-                _LOGGER.debug(
-                    f"attributes updated: {self._attr_extra_state_attributes}"
-                )
-        except Exception as exc:
-            _LOGGER.warning(
-                f"Unable to update attributes of the average entity, error: {exc}, data: {self.coordinator.data}"
-            )
+ 
+    @property
+    def extra_state_attributes(self):
+        if self.description.key != "avg_price":
+            return None
+        if self.native_value is None or self.coordinator.data is None:
+            return None
+        return {
+            "prices_today": self.coordinator.get_prices_today(),
+            "prices_tomorrow": self.coordinator.get_prices_tomorrow(),
+            "prices": self.coordinator.get_prices(),
+        }
 
     @property
     def available(self) -> bool:

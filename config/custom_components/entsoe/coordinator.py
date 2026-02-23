@@ -1,18 +1,18 @@
 from __future__ import annotations
 
+import asyncio
 import logging
-import threading
 from datetime import timedelta
-from functools import cached_property
 
+import aiohttp
 import async_timeout
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
 from jinja2 import pass_context
-from requests.exceptions import HTTPError
 
 from .api_client import EntsoeClient
 from .const import AREA_INFO, CALCULATION_MODE, DEFAULT_MODIFYER, ENERGY_SCALES
@@ -51,7 +51,8 @@ class EntsoeCoordinator(DataUpdateCoordinator):
         self.vat = VAT
         self.calculator_last_sync = None
         self.filtered_hourprices = []
-        self.lock = threading.Lock()
+        self.lock = asyncio.Lock()
+        self._last_cleanup_date = None
 
         # Check incase the sensor was setup using config flow.
         # This blow up if the template isnt valid.
@@ -94,17 +95,22 @@ class EntsoeCoordinator(DataUpdateCoordinator):
                 now=faker(), current_price=price
             )
         else:
-            template_value = self.modifyer.async_render()
+            template_value = self.modifyer.async_render(current_price=price)
 
-        price = round(float(template_value) * (1 + self.vat), 5)
+        try:
+            price = round(float(template_value) * (1 + self.vat), 5)
+        except (ValueError, TypeError) as exc:
+            self.logger.error(
+                f"Failed to convert template result '{template_value}' to float. "
+                f"Please check your price modifier template. Error: {exc}"
+            )
+            raise
 
         return price
 
     # ENTSO: recalculate the price for each price
     def parse_hourprices(self, hourprices):
-        for hour, price in hourprices.items():
-            hourprices[hour] = self.calc_price(value=price, fake_dt=hour)
-        return hourprices
+        return {hour: self.calc_price(value=price, fake_dt=hour) for hour, price in hourprices.items()}
 
     # ENTSO: Triggered by HA to refresh the data (interval = 60 minutes)
     async def _async_update_data(self) -> dict:
@@ -127,12 +133,19 @@ class EntsoeCoordinator(DataUpdateCoordinator):
 
 
         if data is not None:
+            if data is self.data:
+                # Degraded mode returned cached data; don't re-parse already-processed prices
+                self.logger.debug("Using cached data from degraded mode")
+                return data
             parsed_data = self.parse_hourprices(data)
             self.logger.debug(
                 f"received pricing data from entso-e for {len(data)} hours"
             )
             self.data = parsed_data
             return parsed_data
+        
+        # Return existing data if available, otherwise empty dict
+        return self.data if self.data is not None else {}
 
     # ENTSO: check if we need to refresh the data. If we have None, or less than 20hrs left for today, or less than 20hrs tomorrow and its after 11
     def check_update_needed(self, now):
@@ -153,16 +166,16 @@ class EntsoeCoordinator(DataUpdateCoordinator):
                     country_code=self.area, start=start_date, end=end_date
                 )
 
-        except HTTPError as exc:
-            if exc.response.status_code == 401:
-                raise UpdateFailed("Unauthorized: Please check your API-key.") from exc
         except Exception as exc:
-            if self.data is not None:
-                newest_timestamp = self.data[max(self.data.keys())]
-                if (newest_timestamp) > dt.now():
+            if isinstance(exc, aiohttp.ClientResponseError) and exc.status == 401:
+                raise UpdateFailed("Unauthorized: Please check your API-key.") from exc
+            if self.data is not None and len(self.data) > 0:
+                newest_timestamp = max(self.data.keys())
+                if newest_timestamp > dt.now():
                     self.logger.warning(
                         f"Warning the integration is running in degraded mode (falling back on stored data) since fetching the latest ENTSOE-e prices failed with exception: {exc}."
                     )
+                    return self.data
                 else:
                     raise UpdateFailed(
                         f"The latest available data is older than the current time. Therefore entities will no longer update. Error: {exc}"
@@ -203,14 +216,14 @@ class EntsoeCoordinator(DataUpdateCoordinator):
         return bucket_time(dt.now(), self.period_minutes)
 
     # SENSOR: Get the current price
-    def get_current_price(self) -> int:
-        return self.data[self.current_bucket_time]
+    def get_current_price(self) -> float | None:
+        return self.data.get(self.current_bucket_time)
 
     # SENSOR: Get the next hour price
-    def get_next_price(self) -> int:
-        return self.data[
+    def get_next_price(self) -> float | None:
+        return self.data.get(
             self.current_bucket_time + timedelta(minutes=self.period_minutes)
-        ]
+        )
 
     # SENSOR: Get timestamped prices of today as attribute for Average Sensor
     def get_prices_today(self):
@@ -248,7 +261,7 @@ class EntsoeCoordinator(DataUpdateCoordinator):
     async def sync_calculator(self):
         now = dt.now()
         bucket = self.current_bucket_time
-        with self.lock:
+        async with self.lock:
             if (
                 self.calculator_last_sync is None
                 or self.calculator_last_sync != bucket
@@ -258,13 +271,20 @@ class EntsoeCoordinator(DataUpdateCoordinator):
                 )
                 if not self.data:
                     self.logger.debug("no data available yet, fetching data")
-                    await self._async_update_data()
+                    try:
+                        await self._async_update_data()
+                    except UpdateFailed as exc:
+                        self.logger.warning(
+                            f"Failed to fetch initial data during calculator sync: {exc}"
+                        )
+                        return
 
-                if self.today.date() != now.date():
+                current_date = now.date()
+                if self._last_cleanup_date is None or self._last_cleanup_date != current_date:
                     self.logger.debug(
                         "new day detected: update today and filtered hourprices"
                     )
-                    self.today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                    self._last_cleanup_date = current_date
 
                     # remove stale data
                     self.data = {
@@ -309,36 +329,61 @@ class EntsoeCoordinator(DataUpdateCoordinator):
 
     # ANALYSIS: Get max price in filtered period
     def get_max_price(self):
-        return max(self._filtered_prices.values())
+        prices = self._filtered_prices
+        if not prices:
+            return None
+        return max(prices.values())
 
     # ANALYSIS: Get min price in filtered period
     def get_min_price(self):
-        return min(self._filtered_prices.values())
+        prices = self._filtered_prices
+        if not prices:
+            return None
+        return min(prices.values())
 
     # ANALYSIS: Get timestamp of max price in filtered period
     def get_max_time(self):
-        return max(self._filtered_prices, key=self._filtered_prices.get)
+        prices = self._filtered_prices
+        if not prices:
+            return None
+        return max(prices, key=prices.get)
 
     # ANALYSIS: Get timestamp of min price in filtered period
     def get_min_time(self):
-        return min(self._filtered_prices, key=self._filtered_prices.get)
+        prices = self._filtered_prices
+        if not prices:
+            return None
+        return min(prices, key=prices.get)
 
     # ANALYSIS: Get avg price in filtered period
     def get_avg_price(self):
+        prices = self._filtered_prices
+        if not prices:
+            return None
         return round(
-            sum(self._filtered_prices.values()) / len(self._filtered_prices.values()),
+            sum(prices.values()) / len(prices.values()),
             5,
         )
 
     # ANALYSIS: Get percentage of current price relative to maximum of filtered period
     def get_percentage_of_max(self):
-        return round(self.get_current_price() / self.get_max_price() * 100, 1)
+        current_price = self.get_current_price()
+        max_price = self.get_max_price()
+        if current_price is None or max_price is None or max_price == 0:
+            return None
+        return round(current_price / max_price * 100, 1)
 
     # ANALYSIS: Get percentage of current price relative to spread (max-min) of filtered period
     def get_percentage_of_range(self):
-        min = self.get_min_price()
-        spread = self.get_max_price() - min
-        current = self.get_current_price() - min
+        current_price = self.get_current_price()
+        min_price = self.get_min_price()
+        max_price = self.get_max_price()
+        if current_price is None or min_price is None or max_price is None:
+            return None
+        spread = max_price - min_price
+        if spread == 0:
+            return 100.0  # If all prices are the same, current is always 100% of range
+        current = current_price - min_price
         return round(current / spread * 100, 1)
 
     # --------------------------------------------------------------------------------------------------------------------------------
@@ -355,4 +400,17 @@ class EntsoeCoordinator(DataUpdateCoordinator):
                 for k, v in self.data.items()
                 if k.date() >= start_date.date() and k.date() <= end_date.date()
             }
-        return self.parse_hourprices(await self.fetch_prices(start_date, end_date))
+        try:
+            data = await self.fetch_prices(start_date, end_date)
+        except UpdateFailed as exc:
+            raise HomeAssistantError(
+                f"Failed to fetch energy prices from ENTSO-e: {exc}"
+            ) from exc
+        if data is self.data:
+            # Degraded mode: return filtered cached data (already parsed)
+            return {
+                k: v
+                for k, v in data.items()
+                if k.date() >= start_date.date() and k.date() <= end_date.date()
+            }
+        return self.parse_hourprices(data)

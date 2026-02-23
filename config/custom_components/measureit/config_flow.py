@@ -5,34 +5,67 @@
 from __future__ import annotations
 
 import uuid
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
-from croniter import croniter
-from homeassistant.components.sensor import CONF_STATE_CLASS
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import (CONF_DEVICE_CLASS, CONF_UNIQUE_ID,
-                                 CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
+from cronsim import CronSim, CronSimError
+from homeassistant.components.sensor.const import (
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.components.sensor.const import (
+    DOMAIN as SENSOR_DOMAIN,
+)
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.core import async_get_hass
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaCommonFlowHandler, SchemaConfigFlowHandler, SchemaFlowError,
-    SchemaFlowFormStep, SchemaFlowMenuStep)
+    SchemaCommonFlowHandler,
+    SchemaConfigFlowHandler,
+    SchemaFlowError,
+    SchemaFlowFormStep,
+    SchemaFlowMenuStep,
+)
 from homeassistant.helpers.template import Template
+from homeassistant.util import dt as dt_util
 
-from .const import (CONF_CONDITION, CONF_CONFIG_NAME, CONF_COUNTER_TEMPLATE,
-                    CONF_CRON, CONF_INDEX, CONF_METER_TYPE, CONF_PERIOD,
-                    CONF_PERIODS, CONF_SENSOR_NAME, CONF_SOURCE, CONF_TW_DAYS,
-                    CONF_TW_FROM, CONF_TW_TILL, DOMAIN, LOGGER,
-                    PREDEFINED_PERIODS, MeterType)
+from .const import (
+    CONF_CONDITION,
+    CONF_CONFIG_NAME,
+    CONF_COUNTER_TEMPLATE,
+    CONF_CRON,
+    CONF_INDEX,
+    CONF_METER_TYPE,
+    CONF_PERIOD,
+    CONF_PERIODS,
+    CONF_SENSOR_NAME,
+    CONF_SOURCE,
+    CONF_TW_DAYS,
+    CONF_TW_FROM,
+    CONF_TW_TILL,
+    DOMAIN,
+    PREDEFINED_PERIODS,
+    MeterType,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+# URL constants for description placeholders
+_DEVICE_CLASS_URL = "https://www.home-assistant.io/integrations/sensor/#device-class"
+_STATE_CLASS_URL = "https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes"
+_BUYMEACOFFEE_URL = "https://www.buymeacoffee.com/danieldotnl"
 
 PERIOD_OPTIONS = [
-    # selector.SelectOptionDict(value="none", label="none (no reset)"),
     selector.SelectOptionDict(value="hour", label="hour"),
     selector.SelectOptionDict(value="day", label="day"),
     selector.SelectOptionDict(value="week", label="week"),
@@ -54,7 +87,7 @@ DAY_OPTIONS = [
 DEFAULT_DAYS = ["0", "1", "2", "3", "4", "5", "6"]
 
 
-def make_unique_name(period, existing_names):
+def make_unique_name(period: str, existing_names: list[str]) -> str:
     """Create a unique name with a suffix in case of duplicates."""
     if period not in PREDEFINED_PERIODS:
         period = "custom"
@@ -73,7 +106,6 @@ async def validate_sensor_setup(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate sensor input."""
-
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     sensors: list[dict[str, Any]] = handler.options.setdefault(SENSOR_DOMAIN, [])
@@ -81,7 +113,8 @@ async def validate_sensor_setup(
         sensor = dict(user_input)
 
         if not validate_period(period):
-            raise SchemaFlowError("invalid_cron")
+            msg = "invalid_cron"
+            raise SchemaFlowError(msg)
 
         sensor[CONF_CRON] = get_cron_expression(period)
         sensor[CONF_PERIOD] = period
@@ -90,11 +123,12 @@ async def validate_sensor_setup(
         sensor[CONF_UNIQUE_ID] = str(uuid.uuid1())
 
         sensor[CONF_SENSOR_NAME] = make_unique_name(
-            period, [item.get(CONF_SENSOR_NAME) for item in sensors]
+            period, [str(item.get(CONF_SENSOR_NAME)) for item in sensors]
         )
         sensors.append(sensor)
 
     return {}
+
 
 def get_cron_expression(period: str) -> str:
     """Get cron expression ."""
@@ -102,22 +136,29 @@ def get_cron_expression(period: str) -> str:
         return PREDEFINED_PERIODS[period]
     return period
 
-def validate_period(period: str) -> str:
+
+def validate_period(period: str) -> bool:
     """Validate period input."""
     if period in PREDEFINED_PERIODS:
         return True
-    return croniter.is_valid(period)
+    try:
+        CronSim(period, dt_util.now(dt_util.get_default_time_zone()))
+        return True  # noqa: TRY300
+    except CronSimError:
+        return False
 
 
 async def validate_edit_main_config(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    handler: SchemaCommonFlowHandler,  # noqa: ARG001
+    user_input: dict[str, Any],
 ) -> dict[str, Any]:
     """Validate edit main config."""
     return user_input
 
 
 async def validate_time_config(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    handler: SchemaCommonFlowHandler,  # noqa: ARG001
+    user_input: dict[str, Any],
 ) -> dict[str, Any]:
     """Validate time config."""
     user_input[CONF_METER_TYPE] = MeterType.TIME
@@ -125,7 +166,8 @@ async def validate_time_config(
 
 
 async def validate_source_config(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    handler: SchemaCommonFlowHandler,  # noqa: ARG001
+    user_input: dict[str, Any],
 ) -> dict[str, Any]:
     """Validate source config."""
     user_input[CONF_METER_TYPE] = MeterType.SOURCE
@@ -133,7 +175,8 @@ async def validate_source_config(
 
 
 async def validate_count_config(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    handler: SchemaCommonFlowHandler,  # noqa: ARG001
+    user_input: dict[str, Any],
 ) -> dict[str, Any]:
     """Validate source config."""
     user_input[CONF_METER_TYPE] = MeterType.COUNTER
@@ -141,19 +184,21 @@ async def validate_count_config(
 
 
 async def validate_when(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    handler: SchemaCommonFlowHandler,  # noqa: ARG001
+    user_input: dict[str, Any],
 ) -> dict[str, Any]:
     """Validate when config."""
     if len(user_input[CONF_TW_DAYS]) == 0:
-        raise SchemaFlowError("tw_days_minimum")
+        msg = "tw_days_minimum"
+        raise SchemaFlowError(msg)
     if user_input.get(CONF_CONDITION):
-        template = Template(user_input[CONF_CONDITION])
-        template.hass = async_get_hass()
+        template = Template(user_input[CONF_CONDITION], hass=async_get_hass())
         try:
             template.ensure_valid()
             template.async_render()
         except TemplateError as ex:
-            raise SchemaFlowError("condition_invalid") from ex
+            msg = "condition_invalid"
+            raise SchemaFlowError(msg) from ex
     return user_input
 
 
@@ -217,16 +262,15 @@ async def get_add_sensor_suggested_values(
         suggested[CONF_UNIT_OF_MEASUREMENT] = "s"
         suggested[CONF_STATE_CLASS] = SensorStateClass.TOTAL_INCREASING
     elif handler.options[CONF_METER_TYPE] == MeterType.SOURCE:
-        try:
-            state = handler.parent_handler.hass.states.get(handler.options[CONF_SOURCE])
+        state = handler.parent_handler.hass.states.get(handler.options[CONF_SOURCE])
+        if state is not None:
             suggested[CONF_DEVICE_CLASS] = state.attributes.get("device_class")
             suggested[CONF_UNIT_OF_MEASUREMENT] = state.attributes.get(
                 "unit_of_measurement"
             )
-        except Exception as ex:
-            LOGGER.warning(
-                "Couldn't retrieve properties from source entity in config_flow: %s", ex
-            )
+        else:
+            msg = "Source entity not found"
+            raise ValueError(msg)
     elif handler.options[CONF_METER_TYPE] == MeterType.COUNTER:
         suggested[CONF_STATE_CLASS] = SensorStateClass.TOTAL_INCREASING
     return suggested
@@ -252,13 +296,20 @@ async def validate_sensor_edit(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Update edited sensor."""
-
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     idx: int = handler.flow_state["_idx"]
-    if handler.options[SENSOR_DOMAIN][idx].get(CONF_UNIT_OF_MEASUREMENT) != user_input.get(CONF_UNIT_OF_MEASUREMENT):
-        if handler.options[SENSOR_DOMAIN][idx].get(CONF_DEVICE_CLASS) and user_input.get(CONF_DEVICE_CLASS) is not None:
-            raise SchemaFlowError("uom_with_device_class_update")
+    original_uom = handler.options[SENSOR_DOMAIN][idx].get(CONF_UNIT_OF_MEASUREMENT)
+    new_uom = user_input.get(CONF_UNIT_OF_MEASUREMENT)
+    original_device_class = handler.options[SENSOR_DOMAIN][idx].get(CONF_DEVICE_CLASS)
+    new_device_class = user_input.get(CONF_DEVICE_CLASS)
+    if (
+        original_uom != new_uom
+        and original_device_class is not None
+        and new_device_class is not None
+    ):
+        msg = "uom_with_device_class_update"
+        raise SchemaFlowError(msg)
     handler.options[SENSOR_DOMAIN][idx].update(user_input)
     for key in DATA_SCHEMA_EDIT_SENSOR.schema:
         if isinstance(key, vol.Optional) and key not in user_input:
@@ -308,7 +359,7 @@ SENSORS_CONFIG = {
             translation_key="period_selector",
             options=PERIOD_OPTIONS,
             multiple=True,
-            custom_value=True
+            custom_value=True,
         )
     ),
     **SENSOR_CONFIG,
@@ -342,6 +393,35 @@ DATA_SCHEMA_EDIT_MAIN = vol.Schema(
 DATA_SCHEMA_THANK_YOU = vol.Schema({})
 
 
+async def get_sensors_step_placeholders(
+    handler: SchemaCommonFlowHandler,  # noqa: ARG001
+) -> dict[str, str]:
+    """Return description placeholders for sensors step."""
+    return {
+        "device_class_url": _DEVICE_CLASS_URL,
+        "state_class_url": _STATE_CLASS_URL,
+    }
+
+
+async def get_thank_you_placeholders(
+    handler: SchemaCommonFlowHandler,  # noqa: ARG001
+) -> dict[str, str]:
+    """Return description placeholders for thank you step."""
+    return {
+        "buymeacoffee_url": _BUYMEACOFFEE_URL,
+    }
+
+
+async def get_add_sensors_placeholders(
+    handler: SchemaCommonFlowHandler,  # noqa: ARG001
+) -> dict[str, str]:
+    """Return description placeholders for add sensors step."""
+    return {
+        "device_class_url": _DEVICE_CLASS_URL,
+        "state_class_url": _STATE_CLASS_URL,
+    }
+
+
 CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(["time", "source", "count"]),
     "time": SchemaFlowFormStep(
@@ -369,9 +449,11 @@ CONFIG_FLOW = {
         validate_user_input=validate_sensor_setup,
         suggested_values=get_add_sensor_suggested_values,
         next_step="thank_you",
+        description_placeholders=get_sensors_step_placeholders,
     ),
     "thank_you": SchemaFlowFormStep(
         DATA_SCHEMA_THANK_YOU,
+        description_placeholders=get_thank_you_placeholders,
     ),
 }
 
@@ -388,6 +470,7 @@ OPTIONS_FLOW = {
         suggested_values=get_add_sensor_suggested_values,
         validate_user_input=validate_sensor_setup,
         next_step="thank_you",
+        description_placeholders=get_add_sensors_placeholders,
     ),
     "select_edit_sensor": SchemaFlowFormStep(
         get_select_sensor_schema,
@@ -409,6 +492,7 @@ OPTIONS_FLOW = {
     ),
     "thank_you": SchemaFlowFormStep(
         DATA_SCHEMA_THANK_YOU,
+        description_placeholders=get_thank_you_placeholders,
     ),
 }
 

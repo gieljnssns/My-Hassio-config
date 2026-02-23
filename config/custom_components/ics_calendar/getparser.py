@@ -1,7 +1,7 @@
 """Provide GetParser class."""
 
 from .icalendarparser import ICalendarParser
-from .parsers.parser_ics import ParserICS
+# from .parsers.parser_ics import ParserICS
 from .parsers.parser_rie import ParserRIE
 
 
@@ -21,7 +21,7 @@ class GetParser:  # pylint: disable=R0903
         # return parser_cls(*args)
         if parser == "rie":
             return ParserRIE(*args)
-        if parser == "ics":
-            return ParserICS(*args)
+        # if parser == "ics":
+        #     return ParserICS(*args)
 
         return None

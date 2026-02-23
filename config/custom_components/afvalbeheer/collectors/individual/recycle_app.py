@@ -22,6 +22,7 @@ class RecycleApp(WasteCollector):
     """
     WASTE_TYPE_MAPPING = {
         'grof': WASTE_TYPE_BULKLITTER,
+        'groot huisvuil': WASTE_TYPE_BULKLITTER,
         # 'glas': WASTE_TYPE_GLASS,
         'glas': WASTE_TYPE_GLASS,
         # 'duobak': WASTE_TYPE_GREENGREY,
@@ -39,6 +40,7 @@ class RecycleApp(WasteCollector):
         'pmd': WASTE_TYPE_PACKAGES,
         'gemengde': WASTE_TYPE_PLASTIC,
         'snoeihout': WASTE_TYPE_BRANCHES,
+        'takken': WASTE_TYPE_BRANCHES,
         'zachte plastics': WASTE_TYPE_SOFT_PLASTIC,
         'roze zak': WASTE_TYPE_SOFT_PLASTIC,
         'déchets résiduels': WASTE_TYPE_GREY,

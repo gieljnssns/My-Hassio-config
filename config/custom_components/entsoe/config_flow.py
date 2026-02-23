@@ -55,6 +55,7 @@ class EntsoeFlowHandler(ConfigFlow, domain=DOMAIN):
         self.modifyer = None
         self.currency = None
         self.energy_scale = None
+        self.period = None
         self.name = ""
 
     VERSION = 1
@@ -78,6 +79,7 @@ class EntsoeFlowHandler(ConfigFlow, domain=DOMAIN):
             self.area = user_input[CONF_AREA]
             self.advanced_options = user_input[CONF_ADVANCED_OPTIONS]
             self.api_key = user_input[CONF_API_KEY]
+            self.period = user_input[CONF_PERIOD]
             self.name = user_input[CONF_ENTITY_NAME]
 
             if user_input[CONF_ENTITY_NAME] not in (None, ""):
@@ -187,6 +189,7 @@ class EntsoeFlowHandler(ConfigFlow, domain=DOMAIN):
                             options={
                                 CONF_API_KEY: user_input[CONF_API_KEY],
                                 CONF_AREA: user_input[CONF_AREA],
+                                CONF_PERIOD: self.period,
                                 CONF_MODIFYER: user_input[CONF_MODIFYER],
                                 CONF_CURRENCY: user_input[CONF_CURRENCY],
                                 CONF_ENERGY_SCALE: user_input[CONF_ENERGY_SCALE],
@@ -235,16 +238,11 @@ class EntsoeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _valid_template(self, user_template):
         try:
-            #
             ut = Template(user_template, self.hass).async_render(
                 current_price=0
-            )  # Add current price as 0 as we dont know it yet..
-
+            )
+            float(ut)  # Verify template produces a numeric value
             return True
-            if isinstance(ut, float):
-                return True
-            else:
-                return False
         except Exception as e:
             pass
         return False
@@ -364,16 +362,11 @@ class EntsoeOptionFlowHandler(OptionsFlow):
 
     async def _valid_template(self, user_template):
         try:
-            #
             ut = Template(user_template, self.hass).async_render(
                 current_price=0
-            )  # Add current price as 0 as we dont know it yet..
-
+            )
+            float(ut)  # Verify template produces a numeric value
             return True
-            if isinstance(ut, float):
-                return True
-            else:
-                return False
         except Exception as e:
             pass
         return False

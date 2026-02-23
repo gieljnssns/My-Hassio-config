@@ -28,6 +28,7 @@ from custom_components.powercalc.const import (
     DATA_GROUP_SIZES,
     DATA_GROUP_TYPES,
     DATA_HAS_GROUP_INCLUDE,
+    DATA_POWER_PROFILE_SOURCES,
     DATA_POWER_PROFILES,
     DATA_SENSOR_TYPES,
     DATA_SOURCE_DOMAINS,
@@ -38,6 +39,7 @@ from custom_components.powercalc.const import (
     CalculationStrategy,
     EntityType,
     GroupType,
+    PowerProfileSource,
     SensorType,
 )
 from custom_components.powercalc.power_profile.library import ProfileLibrary
@@ -62,6 +64,7 @@ class RuntimeAnalyticsData(TypedDict, total=False):
     source_domains: Counter[str]
     group_types: Counter[GroupType]
     group_sizes: list[int]
+    power_profile_sources: Counter[PowerProfileSource]
     entity_types: Counter[EntityType]
     uses_include: bool
     _seen: dict[str, set[str]]
@@ -179,6 +182,7 @@ class Analytics:
                 "by_source_domain": runtime_data.setdefault(DATA_SOURCE_DOMAINS, Counter()),
                 "by_group_type": runtime_data.setdefault(DATA_GROUP_TYPES, Counter()),
                 "by_entity_type": runtime_data.setdefault(DATA_ENTITY_TYPES, Counter()),
+                "by_power_profile_source": runtime_data.setdefault(DATA_POWER_PROFILE_SOURCES, Counter()),
             },
         }
 

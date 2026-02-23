@@ -5,10 +5,19 @@ from datetime import timedelta
 def get_interval_minutes(iso8601_interval: str) -> int:
     """
     Convert an ISO 8601 duration string to total minutes.
-    Example: 'PT15M' -> 15
+    Example: 'PT15M' -> 15, 'PT1H' -> 60
     """
-
-    return int(re.match(r"PT(\d+)M", iso8601_interval).group(1))
+    # Handle hour format (PT1H, PT2H, etc.)
+    hour_match = re.match(r"PT(\d+)H", iso8601_interval)
+    if hour_match:
+        return int(hour_match.group(1)) * 60
+    
+    # Handle minute format (PT15M, PT60M, etc.)
+    minute_match = re.match(r"PT(\d+)M", iso8601_interval)
+    if minute_match:
+        return int(minute_match.group(1))
+    
+    raise ValueError(f"Unsupported ISO 8601 interval format: {iso8601_interval}")
 
 
 def bucket_time(ts, bucket_size):

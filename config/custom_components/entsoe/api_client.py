@@ -7,10 +7,11 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Dict, Union
 
+import asyncio
+
 import aiohttp
 import pytz
-import requests
-from aiohttp import ClientResponse, ClientError
+from aiohttp import ClientError
 
 from custom_components.entsoe.const import DEFAULT_PERIOD
 from custom_components.entsoe.utils import get_interval_minutes
@@ -33,7 +34,7 @@ class EntsoeClient:
 
     async def _base_request(
             self, params: Dict, start: datetime, end: datetime
-    ) -> ClientResponse:
+    ) -> str:
 
         base_params = {
             "securityToken": self.api_key,
@@ -42,16 +43,25 @@ class EntsoeClient:
         }
         params.update(base_params)
 
+        timeout = aiohttp.ClientTimeout(total=10, connect=5)
+        last_error = None
         for url in API_URLS:
             _LOGGER.debug(f"Performing request to {url} with params {params}")
             async with aiohttp.ClientSession() as session:
                 try:
-                    return await session.get(url=url, params=params, raise_for_status=True)
+                    async with aiohttp.ClientSession(timeout=timeout) as session:
+                      response = await session.get(url=url, params=params, raise_for_status=True)
+                      return await response.text()
+                except aiohttp.ClientResponseError as e:
+                    if e.status == 401:
+                        raise  # Don't retry on auth failures
+                    _LOGGER.info(e)
+                    continue
                 except ClientError as e:
                     _LOGGER.info(e)
                     continue
 
-        raise EntsoeException("All ENTSO-e API endpoints failed to respond with status 200.")
+        raise EntsoeException(f"All ENTSO-e API endpoints failed: {last_error}")
 
     def _remove_namespace(self, tree):
         """Remove namespaces in the passed XML tree for easier tag searching."""
@@ -81,15 +91,15 @@ class EntsoeClient:
             "in_Domain": area.code,
             "out_Domain": area.code,
         }
-        response = await self._base_request(params=params, start=start, end=end)
+        response_text = await self._base_request(params=params, start=start, end=end)
 
         try:
-            series = self.parse_price_document(await response.text())
+            series = self.parse_price_document(response_text)
             return dict(sorted(series.items()))
 
         except Exception as exc:
             _LOGGER.debug(
-                f"Failed to parse response content error: {exc} content:{response.content}"
+                f"Failed to parse response content error: {exc} content:{response_text[:500]}"
             )
             raise exc
 
@@ -104,7 +114,8 @@ class EntsoeClient:
         # There may be overlapping times in the repsonse. For now we skip timeseries which we already processed
         for timeseries in root.findall(".//TimeSeries"):
             # For germany, discard if sequence != 1
-            if timeseries.find(".//out_Domain.mRID").text == Area['DE_LU'].code:
+            out_domain_elem = timeseries.find(".//out_Domain.mRID")
+            if out_domain_elem is not None and out_domain_elem.text == Area['DE_LU'].code:
                 sequence = timeseries.find(".//classificationSequence_AttributeInstanceComponent.position")
                 if sequence is not None  and sequence.text != '1':
                     continue
@@ -126,7 +137,7 @@ class EntsoeClient:
                     .replace(tzinfo=pytz.UTC)
                     .astimezone()
                 )
-                start_time.replace(minute=0)  # ensure we start from the whole hour
+                start_time = start_time.replace(minute=0)  # ensure we start from the whole hour
 
                 response_end = period.find(".//timeInterval/end").text
                 end_time = (
@@ -161,7 +172,7 @@ class EntsoeClient:
 
     # processing hourly prices info -> thats easy
     def process_points(
-            self, period: Element, start_time: datetime, interval: int
+            self, period: ET.Element, start_time: datetime, interval: int
     ) -> dict:
         _LOGGER.debug(f"Processing prices based on interval {interval} minutes")
         # Extract (position, price) pairs
