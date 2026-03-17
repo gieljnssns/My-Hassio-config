@@ -96,6 +96,7 @@ from .const import (
     CONF_SENSOR_TYPE,
     CONF_SLEEP_POWER,
     CONF_STANDBY_POWER,
+    CONF_STATE,
     CONF_STATES_POWER,
     CONF_SUBTRACT_ENTITIES,
     CONF_UNAVAILABLE_POWER,
@@ -304,8 +305,6 @@ async def async_setup_platform(
     if CONF_CREATE_GROUP in config:
         config[CONF_NAME] = config[CONF_CREATE_GROUP]
 
-    register_entity_services()
-
     await _async_setup_entities(
         hass,
         config,
@@ -357,6 +356,9 @@ async def _async_setup_entities(
     discovery_type: PowercalcDiscoveryType | None = None,
 ) -> None:
     """Main routine to setup power/energy sensors from provided configuration."""
+
+    register_entity_services()
+
     try:
         context = CreationContext(
             group=CONF_CREATE_GROUP in config,
@@ -572,8 +574,13 @@ def convert_config_entry_to_sensor_config(config_entry: ConfigEntry, hass: HomeA
             timedelta(hours=on_time["hours"], minutes=on_time["minutes"], seconds=on_time["seconds"]) if on_time else timedelta(days=1)
         )
 
-    def process_states_power(states_power: dict) -> dict:
-        """Convert state power values to Template objects where necessary."""
+    def process_states_power(states_power: dict | list) -> dict:
+        """Convert state power values to Template objects where necessary.
+
+        Handles both dict format (legacy/YAML) and list format (config flow).
+        """
+        if isinstance(states_power, list):
+            states_power = {item[CONF_STATE]: item[CONF_POWER] for item in states_power}
         return {key: Template(value, hass) if isinstance(value, str) and "{{" in value else value for key, value in states_power.items()}
 
     def process_daily_fixed_energy() -> None:

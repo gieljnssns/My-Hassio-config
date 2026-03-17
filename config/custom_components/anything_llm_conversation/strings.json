@@ -1,0 +1,87 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "base_url": "[%key:common::config_flow::data::base_url%]",
+          "chat_model": "Workspace Slug",
+          "failover_api_key": "Failover API Key",
+          "failover_base_url": "Failover Base URL",
+          "failover_chat_model": "Failover Workspace Slug"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "prompt": "Prompt Template",
+          "model": "Completion Model",
+          "max_tokens": "Maximum tokens to return in response",
+          "temperature": "Temperature",
+          "attach_username": "Attach Username to Message",
+          "thread_slug": "Thread Slug",
+          "failover_thread_slug": "Failover Thread Slug"
+        },
+        "data_description": {
+        }
+      }
+    }
+  },
+  "services": {
+    "query_image": {
+      "name": "Query image",
+      "description": "Take in images and answer questions about them",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this service"
+        },
+        "model": {
+          "name": "Model",
+          "description": "The model",
+          "example": "gpt-4.1-mini"
+        },
+        "prompt": {
+          "name": "Prompt",
+          "description": "The text to ask about image",
+          "example": "What’s in this image?"
+        },
+        "images": {
+          "name": "Images",
+          "description": "A list of images that would be asked"
+        },
+        "max_tokens": {
+          "name": "Max Tokens",
+          "description": "The maximum tokens",
+          "example": "300"
+        }
+      }
+    },
+    "change_config": {
+      "name": "Change configuration",
+      "description": "Changes the configuration of the integration.",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to update."
+        },
+        "api_key": {
+          "name": "API Key",
+          "description": "The API key."
+        },
+        "base_url": {
+          "name": "Base URL",
+          "description": "The base URL."
+        }
+      }
+    }
+  }
+}

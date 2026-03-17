@@ -6,6 +6,7 @@ from typing import Dict
 
 import asyncio
 import logging
+from .log_collector import get_vtherm_logger
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
@@ -21,8 +22,9 @@ from .base_thermostat import BaseThermostat
 from .const import *  # pylint: disable=wildcard-import, unused-wildcard-import
 
 from .vtherm_api import VersatileThermostatAPI
+from .log_collector import VThermLogHandler, async_export_logs, async_register_log_download_endpoint, DEFAULT_MAX_AGE_HOURS
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = get_vtherm_logger(__name__)
 
 SELF_REGULATION_PARAM_SCHEMA = {
     vol.Required("kp"): vol.Coerce(float),
@@ -51,6 +53,7 @@ CONFIG_SCHEMA = vol.Schema(
                 CONF_SHORT_EMA_PARAMS: vol.Schema(EMA_PARAM_SCHEMA),
                 CONF_SAFETY_MODE: vol.Schema(SAFETY_MODE_PARAM_SCHEMA),
                 vol.Optional(CONF_MAX_ON_PERCENT): vol.Coerce(float),
+                vol.Optional(CONF_LOG_BUFFER_MAX_AGE_HOURS, default=DEFAULT_MAX_AGE_HOURS): cv.positive_int,
             }
         ),
     },
@@ -103,6 +106,23 @@ async def async_setup(
         _handle_reload,
     )
 
+    # Initialize log collector
+    # Note: Single shared instance stored in hass.data[DOMAIN] is used for all VTherm loggers.
+    # This ensures that all log records are centralized in one ring buffer, regardless of reload.
+    if "log_handler" not in hass.data[DOMAIN]:
+        max_age_hours = (
+            vtherm_config.get(CONF_LOG_BUFFER_MAX_AGE_HOURS, DEFAULT_MAX_AGE_HOURS)
+            if vtherm_config is not None
+            else DEFAULT_MAX_AGE_HOURS
+        )
+        log_handler = VThermLogHandler(max_age_hours=max_age_hours)
+        hass.data[DOMAIN]["log_handler"] = log_handler
+        _LOGGER.info("VTherm log collector initialized (buffer: %d h)", max_age_hours)
+        
+        # Register the HTTP endpoint for log downloads
+        # This provides a /api/versatile_thermostat/logs/<filename> endpoint
+        await async_register_log_download_endpoint(hass)
+
     return True
 
 
@@ -126,8 +146,10 @@ async def reload_all_vtherm(hass):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Versatile Thermostat from a config entry."""
 
+    name = entry.data.get(CONF_NAME)
     _LOGGER.debug(
-        "Calling async_setup_entry entry: entry_id='%s', value='%s'",
+        "%s - Calling async_setup_entry entry: entry_id='%s', value='%s'",
+        name,
         entry.entry_id,
         entry.data,
     )
@@ -154,6 +176,15 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
         entry.entry_id,
         entry.data,
     )
+
+    # If a component has set this flag, skip the reload (data is still persisted to disk).
+    api: VersatileThermostatAPI = VersatileThermostatAPI.get_vtherm_api(hass)
+    if api and api.skip_reload_on_config_update:
+        _LOGGER.debug(
+            "update_listener: skipping reload for entry '%s' (skip_reload_on_config_update=True)",
+            entry.entry_id,
+        )
+        return
 
     if entry.data.get(CONF_THERMOSTAT_TYPE) == CONF_THERMOSTAT_CENTRAL_CONFIG:
         await reload_all_vtherm(hass)

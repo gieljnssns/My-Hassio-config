@@ -2,6 +2,7 @@
 
 """ Underlying entities classes """
 import logging
+from .log_collector import get_vtherm_logger
 import re
 from typing import Any, Dict, List, Optional, Tuple, TypeVar
 from collections.abc import Callable
@@ -44,7 +45,7 @@ from .keep_alive import IntervalCaller
 from .vtherm_api import VersatileThermostatAPI
 from .underlying_state_manager import UnderlyingStateManager
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = get_vtherm_logger(__name__)
 
 class UnderlyingEntityType(StrEnum):
     """All underlying device type"""
@@ -121,6 +122,7 @@ class UnderlyingEntity:
         Runs the initial state checks when all underlying entities are initialized.
         """
         _LOGGER.debug("%s --------> Underlying state change received: '%s'", self, new_state)
+
         # If not yet initialized and we received a valid initial state, run initial checks
         if not self.is_initialized:
             # Check if we have a valid state for all underlying entities for the first time
@@ -223,27 +225,9 @@ class UnderlyingEntity:
         except Exception as err:
             _LOGGER.error("Error calling service %s.%s: %s. The underlying will not change its state.", domain, service, err)
 
-    async def start_cycle(
-        self,
-        hvac_mode: VThermHvacMode,
-        on_time_sec: int,
-        off_time_sec: int,
-        on_percent: int,
-        force=False,
-    ):
-        """Starting cycle for switch"""
-
-    def _cancel_cycle(self):
-        """Stops an eventual cycle"""
-
     def clamp_sent_value(self, value) -> float:
         """capping of the value send to the underlying eqt"""
         return value
-
-    async def turn_off_and_cancel_cycle(self):
-        """Turn off and cancel eventual running cycle"""
-        self._cancel_cycle()
-        await self.turn_off()
 
     async def check_overpowering(self) -> bool:
         """Check that a underlying can be turned on, else
@@ -294,7 +278,7 @@ class UnderlyingEntity:
     @property
     def hvac_action(self) -> HVACAction:
         """Calculate a hvac_action"""
-        return HVACAction.HEATING if self.should_device_be_active is True else HVACAction.OFF
+        raise NotImplementedError
 
     @property
     def is_inversed(self):
@@ -312,6 +296,12 @@ class UnderlyingEntity:
         """Return the last known underlying state"""
         return self._state_manager.get_state(self._entity_id)
 
+    @property
+    def last_change(self) -> datetime | None:
+        """Return the last_changed datetime of the underlying device if known."""
+        state = self._state_manager.get_state(self._entity_id)
+        return state.last_changed if state else None
+
 
 # ----------------------------------------------------------------
 # UnderlyingSwitch
@@ -320,7 +310,7 @@ class UnderlyingSwitch(UnderlyingEntity):
     """Represent a underlying switch"""
 
     def __init__(
-        self, hass: HomeAssistant, thermostat: Any, switch_entity_id: str, initial_delay_sec: int, keep_alive_sec: float, vswitch_on: str = None, vswitch_off: str = None
+        self, hass: HomeAssistant, thermostat: Any, switch_entity_id: str, keep_alive_sec: float, vswitch_on: str = None, vswitch_off: str = None
     ) -> None:
         """Initialize the underlying switch"""
 
@@ -330,9 +320,6 @@ class UnderlyingSwitch(UnderlyingEntity):
             entity_type=UnderlyingEntityType.SWITCH,
             entity_id=switch_entity_id,
         )
-        self._initial_delay_sec = initial_delay_sec
-        self._async_cancel_cycle = None
-        self._should_relaunch_control_heating = False
         self._on_time_sec = 0
         self._off_time_sec = 0
         self._new_on_time_sec = 0
@@ -353,11 +340,6 @@ class UnderlyingSwitch(UnderlyingEntity):
 
         # true if the on part of the cycle is running. Off if the off part is running
         self._is_on_part_running = False
-
-    @property
-    def initial_delay_sec(self):
-        """The initial delay for this class"""
-        return self._initial_delay_sec
 
     @overrides
     @property
@@ -382,7 +364,6 @@ class UnderlyingSwitch(UnderlyingEntity):
         if hvac_mode == VThermHvacMode_OFF:
             if self.is_device_active:
                 await self.turn_off()
-            self._cancel_cycle()
 
         if self.hvac_mode != hvac_mode:
             await super().set_hvac_mode(hvac_mode)
@@ -532,187 +513,18 @@ class UnderlyingSwitch(UnderlyingEntity):
             _LOGGER.error(err)
 
     @overrides
-    async def start_cycle(self, hvac_mode: VThermHvacMode, on_time_sec: int, off_time_sec: int, on_percent: int, force=False):
-        """Starting or update the cycle for switch"""
-        _LOGGER.debug(
-            "%s - Starting new cycle hvac_mode=%s on_time_sec=%d off_time_sec=%d force=%s",
-            self,
-            hvac_mode,
-            on_time_sec,
-            off_time_sec,
-            force,
-        )
-
-        self._hvac_mode = hvac_mode
-
-        # if a previous cycle is running
-        if self._async_cancel_cycle is not None:
-            if not force:
-                # Store new values which will be used at next cycle
-                self._new_on_time_sec = on_time_sec
-                self._new_off_time_sec = off_time_sec
-
-                _LOGGER.debug("%s - New on_time/off_time has been stored waiting for the end of the cycle", self)
-                return
-            else:
-                # stop the previous cycle and store new values as active now
-                self._cancel_cycle()
-                _LOGGER.debug("%s - cycle has been canceled and on_time/off_time has been stored as active", self)
-
-        self._on_time_sec = self._new_on_time_sec = on_time_sec
-        self._off_time_sec = self._new_off_time_sec = off_time_sec
-
-        # here the eventual previous cycle is stopped. Let see if we need to start another one
-        should_be_on = self._calculate_should_be_on(False)
-
-        # If we should heat, starts the cycle with delay. Setting the parameter to false will do the calculation of the should_be_on based on the on_time_sec and hvac_mode
-        if should_be_on:
-            # Set intended state before async scheduling to avoid race condition with keep_alive
-            # by pass the initial delay but repsect the cycle is 100% powr is needed, so that maximum heating will be obtained immediately and not after the first cycle
-            if self._off_time_sec <= 0 and self._initial_delay_sec > 0:
-                _LOGGER.info("%s - 100%% power is requested -> start heating immediatly", self)
-                await self.turn_on()
-
-            # and starts the cycle with the initial delay
-            self._async_cancel_cycle = self.call_later(self._hass, self._initial_delay_sec, self._turn_on_later)
-            _LOGGER.debug("%s - Start cycle on_time=%d, initial_delay=%d)", self, self._on_time_sec, self._initial_delay_sec)
-        # if we not heat but device is active
-        elif self.is_device_active:
-            _LOGGER.info("%s - stop heating because device should be off and no cycle is active", self)
-            await self.turn_off()
-        else:
-            # calculate the should_be_on (setting false as parameter will do the calculation)
-            _LOGGER.debug("%s - nothing to do - no cycle and no need to start one", self)
-
-    @overrides
-    def _cancel_cycle(self):
-        """Cancel the cycle"""
-        if self._async_cancel_cycle:
-            self._async_cancel_cycle()
-            self._async_cancel_cycle = None
-            _LOGGER.debug("%s - Stopping cycle during calculation", self)
-
-    async def _turn_on_later(self, _):
-        """Turn the heater on after a delay"""
-        # Guard against race condition during reload
-        if self._is_removed:
-            _LOGGER.debug("%s - _turn_on_later called after remove_entity, ignoring", self)
-            return
-
-        _LOGGER.debug(
-            "%s - calling turn_on_later hvac_mode=%s, should_relaunch_later=%s off_time_sec=%d",
-            self,
-            self._hvac_mode,
-            self._should_relaunch_control_heating,
-            self._on_time_sec,
-        )
-
-        self._cancel_cycle()
-
-        # at begining of a new cycle, get the last on_time_sec and off_time_sec
-        time = self._on_time_sec = self._new_on_time_sec
-        self._off_time_sec = self._new_off_time_sec
-
-        if not self._calculate_should_be_on(False):
-            _LOGGER.debug("%s - End of cycle (HVAC_MODE_OFF - 2)", self)
-            if self.is_device_active:
-                await self.turn_off()
-            return
-
-        action_label = "start"
-
-        if time > 0:
-            _LOGGER.info(
-                "%s - %s heating for %d min %d sec",
-                self,
-                action_label,
-                time // 60,
-                time % 60,
-            )
-            if not await self.turn_on():
-                return
-        else:
-            _LOGGER.debug("%s - No action on heater cause duration is 0", self)
-
-        # Trigger cycle start callbacks
-        # The cycle really starts now (after the initial delay)
-        # and will end at the next turn_on_later
-        for callback in self._on_cycle_start_callbacks:
-            try:
-                await callback(
-                    on_time_sec=self._on_time_sec,
-                    off_time_sec=self._off_time_sec,
-                    on_percent=self._thermostat.safe_on_percent,
-                    hvac_mode=self._hvac_mode,
-                )
-            except Exception as ex:
-                _LOGGER.warning(
-                    "%s - Error calling cycle start callback %s: %s",
-                    self,
-                    callback,
-                    ex,
-                )
-
-        # waits time sec and stop the switch
-        self._async_cancel_cycle = self.call_later(
-            self._hass,
-            time,
-            self._turn_off_later,
-        )
-
-    async def _turn_off_later(self, _):
-        """Turn the heater off and call the next cycle after the delay"""
-        # Guard against race condition during reload
-        if self._is_removed:
-            _LOGGER.debug("%s - _turn_off_later called after remove_entity, ignoring", self)
-            return
-
-        _LOGGER.debug(
-            "%s - calling turn_off_later hvac_mode=%s, should_relaunch_later=%s off_time_sec=%d",
-            self,
-            self._hvac_mode,
-            self._should_relaunch_control_heating,
-            self._off_time_sec,
-        )
-        self._cancel_cycle()
-
-        if self._hvac_mode == VThermHvacMode_OFF:
-            _LOGGER.debug("%s - End of cycle (HVAC_MODE_OFF - 2)", self)
-            self._is_on_part_running = False
-            if self.is_device_active:
-                await self.turn_off()
-            return
-
-        action_label = "stop"
-        time = self._off_time_sec
-
-        if time > 0:
-            _LOGGER.info(
-                "%s - %s heating for %d min %d sec",
-                self,
-                action_label,
-                time // 60,
-                time % 60,
-            )
-            await self.turn_off()
-        else:
-            _LOGGER.debug("%s - No action on heater cause duration is 0", self)
-        self._async_cancel_cycle = self.call_later(
-            self._hass,
-            time,
-            self._turn_on_later,
-        )
-
-        # increment energy at the end of the on cycle
-        self._thermostat.incremente_energy()
-
-    @overrides
     def remove_entity(self):
-        """Remove the entity after stopping its cycle"""
+        """Remove the entity"""
         self._is_removed = True
-        self._cancel_cycle()
         self._keep_alive.cancel()
         super().remove_entity()
+
+    def hvac_action(self) -> HVACAction:
+        """Calculate a hvac_action based on the current state and should_be_on"""
+        if not self.is_initialized:
+            return HVACAction.OFF
+
+        return HVACAction.HEATING if self.should_device_be_active is True else HVACAction.OFF
 
 
 # ----------------------------------------------------------------
@@ -1204,10 +1016,14 @@ class UnderlyingClimate(UnderlyingEntity):
             raise RuntimeError(f"{self} - cannot cap sent value because underlying is not initialized")
             # return value
 
-        # Gets the min_temp and max_temp
+        # Gets the min_temp and max_temp.
+        # Values from state attributes are already in HA's configured unit (same as value),
+        # because HA's climate component normalizes them via show_temp() before storing.
+        # No unit conversion is needed here.
+
         if self.min_temp is not None:
-            min_val = TemperatureConverter.convert(self.min_temp, self.temperature_unit, self._hass.config.units.temperature_unit)
-            max_val = TemperatureConverter.convert(self.max_temp, self.temperature_unit, self._hass.config.units.temperature_unit)
+            min_val = self.min_temp
+            max_val = self.max_temp
 
             new_value = max(min_val, min(value, max_val))
         else:
@@ -1273,8 +1089,6 @@ class UnderlyingValve(UnderlyingEntity):
             entity_type=UnderlyingEntityType.VALVE,
             entity_id=valve_entity_id,
         )
-        self._async_cancel_cycle = None
-        self._should_relaunch_control_heating = False
         self._hvac_mode = None
         self._percent_open: int | None = None  # self._thermostat.valve_open_percent
         self._min_open: float | None = None
@@ -1383,19 +1197,6 @@ class UnderlyingValve(UnderlyingEntity):
         return current_opening > (self._min_open or 0)
 
     @overrides
-    async def start_cycle(
-        self,
-        hvac_mode: VThermHvacMode,
-        _1,
-        _2,
-        _3,
-        force=False,
-    ):
-        """We use this function to change the on_percent"""
-        # if force:
-        await self.set_valve_open_percent()
-
-    @overrides
     def clamp_sent_value(self, value) -> float:
         """Try to adapt the open_percent value to the min / max found
         in the underlying entity (if any)"""
@@ -1436,8 +1237,7 @@ class UnderlyingValve(UnderlyingEntity):
         await self.send_percent_open()
 
     def remove_entity(self):
-        """Remove the entity after stopping its cycle"""
-        self._cancel_cycle()
+        """Remove the entity"""
         super().remove_entity()
 
     @property
@@ -1503,6 +1303,8 @@ class UnderlyingValveRegulation(UnderlyingValve):
     async def check_initial_state(self):
         """Handle initial valve state change and hvac_mode"""
 
+        _LOGGER.warning("%s - Issue_1831 - Starting initial state check for valve regulation underlying", self)
+
         # Initialize valve state and min max opening
         self.init_valve_state_min_max_open()
 
@@ -1528,8 +1330,10 @@ class UnderlyingValveRegulation(UnderlyingValve):
             # await self._climate_underlying.set_hvac_mode(hvac_mode)
             if self._thermostat.is_sleeping:
                 self._percent_open = 100
+                _LOGGER.warning("%s - Issue_1831 - is sleeping, setting percent_open to 100", self)
             else:
                 self._percent_open = self._thermostat.valve_open_percent or self._opening_threshold
+                _LOGGER.warning("%s - Issue_1831 - not sleeping, setting percent_open to %d", self, self._percent_open)
             await self.send_percent_open()
 
         elif not should_be_on and is_on:
@@ -1540,6 +1344,7 @@ class UnderlyingValveRegulation(UnderlyingValve):
                 self._entity_id,
             )
             self._percent_open = self._opening_threshold
+            _LOGGER.warning("%s - Issue_1831 - off and not sleeping, setting percent_open to %d", self, self._percent_open)
             await self.send_percent_open()
             # await self._climate_underlying.set_hvac_mode(hvac_mode)
 
@@ -1573,6 +1378,8 @@ class UnderlyingValveRegulation(UnderlyingValve):
 
         if self.has_closing_degree_entity:
             await self.send_value_to_number(self._closing_degree_entity_id, closing_degree)
+
+        _LOGGER.warning("%s - Issue_1831 - sent opening_degree=%s closing_degree=%s", self, opening_degree, closing_degree)
 
         _LOGGER.debug(
             "%s - valve regulation - I have sent opening_degree=%s closing_degree=%s",
@@ -1608,28 +1415,15 @@ class UnderlyingValveRegulation(UnderlyingValve):
             return []
         return [VThermHvacMode_HEAT, VThermHvacMode_SLEEP, VThermHvacMode_OFF]
 
-    @overrides
-    async def start_cycle(
-        self,
-        hvac_mode: VThermHvacMode,
-        _1,
-        _2,
-        _3,
-        force=False,
-    ):
-        """We use this function to change the on_percent"""
-        # if force:
-        await self.set_valve_open_percent()
-
     @property
     def is_device_active(self):
-        """If the opening valve is open."""
+        """If the opening valve is open. The real opening value is used here. So we need to compare with 100 - max_closing which the max closing value if the valve is closed."""
         val = self.current_valve_opening
-        return val > self._opening_threshold if isinstance(val, (int, float)) else False
+        return val > (100 - self._max_closing_degree) if isinstance(val, (int, float)) else False
 
     @property
     def should_device_be_active(self):
-        """If the opening valve is open."""
+        """If the opening valve is open. The real opening value is used here. So we need to compare with 100 - max_closing which the max closing value if the valve is closed."""
         # return value > (100 - self._max_closing_degree) # TODO why this ?
         return self.hvac_mode not in [VThermHvacMode_OFF] and self._percent_open > self._opening_threshold if isinstance(self._percent_open, (int, float)) else False
 
@@ -1639,7 +1433,8 @@ class UnderlyingValveRegulation(UnderlyingValve):
         if (value := self.last_sent_opening_value) is None:
             return HVACAction.OFF
 
-        if value > (100 - self._max_closing_degree):
+        # Align the behavior with is_device_active
+        if self.is_device_active:
             return HVACAction.HEATING
         elif value > 0:
             return HVACAction.IDLE

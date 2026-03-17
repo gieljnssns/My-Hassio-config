@@ -2,6 +2,7 @@
 """TPI algorithm handler for ThermostatProp."""
 
 import logging
+from .log_collector import get_vtherm_logger
 from typing import Any, TYPE_CHECKING
 from datetime import datetime
 
@@ -14,17 +15,17 @@ from .vtherm_hvac_mode import VThermHvacMode_OFF, VThermHvacMode_HEAT, VThermHva
 from .vtherm_api import VersatileThermostatAPI
 from .commons import write_event_log
 from .const import EventType
-from .timing_utils import calculate_cycle_times
+from .cycle_scheduler import calculate_cycle_times
 
 if TYPE_CHECKING:
     from .thermostat_prop import ThermostatProp
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = get_vtherm_logger(__name__)
 
 
 class TPIHandler:
     """Handler for TPI-specific logic.
-    
+
     This class encapsulates all TPI-specific behavior and is used
     via composition by ThermostatProp. It updates thermostat attributes
     directly for backward compatibility with child classes.
@@ -80,7 +81,7 @@ class TPIHandler:
 
     def init_algorithm(self):
         """Initialize PropAlgorithm and AutoTpiManager.
-        
+
         Updates thermostat attributes directly for backward compatibility.
         """
         t = self._thermostat
@@ -147,6 +148,8 @@ class TPIHandler:
         heating_rate = entry.get(CONF_AUTO_TPI_HEATING_POWER, 1.0)
         cooling_rate = entry.get(CONF_AUTO_TPI_COOLING_POWER, 1.0)
         aggressiveness = entry.get(CONF_AUTO_TPI_AGGRESSIVENESS, 1.0)
+        continuous_kext = entry.get(CONF_AUTO_TPI_CONTINUOUS_KEXT, False)
+        continuous_kext_alpha = entry.get(CONF_AUTO_TPI_CONTINUOUS_KEXT_ALPHA, 0.04)
 
         _LOGGER.info("%s - DEBUG: TPI coefficients from entry_infos: int=%.3f, ext=%.3f",
                      t, t.tpi_coef_int, t.tpi_coef_ext)
@@ -170,6 +173,8 @@ class TPIHandler:
             heating_rate=heating_rate,
             cooling_rate=cooling_rate,
             aggressiveness=aggressiveness,
+            continuous_kext=continuous_kext,
+            continuous_kext_alpha=continuous_kext_alpha,
         )
         self._auto_tpi_manager.set_is_vtherm_stopping_callback(lambda: t.is_removed)
         _LOGGER.info("%s - DEBUG: AutoTpiManager initialized with defaults: int=%.3f, ext=%.3f",
@@ -183,7 +188,8 @@ class TPIHandler:
             self._auto_tpi_manager._entity_id = t.entity_id
             _LOGGER.info("%s - DEBUG: Before load_data - int=%.3f, ext=%.3f", t, t.tpi_coef_int, t.tpi_coef_ext)
             await self._auto_tpi_manager.async_load_data()
-            
+
+
             # If we have learned parameters, apply them
             learned_params = self._auto_tpi_manager.get_calculated_params()
             if learned_params:
@@ -218,6 +224,12 @@ class TPIHandler:
         if self._auto_tpi_manager:
             t.hass.async_create_task(self._auto_tpi_manager.async_save_data())
 
+    def on_scheduler_ready(self, scheduler) -> None:
+        """Register AutoTPI learning callbacks on the cycle scheduler."""
+        if self._auto_tpi_manager:
+            scheduler.register_cycle_start_callback(self._auto_tpi_manager.on_cycle_started)
+            scheduler.register_cycle_end_callback(self._auto_tpi_manager.on_cycle_completed)
+
     def _is_central_boiler_off(self) -> bool:
         """Check if the central boiler is configured but currently off."""
         t = self._thermostat
@@ -231,7 +243,7 @@ class TPIHandler:
     async def _get_tpi_data(self) -> dict[str, Any]:
         """Calculate and return TPI cycle parameters."""
         t = self._thermostat
-        
+
         # Feed current temperatures to AutoTpiManager BEFORE getting params
         if self._auto_tpi_manager:
             await self._auto_tpi_manager.update(
@@ -274,12 +286,6 @@ class TPIHandler:
             if forced_by_timing:
                 if t.prop_algorithm and hasattr(t.prop_algorithm, "update_realized_power"):
                     t.prop_algorithm.update_realized_power(realized_percent)
-
-            # Always notify AutoTPI manager with the realized power (NEW)
-            # This also accounts for max_on_percent and safety clamping
-            # applied by thermostat_prop.on_percent
-            if self._auto_tpi_manager:
-                self._auto_tpi_manager.update_realized_power(realized_percent)
         else:
             on_time_sec = 0
             off_time_sec = 0
@@ -308,17 +314,7 @@ class TPIHandler:
                 is_heating_failure=t.heating_failure_detection_manager.is_failure_detected,
             )
 
-            # 2. Drive the cycle processing passively
-            if self._auto_tpi_manager.learning_active:
-                await self._auto_tpi_manager.process_cycle(
-                    # Use provided timestamp or current time if missing
-                    timestamp=dt_util.now(),
-                    data_provider=self._get_tpi_data,
-                    event_sender=t._on_prop_cycle_start,
-                    force=force
-                )
-
-            # 3. Synchronize parameters if learning is active
+            # 2. Synchronize parameters if learning is active
             new_params = await self._auto_tpi_manager.calculate()
             if self._auto_tpi_manager.learning_active and new_params:
                 new_coef_int = new_params.get(CONF_TPI_COEF_INT)
@@ -341,8 +337,6 @@ class TPIHandler:
             if t.is_device_active:
                 await t.async_underlying_entity_turn_off()
         else:
-            on_time_sec = 0
-            off_time_sec = 0
             on_percent = 0
             if t.prop_algorithm:
                 on_percent = t.on_percent
@@ -352,28 +346,18 @@ class TPIHandler:
                     t.minimal_activation_delay,
                     t.minimal_deactivation_delay,
                 )
-                
+
                 realized_percent = on_time_sec / (t.cycle_min * 60)
-                
+
                 if forced_by_timing:
                     if t.prop_algorithm and hasattr(t.prop_algorithm, "update_realized_power"):
                         t.prop_algorithm.update_realized_power(realized_percent)
 
-                if self._auto_tpi_manager:
-                    self._auto_tpi_manager.update_realized_power(realized_percent)
-
-            # Store on/off times on thermostat for sensors and attributes
-            t._on_time_sec = on_time_sec
-            t._off_time_sec = off_time_sec
-
-            for under in t.underlyings:
-                await under.start_cycle(
-                    t.vtherm_hvac_mode,
-                    on_time_sec,
-                    off_time_sec,
-                    on_percent,
-                    force,
-                )
+            await t.cycle_scheduler.start_cycle(
+                t.vtherm_hvac_mode,
+                on_percent,
+                force,
+            )
 
     async def on_state_changed(self):
         """Handle state changes."""
@@ -385,9 +369,10 @@ class TPIHandler:
         t = self._thermostat
         t._attr_extra_state_attributes["specific_states"].update({
             "auto_tpi_state": "on" if self._auto_tpi_manager and self._auto_tpi_manager.learning_active else "off",
+            "auto_tpi_continuous_kext": "on" if self._auto_tpi_manager and self._auto_tpi_manager._continuous_kext else "off",
             "auto_tpi_learning": (
                 self._auto_tpi_manager.get_filtered_state()
-                if self._auto_tpi_manager and self._auto_tpi_manager.learning_active
+                if self._auto_tpi_manager and (self._auto_tpi_manager.learning_active or self._auto_tpi_manager._continuous_kext)
                 else {}
             ),
         })
@@ -468,8 +453,10 @@ class TPIHandler:
         # Update delays directly on thermostat (not in algo anymore)
         if minimal_activation_delay is not None:
             t.minimal_activation_delay = minimal_activation_delay
+            t.cycle_scheduler.min_activation_delay = t.minimal_activation_delay
         if minimal_deactivation_delay is not None:
             t.minimal_deactivation_delay = minimal_deactivation_delay
+            t.cycle_scheduler.min_deactivation_delay = t.minimal_deactivation_delay
 
         await self._async_update_tpi_config_entry()
 
@@ -556,7 +543,7 @@ class TPIHandler:
     ):
         """Set the auto TPI mode."""
         t = self._thermostat
-        
+
         _LOGGER.debug(
             "%s - async_set_auto_tpi_mode called with auto_tpi_mode=%s, reinitialise=%s, kint_boost=%s, kext_overshoot=%s",
             t,

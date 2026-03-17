@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 
+from awesomeversion import AwesomeVersion
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -20,6 +21,7 @@ from homeassistant.const import (
     UnitOfReactivePower,
     UnitOfTemperature,
 )
+from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -629,6 +631,10 @@ class ACPowerInverted(ACPower):
     @property
     def name(self) -> str:
         return f"{super().name} Inverted"
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        return AwesomeVersion(HA_VERSION) < AwesomeVersion("2026.2")
 
     @property
     def native_value(self):
@@ -1676,7 +1682,7 @@ class MeterVAhIE(SolarEdgeSensorBase):
         if self._phase is None:
             raise NotImplementedError
         else:
-            return f"{self._platform.uid_base}_" f"{self._phase.lower()}_vah"
+            return f"{self._platform.uid_base}_{self._phase.lower()}_vah"
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -1976,6 +1982,10 @@ class SolarEdgeBatteryPowerInverted(SolarEdgeBatteryPower):
     @property
     def name(self) -> str:
         return f"{super().name} Inverted"
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        return AwesomeVersion(HA_VERSION) < AwesomeVersion("2026.2")
 
     @property
     def native_value(self):

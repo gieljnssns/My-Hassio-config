@@ -8,6 +8,8 @@ import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
 from . import SCAN_INTERVAL
+from .api import ConnectionError
+from .api import ConnectionTimeoutError
 from .api import SunSpecApiClient
 from .const import CONF_ENABLED_MODELS
 from .const import CONF_HOST
@@ -21,6 +23,39 @@ from .const import DOMAIN
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
+def set_connection_error(errors, host, port, unit_id, err):
+    """Map backend failures to user-visible config flow errors."""
+    if isinstance(err, ConnectionTimeoutError):
+        errors["base"] = "timeout"
+        _LOGGER.warning(
+            "Timeout while connecting to host %s:%s unit %s",
+            host,
+            port,
+            unit_id,
+        )
+        return
+
+    if isinstance(err, ConnectionError):
+        errors["base"] = "connection"
+        _LOGGER.warning(
+            "Connection failed for host %s:%s unit %s: %s",
+            host,
+            port,
+            unit_id,
+            err,
+        )
+        return
+
+    errors["base"] = "device_error"
+    _LOGGER.exception(
+        "Unexpected error while connecting to host %s:%s unit %s",
+        host,
+        port,
+        unit_id,
+        exc_info=err,
+    )
+
+
 class SunSpecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for sunspec."""
 
@@ -31,6 +66,23 @@ class SunSpecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._errors = {}
 
+    def _get_unique_id(self, host, port, unit_id):
+        """Build a stable unique ID even when device serial data is missing."""
+        try:
+            uid = self._device_info.getValue("SN")
+        except KeyError:
+            uid = None
+
+        if uid in (None, ""):
+            fallback_uid = f"{host}:{port}:{unit_id}"
+            _LOGGER.info(
+                "Device did not provide serial number during setup, using %s as unique ID",
+                fallback_uid,
+            )
+            return fallback_uid
+
+        return str(uid)
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         self._errors = {}
@@ -40,7 +92,7 @@ class SunSpecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             unit_id = user_input.get(CONF_UNIT_ID) or user_input.get("slave_id", 1)
             valid = await self._test_connection(host, port, unit_id)
             if valid:
-                uid = self._device_info.getValue("SN")
+                uid = self._get_unique_id(host, port, unit_id)
                 _LOGGER.debug(f"Sunspec device unique id: {uid}")
                 await self.async_set_unique_id(uid)
 
@@ -49,10 +101,6 @@ class SunSpecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 self.init_info = user_input
                 return await self.async_step_settings()
-
-                # return self.async_create_entry(title=f"{host}:{port}", data=user_input)
-
-            self._errors["base"] = "connection"
 
             return await self._show_config_form(user_input)
 
@@ -77,9 +125,9 @@ class SunSpecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return SunSpecOptionsFlowHandler(config_entry)
+        return SunSpecOptionsFlowHandler()
 
-    async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
+    async def _show_config_form(self, user_input):
         """Show the configuration form to edit connection data."""
         defaults = user_input or {CONF_HOST: "", CONF_PORT: 502, CONF_UNIT_ID: 1}
         return self.async_show_form(
@@ -94,7 +142,7 @@ class SunSpecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def _show_settings_form(self, user_input):  # pylint: disable=unused-argument
+    async def _show_settings_form(self, user_input):
         """Show the configuration form to edit settings data."""
         models = set(await self.client.async_get_models())
         model_filter = {model for model in sorted(models)}
@@ -124,11 +172,8 @@ class SunSpecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._device_info = await self.client.async_get_device_info()
             _LOGGER.info(self._device_info)
             return True
-        except Exception as e:  # pylint: disable=broad-except
-            _LOGGER.error(
-                "Failed to connect to host %s:%s unit %s - %s", host, port, unit_id, e
-            )
-            pass
+        except Exception as err:
+            set_connection_error(self._errors, host, port, unit_id, err)
         return False
 
 
@@ -137,15 +182,17 @@ class SunSpecOptionsFlowHandler(config_entries.OptionsFlow):
 
     VERSION = 1
 
-    def __init__(self, config_entry):
-        """Initialize HACS options flow."""
-        self.config_entry = config_entry
+    def __init__(self):
+        """Initialize options flow."""
+        self._errors = {}
         self.settings = {}
-        self.options = dict(config_entry.options)
+        self.options = {}
         self.coordinator = None
 
-    async def async_step_init(self, user_input=None):  # pylint: disable=unused-argument
+    async def async_step_init(self, user_input=None):
         """Manage the options."""
+        self._errors = {}
+        self.options = dict(self.config_entry.options)
         self.coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
         return await self.async_step_host_options()
 
@@ -211,22 +258,20 @@ class SunSpecOptionsFlowHandler(config_entries.OptionsFlow):
                     }
                 ),
             )
-        except Exception as e:  # pylint: disable=broad-except
-            _LOGGER.error(
-                "Failed to connect to host %s:%s unit %s - %s",
+        except Exception as e:
+            set_connection_error(
+                self._errors,
                 self.settings[CONF_HOST],
                 self.settings[CONF_PORT],
                 self.settings[CONF_UNIT_ID],
                 e,
             )
             return await self.show_settings_form(
-                data=self.settings, errors={"base": "connection"}
+                data=self.settings, errors=self._errors
             )
 
     async def _update_options(self):
         """Update config entry options."""
-        # self.settings[CONF_PORT] = 503
-        # self.settings[CONF_ENABLED_MODELS] = [160, 103]
         title = f"{self.settings[CONF_HOST]}:{self.settings[CONF_PORT]}:{self.settings[CONF_UNIT_ID]}"
         _LOGGER.debug(
             "Saving config entry with title %s, data: %s options %s",
