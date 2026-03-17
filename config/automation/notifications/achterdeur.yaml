@@ -1,12 +1,12 @@
 alias: Achterdeur sluiten warm buiten
 id: 2df820fc-5f67-4ed6-a150-be60e6c4b9fa
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id: binary_sensor.keuken_achterdeur
     to: "on"
     for:
       seconds: 90
-condition:
+conditions:
   condition: and
   conditions:
     # - condition: state
@@ -22,18 +22,12 @@ actions:
   - action: homeassistant.update_entity
     target:
       entity_id: sensor.achterdeur
-  - action: media_player.play_media
-    continue_on_error: true
-    target:
-      entity_id: media_player.mass_keuken
+  - action: tts.cloud_say
     data:
-      announce: true
-      media_content_type: "music"
-      extra:
-        volume: 65
-      media_content_id: >
-        {% set message =  states('sensor.achterdeur') %}
-          media-source://tts/tts.home_assistant_cloud?message="{{message}}"
+      cache: false
+      entity_id: media_player.mass_keuken
+      message: |
+        {% set message =  states('sensor.achterdeur') %} {{message}}
   - delay:
       seconds: 60
   - action: homeassistant.update_entity
@@ -57,18 +51,12 @@ actions:
   #     title: Achterdeur - 2de waarschuwing!
   #     message: Er heeft weer iemand de achterdeur laten openstaan!!
 
-  - action: media_player.play_media
-    continue_on_error: true
-    target:
-      entity_id: media_player.mass_keuken
+  - action: tts.cloud_say
     data:
-      announce: true
-      media_content_type: "music"
-      extra:
-        volume: 65
-      media_content_id: >
-        {% set message =  states('sensor.achterdeur') %}
-          media-source://tts/tts.home_assistant_cloud?message="{{message}}"
+      cache: false
+      entity_id: media_player.mass_keuken
+      message: |
+        {% set message =  states('sensor.achterdeur') %} {{message}}
   # - delay:
   #     seconds: 60
   # - action: homeassistant.update_entity

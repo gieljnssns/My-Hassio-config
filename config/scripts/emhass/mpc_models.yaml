@@ -1,0 +1,217 @@
+emhass_mpc_models:
+  alias: EMHASS mpc models
+  mode: single
+  sequence:
+    # --- RIDGE ---
+    - action: rest_command.naive_mpc_optim
+      data:
+        payload: >
+          {
+            "entity_save": true,
+            "publish_prefix": "ridge_",
+            "model_type": "load_forecast_ridge",
+            "prod_price_forecast": {{
+              (state_attr('sensor.ecopower_injectieprijzen', 'prijzen')[:states('sensor.prediction_horizon') | int(0)]) | tojson
+              }},
+            "load_cost_forecast": {{
+              (state_attr('sensor.ecopower_afnameprijzen', 'prijzen')[:states('sensor.prediction_horizon') | int(0)]) | tojson
+              }},
+            "pv_power_forecast": {{
+              ([states('sensor.gemiddelde_opbrengst_5m')|int(0)] +
+              state_attr('sensor.pv_power_forecast_list_interpolated', 'list')[:states('sensor.prediction_horizon') | int(0) - 1]) | tojson
+              }},
+            "prediction_horizon": {{ states('sensor.prediction_horizon') | int(0) }},
+            "alpha": 1,
+            "beta": 0,
+            "num_def_loads": 5,
+            "p_deferrable_nom": [1600, 2250, 1200, 900, 2000],
+            "def_total_hours": [
+              {{  [(states('sensor.wasmachien_uren')|float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.droogkast_uren')|float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.afwasmachien_uren')|float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.warmtepompboiler_uren')|float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.warmtepomp_uren') |float * 4) | round(0) / 4, 0] | max }}],
+            "set_def_constant":[true, true, true, true, true],
+            "def_start_timestep": [
+              0,
+              0,
+              0,
+              {{ states("sensor.warmtepompboiler_start_timesteps")|int }},
+              {{ states("sensor.warmtepomp_start_timesteps")|int }}],
+            "def_end_timestep": [
+              {{ [ states('sensor.wasmachien_end_timesteps') | int(0), ((states('sensor.wasmachien_uren') | float * 4) | round(0) * 3) ] | max }},
+              {{ [ states('sensor.droogkast_end_timesteps') | int(0), ((states('sensor.droogkast_uren') | float * 4) | round(0) * 3) ] | max }},
+              {{ [ states('sensor.afwasmachien_end_timesteps') | int(0), ((states('sensor.afwasmachien_uren') | float * 4) | round(0) * 3) ] | max }},
+              {{ [ states('sensor.warmtepompboiler_end_timesteps') | int(0), (((states('sensor.warmtepompboiler_uren') | float * 4) | round(0) * 3) + states("sensor.warmtepompboiler_start_timesteps")|int(0)) ] | max }},
+              {{ [ states('sensor.warmtepomp_end_timesteps') | int(0), (((states('sensor.warmtepompboiler_uren') | float * 4) | round(0) * 3) + states("sensor.warmtepomp_start_timesteps")|int(0)) ] | max }}],
+            "def_current_state": [
+              {{  "true" if is_state('binary_sensor.wasmachien_staat_op', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.droogkast_staat_op', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.afwasmachien_staat_op', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.warmtepompboiler_aan', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.warmtepomp_aan', "on") else "false" }}],
+            "soc_init": {{ states("sensor.battery_state_of_charge") | float(0) / 100 }},
+            "battery_minimum_state_of_charge": {{ 
+                states("sensor.soc_minimum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) > states("sensor.soc_minimum") | float(0)) 
+                else (states("sensor.battery_state_of_charge") | float(0) / 100) }},
+            "battery_maximum_state_of_charge": {{
+              states("sensor.soc_maximum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) < states("sensor.soc_maximum") | float(0))
+              else (states("sensor.battery_state_of_charge") | float(0) / 100) }},
+            "soc_final": 0.7,
+            "Pc_max": {{ states("sensor.battery_p_charge_max")|int }},
+            "Pd_max": {{ states("sensor.battery_p_discharge_max")|int }},
+            "maximum_power_from_grid": {% set month = now().month -%}
+              {% if month < 3 or month > 9 -%}
+                7000
+              {% elif month == 3 or month == 9 -%}
+                5000
+              {%- else -%}
+                3000
+              {% endif -%},
+            "outdoor_temperature_forecast": {{ (state_attr('sensor.kmi_interpolated_temperatures', 'list')) [:states('sensor.prediction_horizon')|int]  }}
+          }
+          
+    - delay: "00:00:03"
+    # {{ state_attr("sensor.emhass_mpc", "mpc")
+    #           | replace('"model_type": "load_forecast"',
+    #                     '"model_type": "load_forecast_ridge"')
+    #           | replace('"publish_prefix": ""',
+    #                     '"publish_prefix": "ridge_"') }}
+    # --- LASSO ---
+    - action: rest_command.naive_mpc_optim
+      data:
+        payload: >
+          {
+            "entity_save": true,
+            "publish_prefix": "lasso_",
+            "model_type": "load_forecast_lasso",
+            "prod_price_forecast": {{
+              (state_attr('sensor.ecopower_injectieprijzen', 'prijzen')[:states('sensor.prediction_horizon') | int(0)]) | tojson
+              }},
+            "load_cost_forecast": {{
+              (state_attr('sensor.ecopower_afnameprijzen', 'prijzen')[:states('sensor.prediction_horizon') | int(0)]) | tojson
+              }},
+            "pv_power_forecast": {{
+              ([states('sensor.gemiddelde_opbrengst_5m')|int(0)] +
+              state_attr('sensor.pv_power_forecast_list_interpolated', 'list')[:states('sensor.prediction_horizon') | int(0) - 1]) | tojson
+              }},
+            "prediction_horizon": {{ states('sensor.prediction_horizon') | int(0) }},
+            "alpha": 1,
+            "beta": 0,
+            "num_def_loads": 5,
+            "p_deferrable_nom": [1600, 2250, 1200, 900, 2000],
+            "def_total_hours": [
+              {{  [(states('sensor.wasmachien_uren')|float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.droogkast_uren')|float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.afwasmachien_uren')|float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.warmtepompboiler_uren')|float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.warmtepomp_uren') |float * 4) | round(0) / 4, 0] | max }}],
+            "set_def_constant":[true, true, true, true, true],
+            "def_start_timestep": [
+              0,
+              0,
+              0,
+              {{ states("sensor.warmtepompboiler_start_timesteps")|int }},
+              {{ states("sensor.warmtepomp_start_timesteps")|int }}],
+            "def_end_timestep": [
+              {{ [ states('sensor.wasmachien_end_timesteps') | int(0), ((states('sensor.wasmachien_uren') | float * 4) | round(0) * 3) ] | max }},
+              {{ [ states('sensor.droogkast_end_timesteps') | int(0), ((states('sensor.droogkast_uren') | float * 4) | round(0) * 3) ] | max }},
+              {{ [ states('sensor.afwasmachien_end_timesteps') | int(0), ((states('sensor.afwasmachien_uren') | float * 4) | round(0) * 3) ] | max }},
+              {{ [ states('sensor.warmtepompboiler_end_timesteps') | int(0), (((states('sensor.warmtepompboiler_uren') | float * 4) | round(0) * 3) + states("sensor.warmtepompboiler_start_timesteps")|int(0)) ] | max }},
+              {{ [ states('sensor.warmtepomp_end_timesteps') | int(0), (((states('sensor.warmtepompboiler_uren') | float * 4) | round(0) * 3) + states("sensor.warmtepomp_start_timesteps")|int(0)) ] | max }}],
+            "def_current_state": [
+              {{  "true" if is_state('binary_sensor.wasmachien_staat_op', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.droogkast_staat_op', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.afwasmachien_staat_op', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.warmtepompboiler_aan', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.warmtepomp_aan', "on") else "false" }}],
+            "soc_init": {{ states("sensor.battery_state_of_charge") | float(0) / 100 }},
+            "battery_minimum_state_of_charge": {{ 
+                states("sensor.soc_minimum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) > states("sensor.soc_minimum") | float(0)) 
+                else (states("sensor.battery_state_of_charge") | float(0) / 100) }},
+            "battery_maximum_state_of_charge": {{
+              states("sensor.soc_maximum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) < states("sensor.soc_maximum") | float(0))
+              else (states("sensor.battery_state_of_charge") | float(0) / 100) }},
+            "soc_final": 0.7,
+            "Pc_max": {{ states("sensor.battery_p_charge_max")|int }},
+            "Pd_max": {{ states("sensor.battery_p_discharge_max")|int }},
+            "maximum_power_from_grid": {% set month = now().month -%}
+              {% if month < 3 or month > 9 -%}
+                7000
+              {% elif month == 3 or month == 9 -%}
+                5000
+              {%- else -%}
+                3000
+              {% endif -%},
+            "outdoor_temperature_forecast": {{ (state_attr('sensor.kmi_interpolated_temperatures', 'list')) [:states('sensor.prediction_horizon')|int]  }}
+          }
+    - delay: "00:00:03"
+    # --- LINEAR ---
+    - action: rest_command.naive_mpc_optim
+      data:
+        payload: >
+          {
+            "entity_save": true,
+            "publish_prefix": "linear_",
+            "model_type": "load_forecast_linear",
+            "prod_price_forecast": {{
+              (state_attr('sensor.ecopower_injectieprijzen', 'prijzen')[:states('sensor.prediction_horizon') | int(0)]) | tojson
+              }},
+            "load_cost_forecast": {{
+              (state_attr('sensor.ecopower_afnameprijzen', 'prijzen')[:states('sensor.prediction_horizon') | int(0)]) | tojson
+              }},
+            "pv_power_forecast": {{
+              ([states('sensor.gemiddelde_opbrengst_5m')|int(0)] +
+              state_attr('sensor.pv_power_forecast_list_interpolated', 'list')[:states('sensor.prediction_horizon') | int(0) - 1]) | tojson
+              }},
+            "prediction_horizon": {{ states('sensor.prediction_horizon') | int(0) }},
+            "alpha": 1,
+            "beta": 0,
+            "num_def_loads": 5,
+            "p_deferrable_nom": [1600, 2250, 1200, 900, 2000],
+            "def_total_hours": [
+              {{  [(states('sensor.wasmachien_uren')|float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.droogkast_uren')|float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.afwasmachien_uren')|float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.warmtepompboiler_uren')|float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.warmtepomp_uren') |float * 4) | round(0) / 4, 0] | max }}],
+            "set_def_constant":[true, true, true, true, true],
+            "def_start_timestep": [
+              0,
+              0,
+              0,
+              {{ states("sensor.warmtepompboiler_start_timesteps")|int }},
+              {{ states("sensor.warmtepomp_start_timesteps")|int }}],
+            "def_end_timestep": [
+              {{ [ states('sensor.wasmachien_end_timesteps') | int(0), ((states('sensor.wasmachien_uren') | float * 4) | round(0) * 3) ] | max }},
+              {{ [ states('sensor.droogkast_end_timesteps') | int(0), ((states('sensor.droogkast_uren') | float * 4) | round(0) * 3) ] | max }},
+              {{ [ states('sensor.afwasmachien_end_timesteps') | int(0), ((states('sensor.afwasmachien_uren') | float * 4) | round(0) * 3) ] | max }},
+              {{ [ states('sensor.warmtepompboiler_end_timesteps') | int(0), (((states('sensor.warmtepompboiler_uren') | float * 4) | round(0) * 3) + states("sensor.warmtepompboiler_start_timesteps")|int(0)) ] | max }},
+              {{ [ states('sensor.warmtepomp_end_timesteps') | int(0), (((states('sensor.warmtepompboiler_uren') | float * 4) | round(0) * 3) + states("sensor.warmtepomp_start_timesteps")|int(0)) ] | max }}],
+            "def_current_state": [
+              {{  "true" if is_state('binary_sensor.wasmachien_staat_op', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.droogkast_staat_op', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.afwasmachien_staat_op', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.warmtepompboiler_aan', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.warmtepomp_aan', "on") else "false" }}],
+            "soc_init": {{ states("sensor.battery_state_of_charge") | float(0) / 100 }},
+            "battery_minimum_state_of_charge": {{ 
+                states("sensor.soc_minimum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) > states("sensor.soc_minimum") | float(0)) 
+                else (states("sensor.battery_state_of_charge") | float(0) / 100) }},
+            "battery_maximum_state_of_charge": {{
+              states("sensor.soc_maximum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) < states("sensor.soc_maximum") | float(0))
+              else (states("sensor.battery_state_of_charge") | float(0) / 100) }},
+            "soc_final": 0.7,
+            "Pc_max": {{ states("sensor.battery_p_charge_max")|int }},
+            "Pd_max": {{ states("sensor.battery_p_discharge_max")|int }},
+            "maximum_power_from_grid": {% set month = now().month -%}
+              {% if month < 3 or month > 9 -%}
+                7000
+              {% elif month == 3 or month == 9 -%}
+                5000
+              {%- else -%}
+                3000
+              {% endif -%},
+            "outdoor_temperature_forecast": {{ (state_attr('sensor.kmi_interpolated_temperatures', 'list')) [:states('sensor.prediction_horizon')|int]  }}
+          }
+    - delay: "00:00:03"

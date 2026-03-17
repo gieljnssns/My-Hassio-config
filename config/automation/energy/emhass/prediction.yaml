@@ -1,8 +1,8 @@
 alias: Prediction set input_number
 id: b81cb250-5e2b-46e0-984b-f09c1a4eec92
 mode: parallel
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id:
       - sensor.voorspelde_uren_randomforest
       - sensor.voorspelde_uren_adaboost
@@ -28,11 +28,11 @@ actions:
   - choose:
       - conditions: "{{ sensor == 'sensor.voorspelde_uren_randomforest' }}"
         sequence:
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             target:
               entity_id: input_boolean.verwarming_starten
 
-  - service: input_number.set_value
+  - action: input_number.set_value
     target:
       entity_id: "{{ input_number }}"
     data:

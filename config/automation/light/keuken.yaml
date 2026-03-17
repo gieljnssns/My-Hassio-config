@@ -4,41 +4,53 @@ id: c2162024-4f52-40f8-b703-150ff505bc2c
 mode: restart
 max_exceeded: silent
 
-trigger:
-  - platform: state
-    entity_id: binary_sensor.keuken_aqara_pir
-    from: "off"
-    to: "on"
+triggers:
+  - trigger: template
     id: presence
-  - platform: state
-    entity_id: binary_sensor.keuken_pir
-    from: "off"
-    to: "on"
-    id: presence
-  - platform: state
-    entity_id: binary_sensor.keuken_presence
-    from: "off"
-    to: "on"
-    id: presence
+    value_template: >
+      {{ is_state("binary_sensor.keuken_aqara_pir", "on") and is_state("sensor.dark_inside", "true") }}
+  - trigger: template
+    value_template: >
+      id: presence
+      {{ is_state("binary_sensor.keuken_pir", "on") and is_state("sensor.dark_inside", "true") }}
+  - trigger: template
+    value_template: >
+      id: presence
+      {{ is_state("binary_sensor.keuken_presence", "on") and is_state("sensor.dark_inside", "true") }}
+  # - trigger: state
+  #   entity_id: binary_sensor.keuken_aqara_pir
+  #   from: "off"
+  #   to: "on"
+  #   id: presence
+  # - trigger: state
+  #   entity_id: binary_sensor.keuken_pir
+  #   from: "off"
+  #   to: "on"
+  #   id: presence
+  # - trigger: state
+  #   entity_id: binary_sensor.keuken_presence
+  #   from: "off"
+  #   to: "on"
+  #   id: presence
   
-  - platform: state
+  - trigger: state
     entity_id: light.keuken_inkom
     from: "off"
     to: "on"
-  - platform: state
+  - trigger: state
     entity_id: light.keuken_luster
     from: "off"
     to: "on"
-  - platform: state
+  - trigger: state
     entity_id: light.keuken_spots
     from: "off"
     to: "on"
-  - platform: state
+  - trigger: state
     entity_id: sensor.dark_inside
-    from: "off"
-    to: "on"
+    from: "false"
+    to: "true"
 
-# condition:
+conditions:
 #   - condition: state
 #     entity_id: sensor.dark_inside
 #     state: "true"
@@ -72,7 +84,7 @@ actions:
           target:
             entity_id: input_datetime.keuken_end_time
         - wait_for_trigger:
-            - platform: state
+            - trigger: state
               entity_id: binary_sensor.keuken_bezetting
               from: "on"
               to: "off"
@@ -97,7 +109,7 @@ actions:
           target:
             entity_id: input_datetime.keuken_end_time
         - wait_for_trigger:
-            - platform: state
+            - trigger: state
               entity_id: binary_sensor.keuken_bezetting
               from: "on"
               to: "off"
@@ -118,7 +130,7 @@ actions:
   # - action: light.turn_on
   #   entity_id: light.keuken_luster
   # - wait_for_trigger:
-  #     - platform: state
+  #     - trigger: state
   #       entity_id: binary_sensor.keuken_bezetting
   #       from: "on"
   #       to: "off"

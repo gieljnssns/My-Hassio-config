@@ -5,16 +5,16 @@
       state: >
         {% if states("input_boolean.droogkast_starten") == 'on' -%}
           {% if states("switch.droogkast") == 'off' and states("input_boolean.wasmachien_starten") == 'on' and states("input_boolean.afwasmachien_starten") == 'on' -%}
-            6
+            5.25
           {% elif states("switch.droogkast") == 'off' and states("input_boolean.wasmachien_starten") == 'on' -%}
-            4
+            3.5
           {% elif states("switch.droogkast") == 'off' and states("input_boolean.afwasmachien_starten") == 'on' -%}
-            4
+            3.5
           {% elif states("switch.droogkast") == 'off' -%}
-            2
+            1.75
           {% elif states("input_boolean.emhass_droogkast") == 'on' -%}
-            {% if (2 - ((as_timestamp(now()) - states("sensor.droogkast_is_gestart_op") | float(0)) / 3600) | round(1)) | float(0) > 0  -%}
-              {{ 2 - ((as_timestamp(now()) - states("sensor.droogkast_is_gestart_op") | float(0)) / 3600) | round(1) }}
+            {% if (1.75 - ((as_timestamp(now()) - states("sensor.droogkast_is_gestart_op") | float(0)) / 3600) | round(1)) | float(0) > 0  -%}
+              {{ 1.75 - ((as_timestamp(now()) - states("sensor.droogkast_is_gestart_op") | float(0)) / 3600) | round(1) }}
             {% else -%}
               0
             {% endif -%}
@@ -29,10 +29,11 @@
       unique_id: de867de0-7b23-4b42-b646-ab2f00a1c1b2
       state: >
         {% from 'easy_time.jinja' import easy_relative_time -%}
-        {% set load = (state_attr('sensor.emhass_droogkast', 'deferrables_schedule')
-                |map(attribute='emhass_droogkast')
+        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
+        {% set load = (state_attr('sensor.' + best_model + '_p_deferrable1', 'deferrables_schedule')
+                |map(attribute=best_model + '_p_deferrable1')
                 |list) -%}
-        {% set time = (state_attr('sensor.emhass_droogkast', 'deferrables_schedule')
+        {% set time = (state_attr('sensor.' + best_model + '_p_deferrable1', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) -%}
         {% if is_state("input_boolean.emhass_droogkast", "on") -%}
@@ -47,7 +48,7 @@
             {% endfor -%}
           {% endif -%}
       availability: >-
-        {{ states('sensor.emhass_droogkast') | is_number }}
+        {{ states('sensor.best_emhass_model_load_7d') not in ('unknown', 'unavailable', 'None') }}
     
     - name: Droogkast end timesteps
       unique_id: 233e7698-caad-47b8-9917-5e228f3dabae

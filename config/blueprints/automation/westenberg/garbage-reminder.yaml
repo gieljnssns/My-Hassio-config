@@ -63,10 +63,10 @@ variables:
     ''friendly_name''), states(garbage_sensor_3)), (state_attr(garbage_sensor_4, ''friendly_name''),
     states(garbage_sensor_4))] | selectattr(''1'', ''eq'', (now() + timedelta(days
     = day_offset | int)).strftime(''%d-%m-%Y'')) | join('', '',  attribute=0) }}'
-trigger:
+triggers:
   platform: time
   at: !input 'reminder_time'
-condition:
+conditions:
   condition: template
   value_template: '{{ sensors_tomorrow != '''' }}'
 actions:

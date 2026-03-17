@@ -1,12 +1,12 @@
 alias: Verlichting afdak
 id: 960aa9bb-f469-49fd-8128-4c2e14b84563
 mode: restart
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id: binary_sensor.afdak_deur
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.afdak_pir
-condition:
+conditions:
   - condition: template
     value_template: >
       {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 60 }}

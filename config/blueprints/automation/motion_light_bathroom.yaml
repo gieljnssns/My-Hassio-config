@@ -42,14 +42,14 @@ mode: restart
 max_exceeded: silent
 variables:
   no_motion_wait: !input no_motion_wait
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id: !input entity
     from: "off"
     to: "on"
     id: aan
   
-  - platform: time
+  - trigger: time
     at: !input input_datetime_target
     id: uit
     
@@ -71,7 +71,7 @@ actions:
             target:
               entity_id: !input input_datetime_target
           - wait_for_trigger:
-            - platform: state
+            - trigger: state
               entity_id: !input occupancy_target
               from: "on"
               to: "off"

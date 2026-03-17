@@ -1,41 +1,39 @@
 alias: Zonnewering winter
 id: 12930512-2ad9-43f8-a711-1538e0d1fb47
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id: sensor.dark_inside
     to: "true"
     id: sluiten
     for:
       minutes: 5
-  - platform: template
+  - trigger: template
     id: openen
     value_template: >
-      {{ states("sensor.windsnelheid") | int(0) > 40 }}
-  - platform: template
+      {{ states("sensor.openweathermap_windsnelheid") | int(0) > 40 }}
+  - trigger: template
     id: openen
     value_template: >
-      {{ states("sensor.windvlaag") | int(0) > 60 }}
-  - platform: template
+      {{ states("sensor.openweathermap_windvlaag_snelheid") | int(0) > 60 }}
+  - trigger: template
     value_template: >
       {% if states("sensor.regen_komende_10_minuten") != "unknown" and states("sensor.regen_komende_10_minuten") != "unavailable" %}
         {{ states("sensor.regen_komende_10_minuten") | float > 0 }}
-      {% else %}
-        {{ states("sensor.neerslagverwachting_gemiddeld")  | float > 0 }}
       {% endif %}
     id: openen
-  - platform: template
+  - trigger: template
     value_template: >
       {% if states("sensor.neerslag_zandhoven") != "unknown" and states("sensor.neerslag_zandhoven") != "unavailable" %}
         {{ states("sensor.neerslag_zandhoven") | float > 0 }}
       {% else %}
-        {{ states("sensor.neerslagintensiteit")  | float > 0 }}
+        {{ states("sensor.openweathermap_rain_intensity")  | float > 0 }}
       {% endif %}
     id: openen
-  - platform: state
+  - trigger: state
     entity_id: sensor.dark_inside
     to: "false"
     id: openen
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.kans_op_aanvriezen
     to: "on"
     id: openen
@@ -60,10 +58,10 @@ actions:
               {{ states("binary_sensor.kans_op_aanvriezen") == "off" }}
           - condition: template
             value_template: >
-              {{ states("sensor.windsnelheid") | int(0) < 40 }}
+              {{ states("sensor.openweathermap_windsnelheid") | int(0) < 40 }}
           - condition: template
             value_template: >
-              {{ states("sensor.windvlaag") | int(0) < 60 }}
+              {{ states("sensor.openweathermap_windvlaag_snelheid") | int(0) < 60 }}
         sequence:
           - action: script.achtergevel_sluiten
           - delay:

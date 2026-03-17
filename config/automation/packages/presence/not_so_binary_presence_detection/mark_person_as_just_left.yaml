@@ -1,36 +1,36 @@
 alias: Mark person as just left
 id: 47e2d373-ee0f-4650-9338-996019fcee5b
 mode: parallel
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id: binary_sensor.giel_bayesian
     id: giel
     from: "on"
     to: "off"
     for:
       seconds: 15
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.martine_bayesian
     id: martine
     from: "on"
     to: "off"
     for:
       seconds: 15
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.noor_bayesian
     id: noor
     from: "on"
     to: "off"
     for:
       seconds: 15
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.fien_bayesian
     id: fien
     from: "on"
     to: "off"
     for:
       seconds: 15
-condition:
+conditions:
   condition: and
   conditions:
     - condition: template

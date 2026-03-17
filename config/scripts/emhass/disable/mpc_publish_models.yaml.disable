@@ -11,11 +11,11 @@ emhass_mpc_publish_models:
                         '"model_type": "load_forecast_ridge"')
               | replace('"publish_prefix": ""',
                         '"publish_prefix": "ridge_"') }}
-    - delay: "00:00:03"
+    - delay: "00:00:02"
     - action: rest_command.publish_data
       data:
         prefix: "ridge_"
-    - delay: "00:00:05"
+    - delay: "00:00:03"
     # --- LASSO ---
     - action: rest_command.naive_mpc_optim
       data:
@@ -25,11 +25,11 @@ emhass_mpc_publish_models:
                         '"model_type": "load_forecast_lasso"')
               | replace('"publish_prefix": ""',
                         '"publish_prefix": "lasso_"') }}
-    - delay: "00:00:03"
+    - delay: "00:00:02"
     - action: rest_command.publish_data
       data:
         prefix: "lasso_"
-    - delay: "00:00:05"
+    - delay: "00:00:03"
     # --- LINEAR ---
     - action: rest_command.naive_mpc_optim
       data:
@@ -39,7 +39,7 @@ emhass_mpc_publish_models:
                         '"model_type": "load_forecast_linear"')
               | replace('"publish_prefix": ""',
                         '"publish_prefix": "linear_"') }}
-    - delay: "00:00:03"
+    - delay: "00:00:02"
     - action: rest_command.publish_data
       data:
         prefix: "linear_"

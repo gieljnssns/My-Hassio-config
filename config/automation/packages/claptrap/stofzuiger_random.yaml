@@ -1,20 +1,20 @@
 alias: "Stofzuiger random"
 id: 33d24a7e-0c62-4802-aac4-ffa4bba81d11
 initial_state: "true"
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id: device_tracker.martine_not_so_binary
     from: "Juist Weg"
     to: "Afwezig"
     for:
       minutes: 10
-  - platform: state
+  - trigger: state
     entity_id: device_tracker.giel_not_so_binary
     from: "Juist Weg"
     to: "Afwezig"
     for:
       minutes: 10
-condition:
+conditions:
   - condition: state
     entity_id: vacuum.claptrap
     state: "docked"

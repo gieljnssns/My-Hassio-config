@@ -1,18 +1,18 @@
 alias: "wled nightlight"
 id: 0885f397-d620-4085-80cc-8700c94c5bf1
 mode: parallel
-trigger:
-  - platform: event
+triggers:
+  - trigger: event
     event_type: state_changed
     event_data:
       entity_id: input_button.wled_noor_nightlight
     id: noor
-  - platform: event
+  - trigger: event
     event_type: state_changed
     event_data:
       entity_id: input_button.wled_fien_nightlight
     id: fien
-action:
+actions:
   - choose:
     - conditions:
         - condition: trigger

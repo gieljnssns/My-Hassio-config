@@ -1,138 +1,81 @@
 fit_heating_hours:
   sequence:
-    - service: recorder.get_statistics
-      data:
-        start_time: >-
-          {{ (now().replace(hour=0, minute=0, second=0)- timedelta(hours =
-          24)).isoformat() }}
-        end_time: >-
-          {{ (now().replace(hour=23, minute=0, second=0)- timedelta(hours =
-          24)).isoformat() }}
-        period: day
-        statistic_ids:
-          - sensor.benedentemperatuur_gefilterd
-          - sensor.buiten_temperatuur
-        types:
-          - mean
-      response_variable: temp_stats
+    # RandomForestRegressor
     - action: rest_command.fit_heating_hours
-    - delay:
-        seconds: 14
-    - action: rest_command.predict_heating_hours
       data:
-        buiten_temp: >
-          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
-        binnen_temp: >
-          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        regression_model: "RandomForestRegressor"
+        model_type: heating_dd
     - delay:
         seconds: 4
-    - action: rest_command.fit_heating_hours_gradientboosting
-    - delay:
-        seconds: 14
-    - action: rest_command.predict_heating_hours_gradientboosting
+    # GradientBoostingRegressor
+    - action: rest_command.fit_heating_hours
       data:
-        buiten_temp: >
-          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
-        binnen_temp: >
-          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        regression_model: "GradientBoostingRegressor"
+        model_type: "heating_dd_gradientboosting"
     - delay:
         seconds: 4
-    - action: rest_command.fit_heating_hours_adaboost
-    - delay:
-        seconds: 14
-    - action: rest_command.predict_heating_hours_adaboost
+    # AdaBoostRegressor
+    - action: rest_command.fit_heating_hours
       data:
-        buiten_temp: >
-          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
-        binnen_temp: >
-          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
-##########
+        regression_model: "AdaBoostRegressor"
+        model_type: "heating_dd_adaboost"
     - delay:
         seconds: 4
-    - action: rest_command.fit_heating_hours_extratrees
-    - delay:
-        seconds: 14
-    - action: rest_command.predict_heating_hours_extratrees
+    # ExtraTreesRegressor
+    - action: rest_command.fit_heating_hours
       data:
-        buiten_temp: >
-          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
-        binnen_temp: >
-          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        regression_model: "ExtraTreesRegressor"
+        model_type: "heating_dd_extratrees"
+    - delay:
+        seconds: 4
+    # SVR
+    - action: rest_command.fit_heating_hours
+      data:
+        regression_model: "SVR"
+        model_type: "heating_dd_svr"
+    - delay:
+        seconds: 4
+    # DecisionTreeRegressor
+    - action: rest_command.fit_heating_hours
+      data:
+        regression_model: "DecisionTreeRegressor"
+        model_type: "heating_dd_decisiontree"
+    - delay:
+        seconds: 4
+    # KNeighborsRegressor
+    - action: rest_command.fit_heating_hours
+      data:
+    # KNeighborsRegressor
+        regression_model: "KNeighborsRegressor"
+        model_type: "heating_dd_kneighbors"
+    - delay:
+        seconds: 4
+    # ElasticNet
+    - action: rest_command.fit_heating_hours
+      data:
+        regression_model: "ElasticNet"
+        model_type: "heating_dd_elasticnet"
+    - delay:
+        seconds: 4
+    # LassoRegression
+    - action: rest_command.fit_heating_hours
+      data:
+        regression_model: "LassoRegression"
+        model_type: "heating_dd_lasso"
+    - delay:
+        seconds: 4
+    # RidgeRegression
+    - action: rest_command.fit_heating_hours
+      data:
+        regression_model: "RidgeRegression"
+        model_type: "heating_dd_ridge"
+    - delay:
+        seconds: 4
+    # LinearRegression
+    - action: rest_command.fit_heating_hours
+      data:
+        regression_model: "LinearRegression"
+        model_type: "heating_dd_linear"
     - delay:
         seconds: 4
 
-    - action: rest_command.fit_heating_hours_svr
-    - delay:
-        seconds: 14
-    - action: rest_command.predict_heating_hours_svr
-      data:
-        buiten_temp: >
-          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
-        binnen_temp: >
-          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
-    - delay:
-        seconds: 4
-    - action: rest_command.fit_heating_hours_decisiontree
-    - delay:
-        seconds: 14
-    - action: rest_command.predict_heating_hours_decisiontree
-      data:
-        buiten_temp: >
-          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
-        binnen_temp: >
-          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
-    - delay:
-        seconds: 4
-    - action: rest_command.fit_heating_hours_kneighbors
-    - delay:
-        seconds: 14
-    - action: rest_command.predict_heating_hours_kneighbors
-      data:
-        buiten_temp: >
-          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
-        binnen_temp: >
-          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
-    - delay:
-        seconds: 4
-    - action: rest_command.fit_heating_hours_elasticnet
-    - delay:
-        seconds: 14
-    - action: rest_command.predict_heating_hours_elasticnet
-      data:
-        buiten_temp: >
-          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
-        binnen_temp: >
-          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
-    - delay:
-        seconds: 4
-    - action: rest_command.fit_heating_hours_lasso
-    - delay:
-        seconds: 14
-    - action: rest_command.predict_heating_hours_lasso
-      data:
-        buiten_temp: >
-          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
-        binnen_temp: >
-          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
-    - delay:
-        seconds: 4
-    - action: rest_command.fit_heating_hours_ridge
-    - delay:
-        seconds: 14
-    - action: rest_command.predict_heating_hours_ridge
-      data:
-        buiten_temp: >
-          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
-        binnen_temp: >
-          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
-    - delay:
-        seconds: 4
-    - action: rest_command.fit_heating_hours_linear
-    - delay:
-        seconds: 14
-    - action: rest_command.predict_heating_hours_linear
-      data:
-        buiten_temp: >
-          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
-        binnen_temp: >
-          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}

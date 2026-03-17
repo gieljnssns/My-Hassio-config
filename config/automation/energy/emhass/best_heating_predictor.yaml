@@ -2,8 +2,8 @@ alias: Best Heating Predictor - Daily Evaluation
 id: 187308a7-0b8d-4b86-b241-5ae15e3095ea
 mode: single
 
-trigger:
-  - platform: time
+triggers:
+  - trigger: time
     at: "23:00:00"
 
 variables:
@@ -46,7 +46,7 @@ variables:
   #   {{ lines | join('\n') }}
 
 actions:
-  - service: input_text.set_value
+  - action: input_text.set_value
     target:
       entity_id: input_text.best_heating_predictor
     data:
@@ -55,7 +55,7 @@ actions:
   - repeat:
       for_each: "{{ errors.items() | list }}"
       sequence:
-        - service: input_number.set_value
+        - action: input_number.set_value
           target:
             entity_id: >
               {{ 'input_number.error_' ~
@@ -63,7 +63,7 @@ actions:
           data:
             value: "{{ repeat.item[1] | round(3) }}"
 
-  - service: persistent_notification.create
+  - action: persistent_notification.create
     data:
       title: "Dagelijkse Predictor Evaluatie"
       message: >

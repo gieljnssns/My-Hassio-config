@@ -81,8 +81,8 @@ blueprint:
         object:
           multiple: false
   source_url: https://github.com/ToinneGuust/Capacity-tariff-disable-appliances/blob/main/Capacity-tariff-disable-appliances.yaml
-trigger:
-- platform: time_pattern
+triggers:
+- trigger: time_pattern
   minutes: /5
 variables:
   sensor_entity: !input power_sensor
@@ -94,8 +94,8 @@ variables:
   predicted_value: '{{ ((current_value | float) / (effective_minutes | float) * 15)
     if minutes_now != 0 else 0 }}'
   device_list: !input devices
-condition: []
-action:
+conditions: []
+actions:
 - if:
   - condition: template
     value_template: '{{ predicted_value > threshold and minutes_now != 0 }}'
@@ -108,17 +108,17 @@ action:
           value_template: '{{ states(repeat.item.power_sensor) | float(0) > power_threshold
             }}'
         then:
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id: '{{ repeat.item.switch }}'
   else:
   - repeat:
       for_each: '{{ device_list }}'
       sequence:
-      - service: switch.turn_on
+      - action: switch.turn_on
         target:
           entity_id: '{{ repeat.item.switch }}'
-- service: logbook.log
+- action: logbook.log
   data:
     name: Power Prediction Debug
     message: 'Current: {{ current_value }} W | Minutes: {{ minutes_now }} | Predicted:

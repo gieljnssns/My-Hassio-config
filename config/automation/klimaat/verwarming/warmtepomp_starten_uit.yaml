@@ -2,12 +2,12 @@ alias: Warmtepomp mag gestart worden uit
 id: 0be8ea5d-9a95-4678-beb9-92409febab4a
 description: >-
   Als warmtepomp_end_timesteps dicht bij warmtepomp_uren komt mag de bool uitgezet worden 
-trigger:
-  - platform: template
+triggers:
+  - trigger: template
     value_template: >
       {{ (states("sensor.warmtepomp_end_timesteps") | float < (states("sensor.warmtepomp_uren")|float(0) * 12) + 2) and
           states("binary_sensor.warmtepomp_aan") == "off" }}
-condition: []
+conditions: []
 actions:
   - action: input_boolean.turn_off
     entity_id:

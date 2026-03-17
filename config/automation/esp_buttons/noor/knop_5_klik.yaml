@@ -1,16 +1,16 @@
 alias: Knop Noor 5 klik
 id: 40a60f6c-c147-4b72-b7c0-1eb0f85df9eb
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id: binary_sensor.knop_noor_5_klik
     to: "on"
     id: aan
-  - platform: event
+  - trigger: event
     event_type: state_changed
     event_data:
       entity_id: input_button.verwarming_1u_noor
     id: aan
-  - platform: time
+  - trigger: time
     at: input_datetime.slaapkamer_noor_verwarming_end_time
     id: uit
 actions:

@@ -6,12 +6,12 @@ max_exceeded: silent
 # variables:
 #   no_motion_wait: 30
 triggers:
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.gang_boven_pir, light.gang_boven, binary_sensor.gang_boven_pir_2
     from: 'off'
     to: 'on'
     id: aan
-  - platform: time
+  - trigger: time
     at: input_datetime.gang_boven_end_time
     id: uit
 actions:
@@ -48,11 +48,11 @@ actions:
             target:
               entity_id: input_datetime.gang_boven_end_time
           - wait_for_trigger:
-              - platform: state
+              - trigger: state
                 entity_id: binary_sensor.gang_boven_bezetting
                 from: 'on'
                 to: 'off'
-              # - platform: state
+              # - trigger: state
               #   entity_id: binary_sensor.gang_hal_bezetting
               #   from: 'on'
               #   to: 'off'

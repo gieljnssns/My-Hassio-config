@@ -1,24 +1,24 @@
 alias: Welkom allemaal, sonos playing
 id: 943b0e04-920d-4874-a5a2-27798ac7c36a
 mode: single
-trigger:
-  - platform: template
+triggers:
+  - trigger: template
     value_template: >
       {{  (is_state('binary_sensor.gang_voordeur_last_5_min', 'on')
           or is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on')) and
           (is_state('binary_sensor.keuken_aqara_pir', 'on') 
           or is_state('binary_sensor.keuken_presence', 'on')
           or is_state('binary_sensor.keuken_pir', 'on')) }}
-  # - platform: template
+  # - trigger: template
   #   value_template: >
   #     {{  is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and
   #         is_state('binary_sensor.keuken_aqara_pir', 'on') }}
-  # - platform: template
+  # - trigger: template
   #   value_template: >
   #     {{  is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and
   #         is_state('binary_sensor.keuken_aqara_pir', 'on') }}
 
-condition:
+conditions:
   condition: and
   conditions:
     - condition: state
@@ -45,14 +45,10 @@ condition:
             as_timestamp(now()) - as_timestamp(state_attr('automation.welkom_allemaal_sonos_playing', 'last_triggered')) | float > 310 and
             as_timestamp(now()) - as_timestamp(state_attr('automation.welkom_sonos_paused', 'last_triggered')) | float > 310 }}
 actions:
-  - action: media_player.play_media
-    target:
-      entity_id: media_player.mass_keuken
+  - action: tts.cloud_say
     data:
-      announce: true
-      media_content_type: "music"
-      extra:
-        volume: 60
-      media_content_id: >
-        {% set message =  states('sensor.welkom_2') %}
-         media-source://tts/tts.home_assistant_cloud?message="{{message}}"
+      cache: false
+      entity_id: media_player.mass_keuken
+      message: |
+        {% set message =  states('sensor.welkom_2') %} 
+          {{message}}

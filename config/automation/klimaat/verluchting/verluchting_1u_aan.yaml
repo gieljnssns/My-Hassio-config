@@ -1,27 +1,27 @@
-  alias: 'Verluchting 1u Aan'
-  id: c9229ffd-c000-42c0-b499-9c4a3a300927
-  trigger:
-    - platform: time
-      at: '01:00'
-  condition:
-    condition: and
-    conditions:
-      - condition: state
-        entity_id: binary_sensor.buiten_fris_genoeg
-        state: 'on'
-      - condition: numeric_state
-        entity_id: sensor.buitentemperatuur_gefilterd
-        above: 10
-      - condition: state
-        entity_id: input_boolean.verluchting_afkoeling
-        state: 'off'
-  actions:
-    # - action: script.turn_off
-    #   entity_id: script.verluchting_2_uur
-    # - action: script.turn_off
-    #   entity_id: script.verluchting_1_uur
-    # - delay:
-    #     seconds: 5
-    - action: script.turn_on
-      entity_id: script.verluchting_1_uur
+alias: 'Verluchting 1u Aan'
+id: c9229ffd-c000-42c0-b499-9c4a3a300927
+triggers:
+  - trigger: time
+    at: '01:00'
+conditions:
+  condition: and
+  conditions:
+    - condition: state
+      entity_id: binary_sensor.buiten_fris_genoeg
+      state: 'on'
+    - condition: numeric_state
+      entity_id: sensor.buitentemperatuur_gefilterd
+      above: 10
+    - condition: state
+      entity_id: input_boolean.verluchting_afkoeling
+      state: 'off'
+actions:
+  # - action: script.turn_off
+  #   entity_id: script.verluchting_2_uur
+  # - action: script.turn_off
+  #   entity_id: script.verluchting_1_uur
+  # - delay:
+  #     seconds: 5
+  - action: script.turn_on
+    entity_id: script.verluchting_1_uur
     

@@ -3,15 +3,15 @@
 
 alias: "Verluchting Afkoeling Uit"
 id: 3730dffd-c23d-40ac-bca8-d84821652fc4
-trigger:
-  # - platform: time_pattern
+triggers:
+  # - trigger: time_pattern
   #   minutes: "/5"
   #   seconds: 00
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.afkoeling_gewenst
     from: "on"
     to: "off"
-condition:
+conditions:
   condition: and
   conditions:
     - condition: state

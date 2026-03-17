@@ -1,0 +1,79 @@
+alias: "Power polling control"
+mode: single
+id: de23f3e5-bf3c-4cae-b50a-23c86dc4c6de
+triggers:
+  - trigger: state
+    entity_id:
+      - input_boolean.emhass_wasmachien
+      - binary_sensor.wasmachien_staat_op
+      - input_boolean.emhass_afwasmachien
+      - binary_sensor.afwasmachien_staat_op
+      - input_boolean.emhass_droogkast
+      - binary_sensor.droogkast_staat_op
+      - sensor.koffiezet_vermogen_2
+      - sensor.keuken_ijskast_vermogen
+      - sensor.keuken_toestellen_vermogen
+      - sensor.keuken_toestellen_2_vermogen
+      - sensor.keuken_toestellen_3_vermogen
+      - sensor.keuken_oven_vermogen
+      - sensor.regenwaterpomp_vermogen
+      - sensor.garage_ijskast_vermogen
+      - sensor.ventilator_kerstverlichting_vermogen
+
+actions:
+  - if:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: input_boolean.emhass_wasmachien
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.wasmachien_staat_op
+            state: "on"
+          - condition: state
+            entity_id: input_boolean.emhass_afwasmachien
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.afwasmachien_staat_op
+            state: "on"
+          - condition: state
+            entity_id: input_boolean.emhass_droogkast
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.droogkast_staat_op
+            state: "on"
+          - condition: numeric_state
+            entity_id: sensor.koffiezet_vermogen_2
+            above: 10
+          - condition: numeric_state
+            entity_id: sensor.keuken_ijskast_vermogen
+            above: 10
+          - condition: numeric_state
+            entity_id: sensor.keuken_toestellen_vermogen
+            above: 10
+          - condition: numeric_state
+            entity_id: sensor.keuken_toestellen_2_vermogen
+            above: 10
+          - condition: numeric_state
+            entity_id: sensor.keuken_toestellen_3_vermogen
+            above: 10
+          - condition: numeric_state
+            entity_id: sensor.keuken_oven_vermogen
+            above: 10
+          - condition: numeric_state
+            entity_id: sensor.regenwaterpomp_vermogen
+            above: 10
+          - condition: numeric_state
+            entity_id: sensor.garage_ijskast_vermogen
+            above: 10
+          - condition: numeric_state
+            entity_id: sensor.ventilator_kerstverlichting_vermogen
+            above: 50
+        then:
+          - action: automation.turn_on
+            target:
+              entity_id: automation.power_polling
+        else:
+          - action: automation.turn_off
+            target:
+              entity_id: automation.power_polling

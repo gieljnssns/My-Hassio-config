@@ -1,0 +1,166 @@
+# js_variables:
+# # title
+#   date_time: sensor.date_time_iso
+
+#   analytics: input_boolean.sidebar_analytics
+# jinja_variables:
+#   analytics: >
+#     {{ is_state('input_boolean.sidebar_analytics','on') }}
+# partials:
+#   instellingen: |
+#     const anal = is_state(analytics,'on');
+  
+# subtitle
+  # marquee: sensor.marquee_alerts
+title: 'Amelbergastraat 79'
+# sidebar_mode: "narrow"
+# title: >
+#     {% if is_state('input_boolean.sidebar_analytics','on') %}
+#       True
+#     {% else %}
+#       False
+#     {% endif %}
+analytics: true
+  # sidebar_item_clicked: >
+  #   {% if is_state('input_boolean.sidebar_analytics','on') %}
+  #     True
+  #   {% else %}
+  #     False
+  #   {% endif %}
+#   panel_visited: >
+#     {% if is_state('input_boolean.sidebar_analytics','on') %}
+#       True
+#     {% else %}
+#       False
+#     {% endif %}
+order:
+  - item: logbook
+    match: href
+    hide: true
+  - item: energy
+    match: href
+    hide: true
+  - item: history
+    match: href
+    hide: true
+  - item: calendar
+    match: href
+    hide: true
+  - item: media-browser
+    match: href
+    hide: true
+  # - item: light
+  #   match: href
+  #   hide: true
+  # - item: security
+  #   match: href
+  #   hide: true
+  # - item: climate
+  #   match: href
+  #   hide: true
+  # - item: home
+  #   match: href
+  #   hide: true
+  - item: lovelace
+    match: href
+    order: 0
+  - item: todo
+    match: href
+    order: 1
+  - item: Kalenders
+    new_item: true
+    href: "/lovelace-kalender/kalenders"
+    icon: mdi:calendar-star
+    hide: false
+    order: 2
+    # divider: true
+
+exceptions:
+  - user: Martine
+    extend_from: 'base'
+    order:
+      - item: to-do
+        order: 3
+        hide: false
+      - item: Music assistant
+        new_item: true
+        href: "/app/d5369777_music_assistant_beta"
+        icon: mdi:music
+        order: 4
+        hide: false
+      - new_item: true
+        item: Frigate
+        icon: mdi:cctv
+        href: "/app/ccab4aaf_frigate-proxy"
+        order: 5
+      - item: energie
+        order: 6
+        hide: false
+
+  - user: Giel
+    extend_from: 'base'
+    order:
+      - item: Music assistant
+        new_item: true
+        href: "/app/d5369777_music_assistant_beta"
+        icon: mdi:music
+        order: 3
+        hide: false
+      - new_item: true
+        item: Frigate
+        icon: mdi:cctv
+        href: "/app/ccab4aaf_frigate-proxy"
+        order: 4
+        # divider: true
+      - item: energy
+        order: 5
+        hide: false
+      - new_item: true
+        item: Emhass
+        href: "/app/5b918bf2_emhass"
+        icon: mdi:home-lightning-bolt
+        order: 6
+        # divider: true
+      - new_item: true
+        item: Adguard
+        href: "/app/a0d7b954_adguard"
+        icon: mdi:shield
+        order: 7
+        hide: false
+      - item: hacs
+        order: 8
+        hide: false
+  #       # notification: |
+  #       #   [[[
+  #       #     const outdatedHacsEntities = Object.values(entities.update).filter(
+  #       #       (entity) => entity.platform === 'hacs' && is_state(entity.entity_id, 'on')
+  #       #     );
+  #       #     return outdatedHacsEntities.length || '';
+  #       #   ]]]
+      - item: Esphome
+        new_item: true
+        order: 9
+        hide: false
+        icon: mdi:car-esp
+        href: "/app/5c53de3b_esphome"
+
+      - item: Foutenboek
+        href: "/config/logs"
+        new_item: true
+        icon: mdi:math-log
+        bottom: true
+        order: 10
+        hide: false
+      - item: developer tools
+        name: Dev tools
+        new_item: true
+        icon: 'mdi:hammer'
+        bottom: true
+        href: "/config/developer-tools/template"
+        hide: false
+        order: 11
+      - item: logbook
+        match: href
+        bottom: true
+        hide: false
+        order: 12

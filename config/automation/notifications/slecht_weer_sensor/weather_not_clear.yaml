@@ -1,10 +1,10 @@
 alias: "Bad weather notification - clear"
 id: 45a4e1d5-aa55-4c81-b15e-337eed05db82
-trigger:
-  - platform: time
+triggers:
+  - trigger: time
     at: "07:00:00"
 
-condition:
+conditions:
   condition: and
   conditions:
     - condition: state
@@ -37,11 +37,11 @@ actions:
           - action: notify.mobile_app_mphone
             data:
               message: >
-                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
+                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.openweathermap_windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
           - action: notify.noor_en_fien
             data:
               message: >
-                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
+                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.openweathermap_windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
       - conditions:
           - condition: state
             entity_id: binary_sensor.v_monnikenheide
@@ -53,7 +53,7 @@ actions:
           - action: notify.mobile_app_mphone
             data:
               message: >
-                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
+                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.openweathermap_windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
       - conditions:
           - condition: state
             entity_id: binary_sensor.v_monnikenheide
@@ -65,15 +65,15 @@ actions:
           - action: notify.noor_en_fien
             data:
               message: >
-                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
+                " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.openweathermap_windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
   # - action: notify.mobile_app_mphone
   #   data:
   #     message: >
-  #       " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
+  #       " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.openweathermap_windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
   # - condition: state
   #   entity_id: binary_sensor.schooldag
   #   state: "on"
   # - action: notify.noor_en_fien
   #   data:
   #     message: >
-  #       " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
+  #       " Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.openweathermap_windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "

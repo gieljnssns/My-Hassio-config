@@ -23,10 +23,11 @@
       unique_id: c38353a5-d1d8-4f10-a826-dbb2cf432c07
       state: >
         {% from 'easy_time.jinja' import easy_relative_time -%}
-        {% set load = (state_attr('sensor.emhass_afwasmachien', 'deferrables_schedule')
-                |map(attribute='emhass_afwasmachien')
+        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
+        {% set load = (state_attr('sensor.' + best_model + '_p_deferrable2', 'deferrables_schedule')
+                |map(attribute=best_model + '_p_deferrable2')
                 |list) -%}
-        {% set time = (state_attr('sensor.emhass_afwasmachien', 'deferrables_schedule')
+        {% set time = (state_attr('sensor.' + best_model + '_p_deferrable2', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) -%}
         {% if is_state("input_boolean.emhass_afwasmachien", "on") -%}
@@ -41,7 +42,7 @@
             {% endfor -%}
           {% endif -%}
       availability: >-
-        {{ states('sensor.emhass_afwasmachien') | is_number }}
+        {{ states('sensor.best_emhass_model_load_7d') not in ('unknown', 'unavailable', 'None') }}
     
     - name: Afwasmachien end timesteps
       unique_id: 32c63c15-0e67-4686-8680-1a8ca97f4aff

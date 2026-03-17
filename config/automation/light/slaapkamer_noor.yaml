@@ -4,13 +4,13 @@ id: d0467a85-0e2b-4b05-9255-c1fe15316291
 mode: restart
 max_exceeded: silent
 
-trigger:
-  # - platform: state
+triggers:
+  # - trigger: state
   #   entity_id: binary_sensor.slaapkamer_noor_aqara_pir
   #   from: "off"
   #   to: "on"
   #   id: presence
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.noor_bezetting
     from: "off"
     to: "on"
@@ -23,18 +23,18 @@ trigger:
     subtype: remote_button_short_press
     id: zha
   
-  - platform: state
+  - trigger: state
     entity_id: light.noor
     from: "off"
     to: "on"
     id: light
 
-  - platform: state
-    entity_id: binary_sensor.nphone_focus
-    from: "off"
-    to: "on"
-    id: focus_on
-  # - platform: state
+  # - trigger: state
+  #   entity_id: binary_sensor.nphone_focus
+  #   from: "off"
+  #   to: "on"
+  #   id: focus_on
+  # - trigger: state
   #   entity_id: binary_sensor.nphone_focus
   #   from: "on"
   #   to: "off"
@@ -55,7 +55,7 @@ actions:
           state: "not_home"
         - condition: state
           entity_id: sensor.dark_inside
-          state: "on"
+          state: "true"
         # - condition: not
         #   conditions:
         #     - condition: state
@@ -72,7 +72,7 @@ actions:
           target:
             entity_id: input_datetime.slaapkamer_noor_verlichting_end_time
         - wait_for_trigger:
-            - platform: state
+            - trigger: state
               entity_id: binary_sensor.noor_bezetting
               from: "on"
               to: "off"
@@ -96,7 +96,7 @@ actions:
           state: "home"
         - condition: state
           entity_id: sensor.dark_inside
-          state: "on"
+          state: "true"
       sequence:
         - action: light.turn_on
           entity_id: light.noor
@@ -107,7 +107,7 @@ actions:
           target:
             entity_id: input_datetime.slaapkamer_noor_verlichting_end_time
         - wait_for_trigger:
-            - platform: state
+            - trigger: state
               entity_id: binary_sensor.noor_bezetting
               from: "on"
               to: "off"
@@ -117,36 +117,19 @@ actions:
               {{ now() + timedelta(seconds=120) }}
           target:
             entity_id: input_datetime.slaapkamer_noor_verlichting_end_time
-    - conditions:
-        - condition: trigger
-          id: focus_on
-        - condition: state
-          entity_id: binary_sensor.noor_bezetting
-          state: "on"
-      sequence:
-        - action: light.turn_off
-          data:
-            transition: 120
-          target:
-            entity_id: light.noor
-        # - delay:
-        #     seconds: 30
-        # - action: light.turn_on
-        #   data:
-        #     effect: Solid
-        #     brightness: 9
-        #     rgb_color:
-        #       - 4
-        #       - 0
-        #       - 255
-        #     transition: 30
-        #   target:
-        #     entity_id: light.wled_noor
-        # - delay:
-        #     seconds: 30
-        # - action: switch.turn_on
-        #   target:
-        #     entity_id: switch.wled_noor_nightlight
+    # - conditions:
+    #     - condition: trigger
+    #       id: focus_on
+    #     - condition: state
+    #       entity_id: binary_sensor.noor_bezetting
+    #       state: "on"
+    #   sequence:
+    #     - action: light.turn_off
+    #       data:
+    #         transition: 120
+    #       target:
+    #         entity_id: light.noor
+       
     # - conditions:
     #     - condition: trigger
     #       id: focus_off
@@ -194,7 +177,7 @@ actions:
               id: light
           sequence:
             - wait_for_trigger:
-                - platform: state
+                - trigger: state
                   entity_id: binary_sensor.noor_bezetting
                   from: "on"
                   to: "off"

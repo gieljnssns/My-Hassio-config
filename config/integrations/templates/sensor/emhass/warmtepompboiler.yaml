@@ -4,59 +4,84 @@
       unit_of_measurement: "uur"
       state: >
         {% set temp = (states("sensor.thermostaat") | float(45) * 4) | round(0) / 4 -%}
+        {% set temp_in = states("sensor.boiler_in") | float(18) -%}
+        {% set delta = (temp - temp_in) > 30 -%}
+        
         {% if states("input_boolean.warm_water_starten") == 'on' -%}
             {% if states("input_boolean.op_verlof") == 'off' -%}
-              {% if (states("sensor.open_meteo_voorspelling_resterend_vandaag") | float(0)) > 2 -%}
-                {% set hours = (max(0, (51 - temp) / 5) * 4) | round(0) / 4 -%}
-              {% else -%}
-                {% set hours = (max(0, (50 - temp) / 5) * 4) | round(0) / 4 -%}
-              {% endif -%}
+              {% set target_temp = 49.2 -%}
             {% else -%}
-              {% set hours = (max(0, (46 - temp) / 5) * 4) | round(0) / 4 -%}
+              {% set target_temp = 46 -%}
             {% endif -%}
+            
+            {#- Bereken basis uren -#}
+            {% set base_hours = (max(0, (target_temp - temp) / 5) * 4) | round(0) / 4 -%}
+            {#- Extra uren bij waterverbruik -#}
+            {% if temp < (target_temp - 2) %}
+              {% set extra_hours = 1.0 if delta else 0 -%}
+            {% elif temp < (target_temp - 1) -%}
+              {% set extra_hours = 0.5 if delta else 0 -%}
+            {% else -%}
+              {% set extra_hours = 0 -%}
+            {% endif -%}
+            {% set hours = base_hours + extra_hours -%}
+            
             {% if is_state("binary_sensor.warmtepompboiler_aan", "on") -%}
               {{ hours }}
             {% else -%}
-              {{ hours if hours >= 1 else 0 }}
+              {{ hours if hours >= 0.5 else 0 }}
             {% endif -%}
         {% else -%}
           0
         {% endif -%}
       # state: >
-      #   {% set horizon = states('sensor.prediction_horizon')|int(0) / 12 -%}
       #   {% set temp = (states("sensor.thermostaat") | float(45) * 4) | round(0) / 4 -%}
       #   {% if states("input_boolean.warm_water_starten") == 'on' -%}
-      #     {% if states("input_boolean.op_verlof") == 'off' -%}
-      #       {% if (states("sensor.open_meteo_voorspelling_resterend_vandaag") | float(0)) > 2 -%}
-      #         {% set hours = max(0, (53 - temp) / 5) -%}
+      #       {% if states("input_boolean.op_verlof") == 'off' -%}
+      #         {% set hours = (max(0, (50 - temp) / 5) * 4) | round(0) / 4 -%}
       #       {% else -%}
-      #         {% set hours = max(0, (52 - temp) / 5) -%}
+      #         {% set hours = (max(0, (46 - temp) / 5) * 4) | round(0) / 4 -%}
       #       {% endif -%}
-      #     {% else -%}
-      #       {% set hours = max(0, (46 - temp) / 5) -%}
-      #     {% endif -%}
-      #     {% if hours|float > horizon -%}
-      #       {{ horizon }}
-      #     {% else -%}
-      #       {% if states("binary_sensor.warmtepompboiler_aan") == "on" -%}
-      #         {{ (hours|float * 4) | round(0) / 4 }}
+      #       {% if is_state("binary_sensor.warmtepompboiler_aan", "on") -%}
+      #         {{ hours }}
       #       {% else -%}
-      #         {{ (hours|float * 4) | round(0) / 4 if ((hours|float * 4) | round(0) / 4) > 1 else 0}}
+      #         {{ hours if hours >= 0.5 else 0 }}
       #       {% endif -%}
-      #     {% endif -%}
       #   {% else -%}
       #     0
       #   {% endif -%}
+      # state: >
+      #   {% set temp = (states("sensor.thermostaat") | float(45) * 4) | round(0) / 4 -%}
+      #   {% if states("input_boolean.warm_water_starten") == 'on' -%}
+      #       {% if states("input_boolean.op_verlof") == 'off' -%}
+      #         {% if (states("sensor.open_meteo_voorspelling_resterend_vandaag") | float(0)) > 2 -%}
+      #           {% set hours = (max(0, (51 - temp) / 5) * 4) | round(0) / 4 -%}
+      #         {% else -%}
+      #           {% set hours = (max(0, (50 - temp) / 5) * 4) | round(0) / 4 -%}
+      #         {% endif -%}
+      #       {% else -%}
+      #         {% set hours = (max(0, (46 - temp) / 5) * 4) | round(0) / 4 -%}
+      #       {% endif -%}
+      #       {% if is_state("binary_sensor.warmtepompboiler_aan", "on") -%}
+      #         {{ hours }}
+      #       {% else -%}
+      #         {{ hours if hours >= 1 else 0 }}
+      #       {% endif -%}
+      #   {% else -%}
+      #     0
+      #   {% endif -%}
+
 
 
     - name: Warm water startuur
       unique_id: f4450d07-ad80-4ed5-a96a-852c84fec6ca
       state: >
         {% from 'easy_time.jinja' import easy_relative_time -%}
-        {% set load = (state_attr('sensor.emhass_warmtepompboiler', 'deferrables_schedule')
-                |map(attribute='emhass_warmtepompboiler')
+        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
+        {% set load = (state_attr('sensor.' + best_model + '_p_deferrable3', 'deferrables_schedule')
+                |map(attribute=best_model + '_p_deferrable3')
                 |list) -%}
-        {% set time = (state_attr('sensor.emhass_warmtepompboiler', 'deferrables_schedule')
+        {% set time = (state_attr('sensor.' + best_model + '_p_deferrable3', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) -%}
         {% if is_state("input_boolean.emhass_warmtepompboiler", "on") -%}
@@ -71,7 +96,7 @@
             {% endfor -%}
           {% endif -%}
       availability: >-
-        {{ states('sensor.emhass_warmtepompboiler') | is_number }}
+        {{ states('sensor.best_emhass_model_load_7d') not in ('unknown', 'unavailable', 'None') }}
     
     - name: Warmtepompboiler start timesteps
       unique_id: b9a1f40e-00d6-48b4-9a9b-b7d558e78357
@@ -93,7 +118,7 @@
         {% set minute = now().minute -%}
         {% set block = hour * 12 + (minute // 5) -%}
         {% set remaining = 288 - block -%}
-        {% if states("sensor.thermostaat") | int < 43 or states("binary_sensor.warmtepompboiler_aan") == "on" -%}
+        {% if states("sensor.thermostaat") | int(43) < 43 or states("binary_sensor.warmtepompboiler_aan") == "on" -%}
           {{ operate | int }}
         {% elif uren == 0 -%}
           {{ 288 }}

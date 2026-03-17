@@ -1,21 +1,21 @@
 alias: Emhass warmtepompboiler
 id: 2dbe7701-5976-4ce8-aaad-0298d80cb019
-trigger:
-  - platform: numeric_state
+triggers:
+  - trigger: numeric_state
     entity_id: sensor.emhass_warmtepompboiler
     above: 1
     # for:
     #   minutes: 2
     #   seconds: 30
-  - platform: numeric_state
+  - trigger: numeric_state
     entity_id: sensor.emhass_warmtepompboiler
     below: 0.1
-    for:
-      minutes: 4
-  - platform: template
+    # for:
+    #   minutes: 4
+  - trigger: template
     value_template: >
       {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 60 }}
-  - platform: event
+  - trigger: event
     event_type: automation_reloaded
 actions:
   - choose:

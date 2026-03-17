@@ -3,28 +3,35 @@
       unique_id: 5c252e9e-ae09-4100-aace-8bb8d4149e8e
       unit_of_measurement: "uur"
       state: >
-        {% set hours = states('input_number.voorspelde_uren_randomforest')|float - states('sensor.branduren_warmtepomp')|float -%}
+        {% set best_model = states('sensor.best_heating_predictor_30d') | lower -%}
+        {% set hours = ((states('input_number.voorspelde_uren_' + best_model)|float(0) - states('sensor.branduren_warmtepomp')|float(0)) * 4) | round(0) / 4  -%}
+        
         {% if states("input_boolean.verwarming_starten") == 'on' -%}
-          {% if states('input_number.voorspelde_uren_randomforest')|float > 1 -%} 
-            {{ hours }} 
+          {% if states('sensor.temp_living')|float(18) > 21  and 12 < now().hour -%}
+            0
+          {% elif states('input_number.voorspelde_uren_' + best_model)|float(0)> 1 -%} 
+            {{ hours }}
           {% else -%} 
             0 
           {% endif -%}
         {% else -%}
           0
         {% endif -%}
+      availability: >-
+        {{ states('sensor.best_heating_predictor_30d') not in ('unknown', 'unavailable', 'None') }}
     
     - name: Verwarming startuur
       unique_id: ceff5121-3392-4bac-8fa5-a8cec3e3d331
       state: >
         {% from 'easy_time.jinja' import easy_relative_time -%}
-        {% set load = (state_attr('sensor.emhass_warmtepomp', 'deferrables_schedule')
-                |map(attribute='emhass_warmtepomp')
+        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
+        {% set load = (state_attr('sensor.' + best_model + '_p_deferrable4', 'deferrables_schedule')
+                |map(attribute=best_model + '_p_deferrable4')
                 |list) -%}
-        {% set time = (state_attr('sensor.emhass_warmtepomp', 'deferrables_schedule')
+        {% set time = (state_attr('sensor.' + best_model + '_p_deferrable4', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) -%}
-        {% if is_state("input_boolean.emhass_warmtepomp", "on") -%}
+        {% if is_state("input_boolean.emhass_warmtepomp", "on") or is_state("binary_sensor.warmtepomp_aan", "on") -%}
           Staat op
         {% else -%}
           {% set new_list = namespace(all=[]) -%}
@@ -36,7 +43,7 @@
             {% endfor -%}
           {% endif -%}
       availability: >-
-        {{ states('sensor.emhass_warmtepomp') | is_number }}
+        {{ states('sensor.best_emhass_model_load_7d') not in ('unknown', 'unavailable', 'None') }}
     
     - name: Warmtepomp start timesteps
       unique_id: e3c01f29-feeb-4e07-be8b-1278b87323e9
@@ -47,7 +54,7 @@
           {% set now_time = now().strftime('%H:%M:%S') -%}
           {% set start_dt = today_at(start_time) -%}
           {% set now_dt = now() -%}
-          {# Check of warmtepomp minstens 30 minuten stil staat #}
+          {#- Check of warmtepomp minstens 30 minuten stil staat -#}
           {% set actual_start_dt = start_dt -%}
           {% if (as_timestamp(now()) - states("sensor.warmtepomp_is_gestopt_op")|float(0)) < 1800 -%}
             {% set min_wait_time = states("sensor.warmtepomp_is_gestopt_op")|float(0) + 1800 -%}
@@ -57,8 +64,8 @@
             {% endif -%}
           {% endif -%}
           
-          {# Als de werkelijke starttijd al voorbij is, geef 0 terug #}
-          {% if actual_start_dt <= now_dt -%}
+          {#- Als de werkelijke starttijd al voorbij is of de warmtepomp al aan staat, geef 0 terug -#}
+          {% if actual_start_dt <= now_dt or is_state("binary_sensor.warmtepomp_aan", "on") -%}
             0
           {% else -%}
             {% set time_diff = (actual_start_dt - now_dt).total_seconds() -%}
@@ -74,6 +81,8 @@
       unit_of_measurement: 5m
       state: >
         {% set end_time = states('input_datetime.eindtijd_verwarming') -%}
+        {% set operate = (states('sensor.warmtepomp_uren') | float(0) * 12) | int  -%}
+        
         {% if end_time not in ['unknown', 'unavailable'] -%}
           {% set now_time = now().strftime('%H:%M:%S') -%}
           {% set end_dt = today_at(end_time) -%}
@@ -86,10 +95,32 @@
           
           {% set time_diff = (end_dt - now_dt).total_seconds() -%}
           {% set timesteps = (time_diff / 300) | round(0, 'ceil') -%}
-          {{ timesteps | int }}
+          {% if is_state('binary_sensor.warmtepomp_aan', 'off') -%}
+            {{ timesteps | int }}
+          {% else -%}
+            {{ operate }}
+          {% endif -%}
         {% else -%}
           0
         {% endif -%}
+      # state: >
+      #   {% set end_time = states('input_datetime.eindtijd_verwarming') -%}
+      #   {% if end_time not in ['unknown', 'unavailable'] -%}
+      #     {% set now_time = now().strftime('%H:%M:%S') -%}
+      #     {% set end_dt = today_at(end_time) -%}
+      #     {% set now_dt = now() -%}
+          
+      #     {# Als de eindtijd al voorbij is vandaag, neem dan morgen #}
+      #     {% if end_dt <= now_dt -%}
+      #       {% set end_dt = end_dt + timedelta(days=1) -%}
+      #     {% endif -%}
+          
+      #     {% set time_diff = (end_dt - now_dt).total_seconds() -%}
+      #     {% set timesteps = (time_diff / 300) | round(0, 'ceil') -%}
+      #     {{ timesteps | int }}
+      #   {% else -%}
+      #     0
+      #   {% endif -%}
     
     - name: Min temperatures schedule
       unique_id: a1b2c3d4-min-temp-schedule

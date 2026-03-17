@@ -2,18 +2,18 @@ alias: "Op verlof aan?"
 id: cae5ef81-fe21-499b-8827-734f6a99130c
 mode: single
 max_exceeded: silent
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id: device_tracker.gphone_2
     to: "not_home"
     for:
       hours: 4
-  - platform: state
+  - trigger: state
     entity_id: device_tracker.mphone_2
     to: "not_home"
     for:
       hours: 4
-condition:
+conditions:
   condition: and
   conditions:
     - condition: state

@@ -1,19 +1,19 @@
 # Sonos/playstation met muziek uit als tv op springt
 alias: "sonos/ps muziek uit tv"
 id: ad8189b2-9488-4f1d-9390-a2baaa8009bd
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id: media_player.philips_tv
     from: "off"
     to: "on"
-  - platform: state
+  - trigger: state
     entity_id: media_player.mass_living_2
     attribute: app_id
     to: "TV"
-  - platform: template
+  - trigger: template
     value_template: >
       {{ state_attr("media_player.mass_living_2","app_id") == "x-sonos-htastream" }}
-  - platform: template
+  - trigger: template
     id: music_off
     value_template: >
       {% set sourcelist = ["TV VLAANDEREN", "Netflix", "VRT MAX", "Streamz", "YouTube", "VTM GO"] %}

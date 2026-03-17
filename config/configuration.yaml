@@ -35,6 +35,8 @@ homeassistant:
   allowlist_external_dirs:
     - "/share"
     - "/config"
+    # - "/share/addon_configs/e98ac8ca_ai-orchestrator"
+
   # debug: true
 
 ####################################################
@@ -72,11 +74,8 @@ conversation:
 frontend:
   themes: !include_dir_merge_named themes/
   extra_module_url:
-    # - /hacsfiles/lovelace-card-mod/card-mod.js
-    - /hacsfiles/lovelace-card-mod/card-mod.js?hacstag=1909275244207
-    # - /local/community/lovelace-card-mod/card-mod.js
-    # - /local/custom.js
-    - /hacsfiles/custom-sidebar/custom-sidebar-yaml.js
+    - /hacsfiles/lovelace-card-mod/card-mod.js?hacstag=190927524421
+    - /hacsfiles/custom-sidebar/custom-sidebar-plugin.js
 
 ###  Hassio  ###
 hassio:
@@ -103,10 +102,13 @@ system_health:
 tag:
 
 ###  Wake on Lan  ###
-wake_on_lan:
+# wake_on_lan:
 
 ###  Websocket API  ###
 websocket_api:
+
+# ###  Zha toolkit  ###
+# zha_toolkit:
 
 ####################################################
 #                                                  #
@@ -147,7 +149,7 @@ script: !include_dir_merge_named scripts
 
 ###  Panels  ###
 # panel_iframe: !include panels/iframe.yaml
-panel_custom: !include panels/custom.yaml
+# panel_custom: !include panels/custom.yaml
 
 ###  Zones  ###
 zone: !include zones.yaml
@@ -181,8 +183,8 @@ mqtt:
 # proximity: !include integrations/proximity.yaml
 rest_command: !include_dir_merge_named integrations/restful_commands
 sensor: !include_dir_merge_list integrations/sensors
-shell_command: !include integrations/shell_commands.yaml
-switch: !include_dir_merge_list integrations/switch
+# shell_command: !include integrations/shell_commands.yaml
+# switch: !include_dir_merge_list integrations/switch
 template: !include_dir_merge_list integrations/templates
 timer: !include_dir_merge_named integrations/timer
 # utility_meter: !include_dir_merge_named integrations/utility_meter

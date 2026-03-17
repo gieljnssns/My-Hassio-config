@@ -1,0 +1,158 @@
+predict_heating_hours:
+  sequence:
+    - action: recorder.get_statistics
+      data:
+        start_time: >-
+          {{ (now().replace(hour=0, minute=0, second=0)- timedelta(hours =
+          24)).isoformat() }}
+        end_time: >-
+          {{ (now().replace(hour=23, minute=0, second=0)- timedelta(hours =
+          24)).isoformat() }}
+        period: day
+        statistic_ids:
+          - sensor.benedentemperatuur_gefilterd
+          - sensor.buiten_temperatuur
+        types:
+          - mean
+      response_variable: temp_stats
+    # RandomForestRegressor
+    - action: rest_command.predict_heating_hours
+      data:
+        model_type: "heating_dd"
+        mlr_predict_entity_id: "sensor.voorspelde_uren_randomforest"
+        mlr_predict_friendly_name: "Voorspelde uren RandomForestRegressor"
+        buiten_temp: >
+          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
+        binnen_temp: >
+          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        max_setpoint: 21
+    - delay:
+        seconds: 4
+    # GradientBoostingRegressor
+    - action: rest_command.predict_heating_hours
+      data:
+        model_type: "heating_dd_gradientboosting"
+        mlr_predict_entity_id: "sensor.voorspelde_uren_gradientboosting"
+        mlr_predict_friendly_name: "Voorspelde uren GradientBoosting"
+        buiten_temp: >
+          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
+        binnen_temp: >
+          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        max_setpoint: 21
+    - delay:
+        seconds: 4
+    # AdaBoostRegressor
+    - action: rest_command.predict_heating_hours
+      data:
+        model_type: "heating_dd_adaboost"
+        mlr_predict_entity_id: "sensor.voorspelde_uren_adaboost"
+        mlr_predict_friendly_name: "Voorspelde uren AdaBoost"
+        buiten_temp: >
+          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
+        binnen_temp: >
+          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        max_setpoint: 21
+    - delay:
+        seconds: 4
+    # ExtraTreesRegressor
+    - action: rest_command.predict_heating_hours
+      data:
+        model_type: "heating_dd_extratrees"
+        mlr_predict_entity_id: "sensor.voorspelde_uren_extratrees"
+        mlr_predict_friendly_name: "Voorspelde uren extratrees"
+        buiten_temp: >
+          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
+        binnen_temp: >
+          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        max_setpoint: 21
+    - delay:
+        seconds: 4
+    # SVR
+    - action: rest_command.predict_heating_hours
+      data:
+        model_type: "heating_dd_svr"
+        mlr_predict_entity_id: "sensor.voorspelde_uren_svr"
+        mlr_predict_friendly_name: "Voorspelde uren svr"
+        buiten_temp: >
+          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
+        binnen_temp: >
+          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        max_setpoint: 21
+    - delay:
+        seconds: 4
+    # DecisionTreeRegressor
+    - action: rest_command.predict_heating_hours
+      data:
+        model_type: "heating_dd_decisiontree"
+        mlr_predict_entity_id: "sensor.voorspelde_uren_decisiontree"
+        mlr_predict_friendly_name: "Voorspelde uren decisiontree"
+        buiten_temp: >
+          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
+        binnen_temp: >
+          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        max_setpoint: 21
+    - delay:
+        seconds: 4
+    # KNeighborsRegressor
+    - action: rest_command.predict_heating_hours
+      data:
+        model_type: "heating_dd_kneighbors"
+        mlr_predict_entity_id: "sensor.voorspelde_uren_kneighbors"
+        mlr_predict_friendly_name: "Voorspelde uren kneighbors"
+        buiten_temp: >
+          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
+        binnen_temp: >
+          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        max_setpoint: 21
+    - delay:
+        seconds: 4
+    # ElasticNet
+    - action: rest_command.predict_heating_hours
+      data:
+        model_type: "heating_dd_elasticnet"
+        mlr_predict_entity_id: "sensor.voorspelde_uren_elasticnet"
+        mlr_predict_friendly_name: "Voorspelde uren elasticnet"
+        buiten_temp: >
+          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
+        binnen_temp: >
+          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        max_setpoint: 21
+    - delay:
+        seconds: 4
+    # LassoRegression
+    - action: rest_command.predict_heating_hours
+      data:
+        model_type: "heating_dd_lasso"
+        mlr_predict_entity_id: "sensor.voorspelde_uren_lasso"
+        mlr_predict_friendly_name: "Voorspelde uren lasso"
+        buiten_temp: >
+          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
+        binnen_temp: >
+          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        max_setpoint: 21
+    - delay:
+        seconds: 4
+    # RidgeRegression
+    - action: rest_command.predict_heating_hours
+      data:
+        model_type: "heating_dd_ridge"
+        mlr_predict_entity_id: "sensor.voorspelde_uren_ridge"
+        mlr_predict_friendly_name: "Voorspelde uren ridge"
+        buiten_temp: >
+          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
+        binnen_temp: >
+          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        max_setpoint: 21
+    - delay:
+        seconds: 4
+    # LinearRegression
+    - action: rest_command.predict_heating_hours
+      data:
+        model_type: "heating_dd_linear"
+        mlr_predict_entity_id: "sensor.voorspelde_uren_linear"
+        mlr_predict_friendly_name: "Voorspelde uren linear"
+        buiten_temp: >
+          {{temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2)}}
+        binnen_temp: >
+          {{temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2)}}
+        max_setpoint: 21

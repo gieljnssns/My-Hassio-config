@@ -1,40 +1,40 @@
 alias: Licht hof aan
 id: 25632745-3abf-4ae9-a64e-181845b9dec6
 mode: restart
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id: device_tracker.giel_not_so_binary
     to: "Juist Aangekomen"
     id: just_arrived
-  - platform: state
+  - trigger: state
     entity_id: device_tracker.martine_not_so_binary
     to: "Juist Aangekomen"
     id: just_arrived
-  - platform: state
+  - trigger: state
     entity_id: device_tracker.noor_not_so_binary
     to: "Juist Aangekomen"
     id: just_arrived
-  - platform: state
+  - trigger: state
     entity_id: device_tracker.fien_not_so_binary
     to: "Juist Aangekomen"
     id: just_arrived
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.keuken_achterdeur
     to: "on"
     id: door
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.garage_deur
     # to: "on"
     id: door
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.tuin_bezetting
     to: "on"
     id: occupancy
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.poort
     to: "on"
     id: door
-condition:
+conditions:
   - condition: state
     entity_id: sensor.dark_outside
     state: "true"
@@ -66,7 +66,7 @@ actions:
                     target:
                       entity_id: input_datetime.alle_tuinverlichting_end_time
                   - wait_for_trigger:
-                      - platform: state
+                      - trigger: state
                         entity_id:
                           - binary_sensor.tuin_bezetting
                         from: "on"
@@ -114,7 +114,7 @@ actions:
                 target:
                   entity_id: input_datetime.alle_tuinverlichting_end_time
               - wait_for_trigger:
-                  - platform: state
+                  - trigger: state
                     entity_id:
                       - binary_sensor.tuin_bezetting
                     from: "on"

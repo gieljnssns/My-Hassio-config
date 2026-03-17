@@ -1,0 +1,148 @@
+emhass_grid_follower:
+  alias: EMHASS Grid Follower
+  sequence:
+    - repeat:
+        while:
+          - condition: template
+            value_template: >
+              {{ states('select.goodwe_inverter_operation_mode') in ['eco_charge', 'eco_discharge'] }}
+        sequence:
+          - variables:
+              p_grid_actual: "{{ states('sensor.huidig_fluvius') | float(0) }}"
+              p_grid_target: "{{ states('sensor.emhass_grid2') | float(0) }}"
+              current_power: "{{ states('number.goodwe_eco_mode_power') | float(0) }}"
+              current_mode: "{{ states('select.goodwe_inverter_operation_mode') }}"
+              error: "{{ p_grid_actual - p_grid_target }}"
+              max_charge_pct: >
+                {% set w = states('sensor.battery_p_charge_max') | float(8000) -%}
+                {{ [(w / 80) | round(0) | int, 100] | min }}
+              max_discharge_pct: >
+                {% set w = states('sensor.battery_p_discharge_max') | float(4448) -%}
+                {{ [(w / 80) | round(0) | int, 100] | min }}
+
+              # eco_charge:    meer power → meer netafname → error daalt
+              #                error negatief (actual < target) → power omhoog
+              #                error positief (actual > target) → power omlaag
+              # eco_discharge: meer power → minder netafname → error daalt
+              #                error positief (actual > target) → power omhoog
+              #                error negatief (actual < target) → power omlaag
+              # Conclusie: teken van correctie is OMGEKEERD per mode
+              corrected_error: >
+                {% if current_mode == 'eco_charge' -%}
+                  {{ -(error | float) }}
+                {% else -%}
+                  {{ error | float }}
+                {% endif -%}
+              
+              # Grotere hysterese: pas van mode wisselen bij >300W afwijking
+              # én alleen als current_power al op minimum staat (0-5%)
+              # Dit voorkomt oscillatie tussen charge/discharge
+              target_mode: >
+                {% set e = error | float -%}
+                {% set cp = current_power | float -%}
+                {% if current_mode == 'eco_discharge' -%}
+                  {% if e < -100 and cp <= 5 -%}
+                    eco_charge
+                  {% else -%}
+                    eco_discharge
+                  {% endif -%}
+                {% elif current_mode == 'eco_charge' -%}
+                  {% if e > 100 and cp <= 5 -%}
+                    eco_discharge
+                  {% else -%}
+                    eco_charge
+                  {% endif -%}
+                {% else -%}
+                  {{ current_mode }}
+                {% endif -%}
+
+
+              # # Stapgrootte (80W ≈ 1%)
+              # step: "{{ ((error | abs) / 80) | round(0) | int }}"
+
+              # Stapgrootte: proportioneel maar begrensd op max 10% per stap
+              step: >
+                {{ [(( corrected_error | abs) / 80) | round(0) | int, 15] | min }}
+
+              new_power: >
+                {% set ce = corrected_error | float -%}
+                {% set s = step | int -%}
+                {% set cp = current_power | float -%}
+                {% set soc = states('sensor.battery_state_of_charge') | float(50) -%}
+                {% set soc_block = (current_mode == 'eco_discharge' and soc <= 15) or (current_mode == 'eco_charge' and soc >= 95) -%}
+                {% set max_pct = max_charge_pct | int if current_mode == 'eco_charge' else max_discharge_pct | int -%}
+                {% if target_mode != current_mode or soc_block -%}
+                  {% set np = 0 -%}
+                {% elif ce | abs <= 50 -%}
+                  {% set np = cp -%}
+                {% elif ce > 0 -%}
+                  {% set np = cp + s -%}
+                {% else -%}
+                  {% set np = cp - s -%}
+                {% endif -%}
+                {% if np > max_pct -%}
+                  {{ max_pct }}
+                {% elif np < 0 -%}
+                  0
+                {% else -%}
+                  {{ np | round(0) | int }}
+                {% endif -%}
+              
+              # new_power: >
+              #   {% set e = error | float -%}
+              #   {% set s = step | int -%}
+              #   {% if e | abs <= 50 -%}
+              #     {% set np = current_power - 1 -%}
+              #   {% elif target_mode == current_mode -%}
+              #     {% set np = current_power + s -%}
+              #   {% else -%}
+              #     {% set np = 0 -%}
+              #   {% endif -%}
+              #   {% if np > 100 -%}
+              #     100
+              #   {% elif np < 0 -%}
+              #     0
+              #   {% else -%}
+              #     {{ np | round(0) | int }}
+              #   {% endif -%}
+
+              is_night: >
+                {% set h = now().hour -%}
+                {{ h >= 1 and h < 6 }}
+
+              interval: "{{ 60 if is_night else 10 }}"
+
+          # Schakel mode indien nodig
+          - if:
+              - condition: template
+                value_template: "{{ target_mode != current_mode }}"
+            then:
+              - service: number.set_value
+                target:
+                  entity_id: number.goodwe_eco_mode_power
+                data:
+                  value: 0
+              - delay:
+                  seconds: 1
+              - service: select.select_option
+                target:
+                  entity_id: select.goodwe_inverter_operation_mode
+                data:
+                  option: "{{ target_mode }}"
+
+          # Pas power aan indien mode niet wisselt
+          - if:
+              - condition: template
+                value_template: "{{ target_mode == current_mode and (new_power | int) != (current_power | int) }}"
+            then:
+              - service: number.set_value
+                target:
+                  entity_id: number.goodwe_eco_mode_power
+                data:
+                  value: "{{ new_power }}"
+
+          - delay:
+              seconds: "{{ interval }}"
+
+  mode: single
+  max_exceeded: silent

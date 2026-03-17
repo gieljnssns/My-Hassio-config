@@ -2,28 +2,28 @@ alias: Slaap na de nacht
 id: 7e9cc1fa-4db2-433a-a372-043d538d13a9
 description: >-
   Input boolean Giel slaapt na de nacht
-trigger:
-  - platform: time
+triggers:
+  - trigger: time
     at: "16:00:13"
-  # - platform: time
+  # - trigger: time
   #   at: "12:00:13"
-  - platform: state
+  - trigger: state
     entity_id: calendar.de_nacht
     from: "on"
     to: "off"
-  - platform: state
+  - trigger: state
     entity_id: calendar.weekend_nacht
     to: "off"
     from: "on"
-  # - platform: state
+  # - trigger: state
   #   entity_id: calendar.mondelez_de_nacht
   #   from: "on"
   #   to: "off"
-  # - platform: state
+  # - trigger: state
   #   entity_id: calendar.mondelez_weekend_nacht
   #   to: "off"
   #   from: "on"
-condition: []
+conditions: []
 actions:
   - choose:
       - conditions:

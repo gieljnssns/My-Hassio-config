@@ -1,37 +1,37 @@
-  alias: Set device tracker
-  id: fa8245b7-3a4e-44f2-91d0-84a86ff5d978
-  mode: parallel
-  trigger:
-    - platform: state
-      entity_id: sensor.giel_status
-    - platform: state
-      entity_id: sensor.martine_status
-    - platform: state
-      entity_id: sensor.noor_status
-    - platform: state
-      entity_id: sensor.fien_status
-  actions:
-    - action: device_tracker.see
-      data_template:
-        dev_id: >-
-          {% if trigger.entity_id == 'sensor.giel_status' %}
-              giel_not_so_binary
-          {% elif trigger.entity_id == 'sensor.martine_status' %}
-              martine_not_so_binary
-          {% elif trigger.entity_id == 'sensor.noor_status' %}
-              noor_not_so_binary
-          {% else %}
-              fien_not_so_binary
-          {% endif %}
-        location_name: >-
-          {% if trigger.entity_id == 'sensor.giel_status' %}
-              {{states('sensor.giel_status')}}
-          {% elif trigger.entity_id == 'sensor.martine_status' %}
-              {{states('sensor.martine_status')}}
-          {% elif trigger.entity_id == 'sensor.noor_status' %}
-              {{states('sensor.noor_status')}}
-          {% else %}
-              {{states('sensor.fien_status')}}
-          {% endif %}
-        source_type: router
+alias: Set device tracker
+id: fa8245b7-3a4e-44f2-91d0-84a86ff5d978
+mode: parallel
+triggers:
+  - trigger: state
+    entity_id: sensor.giel_status
+  - trigger: state
+    entity_id: sensor.martine_status
+  - trigger: state
+    entity_id: sensor.noor_status
+  - trigger: state
+    entity_id: sensor.fien_status
+actions:
+  - action: device_tracker.see
+    data_template:
+      dev_id: >-
+        {% if trigger.entity_id == 'sensor.giel_status' %}
+            giel_not_so_binary
+        {% elif trigger.entity_id == 'sensor.martine_status' %}
+            martine_not_so_binary
+        {% elif trigger.entity_id == 'sensor.noor_status' %}
+            noor_not_so_binary
+        {% else %}
+            fien_not_so_binary
+        {% endif %}
+      location_name: >-
+        {% if trigger.entity_id == 'sensor.giel_status' %}
+            {{states('sensor.giel_status')}}
+        {% elif trigger.entity_id == 'sensor.martine_status' %}
+            {{states('sensor.martine_status')}}
+        {% elif trigger.entity_id == 'sensor.noor_status' %}
+            {{states('sensor.noor_status')}}
+        {% else %}
+            {{states('sensor.fien_status')}}
+        {% endif %}
+      source_type: router
       

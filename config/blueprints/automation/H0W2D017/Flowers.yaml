@@ -281,11 +281,11 @@ variables:
   # night_temp: '{% if lowest_night_temp < low_threshold and night_temp_enabled == true
   #   %} The temperature will be below {{low_threshold | int}}°C, and at it`s lowest
   #   point it will be {{lowest_night_temp}}°C {%endif%}'
-trigger:
-  - platform: time
+triggers:
+  - trigger: time
     at: !input time
     id: time
-  - platform: numeric_state
+  - trigger: numeric_state
     entity_id: !input temp_sensor
     above: !input high_threshold
     for:
@@ -293,7 +293,7 @@ trigger:
       minutes: 0
       seconds: 0
     id: temp_high
-  - platform: numeric_state
+  - trigger: numeric_state
     entity_id: !input temp_sensor
     below: !input low_threshold
     for:
@@ -395,7 +395,7 @@ actions:
   - condition: template
     value_template: "{{persistent == true}}"
   - wait_for_trigger:
-      - platform: event
+      - trigger: event
         event_type: mobile_app_notification_action
         event_data:
           tag: flowerpower

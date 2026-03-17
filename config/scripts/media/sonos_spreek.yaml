@@ -1,41 +1,24 @@
 sonos_spreek:
   sequence:
-    - action: media_player.play_media
-      target:
-        entity_id: >
-          {% if is_state('input_select.welke_sonos', 'Keuken') %}
-            media_player.mass_keuken
-          {% elif is_state('input_select.welke_sonos', 'Badkamer') %}
-            media_player.mass_badkamer
-          {% elif is_state('input_select.welke_sonos', 'Living') %}
-            media_player.mass_living_2
-          {% elif is_state('input_select.welke_sonos', 'Move') %}
-            media_player.mass_move
-          {% elif is_state('input_select.welke_sonos', 'Noor') %}
-            media_player.mass_slaapkamer_noor
-          {% elif is_state('input_select.welke_sonos', 'Fien') %}
-            media_player.mass_slaapkamer_fien
-          {% else %}
-            False
-          {% endif %}
+    - action: tts.cloud_say
       data:
-        announce: true
-        media_content_id: >
-          {% set message =  states('input_text.sonos_spraak') %}
-            media-source://tts/tts.home_assistant_cloud?message="{{message}}"
-        media_content_type: "music"
-        extra:
-          volume: >
-            {% if is_state('input_select.sonos_volume', 'Maximum') %}
-              100
-            {% elif is_state('input_select.sonos_volume', 'Luid') %}
-              90
-            {% elif is_state('input_select.sonos_volume', 'Medium') %}
-              80
-            {% elif is_state('input_select.sonos_volume', 'Stil') %}
-              70
-            {% elif is_state('input_select.sonos_volume', 'Minimum') %}
-              60
-            {% else %}
-              False
-            {% endif %}
+        entity_id: >
+          {% if is_state('input_select.welke_sonos', 'Keuken') -%}
+            media_player.mass_keuken
+          {% elif is_state('input_select.welke_sonos', 'Badkamer') -%}
+            media_player.mass_badkamer
+          {% elif is_state('input_select.welke_sonos', 'Living') -%}
+            media_player.mass_living_2
+          {% elif is_state('input_select.welke_sonos', 'Move') -%}
+            media_player.mass_move
+          {% elif is_state('input_select.welke_sonos', 'Noor') -%}
+            media_player.mass_slaapkamer_noor
+          {% elif is_state('input_select.welke_sonos', 'Fien') -%}
+            media_player.mass_slaapkamer_fien
+          {% else -%}
+            False
+          {% endif -%}
+        cache: false
+        message: >
+          {% set message =  states('input_text.sonos_spraak') -%}
+            {{message}}

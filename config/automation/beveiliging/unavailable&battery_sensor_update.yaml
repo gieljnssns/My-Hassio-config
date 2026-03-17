@@ -1,10 +1,10 @@
 id: "1596733904625"
 alias: Unavailable & batteryentities sensor update
 description: ""
-trigger:
-  - platform: time_pattern
+triggers:
+  - trigger: time_pattern
     minutes: /33
-condition:
+conditions:
   - condition: template
     value_template: >
       {{ (as_timestamp(now()) - as_timestamp(states("sensor.uptime"))) / 3600 | float > 0.05 | float }}

@@ -1,0 +1,129 @@
+alias: "Power polling"
+mode: restart
+id: 463c9013-26ee-413d-8235-781e552fc32f
+triggers:
+  - trigger: time_pattern
+    seconds: "/2"
+actions:
+  - if:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: input_boolean.emhass_wasmachien
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.wasmachien_staat_op
+            state: "on"
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.wasmachien_vermogen
+
+  - if:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: input_boolean.emhass_afwasmachien
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.afwasmachien_staat_op
+            state: "on"
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.afwasmachien_vermogen
+
+  - if:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: input_boolean.emhass_droogkast
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.droogkast_staat_op
+            state: "on"
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.droogkast_vermogen
+
+  - if:
+      - condition: numeric_state
+        entity_id: sensor.koffiezet_vermogen_2
+        above: 10
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.koffiezet_vermogen_2
+
+  - if:
+      - condition: numeric_state
+        entity_id: sensor.keuken_ijskast_vermogen
+        above: 10
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.keuken_ijskast_vermogen
+
+  - if:
+      - condition: numeric_state
+        entity_id: sensor.keuken_toestellen_vermogen
+        above: 10
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.keuken_toestellen_vermogen
+
+  - if:
+      - condition: numeric_state
+        entity_id: sensor.keuken_toestellen_2_vermogen
+        above: 10
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.keuken_toestellen_2_vermogen
+
+  - if:
+      - condition: numeric_state
+        entity_id: sensor.keuken_toestellen_3_vermogen
+        above: 10
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.keuken_toestellen_3_vermogen
+
+  - if:
+      - condition: numeric_state
+        entity_id: sensor.keuken_oven_vermogen
+        above: 10
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.keuken_oven_vermogen
+
+  - if:
+      - condition: numeric_state
+        entity_id: sensor.regenwaterpomp_vermogen
+        above: 10
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.regenwaterpomp_vermogen
+
+  - if:
+      - condition: numeric_state
+        entity_id: sensor.garage_ijskast_vermogen
+        above: 10
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.garage_ijskast_vermogen
+
+  - if:
+      - condition: numeric_state
+        entity_id: sensor.ventilator_kerstverlichting_vermogen
+        above: 50
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.ventilator_kerstverlichting_vermogen

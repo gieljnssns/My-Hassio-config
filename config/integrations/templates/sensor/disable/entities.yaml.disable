@@ -15,21 +15,10 @@
         {% set poe = states.sensor | selectattr('entity_id', 'search', '_poe_power') 
                                     | map(attribute='entity_id')
                                     | list %}
-        {% set moving_distance = states.sensor | selectattr('entity_id', 'search', '_moving_distance') 
-                                                | map(attribute='entity_id')
-                                                | list %}
-        {% set still_distance = states.sensor | selectattr('entity_id', 'search', '_still_distance') 
-                                              | map(attribute='entity_id')
-                                              | list %}
-        {% set detection_distance = states.sensor | selectattr('entity_id', 'search', '_detection_distance') 
-                                                  | map(attribute='entity_id')
-                                                  | list %}
-        {% set move_energy = states.sensor | selectattr('entity_id', 'search', '_move_energy') 
-                                            | map(attribute='entity_id')
-                                            | list %}
-        {% set still_energy = states.sensor | selectattr('entity_id', 'search', '_still_energy') 
-                                            | map(attribute='entity_id')
-                                            | list %}
+
+
+
+        
         {% set cpu = states.sensor | selectattr('entity_id', 'match', 'sensor.cpu_') 
                                     | map(attribute='entity_id')
                                     | list %}                 
@@ -51,9 +40,6 @@
         {% set cpu2 = states.sensor | selectattr('entity_id', 'match', 'sensor.*_cpu_utilization') 
                                         | map(attribute='entity_id')
                                         | list %}
-        {% set memory = states.sensor | selectattr('entity_id', 'match', 'sensor.*_memory_utilization') 
-                                        | map(attribute='entity_id')
-                                        | list %}
         {% set camera = states.camera | map(attribute='entity_id') | list %}
         {% set group = states.group | map(attribute='entity_id') | list %}
         {% set scene = states.scene | map(attribute='entity_id') | list %}
@@ -64,7 +50,7 @@
         {% set image = states.image | map(attribute='entity_id') | list %}
         {% set tts = states.tts | map(attribute='entity_id') | list %}
         {% set event = states.event | map(attribute='entity_id') | list %}
-        {% set all = cpu2 + memory + update + zone + weather + sun + scene + group + camera + plant + quarter + wifi + ram + swap + cpu + still_energy + move_energy + detection_distance + still_distance + moving_distance + poe + start + uptime + shelly + image + tts + event%}
+        {% set all = cpu2 + update + zone + weather + sun + scene + group + camera + plant + quarter + wifi + ram + swap + cpu + poe + start + uptime + shelly + image + tts + event%}
 
         {{ all | length }}
       attributes:
@@ -82,21 +68,9 @@
           {% set poe = states.sensor | selectattr('entity_id', 'search', '_poe_power') 
                                       | map(attribute='entity_id')
                                       | list %}
-          {% set moving_distance = states.sensor | selectattr('entity_id', 'search', '_moving_distance') 
-                                                  | map(attribute='entity_id')
-                                                  | list %}
-          {% set still_distance = states.sensor | selectattr('entity_id', 'search', '_still_distance') 
-                                                | map(attribute='entity_id')
-                                                | list %}
-          {% set detection_distance = states.sensor | selectattr('entity_id', 'search', '_detection_distance') 
-                                                    | map(attribute='entity_id')
-                                                    | list %}
-          {% set move_energy = states.sensor | selectattr('entity_id', 'search', '_move_energy') 
-                                              | map(attribute='entity_id')
-                                              | list %}
-          {% set still_energy = states.sensor | selectattr('entity_id', 'search', '_still_energy') 
-                                              | map(attribute='entity_id')
-                                              | list %}
+          
+          
+        
           {% set cpu = states.sensor | selectattr('entity_id', 'match', 'sensor.cpu_') 
                                       | map(attribute='entity_id')
                                       | list %}                 
@@ -118,9 +92,7 @@
           {% set cpu2 = states.sensor | selectattr('entity_id', 'match', 'sensor.*_cpu_utilization') 
                                         | map(attribute='entity_id')
                                         | list %}
-          {% set memory = states.sensor | selectattr('entity_id', 'match', 'sensor.*_memory_utilization') 
-                                        | map(attribute='entity_id')
-                                        | list %}
+          
           {% set camera = states.camera | map(attribute='entity_id') | list %}
           {% set group = states.group | map(attribute='entity_id') | list %}
           {% set scene = states.scene | map(attribute='entity_id') | list %}
@@ -131,7 +103,7 @@
           {% set image = states.image | map(attribute='entity_id') | list %}
           {% set tts = states.tts | map(attribute='entity_id') | list %}
           {% set event = states.event | map(attribute='entity_id') | list %}
-          {% set all = cpu2 + memory + update + zone + weather + sun + scene + group + camera + plant + quarter + wifi + ram + swap + cpu + still_energy + move_energy + detection_distance + still_distance + moving_distance + poe + start + uptime + shelly + image + tts + event%}
+          {% set all = cpu2 + update + zone + weather + sun + scene + group + camera + plant + quarter + wifi + ram + swap + cpu + poe + start + uptime + shelly + image + tts + event%}
 
           {{ all }}
 

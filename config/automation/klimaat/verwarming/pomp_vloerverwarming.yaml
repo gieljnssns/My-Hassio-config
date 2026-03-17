@@ -2,19 +2,19 @@ alias: Pomp vloerverwarming
 id: 19651013-1164-44e7-a2b9-361ab2c437e4
 description: >-
   De pomp moet draaien wanneer de warmtepomp draait en 20 min nadraaien
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id: binary_sensor.warmtepomp_aan
     to: "on"
-  # - platform: state
+  # - trigger: state
   #   entity_id: binary_sensor.warmtepomp_aan_delay_off
   #   to: "off"
-  - platform: template
+  - trigger: template
     value_template: >
       {{ states("sensor.vloerverwarming_terug") | float(0) < state_attr("climate.living", "current_temperature") | float(0) }}
     for:
       minutes: 5
-condition: []
+conditions: []
 actions:
   - choose:
       - conditions:

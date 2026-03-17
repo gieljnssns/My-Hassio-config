@@ -1,61 +1,59 @@
 alias: Zijgevel openen #Sunscreen up/inklappen
 id: 20cf3eda-0ede-4c90-b0b8-33e1853f7114
-trigger:
+triggers:
   # Sun based triggers
-  # - platform: numeric_state
+  # - trigger: numeric_state
   #   entity_id: sensor.sun_azimut
   #   above: 330
-  - platform: template
+  - trigger: template
     value_template: >
       {{ states("sensor.sun_azimut") | int > 330 and
         states("sensor.buiten_temperatuur") | int(0) > 10 }}
-  # - platform: numeric_state
+  # - trigger: numeric_state
   #   entity_id: sensor.sun_elevation
   #   below: -10
-  - platform: template
+  - trigger: template
     value_template: >
       {{ states("sensor.sun_elevation") | int < -10 and
         states("sensor.buiten_temperatuur") | int(0) > 10 }}
-  - platform: state
+  - trigger: state
     entity_id: sensor.dark_inside
     to: "true"
     for:
       minutes: 5
-  - platform: numeric_state
+  - trigger: numeric_state
     entity_id: sensor.buiten_lichtsterkte
     below: 10000
     for:
       minutes: 5
 
   # Weather based triggers
-  - platform: template
+  - trigger: template
     value_template: >
-      {{ states("sensor.windsnelheid") | int(0) > 40 }}
-  - platform: template
+      {{ states("sensor.openweathermap_windsnelheid") | int(0) > 40 }}
+  - trigger: template
     value_template: >
-      {{ states("sensor.windvlaag") | int(0) > 60 }}
-  # - platform: template
+      {{ states("sensor.openweathermap_windvlaag_snelheid") | int(0) > 60 }}
+  # - trigger: template
   #   value_template: >
   #     {{ states("sensor.buiten_lichtsterkte") | float(0) < 4000 and
   #       (states("sensor.solcast_forecast_next_hour") | float(0) < 1000 or
   #       states("sensor.solcast_forecast_this_hour") | float(0) < 1000) }}
 
-  - platform: template
+  - trigger: template
     value_template: >
       {% if states("sensor.regen_komende_10_minuten") != "unknown" and states("sensor.regen_komende_10_minuten") != "unavailable" %}
         {{ states("sensor.regen_komende_10_minuten") | float > 0.80 }}
-      {% else %}
-        {{ states("sensor.neerslagverwachting_gemiddeld")  | float > 0.80 }}
       {% endif %}
-  - platform: template
+  - trigger: template
     value_template: >
       {% if states("sensor.neerslag_zandhoven") != "unknown" and states("sensor.neerslag_zandhoven") != "unavailable" %}
         {{ states("sensor.neerslag_zandhoven") | float > 0.40 }}
       {% else %}
-        {{ states("sensor.neerslagintensiteit")  | float > 0.40 }}
+        {{ states("sensor.openweathermap_rain_intensity")  | float > 0.40 }}
       {% endif %}
 
-condition:
+conditions:
   - condition: or
     conditions:
       - condition: state

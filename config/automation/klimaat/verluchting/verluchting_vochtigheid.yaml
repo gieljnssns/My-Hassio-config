@@ -1,15 +1,15 @@
 alias: Verluchting te vochtig
 id: 0ac1bc1f-98e8-4d13-8626-3a71c4bfe7f5
-trigger:
-  - platform: numeric_state
+triggers:
+  - trigger: numeric_state
     entity_id: sensor.keuken_luchtvochtigheid
     above: 95
     for:
       seconds: 60
-  - platform: state
+  - trigger: state
     entity_id: binary_sensor.badkamer_trend_up
     to: "on"
-condition:
+conditions:
   condition: and
   conditions:
     - condition: numeric_state

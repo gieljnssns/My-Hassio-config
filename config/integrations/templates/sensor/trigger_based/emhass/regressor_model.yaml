@@ -1,0 +1,82 @@
+# =============================================================================
+# BESTE MODEL SENSOREN
+# =============================================================================
+
+# BESTE MODEL - 30D
+- trigger:
+    - trigger: time
+      at: "23:30:00"
+  sensor:
+    - name: "Best Heating Predictor 30d"
+      unique_id: 07d1f0f5-3965-473f-9bfc-0c9f9ae4b10b
+      state: >
+        {% set models = {
+          'adaboost': states('sensor.adaboost_error_30d') | float(99),
+          'gradientboosting': states('sensor.gradientboosting_error_30d') | float(99),
+          'extratrees': states('sensor.extratrees_error_30d') | float(99),
+          'randomforest': states('sensor.randomforest_error_30d') | float(99),
+          'svr': states('sensor.svr_error_30d') | float(99),
+          'decisiontree': states('sensor.decisiontree_error_30d') | float(99),
+          'kneighbors': states('sensor.kneighbors_error_30d') | float(99),
+          'elasticnet': states('sensor.elasticnet_error_30d') | float(99),
+          'lasso': states('sensor.lasso_error_30d') | float(99),
+          'ridge': states('sensor.ridge_error_30d') | float(99),
+          'linear': states('sensor.linear_error_30d') | float(99)
+        } %}
+        {{ models | dictsort(false, 'value') | first | first }}
+      attributes:
+        ranking: >
+          {% set models = {
+            'adaboost': states('sensor.adaboost_error_30d') | float(99),
+            'gradientboosting': states('sensor.gradientboosting_error_30d') | float(99),
+            'extratrees': states('sensor.extratrees_error_30d') | float(99),
+            'randomforest': states('sensor.randomforest_error_30d') | float(99),
+            'svr': states('sensor.svr_error_30d') | float(99),
+            'decisiontree': states('sensor.decisiontree_error_30d') | float(99),
+            'kneighbors': states('sensor.kneighbors_error_30d') | float(99),
+            'elasticnet': states('sensor.elasticnet_error_30d') | float(99),
+            'lasso': states('sensor.lasso_error_30d') | float(99),
+            'ridge': states('sensor.ridge_error_30d') | float(99),
+            'linear': states('sensor.linear_error_30d') | float(99)
+          } %}
+          {{ models | dictsort(by='value') | map(attribute='0') | list }}
+
+
+# BESTE MODEL - 7 DAGEN
+- trigger:
+    - trigger: time
+      at: "23:30:00"
+  sensor:
+    - name: "Best Heating Predictor 7d"
+      unique_id: e47f5f23-9671-4be5-b123-bf81ecbef127
+      state: >
+        {% set models = {
+          'adaboost': states('sensor.adaboost_error_7d') | float(99),
+          'gradientboosting': states('sensor.gradientboosting_error_7d') | float(99),
+          'extratrees': states('sensor.extratrees_error_7d') | float(99),
+          'randomforest': states('sensor.randomforest_error_7d') | float(99),
+          'svr': states('sensor.svr_error_7d') | float(99),
+          'decisiontree': states('sensor.decisiontree_error_7d') | float(99),
+          'kneighbors': states('sensor.kneighbors_error_7d') | float(99),
+          'elasticnet': states('sensor.elasticnet_error_7d') | float(99),
+          'lasso': states('sensor.lasso_error_7d') | float(99),
+          'ridge': states('sensor.ridge_error_7d') | float(99),
+          'linear': states('sensor.linear_error_7d') | float(99)
+        } %}
+        {{ models | dictsort(false, 'value') | first | first }}
+      attributes:
+        ranking: >
+          {% set models = {
+            'adaboost': states('sensor.adaboost_error_7d') | float(99),
+            'gradientboosting': states('sensor.gradientboosting_error_7d') | float(99),
+            'extratrees': states('sensor.extratrees_error_7d') | float(99),
+            'randomforest': states('sensor.randomforest_error_7d') | float(99),
+            'svr': states('sensor.svr_error_7d') | float(99),
+            'decisiontree': states('sensor.decisiontree_error_7d') | float(99),
+            'kneighbors': states('sensor.kneighbors_error_7d') | float(99),
+            'elasticnet': states('sensor.elasticnet_error_7d') | float(99),
+            'lasso': states('sensor.lasso_error_7d') | float(99),
+            'ridge': states('sensor.ridge_error_7d') | float(99),
+            'linear': states('sensor.linear_error_7d') | float(99)
+          } %}
+          {{ models | dictsort(by='value') | map(attribute='0') | list }}

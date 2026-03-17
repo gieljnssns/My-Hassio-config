@@ -1,4 +1,4 @@
-purge_keep_days: 365
+purge_keep_days: 10
 auto_purge: false
 auto_repack: false
 exclude:
@@ -23,25 +23,20 @@ exclude:
     - sensor.unifi_waskot_vermogen
     - sensor.unifi_media_vermogen
     - sensor.nuc_vermogen
-    - sensor.toestellen_vermogen
+
     - sensor.date
     - sensor.date_time
-    # - sensor.notification_hour
-    # - sensor.notification_minute
-    # - sensor.notification_time
-    # - sensor.notification_time_long
+
     - sensor.time
     - sensor.time_date
     - sensor.last_boot
-    # - sensor.buitentemperatuur_gefilterd
-    # - sensor.zonne_energie_gefilterd_lowpass
+
     - sensor.buiten_buiten_temperatuur
     - sensor.buiten_buiten_luchtdruk
     - sensor.badkamer_temperatuur
     - sensor.temperatuur_slaapkamer_2
     - sensor.temp_living_2
-    # - sensor.purge_entites_1
-    # - sensor.purge_entites_2
+
     - sensor.gft
     - sensor.papier
     - sensor.pmd
@@ -55,7 +50,6 @@ exclude:
     - sensor.net_afname
     - sensor.net_terugsturen
     - sensor.neerslag_verwacht_zandhoven
-    # - sensor.average_electricity_price
     - binary_sensor.badkamer_trend_down
     - binary_sensor.badkamer_trend_up
     - sensor.energy_production_today_2
@@ -63,76 +57,54 @@ exclude:
     - sensor.energy_production_tomorrow_3
     - sensor.energy_production_tomorrow_2
     - sensor.energy_production_tomorrow
-    - sensor.emhass_mpc
-    # - sensor.gemiddelde_opbrengst_5m
     ####  Emhass  ###
     - sensor.emhass_prod_price
     - sensor.ridge_emhass_prod_price
     - sensor.lasso_emhass_prod_price
     - sensor.linear_emhass_prod_price
-    - sensor.emhass_prod_price_test
     - sensor.emhass_load_forecast
     - sensor.ridge_emhass_load_forecast
     - sensor.lasso_emhass_load_forecast
     - sensor.linear_emhass_load_forecast
-    - sensor.emhass_load_forecast_test
-    - sensor.emhass_afwasmachien
     - sensor.ridge_emhass_afwasmachien
     - sensor.lasso_emhass_afwasmachien
     - sensor.linear_emhass_afwasmachien
-    - sensor.emhass_afwasmachien_test
-    - sensor.emhass_warmtepompboiler
     - sensor.ridge_emhass_warmtepompboiler
     - sensor.lasso_emhass_warmtepompboiler
     - sensor.linear_emhass_warmtepompboiler
-    - sensor.emhass_warmtepompboiler_test
     - sensor.emhass_grid_forecast
     - sensor.ridge_emhass_grid_forecast
     - sensor.lasso_emhass_grid_forecast
     - sensor.linear_emhass_grid_forecast
-    - sensor.emhass_grid_forecast_test
-    - sensor.emhass_wasmachien
     - sensor.ridge_emhass_wasmachien
     - sensor.lasso_emhass_wasmachien
     - sensor.linear_emhass_wasmachien
-    - sensor.emhass_wasmachien_test
-    - sensor.emhass_droogkast
     - sensor.ridge_emhass_droogkast
     - sensor.lasso_emhass_droogkast
     - sensor.linear_emhass_droogkast
-    - sensor.emhass_droogkast_test
-    - sensor.emhass_warmtepomp
     - sensor.ridge_emhass_warmtepomp
     - sensor.lasso_emhass_warmtepomp
     - sensor.linear_emhass_warmtepomp
-    - sensor.emhass_warmtepomp_test
     - sensor.emhass_pv_forecast
     - sensor.ridge_emhass_pv_forecast
     - sensor.lasso_emhass_pv_forecast
     - sensor.linear_emhass_pv_forecast
-    - sensor.emhass_pv_forecast_test
     - sensor.emhass_load_cost
     - sensor.ridge_emhass_load_cost
     - sensor.lasso_emhass_load_cost
     - sensor.linear_emhass_load_cost
-    - sensor.emhass_load_cost_test
     - sensor.emhass_curtailment
     - sensor.ridge_emhass_curtailment
     - sensor.lasso_emhass_curtailment
     - sensor.linear_emhass_curtailment
-    - sensor.emhass_curtailment_test
     - sensor.p_batt_forecast
     - sensor.ridge_p_batt_forecast
     - sensor.lasso_p_batt_forecast
     - sensor.linear_p_batt_forecast
-    - sensor.p_batt_forecast_test
     - sensor.soc_batt_forecast
     - sensor.ridge_soc_batt_forecast
     - sensor.lasso_soc_batt_forecast
     - sensor.linear_soc_batt_forecast
-    - sensor.soc_batt_forecast_test
-    - sensor.emhass_mpc
-    - sensor.emhass_mpc_test
     - sensor.nordpool_raw
     - sensor.optim_status
     - sensor.lasso_optim_status          
@@ -191,29 +163,7 @@ exclude:
     - sensor.unit_prod_price
     - sensor.linear_unit_prod_price
 
-    # - sensor.emhass_load_forecast_elasticnet
-    # - sensor.emhass_grid_forecast_elasticnet
-    # - sensor.p_batt_forecast_elasticnet
-    # - sensor.soc_batt_forecast_elasticnet
-    # - sensor.emhass_load_forecast_ridge
-    # - sensor.emhass_grid_forecast_ridge
-    # - sensor.p_batt_forecast_ridge
-    # - sensor.soc_batt_forecast_ridge
-    # - sensor.emhass_load_forecast_lasso
-    # - sensor.emhass_grid_forecast_lasso
-    # - sensor.p_batt_forecast_lasso
-    # - sensor.soc_batt_forecast_lasso
-    # - sensor.emhass_load_forecast_linear
-    # - sensor.emhass_grid_forecast_linear
-    # - sensor.p_batt_forecast_linear
-    # - sensor.soc_batt_forecast_linear
-
   entity_globs:
-    - sensor.*_still_energy
-    - sensor.*_move_energy
-    - sensor.*_detection_distance
-    - sensor.*_still_distance
-    - sensor.*_moving_distance
     - sensor.*_poe_power
     - sensor.*_uptime
     - sensor.uptime*
@@ -226,7 +176,6 @@ exclude:
     - sensor.quarter_*
     - sensor.plant_*
     - sensor.*_cpu_utilization
-    - sensor.*_memory_utilization
   
   # event_types:
   #   - call_service # Don't record actions
