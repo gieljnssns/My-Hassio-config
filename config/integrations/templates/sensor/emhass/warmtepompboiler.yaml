@@ -6,7 +6,7 @@
         {% set temp = (states("sensor.thermostaat") | float(45) * 4) | round(0) / 4 -%}
         {% set temp_in = states("sensor.boiler_in") | float(18) -%}
         {% set delta = (temp - temp_in) > 30 -%}
-        
+
         {% if states("input_boolean.warm_water_starten") == 'on' -%}
             {% if states("input_boolean.op_verlof") == 'off' -%}
               {% set target_temp = 49.2 -%}
@@ -71,8 +71,6 @@
       #     0
       #   {% endif -%}
 
-
-
     - name: Warm water startuur
       unique_id: f4450d07-ad80-4ed5-a96a-852c84fec6ca
       state: >
@@ -97,7 +95,7 @@
           {% endif -%}
       availability: >-
         {{ states('sensor.best_emhass_model_load_7d') not in ('unknown', 'unavailable', 'None') }}
-    
+
     - name: Warmtepompboiler start timesteps
       unique_id: b9a1f40e-00d6-48b4-9a9b-b7d558e78357
       unit_of_measurement: 5m
@@ -107,7 +105,7 @@
         {% else -%}
           0
         {% endif -%}
-    
+
     - name: Warmtepompboiler end timesteps
       unique_id: 108e2881-9ac7-49ef-baab-2631da9ab3f4
       unit_of_measurement: 5m

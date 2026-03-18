@@ -15,7 +15,7 @@ actions:
         - sensor.huawei_energy
         - sensor.solaredge_energy
     response_variable: solar_stats
-  
+
   - action: recorder.get_statistics
     data:
       start_time: >-
@@ -49,8 +49,6 @@ actions:
         {% set max_setpoint = 21 -%}
 
           {{time}},{{dd}},{{solar}},{{hour}},{{buiten_gisteren_mean}},{{beneden_gisteren_mean}},{{max_setpoint}}
-      
-
 
   - action: notify.send_message
     target:

@@ -1,0 +1,14 @@
+alias: Light kelder automatisch uit
+description: "Zet light.kelder uit na 10 minuten dat het aan staat"
+id: c51cdd28-2bf7-4f71-b3d6-9d5543f5e65f
+mode: single
+triggers:
+  - trigger: state
+    entity_id: light.kelder
+    to: "on"
+    for:
+      minutes: 10
+actions:
+  - action: light.turn_off
+    target:
+      entity_id: light.kelder

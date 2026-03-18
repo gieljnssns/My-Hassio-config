@@ -27,22 +27,21 @@ triggers:
       entity_id: person.martine
 actions:
   - choose:
-    - conditions:
-        - condition: trigger
-          id: frigate
-      sequence:
-        - action: notify.mobile_app_gphone
-          data:
-            title: Frigate 
-            message: >
-              Er wordt gekeken.
-    - conditions:
-        - condition: trigger
-          id: camera
-      sequence:
-        - action: notify.mobile_app_gphone
-          data:
-            title: Camera 
-            message: >
-              Er wordt gekeken.
-            
+      - conditions:
+          - condition: trigger
+            id: frigate
+        sequence:
+          - action: notify.mobile_app_gphone
+            data:
+              title: Frigate
+              message: >
+                Er wordt gekeken.
+      - conditions:
+          - condition: trigger
+            id: camera
+        sequence:
+          - action: notify.mobile_app_gphone
+            data:
+              title: Camera
+              message: >
+                Er wordt gekeken.

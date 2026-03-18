@@ -7,7 +7,7 @@ blueprint:
       name: Entity
       selector:
         entity:
-    
+
     input_datetime_target:
       name: Entity
       selector:
@@ -20,14 +20,14 @@ blueprint:
         target:
           entity:
             domain: light
-    
+
     occupancy_target:
       name: Occupancy
       selector:
         target:
           entity:
             domain: binary_sensor
-    
+
     occupancy_target2:
       name: Occupancy
       selector:
@@ -57,11 +57,11 @@ triggers:
     from: "off"
     to: "on"
     id: aan
-  
+
   - trigger: time
     at: !input input_datetime_target
     id: uit
-    
+
 actions:
   - delay:
       milliseconds: 200
@@ -116,12 +116,12 @@ actions:
           - action: light.turn_off
             target: !input light_target
     default:
-        - action: input_datetime.set_datetime
-          data:
-            datetime: >
-              {{ now() + timedelta(seconds=120) }}
-          target:
-            entity_id: !input input_datetime_target
+      - action: input_datetime.set_datetime
+        data:
+          datetime: >
+            {{ now() + timedelta(seconds=120) }}
+        target:
+          entity_id: !input input_datetime_target
 
   # - action: light.turn_on
   #   target: !input light_target

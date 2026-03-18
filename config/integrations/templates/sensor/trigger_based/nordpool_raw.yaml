@@ -1,12 +1,12 @@
 - trigger:
-    # - platform: state
+    # - trigger: state
     #   entity_id: sensor.nord_pool_be_huidige_prijs
-    - platform: homeassistant
+    - trigger: homeassistant
       event: start
-    # - platform: time
+    # - trigger: time
     #   at: "13:00:00"  # Wanneer prijzen voor morgen beschikbaar komen
-    - platform: time_pattern
-      minutes: "/5"  # Update elke 5 minuten voor actuele prijs
+    - trigger: time_pattern
+      minutes: "/5" # Update elke 5 minuten voor actuele prijs
   action:
     - variables:
         today: "{{ now().strftime('%Y-%m-%d') }}"
@@ -31,13 +31,13 @@
         {% set quarter_index = (now().minute // 15) -%}
         {% set current_hour = now().hour -%}
         {% set current_time_index = current_hour * 4 + quarter_index -%}
-        
+
         {% set today_prices_data = today_prices.BE if today_prices and 'BE' in today_prices else [] -%}
         {% set tomorrow_prices_data = tomorrow_prices.BE if tomorrow_prices and 'BE' in tomorrow_prices else [] -%}
-        
+
         {% set today_remaining = today_prices_data[current_time_index:] if today_prices_data|length > current_time_index else [] -%}
         {% set all_prices = today_remaining + tomorrow_prices_data -%}
-        
+
         {% if all_prices|length > 0 -%}
           {% set current_price = (all_prices[0].price / 1000) -%}
           {{ current_price }}

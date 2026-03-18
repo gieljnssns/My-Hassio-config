@@ -19,8 +19,8 @@ triggers:
     id: uit
   - trigger: state
     entity_id: binary_sensor.gang_hal_pir
-    from: 'off'
-    to: 'on'
+    from: "off"
+    to: "on"
     id: aan
 
 actions:
@@ -36,7 +36,7 @@ actions:
           - condition: trigger
             id: aan
           - condition: or
-            conditions: 
+            conditions:
               - condition: state
                 entity_id: binary_sensor.giel_thuis_nacht
                 state: "on"
@@ -58,8 +58,8 @@ actions:
           - wait_for_trigger:
               - trigger: state
                 entity_id: binary_sensor.gang_hal_bezetting
-                from: 'on'
-                to: 'off'
+                from: "on"
+                to: "off"
           - action: input_datetime.set_datetime
             data:
               datetime: >

@@ -69,11 +69,11 @@ actions:
           - condition: numeric_state
             entity_id: sensor.ventilator_kerstverlichting_vermogen
             above: 50
-        then:
-          - action: automation.turn_on
-            target:
-              entity_id: automation.power_polling
-        else:
-          - action: automation.turn_off
-            target:
-              entity_id: automation.power_polling
+    then:
+      - action: automation.turn_on
+        target:
+          entity_id: automation.power_polling
+    else:
+      - action: automation.turn_off
+        target:
+          entity_id: automation.power_polling

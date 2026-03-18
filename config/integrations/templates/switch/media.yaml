@@ -20,7 +20,7 @@
         - action: script.playstation_off
       default_entity_id: switch.playstation
       icon: mdi:sony-playstation
-    
+
     - name: Badkamer2Keuken
       unique_id: 3c8b1fe1-6769-4d07-81e2-f864c9ffacd7
       state: >
@@ -30,19 +30,19 @@
         - action: media_player.join
           data:
             group_members:
-            - media_player.mass_badkamer
+              - media_player.mass_badkamer
           target:
             entity_id:
-            - media_player.mass_keuken
+              - media_player.mass_keuken
       turn_off:
         - action: media_player.unjoin
           target:
             entity_id:
-            - media_player.mass_badkamer
+              - media_player.mass_badkamer
       default_entity_id: switch.badkamer2keuken
       icon: mdi:music-box-multiple
 
-    - name: Living2Keuken 
+    - name: Living2Keuken
       unique_id: 58adb0f2-d645-40a3-9544-5211bedcfaed
       state: >
         {{ state_attr('media_player.mass_living_2', 'active_queue') | string == 
@@ -51,18 +51,18 @@
         - action: media_player.join
           data:
             group_members:
-            - media_player.mass_living_2
+              - media_player.mass_living_2
           target:
             entity_id:
-            - media_player.mass_keuken
+              - media_player.mass_keuken
       turn_off:
         - action: media_player.unjoin
           target:
             entity_id:
-            - media_player.mass_living_2
+              - media_player.mass_living_2
       default_entity_id: switch.living2keuken
       icon: mdi:music-box-multiple
-      
+
     - name: 2c2Keuken
       unique_id: 3f7394eb-6b95-4e89-9b04-7bdcd88b090d
       state: >
@@ -72,18 +72,18 @@
         - action: media_player.join
           data:
             group_members:
-            - media_player.mass_2c
+              - media_player.mass_2c
           target:
             entity_id:
-            - media_player.mass_keuken
+              - media_player.mass_keuken
       turn_off:
         - action: media_player.unjoin
           target:
             entity_id:
-            - media_player.mass_2c
+              - media_player.mass_2c
       default_entity_id: switch.2c2keuken
       icon: mdi:music-box-multiple
-    
+
     - name: Move2Keuken
       unique_id: 13326cd4-33f1-40d4-9192-865bea3544ce
       state: >
@@ -93,57 +93,56 @@
         - action: media_player.join
           data:
             group_members:
-            - media_player.mass_move
+              - media_player.mass_move
           target:
             entity_id:
-            - media_player.mass_keuken
+              - media_player.mass_keuken
       turn_off:
         - action: media_player.unjoin
           target:
             entity_id:
-            - media_player.mass_move
+              - media_player.mass_move
       default_entity_id: switch.move2keuken
       icon: mdi:music-box-multiple
-      
+
     - name: Incognito
       unique_id: 5a6ddcd0-8510-48bb-85c9-97900d867c70
       turn_on:
         - action: switch.turn_off
           target:
             entity_id:
-            - switch.tuin_detect
-            - switch.afdak_detect
-            - switch.keuken_detect
-            - switch.living_detect
+              - switch.tuin_detect
+              - switch.afdak_detect
+              - switch.keuken_detect
+              - switch.living_detect
         - action: automation.turn_off
           target:
             entity_id:
-            - automation.licht_hof_aan
-            - automation.den_hof_occupancy
-            - automation.garage_occupancy
+              - automation.licht_hof_aan
+              - automation.den_hof_occupancy
+              - automation.garage_occupancy
         - action: automation.turn_on
           target:
             entity_id:
-            - automation.poort_gphone
-            - automation.event_trigger
+              - automation.poort_gphone
+              - automation.event_trigger
       turn_off:
         - action: switch.turn_on
           target:
             entity_id:
-            - switch.tuin_detect
-            - switch.afdak_detect
-            - switch.keuken_detect
-            - switch.living_detect
+              - switch.tuin_detect
+              - switch.afdak_detect
+              - switch.keuken_detect
+              - switch.living_detect
         - action: automation.turn_on
           target:
             entity_id:
-            - automation.licht_hof_aan
-            - automation.den_hof_occupancy
-            - automation.garage_occupancy
+              - automation.licht_hof_aan
+              - automation.den_hof_occupancy
+              - automation.garage_occupancy
         - action: automation.turn_off
           target:
             entity_id:
-            - automation.poort_gphone
-            - automation.event_trigger
+              - automation.poort_gphone
+              - automation.event_trigger
       default_entity_id: switch.incognito
-

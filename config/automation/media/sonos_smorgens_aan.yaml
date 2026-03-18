@@ -13,11 +13,11 @@ triggers:
     entity_id: binary_sensor.keuken_pir
     from: "off"
     to: "on"
-  # - trigger: template
-  #   value_template: >
-  #     {{  is_state('binary_sensor.keuken_aqara_pir', 'on') 
-  #         or is_state('binary_sensor.keuken_presence', 'on')
-  #         or is_state('binary_sensor.keuken_pir', 'on') }}
+    # - trigger: template
+    #   value_template: >
+    #     {{  is_state('binary_sensor.keuken_aqara_pir', 'on')
+    #         or is_state('binary_sensor.keuken_presence', 'on')
+    #         or is_state('binary_sensor.keuken_pir', 'on') }}
 conditions:
   condition: and
   conditions:
@@ -66,7 +66,7 @@ actions:
     target:
       entity_id: media_player.mass_move
   - delay:
-      seconds: 5 
+      seconds: 5
   - action: media_player.join
     data:
       group_members:

@@ -14,7 +14,7 @@ conditions:
       - condition: template
         value_template: >
           {{ states("sensor.people_arrive_count") | int(0) > 0 }}
-      
+
 actions:
   - wait_template: >
       {{ states("sensor.people_arrive_count") | int(0) == 0 }}
@@ -24,4 +24,3 @@ actions:
     entity_id: alarm_control_panel.ha_alarm
     data:
       code: !secret alarm_code
-

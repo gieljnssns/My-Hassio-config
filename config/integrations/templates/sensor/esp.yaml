@@ -30,9 +30,9 @@
       # state: >
       #   {% set unknown = expand(integration_entities('esphome')
       #             | select('match','sensor.')
-      #             | reject('contains', '_energy')) 
-      #             | selectattr("state", "eq", "unavailable") 
-      #             | map(attribute="entity_id") 
+      #             | reject('contains', '_energy'))
+      #             | selectattr("state", "eq", "unavailable")
+      #             | map(attribute="entity_id")
       #             | list %}
 
       #   {% set devices = namespace(all=[]) %}
@@ -43,8 +43,6 @@
       #     {% endif %}
       #   {% endfor %}
       #   {{ devices.all  }}
-
-
 
       # state: >-
       #   {{  states("binary_sensor.shelly_warmtepomp_status") != 'on' or

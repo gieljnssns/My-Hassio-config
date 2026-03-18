@@ -1,5 +1,5 @@
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: sensor.solaredge_i1_ac_energy
   sensor:
     - name: "SolarEdge energy"
@@ -19,9 +19,9 @@
         {% endif -%}
 
 - trigger:
-    - platform: time_pattern
+    - trigger: time_pattern
       minutes: /5
-    - platform: homeassistant
+    - trigger: homeassistant
       event: start
   sensor:
     - name: Open meteo voorspelling vandaag
@@ -99,7 +99,7 @@
       #       {% endfor -%}
       #       {{ ns.output }}
       #     {% endif -%}
-            
+
     - name: Open meteo voorspelling morgen
       unique_id: 026dd8288-540a-46cf-9d70-553bfb28dc61
       unit_of_measurement: "kWh"
@@ -213,7 +213,7 @@
         {% set huis = states('sensor.energy_production_today_remaining_2') | float(default=0) -%}
         {% set badkamer = states('sensor.energy_production_today_remaining_3') | float(default=0) -%}
         {{ (garage + huis + badkamer) | round(2) }}
-    
+
     - name: Pv prediction now
       unique_id: add11962-232a-4274-9654-4cabb3559f58
       unit_of_measurement: "W"

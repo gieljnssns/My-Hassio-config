@@ -5,13 +5,13 @@ triggers:
     at: "14:02:00"
   - trigger: state
     entity_id: input_select.noor_status_dropdown
-    to: 'Juist Aangekomen'
+    to: "Juist Aangekomen"
     for:
       minutes: 2
     id: noor_status
   - trigger: state
     entity_id: input_select.fien_status_dropdown
-    to: 'Juist Aangekomen'
+    to: "Juist Aangekomen"
     for:
       minutes: 2
     id: fien_status
@@ -56,56 +56,56 @@ conditions:
         - sun
 actions:
   - choose:
-    - conditions:
-        - condition: trigger
-          id: noor_status
-      sequence:
-        - action: switch.turn_on
-          target:
-            entity_id: switch.pries_boven, switch.pries_onder
-    - conditions:
-        - condition: trigger
-          id: fien_status
-      sequence:
-        - action: switch.turn_on
-          target:
-            entity_id: switch.pries_boven, switch.pries_onder
-    - conditions:
-        - condition: template
-          value_template: >
-            {{ now().hour == 14 }}
-      sequence:
-        - action: switch.turn_on
-          target:
-            entity_id: switch.garage_oplader, switch.pries_boven, switch.pries_onder
-    - conditions:
-        - condition: trigger
-          id: garage_oplader
-      sequence:
-        - action: switch.turn_off
-          target:
-            entity_id: switch.garage_oplader
-    - conditions:
-        - condition: trigger
-          id: pries_boven
-      sequence:
-        - action: switch.turn_off
-          target:
-            entity_id: switch.pries_boven
-    - conditions:
-        - condition: trigger
-          id: pries_onder
-      sequence:
-        - action: switch.turn_off
-          target:
-            entity_id: switch.pries_onder
-    - conditions:
-        - condition: trigger
-          id: armed_night
-      sequence:
-        - action: switch.turn_off
-          target:
-            entity_id: switch.garage_oplader, switch.pries_boven, switch.pries_onder
+      - conditions:
+          - condition: trigger
+            id: noor_status
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.pries_boven, switch.pries_onder
+      - conditions:
+          - condition: trigger
+            id: fien_status
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.pries_boven, switch.pries_onder
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ now().hour == 14 }}
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.garage_oplader, switch.pries_boven, switch.pries_onder
+      - conditions:
+          - condition: trigger
+            id: garage_oplader
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.garage_oplader
+      - conditions:
+          - condition: trigger
+            id: pries_boven
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.pries_boven
+      - conditions:
+          - condition: trigger
+            id: pries_onder
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.pries_onder
+      - conditions:
+          - condition: trigger
+            id: armed_night
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.garage_oplader, switch.pries_boven, switch.pries_onder
   # - action: >
   #     {% if now().hour == 16 %}
   #       switch.turn_on

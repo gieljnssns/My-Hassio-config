@@ -1,13 +1,13 @@
 alias: "Doorbell Notifications"
 id: 642ea33c-f454-4b4c-a4bb-12ecb35d6868
 triggers:
-  platform: state
+  trigger: state
   entity_id: switch.deurbel
   to: "on"
 actions:
   - action: music_assistant.play_announcement
     target:
-      entity_id: 
+      entity_id:
         - media_player.mass_keuken
         - media_player.mass_badkamer
     data:
@@ -24,17 +24,17 @@ actions:
     then:
       - action: light.toggle
         target:
-          entity_id: 
+          entity_id:
             - light.garage
             - light.garage_werkbank
       - delay:
           seconds: 1
       - action: light.toggle
         target:
-          entity_id: 
+          entity_id:
             - light.garage
             - light.garage_werkbank
-    
+
   - if:
       - condition: state
         entity_id: binary_sensor.tuin_bezetting
@@ -42,13 +42,13 @@ actions:
     then:
       - action: light.toggle
         target:
-          entity_id: 
+          entity_id:
             - light.alle_tuinverlichting
       - delay:
           seconds: 1
       - action: light.toggle
         target:
-          entity_id: 
+          entity_id:
             - light.alle_tuinverlichting
   - delay:
       seconds: 10

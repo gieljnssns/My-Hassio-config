@@ -6,14 +6,14 @@ triggers:
     to: "on"
 actions:
   - choose:
-    - conditions:
-        - condition: template
-          value_template: >
-            {{ states("light.garage_sfeerverlichting") == 'on' }}
-      sequence:
-        - action: light.turn_off
-          entity_id:
-            - light.garage_sfeerverlichting
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ states("light.garage_sfeerverlichting") == 'on' }}
+        sequence:
+          - action: light.turn_off
+            entity_id:
+              - light.garage_sfeerverlichting
     default:
       - action: light.turn_on
         data:

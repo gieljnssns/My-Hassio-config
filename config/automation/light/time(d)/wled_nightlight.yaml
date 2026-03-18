@@ -14,24 +14,23 @@ triggers:
     id: fien
 actions:
   - choose:
-    - conditions:
-        - condition: trigger
-          id: noor
-      sequence:
-        - action: input_datetime.set_datetime
-          data:
-            datetime: >
-              {{ now() + timedelta(seconds=10800) }}
-          target:
-            entity_id: input_datetime.wled_noor_end_time
-    - conditions:
-        - condition: trigger
-          id: fien
-      sequence:
-        - action: input_datetime.set_datetime
-          data:
-            datetime: >
-              {{ now() + timedelta(seconds=10800) }}
-          target:
-            entity_id: input_datetime.wled_fien_end_time
-  
+      - conditions:
+          - condition: trigger
+            id: noor
+        sequence:
+          - action: input_datetime.set_datetime
+            data:
+              datetime: >
+                {{ now() + timedelta(seconds=10800) }}
+            target:
+              entity_id: input_datetime.wled_noor_end_time
+      - conditions:
+          - condition: trigger
+            id: fien
+        sequence:
+          - action: input_datetime.set_datetime
+            data:
+              datetime: >
+                {{ now() + timedelta(seconds=10800) }}
+            target:
+              entity_id: input_datetime.wled_fien_end_time

@@ -2,13 +2,13 @@ blueprint:
   name: Motion-activated Light dark outside
   domain: automation
   # source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/automation/blueprints/motion_light.yaml
-  
+
   input:
     entity:
       name: Entity
       selector:
         entity:
-    
+
     input_datetime_target:
       name: Entity
       selector:
@@ -21,14 +21,14 @@ blueprint:
         target:
           entity:
             domain: light
-    
+
     occupancy_target:
       name: Occupancy
       selector:
         target:
           entity:
             domain: binary_sensor
-    
+
     no_motion_wait:
       name: Wait time
       description: Time to wait until the light should be turned off.
@@ -52,7 +52,7 @@ triggers:
     from: "off"
     to: "on"
     id: aan
-  
+
   - trigger: time
     at: !input input_datetime_target
     id: uit
@@ -81,10 +81,10 @@ actions:
             target:
               entity_id: !input input_datetime_target
           - wait_for_trigger:
-            - trigger: state
-              entity_id: !input occupancy_target
-              from: "on"
-              to: "off"
+              - trigger: state
+                entity_id: !input occupancy_target
+                from: "on"
+                to: "off"
           - action: input_datetime.set_datetime
             data:
               datetime: >
@@ -105,9 +105,6 @@ actions:
             {{ now() + timedelta(seconds=120) }}
         target:
           entity_id: !input input_datetime_target
-  
-  
-  
 #   input:
 #     entity:
 #       name: Entity

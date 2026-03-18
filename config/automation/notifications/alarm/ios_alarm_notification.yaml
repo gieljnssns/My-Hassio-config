@@ -8,7 +8,8 @@ actions:
   - action: script.turn_on
     data_template:
       entity_id: >
-        {% if is_state('device_tracker.bompa', 'home') or is_state('device_tracker.oma_2', 'home')  %}
+        {% if is_state('device_tracker.bompa', 'home') or
+            is_state('device_tracker.oma_2', 'home') %}
           script.melding
         {% else %}
           script.alarm_frigate

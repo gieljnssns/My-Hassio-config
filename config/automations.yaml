@@ -1,127 +1,122 @@
-- id: '1603382266087'
+- id: "1603382266087"
   alias: profiler
   description: profiler
   trigger:
-  - platform: time
-    at: '17:59'
-  condition: []
+    - platform: time
+      at: "17:59"
   actions:
-  - action: profiler.start
-    data: {}
+    - action: profiler.start
+      data: {}
   mode: single
-- id: '1617444794333'
+- id: "1617444794333"
   alias: Shelly herstarten
-  description: ''
+  description: ""
   trigger:
-  - platform: state
-    entity_id: 'switch.shelly_badkamer_verluchting_herstarten '
-    to: 'off'
-    from: unavailable
+    - platform: state
+      entity_id: "switch.shelly_badkamer_verluchting_herstarten "
+      to: "off"
+      from: unavailable
   condition:
-  - condition: state
-    entity_id: binary_sensor.shelly_badkamer_verluchting_status
-    state: 'off'
-    for: 00:05:00
+    - condition: state
+      entity_id: binary_sensor.shelly_badkamer_verluchting_status
+      state: "off"
+      for: 00:05:00
   actions:
-  - action: switch.turn_on
-    target:
-      entity_id: switch.shelly_badkamer_verluchting_herstarten
+    - action: switch.turn_on
+      target:
+        entity_id: switch.shelly_badkamer_verluchting_herstarten
   mode: parallel
   max: 10
-- id: '1650959980916'
+- id: "1650959980916"
   alias: Unifi unavailable
-  description: ''
+  description: ""
   trigger:
-  - platform: state
-    entity_id:
-    - device_tracker.droommachien
-    from: home
-    for:
-      hours: 0
-      minutes: 5
-      seconds: 0
-  condition: []
+    - platform: state
+      entity_id:
+        - device_tracker.droommachien
+      from: home
+      for:
+        hours: 0
+        minutes: 5
+        seconds: 0
   actions:
-  - action: notify.mobile_app_gphone
-    data:
-      message: Unifi nazien!!!
-  mode: single
-- id: '1685887833753'
-  alias: Beweging poort
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - binary_sensor.poort
-    to: 'on'
-  condition: []
-  actions:
-  - action: notify.giel_en_martine
-    data:
-      message: Beweging poort
-  mode: single
-- id: '1699040529160'
-  alias: poort gphone
-  description: ''
-  triggers:
-  - entity_id:
-    - binary_sensor.poort
-    to: 'on'
-    trigger: state
-  conditions: []
-  actions:
-  - action: notify.mobile_app_gphone
-    data:
-      message: Poort
+    - action: notify.mobile_app_gphone
       data:
-        actions:
-        - action: POORT
-          title: Afzetten?
+        message: Unifi nazien!!!
   mode: single
-- id: '1741689014825'
-  alias: Gang verklikker
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - binary_sensor.gang_boven_pir
-    to: 'on'
-    id: gang
-  - trigger: state
-    entity_id:
-    - binary_sensor.trap_aqara_pir
-    to: 'on'
-    id: trap
-  conditions: []
+- id: "1685887833753"
+  alias: Beweging poort
+  description: ""
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.poort
+      to: "on"
   actions:
-  - choose:
-    - conditions:
-      - condition: trigger
-        id:
-        - gang
-      sequence:
-      - action: notify.mobile_app_gphone
+    - action: notify.giel_en_martine
+      data:
+        message: Beweging poort
+  mode: single
+- id: "1699040529160"
+  alias: poort gphone
+  description: ""
+  triggers:
+    - entity_id:
+        - binary_sensor.poort
+      to: "on"
+      trigger: state
+  actions:
+    - action: notify.mobile_app_gphone
+      data:
+        message: Poort
         data:
-          message: Gang boven!
-          data:
-            actions:
-            - action: GANG
+          actions:
+            - action: POORT
               title: Afzetten?
-              uri: /lovelace/boven
-    - conditions:
-      - condition: trigger
-        id:
-        - trap
-      sequence:
-      - action: notify.mobile_app_gphone
-        data:
-          message: Trap!!!
-          data: {}
-      - action: automation.turn_off
-        metadata: {}
-        data:
-          stop_actions: true
-        target:
-          entity_id: automation.gang_verklikker
+  mode: single
+- id: "1741689014825"
+  alias: Gang verklikker
+  description: ""
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.gang_boven_pir
+      to: "on"
+      id: gang
+    - trigger: state
+      entity_id:
+        - binary_sensor.trap_aqara_pir
+      to: "on"
+      id: trap
+  actions:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id:
+                - gang
+          sequence:
+            - action: notify.mobile_app_gphone
+              data:
+                message: Gang boven!
+                data:
+                  actions:
+                    - action: GANG
+                      title: Afzetten?
+                      uri: /lovelace/boven
+        - conditions:
+            - condition: trigger
+              id:
+                - trap
+          sequence:
+            - action: notify.mobile_app_gphone
+              data:
+                message: Trap!!!
+                data: {}
+            - action: automation.turn_off
+              metadata: {}
+              data:
+                stop_actions: true
+              target:
+                entity_id: automation.gang_verklikker
   mode: parallel
   max: 10

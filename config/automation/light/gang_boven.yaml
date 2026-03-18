@@ -1,6 +1,6 @@
 alias: Light gang boven
 id: eb69e93e-c561-46bb-8554-bf70d7e89099
-description: ''
+description: ""
 mode: restart
 max_exceeded: silent
 # variables:
@@ -8,8 +8,8 @@ max_exceeded: silent
 triggers:
   - trigger: state
     entity_id: binary_sensor.gang_boven_pir, light.gang_boven, binary_sensor.gang_boven_pir_2
-    from: 'off'
-    to: 'on'
+    from: "off"
+    to: "on"
     id: aan
   - trigger: time
     at: input_datetime.gang_boven_end_time
@@ -25,12 +25,12 @@ actions:
             conditions:
               - condition: state
                 entity_id: binary_sensor.gang_boven_bezetting
-                state: 'on'
+                state: "on"
               # - condition: state
               #   entity_id: binary_sensor.gang_hal_bezetting
               #   state: 'on'
           - condition: and
-            conditions: 
+            conditions:
               - condition: state
                 entity_id: binary_sensor.giel_thuis_nacht
                 state: "off"
@@ -50,8 +50,8 @@ actions:
           - wait_for_trigger:
               - trigger: state
                 entity_id: binary_sensor.gang_boven_bezetting
-                from: 'on'
-                to: 'off'
+                from: "on"
+                to: "off"
               # - trigger: state
               #   entity_id: binary_sensor.gang_hal_bezetting
               #   from: 'on'
@@ -76,4 +76,3 @@ actions:
             {{ now() + timedelta(seconds=120) }}
         target:
           entity_id: input_datetime.gang_boven_end_time
-

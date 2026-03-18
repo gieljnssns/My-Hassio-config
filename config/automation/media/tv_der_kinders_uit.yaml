@@ -14,20 +14,20 @@ actions:
   - choose:
       - conditions:
           - condition: time
-            before: '22:10:00'
+            before: "22:10:00"
           - condition: or
             conditions:
               - condition: state
                 entity_id: binary_sensor.schooldag
-                state:  "on"
+                state: "on"
               - condition: and
                 conditions:
                   - condition: time
                     weekday:
-                      -  sun
+                      - sun
                   - condition: state
                     entity_id: calendar.belgie_verlof
-                    state:  "off"
+                    state: "off"
         sequence:
           - action: media_player.turn_off
             entity_id:

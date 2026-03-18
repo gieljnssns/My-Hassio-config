@@ -1,5 +1,5 @@
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: input_boolean.emhass_droogkast
       from: "off"
       to: "on"
@@ -9,7 +9,7 @@
       state: >
         {{ as_timestamp(states.input_boolean.emhass_droogkast.last_changed) }}
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: input_boolean.emhass_wasmachien
       from: "off"
       to: "on"
@@ -19,7 +19,7 @@
       state: >
         {{ as_timestamp(states.input_boolean.emhass_wasmachien.last_changed) }}
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: input_boolean.emhass_afwasmachien
       from: "off"
       to: "on"
@@ -29,7 +29,7 @@
       state: >
         {{ as_timestamp(states.input_boolean.emhass_afwasmachien.last_changed) }}
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: binary_sensor.warmtepomp_aan
       from: "off"
       to: "on"
@@ -39,7 +39,7 @@
       state: >
         {{ as_timestamp(states.binary_sensor.warmtepomp_aan.last_changed) }}
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: binary_sensor.warmtepompboiler_aan
       from: "off"
       to: "on"
@@ -49,7 +49,7 @@
       state: >
         {{ as_timestamp(states.binary_sensor.warmtepompboiler_aan.last_changed) }}
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: input_boolean.emhass_warmtepompboiler
       from: "on"
       to: "off"
@@ -59,7 +59,7 @@
       state: >
         {{ as_timestamp(states.input_boolean.emhass_warmtepompboiler.last_changed) }}
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: binary_sensor.warmtepompboiler_aan
       from: "on"
       to: "off"
@@ -69,7 +69,7 @@
       state: >
         {{ as_timestamp(states.binary_sensor.warmtepompboiler_aan.last_changed) }}
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: binary_sensor.warmtepomp_aan
       from: "on"
       to: "off"
@@ -79,10 +79,9 @@
       state: >
         {{ as_timestamp(states.binary_sensor.warmtepomp_aan.last_changed) }}
 
-
 - trigger:
-    - platform: state
-      entity_id: 
+    - trigger: state
+      entity_id:
         - script.emhass_publish_models
       from: "on"
       to: "off"
@@ -109,7 +108,7 @@
             {% endfor -%}
           {% endif -%}
           {{ values.list }}
-  
+
     - name: Emhass grid2
       unique_id: 4906ce9a-ee07-4cb8-a13b-79aec92d9805
       unit_of_measurement: W
@@ -166,7 +165,7 @@
         {{ states('sensor.' + best_model + '_unit_prod_price') }}
       attributes:
         model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
-    
+
     - name: "EMHASS Optim Status"
       unique_id: f7ff7731-ff33-4cd0-bc93-f070278dbac9
       state: >
@@ -235,10 +234,9 @@
       attributes:
         model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
 
-
 #####  Emhass test  #######
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: sensor.lasso_p_load_forecast
       not_to:
         - unknown
@@ -252,7 +250,7 @@
         {{ trigger.to_state.state }}
 
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: sensor.lasso_p_grid_forecast
       not_to:
         - unknown
@@ -265,9 +263,8 @@
       state: >
         {{ trigger.to_state.state }}
 
-
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: sensor.ridge_p_load_forecast
       not_to:
         - unknown
@@ -281,7 +278,7 @@
         {{ trigger.to_state.state }}
 
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: sensor.ridge_p_grid_forecast
       not_to:
         - unknown
@@ -295,7 +292,7 @@
         {{ trigger.to_state.state }}
 
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: sensor.linear_p_load_forecast
       not_to:
         - unknown
@@ -309,7 +306,7 @@
         {{ trigger.to_state.state }}
 
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: sensor.linear_p_grid_forecast
       not_to:
         - unknown

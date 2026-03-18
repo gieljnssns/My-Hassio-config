@@ -1,12 +1,12 @@
 - trigger:
-    - platform: template
+    - trigger: template
       id: aan
       value_template: >
         {{ states('device_tracker.gphone_2') == 'home' and
           states('alarm_control_panel.ha_alarm') == 'armed_night' }}
       for:
         minutes: 15
-    - platform: template
+    - trigger: template
       id: uit
       value_template: >
         {{ states("binary_sensor.gphone_focus") == "off" and states('alarm_control_panel.ha_alarm') == 'disarmed' }}
@@ -20,14 +20,14 @@
           states('alarm_control_panel.ha_alarm') == 'armed_night' }}
 
 - trigger:
-    - platform: template
+    - trigger: template
       id: aan
       value_template: >
         {{ states('device_tracker.mphone_2') == 'home' and
           states('alarm_control_panel.ha_alarm') == 'armed_night' }}
       for:
         minutes: 15
-    - platform: template
+    - trigger: template
       id: uit
       value_template: >
         {{ states("binary_sensor.mphone_focus") == "off" and states('alarm_control_panel.ha_alarm') == 'disarmed' }}

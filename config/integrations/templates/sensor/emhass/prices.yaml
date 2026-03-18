@@ -16,7 +16,7 @@
         {% set current_time_index = current_hour * 12 + quarter_index -%}
         {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') |list ) -%}
         {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') |list -%}
-        
+
         {% set all_prices = today_prices_data + tomorrow_prices_data  -%}
         {% set ns = namespace(result=[]) -%}
         {% for price in all_prices -%}
@@ -24,9 +24,8 @@
           {% set ns.result = ns.result + [adjusted_price] * 3 -%}
         {% endfor -%}
         {% set prices = ns.result[current_time_index:] -%}
-        
-          {{ (((prices[0] * factor_A + factor_B + GSC + WKC + nettarief + heffing + accijns) * VAT_scaling) / 1000) | round(5) }}
 
+          {{ (((prices[0] * factor_A + factor_B + GSC + WKC + nettarief + heffing + accijns) * VAT_scaling) / 1000) | round(5) }}
 
       attributes:
         prijzen: >
@@ -38,13 +37,13 @@
           {% set heffing = 0.0019261 -%}
           {% set accijns = 0.04748 -%}
           {% set VAT_scaling = 1.06 -%}
-          
+
           {% set quarter_index = (now().minute // 5) -%}
           {% set current_hour = now().hour -%}
           {% set current_time_index = current_hour * 12 + quarter_index -%}
           {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') |list ) -%}
           {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') |list -%}
-          
+
           {% set all_prices = today_prices_data + tomorrow_prices_data  -%}
           {% set ns = namespace(result=[]) -%}
           {% for price in all_prices -%}
@@ -64,7 +63,6 @@
                       | map('multiply', 0.001)
                       | map('round', 5) | list }}
 
-
     - name: "Ecopower Injectieprijzen"
       unique_id: 98d961f2-497a-440a-865b-bf2fe1897218
       unit_of_measurement: "EUR/kWh"
@@ -76,7 +74,7 @@
         {% set current_time_index = current_hour * 12 + quarter_index -%}
         {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') |list ) -%}
         {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') |list -%}
-        
+
         {% set all_prices = today_prices_data + tomorrow_prices_data  -%}
         {% set ns = namespace(result=[]) -%}
         {% for price in all_prices -%}
@@ -84,20 +82,20 @@
           {% set ns.result = ns.result + [adjusted_price] * 3 -%}
         {% endfor -%}
         {% set prices = ns.result[current_time_index:] -%}
-        
+
           {{ ((prices[0] * factor_C + factor_D) / 1000) | round(5) }}
 
       attributes:
         prijzen: >
           {% set factor_C = 0.98 -%}
           {% set factor_D = -0.015 -%}
-          
+
           {% set quarter_index = (now().minute // 5) -%}
           {% set current_hour = now().hour -%}
           {% set current_time_index = current_hour * 12 + quarter_index -%}
           {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') |list ) -%}
           {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') |list -%}
-          
+
           {% set all_prices = today_prices_data + tomorrow_prices_data  -%}
           {% set ns = namespace(result=[]) -%}
           {% for price in all_prices -%}
@@ -123,7 +121,7 @@
 #         {% set nettarief = 0.0565101 -%}
 #         {% set heffing = 0.0019261 -%}
 #         {% set accijns = 0.04748 -%}
-#         {% set VAT_scaling = 1.06 -%}       
+#         {% set VAT_scaling = 1.06 -%}
 #         {% set today = now().strftime('%Y-%m-%d') -%}
 #         {% set tomorrow = (now().timestamp() + 86400) | timestamp_custom('%Y-%m-%d') -%}
 #         {% set quarter_index = (now().minute // 5) -%}
@@ -173,17 +171,16 @@
 #           {% endfor -%}
 #           {% set start = quarter_index -%}
 #           {% set prices = ns.z[start:] -%}
-#           # {{ prices | map('float') 
-#           #           | map('multiply', factor_A) 
-#           #           | map('add', factor_B) 
-#           #           | map('add', GSC) 
+#           # {{ prices | map('float')
+#           #           | map('multiply', factor_A)
+#           #           | map('add', factor_B)
+#           #           | map('add', GSC)
 #           #           | map('add', WKC)
-#           #           | map('add', nettarief) 
-#           #           | map('add', heffing) 
+#           #           | map('add', nettarief)
+#           #           | map('add', heffing)
 #           #           | map('add', accijns)
-#           #           | map('multiply', VAT_scaling) 
+#           #           | map('multiply', VAT_scaling)
 #           #           | map('round', 5) | list }}
-
 
 #     - name: "Ecopower Injectieprijzen"
 #       unique_id: 98d961f2-497a-440a-865b-bf2fe1897218
@@ -235,7 +232,7 @@
 #           {% set start = quarter_index -%}
 #           {% set prices = ns.z[start:] -%}
 #           {{ prices | map('float') | map('multiply', factor_C) | map('add', factor_D) | map('round', 5) | list }}
-    
+
 #     - name: "Price list length"
 #       unique_id: 3ac05511-a002-4d3a-b104-2d57ada50d07
 #       unit_of_measurement: "st"

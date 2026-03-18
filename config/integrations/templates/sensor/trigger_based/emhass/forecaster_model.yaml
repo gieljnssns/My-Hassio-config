@@ -3,7 +3,7 @@
 # =============================================================================
 # RIDGE MODEL
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: sensor.emhass_load_ridge
       not_to:
         - unknown
@@ -31,7 +31,7 @@
 
 # LASSO MODEL
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: sensor.emhass_load_lasso
       not_to:
         - unknown
@@ -59,7 +59,7 @@
 
 # LINEAR MODEL
 - trigger:
-    - platform: state
+    - trigger: state
       entity_id: sensor.emhass_load_linear
       not_to:
         - unknown
@@ -85,14 +85,13 @@
             0
           {% endif -%}
 
-
 # =============================================================================
 # BESTE MODEL SENSOREN
 # =============================================================================
 
 # BESTE MODEL - 24H
 - trigger:
-    - platform: time_pattern
+    - trigger: time_pattern
       minutes: /30
   sensor:
     - name: "Best EMHASS Model Load (24h)"
@@ -118,7 +117,7 @@
 
 # BESTE MODEL - 7 DAGEN
 - trigger:
-    - platform: time_pattern
+    - trigger: time_pattern
       hours: /1
   sensor:
     - name: "Best EMHASS Model Load (7d)"

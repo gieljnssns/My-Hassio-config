@@ -1,7 +1,7 @@
 - trigger:
-    - platform: event
+    - trigger: event
       event_type: refresh_20m
-    - platform: event
+    - trigger: event
       event_type: event_template_reloaded
   action:
     - action: weather.get_forecasts
@@ -27,8 +27,8 @@
     #   unit_of_measurement: "%"
     #   state: >
     #     {% set forecast = hourly %}
-    #     {{ forecast["weather.home"].forecast[:12] 
-    #           | map(attribute='precipitation_probability') 
+    #     {{ forecast["weather.home"].forecast[:12]
+    #           | map(attribute='precipitation_probability')
     #           | max
     #           | round(1) }}
 
@@ -41,7 +41,7 @@
             | map(attribute='temperature') 
             | max
             | round(1) }}
-    
+
     - name: Min temperatuur buiten voorspelling 12u
       unique_id: 3623b064-44c9-4e96-a597-0b981a654c77
       unit_of_measurement: "°C"
@@ -51,7 +51,7 @@
             | map(attribute='temperature') 
             | min
             | round(1) }}
-    
+
     - name: Maximum temperatuur morgen
       unique_id: aac3691b-e083-48a2-9ea9-d9687341ea35
       unit_of_measurement: "°C"
@@ -66,11 +66,10 @@
             | list %}
         {{ temps | max if temps|count > 0 else none }}
 
-
 - trigger:
-    - platform: event
+    - trigger: event
       event_type: refresh_5m
-    - platform: event
+    - trigger: event
       event_type: event_template_reloaded
   action:
     - action: weather.get_forecasts
@@ -91,7 +90,7 @@
       state: >
         {{ state_attr("weather.home_2", "temperature") }}
       attributes:
-        list: >  
+        list: >
           {% set forecast = open_meteo['weather.home_2'].forecast -%}
           {% set now_ts = as_timestamp(now()) -%}
           {% set current_5min_ts = ((now_ts // 300) | int) * 300 -%}
@@ -118,11 +117,11 @@
             {% endif -%}
           {% endfor -%}
           {{ ns.result }}
-    
+
     - name: Kmi interpolated temperatures
       unique_id: 78e5598b-3b4b-4c99-8c84-548ae6616981
       state: >
-        {{ state_attr("weather.home", "temperature") }} 
+        {{ state_attr("weather.home", "temperature") }}
       attributes:
         list: >
           {% set forecast = kmi['weather.home'].forecast -%}

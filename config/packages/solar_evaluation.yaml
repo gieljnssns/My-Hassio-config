@@ -107,7 +107,6 @@ template:
             false
           {% endif -%}
 
-
 # ===== AUTOMATIONS =====
 automation:
   # Set beste voorspeller op basis van voorspelde verwarmingsuren
@@ -132,7 +131,6 @@ automation:
               solcast90
             {% endif -%}
 
-
   - alias: "Hourly Solar Prediction Evaluation (5m)"
     description: "Evalueer uurlijks welke 5m-voorspelling het beste presteert"
     id: 54877c8c-46d8-4c01-a220-6f28f05a0cce
@@ -142,7 +140,7 @@ automation:
     conditions:
       - condition: state
         entity_id: input_boolean.solar_evaluation_active
-        state: 'on'
+        state: "on"
       - condition: template
         value_template: >
           {{ is_state('binary_sensor.solar_evaluation_period', 'on') }}
@@ -176,7 +174,7 @@ automation:
       - condition: template
         value_template: "{{ trigger.from_state.state not in ['unknown', 'unavailable'] }}"
     actions:
-      - action: notify.mobile_app_gphone  # Pas aan naar je notificatie service
+      - action: notify.mobile_app_gphone # Pas aan naar je notificatie service
         data:
           title: "🌞 Solar Voorspeller Gewijzigd"
           message: >

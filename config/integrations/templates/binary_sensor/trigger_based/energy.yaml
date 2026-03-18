@@ -1,17 +1,17 @@
 - trigger:
-    - platform: template
+    - trigger: template
       id: aan
       value_template: >
         {{ states("sensor.wasmachien_vermogen") | float(0) >= 5 }}
       for:
         minutes: 2
-    - platform: template
+    - trigger: template
       id: uit
       value_template: >
         {{ states("sensor.wasmachien_vermogen") | float(0) < 10 }}
       for:
         minutes: 5
-    - platform: state
+    - trigger: state
       entity_id: input_boolean.wasmachien_staat_op
       to: "off"
   action:
@@ -32,19 +32,19 @@
         {{ states("input_boolean.wasmachien_staat_op") }}
 
 - trigger:
-    - platform: template
+    - trigger: template
       id: aan
       value_template: >
         {{ states("sensor.droogkast_vermogen") | float(0) >= 4 }}
       for:
         minutes: 2
-    - platform: template
+    - trigger: template
       id: uit
       value_template: >
         {{ states("sensor.droogkast_vermogen") | float(0) < 4 }}
       for:
         minutes: 5
-    - platform: state
+    - trigger: state
       entity_id: input_boolean.droogkast_staat_op
       to: "off"
   action:
@@ -65,19 +65,19 @@
         {{ states("input_boolean.droogkast_staat_op") }}
 
 - trigger:
-    - platform: template
+    - trigger: template
       id: aan
       value_template: >
         {{ states("sensor.afwasmachien_vermogen") | float(0) >= 3 }}
       for:
         minutes: 2
-    - platform: template
+    - trigger: template
       id: uit
       value_template: >
         {{ states("sensor.afwasmachien_vermogen") | float(0) < 3 }}
       for:
         minutes: 5
-    - platform: state
+    - trigger: state
       entity_id: input_boolean.afwasmachien_staat_op
       to: "off"
   action:
@@ -98,11 +98,11 @@
         {{ states("input_boolean.afwasmachien_staat_op") }}
 
 - trigger:
-    - platform: template
+    - trigger: template
       id: aan
       value_template: >
         {{ states("sensor.thermostaat") | float(0) <= 42.5 }}
-    - platform: template
+    - trigger: template
       id: uit
       value_template: >
         {{ states("sensor.thermostaat") | float(0) > 45 }}

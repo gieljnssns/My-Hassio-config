@@ -6,14 +6,14 @@ triggers:
     to: "on"
 actions:
   - choose:
-    - conditions:
-        - condition: template
-          value_template: >
-            {{ states("light.garage_sjotterbak") == 'on' }}
-      sequence:
-        - action: light.turn_off
-          entity_id:
-            - light.garage_sjotterbak
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ states("light.garage_sjotterbak") == 'on' }}
+        sequence:
+          - action: light.turn_off
+            entity_id:
+              - light.garage_sjotterbak
     default:
       - action: light.turn_on
         data:

@@ -3,12 +3,12 @@ id: faac69de-f54b-4ac5-82c1-4de36624c400
 triggers:
   - trigger: state
     entity_id: alarm_control_panel.ha_alarm
-    to: 'armed_night'
+    to: "armed_night"
     id: uit
   - trigger: state
     entity_id: alarm_control_panel.ha_alarm
-    from: 'armed_night'
-    to: 'disarmed'
+    from: "armed_night"
+    to: "disarmed"
     for:
       minutes: 15
     id: aan
@@ -30,49 +30,49 @@ triggers:
   #   id: aan_slaapkamer_fien
 actions:
   - choose:
-    - conditions:
-        - condition: trigger
-          id: uit
-      sequence:
-        - delay:
-            minutes: 15
-        - action: climate.set_preset_mode
-          target:
-            entity_id:
-              - climate.slaapkamer
-              - climate.slaapkamer_fien
-              - climate.slaapkamer_noor
-          data:
-            preset_mode: eco
-    - conditions:
-        - condition: trigger
-          id: aan
-      sequence:
-        - action: climate.set_preset_mode
-          target:
-            entity_id:
-              - climate.slaapkamer_fien
-          data:
-            preset_mode: comfort
-        - action: climate.set_preset_mode
-          target:
-            entity_id:
-              - climate.slaapkamer_noor
-          data:
-            preset_mode: comfort
-    - conditions:
-        - condition: trigger
-          id: aan_slaapkamer
-        - condition: template
-          value_template: >
-            {{ states("binary_sensor.gphone_focus") == "off" and states("binary_sensor.mphone_focus") == "off" }}
-      sequence:
-        - action: climate.set_preset_mode
-          target:
-            entity_id:
-              - climate.slaapkamer
-          data:
-            preset_mode: comfort
+      - conditions:
+          - condition: trigger
+            id: uit
+        sequence:
+          - delay:
+              minutes: 15
+          - action: climate.set_preset_mode
+            target:
+              entity_id:
+                - climate.slaapkamer
+                - climate.slaapkamer_fien
+                - climate.slaapkamer_noor
+            data:
+              preset_mode: eco
+      - conditions:
+          - condition: trigger
+            id: aan
+        sequence:
+          - action: climate.set_preset_mode
+            target:
+              entity_id:
+                - climate.slaapkamer_fien
+            data:
+              preset_mode: comfort
+          - action: climate.set_preset_mode
+            target:
+              entity_id:
+                - climate.slaapkamer_noor
+            data:
+              preset_mode: comfort
+      - conditions:
+          - condition: trigger
+            id: aan_slaapkamer
+          - condition: template
+            value_template: >
+              {{ states("binary_sensor.gphone_focus") == "off" and states("binary_sensor.mphone_focus") == "off" }}
+        sequence:
+          - action: climate.set_preset_mode
+            target:
+              entity_id:
+                - climate.slaapkamer
+            data:
+              preset_mode: comfort
     # - conditions:
     #     - condition: trigger
     #       id: aan_slaapkamer_noor

@@ -33,7 +33,7 @@ emhass_grid_follower:
                 {% else -%}
                   {{ error | float }}
                 {% endif -%}
-              
+
               # Grotere hysterese: pas van mode wisselen bij >300W afwijking
               # én alleen als current_power al op minimum staat (0-5%)
               # Dit voorkomt oscillatie tussen charge/discharge
@@ -55,7 +55,6 @@ emhass_grid_follower:
                 {% else -%}
                   {{ current_mode }}
                 {% endif -%}
-
 
               # # Stapgrootte (80W ≈ 1%)
               # step: "{{ ((error | abs) / 80) | round(0) | int }}"
@@ -87,7 +86,7 @@ emhass_grid_follower:
                 {% else -%}
                   {{ np | round(0) | int }}
                 {% endif -%}
-              
+
               # new_power: >
               #   {% set e = error | float -%}
               #   {% set s = step | int -%}
@@ -117,14 +116,14 @@ emhass_grid_follower:
               - condition: template
                 value_template: "{{ target_mode != current_mode }}"
             then:
-              - service: number.set_value
+              - action: number.set_value
                 target:
                   entity_id: number.goodwe_eco_mode_power
                 data:
                   value: 0
               - delay:
                   seconds: 1
-              - service: select.select_option
+              - action: select.select_option
                 target:
                   entity_id: select.goodwe_inverter_operation_mode
                 data:
@@ -135,7 +134,7 @@ emhass_grid_follower:
               - condition: template
                 value_template: "{{ target_mode == current_mode and (new_power | int) != (current_power | int) }}"
             then:
-              - service: number.set_value
+              - action: number.set_value
                 target:
                   entity_id: number.goodwe_eco_mode_power
                 data:

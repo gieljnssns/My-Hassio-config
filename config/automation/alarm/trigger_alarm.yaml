@@ -1,9 +1,9 @@
-alias: 'Trigger alarm'
+alias: "Trigger alarm"
 id: b089d944-00eb-4e69-8be4-18be18af8759
 triggers:
   - trigger: state
     entity_id: binary_sensor.tuin_bezetting
-    to: 'on'
+    to: "on"
     for:
       seconds: 15
 conditions:
@@ -11,21 +11,21 @@ conditions:
   conditions:
     - condition: state
       entity_id: binary_sensor.martine_vertrekt_naart_werk
-      state: 'off'
+      state: "off"
     - condition: state
       entity_id: binary_sensor.giel_vertrekt_naart_werk
-      state: 'off'
+      state: "off"
     - condition: or
       conditions:
         - condition: state
           entity_id: alarm_control_panel.ha_alarm
-          state: 'armed_away'
+          state: "armed_away"
         - condition: state
           entity_id: alarm_control_panel.ha_alarm
-          state: 'armed_home'
+          state: "armed_home"
         - condition: state
           entity_id: alarm_control_panel.ha_alarm
-          state: 'armed_night'
+          state: "armed_night"
 actions:
   - action: alarm_control_panel.alarm_trigger
     entity_id: alarm_control_panel.ha_alarm

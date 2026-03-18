@@ -5,7 +5,7 @@
       state: >
         {% set best_model = states('sensor.best_heating_predictor_30d') | lower -%}
         {% set hours = ((states('input_number.voorspelde_uren_' + best_model)|float(0) - states('sensor.branduren_warmtepomp')|float(0)) * 4) | round(0) / 4  -%}
-        
+
         {% if states("input_boolean.verwarming_starten") == 'on' -%}
           {% if states('sensor.temp_living')|float(18) > 21  and 12 < now().hour -%}
             0
@@ -19,7 +19,7 @@
         {% endif -%}
       availability: >-
         {{ states('sensor.best_heating_predictor_30d') not in ('unknown', 'unavailable', 'None') }}
-    
+
     - name: Verwarming startuur
       unique_id: ceff5121-3392-4bac-8fa5-a8cec3e3d331
       state: >
@@ -44,7 +44,7 @@
           {% endif -%}
       availability: >-
         {{ states('sensor.best_emhass_model_load_7d') not in ('unknown', 'unavailable', 'None') }}
-    
+
     - name: Warmtepomp start timesteps
       unique_id: e3c01f29-feeb-4e07-be8b-1278b87323e9
       unit_of_measurement: 5m
@@ -75,14 +75,14 @@
         {% else -%}
           0
         {% endif -%}
-    
+
     - name: Warmtepomp end timesteps
       unique_id: 2db655d5-f4d4-4687-a4e7-0029173bea99
       unit_of_measurement: 5m
       state: >
         {% set end_time = states('input_datetime.eindtijd_verwarming') -%}
         {% set operate = (states('sensor.warmtepomp_uren') | float(0) * 12) | int  -%}
-        
+
         {% if end_time not in ['unknown', 'unavailable'] -%}
           {% set now_time = now().strftime('%H:%M:%S') -%}
           {% set end_dt = today_at(end_time) -%}
@@ -109,19 +109,19 @@
       #     {% set now_time = now().strftime('%H:%M:%S') -%}
       #     {% set end_dt = today_at(end_time) -%}
       #     {% set now_dt = now() -%}
-          
+
       #     {# Als de eindtijd al voorbij is vandaag, neem dan morgen #}
       #     {% if end_dt <= now_dt -%}
       #       {% set end_dt = end_dt + timedelta(days=1) -%}
       #     {% endif -%}
-          
+
       #     {% set time_diff = (end_dt - now_dt).total_seconds() -%}
       #     {% set timesteps = (time_diff / 300) | round(0, 'ceil') -%}
       #     {{ timesteps | int }}
       #   {% else -%}
       #     0
       #   {% endif -%}
-    
+
     - name: Min temperatures schedule
       unique_id: a1b2c3d4-min-temp-schedule
       state: >
@@ -185,7 +185,7 @@
             {% set ns.result = ns.result + [temp] -%}
           {% endfor -%}
           {{ ns.result }}
-    
+
     - name: Max temperatures schedule
       unique_id: e5f6g7h8-max-temp-schedule
       state: >

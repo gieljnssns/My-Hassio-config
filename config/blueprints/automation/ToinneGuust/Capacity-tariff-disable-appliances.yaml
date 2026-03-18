@@ -1,6 +1,7 @@
 blueprint:
   name: Predictive Power Control
-  description: "# Avoid capacity tariff on electric consumption in Flanders\n\n**Version:
+  description:
+    "# Avoid capacity tariff on electric consumption in Flanders\n\n**Version:
     1.0**\n\n**Summary**  \n  This automation aims to reduce the cost of the capacity
     tariff in Flanders by temporarily switching off certain appliances.  \n  The most
     obvious candidates are appliances that generate heat and can be turned off and
@@ -34,19 +35,21 @@ blueprint:
   input:
     power_sensor:
       name: Power sensor
-      description: Sensor tracking average power consumption over every quarter of
+      description:
+        Sensor tracking average power consumption over every quarter of
         an hour (e.g. p1_meter_average_demand).
       selector:
         entity:
           domain:
-          - sensor
+            - sensor
           device_class:
-          - power
+            - power
           reorder: false
           multiple: false
     threshold:
       name: Power threshold (W)
-      description: Threshold in Watts to trigger power-off. If the p1_meter_average_demand
+      description:
+        Threshold in Watts to trigger power-off. If the p1_meter_average_demand
         is calculated to go over this value during the current quarter of an hour
         it will switch the devices off.
       default: 2200
@@ -59,7 +62,8 @@ blueprint:
           mode: slider
     power_threshold:
       name: Power threshold for appliances (W)
-      description: If an appliance consumes less than this it is not powered off.
+      description:
+        If an appliance consumes less than this it is not powered off.
         This is used to not turn off appliances that are not consuming a lot of power.
       default: 100
       selector:
@@ -71,7 +75,8 @@ blueprint:
           mode: slider
     devices:
       name: Devices to Control
-      description: "List of devices (switches) with associated power sensors. This
+      description:
+        "List of devices (switches) with associated power sensors. This
         is a map where each entry contains:\n  - power_sensor: sensor entity\n  -
         switch: the switch to control\n  \nexample:\n  \\- power_sensor: sensor.plug_washing_machine_power\n
         \    switch: switch.plug_washing_machine\n  \\- power_sensor: sensor.plug_dishwasher_power\n
@@ -82,49 +87,52 @@ blueprint:
           multiple: false
   source_url: https://github.com/ToinneGuust/Capacity-tariff-disable-appliances/blob/main/Capacity-tariff-disable-appliances.yaml
 triggers:
-- trigger: time_pattern
-  minutes: /5
+  - trigger: time_pattern
+    minutes: /5
 variables:
   sensor_entity: !input power_sensor
   threshold: !input threshold
   power_threshold: !input power_threshold
-  minutes_now: '{{ now().minute % 15 | float(0) }}'
-  current_value: '{{ states(sensor_entity) | float(0) }}'
-  effective_minutes: '{{ 1 if minutes_now == 0 else minutes_now }}'
-  predicted_value: '{{ ((current_value | float) / (effective_minutes | float) * 15)
-    if minutes_now != 0 else 0 }}'
+  minutes_now: "{{ now().minute % 15 | float(0) }}"
+  current_value: "{{ states(sensor_entity) | float(0) }}"
+  effective_minutes: "{{ 1 if minutes_now == 0 else minutes_now }}"
+  predicted_value:
+    "{{ ((current_value | float) / (effective_minutes | float) * 15)
+    if minutes_now != 0 else 0 }}"
   device_list: !input devices
 conditions: []
 actions:
-- if:
-  - condition: template
-    value_template: '{{ predicted_value > threshold and minutes_now != 0 }}'
-  then:
-  - repeat:
-      for_each: '{{ device_list }}'
-      sequence:
-      - if:
-        - condition: template
-          value_template: '{{ states(repeat.item.power_sensor) | float(0) > power_threshold
-            }}'
-        then:
-        - action: switch.turn_off
-          target:
-            entity_id: '{{ repeat.item.switch }}'
-  else:
-  - repeat:
-      for_each: '{{ device_list }}'
-      sequence:
-      - action: switch.turn_on
-        target:
-          entity_id: '{{ repeat.item.switch }}'
-- action: logbook.log
-  data:
-    name: Power Prediction Debug
-    message: 'Current: {{ current_value }} W | Minutes: {{ minutes_now }} | Predicted:
-      {{ predicted_value | round(2) }} W
+  - if:
+      - condition: template
+        value_template: "{{ predicted_value > threshold and minutes_now != 0 }}"
+    then:
+      - repeat:
+          for_each: "{{ device_list }}"
+          sequence:
+            - if:
+                - condition: template
+                  value_template:
+                    "{{ states(repeat.item.power_sensor) | float(0) > power_threshold
+                    }}"
+              then:
+                - action: switch.turn_off
+                  target:
+                    entity_id: "{{ repeat.item.switch }}"
+    else:
+      - repeat:
+          for_each: "{{ device_list }}"
+          sequence:
+            - action: switch.turn_on
+              target:
+                entity_id: "{{ repeat.item.switch }}"
+  - action: logbook.log
+    data:
+      name: Power Prediction Debug
+      message:
+        "Current: {{ current_value }} W | Minutes: {{ minutes_now }} | Predicted:
+        {{ predicted_value | round(2) }} W
 
-      '
+        "
 mode: single
 trace:
   stored_traces: 300
