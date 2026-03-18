@@ -50,10 +50,10 @@ template:
           {% endif %}
           {% if type == snow and states("sensor.openweathermap_rain_intensity") | int(default=0) > 0 %}
             snow
-          {% elif ((states("sensor.buiten_buiten_temperatuur") | int(0) < 4) and states("sensor.buiten_buiten_dauwpunt") | int(0) < 6 and states("sensor.openweathermap_windsnelheid") | int(0) < 12 and states("sensor.tomorrow_io_home_cloud_cover") | int(0) < 20 and states("sensor.poort_luchtvochtigheid") | int(0) > 50) %} 
+          {% elif ((states("sensor.buiten_buiten_temperatuur") | int(0) < 4) and states("sensor.buiten_buiten_dauwpunt") | int(0) < 6 and states("sensor.openweathermap_windsnelheid") | int(0) < 12 and states("sensor.tomorrow_io_home_cloud_cover") | int(0) < 20 and states("sensor.poort_luchtvochtigheid") | int(0) > 50) %}
             frost
-          {% elif type == rain and states("sensor.openweathermap_rain_intensity") | int(default=0) > 7 %} 
+          {% elif type == rain and states("sensor.openweathermap_rain_intensity") | int(default=0) > 7 %}
             heavy_rain
-          {% else %} 
+          {% else %}
             clear
           {% endif %}

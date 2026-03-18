@@ -4,12 +4,12 @@
       icon: mdi:car-esp
       state: >
         {% set now = now().timestamp() %}
-        {% set min_unavailable_time = 5 %} 
+        {% set min_unavailable_time = 5 %}
 
-        {% set esp_sensors = states.binary_sensor 
-            | selectattr('entity_id', 'search', '_status')  
+        {% set esp_sensors = states.binary_sensor
+            | selectattr('entity_id', 'search', '_status')
             | selectattr('entity_id', 'in', integration_entities('esphome'))
-            | selectattr('state', 'eq', 'off')  
+            | selectattr('state', 'eq', 'off')
             | list %}
 
         {% set down_devices = namespace(all=[]) %}

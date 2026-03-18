@@ -6,7 +6,7 @@
       unit_of_measurement: "°C"
       availability: >
         {{ state_attr("climate.living", "current_temperature") is number }}
-    
+
     - name: "Condensatie Marge Keuken"
       unique_id: cond_marge_keuken
       unit_of_measurement: "°C"
@@ -22,7 +22,7 @@
         {% set Rsi = 0.13 %}
         {% set T_onderdorpel = (T_binnen - (T_binnen - T_buiten) * (Rsi * Uf)) - 2.5 %}
         {{ (T_onderdorpel - T_dauwpunt) | round(1) }}
-    
+
     - name: "Condensatie Marge Noor"
       unique_id: cond_marge_noor
       unit_of_measurement: "°C"
@@ -38,7 +38,7 @@
         {% set Rsi = 0.13 %}
         {% set T_onderdorpel = (T_binnen - (T_binnen - T_buiten) * (Rsi * Uf)) - 2.5 %}
         {{ (T_onderdorpel - T_dauwpunt) | round(1) }}
-    
+
     - name: "Condensatie Marge Slaapkamer"
       unique_id: cond_marge_slaapkamer
       unit_of_measurement: "°C"
@@ -54,7 +54,7 @@
         {% set Rsi = 0.13 %}
         {% set T_onderdorpel = (T_binnen - (T_binnen - T_buiten) * (Rsi * Uf)) - 2.5 %}
         {{ (T_onderdorpel - T_dauwpunt) | round(1) }}
-    
+
     - name: "Condensatie Marge Fien"
       unique_id: cond_marge_fien
       unit_of_measurement: "°C"
@@ -116,7 +116,7 @@
       unit_of_measurement: "DD"
       availability: >
         {{ has_value("sensor.gemiddelde_temperatuur_buiten_voorspelling_2") }}
-    
+
     - name: Regen komende 10 minuten
       unique_id: ecf2f88b-e69f-4f6e-963d-b412ef724452
       unit_of_measurement: mm
@@ -124,9 +124,9 @@
         {% set now_ts = now().timestamp() | int -%}
         {% set data = state_attr('sensor.neerslag_verwacht_zandhoven', 'precipitation_data') -%}
         {% set next = data | selectattr('timestamp', '>', now_ts) | list -%}
-        {% set total = next[:2] 
-            | map(attribute='precipitationrate') 
-            | map('float') 
-            | map('multiply', 1/12) 
+        {% set total = next[:2]
+            | map(attribute='precipitationrate')
+            | map('float')
+            | map('multiply', 1/12)
             | sum -%}
         {{ total | round(2) }}

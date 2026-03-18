@@ -4,7 +4,7 @@ mode: parallel
 triggers:
   - trigger: template
     value_template: >
-      {{ states("sensor.huidige_opbrengst") | int(0) < 100 and 
+      {{ states("sensor.huidige_opbrengst") | int(0) < 100 and
         states("sensor.buiten_lichtsterkte") | int(0) < 950 }}
     for:
       minutes: 5

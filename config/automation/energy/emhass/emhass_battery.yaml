@@ -23,13 +23,13 @@ conditions:
 variables:
   p_batt: >-
     {{ states("sensor.emhass_battery") }}
-  
+
   p_grid: >-
     {{ states("sensor.emhass_grid2") }}
-  
+
   # Huidige SOC van batterij
   soc: "{{ states('sensor.battery_state_of_charge') | float(0) }}"
-  
+
   # Bepaal EMHASS batterij modus met originele logica
   emhass_battery_mode: >-
     {% if p_batt == 'unavailable' or p_grid == 'unavailable' -%}
@@ -62,7 +62,7 @@ variables:
         Unknown
       {% endif -%}
     {% endif -%}
-  
+
   # Bereken power percentage voor GoodWe (alleen bij force charge/discharge)
   power_percentage: >-
     {% set abs_power = (p_batt | float) | abs -%}
@@ -116,7 +116,7 @@ actions:
               - action: script.turn_on
                 target:
                   entity_id: script.emhass_grid_follower
-      
+
       # FORCIBLE DISCHARGE
       - conditions:
           - condition: template
@@ -135,7 +135,7 @@ actions:
                   entity_id: select.goodwe_inverter_operation_mode
                 data:
                   option: "eco_discharge"
-          
+
           # Controleer of power wijziging nodig is
           - if:
               - condition: template
@@ -155,7 +155,7 @@ actions:
               - action: script.turn_on
                 target:
                   entity_id: script.emhass_grid_follower
-      
+
       # FOLLOW GRID / IDLE (general mode)
       - conditions:
           - condition: template
@@ -176,7 +176,7 @@ actions:
                   entity_id: number.goodwe_eco_mode_power
                 data:
                   value: 5
-    
+
     default:
       - action: logbook.log
         data:

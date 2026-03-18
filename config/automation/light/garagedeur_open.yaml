@@ -16,7 +16,7 @@ actions:
       - conditions:
           - condition: template
             value_template: >
-              {{  states('binary_sensor.garage_deur') == "off" and 
+              {{  states('binary_sensor.garage_deur') == "off" and
                   states("binary_sensor.garage_bezetting") == "off"  }}
         sequence:
           - action: light.turn_off
@@ -25,8 +25,8 @@ actions:
       - conditions:
           - condition: template
             value_template: >
-              {{  states('binary_sensor.garage_deur') == "off" and 
-                  states("binary_sensor.garage_bezetting") == "off" and 
+              {{  states('binary_sensor.garage_deur') == "off" and
+                  states("binary_sensor.garage_bezetting") == "off" and
                   states("light.garage") == "off"  }}
         sequence:
           - action: light.turn_off
@@ -35,8 +35,8 @@ actions:
       - conditions:
           - condition: template
             value_template: >
-              {{  states('binary_sensor.garage_deur') == "off" and 
-                  states("binary_sensor.garage_bezetting") == "on" and 
+              {{  states('binary_sensor.garage_deur') == "off" and
+                  states("binary_sensor.garage_bezetting") == "on" and
                   states("light.garage") == "off"  }}
         sequence:
           - action: light.turn_off

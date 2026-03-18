@@ -2,16 +2,16 @@
     - name: Afkoeling gewenst
       unique_id: 61efbf71-ab3f-4e70-8d0f-81eff1e49d46
       state: >
-        {{ (states('sensor.gemiddelde_temp_beneden') | float(0)) > (states('sensor.buiten_temperatuur') | float(0)) and 
+        {{ (states('sensor.gemiddelde_temp_beneden') | float(0)) > (states('sensor.buiten_temperatuur') | float(0)) and
             states('sensor.gemiddelde_temp_beneden') | float(0) > 25 }}
       icon: >
-        {% if (states('sensor.gemiddelde_temp_beneden') | float(0)) > (states('sensor.buiten_temperatuur') | float(0)) and 
+        {% if (states('sensor.gemiddelde_temp_beneden') | float(0)) > (states('sensor.buiten_temperatuur') | float(0)) and
             states('sensor.gemiddelde_temp_beneden') | float(0) > 25 %}
           mdi:fan
         {% else %}
           mdi:fan-off
         {% endif %}
-    
+
     - name: "Kans op Aanvriezen"
       unique_id: a562950c-c161-4617-ac9c-0eb5f6b0b745
       state: >
@@ -43,21 +43,21 @@
         {% set marge = states('sensor.condensatie_marge_keuken') | float(99) %}
         {{ marge < 1 }}
       device_class: moisture
-    
+
     - name: "Condensatie Alarm Noor"
       unique_id: cond_alarm_noor
       state: >
         {% set marge = states('sensor.condensatie_marge_noor') | float(99) %}
         {{ marge < 1 }}
       device_class: moisture
-    
+
     - name: "Condensatie Alarm Slaapkamer"
       unique_id: cond_alarm_slaapkamer
       state: >
         {% set marge = states('sensor.condensatie_marge_slaapkamer') | float(99) %}
         {{ marge < 1 }}
       device_class: moisture
-    
+
     - name: "Condensatie Alarm Fien"
       unique_id: cond_alarm_fien
       state: >
@@ -81,20 +81,20 @@
       unique_id: 8b0ef76e-b2b4-4215-b84b-a9807032b956
       icon: mdi:water-percent
       state: >
-        {{ states("sensor.badkamer_luchtvochtigheid_stats") | float(default=0) >= 7 | float(default=0)}}
+        {{ states("sensor.badkamer_luchtvochtigheid_stats") | float(default=0) >= 7 | float(default=0) }}
 
     - name: Bathroom humidity falling template
       unique_id: 4474709e-2bf0-49a1-9d8c-f294c4895194
       icon: mdi:water-percent
       state: >
-        {{ states("sensor.badkamer_luchtvochtigheid_stats") | float(default=0) <= -5 | float(default=0)}}
+        {{ states("sensor.badkamer_luchtvochtigheid_stats") | float(default=0) <= -5 | float(default=0) }}
     # - name: keuken_humidity_rising_template
     #   unique_id: 5b823bf5-57cb-43a2-b98c-5eb8809cc41e
     #   icon: mdi:water-percent
     #   state : >
-    #     {{ states("sensor.keuken_luchtvochtigheid_stats") | float(default=0) >= 7 | float(default=0)}}
+    #     {{ states("sensor.keuken_luchtvochtigheid_stats") | float(default=0) >= 7 | float(default=0) }}
     # - name: keuken_humidity_falling_template
     #   unique_id: 5c1b1e0d-4ed8-4d0f-99c1-04948d78e90e
     #   icon: mdi:water-percent
     #   state : >
-    #     {{ states("sensor.keuken_luchtvochtigheid_stats") | float(default=0) <= -5 | float(default=0)}}
+    #     {{ states("sensor.keuken_luchtvochtigheid_stats") | float(default=0) <= -5 | float(default=0) }}

@@ -51,8 +51,8 @@ emhass_mpc_models:
               {{  "true" if is_state('binary_sensor.warmtepompboiler_aan', "on") else "false" }},
               {{  "true" if is_state('binary_sensor.warmtepomp_aan', "on") else "false" }}],
             "soc_init": {{ states("sensor.battery_state_of_charge") | float(0) / 100 }},
-            "battery_minimum_state_of_charge": {{ 
-                states("sensor.soc_minimum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) > states("sensor.soc_minimum") | float(0)) 
+            "battery_minimum_state_of_charge": {{
+                states("sensor.soc_minimum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) > states("sensor.soc_minimum") | float(0))
                 else (states("sensor.battery_state_of_charge") | float(0) / 100) }},
             "battery_maximum_state_of_charge": {{
               states("sensor.soc_maximum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) < states("sensor.soc_maximum") | float(0))
@@ -70,7 +70,7 @@ emhass_mpc_models:
               {% endif -%},
             "outdoor_temperature_forecast": {{ (state_attr('sensor.kmi_interpolated_temperatures', 'list')) [:states('sensor.prediction_horizon')|int]  }}
           }
-          
+
     - delay: "00:00:03"
     # {{ state_attr("sensor.emhass_mpc", "mpc")
     #           | replace('"model_type": "load_forecast"',
@@ -126,8 +126,8 @@ emhass_mpc_models:
               {{  "true" if is_state('binary_sensor.warmtepompboiler_aan', "on") else "false" }},
               {{  "true" if is_state('binary_sensor.warmtepomp_aan', "on") else "false" }}],
             "soc_init": {{ states("sensor.battery_state_of_charge") | float(0) / 100 }},
-            "battery_minimum_state_of_charge": {{ 
-                states("sensor.soc_minimum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) > states("sensor.soc_minimum") | float(0)) 
+            "battery_minimum_state_of_charge": {{
+                states("sensor.soc_minimum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) > states("sensor.soc_minimum") | float(0))
                 else (states("sensor.battery_state_of_charge") | float(0) / 100) }},
             "battery_maximum_state_of_charge": {{
               states("sensor.soc_maximum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) < states("sensor.soc_maximum") | float(0))
@@ -195,8 +195,8 @@ emhass_mpc_models:
               {{  "true" if is_state('binary_sensor.warmtepompboiler_aan', "on") else "false" }},
               {{  "true" if is_state('binary_sensor.warmtepomp_aan', "on") else "false" }}],
             "soc_init": {{ states("sensor.battery_state_of_charge") | float(0) / 100 }},
-            "battery_minimum_state_of_charge": {{ 
-                states("sensor.soc_minimum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) > states("sensor.soc_minimum") | float(0)) 
+            "battery_minimum_state_of_charge": {{
+                states("sensor.soc_minimum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) > states("sensor.soc_minimum") | float(0))
                 else (states("sensor.battery_state_of_charge") | float(0) / 100) }},
             "battery_maximum_state_of_charge": {{
               states("sensor.soc_maximum") | float(0) if ((states("sensor.battery_state_of_charge") | float(0) / 100) < states("sensor.soc_maximum") | float(0))

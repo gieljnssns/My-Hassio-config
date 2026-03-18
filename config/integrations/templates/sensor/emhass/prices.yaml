@@ -51,13 +51,13 @@
             {% set ns.result = ns.result + [adjusted_price] * 3 -%}
           {% endfor -%}
           {% set prices = ns.result[current_time_index:] -%}
-            {{ prices | map('float') 
-                      | map('multiply', factor_A) 
-                      | map('add', factor_B) 
-                      | map('add', GSC) 
+            {{ prices | map('float')
+                      | map('multiply', factor_A)
+                      | map('add', factor_B)
+                      | map('add', GSC)
                       | map('add', WKC)
-                      | map('add', nettarief) 
-                      | map('add', heffing) 
+                      | map('add', nettarief)
+                      | map('add', heffing)
                       | map('add', accijns)
                       | map('multiply', VAT_scaling)
                       | map('multiply', 0.001)
@@ -103,9 +103,9 @@
             {% set ns.result = ns.result + [adjusted_price] * 3 -%}
           {% endfor -%}
           {% set prices = ns.result[current_time_index:] -%}
-            {{ prices | map('float') 
-                      | map('multiply', factor_C) 
-                      | map('add', factor_D) 
+            {{ prices | map('float')
+                      | map('multiply', factor_C)
+                      | map('add', factor_D)
                       | map('multiply', 0.001)
                       | map('round', 5) | list }}
 

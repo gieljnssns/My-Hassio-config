@@ -6,7 +6,7 @@ triggers:
     value_template: >
       {{  (is_state('binary_sensor.gang_voordeur_last_5_min', 'on')
           or is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on')) and
-          (is_state('binary_sensor.keuken_aqara_pir', 'on') 
+          (is_state('binary_sensor.keuken_aqara_pir', 'on')
           or is_state('binary_sensor.keuken_presence', 'on')
           or is_state('binary_sensor.keuken_pir', 'on')) }}
   # - trigger: template
@@ -50,5 +50,5 @@ actions:
       cache: false
       entity_id: media_player.mass_keuken
       message: |
-        {% set message =  states('sensor.welkom_2') %} 
+        {% set message =  states('sensor.welkom_2') %}
           {{message}}

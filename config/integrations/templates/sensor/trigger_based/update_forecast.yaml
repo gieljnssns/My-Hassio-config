@@ -17,9 +17,9 @@
       unit_of_measurement: "°C"
       state: >
         {% set forecast = hourly %}
-        {{ forecast["weather.home"].forecast[:24] 
-            | map(attribute='temperature') 
-            | average 
+        {{ forecast["weather.home"].forecast[:24]
+            | map(attribute='temperature')
+            | average
             | round(1) }}
 
     # - name: Max neerslag volgende 12u
@@ -37,8 +37,8 @@
       unit_of_measurement: "°C"
       state: >
         {% set forecast = hourly %}
-        {{ forecast["weather.home"].forecast[:12] 
-            | map(attribute='temperature') 
+        {{ forecast["weather.home"].forecast[:12]
+            | map(attribute='temperature')
             | max
             | round(1) }}
 
@@ -47,8 +47,8 @@
       unit_of_measurement: "°C"
       state: >
         {% set forecast = hourly %}
-        {{ forecast["weather.home"].forecast[:12] 
-            | map(attribute='temperature') 
+        {{ forecast["weather.home"].forecast[:12]
+            | map(attribute='temperature')
             | min
             | round(1) }}
 
@@ -58,11 +58,11 @@
       state: >
         {% set forecast = hourly["weather.home"].forecast %}
         {% set tomorrow = (now().date() + timedelta(days=1)) %}
-        {% set temps = forecast 
-            | selectattr('datetime','defined') 
-            | selectattr('temperature','defined') 
-            | selectattr('datetime','search', tomorrow.isoformat()) 
-            | map(attribute='temperature') 
+        {% set temps = forecast
+            | selectattr('datetime','defined')
+            | selectattr('temperature','defined')
+            | selectattr('datetime','search', tomorrow.isoformat())
+            | map(attribute='temperature')
             | list %}
         {{ temps | max if temps|count > 0 else none }}
 

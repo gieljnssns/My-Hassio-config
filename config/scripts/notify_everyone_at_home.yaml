@@ -2,9 +2,9 @@ notify_everyone_at_home:
   sequence:
     - repeat:
         for_each: >-
-          {{ expand("person.giel", "person.martine", "person.noor", "person.fien") 
-                    | selectattr("state", "eq", "home") 
-                    | map(attribute="entity_id") 
+          {{ expand("person.giel", "person.martine", "person.noor", "person.fien")
+                    | selectattr("state", "eq", "home")
+                    | map(attribute="entity_id")
                     | list }}
         sequence:
           - action: >

@@ -60,7 +60,7 @@
         {% set productie_state = states('sensor.electricity_meter_energieproductie') -%}
 
         {# Check of de primaire sensoren beschikbaar en geldig zijn #}
-        {% set primary_available = verbruik_state not in ['unavailable', 'unknown', 'none'] 
+        {% set primary_available = verbruik_state not in ['unavailable', 'unknown', 'none']
                                     and productie_state not in ['unavailable', 'unknown', 'none'] -%}
         {# Check of de sensoren recent zijn geupdate (binnen 10 seconden) #}
         {% set now_ts = now().timestamp() -%}
@@ -86,7 +86,7 @@
         {% set battery_power = states('sensor.battery_power') | float(0) -%}
         {% set solar_power = (states('sensor.huawei_active_power') | float(0)) + (states('sensor.solaredge_i1_ac_power') | float(0)) -%}
 
-        {# Bereken verbruik: Solar - Net + Batterij 
+        {# Bereken verbruik: Solar - Net + Batterij
            Net_power is NEGATIEF bij import, dus Solar - (-waarde) = Solar + waarde
            Net_power is POSITIEF bij export, dus Solar - (+waarde) = Solar - waarde
         #}
@@ -132,7 +132,7 @@
         {% set productie_state = states('sensor.electricity_meter_energieproductie') -%}
 
         {# Check of de primaire sensoren beschikbaar en geldig zijn #}
-        {% set primary_available = verbruik_state not in ['unavailable', 'unknown', 'none'] 
+        {% set primary_available = verbruik_state not in ['unavailable', 'unknown', 'none']
                                     and productie_state not in ['unavailable', 'unknown', 'none'] -%}
 
         {# Check of de sensoren recent zijn geupdate (binnen 10 seconden) #}
@@ -170,43 +170,43 @@
       unit_of_measurement: "W"
       device_class: power
       state: >
-        {{ (states("sensor.danszaal_luster_vermogen") | float(default=0) + 
-            states("sensor.zithoek_luster_vermogen") | float(default=0) + 
-            states("sensor.gang_boven_vermogen") | float(default=0) + 
+        {{ (states("sensor.danszaal_luster_vermogen") | float(default=0) +
+            states("sensor.zithoek_luster_vermogen") | float(default=0) +
+            states("sensor.gang_boven_vermogen") | float(default=0) +
             states("sensor.gang_hal_1_vermogen") | float(default=0) +
             states("sensor.gang_hal_2_vermogen") | float(default=0) +
-            states("sensor.slaapkamer_hoog_vermogen") | float(default=0) + 
-            states("sensor.keuken_inkom_vermogen") | float(default=0) + 
-            states("sensor.keuken_spots_vermogen") | float(default=0) + 
-            states("sensor.danszaal_spots_vermogen") | float(default=0) + 
-            states("sensor.wc_vermogen") | float(default=0) + 
-            states("sensor.garage_vermogen") | float(default=0) + 
-            states("sensor.garage_werkbank_vermogen") | float(default=0) + 
-            states("sensor.badkamer_hoog_vermogen") | float(default=0) + 
-            states("sensor.badkamer_pombak_vermogen") | float(default=0) + 
-            states("sensor.gang_beneden_vermogen") | float(default=0) + 
-            states("sensor.keuken_luster_vermogen") | float(default=0) + 
-            states("sensor.trap_vermogen") | float(default=0) + 
+            states("sensor.slaapkamer_hoog_vermogen") | float(default=0) +
+            states("sensor.keuken_inkom_vermogen") | float(default=0) +
+            states("sensor.keuken_spots_vermogen") | float(default=0) +
+            states("sensor.danszaal_spots_vermogen") | float(default=0) +
+            states("sensor.wc_vermogen") | float(default=0) +
+            states("sensor.garage_vermogen") | float(default=0) +
+            states("sensor.garage_werkbank_vermogen") | float(default=0) +
+            states("sensor.badkamer_hoog_vermogen") | float(default=0) +
+            states("sensor.badkamer_pombak_vermogen") | float(default=0) +
+            states("sensor.gang_beneden_vermogen") | float(default=0) +
+            states("sensor.keuken_luster_vermogen") | float(default=0) +
+            states("sensor.trap_vermogen") | float(default=0) +
             states("sensor.waskot_vermogen") | float(default=0) +
             states("sensor.paddeke_1_vermogen") | float(default=0) +
             states("sensor.paddeke_2_vermogen") | float(default=0) +
-            states("sensor.garage_buiten_1_vermogen") | float(default=0) + 
-            states("sensor.garage_buiten_2_vermogen") | float(default=0) + 
-            states("sensor.slaapkamer_fien_1_vermogen") | float(default=0) + 
-            states("sensor.slaapkamer_fien_2_vermogen") | float(default=0) + 
-            states("sensor.slaapkamer_fien_3_vermogen") | float(default=0) + 
-            states("sensor.slaapkamer_noor_1_vermogen") | float(default=0) + 
-            states("sensor.slaapkamer_noor_2_vermogen") | float(default=0) + 
-            states("sensor.slaapkamer_spot_vermogen") | float(default=0) + 
+            states("sensor.garage_buiten_1_vermogen") | float(default=0) +
+            states("sensor.garage_buiten_2_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_fien_1_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_fien_2_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_fien_3_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_noor_1_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_noor_2_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_spot_vermogen") | float(default=0) +
             states("sensor.zithoek_links_achter_vermogen") | float(default=0) +
-            states("sensor.zithoek_links_midden_vermogen") | float(default=0) + 
-            states("sensor.zithoek_links_voor_vermogen") | float(default=0) + 
-            states("sensor.zithoek_rechts_achter_vermogen") | float(default=0) + 
+            states("sensor.zithoek_links_midden_vermogen") | float(default=0) +
+            states("sensor.zithoek_links_voor_vermogen") | float(default=0) +
+            states("sensor.zithoek_rechts_achter_vermogen") | float(default=0) +
             states("sensor.kelder_vermogen") | float(default=0) +
-            states("sensor.zithoek_rechts_midden_vermogen") | float(default=0) + 
+            states("sensor.zithoek_rechts_midden_vermogen") | float(default=0) +
             states("sensor.welcome_1_vermogen") | float(default=0) +
-            states("sensor.welcome_2_vermogen") | float(default=0) + 
-            states("sensor.den_hof_spot_vermogen") | float(default=0) + 
+            states("sensor.welcome_2_vermogen") | float(default=0) +
+            states("sensor.den_hof_spot_vermogen") | float(default=0) +
             states("sensor.wled_fien_vermogen") | float(default=0) +
             states("sensor.wled_noor_vermogen") | float(default=0) +
             states("sensor.zithoek_rechts_voor_vermogen") | float(default=0)) | round (1)}}

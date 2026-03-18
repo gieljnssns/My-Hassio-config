@@ -51,7 +51,7 @@ actions:
       entity_id: input_text.best_heating_predictor
     data:
       value: "{{ best_today }}"
-  
+
   - repeat:
       for_each: "{{ errors.items() | list }}"
       sequence:
@@ -67,6 +67,6 @@ actions:
     data:
       title: "Dagelijkse Predictor Evaluatie"
       message: >
-        🏠 **Werkelijke branduren:** {{ actual | round(3) }} h  
-        🥇 **Beste vandaag:** {{ best_today }}  
+        🏠 **Werkelijke branduren:** {{ actual | round(3) }} h
+        🥇 **Beste vandaag:** {{ best_today }}
         📉 **Fout:** {{ best_error }} h

@@ -11,13 +11,13 @@ esphome_ignore_update:
     - alias: Ignore all ESPHome devices updates in sequence
       repeat:
         for_each: >-
-          {{ expand(integration_entities("esphome") 
+          {{ expand(integration_entities("esphome")
               | select('match','update.'))
-              | selectattr('attributes.in_progress','eq', false) 
+              | selectattr('attributes.in_progress','eq', false)
               | selectattr('state','eq','on')
-              | selectattr('attributes.latest_version','ne','attributes.skipped_version') 
+              | selectattr('attributes.latest_version','ne','attributes.skipped_version')
               | map(attribute='entity_id')
-              | list 
+              | list
             }}
         sequence:
           - action: update.skip
