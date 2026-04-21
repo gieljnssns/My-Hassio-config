@@ -1,3 +1,9 @@
+# "prod_price_forecast": {{
+#               (state_attr('sensor.ecopower_injectieprijzen', 'prijzen')[:states('sensor.prediction_horizon') | int(0)]) | tojson
+#               }},
+#             "load_cost_forecast": {{
+#               (state_attr('sensor.ecopower_afnameprijzen', 'prijzen')[:states('sensor.prediction_horizon') | int(0)]) | tojson
+#               }},
 emhass_mpc_models:
   alias: EMHASS mpc models
   mode: single
@@ -66,7 +72,7 @@ emhass_mpc_models:
               {% elif month == 3 or month == 9 -%}
                 5000
               {%- else -%}
-                3000
+                4000
               {% endif -%},
             "outdoor_temperature_forecast": {{ (state_attr('sensor.kmi_interpolated_temperatures', 'list')) [:states('sensor.prediction_horizon')|int]  }}
           }
@@ -141,7 +147,7 @@ emhass_mpc_models:
               {% elif month == 3 or month == 9 -%}
                 5000
               {%- else -%}
-                3000
+                4000
               {% endif -%},
             "outdoor_temperature_forecast": {{ (state_attr('sensor.kmi_interpolated_temperatures', 'list')) [:states('sensor.prediction_horizon')|int]  }}
           }
@@ -210,7 +216,7 @@ emhass_mpc_models:
               {% elif month == 3 or month == 9 -%}
                 5000
               {%- else -%}
-                3000
+                4000
               {% endif -%},
             "outdoor_temperature_forecast": {{ (state_attr('sensor.kmi_interpolated_temperatures', 'list')) [:states('sensor.prediction_horizon')|int]  }}
           }

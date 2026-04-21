@@ -14,6 +14,7 @@
   sensor:
     - name: Buiten temperatuur
       unique_id: e04b3353-a23c-41ee-9329-b5d3b2526ca6
+      state_class: measurement
       state: >
         {% set station = states("sensor.buiten_buiten_temperatuur") |float(0) -%}
         {% if states("sensor.poort_temperatuur") not in ["unavailable", "unknown"] -%}
@@ -64,6 +65,7 @@
   sensor:
     - name: Buiten lichtsterkte
       unique_id: 2668b502-27ec-4046-a4b7-c52444181fe1
+      state_class: measurement
       state: >
         {% set list = [ states("sensor.achtergevel_lichtsterkte") | float(0),
                         states("sensor.zonnetent_lichtsterkte") | float(0),
@@ -93,6 +95,7 @@
   sensor:
     - name: Temperatuur badkamer
       unique_id: b0459554-269b-436a-838c-3bfcaf48a0ba
+      state_class: measurement
       state: >
         {{ trigger.to_state.state }}
       unit_of_measurement: "°C"

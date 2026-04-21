@@ -7,7 +7,7 @@ substitutions:
 packages:
   wifi: !include common/wifi-airport.yaml
   device_base: !include common/device_base_new_style.yaml
-  
+
 switch:
   - platform: homeassistant
     id: extra
@@ -20,7 +20,6 @@ climate:
   - platform: thermostat
     name: "Sanitair extra"
     sensor: thermostaat
-    # default_target_temperature_low: 50 °C
     default_preset: "Sanitair extra"
     preset:
       - name: "Sanitair extra"
@@ -46,12 +45,12 @@ climate:
 #     id: masser
 one_wire:
   - platform: gpio
-    pin: 
+    pin:
       number: D1
     id: dallas
-  
+
   - platform: gpio
-    pin: 
+    pin:
       number: D2
     id: dallas2
     # 0xEC3C01D075637428
@@ -74,138 +73,48 @@ sensor:
     one_wire_id: dallas2
     id: heen
     filters:
-        - filter_out: nan
-    # on_raw_value:
-    #   then:
-    #     - if:
-    #         condition:
-    #           - sensor.in_range:
-    #               id: uptime_
-    #               above: 15
-    #           - lambda: |-
-    #               return isnan(id(heen).raw_state);
-    #         then:
-    #           - number.increment:
-    #               id: nans
-    #           - text.set:
-    #               id: nans_text
-    #               value: "Vloerverwarming heen"
+      - filter_out: nan
+
   - platform: dallas_temp
     address: 0x273C01D6075FEC28
     name: "Boiler uit"
     id: uit
     one_wire_id: dallas2
     filters:
-        - filter_out: nan
-    # on_raw_value:
-    #   then:
-    #     - if:
-    #         condition:
-    #           - sensor.in_range:
-    #               id: uptime_
-    #               above: 15
-    #           - lambda: |-
-    #               return isnan(id(uit).raw_state);
-    #         then:
-    #           - number.increment:
-    #               id: nans
-    #           - text.set:
-    #               id: nans_text
-    #               value: "Boiler uit"
-    #           # - homeassistant.service:
-    #           #     service: persistent_notification.create
-    #           #     data:
-    #           #       title: Bericht uit de kelder
-    #           #       message: Boiler uit is NaN
-    
+      - filter_out: nan
+
   - platform: dallas_temp
     address: 0xD03C01D607B86528
     name: "Boiler in"
     one_wire_id: dallas
     id: in
     filters:
-        - filter_out: nan
-    # on_raw_value:
-    #   then:
-    #     - if:
-    #         condition:
-    #           - sensor.in_range:
-    #               id: uptime_
-    #               above: 15
-    #           - lambda: |-
-    #               return isnan(id(in).raw_state);
-    #         then:
-    #           - number.increment:
-    #               id: nans
-    #           - text.set:
-    #               id: nans_text
-    #               value: "Boiler in"
+      - filter_out: nan
+
   - platform: dallas_temp
     address: 0x563C01D607E4C728
     name: "Vloerverwarming terug"
     id: terug
     one_wire_id: dallas2
     filters:
-        - filter_out: nan
-    # on_raw_value:
-    #   then:
-    #     - if:
-    #         condition:
-    #           - sensor.in_range:
-    #               id: uptime_
-    #               above: 15
-    #           - lambda: |-
-    #               return isnan(id(terug).raw_state);
-    #         then:
-    #           - number.increment:
-    #               id: nans
-    #           - text.set:
-    #               id: nans_text
-    #               value: "Vloerverwarming terug"
+      - filter_out: nan
+
   - platform: dallas_temp
     address: 0x423C01D075CD3928
     name: "Kelder"
     id: kelder
     one_wire_id: dallas
     filters:
-        - filter_out: nan
-    # on_raw_value:
-    #   then:
-    #     - if:
-    #         condition:  
-    #           - sensor.in_range:
-    #               id: uptime_
-    #               above: 15
-    #           - lambda: |-
-    #               return isnan(id(kelder).raw_state);
-    #         then:
-    #           - number.increment:
-    #               id: nans
-    #           - text.set:
-    #               id: nans_text
-    #               value: "Kelder"
+      - filter_out: nan
+
   - platform: dallas_temp
     address: 0x133C01D607F68D28
     name: "Thermostaat"
     id: thermostaat
     one_wire_id: dallas
     filters:
-        - filter_out: nan
-    # on_raw_value:
-    #   then:
-    #     - if:
-    #         condition:  
-    #           - sensor.in_range:
-    #               id: uptime_
-    #               above: 15
-    #           - lambda: |-
-    #               return isnan(id(thermostaat).raw_state);
-    #         then:
-    #           - number.increment:
-    #               id: nans
-    #           - text.set:
-    #               id: nans_text
-    #               value: "Thermostaat"
+      - filter_out: nan
+
     on_value_range:
       above: 55
       then:

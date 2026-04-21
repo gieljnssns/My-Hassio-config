@@ -2,6 +2,7 @@
     - name: "Ecopower Afnameprijzen"
       unique_id: 16ccc75e-d8ab-4b79-ad3a-af3d289b1724
       unit_of_measurement: "EUR/kWh"
+      state_class: measurement
       state: >
         {% set factor_A = 1.02 -%}
         {% set factor_B = 0.004 -%}
@@ -14,18 +15,16 @@
         {% set quarter_index = (now().minute // 5) -%}
         {% set current_hour = now().hour -%}
         {% set current_time_index = current_hour * 12 + quarter_index -%}
-        {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') |list ) -%}
-        {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') |list -%}
-
-        {% set all_prices = today_prices_data + tomorrow_prices_data  -%}
+        {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') | list) -%}
+        {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') | list -%}
+        {% set all_prices = today_prices_data + tomorrow_prices_data -%}
         {% set ns = namespace(result=[]) -%}
         {% for price in all_prices -%}
-          {% set adjusted_price = 0 if (price | float | abs) < 0.12 else price -%}
-          {% set ns.result = ns.result + [adjusted_price] * 3 -%}
+          {% set ns.result = ns.result + [price] * 3 -%}
         {% endfor -%}
         {% set prices = ns.result[current_time_index:] -%}
-
-          {{ (((prices[0] * factor_A + factor_B + GSC + WKC + nettarief + heffing + accijns) * VAT_scaling) / 1000) | round(5) }}
+        {% set calc = (((prices[0] * factor_A + factor_B + GSC + WKC + nettarief + heffing + accijns) * VAT_scaling) / 1000) | round(3) -%}
+        {{ 0 if calc < 0.005 else calc }}
 
       attributes:
         prijzen: >
@@ -37,78 +36,73 @@
           {% set heffing = 0.0019261 -%}
           {% set accijns = 0.04748 -%}
           {% set VAT_scaling = 1.06 -%}
-
           {% set quarter_index = (now().minute // 5) -%}
           {% set current_hour = now().hour -%}
           {% set current_time_index = current_hour * 12 + quarter_index -%}
-          {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') |list ) -%}
-          {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') |list -%}
-
-          {% set all_prices = today_prices_data + tomorrow_prices_data  -%}
+          {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') | list) -%}
+          {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') | list -%}
+          {% set all_prices = today_prices_data + tomorrow_prices_data -%}
           {% set ns = namespace(result=[]) -%}
           {% for price in all_prices -%}
-            {% set adjusted_price = 0 if (price | float | abs) < 0.12 else price -%}
-            {% set ns.result = ns.result + [adjusted_price] * 3 -%}
+            {% set ns.result = ns.result + [price] * 3 -%}
           {% endfor -%}
           {% set prices = ns.result[current_time_index:] -%}
-            {{ prices | map('float')
-                      | map('multiply', factor_A)
-                      | map('add', factor_B)
-                      | map('add', GSC)
-                      | map('add', WKC)
-                      | map('add', nettarief)
-                      | map('add', heffing)
-                      | map('add', accijns)
-                      | map('multiply', VAT_scaling)
-                      | map('multiply', 0.001)
-                      | map('round', 5) | list }}
+          {% set ns2 = namespace(final=[]) -%}
+          {% for p in prices -%}
+            {% set calc = (((p * factor_A + factor_B + GSC + WKC + nettarief + heffing + accijns) * VAT_scaling) * 0.001) | round(3) -%}
+            {% set final = 0 if calc < 0.005 else calc -%}
+            {% set ns2.final = ns2.final + [final] -%}
+          {% endfor -%}
+          {{ ns2.final }}
 
     - name: "Ecopower Injectieprijzen"
       unique_id: 98d961f2-497a-440a-865b-bf2fe1897218
       unit_of_measurement: "EUR/kWh"
+      state_class: measurement
       state: >
         {% set factor_C = 0.98 -%}
         {% set factor_D = -0.015 -%}
         {% set quarter_index = (now().minute // 5) -%}
         {% set current_hour = now().hour -%}
         {% set current_time_index = current_hour * 12 + quarter_index -%}
-        {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') |list ) -%}
-        {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') |list -%}
-
-        {% set all_prices = today_prices_data + tomorrow_prices_data  -%}
+        {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') | list) -%}
+        {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') | list -%}
+        {% set all_prices = today_prices_data + tomorrow_prices_data -%}
         {% set ns = namespace(result=[]) -%}
         {% for price in all_prices -%}
-          {% set adjusted_price = 0 if (price | float | abs) < 0.12 else price -%}
-          {% set ns.result = ns.result + [adjusted_price] * 3 -%}
+          {% set ns.result = ns.result + [price] * 3 -%}
         {% endfor -%}
         {% set prices = ns.result[current_time_index:] -%}
-
-          {{ ((prices[0] * factor_C + factor_D) / 1000) | round(5) }}
+        {% set calc = ((prices[0] * factor_C + factor_D) / 1000) | round(3) -%}
+        {{ 0 if (calc | abs) <= 0.0005 else calc }}
 
       attributes:
         prijzen: >
           {% set factor_C = 0.98 -%}
           {% set factor_D = -0.015 -%}
-
           {% set quarter_index = (now().minute // 5) -%}
           {% set current_hour = now().hour -%}
           {% set current_time_index = current_hour * 12 + quarter_index -%}
-          {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') |list ) -%}
-          {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') |list -%}
-
-          {% set all_prices = today_prices_data + tomorrow_prices_data  -%}
+          {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') | list) -%}
+          {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') | list -%}
+          {% set all_prices = today_prices_data + tomorrow_prices_data -%}
           {% set ns = namespace(result=[]) -%}
           {% for price in all_prices -%}
-            {% set adjusted_price = 0 if (price | float | abs) < 0.12 else price -%}
-            {% set ns.result = ns.result + [adjusted_price] * 3 -%}
+            {% set ns.result = ns.result + [price] * 3 -%}
           {% endfor -%}
           {% set prices = ns.result[current_time_index:] -%}
-            {{ prices | map('float')
-                      | map('multiply', factor_C)
-                      | map('add', factor_D)
-                      | map('multiply', 0.001)
-                      | map('round', 5) | list }}
+          {% set ns2 = namespace(final=[]) -%}
+          {% for p in prices -%}
+            {% set calc = ((p * factor_C + factor_D) * 0.001) | round(3) -%}
+            
+            {% set final = 0 if (calc | abs) <= 0.005 else calc -%}
+            {% set ns2.final = ns2.final + [final] -%}
+          {% endfor -%}
+          {{ ns2.final }}
 
+# {% set final = 0 if (calc | abs) <= 0.005 else calc -%}
+# {% set final = 0 if calc < 0.005 else calc -%}
+# {{ 0 if calc < 0.005 else calc }}
 # - sensor:
 #     - name: "Ecopower Afnameprijzen"
 #       unique_id: 16ccc75e-d8ab-4b79-ad3a-af3d289b1724

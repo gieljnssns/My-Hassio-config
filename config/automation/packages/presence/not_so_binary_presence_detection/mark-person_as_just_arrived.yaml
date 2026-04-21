@@ -124,16 +124,6 @@ conditions:
           {{ states('input_select.fien_status_dropdown') is not in ['Thuis', "Juist Aangekomen"] }}
         {% endif %}
 actions:
-  - action: >
-      {% if trigger.id == 'giel' %}
-        script.request_gphone_update
-      {% elif trigger.id == 'martine' %}
-        script.request_mphone_update
-      {% elif trigger.id == 'noor' %}
-        script.request_nphone_update
-      {% elif trigger.id == 'fien' %}
-        script.request_fphone_update
-      {% endif %}
   - action: input_select.select_option
     data_template:
       entity_id: >
@@ -147,6 +137,16 @@ actions:
           input_select.fien_status_dropdown
         {% endif %}
       option: Juist Aangekomen
+  - action: >
+      {% if trigger.id == 'giel' %}
+        script.request_gphone_update
+      {% elif trigger.id == 'martine' %}
+        script.request_mphone_update
+      {% elif trigger.id == 'noor' %}
+        script.request_nphone_update
+      {% elif trigger.id == 'fien' %}
+        script.request_fphone_update
+      {% endif %}
   # - condition: template
   #   value_template: >
   #     {% if trigger.id == 'giel' %}

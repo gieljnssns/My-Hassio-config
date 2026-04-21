@@ -68,20 +68,20 @@ actions:
 
           {{time}},{{dd}},{{solar}},{{hour}},{{buiten_gisteren_mean}},{{beneden_gisteren_mean}},{{max_setpoint}}
 
-  - action: notify.send_message
-    target:
-      entity_id: notify.file
-    data:
-      message: >
-        {% set solaredge = solar_stats.statistics["sensor.solaredge_energy"][-1].change | float(0) -%}
-        {% set huawei = solar_stats.statistics["sensor.huawei_energy"][-1].change | float(0) -%}
-        {% set buiten_gisteren_mean = temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2) -%}
-        {% set beneden_gisteren_mean = temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2) -%}
+  # - action: notify.send_message
+  #   target:
+  #     entity_id: notify.file
+  #   data:
+  #     message: >
+  #       {% set solaredge = solar_stats.statistics["sensor.solaredge_energy"][-1].change | float(0) -%}
+  #       {% set huawei = solar_stats.statistics["sensor.huawei_energy"][-1].change | float(0) -%}
+  #       {% set buiten_gisteren_mean = temp_stats.statistics["sensor.buiten_temperatuur"][0].mean | float(0) | round(2) -%}
+  #       {% set beneden_gisteren_mean = temp_stats.statistics["sensor.benedentemperatuur_gefilterd"][0].mean | float(0) | round(2) -%}
 
-        {% set dd = states('sensor.degree_day_daily') |float -%}
-        {% set hour = states('sensor.branduren_warmtepomp_vandaag') |float | round(2) -%}
-        {% set solar = (solaredge + huawei) | round(3) -%}
-        {% set time = now() -%}
-        {% set max_setpoint = 21 -%}
+  #       {% set dd = states('sensor.degree_day_daily') |float -%}
+  #       {% set hour = states('sensor.branduren_warmtepomp_vandaag') |float | round(2) -%}
+  #       {% set solar = (solaredge + huawei) | round(3) -%}
+  #       {% set time = now() -%}
+  #       {% set max_setpoint = 21 -%}
 
-          {{time}},{{dd}},{{solar}},{{hour}},{{buiten_gisteren_mean}},{{beneden_gisteren_mean}},{{max_setpoint}}
+  #         {{time}},{{dd}},{{solar}},{{hour}},{{buiten_gisteren_mean}},{{beneden_gisteren_mean}},{{max_setpoint}}

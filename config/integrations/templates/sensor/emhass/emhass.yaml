@@ -20,22 +20,22 @@
             states('sensor.ecopower_injectieprijzen') not in ('unknown', 'unavailable', 'None') and
             states('sensor.pv_power_forecast_list_interpolated') not in ('unknown', 'unavailable', 'None') }}
 
-    - name: Huidig verbruik zonder wp
-      unique_id: 664ab9ff-3875-4a45-b53a-685b7a8f7f96
-      unit_of_measurement: "W"
-      device_class: power
-      state: >
-        {% set use = (states("sensor.huidig_verbruik") | float(default=0) -
-                      states("sensor.wasmachien_vermogen") | float(default=0) -
-                      states("sensor.droogkast_vermogen") | float(default=0) -
-                      states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
-                      states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
-                      states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) -%}
-        {% if use > 200 -%}
-            {{ use }}
-        {% else  -%}
-            {{ 200 | float(default=0) }}
-        {% endif -%}
+    # - name: Huidig verbruik zonder wp
+    #   unique_id: 664ab9ff-3875-4a45-b53a-685b7a8f7f96
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   state: >
+    #     {% set use = (states("sensor.huidig_verbruik") | float(default=0) -
+    #                   states("sensor.wasmachien_vermogen") | float(default=0) -
+    #                   states("sensor.droogkast_vermogen") | float(default=0) -
+    #                   states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
+    #                   states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
+    #                   states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) -%}
+    #     {% if use > 200 -%}
+    #         {{ use }}
+    #     {% else  -%}
+    #         {{ 200 | float(default=0) }}
+    #     {% endif -%}
 
     - name: Prediction horizon span
       unique_id: 4413a66d-72e7-498b-9a9d-56eb43907fae
@@ -49,7 +49,7 @@
       state: >
         {% from 'easy_time.jinja' import count_the_days -%}
         {% set days = count_the_days("2024-08-01 00:00:00") | int(0) -%}
-        {{ (days * -1) - 1 }}
+        {{ (((days * -1) - 1), 725) | min }}
 
     - name: "Battery P Charge Max"
       unique_id: 368202ee-72a6-47e2-aad2-9c3570cb825f

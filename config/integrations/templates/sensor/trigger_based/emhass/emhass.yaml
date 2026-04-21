@@ -151,6 +151,7 @@
     - name: Emhass cost
       unique_id: dfd183d6-d8da-46e8-962c-b980e54e84d0
       unit_of_measurement: "EUR/kWh"
+      state_class: measurement
       state: >
         {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
         {{ states('sensor.' + best_model + '_unit_load_cost') }}
@@ -160,6 +161,7 @@
     - name: Emhass price
       unique_id: 16995e34-99e3-4c59-b2d0-489011ce6698
       unit_of_measurement: "EUR/kWh"
+      state_class: measurement
       state: >
         {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
         {{ states('sensor.' + best_model + '_unit_prod_price') }}
@@ -318,3 +320,72 @@
       state_class: measurement
       state: >
         {{ trigger.to_state.state }}
+
+- trigger:
+    - trigger: time_pattern
+      seconds: "/2"
+  sensor:
+    - name: Huidig verbruik
+      unique_id: 88576813-0ac7-4deb-9b6d-15bb99a08752
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% set verbruik_state = states('sensor.electricity_meter_energieverbruik') -%}
+        {% set productie_state = states('sensor.electricity_meter_energieproductie') -%}
+
+        {# Check of de primaire sensoren beschikbaar en geldig zijn #}
+        {% set primary_available = verbruik_state not in ['unavailable', 'unknown', 'none']
+                                    and productie_state not in ['unavailable', 'unknown', 'none'] -%}
+        {# Check of de sensoren recent zijn geupdate (binnen 10 seconden) #}
+        {% set now_ts = now().timestamp() -%}
+        {% set verbruik_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieverbruik.last_updated, 0)) < 10 -%}
+        {% set productie_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieproductie.last_updated, 0)) < 10 -%}
+        {% set primary_fresh = verbruik_updated and productie_updated -%}
+
+        {% if primary_available and primary_fresh -%}
+          {# Gebruik primaire sensoren #}
+          {% set verbruik = verbruik_state | float(0) -%}
+          {% set productie = productie_state | float(0) -%}
+          {% set net_power = ((productie - verbruik) * 1000) | round(0) -%}
+        {% else -%}
+          {# Fallback naar meter_active_power_total (IS AL IN WATT, negatief = import) #}
+          {% set meter_power_state = states('sensor.meter_active_power_total') -%}
+          {% if meter_power_state not in ['unavailable', 'unknown', 'none'] -%}
+            {% set net_power = meter_power_state | float(0) -%}
+          {% else -%}
+            {% set net_power = 0 -%}
+          {% endif -%}
+        {% endif -%}
+
+        {% set battery_power = states('sensor.battery_power') | float(0) -%}
+        {% set solar_power = (states('sensor.huawei_active_power') | float(0)) + (states('sensor.solaredge_i1_ac_power') | float(0)) -%}
+
+        {# Bereken verbruik: Solar - Net + Batterij
+           Net_power is NEGATIEF bij import, dus Solar - (-waarde) = Solar + waarde
+           Net_power is POSITIEF bij export, dus Solar - (+waarde) = Solar - waarde
+        #}
+        {% set consumption = solar_power - net_power + battery_power -%}
+
+        {# Minimum 150W verbruik #}
+        {{ [150, consumption] | max | round(0) }}
+      availability: >
+        {% set meter_available = states('sensor.meter_active_power_total') not in ['unavailable', 'unknown', 'none'] -%}
+        {% set primary_available = states('sensor.electricity_meter_energieverbruik') not in ['unavailable', 'unknown', 'none'] -%}
+        {{ meter_available or primary_available }}
+
+    - name: Huidig verbruik zonder wp
+      unique_id: 664ab9ff-3875-4a45-b53a-685b7a8f7f96
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% set use = (states("sensor.huidig_verbruik") | float(default=0) -
+                      states("sensor.wasmachien_vermogen") | float(default=0) -
+                      states("sensor.droogkast_vermogen") | float(default=0) -
+                      states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
+                      states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
+                      states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) -%}
+        {% if use > 150 -%}
+            {{ use }}
+        {% else  -%}
+            {{ 150 | float(default=0) }}
+        {% endif -%}
