@@ -23,7 +23,11 @@ from .const import (
     CONF_FAILOVER_WORKSPACE_SLUG,
     CONF_FAILOVER_THREAD_SLUG,
     CONF_ENABLE_HEALTH_CHECK,
+    CONF_HEALTH_CHECK_TIMEOUT,
+    CONF_CHAT_TIMEOUT,
     DEFAULT_ENABLE_HEALTH_CHECK,
+    DEFAULT_HEALTH_CHECK_TIMEOUT,
+    DEFAULT_CHAT_TIMEOUT,
     DOMAIN,
 )
 from .helpers import AnythingLLMClient, get_anythingllm_client
@@ -31,7 +35,7 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CONVERSATION]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CONVERSATION]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type AnythingLLMConfigEntry = ConfigEntry[AnythingLLMClient]
@@ -60,12 +64,18 @@ async def async_setup_entry(
             failover_workspace_slug=entry.data.get(CONF_FAILOVER_WORKSPACE_SLUG),
             failover_thread_slug=entry.options.get(CONF_FAILOVER_THREAD_SLUG),
             enable_health_check=entry.data.get(CONF_ENABLE_HEALTH_CHECK, DEFAULT_ENABLE_HEALTH_CHECK),
+            health_check_timeout=float(entry.data.get(CONF_HEALTH_CHECK_TIMEOUT, DEFAULT_HEALTH_CHECK_TIMEOUT)),
+            chat_timeout=float(entry.data.get(CONF_CHAT_TIMEOUT, DEFAULT_CHAT_TIMEOUT)),
         )
     except Exception as err:
         _LOGGER.error("Failed to connect to AnythingLLM: %s", err)
         raise ConfigEntryNotReady(err) from err
 
     entry.runtime_data = client
+
+    # Start the background health monitor so it never blocks a voice request.
+    client.start_health_monitor()
+    entry.async_on_unload(client.stop_health_monitor)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))

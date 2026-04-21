@@ -10,7 +10,7 @@ from homeassistant.helpers import config_validation as cv
 
 LOGGER: Logger = getLogger(__package__)
 
-MIN_HA_VERSION = "2025.9.0"
+MIN_HA_VERSION = "2025.12.0"
 
 DOMAIN = "battery_notes"
 NAME = "Battery Notes"
@@ -29,6 +29,7 @@ FALLBACK_SCHEMA_URL = "https://raw.githubusercontent.com/andrew-codechimp/HA-Bat
 CONF_SOURCE_ENTITY_ID = "source_entity_id"
 CONF_BATTERY_TYPE = "battery_type"
 CONF_BATTERY_QUANTITY = "battery_quantity"
+CONF_NOTE = "note"
 CONF_BATTERY_LOW_THRESHOLD = "battery_low_threshold"
 CONF_SENSORS = "sensors"
 CONF_ENABLE_AUTODISCOVERY = "enable_autodiscovery"
@@ -79,6 +80,7 @@ ATTR_SOURCE_ENTITY_ID = "source_entity_id"
 ATTR_REMOVE = "remove"
 ATTR_BATTERY_QUANTITY = "battery_quantity"
 ATTR_BATTERY_TYPE = "battery_type"
+ATTR_NOTE = "note"
 ATTR_BATTERY_TYPE_AND_QUANTITY = "battery_type_and_quantity"
 ATTR_BATTERY_LAST_REPLACED = "battery_last_replaced"
 ATTR_BATTERY_LOW = "battery_low"

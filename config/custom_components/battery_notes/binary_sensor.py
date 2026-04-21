@@ -52,11 +52,9 @@ from homeassistant.helpers.template import (
     Template,
     TemplateStateFromEntityId,
 )
+from homeassistant.util import dt as dt_util
 
-from .common import (
-    utcnow_no_timezone,
-    validate_is_float,
-)
+from .common import validate_is_float
 from .const import (
     ATTR_BATTERY_LAST_REPLACED,
     ATTR_BATTERY_LOW_THRESHOLD,
@@ -65,6 +63,7 @@ from .const import (
     ATTR_BATTERY_TYPE_AND_QUANTITY,
     ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
+    ATTR_NOTE,
     ATTR_SOURCE_ENTITY_ID,
     CONF_SOURCE_ENTITY_ID,
     DOMAIN,
@@ -231,6 +230,7 @@ class BatteryNotesBatteryLowBaseSensor(BatteryNotesEntity, BinarySensorEntity):
             ATTR_BATTERY_QUANTITY,
             ATTR_BATTERY_TYPE,
             ATTR_BATTERY_TYPE_AND_QUANTITY,
+            ATTR_NOTE,
             ATTR_BATTERY_LAST_REPLACED,
             ATTR_DEVICE_ID,
             ATTR_SOURCE_ENTITY_ID,
@@ -248,6 +248,7 @@ class BatteryNotesBatteryLowBaseSensor(BatteryNotesEntity, BinarySensorEntity):
             ATTR_BATTERY_QUANTITY: self.coordinator.battery_quantity,
             ATTR_BATTERY_TYPE: self.coordinator.battery_type,
             ATTR_BATTERY_TYPE_AND_QUANTITY: self.coordinator.battery_type_and_quantity,
+            ATTR_NOTE: self.coordinator.battery_note,
         }
 
         if self.enable_replaced:
@@ -607,7 +608,7 @@ class BatteryNotesBatteryBinaryLowSensor(BatteryNotesBatteryLowBaseSensor):
             self.async_write_ha_state()
             return
 
-        self.coordinator.last_reported = utcnow_no_timezone()
+        self.coordinator.last_reported = dt_util.utcnow()
         self.coordinator.battery_low_binary_state = (
             wrapped_battery_low_state.state == "on"
         )

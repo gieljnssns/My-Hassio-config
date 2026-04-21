@@ -1,0 +1,141 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Profile Setup",
+        "description": "Create a new agent profile with a unique name and personality.",
+        "data": {
+          "profile_name": "Profile Name",
+          "server_type": "Server Type"
+        }
+      },
+      "server": {
+        "title": "Server Configuration",
+        "description": "Configure your inference server URL and MCP server port.",
+        "data": {
+          "lmstudio_url": "Server URL",
+          "api_key": "API Key",
+          "mcp_port": "MCP Server Port",
+          "openclaw_host": "Gateway Host",
+          "openclaw_port": "Gateway Port",
+          "openclaw_token": "Gateway Token",
+          "openclaw_use_ssl": "Use SSL/TLS"
+        }
+      },
+      "openclaw_pairing": {
+        "title": "OpenClaw Device Pairing",
+        "description": "Your device needs to be approved on the OpenClaw server.\n\nApprove it by running `openclaw devices approve` or using the OpenClaw Control UI, then click Submit.\n\nDevice ID: {device_id}"
+      },
+      "model": {
+        "title": "Model & Prompts",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "Model Name",
+          "system_prompt": "System Prompt",
+          "technical_prompt": "Technical Instructions"
+        }
+      },
+      "advanced": {
+        "title": "Advanced Settings",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "Temperature",
+          "max_tokens": "Max Response Tokens",
+          "max_history": "Max History Messages",
+          "max_iterations": "Max Tool Iterations",
+          "control_home_assistant": "Control Home Assistant",
+          "response_mode": "Response Mode",
+          "follow_up_phrases": "Follow-up Phrases",
+          "end_words": "End Conversation Words",
+          "clean_responses": "Clean Responses for Voice Output",
+          "timeout": "Response Time Out",
+          "debug_mode": "Debug Mode",
+          "ollama_keep_alive": "Ollama Keep Alive",
+          "ollama_num_ctx": "Ollama Context Window",
+          "openclaw_session_key": "Session Key"
+        }
+      },
+      "mcp_server": {
+        "title": "Shared MCP Server Settings",
+        "description": "⚠️ These settings affect ALL profiles. Changes here will impact every MCP Assist conversation agent.",
+        "data": {
+          "mcp_port": "MCP Server Port",
+          "search_provider": "Web Search",
+          "brave_api_key": "Brave Search API Key",
+          "allowed_ips": "Additional Allowed IPs/Ranges",
+          "enable_gap_filling": "Enable Smart Entity Index"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the inference server. Make sure it's running and accessible.",
+      "no_models": "No models loaded on the server. Please load a model first.",
+      "invalid_model": "The specified model is not available on the server.",
+      "invalid_port": "Port must be between 1024 and 65535.",
+      "invalid_ip": "Invalid IP address or CIDR range format. Use comma-separated values like: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "Profile name is required.",
+      "invalid_json": "Invalid JSON format. Please check your MCP servers configuration.",
+      "invalid_api_key": "Invalid API key. Please check and try again.",
+      "auth_failed": "Authentication failed. Please verify your API key.",
+      "unknown": "An unknown error occurred.",
+      "openclaw_not_paired": "Device not yet approved on the OpenClaw server. Please approve it and try again.",
+      "openclaw_connection_failed": "Could not connect to the OpenClaw gateway. Check the host, port, and token."
+    },
+    "abort": {
+      "already_configured": "A profile with this name already exists. Please choose a different name."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Profile Settings",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "Profile Name",
+          "lmstudio_url": "Server URL",
+          "api_key": "API Key",
+          "model_name": "Model Name",
+          "system_prompt": "System Prompt",
+          "technical_prompt": "Technical Instructions",
+          "temperature": "Temperature",
+          "max_tokens": "Max Response Tokens",
+          "max_history": "Max History Messages",
+          "max_iterations": "Max Tool Iterations",
+          "control_home_assistant": "Control Home Assistant",
+          "response_mode": "Response Mode",
+          "follow_up_phrases": "Follow-up Phrases",
+          "end_words": "End Conversation Words",
+          "clean_responses": "Clean Responses for Voice Output",
+          "timeout": "Response Time Out",
+          "debug_mode": "Debug Mode",
+          "ollama_keep_alive": "Ollama Keep Alive",
+          "ollama_num_ctx": "Ollama Context Window",
+          "openclaw_host": "Gateway Host",
+          "openclaw_port": "Gateway Port",
+          "openclaw_token": "Gateway Token",
+          "openclaw_use_ssl": "Use SSL/TLS",
+          "openclaw_session_key": "Session Key"
+        }
+      },
+      "mcp_server": {
+        "title": "Shared MCP Server Settings",
+        "description": "⚠️ These settings are shared across ALL profiles",
+        "data": {
+          "mcp_port": "MCP Server Port",
+          "search_provider": "Web Search",
+          "brave_api_key": "Brave Search API Key",
+          "allowed_ips": "Additional Allowed IPs/Ranges",
+          "enable_gap_filling": "Enable Smart Entity Index",
+          "max_entities_per_discovery": "Max Entities Per Discovery (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

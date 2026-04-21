@@ -1,13 +1,16 @@
 """ This module manages the lock feature of the Versatile Thermostat integration. """
 import logging
+from datetime import timedelta
 from .log_collector import get_vtherm_logger
 from typing import Any
 
 from homeassistant.core import (
     HomeAssistant,
+    callback,
 )
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.event import async_call_later
 
 from .const import *  # pylint: disable=wildcard-import, unused-wildcard-import
 from .commons_type import ConfigData
@@ -26,6 +29,8 @@ class FeatureLockManager(BaseFeatureManager):
         self._lock_automations: bool = True
         self._lock_code: str | None = None
         self._is_locked: bool = False
+        self._auto_relock_sec: int = 30
+        self._cancel_auto_relock = None
 
     @overrides
     def post_init(self, entry_infos: ConfigData):
@@ -33,6 +38,7 @@ class FeatureLockManager(BaseFeatureManager):
         self._lock_users = entry_infos.get(CONF_LOCK_USERS, True)
         self._lock_automations = entry_infos.get(CONF_LOCK_AUTOMATIONS, True)
         self._lock_code = entry_infos.get(CONF_LOCK_CODE)
+        self._auto_relock_sec = int(entry_infos.get(CONF_AUTO_RELOCK_SEC, 30) or 0)
         self._is_configured = self._lock_users or self._lock_automations
 
     @overrides
@@ -54,6 +60,11 @@ class FeatureLockManager(BaseFeatureManager):
     def is_locked(self) -> bool:
         """Return True if the thermostat is locked."""
         return self._is_locked
+
+    @property
+    def is_detected(self) -> bool:
+        """Return the overall state of the feature manager based on failure states"""
+        return self.is_locked
 
     def check_is_locked(self, function_name: str) -> bool:
         """Check if the thermostat is locked."""
@@ -85,10 +96,35 @@ class FeatureLockManager(BaseFeatureManager):
     def change_lock_state(self, locked: bool, code: str | None = None) -> None:
         """Set the internal lock state."""
         if self._validate_lock_code(code):
+            if self._cancel_auto_relock:
+                self._cancel_auto_relock()
+                self._cancel_auto_relock = None
             self._is_locked = locked
             _LOGGER.info("%s - Lock state set to %s", self, locked)
+            if not locked and self._auto_relock_sec > 0:
+                self._cancel_auto_relock = async_call_later(
+                    self.hass,
+                    timedelta(seconds=self._auto_relock_sec),
+                    self._do_auto_relock,
+                )
+                _LOGGER.info(
+                    "%s - Auto-relock scheduled in %s seconds",
+                    self,
+                    self._auto_relock_sec,
+                )
             return True
         return False
+
+    @callback
+    def _do_auto_relock(self, _now) -> None:
+        """Callback triggered by the auto-relock timer."""
+        self._cancel_auto_relock = None
+        self._is_locked = True
+        _LOGGER.info(
+            "%s - Auto-relock triggered after %s seconds", self, self._auto_relock_sec
+        )
+        self._vtherm.update_custom_attributes()
+        self._vtherm.async_write_ha_state()
 
     @property
     def has_lock_settings_enabled(self) -> bool:
@@ -110,6 +146,7 @@ class FeatureLockManager(BaseFeatureManager):
                         "is_locked": self._is_locked,
                         "lock_users": self._lock_users,
                         "lock_automations": self._lock_automations,
-                        "lock_code": bool(self._lock_code)
+                        "lock_code": bool(self._lock_code),
+                        "auto_relock_sec": self._auto_relock_sec,
                     }
                 })

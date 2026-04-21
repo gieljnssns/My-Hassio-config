@@ -72,6 +72,7 @@ from .feature_auto_start_stop_manager import FeatureAutoStartStopManager
 from .feature_lock_manager import FeatureLockManager
 from .feature_timed_preset_manager import FeatureTimedPresetManager
 from .feature_heating_failure_detection_manager import FeatureHeatingFailureDetectionManager
+from .feature_repair_incorrect_state_manager import FeatureRepairIncorrectStateManager
 from .state_manager import StateManager
 from .vtherm_state import VThermState
 from .vtherm_preset import VThermPreset, HIDDEN_PRESETS, PRESET_AC_SUFFIX
@@ -214,6 +215,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         self._lock_manager: FeatureLockManager = FeatureLockManager(self, hass)
         self._timed_preset_manager: FeatureTimedPresetManager = FeatureTimedPresetManager(self, hass)
         self._heating_failure_detection_manager: FeatureHeatingFailureDetectionManager = FeatureHeatingFailureDetectionManager(self, hass)
+        self._repair_incorrect_state_manager: FeatureRepairIncorrectStateManager = FeatureRepairIncorrectStateManager(self, hass)
 
         self.register_manager(self._presence_manager)
         self.register_manager(self._power_manager)
@@ -223,6 +225,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         self.register_manager(self._lock_manager)
         self.register_manager(self._timed_preset_manager)
         self.register_manager(self._heating_failure_detection_manager)
+        self.register_manager(self._repair_incorrect_state_manager)
 
         self._cancel_recalculate_later: Callable[[], None] | None = None
 
@@ -996,6 +999,11 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         return self._heating_failure_detection_manager
 
     @property
+    def repair_incorrect_state_manager(self) -> FeatureRepairIncorrectStateManager:
+        """Get the repair incorrect state manager"""
+        return self._repair_incorrect_state_manager
+
+    @property
     def current_state(self) -> VThermState | None:
         """Get the current state"""
         return self._state_manager.current_state
@@ -1226,6 +1234,11 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         """Returns the activable underlying entities for controlling
          the central boiler"""
         return self.underlying_entities
+
+    @property
+    def all_underlying_entities(self) -> list | None:
+        """Returns all underlying entities for controling the central boiler"""
+        return self.activable_underlying_entities
 
     def find_underlying_by_entity_id(self, entity_id: str) -> Entity | None:
         """Get the underlying entity by a entity_id"""
@@ -1578,9 +1591,27 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         # Check for heating/cooling failures (only for TPI VTherms)
         await self._heating_failure_detection_manager.refresh_state()
 
+        # Check and repair state discrepancies
+        await self._repair_incorrect_state_manager.check_and_repair()
+
         self.calculate_hvac_action()
         self.update_custom_attributes()
         self.async_write_ha_state()
+
+        # For each manager display the manager state in debug and send an event with the manager state
+        current_state = self._state_manager.current_state.to_dict()
+        current_state["room_temperature"] = self.current_temperature
+        current_state["outdoor_temperature"] = self.current_outdoor_temperature
+        current_state["hvac_action"] = str(self.hvac_action)
+        current_state["power_percent"] = self.power_percent
+        manager_states = {}
+        for manager in self._managers:
+            try:
+                manager_states[manager.__class__.__name__] = manager.is_detected
+            except RuntimeError as e:
+                _LOGGER.error("%s - Error while getting is_detected state of manager %s: %s", self, manager.__class__.__name__, e)
+
+        _LOGGER.debug("%s - End of cycle. current_state: %s, managers_states: %s", self, current_state, manager_states)
         return True
 
     async def _control_heating_specific(self, force=False):
@@ -1660,15 +1691,11 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         return preset_mode + PRESET_AWAY_SUFFIX
 
     def get_state_date_or_now(self, state: State) -> datetime:
-        """Extract the last_changed state from State or return now if not available"""
-        return (
-            state.last_changed.astimezone(self._current_tz)
-            if isinstance(state.last_changed, datetime)
-            else self.now
-        )
+        """Extract the last_updated state from State or return now if not available"""
+        return state.last_updated.astimezone(self._current_tz) if isinstance(state.last_updated, datetime) else self.now
 
     def get_last_updated_date_or_now(self, state: State) -> datetime:
-        """Extract the last_changed state from State or return now if not available"""
+        """Extract the last_updated state from State or return now if not available"""
         return (
             state.last_updated.astimezone(self._current_tz)
             if isinstance(state.last_updated, datetime)
@@ -2207,6 +2234,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
             log_level=log_level,
             period_start=period_start,
             period_end=period_end,
+            config_entry=self._entry_infos,
         )
 
     ##

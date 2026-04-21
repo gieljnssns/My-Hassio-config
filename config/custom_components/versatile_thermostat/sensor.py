@@ -280,13 +280,14 @@ class OnPercentSensor(VersatileThermostatBaseEntity, SensorEntity):
         """Called when my climate have change"""
         # _LOGGER.debug("%s - climate state change", self._attr_unique_id)
 
-        on_percent = (
-            float(self.my_climate.proportional_algorithm.on_percent)
+        raw_on_percent = (
+            self.my_climate.proportional_algorithm.on_percent
             if self.my_climate and self.my_climate.has_prop
             else None
         )
-        if on_percent is None:
+        if raw_on_percent is None:
             return
+        on_percent = float(raw_on_percent)
 
         if math.isnan(on_percent) or math.isinf(on_percent):
             raise ValueError(f"Sensor has illegal state {on_percent}")
@@ -1037,10 +1038,10 @@ class TotalPowerActiveDeviceForBoilerSensor(NbActiveDeviceForBoilerSensor):
                 return
 
             _LOGGER.debug(
-                "%s - calculating the total power of active underlying device for boiler activation. change change from %s to %s",
+                "%s - calculating the total power of active underlying device for boiler activation. mean_power_cycle change from %s to %s",
                 self,
-                old_state,
-                new_state,
+                old_mean_cycle_power,
+                new_mean_cycle_power,
             )
         else:
             _LOGGER.debug(

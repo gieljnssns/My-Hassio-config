@@ -709,13 +709,13 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
             "%s - Underlying climate %s have changed. new_hvac_mode is %s (vs %s), new_hvac_action=%s (vs %s), new_target_temp=%s (vs %s), new_fan_mode=%s (vs %s)",
             self,
             under.entity_id,
-            new_hvac_mode,
+            new_hvac_mode if new_hvac_mode is not None else "<no change>",
             self.vtherm_hvac_mode,
-            new_hvac_action,
+            new_hvac_action if new_hvac_action is not None else "<no change>",
             self.hvac_action,
-            new_target_temp,
+            new_target_temp if new_target_temp is not None else "<no change>",
             self.target_temperature,
-            new_fan_mode,
+            new_fan_mode if new_fan_mode is not None else "<no change>",
             self.fan_mode,
         )
 
@@ -777,13 +777,18 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                         return
 
                 _LOGGER.debug(
-                    "%s - All underlyings have the same hvac_mode, so VTherm will send the new hvac mode %s",
+                    "%s - All underlyings have the same hvac_mode '%s'",
                     self,
                     new_hvac_mode,
                 )
             changes = True
             # We follow the underlying hvac_mode change
             if self._follow_underlying_temp_change:
+                _LOGGER.debug(
+                    "%s - Follow is 'on'. Changing hvac_mode for all underlying to '%s'",
+                    self,
+                    new_hvac_mode,
+                )
                 self.requested_state.set_hvac_mode(new_hvac_mode)
 
         # A quick win to known if it has change by using the self._attr_fan_mode and not only underlying[0].fan_mode

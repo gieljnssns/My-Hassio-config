@@ -12,7 +12,7 @@ _RE_HTML_TAGS = re.compile(r'<[^>]+>')
 _RE_CELSIUS = re.compile(r'(\d+)C\b')
 _RE_FAHRENHEIT = re.compile(r'(\d+)F\b')
 
-# Follow-up detection phrases (compiled once for performance)
+# Follow-up detection phrases
 FOLLOW_UP_PHRASES = frozenset([
     "which one",
     "would you like",
@@ -26,6 +26,12 @@ FOLLOW_UP_PHRASES = frozenset([
     "select from",
     "pick from",
 ])
+# Compiled once — single regex scan is faster than N individual `in` checks.
+# Phrases sorted longest-first so multi-word phrases win in alternation.
+_RE_FOLLOW_UP = re.compile(
+    r"(?:" + "|".join(re.escape(p) for p in sorted(FOLLOW_UP_PHRASES, key=len, reverse=True)) + r")",
+    re.IGNORECASE,
+)
 
 
 def clean_response_for_tts(text: str) -> str:
@@ -37,12 +43,20 @@ def clean_response_for_tts(text: str) -> str:
     Returns:
         Cleaned text optimized for TTS playback
     """
+    # Decode HTML entities FIRST so that tag-based patterns below match both
+    # literal tags and HTML-encoded variants (e.g. &lt;think&gt; → <think>).
+    text = html.unescape(text)
+    text = _RE_BR_TAGS.sub(' ', text)   # Convert <br> to space before tag stripping
+
     # Option 1: Remove <think> tags and their content
     text = _RE_THINK_TAGS.sub('', text)
     
     # Option 2: Remove only the <think> tags but keep the content inside
     # Uncomment below and comment out Option 1 above to use this instead
     # text = re.sub(r'</?think>', '', text, flags=re.IGNORECASE)
+
+    # Strip remaining HTML tags (after think-tag removal so inner text is preserved)
+    text = _RE_HTML_TAGS.sub('', text)
     
     # Option 3: Remove asterisks (markdown bold/italic)
     text = text.replace('*', '')
@@ -59,10 +73,11 @@ def clean_response_for_tts(text: str) -> str:
     text = _RE_WHITESPACE.sub(' ', text)  # Normalize whitespace to single spaces
     
     # Option 5: HTML entity handling
-    # Uncomment to convert common HTML entities to readable text:
-    text = html.unescape(text)  # Converts &nbsp; &amp; &lt; &gt; etc to actual characters
-    text = _RE_BR_TAGS.sub(' ', text)  # Convert <br> to space
-    text = _RE_HTML_TAGS.sub('', text)  # Remove any other HTML tags
+    # html.unescape and <br> conversion are applied unconditionally at the top of
+    # this function. To apply a second pass after markdown processing, uncomment:
+    # text = html.unescape(text)
+    # text = _RE_BR_TAGS.sub(' ', text)
+    # text = _RE_HTML_TAGS.sub('', text)
     
     # Option 6: Emoji handling
     # Uncomment to handle emojis (requires emoji package: pip install emoji):
@@ -111,8 +126,8 @@ def should_continue_conversation(response_text: str) -> bool:
     if response_text.rstrip().endswith("?"):
         return True
     
-    # Check for follow-up phrases
-    return any(phrase in response_lower for phrase in FOLLOW_UP_PHRASES)
+    # Check for follow-up phrases using a single compiled regex scan
+    return bool(_RE_FOLLOW_UP.search(response_lower))
 
 
 class QueryResponse:

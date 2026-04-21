@@ -1,9 +1,14 @@
 """Pattern matching data for mode suggestions and detection."""
 
+import re
+
 # Mode detection keywords - explicit mode switching commands
 MODE_KEYWORDS = {
+    "adventure": ["adventure mode", "author mode", "story mode", "creative mode"],
     "analysis": ["analysis mode", "analyzer mode", "analyze mode"],
     "research": ["research mode", "researcher mode"],
+    "visual": ["visual mode", "vision mode", "image mode", "multimodal mode"],
+    "investigation": ["investigation mode", "investigate mode", "forensics mode", "root cause mode"],
     "code_review": ["code review mode", "review mode", "code mode"],
     "troubleshooting": ["troubleshooting mode", "debug mode", "fix mode", "troubleshoot mode"],
     "security": ["security mode", "secure mode", "alarm mode", "security system"],
@@ -12,7 +17,7 @@ MODE_KEYWORDS = {
 }
 
 # Mode query keywords
-MODE_QUERY_KEYWORDS = ["what mode", "which mode", "current mode"]
+MODE_QUERY_KEYWORDS = ["what mode", "which mode", "current mode", "what workspace", "which workspace", "current workspace"]
 
 # Mode suggestion patterns - triggers for automatic mode suggestions
 # These are context clues that indicate a query would benefit from a specific mode
@@ -128,4 +133,15 @@ MODE_SUGGESTION_PATTERNS = {
 
 # Minimum confidence threshold for mode suggestions
 # How many pattern matches needed before suggesting a mode
-MODE_SUGGESTION_THRESHOLD = 1  # Suggest if at least 1 pattern matches
+MODE_SUGGESTION_THRESHOLD = 2  # Require at least 2 pattern matches to reduce false positives
+
+# Issue 18: compile each mode's pattern list into a single regex so detect_suggested_modes
+# scans the input text once per mode instead of doing N individual substring checks.
+# Patterns sorted longest-first so multi-word phrases take priority in alternation.
+_MODE_PATTERN_REGEXES: dict[str, re.Pattern] = {
+    mode_key: re.compile(
+        r"(?:" + "|".join(re.escape(p) for p in sorted(patterns, key=len, reverse=True)) + r")",
+        re.IGNORECASE,
+    )
+    for mode_key, patterns in MODE_SUGGESTION_PATTERNS.items()
+}

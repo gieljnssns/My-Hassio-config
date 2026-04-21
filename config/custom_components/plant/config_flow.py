@@ -36,12 +36,14 @@ from .const import (
     CONF_MAX_ILLUMINANCE,
     CONF_MAX_MOISTURE,
     CONF_MAX_TEMPERATURE,
+    CONF_MAX_VPD,
     CONF_MIN_CONDUCTIVITY,
     CONF_MIN_DLI,
     CONF_MIN_HUMIDITY,
     CONF_MIN_ILLUMINANCE,
     CONF_MIN_MOISTURE,
     CONF_MIN_TEMPERATURE,
+    CONF_MIN_VPD,
     DATA_SOURCE,
     DATA_SOURCE_PLANTBOOK,
     DEFAULT_MAX_CONDUCTIVITY,
@@ -50,12 +52,15 @@ from .const import (
     DEFAULT_MAX_ILLUMINANCE,
     DEFAULT_MAX_MOISTURE,
     DEFAULT_MAX_TEMPERATURE,
+    DEFAULT_MAX_VPD,
     DEFAULT_MIN_CONDUCTIVITY,
     DEFAULT_MIN_DLI,
     DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_ILLUMINANCE,
     DEFAULT_MIN_MOISTURE,
     DEFAULT_MIN_TEMPERATURE,
+    DEFAULT_MIN_VPD,
+    DEFAULT_MOISTURE_GRACE_PERIOD,
     DOMAIN,
     DOMAIN_PLANTBOOK,
     DOMAIN_SENSOR,
@@ -66,6 +71,7 @@ from .const import (
     FLOW_FORCE_SPECIES_UPDATE,
     FLOW_HUMIDITY_TRIGGER,
     FLOW_ILLUMINANCE_TRIGGER,
+    FLOW_MOISTURE_GRACE_PERIOD,
     FLOW_MOISTURE_TRIGGER,
     FLOW_PLANT_INFO,
     FLOW_PLANT_LIMITS,
@@ -81,6 +87,7 @@ from .const import (
     FLOW_STRING_DESCRIPTION,
     FLOW_TEMP_UNIT,
     FLOW_TEMPERATURE_TRIGGER,
+    FLOW_VPD_TRIGGER,
     OPB_DISPLAY_PID,
     URL_SCHEME_HTTP,
     URL_SCHEME_MEDIA_SOURCE,
@@ -307,6 +314,8 @@ class PlantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_MIN_DLI: DEFAULT_MIN_DLI,
                     CONF_MAX_HUMIDITY: DEFAULT_MAX_HUMIDITY,
                     CONF_MIN_HUMIDITY: DEFAULT_MIN_HUMIDITY,
+                    CONF_MAX_VPD: DEFAULT_MAX_VPD,
+                    CONF_MIN_VPD: DEFAULT_MIN_VPD,
                 }
                 for key, default_val in all_threshold_defaults.items():
                     if key not in limits:
@@ -468,6 +477,25 @@ class PlantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             ] = int
 
+        # Show VPD thresholds when both temperature and humidity are selected
+        if show_all or (
+            selected_sensors["temperature"] and selected_sensors["humidity"]
+        ):
+            max_vpd = plant_config[FLOW_PLANT_INFO][ATTR_LIMITS].get(CONF_MAX_VPD)
+            min_vpd = plant_config[FLOW_PLANT_INFO][ATTR_LIMITS].get(CONF_MIN_VPD)
+            data_schema[
+                vol.Required(
+                    CONF_MAX_VPD,
+                    default=max_vpd if max_vpd is not None else DEFAULT_MAX_VPD,
+                )
+            ] = float
+            data_schema[
+                vol.Required(
+                    CONF_MIN_VPD,
+                    default=min_vpd if min_vpd is not None else DEFAULT_MIN_VPD,
+                )
+            ] = float
+
         data_schema[
             vol.Optional(
                 ATTR_ENTITY_PICTURE,
@@ -570,6 +598,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
+            _LOGGER.debug(
+                "Options flow submitted for %s: %s",
+                self.config_entry.entry_id,
+                user_input,
+            )
             if ATTR_SPECIES not in user_input or not re.match(
                 r"\w+", user_input[ATTR_SPECIES]
             ):
@@ -583,6 +616,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ):
                 user_input[OPB_DISPLAY_PID] = ""
 
+            _LOGGER.debug(
+                "Options flow creating entry with data: %s (previous options: %s)",
+                user_input,
+                dict(self.config_entry.options),
+            )
             return self.async_create_entry(title="", data=user_input)
 
         plant_helper = PlantHelper(hass=self.hass)
@@ -630,6 +668,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         data_schema[
             vol.Optional(FLOW_MOISTURE_TRIGGER, default=self.plant.moisture_trigger)
         ] = cv.boolean
+        # Add moisture grace period setting (in seconds)
+        current_grace_period = self.config_entry.options.get(
+            FLOW_MOISTURE_GRACE_PERIOD, DEFAULT_MOISTURE_GRACE_PERIOD
+        )
+        data_schema[
+            vol.Optional(
+                FLOW_MOISTURE_GRACE_PERIOD,
+                description={"suggested_value": current_grace_period},
+            )
+        ] = vol.All(vol.Coerce(int), vol.Range(min=0, max=86400))
         data_schema[
             vol.Optional(
                 FLOW_CONDUCTIVITY_TRIGGER, default=self.plant.conductivity_trigger
@@ -644,6 +692,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 default=self.plant.soil_temperature_trigger,
             )
         ] = cv.boolean
+        data_schema[vol.Optional(FLOW_VPD_TRIGGER, default=self.plant.vpd_trigger)] = (
+            cv.boolean
+        )
 
         return self.async_show_form(
             step_id="plant_properties",
@@ -692,6 +743,7 @@ async def update_plant_options(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> None:
     """Handle options update."""
+    _LOGGER.debug("update_plant_options CALLED for entry %s", entry.entry_id)
     # Guard against being called after entry is unloaded
     if entry.entry_id not in hass.data.get(DOMAIN, {}):
         _LOGGER.debug("Ignoring update for unloaded entry %s", entry.entry_id)
@@ -700,10 +752,10 @@ async def update_plant_options(
     plant = hass.data[DOMAIN][entry.entry_id]["plant"]
 
     _LOGGER.debug(
-        "Update plant options begin for %s Data %s, Options: %s",
+        "update_plant_options begin for %s Options: %s Data: %s",
         entry.entry_id,
-        entry.options,
-        entry.data,
+        dict(entry.options),
+        dict(entry.data),
     )
     entity_picture = entry.options.get(ATTR_ENTITY_PICTURE)
 
@@ -754,6 +806,14 @@ async def update_plant_options(
 
     new_species = entry.options.get(ATTR_SPECIES)
     force_new_species = entry.options.get(FLOW_FORCE_SPECIES_UPDATE)
+    _LOGGER.debug(
+        "Force refresh check: new_species=%s, plant.species=%s, "
+        "force_new_species=%s, species_changed=%s",
+        new_species,
+        plant.species,
+        force_new_species,
+        new_species != plant.species if new_species is not None else "N/A",
+    )
     if new_species is not None and (
         new_species != plant.species or force_new_species is True
     ):
@@ -767,6 +827,11 @@ async def update_plant_options(
                 FLOW_FORCE_SPECIES_UPDATE: force_new_species,
             }
         )
+        _LOGGER.debug(
+            "generate_configentry returned: data_source=%s, limits=%s",
+            plant_config[DATA_SOURCE],
+            plant_config.get(FLOW_PLANT_INFO, {}).get(FLOW_PLANT_LIMITS),
+        )
         if plant_config[DATA_SOURCE] == DATA_SOURCE_PLANTBOOK:
             plant.species = new_species
             plant.add_image(plant_config[FLOW_PLANT_INFO][ATTR_ENTITY_PICTURE])
@@ -775,21 +840,27 @@ async def update_plant_options(
             plant.display_species = (
                 opb_display[0].upper() + opb_display[1:] if opb_display else ""
             )
+            _LOGGER.debug(
+                "Updating %d threshold entities from OPB data",
+                len(plant_config[FLOW_PLANT_INFO][FLOW_PLANT_LIMITS]),
+            )
             for key, value in plant_config[FLOW_PLANT_INFO][FLOW_PLANT_LIMITS].items():
                 set_entity = getattr(plant, key)
-                _LOGGER.debug("Entity: %s To: %s", set_entity, value)
-                set_entity_id = set_entity.entity_id
+                if set_entity is None:
+                    _LOGGER.warning(
+                        "Threshold entity for '%s' is None on plant %s, skipping",
+                        key,
+                        plant.name,
+                    )
+                    continue
                 _LOGGER.debug(
-                    "Setting %s to %s",
-                    set_entity_id,
+                    "Setting %s (entity_id=%s) from %s to %s",
+                    key,
+                    set_entity.entity_id,
+                    set_entity.native_value,
                     value,
                 )
-
-                hass.states.async_set(
-                    set_entity_id,
-                    new_state=value,
-                    attributes=hass.states.get(set_entity_id).attributes,
-                )
+                await set_entity.async_set_native_value(float(value))
 
         else:
             plant.species = new_species
@@ -798,6 +869,13 @@ async def update_plant_options(
         # this will only be run once (unchanged options are will not trigger the flow)
         options = dict(entry.options)
         data = dict(entry.data)
+        # Persist refreshed OPB limits to config entry so they survive restarts
+        if plant_config[DATA_SOURCE] == DATA_SOURCE_PLANTBOOK:
+            plant_info = dict(data.get(FLOW_PLANT_INFO, {}))
+            plant_info[FLOW_PLANT_LIMITS] = dict(
+                plant_config[FLOW_PLANT_INFO][FLOW_PLANT_LIMITS]
+            )
+            data[FLOW_PLANT_INFO] = plant_info
         options[FLOW_FORCE_SPECIES_UPDATE] = False
         options[OPB_DISPLAY_PID] = plant.display_species
         options[ATTR_ENTITY_PICTURE] = plant.entity_picture

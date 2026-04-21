@@ -40,7 +40,7 @@ The current state of devices is provided in available devices.
 CONF_WORKSPACE_SLUG = "workspace_slug"
 DEFAULT_WORKSPACE_SLUG = "default-workspace"
 CONF_MAX_TOKENS = "max_tokens"
-DEFAULT_MAX_TOKENS = 150
+DEFAULT_MAX_TOKENS = 1024
 CONF_TEMPERATURE = "temperature"
 DEFAULT_TEMPERATURE = 0.5
 CONF_ATTACH_USERNAME = "attach_username"

@@ -72,7 +72,6 @@ from .flow_helper.schema import (
     SCHEMA_UTILITY_METER_TOGGLE,
 )
 from .power_profile.factory import get_power_profile
-from .power_profile.library import ModelInfo
 from .power_profile.power_profile import SUPPORTED_DOMAINS, DeviceType, DiscoveryBy, PowerProfile
 from .strategy.factory import PowerCalculatorStrategyFactory
 
@@ -472,12 +471,11 @@ class PowercalcOptionsFlow(PowercalcCommonFlow, OptionsFlow):
             return None
 
         try:
-            model_info = ModelInfo(manufacturer, model)
             self.selected_profile = await get_power_profile(
                 self.hass,
-                {},
+                self.sensor_config,
                 self.source_entity,
-                model_info,
+                process_variables=False,
             )
             if self.selected_profile and not self.strategy:
                 self.strategy = self.selected_profile.calculation_strategy
@@ -509,7 +507,7 @@ class PowercalcOptionsFlow(PowercalcCommonFlow, OptionsFlow):
 
     def should_add_strategy_option_to_menu(self) -> bool:
         """Check whether the strategy option should be added to the menu."""
-        if not self.strategy or self.strategy == CalculationStrategy.LUT:
+        if not self.strategy or self.strategy not in STRATEGY_STEP_MAPPING:
             return False
 
         if self.selected_profile:
@@ -523,27 +521,15 @@ class PowercalcOptionsFlow(PowercalcCommonFlow, OptionsFlow):
 
     async def async_step_basic_options(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle the basic options flow."""
-        schema = fill_schema_defaults(
-            self.build_basic_options_schema(),
-            self.sensor_config,
-        )
-        return await self.async_handle_options_step(user_input, schema, Step.BASIC_OPTIONS)
+        return await self.async_handle_options_step(user_input, self.build_basic_options_schema(), Step.BASIC_OPTIONS)
 
     async def async_step_advanced_options(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle the basic options flow."""
-        schema = fill_schema_defaults(
-            SCHEMA_POWER_ADVANCED,
-            self.sensor_config,
-        )
-        return await self.async_handle_options_step(user_input, schema, Step.ADVANCED_OPTIONS)
+        return await self.async_handle_options_step(user_input, SCHEMA_POWER_ADVANCED, Step.ADVANCED_OPTIONS)
 
     async def async_step_utility_meter_options(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle the basic options flow."""
-        schema = fill_schema_defaults(
-            SCHEMA_UTILITY_METER_OPTIONS,
-            self.sensor_config,
-        )
-        return await self.async_handle_options_step(user_input, schema, Step.UTILITY_METER_OPTIONS)
+        return await self.async_handle_options_step(user_input, SCHEMA_UTILITY_METER_OPTIONS, Step.UTILITY_METER_OPTIONS)
 
     async def async_handle_options_step(self, user_input: dict[str, Any] | None, schema: vol.Schema, step: Step) -> FlowResult:
         """
@@ -552,6 +538,7 @@ class PowercalcOptionsFlow(PowercalcCommonFlow, OptionsFlow):
         And finally persist the changes on the config entry
         """
         errors: dict[str, str] | None = {}
+        schema = fill_schema_defaults(schema, self.sensor_config)
         if user_input is not None:
             errors = await self.process_all_options(user_input, schema)
             if not errors:

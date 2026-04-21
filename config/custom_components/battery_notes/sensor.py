@@ -53,8 +53,9 @@ from homeassistant.helpers.template import (
     TemplateStateFromEntityId,
 )
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
-from .common import utcnow_no_timezone, validate_is_float
+from .common import validate_is_float
 from .const import (
     ATTR_BATTERY_LAST_REPLACED,
     ATTR_BATTERY_LAST_REPORTED,
@@ -66,6 +67,7 @@ from .const import (
     ATTR_BATTERY_TYPE_AND_QUANTITY,
     ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
+    ATTR_NOTE,
     ATTR_SOURCE_ENTITY_ID,
     CONF_ADVANCED_SETTINGS,
     CONF_BATTERY_QUANTITY,
@@ -233,7 +235,13 @@ class BatteryNotesTypeSensor(BatteryNotesEntity, RestoreSensor):
 
     _attr_should_poll = False
     entity_description: BatteryNotesSensorEntityDescription
-    _unrecorded_attributes = frozenset({ATTR_BATTERY_QUANTITY, ATTR_BATTERY_TYPE})
+    _unrecorded_attributes = frozenset(
+        {
+            ATTR_BATTERY_QUANTITY,
+            ATTR_BATTERY_TYPE,
+            ATTR_NOTE,
+        }
+    )
 
     def __init__(  # noqa: PLR0913
         self,
@@ -285,6 +293,7 @@ class BatteryNotesTypeSensor(BatteryNotesEntity, RestoreSensor):
         attrs = {
             ATTR_BATTERY_QUANTITY: self.coordinator.battery_quantity,
             ATTR_BATTERY_TYPE: self.coordinator.battery_type,
+            ATTR_NOTE: self.coordinator.battery_note,
         }
 
         super_attrs = super().extra_state_attributes
@@ -359,6 +368,7 @@ class BatteryNotesBatteryPlusBaseSensor(BatteryNotesEntity, RestoreSensor):
             ATTR_BATTERY_QUANTITY,
             ATTR_BATTERY_TYPE,
             ATTR_BATTERY_TYPE_AND_QUANTITY,
+            ATTR_NOTE,
             ATTR_BATTERY_LOW,
             ATTR_BATTERY_LOW_THRESHOLD,
             ATTR_BATTERY_LAST_REPORTED,
@@ -418,6 +428,7 @@ class BatteryNotesBatteryPlusBaseSensor(BatteryNotesEntity, RestoreSensor):
             ATTR_BATTERY_QUANTITY: self.coordinator.battery_quantity,
             ATTR_BATTERY_TYPE: self.coordinator.battery_type,
             ATTR_BATTERY_TYPE_AND_QUANTITY: self.coordinator.battery_type_and_quantity,
+            ATTR_NOTE: self.coordinator.battery_note,
             ATTR_BATTERY_LOW: self.coordinator.battery_low,
             ATTR_BATTERY_LOW_THRESHOLD: self.coordinator.battery_low_threshold,
             ATTR_BATTERY_LAST_REPORTED: self.coordinator.last_reported,
@@ -550,7 +561,7 @@ class BatteryNotesBatteryPlusSensor(BatteryNotesBatteryPlusBaseSensor):
             return
 
         # Don't update if battery level same and it's been < 1 hour
-        delta = utcnow_no_timezone() - self.coordinator.last_wrapped_battery_state_write
+        delta = dt_util.utcnow() - self.coordinator.last_wrapped_battery_state_write
         if (
             self.coordinator.last_reported_level == wrapped_battery_state.state
             and delta.total_seconds() < 3600  # 1 hour
@@ -558,12 +569,12 @@ class BatteryNotesBatteryPlusSensor(BatteryNotesBatteryPlusBaseSensor):
             self._attr_available = True
             return
 
-        self.coordinator.last_wrapped_battery_state_write = utcnow_no_timezone()
+        self.coordinator.last_wrapped_battery_state_write = dt_util.utcnow()
         self.coordinator.current_battery_level = wrapped_battery_state.state
 
         await self.coordinator.async_request_refresh()
 
-        self.coordinator.last_reported = utcnow_no_timezone()
+        self.coordinator.last_reported = dt_util.utcnow()
 
         _LOGGER.debug(
             "Entity id %s has been reported.",

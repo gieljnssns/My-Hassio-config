@@ -1,5 +1,87 @@
 """Mode definitions for AnythingLLM Conversation."""
 
+# Workspace-centric system prompts. These are used when the active AnythingLLM
+# workspace matches one of these slugs.
+WORKSPACE_SYSTEM_PROMPTS = {
+    "jarvis": {
+        "name": "JARVIS Workspace",
+        "apply_tts_cleaning": True,
+        # Persona and behavior are configured in the AnythingLLM workspace system prompt.
+        # See WORKSPACE_PROMPTS.md for the suggested prompt to paste there.
+        # The integration injects only the entity context block below.
+        "system_prompt": """Current Time: {{ now() }}
+
+Available Devices:
+entity_id,name,state,aliases
+{% for entity in exposed_entities -%}
+{{ entity.entity_id }},{{ entity.name }},{{ entity.state }},{{entity.aliases | join('/')}}
+{% endfor -%}""",
+    },
+    "adventure": {
+        "name": "Adventure Workspace",
+        "apply_tts_cleaning": False,
+        # No entity context needed. Prompt is managed entirely in AnythingLLM workspace settings.
+        # See WORKSPACE_PROMPTS.md for the suggested prompt to paste there.
+        "system_prompt": None,
+    },
+    "analysis": {
+        "name": "Analysis Workspace",
+        "apply_tts_cleaning": False,
+        # Persona and behavior are configured in the AnythingLLM workspace system prompt.
+        # See WORKSPACE_PROMPTS.md for the suggested prompt to paste there.
+        # The integration injects only the entity context block below.
+        "system_prompt": """Current Time: {{ now() }}
+
+Available Devices:
+entity_id,name,state,aliases
+{% for entity in exposed_entities -%}
+{{ entity.entity_id }},{{ entity.name }},{{ entity.state }},{{entity.aliases | join('/')}}
+{% endfor -%}""",
+    },
+    "research": {
+        "name": "Research Workspace",
+        "apply_tts_cleaning": False,
+        # No entity context needed. Prompt is managed entirely in AnythingLLM workspace settings.
+        # See WORKSPACE_PROMPTS.md for the suggested prompt to paste there.
+        "system_prompt": None,
+    },
+    "visual": {
+        "name": "Visual Workspace",
+        "apply_tts_cleaning": False,
+        # No entity context needed. Prompt is managed entirely in AnythingLLM workspace settings.
+        # See WORKSPACE_PROMPTS.md for the suggested prompt to paste there.
+        "system_prompt": None,
+    },
+    "investigation": {
+        "name": "Investigation Workspace",
+        "apply_tts_cleaning": False,
+        # Persona and behavior are configured in the AnythingLLM workspace system prompt.
+        # See WORKSPACE_PROMPTS.md for the suggested prompt to paste there.
+        # The integration injects only the entity context block below.
+        "system_prompt": """Current Time: {{ now() }}
+
+Available Devices:
+entity_id,name,state,aliases
+{% for entity in exposed_entities -%}
+{{ entity.entity_id }},{{ entity.name }},{{ entity.state }},{{entity.aliases | join('/')}}
+{% endfor -%}""",
+    },
+    "security": {
+        "name": "Security Workspace",
+        "apply_tts_cleaning": False,
+        # Persona and behavior are configured in the AnythingLLM workspace system prompt.
+        # See WORKSPACE_PROMPTS.md for the suggested prompt to paste there.
+        # The integration injects only the entity context block below.
+        "system_prompt": """Current Time: {{ now() }}
+
+Available Devices:
+entity_id,name,state,aliases
+{% for entity in exposed_entities -%}
+{{ entity.entity_id }},{{ entity.name }},{{ entity.state }},{{entity.aliases | join('/')}}
+{% endfor -%}""",
+    },
+}
+
 # Base persona that applies to all modes
 BASE_PERSONA = """You are a helpful Home Assistant AI voice assistant with direct access to smart home devices and automation capabilities.
 
@@ -325,3 +407,23 @@ for mode_key, mode_data in MODE_BEHAVIORS.items():
         "name": mode_data["name"],
         "system_prompt": complete_prompt
     }
+
+
+def get_workspace_prompt_config(workspace_slug: str | None) -> dict | None:
+    """Return workspace prompt config for a workspace slug."""
+    if not workspace_slug:
+        return None
+    return WORKSPACE_SYSTEM_PROMPTS.get(workspace_slug.lower())
+
+
+def get_workspace_display_name(workspace_slug: str | None) -> str:
+    """Return display name for a workspace slug."""
+    prompt_config = get_workspace_prompt_config(workspace_slug)
+    if prompt_config:
+        return prompt_config["name"]
+
+    if not workspace_slug:
+        return "Default Workspace"
+
+    pretty_name = workspace_slug.replace("-", " ").replace("_", " ").strip().title()
+    return f"{pretty_name} Workspace"

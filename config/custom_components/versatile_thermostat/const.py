@@ -144,6 +144,9 @@ CONF_FAILURE_DETECTION_ENABLE_TEMPLATE = "failure_detection_enable_template"
 CONF_LOCK_CODE = "lock_code"
 CONF_LOCK_USERS = "lock_users"
 CONF_LOCK_AUTOMATIONS = "lock_automations"
+CONF_AUTO_RELOCK_SEC = "auto_relock_sec"
+
+CONF_REPAIR_INCORRECT_STATE = "repair_incorrect_state"
 
 CONF_VSWITCH_ON_CMD_LIST = "vswitch_on_command"
 CONF_VSWITCH_OFF_CMD_LIST = "vswitch_off_command"
@@ -210,6 +213,7 @@ CONF_USE_CENTRAL_MODE = "use_central_mode"
 CONF_CENTRAL_BOILER_ACTIVATION_SRV = "central_boiler_activation_service"
 CONF_CENTRAL_BOILER_DEACTIVATION_SRV = "central_boiler_deactivation_service"
 CONF_CENTRAL_BOILER_ACTIVATION_DELAY_SEC = "central_boiler_activation_delay_sec"
+CONF_KEEP_ALIVE_BOILER_DELAY_SEC = "keep_alive_boiler_delay_sec"
 
 CONF_USED_BY_CENTRAL_BOILER = "used_by_controls_central_boiler"
 CONF_WINDOW_ACTION = "window_action"
@@ -376,6 +380,7 @@ ALL_CONF = (
         CONF_CENTRAL_BOILER_ACTIVATION_SRV,
         CONF_CENTRAL_BOILER_DEACTIVATION_SRV,
         CONF_CENTRAL_BOILER_ACTIVATION_DELAY_SEC,
+        CONF_KEEP_ALIVE_BOILER_DELAY_SEC,
         CONF_WINDOW_ACTION,
         CONF_STEP_TEMPERATURE,
         CONF_MIN_OPENING_DEGREES,
@@ -401,6 +406,7 @@ ALL_CONF = (
         CONF_HEATING_FAILURE_DETECTION_DELAY,
         CONF_TEMPERATURE_CHANGE_TOLERANCE,
         CONF_FAILURE_DETECTION_ENABLE_TEMPLATE,
+        CONF_REPAIR_INCORRECT_STATE,
     ]
     + CONF_PRESETS_VALUES
     + CONF_PRESETS_AWAY_VALUES
@@ -473,6 +479,14 @@ SERVICE_DOWNLOAD_LOGS = "download_logs"
 
 DEFAULT_SAFETY_MIN_ON_PERCENT = 0.5
 DEFAULT_SAFETY_DEFAULT_ON_PERCENT = 0.1
+
+# Repair incorrect state defaults
+DEFAULT_REPAIR_INCORRECT_STATE = False
+REPAIR_MAX_ATTEMPTS = 5
+REPAIR_MIN_DELAY_AFTER_INIT_SEC = 30
+
+# Central boiler keep-alive defaults
+DEFAULT_KEEP_ALIVE_BOILER_DELAY_SEC = 0
 
 # Heating failure detection defaults
 DEFAULT_HEATING_FAILURE_THRESHOLD = 0.9  # 90%

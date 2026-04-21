@@ -10,7 +10,6 @@ from typing import Any, NotRequired, TypedDict, cast
 
 import aiohttp
 from aiohttp import ClientError
-import async_timeout
 from awesomeversion import AwesomeVersion
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -33,6 +32,7 @@ TIMEOUT_SECONDS = 30
 
 class LibraryModel(TypedDict):
     id: str
+    name: NotRequired[str]
     aliases: NotRequired[list[str]]
     hash: str
     device_type: NotRequired[DeviceType]
@@ -143,7 +143,7 @@ class RemoteLoader(Loader):
             session = async_get_clientsession(self.hass)
 
             try:
-                async with async_timeout.timeout(TIMEOUT_SECONDS), session.get(ENDPOINT_LIBRARY) as resp:
+                async with asyncio.timeout(TIMEOUT_SECONDS), session.get(ENDPOINT_LIBRARY) as resp:
                     if resp.status != 200:
                         raise ProfileDownloadError(
                             f"Failed to download library.json, unexpected status code: {resp.status}",
@@ -185,15 +185,14 @@ class RemoteLoader(Loader):
         return self.manufacturer_lookup.get(search, set())
 
     @async_cache
-    async def get_model_listing(self, manufacturer: str, device_types: set[DeviceType] | None) -> set[str]:
-        """Get listing of available models for a given manufacturer."""
-
+    async def get_model_listing(self, manufacturer: str, device_types: set[DeviceType] | None) -> set[tuple[str, str]]:
+        """Get listing of available models and display names for a given manufacturer."""
         models = self.manufacturer_models.get(manufacturer)
         if not models:
             return set()
 
         return {
-            model["id"]
+            (model["id"], str(model.get("name") or model["id"]))
             for model in self.manufacturer_models.get(manufacturer, [])
             if not device_types or any(device_type in model.get("device_type", [DeviceType.LIGHT]) for device_type in device_types)
         }
@@ -328,7 +327,7 @@ class RemoteLoader(Loader):
         session = async_get_clientsession(self.hass)
 
         try:
-            async with async_timeout.timeout(TIMEOUT_SECONDS):
+            async with asyncio.timeout(TIMEOUT_SECONDS):
                 async with session.get(endpoint, params={"hash": model_hash}) as resp:
                     if resp.status != 200:
                         raise ProfileDownloadError(f"Failed to download profile: {manufacturer}/{model}")

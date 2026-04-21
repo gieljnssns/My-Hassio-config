@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import random
 from datetime import datetime, timedelta
 
@@ -58,6 +59,7 @@ from .const import (
     ATTR_MOISTURE,
     ATTR_PLANT,
     ATTR_SENSORS,
+    ATTR_VPD,
     DATA_UPDATED,
     DEFAULT_LUX_TO_PPFD,
     DOMAIN,
@@ -79,6 +81,7 @@ from .const import (
     ICON_PPFD,
     ICON_SOIL_TEMPERATURE,
     ICON_TEMPERATURE,
+    ICON_VPD,
     READING_CO2,
     READING_CONDUCTIVITY,
     READING_DLI,
@@ -88,6 +91,7 @@ from .const import (
     READING_PPFD,
     READING_SOIL_TEMPERATURE,
     READING_TEMPERATURE,
+    READING_VPD,
     TRANSLATION_KEY_CO2,
     TRANSLATION_KEY_CONDUCTIVITY,
     TRANSLATION_KEY_DAILY_LIGHT_INTEGRAL,
@@ -99,9 +103,11 @@ from .const import (
     TRANSLATION_KEY_SOIL_TEMPERATURE,
     TRANSLATION_KEY_TEMPERATURE,
     TRANSLATION_KEY_TOTAL_LIGHT_INTEGRAL,
+    TRANSLATION_KEY_VPD,
     UNIT_DLI,
     UNIT_PPFD,
     UNIT_TOTAL_LIGHT_INTEGRAL,
+    UNIT_VPD,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -154,23 +160,41 @@ async def async_setup_entry(
 
     # Create and add the integral-entities
     # Must be run after the sensors are added to the plant
+    # Default-disable illuminance-derived entities when no illuminance sensor configured
+    has_illuminance = (
+        entry.data.get(FLOW_PLANT_INFO, {}).get(FLOW_SENSOR_ILLUMINANCE) is not None
+    )
 
     pcurppfd = PlantCurrentPpfd(hass, entry, plant)
+    pcurppfd._attr_entity_registry_enabled_default = has_illuminance
     async_add_entities([pcurppfd])
 
     pintegral = PlantTotalLightIntegral(hass, entry, pcurppfd, plant)
+    pintegral._attr_entity_registry_enabled_default = has_illuminance
     async_add_entities([pintegral], update_before_add=True)
 
     plant.add_calculations(pcurppfd, pintegral)
 
     pdli = PlantDailyLightIntegral(hass, entry, pintegral, plant)
+    pdli._attr_entity_registry_enabled_default = has_illuminance
     async_add_entities(new_entities=[pdli], update_before_add=True)
 
     # Create rolling 24-hour DLI sensor (alternative to midnight-reset DLI)
     pdli_24h = PlantDailyLightIntegral24h(hass, entry, pintegral, plant)
+    pdli_24h._attr_entity_registry_enabled_default = has_illuminance
     async_add_entities(new_entities=[pdli_24h], update_before_add=True)
 
     plant.add_dli(dli=pdli, dli_24h=pdli_24h)
+
+    # Create VPD sensor (computed from temperature + humidity)
+    has_temp_and_humidity = (
+        entry.data.get(FLOW_PLANT_INFO, {}).get(FLOW_SENSOR_TEMPERATURE) is not None
+        and entry.data.get(FLOW_PLANT_INFO, {}).get(FLOW_SENSOR_HUMIDITY) is not None
+    )
+    pvpd = PlantCurrentVpd(hass, entry, plant)
+    pvpd._attr_entity_registry_enabled_default = has_temp_and_humidity
+    async_add_entities([pvpd])
+    plant.add_vpd(vpd=pvpd)
 
     return True
 
@@ -210,8 +234,13 @@ class PlantCurrentStatus(RestoreSensor):
                 f"{self._plant.name} {self._entity_id_key}",
                 current_ids={},
             )
+        # Default-disable entities with no external sensor configured.
+        # HA only applies entity_registry_enabled_default on first registration,
+        # so user-enabled entities survive config entry reloads.
+        self._attr_entity_registry_enabled_default = self._external_sensor is not None
+
         if (
-            not self._attr_native_value
+            self._attr_native_value is None
             or self._attr_native_value == STATE_UNKNOWN
             or self._attr_native_value == STATE_UNAVAILABLE
         ):
@@ -250,25 +279,45 @@ class PlantCurrentStatus(RestoreSensor):
         _LOGGER.info("Setting %s external sensor to %s", self.entity_id, new_sensor)
         # pylint: disable=attribute-defined-outside-init
         self._external_sensor = new_sensor
-        self.async_track_entity(self.entity_id)
-        self.async_track_entity(self.external_sensor)
+
+        # Disabled entities have self.hass = None; use the plant's hass reference
+        # for operations that need it (config updates, registry changes)
+        hass = self.hass or (self._plant.hass if self._plant else None)
+
+        # Only track state changes if the entity is enabled (has its own hass ref).
+        # Disabled entities will set up tracking when enabled via async_added_to_hass.
+        if self.hass is not None:
+            self.async_track_entity(self.entity_id)
+            self.async_track_entity(self.external_sensor)
 
         # Persist the change to config entry if we have a config key
         if self._config_key:
-            self._update_config_entry(new_sensor)
+            self._update_config_entry(new_sensor, hass)
 
-        self.async_write_ha_state()
+        # Only write state if the entity is enabled (disabled entities have no state)
+        if self.hass is not None and self.hass.states.get(self.entity_id) is not None:
+            self.async_write_ha_state()
 
         if (
             self._plant
             and getattr(self._plant, "plant_complete", False)
-            and not self.hass.is_stopping
+            and hass is not None
+            and not hass.is_stopping
         ):
             self._plant.update_entity_disabled_state(self)
 
-    def _update_config_entry(self, new_sensor: str | None) -> None:
+    def _update_config_entry(
+        self, new_sensor: str | None, hass: HomeAssistant | None = None
+    ) -> None:
         """Update the config entry with the new sensor value."""
         if not self._config_key:
+            return
+
+        hass = hass or self.hass
+        if hass is None:
+            _LOGGER.warning(
+                "Cannot update config entry for %s: no hass reference", self.entity_id
+            )
             return
 
         # Skip update if value hasn't changed (avoids spurious config entry
@@ -283,7 +332,7 @@ class PlantCurrentStatus(RestoreSensor):
         new_plant_info[self._config_key] = new_sensor
         new_data[FLOW_PLANT_INFO] = new_plant_info
 
-        self.hass.config_entries.async_update_entry(self._config, data=new_data)
+        hass.config_entries.async_update_entry(self._config, data=new_data)
         _LOGGER.debug(
             "Updated config entry %s with %s=%s",
             self._config.entry_id,
@@ -606,6 +655,139 @@ class PlantCurrentSoilTemperature(PlantCurrentStatus):
             FLOW_SENSOR_SOIL_TEMPERATURE
         )
         super().__init__(hass, config, plantdevice)
+
+
+class PlantCurrentVpd(RestoreSensor):
+    """Entity reporting current VPD (Vapour Pressure Deficit) calculated from temperature and humidity.
+
+    VPD = SVP * (1 - RH/100), where SVP is the saturation vapor pressure
+    calculated using the Tetens formula: SVP = 0.6108 * exp((17.27 * T) / (T + 237.3))
+    """
+
+    _attr_has_entity_name = True
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_device_class = ATTR_VPD
+    _attr_icon = ICON_VPD
+    _attr_native_unit_of_measurement = UNIT_VPD
+    _attr_suggested_display_precision = 2
+    _attr_translation_key = TRANSLATION_KEY_VPD
+    _entity_id_key = READING_VPD
+
+    def __init__(
+        self, hass: HomeAssistant, config: ConfigEntry, plantdevice: Entity
+    ) -> None:
+        """Initialize the sensor"""
+        self._attr_unique_id = f"{config.entry_id}-current-vpd"
+        self._plant = plantdevice
+        self.hass = hass
+        self._config = config
+        self._tracker = []
+
+        # Only force entity_id for existing entities (backwards compat)
+        ent_reg = er_async_get(hass)
+        if ent_reg.async_get_entity_id(DOMAIN_SENSOR, DOMAIN, self._attr_unique_id):
+            self.entity_id = async_generate_entity_id(
+                f"{DOMAIN_SENSOR}.{{}}",
+                f"{self._plant.name} {self._entity_id_key}",
+                current_ids={},
+            )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Device info for devices"""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._plant.unique_id)},
+            name=self._plant.name,
+        )
+
+    @staticmethod
+    def calculate_vpd(temperature_c: float, humidity: float) -> float:
+        """Calculate VPD in kPa from temperature (Celsius) and relative humidity (%).
+
+        Uses the Tetens formula for saturation vapor pressure.
+        """
+        svp = 0.6108 * math.exp((17.27 * temperature_c) / (temperature_c + 237.3))
+        return svp * (1 - humidity / 100.0)
+
+    def _get_temperature_celsius(self) -> float | None:
+        """Get the current temperature in Celsius from the plant's temperature sensor."""
+        if self._plant.sensor_temperature is None:
+            return None
+        state = getattr(
+            self.hass.states.get(self._plant.sensor_temperature.entity_id),
+            "state",
+            None,
+        )
+        if state is None or state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return None
+        try:
+            temp = float(state)
+        except (ValueError, TypeError):
+            return None
+        # The plant sensor stores values in Celsius
+        return temp
+
+    def _get_humidity(self) -> float | None:
+        """Get the current humidity from the plant's humidity sensor."""
+        if self._plant.sensor_humidity is None:
+            return None
+        state = getattr(
+            self.hass.states.get(self._plant.sensor_humidity.entity_id),
+            "state",
+            None,
+        )
+        if state is None or state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return None
+        try:
+            return float(state)
+        except (ValueError, TypeError):
+            return None
+
+    def _update_vpd(self) -> None:
+        """Recalculate VPD from current temperature and humidity."""
+        temp_c = self._get_temperature_celsius()
+        humidity = self._get_humidity()
+        if temp_c is not None and humidity is not None:
+            self._attr_native_value = round(self.calculate_vpd(temp_c, humidity), 2)
+        else:
+            self._attr_native_value = None
+
+    async def async_added_to_hass(self) -> None:
+        """Restore state and subscribe to temperature and humidity changes."""
+        await super().async_added_to_hass()
+
+        # Track temperature sensor state changes
+        if self._plant.sensor_temperature is not None:
+            self._tracker.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self._plant.sensor_temperature.entity_id],
+                    self._state_changed_event,
+                )
+            )
+
+        # Track humidity sensor state changes
+        if self._plant.sensor_humidity is not None:
+            self._tracker.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self._plant.sensor_humidity.entity_id],
+                    self._state_changed_event,
+                )
+            )
+
+        # Calculate initial value
+        self._update_vpd()
+
+    @callback
+    def _state_changed_event(self, event: Event) -> None:
+        """Handle state changes from temperature or humidity sensors."""
+        self._update_vpd()
+        self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update VPD value."""
+        self._update_vpd()
 
 
 class PlantCurrentPpfd(PlantCurrentStatus):
@@ -1042,7 +1224,7 @@ class PlantDummyStatus(SensorEntity):
         )
         self._plant = plantdevice
 
-        if not self._attr_native_value or self._attr_native_value == STATE_UNKNOWN:
+        if self._attr_native_value is None or self._attr_native_value == STATE_UNKNOWN:
             self._attr_native_value = self._default_state
 
 

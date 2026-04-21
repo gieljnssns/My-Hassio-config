@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import types
 from typing import Any
 
@@ -69,6 +70,15 @@ from .helpers import get_anythingllm_client
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _sanitize_slug(value: str) -> str:
+    """Sanitize a workspace or thread slug for safe URL interpolation."""
+    if not value:
+        return value
+    slug = re.sub(r'[^a-z0-9_-]', '-', value.lower().strip())
+    slug = re.sub(r'-+', '-', slug).strip('-')
+    return slug
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default="AnythingLLM"): str,
@@ -118,10 +128,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """
     api_key = data[CONF_API_KEY]
     base_url = data.get(CONF_BASE_URL, DEFAULT_CONF_BASE_URL)
-    workspace_slug = data.get(CONF_WORKSPACE_SLUG, DEFAULT_WORKSPACE_SLUG)
+    raw_slug = data.get(CONF_WORKSPACE_SLUG, DEFAULT_WORKSPACE_SLUG)
+    workspace_slug = re.sub(r'[^a-z0-9_-]', '-', raw_slug.lower().strip())
     failover_api_key = data.get(CONF_FAILOVER_API_KEY)
     failover_base_url = data.get(CONF_FAILOVER_BASE_URL)
-    failover_workspace_slug = data.get(CONF_FAILOVER_WORKSPACE_SLUG)
+    raw_failover_slug = data.get(CONF_FAILOVER_WORKSPACE_SLUG)
+    failover_workspace_slug = (
+        re.sub(r'[^a-z0-9_-]', '-', raw_failover_slug.lower().strip())
+        if raw_failover_slug
+        else None
+    )
 
     # Ensure timeouts are float
     health_check_timeout = float(data.get(CONF_HEALTH_CHECK_TIMEOUT, DEFAULT_HEALTH_CHECK_TIMEOUT))
@@ -135,6 +151,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         failover_api_key=failover_api_key,
         failover_base_url=failover_base_url,
         failover_workspace_slug=failover_workspace_slug,
+        health_check_timeout=health_check_timeout,
+        chat_timeout=chat_timeout,
     )
 
 
@@ -287,6 +305,14 @@ class AnythingLLMSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
+            for _slug_key in (
+                CONF_WORKSPACE_SLUG,
+                CONF_THREAD_SLUG,
+                CONF_FAILOVER_WORKSPACE_SLUG,
+                CONF_FAILOVER_THREAD_SLUG,
+            ):
+                if user_input.get(_slug_key):
+                    user_input[_slug_key] = _sanitize_slug(user_input[_slug_key])
             if self._is_new:
                 title = user_input.get(CONF_NAME, DEFAULT_NAME)
                 if CONF_NAME in user_input:
