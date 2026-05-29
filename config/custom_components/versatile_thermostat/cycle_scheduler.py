@@ -8,7 +8,7 @@ without temporal scheduling.
 
 import logging
 import time
-from .log_collector import get_vtherm_logger
+from vtherm_api.log_collector import get_vtherm_logger
 from typing import Any, Callable
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
@@ -115,6 +115,9 @@ class CycleScheduler:
         self._states: list[UnderlyingCycleState] = []
         self._penalty: float = 0.0
         self._cycle_start_time: float = 0.0
+        # For valves, keep the applied-power segments within the current
+        # master cycle so realized e_eff reflects real mid-cycle updates.
+        self._valve_cycle_trace: list[tuple[float, float]] = []
         # Guard flags to keep is_cycle_running=True during async yield points
         # where timers are not yet (re-)installed:
         # _is_cancelling: True while cancel_cycle() awaits _fire_cycle_end_callbacks()
@@ -192,6 +195,25 @@ class CycleScheduler:
         self._active_off_time_sec = off_time_sec
         self._active_on_percent = on_percent
 
+    @staticmethod
+    def _same_cycle_request(
+        hvac_mode_a: VThermHvacMode | None,
+        on_time_sec_a: float,
+        off_time_sec_a: float,
+        on_percent_a: float,
+        hvac_mode_b: VThermHvacMode | None,
+        on_time_sec_b: float,
+        off_time_sec_b: float,
+        on_percent_b: float,
+    ) -> bool:
+        """Return True when two cycle requests are effectively identical."""
+        return (
+            hvac_mode_a == hvac_mode_b
+            and on_time_sec_a == on_time_sec_b
+            and off_time_sec_a == off_time_sec_b
+            and abs(on_percent_a - on_percent_b) <= 1e-9
+        )
+
     async def start_cycle(
         self,
         hvac_mode: VThermHvacMode,
@@ -217,6 +239,7 @@ class CycleScheduler:
             self.min_activation_delay,
             self.min_deactivation_delay,
         )
+        realized_on_percent = on_time_sec / self._cycle_duration_sec if self._cycle_duration_sec > 0 else 0.0
 
         # Always update thermostat timing attributes immediately so sensors
         # reflect the latest computed value, even when the cycle returns early.
@@ -234,11 +257,14 @@ class CycleScheduler:
                     self._thermostat,
                     on_time_sec,
                     off_time_sec,
-                    on_percent,
+                    realized_on_percent,
                 )
-                self._set_pending_cycle(hvac_mode, on_time_sec, off_time_sec, on_percent)
-                self._set_active_cycle(hvac_mode, on_time_sec, off_time_sec, on_percent)
-                await self._apply_valve_command(hvac_mode, on_time_sec, off_time_sec)
+                await self._update_running_valve_cycle(
+                    hvac_mode,
+                    on_time_sec,
+                    off_time_sec,
+                    realized_on_percent,
+                )
                 return
             if self._active_on_time_sec > 0:
                 # A real cycle is actively running — don't interrupt it.
@@ -251,22 +277,35 @@ class CycleScheduler:
                     force,
                     on_time_sec,
                     off_time_sec,
-                    on_percent,
+                    realized_on_percent,
                 )
-                self._set_pending_cycle(hvac_mode, on_time_sec, off_time_sec, on_percent)
+                self._set_pending_cycle(hvac_mode, on_time_sec, off_time_sec, realized_on_percent)
                 return
             # Current cycle is idle (on_time=0, device off).
-            # Cancel it and allow a real cycle to start.
+            # Keep it running if the requested idle cycle is unchanged; otherwise
+            # cancel it and allow the new cycle to start immediately.
+            if self._same_cycle_request(
+                self._active_hvac_mode,
+                self._active_on_time_sec,
+                self._active_off_time_sec,
+                self._active_on_percent,
+                hvac_mode,
+                on_time_sec,
+                off_time_sec,
+                realized_on_percent,
+            ):
+                _LOGGER.debug(
+                    "%s - Current cycle is idle and unchanged, keeping existing cycle",
+                    self._thermostat,
+                )
+                self._set_pending_cycle(hvac_mode, on_time_sec, off_time_sec, realized_on_percent)
+                return
             _LOGGER.debug(
-                "%s - Current cycle is idle (on_time=0), replacing with new cycle",
+                "%s - Current cycle is idle (on_time=0), replacing with changed cycle",
                 self._thermostat,
             )
 
         await self._cancel_cycle_impl()
-
-        # Compute realized on_percent after timing constraints (for learning callbacks)
-        # This is the actual percentage that will be executed physically
-        realized_on_percent = on_time_sec / self._cycle_duration_sec if self._cycle_duration_sec > 0 else 0.0
 
         # Store current cycle parameters for repeat
         self._set_pending_cycle(hvac_mode, on_time_sec, off_time_sec, realized_on_percent)
@@ -288,6 +327,53 @@ class CycleScheduler:
         finally:
             self._is_starting = False
 
+    async def apply_valve_update(
+        self,
+        hvac_mode: VThermHvacMode,
+        on_percent: float,
+    ) -> None:
+        """Apply a deferred valve recompute without running a full control cycle."""
+        if not self._is_valve_mode:
+            return
+
+        cycle_min = self._cycle_duration_sec / 60
+        on_time_sec, off_time_sec, _ = calculate_cycle_times(
+            on_percent,
+            cycle_min,
+            self.min_activation_delay,
+            self.min_deactivation_delay,
+        )
+        realized_on_percent = on_time_sec / self._cycle_duration_sec if self._cycle_duration_sec > 0 else 0.0
+
+        self._thermostat._on_time_sec = on_time_sec
+        self._thermostat._off_time_sec = off_time_sec
+        self._set_pending_cycle(hvac_mode, on_time_sec, off_time_sec, realized_on_percent)
+
+        if self.is_cycle_running:
+            await self._update_running_valve_cycle(
+                hvac_mode,
+                on_time_sec,
+                off_time_sec,
+                realized_on_percent,
+            )
+            return
+
+        self._set_active_cycle(hvac_mode, on_time_sec, off_time_sec, realized_on_percent)
+        await self._apply_valve_command(hvac_mode, on_time_sec, off_time_sec)
+
+    async def _update_running_valve_cycle(
+        self,
+        hvac_mode: VThermHvacMode,
+        on_time_sec: float,
+        off_time_sec: float,
+        on_percent: float,
+    ) -> None:
+        """Apply a valve update while preserving the current master-cycle window."""
+        self._set_pending_cycle(hvac_mode, on_time_sec, off_time_sec, on_percent)
+        self._set_active_cycle(hvac_mode, on_time_sec, off_time_sec, on_percent)
+        await self._apply_valve_command(hvac_mode, on_time_sec, off_time_sec)
+        self._append_valve_cycle_trace(on_percent)
+
     async def _apply_valve_command(
         self,
         hvac_mode: VThermHvacMode,
@@ -301,6 +387,31 @@ class CycleScheduler:
             under._hvac_mode = hvac_mode
             await under.set_valve_open_percent()
 
+    def _reset_valve_cycle_trace(self, on_percent: float) -> None:
+        """Start a new valve trace for the current master cycle."""
+        self._valve_cycle_trace = [(0.0, max(0.0, min(1.0, on_percent)))]
+
+    def _append_valve_cycle_trace(self, on_percent: float) -> None:
+        """Append a new applied-power segment for a running valve cycle."""
+        if self._cycle_start_time <= 0:
+            self._reset_valve_cycle_trace(on_percent)
+            return
+
+        applied_on_percent = max(0.0, min(1.0, on_percent))
+        if self._valve_cycle_trace:
+            last_offset, last_on_percent = self._valve_cycle_trace[-1]
+            if abs(last_on_percent - applied_on_percent) <= 1e-9:
+                return
+        else:
+            last_offset = 0.0
+
+        offset = min(
+            max(0.0, time.time() - self._cycle_start_time),
+            self._cycle_duration_sec,
+        )
+        offset = max(offset, last_offset)
+        self._valve_cycle_trace.append((offset, applied_on_percent))
+
     async def _start_cycle_valve(self, hvac_mode: VThermHvacMode):
         """Valve passthrough: call set_valve_open_percent() on each underlying.
 
@@ -308,13 +419,13 @@ class CycleScheduler:
         their open percentage updated. A master cycle window is still kept so
         cycle callbacks remain available to SmartPI in valve-based setups.
         """
+        self._cycle_start_time = time.time()
         await self._apply_valve_command(
             hvac_mode,
             self._current_on_time_sec,
             self._current_off_time_sec,
         )
-
-        self._cycle_start_time = time.time()
+        self._reset_valve_cycle_trace(self._current_on_percent)
         self._cycle_end_unsub = async_call_later(
             self._hass,
             self._cycle_duration_sec,
@@ -341,6 +452,9 @@ class CycleScheduler:
                 if under.is_device_active:
                     await under.turn_off()
                 under._should_be_on = False
+            # Keep a real master-cycle start time so the next automatic restart
+            # reports a full elapsed_ratio instead of looking interrupted with 0 s elapsed.
+            self._cycle_start_time = time.time()
             # Schedule next cycle evaluation
             self._cycle_end_unsub = async_call_later(self._hass, self._cycle_duration_sec, self._on_master_cycle_end)
             return
@@ -350,6 +464,8 @@ class CycleScheduler:
             for under in self._underlyings:
                 await under.turn_on()
                 under._should_be_on = True
+            # Keep a real master-cycle start time for the same reason as 0% cycles.
+            self._cycle_start_time = time.time()
             # Schedule next cycle evaluation
             self._cycle_end_unsub = async_call_later(self._hass, self._cycle_duration_sec, self._on_master_cycle_end)
             return
@@ -532,6 +648,7 @@ class CycleScheduler:
         if self._cycle_end_unsub:
             self._cycle_end_unsub()
             self._cycle_end_unsub = None
+        self._valve_cycle_trace = []
         self._set_pending_cycle(None, 0, 0, 0.0)
         self._set_active_cycle(None, 0, 0, 0.0)
         self._is_cancelling = False
@@ -571,6 +688,7 @@ class CycleScheduler:
             await self._fire_cycle_end_callbacks(realized_e_eff, elapsed_ratio)
 
         self._states = []
+        self._valve_cycle_trace = []
         self._set_pending_cycle(None, 0, 0, 0.0)
         self._set_active_cycle(None, 0, 0, 0.0)
         self._cycle_start_time = 0.0
@@ -584,10 +702,20 @@ class CycleScheduler:
             return 0.0
 
         if self._is_valve_mode:
-            # Valve mode applies one constant opening command over the full
-            # master cycle window, so the realized effective power is the
-            # current cycle command itself.
-            return max(0.0, min(1.0, self._active_on_percent))
+            if not self._valve_cycle_trace:
+                return max(0.0, min(1.0, self._active_on_percent))
+
+            weighted_power = 0.0
+            for idx, (start_offset, on_percent) in enumerate(self._valve_cycle_trace):
+                if start_offset >= elapsed_sec:
+                    break
+                end_offset = elapsed_sec
+                if idx + 1 < len(self._valve_cycle_trace):
+                    end_offset = min(self._valve_cycle_trace[idx + 1][0], elapsed_sec)
+                if end_offset > start_offset:
+                    weighted_power += (end_offset - start_offset) * on_percent
+
+            return max(0.0, min(1.0, weighted_power / elapsed_sec))
 
         # When _states is empty the cycle ran at either 0% or 100% (no tick scheduling).
         # Infer from _active_on_time_sec: if it covers the full duration, e_eff = 1.0.

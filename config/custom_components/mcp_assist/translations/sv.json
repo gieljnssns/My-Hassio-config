@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Profilkonfiguration",
+        "description": "Skapa en ny agentprofil med ett unikt namn och personlighet.",
+        "data": {
+          "profile_name": "Profilnamn",
+          "server_type": "Servertyp"
+        }
+      },
+      "server": {
+        "title": "Serverkonfiguration",
+        "description": "Konfigurera din inferensserver-URL och MCP-serverport.",
+        "data": {
+          "lmstudio_url": "Server-URL",
+          "api_key": "API-nyckel",
+          "mcp_port": "MCP-serverport"
+        }
+      },
+      "model": {
+        "title": "Modell och instruktioner",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "Modellnamn",
+          "system_prompt": "Systeminstruktioner",
+          "technical_prompt": "Tekniska instruktioner"
+        }
+      },
+      "advanced": {
+        "title": "Avancerade installningar",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "Temperatur",
+          "max_tokens": "Max svarstoken",
+          "max_history": "Max historikmeddelanden",
+          "max_iterations": "Max verktygsiterationer",
+          "control_home_assistant": "Styr Home Assistant",
+          "response_mode": "Svarslage",
+          "follow_up_phrases": "Uppfoljningsfraser",
+          "end_words": "Avsluta konversation-ord",
+          "timeout": "Svarstimeout",
+          "debug_mode": "Felsokningslage",
+          "ollama_keep_alive": "Hall Ollama aktiv",
+          "ollama_num_ctx": "Ollama kontextfonster",
+          "clean_responses": "Rensa svar för röstutmatning"
+        }
+      },
+      "mcp_server": {
+        "title": "Delade MCP-serverinstallningar",
+        "description": "Dessa installningar paverkar ALLA profiler. Andringar har kommer att paverka varje MCP Assist-konversationsagent.",
+        "data": {
+          "mcp_port": "MCP-serverport",
+          "search_provider": "Webbsokning",
+          "brave_api_key": "Brave Search API-nyckel",
+          "allowed_ips": "Ytterligare tillatna IP/intervall",
+          "enable_gap_filling": "Aktivera smart entitetsindex",
+          "max_entities_per_discovery": "Max entiteter per sokning (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan inte ansluta till inferensservern. Se till att den kor och ar atkomlig.",
+      "no_models": "Inga modeller laddade pa servern. Ladda en modell forst.",
+      "invalid_model": "Den angivna modellen ar inte tillganglig pa servern.",
+      "invalid_port": "Porten maste vara mellan 1024 och 65535.",
+      "invalid_ip": "Ogiltigt IP-adress- eller CIDR-intervallformat. Anvand kommaseparerade varden som: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "Profilnamn kravs.",
+      "invalid_json": "Ogiltigt JSON-format. Kontrollera din MCP-serverkonfiguration.",
+      "invalid_api_key": "Ogiltig API-nyckel. Kontrollera och forsok igen.",
+      "auth_failed": "Autentisering misslyckades. Verifiera din API-nyckel.",
+      "unknown": "Ett okant fel intraffade."
+    },
+    "abort": {
+      "already_configured": "En profil med detta namn finns redan. Valj ett annat namn."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Profilinstallningar",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "Profilnamn",
+          "lmstudio_url": "Server-URL",
+          "api_key": "API-nyckel",
+          "model_name": "Modellnamn",
+          "system_prompt": "Systeminstruktioner",
+          "technical_prompt": "Tekniska instruktioner",
+          "temperature": "Temperatur",
+          "max_tokens": "Max svarstoken",
+          "max_history": "Max historikmeddelanden",
+          "max_iterations": "Max verktygsiterationer",
+          "control_home_assistant": "Styr Home Assistant",
+          "response_mode": "Svarslage",
+          "follow_up_phrases": "Uppfoljningsfraser",
+          "end_words": "Avsluta konversation-ord",
+          "timeout": "Svarstimeout",
+          "debug_mode": "Felsokningslage",
+          "ollama_keep_alive": "Hall Ollama aktiv",
+          "ollama_num_ctx": "Ollama kontextfonster",
+          "clean_responses": "Rensa svar för röstutmatning"
+        }
+      },
+      "mcp_server": {
+        "title": "Delade MCP-serverinstallningar",
+        "description": "Dessa installningar delas av ALLA profiler",
+        "data": {
+          "mcp_port": "MCP-serverport",
+          "search_provider": "Webbsokning",
+          "brave_api_key": "Brave Search API-nyckel",
+          "allowed_ips": "Ytterligare tillatna IP/intervall",
+          "enable_gap_filling": "Aktivera smart entitetsindex",
+          "max_entities_per_discovery": "Max entiteter per sokning (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

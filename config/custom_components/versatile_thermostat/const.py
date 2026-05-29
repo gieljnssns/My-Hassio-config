@@ -2,7 +2,6 @@
 """Constants for the Versatile Thermostat integration."""
 
 import logging
-from .log_collector import get_vtherm_logger
 import math
 from typing import Literal
 
@@ -16,6 +15,10 @@ from homeassistant.const import CONF_NAME, Platform
 from homeassistant.components.climate.const import ClimateEntityFeature  # pylint: disable=unused-import
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
+
+
+from vtherm_api.const import DOMAIN, VTHERM_API_NAME, DEVICE_MANUFACTURER, DEVICE_MODEL, get_tz, NowClass, EventType
+from vtherm_api.log_collector import get_vtherm_logger
 
 PROPORTIONAL_FUNCTION_TPI = "tpi"
 
@@ -472,6 +475,7 @@ SERVICE_UNLOCK = "unlock"
 SERVICE_SET_TPI_PARAMETERS = "set_tpi_parameters"
 SERVICE_SET_AUTO_TPI_MODE = "set_auto_tpi_mode"
 SERVICE_AUTO_TPI_CALIBRATE_CAPACITY = "auto_tpi_calibrate_capacity"
+AUTO_TPI_EVENT = "versatile_thermostat_auto_tpi_event"
 SERVICE_SET_TIMED_PRESET = "set_timed_preset"
 SERVICE_CANCEL_TIMED_PRESET = "cancel_timed_preset"
 SERVICE_RECALIBRATE_VALVES = "recalibrate_valves"
@@ -597,23 +601,6 @@ class RegulationParamVeryStrong:
     accumulated_error_threshold: float = 80
     overheat_protection: bool = True
 
-
-class EventType(Enum):
-    """The event type that can be sent"""
-
-    SAFETY_EVENT = "versatile_thermostat_safety_event"
-    POWER_EVENT = "versatile_thermostat_power_event"
-    TEMPERATURE_EVENT = "versatile_thermostat_temperature_event"
-    HVAC_MODE_EVENT = "versatile_thermostat_hvac_mode_event"
-    CENTRAL_BOILER_EVENT = "versatile_thermostat_central_boiler_event"
-    PRESET_EVENT = "versatile_thermostat_preset_event"
-    WINDOW_AUTO_EVENT = "versatile_thermostat_window_auto_event"
-    AUTO_START_STOP_EVENT = "versatile_thermostat_auto_start_stop_event"
-    AUTO_TPI_EVENT = "versatile_thermostat_auto_tpi_event"
-    TIMED_PRESET_EVENT = "versatile_thermostat_timed_preset_event"
-    HEATING_FAILURE_EVENT = "versatile_thermostat_heating_failure_event"
-
-
 def send_vtherm_event(hass, event_type: EventType, entity, data: dict):
     """Send an event"""
     _LOGGER.info("%s - Sending event %s with data: %s", entity, event_type, data)
@@ -639,24 +626,6 @@ def get_safe_float_value(value):
         return None if math.isinf(float_val) or not math.isfinite(float_val) else float_val
     except (ValueError, TypeError):
         return None
-
-
-def get_tz(hass: HomeAssistant):
-    """Get the current timezone"""
-
-    return dt_util.get_time_zone(hass.config.time_zone)
-
-
-class NowClass:
-    """For testing purpose only"""
-
-    @staticmethod
-    def get_now(hass: HomeAssistant) -> datetime:
-        """A test function to get the now.
-        For testing purpose this method can be overriden to get a specific
-        timestamp.
-        """
-        return datetime.now(get_tz(hass))
 
 
 class UnknownEntity(HomeAssistantError):

@@ -1,8 +1,7 @@
 # pylint: disable=line-too-long, abstract-method
 """Base class for proportional thermostats (TPI, SmartPI)."""
-
 import logging
-from .log_collector import get_vtherm_logger
+from vtherm_api.log_collector import get_vtherm_logger
 from typing import Generic
 
 from homeassistant.core import HomeAssistant
@@ -11,7 +10,7 @@ from homeassistant.exceptions import ServiceValidationError
 from .base_thermostat import BaseThermostat, ConfigData
 from .underlyings import T
 from .vtherm_hvac_mode import VThermHvacMode_OFF
-from .const import CONF_PROP_FUNCTION
+from .const import CONF_PROP_FUNCTION, PROPORTIONAL_FUNCTION_TPI
 
 _LOGGER = get_vtherm_logger(__name__)
 
@@ -144,18 +143,49 @@ class ThermostatProp(BaseThermostat[T], Generic[T]):
         # This allows selecting the correct handler (TPI, or other prop algorithms)
         self._proportional_function = self._entry_infos.get(CONF_PROP_FUNCTION)
 
-        self._init_algorithm_handler()
+        # For external algorithms, don't raise if not registered yet — will retry at startup.
+        self._init_algorithm_handler(
+            raise_if_missing=(self._proportional_function == PROPORTIONAL_FUNCTION_TPI)
+        )
 
-    def _init_algorithm_handler(self):
+    def _init_algorithm_handler(self, raise_if_missing: bool = True) -> bool:
         """Initialize the algorithm handler based on proportional_function config.
 
-        This method creates the appropriate handler (TPI or other future ones) based on
-        the CONF_PROP_FUNCTION setting in the configuration.
+        Returns True if the handler was successfully initialized, False if the external
+        algorithm was not yet registered (only possible when raise_if_missing=False).
         """
         # Import here to avoid circular imports
         from .prop_handler_tpi import TPIHandler  # pylint: disable=import-outside-toplevel
-        self._algo_handler = TPIHandler(self)
-        self._algo_handler.init_algorithm()
+        from .vtherm_central_api import VersatileThermostatAPI  # pylint: disable=import-outside-toplevel
+
+        if self._proportional_function == PROPORTIONAL_FUNCTION_TPI:
+            self._algo_handler = TPIHandler(self)
+            self._algo_handler.init_algorithm()
+            return True
+
+        api = VersatileThermostatAPI.get_vtherm_api(self.hass)
+        factory = (
+            api.get_prop_algorithm(self._proportional_function)
+            if api is not None and hasattr(api, "get_prop_algorithm")
+            else None
+        )
+
+        if factory is not None:
+            self._algo_handler = factory.create(self)
+            self._algo_handler.init_algorithm()
+            return True
+
+        if raise_if_missing:
+            raise ValueError(
+                f"{self} - Unknown proportional function: {self._proportional_function}"
+            )
+
+        _LOGGER.warning(
+            "%s - External proportional algorithm '%s' not yet registered. Will retry at startup.",
+            self,
+            self._proportional_function,
+        )
+        return False
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -165,6 +195,17 @@ class ThermostatProp(BaseThermostat[T], Generic[T]):
 
     async def async_startup(self, central_configuration):
         """Startup the thermostat."""
+        # External algorithm plugins register after VT entities are created.
+        # async_startup is called after EVENT_HOMEASSISTANT_STARTED so all plugins
+        # are guaranteed to be loaded at this point.
+        if self._algo_handler is None:
+            if not self._init_algorithm_handler(raise_if_missing=True):
+                return
+            if self._cycle_scheduler is not None:
+                self._algo_handler.on_scheduler_ready(self._cycle_scheduler)
+            # Catch up on the lifecycle call that was skipped at entity creation.
+            await self._algo_handler.async_added_to_hass()
+
         await super().async_startup(central_configuration)
         if self._algo_handler:
             await self._algo_handler.async_startup()
@@ -188,24 +229,28 @@ class ThermostatProp(BaseThermostat[T], Generic[T]):
                 self._cur_ext_temp,
                 self.last_temperature_slope,
                 self.vtherm_hvac_mode or VThermHvacMode_OFF,
+                power_shedding=self.is_overpowering_detected,
+                off_reason=self.hvac_off_reason,
             )
 
-    async def _control_heating_specific(self, force=False):
+    async def _control_heating_specific(self, timestamp=None, force=False):
         """Control heating using the algorithm handler."""
         if self._algo_handler:
-            await self._algo_handler.control_heating(force)
+            await self._algo_handler.control_heating(timestamp, force)
 
     async def update_states(self, force=False):
         """Update states and delegate to handler."""
         changed = await super().update_states(force)
-        if changed and self._algo_handler:
-            await self._algo_handler.on_state_changed()
+        if self._algo_handler:
+            # External proportional plugins may need to react to temperature
+            # crossings even when VT logical state did not change.
+            await self._algo_handler.on_state_changed(changed)
         return changed
 
     def update_custom_attributes(self):
         """Update custom attributes."""
         super().update_custom_attributes()
-        if self._algo_handler:
+        if self._algo_handler and hasattr(self._algo_handler, "update_attributes"):
             self._algo_handler.update_attributes()
 
     # =========================================================================

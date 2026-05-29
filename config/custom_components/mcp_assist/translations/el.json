@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ρυθμιση προφιλ",
+        "description": "Δημιουργηστε ενα νεο προφιλ πρακτορα με μοναδικο ονομα και προσωπικοτητα.",
+        "data": {
+          "profile_name": "Ονομα προφιλ",
+          "server_type": "Τυπος διακομιστη"
+        }
+      },
+      "server": {
+        "title": "Διαμορφωση διακομιστη",
+        "description": "Διαμορφωστε τη διευθυνση URL του διακομιστη συμπερασματος και τη θυρα του διακομιστη MCP.",
+        "data": {
+          "lmstudio_url": "URL διακομιστη",
+          "api_key": "Κλειδι API",
+          "mcp_port": "Θυρα διακομιστη MCP"
+        }
+      },
+      "model": {
+        "title": "Μοντελο και οδηγιες",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "Ονομα μοντελου",
+          "system_prompt": "Οδηγιες συστηματος",
+          "technical_prompt": "Τεχνικες οδηγιες"
+        }
+      },
+      "advanced": {
+        "title": "Προηγμενες ρυθμισεις",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "Θερμοκρασια",
+          "max_tokens": "Μεγιστα token απαντησης",
+          "max_history": "Μεγιστα μηνυματα ιστορικου",
+          "max_iterations": "Μεγιστες επαναληψεις εργαλειων",
+          "control_home_assistant": "Ελεγχος Home Assistant",
+          "response_mode": "Λειτουργια απαντησης",
+          "follow_up_phrases": "Φρασεις παρακολουθησης",
+          "end_words": "Λεξεις τερματισμου συνομιλιας",
+          "timeout": "Ληξη χρονου αποκρισης",
+          "debug_mode": "Λειτουργια αποσφαλματωσης",
+          "ollama_keep_alive": "Διατηρηση Ollama ενεργου",
+          "ollama_num_ctx": "Παραθυρο πλαισιου Ollama",
+          "clean_responses": "Καθαρισμός απαντήσεων για φωνητική έξοδο"
+        }
+      },
+      "mcp_server": {
+        "title": "Κοινοχρηστες ρυθμισεις διακομιστη MCP",
+        "description": "Αυτες οι ρυθμισεις επηρεαζουν ΟΛΑ τα προφιλ. Οι αλλαγες εδω θα επηρεασουν καθε πρακτορα συνομιλιας MCP Assist.",
+        "data": {
+          "mcp_port": "Θυρα διακομιστη MCP",
+          "search_provider": "Αναζητηση Web",
+          "brave_api_key": "Κλειδι API Brave Search",
+          "allowed_ips": "Επιπλεον επιτρεπομενες IP/Ευρη",
+          "enable_gap_filling": "Ενεργοποιηση εξυπνου ευρετηριου οντοτητων",
+          "max_entities_per_discovery": "Μεγιστες οντοτητες ανα αναζητηση (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Αδυναμια συνδεσης με τον διακομιστη συμπερασματος. Βεβαιωθειτε οτι εκτελειται και ειναι προσβασιμος.",
+      "no_models": "Δεν υπαρχουν φορτωμενα μοντελα στον διακομιστη. Φορτωστε πρωτα ενα μοντελο.",
+      "invalid_model": "Το καθορισμενο μοντελο δεν ειναι διαθεσιμο στον διακομιστη.",
+      "invalid_port": "Η θυρα πρεπει να ειναι μεταξυ 1024 και 65535.",
+      "invalid_ip": "Μη εγκυρη μορφη διευθυνσης IP η ευρους CIDR. Χρησιμοποιηστε τιμες διαχωρισμενες με κομμα οπως: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "Απαιτειται ονομα προφιλ.",
+      "invalid_json": "Μη εγκυρη μορφη JSON. Ελεγξτε τη διαμορφωση των διακομιστων MCP σας.",
+      "invalid_api_key": "Μη εγκυρο κλειδι API. Ελεγξτε και δοκιμαστε ξανα.",
+      "auth_failed": "Η ταυτοποιηση απετυχε. Επαληθευστε το κλειδι API σας.",
+      "unknown": "Προεκυψε αγνωστο σφαλμα."
+    },
+    "abort": {
+      "already_configured": "Υπαρχει ηδη προφιλ με αυτο το ονομα. Επιλεξτε διαφορετικο ονομα."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ρυθμισεις προφιλ",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "Ονομα προφιλ",
+          "lmstudio_url": "URL διακομιστη",
+          "api_key": "Κλειδι API",
+          "model_name": "Ονομα μοντελου",
+          "system_prompt": "Οδηγιες συστηματος",
+          "technical_prompt": "Τεχνικες οδηγιες",
+          "temperature": "Θερμοκρασια",
+          "max_tokens": "Μεγιστα token απαντησης",
+          "max_history": "Μεγιστα μηνυματα ιστορικου",
+          "max_iterations": "Μεγιστες επαναληψεις εργαλειων",
+          "control_home_assistant": "Ελεγχος Home Assistant",
+          "response_mode": "Λειτουργια απαντησης",
+          "follow_up_phrases": "Φρασεις παρακολουθησης",
+          "end_words": "Λεξεις τερματισμου συνομιλιας",
+          "timeout": "Ληξη χρονου αποκρισης",
+          "debug_mode": "Λειτουργια αποσφαλματωσης",
+          "ollama_keep_alive": "Διατηρηση Ollama ενεργου",
+          "ollama_num_ctx": "Παραθυρο πλαισιου Ollama",
+          "clean_responses": "Καθαρισμός απαντήσεων για φωνητική έξοδο"
+        }
+      },
+      "mcp_server": {
+        "title": "Κοινοχρηστες ρυθμισεις διακομιστη MCP",
+        "description": "Αυτες οι ρυθμισεις ειναι κοινες για ΟΛΑ τα προφιλ",
+        "data": {
+          "mcp_port": "Θυρα διακομιστη MCP",
+          "search_provider": "Αναζητηση Web",
+          "brave_api_key": "Κλειδι API Brave Search",
+          "allowed_ips": "Επιπλεον επιτρεπομενες IP/Ευρη",
+          "enable_gap_filling": "Ενεργοποιηση εξυπνου ευρετηριου οντοτητων",
+          "max_entities_per_discovery": "Μεγιστες οντοτητες ανα αναζητηση (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

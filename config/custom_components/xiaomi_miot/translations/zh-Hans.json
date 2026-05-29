@@ -1,6 +1,6 @@
 {
     "config": {
-        "flow_title": "Xiaomi Miot Auto",
+        "flow_title": "Xiaomi Miot",
         "step": {
             "user": {
                 "title": "选择操作",
@@ -23,14 +23,16 @@
                     "username": "小米ID / 邮箱",
                     "password": "小米密码",
                     "captcha": "验证码",
+                    "verify_ticket": "邮箱/手机验证码",
                     "server_country": "小米服务器",
                     "conn_mode": "设备连接模式",
+                    "trans_options": "翻译属性值描述",
                     "filter_models": "通过型号/家庭/WiFi筛选设备 (高级模式，新手勿选)"
                 }
             },
             "cloud_filter": {
                 "title": "筛选设备",
-                "description": "你可以通过筛选只接入想要的设备。在排除模式中，如果不勾选任何设备，则相当于接入所有设备。如果想集成网关子设备，请直接选择子设备，接入网关不会自动集成子设备。\n{tip}",
+                "description": "你可以通过筛选只接入想要的设备。如果想集成网关子设备，请直接选择子设备，接入网关不会自动集成子设备。\n{tip}",
                 "data": {
                     "filter_model": "筛选设备型号",
                     "model_list": "设备型号列表",
@@ -43,6 +45,10 @@
                     "filter_did": "筛选设备",
                     "did_list": "设备列表",
                     "home_ids": "筛选家庭 (留空保存)"
+                },
+                "data_description": {
+                    "filter_did": "在排除模式中，如果不勾选任何设备，则相当于接入所有设备",
+                    "home_ids": "勾选此项后提交，会回到在当前页面，设备列表会刷新并筛选出已勾选家庭的设备"
                 }
             },
             "customizing": {
@@ -54,6 +60,8 @@
                     "model": "选择设备型号",
                     "model_specified": "指定设备型号 (可选)",
                     "only_main_entity": "仅主(父)实体",
+                    "yaml_mode": "YAML模式",
+                    "yaml_customizes": "自定义选项代码",
                     "reset_customizes": "重置为默认自定义",
                     "bool2selects": "自定义选项"
                 }
@@ -64,7 +72,8 @@
             "cannot_login": "小米账户登录失败，请检查账号密码。如多次尝试仍登录失败，请在与当前网络相同的环境下登录小米官网(mi.com)后重试",
             "cannot_reach": "无法访问小米API接口",
             "tzinfo_error": "你的 Hass 环境看起来有点问题，请参考: https://github.com/al-one/hass-xiaomi-miot/issues/260",
-            "none_devices": "该小米账户下没有设备"
+            "none_devices": "该小米账户下没有设备",
+            "need_verify": "本次登录需要安全验证，请打开验证网页发送手机/邮箱验证码，收到验证码后不要在网页验证，回到HomeAssistant填入下方输入框"
         },
         "abort": {
             "config_saved": "配置已保存！[再次自定义](/_my_redirect/config_flow_start?domain=xiaomi_miot)。\n{tip}\n\n有些自定义选项需要[重载集成](/developer-tools/yaml)才能生效。",
@@ -90,16 +99,18 @@
                     "username": "小米ID / 邮箱",
                     "password": "小米密码",
                     "captcha": "验证码",
+                    "verify_ticket": "邮箱/手机验证码",
                     "server_country": "小米服务器",
                     "conn_mode": "设备连接模式",
                     "renew_devices": "更新设备列表",
+                    "trans_options": "翻译属性值描述",
                     "disable_message": "禁用米家APP通知消息实体",
                     "disable_scene_history": "禁用米家场景历史实体"
                 }
             },
             "cloud_filter": {
                 "title": "筛选设备",
-                "description": "你可以通过筛选只接入想要的设备。在排除模式中，如果不勾选任何设备，则相当于接入所有设备。如果想集成网关子设备，请直接选择子设备，接入网关不会自动集成子设备。\n{tip}",
+                "description": "你可以通过筛选只接入想要的设备。如果想集成网关子设备，请直接选择子设备，接入网关不会自动集成子设备。\n{tip}",
                 "data": {
                     "filter_model": "筛选设备型号",
                     "model_list": "设备型号列表",
@@ -112,6 +123,10 @@
                     "filter_did": "筛选设备",
                     "did_list": "设备列表",
                     "home_ids": "筛选家庭 (留空保存)"
+                },
+                "data_description": {
+                    "filter_did": "在排除模式中，如果不勾选任何设备，则相当于接入所有设备",
+                    "home_ids": "勾选此项后提交，会回到在当前页面，设备列表会刷新并筛选出已勾选家庭的设备"
                 }
             }
         },
@@ -120,10 +135,11 @@
             "cannot_login": "小米账户登录失败，请检查账号密码。如多次尝试仍登录失败，请使用与HA宿主机同一局域网下的其他设备登录小米官网(mi.com)后重试",
             "cannot_reach": "无法访问小米API接口",
             "tzinfo_error": "你的Hass环境看起来有点问题，请参考: https://github.com/al-one/hass-xiaomi-miot/issues/260",
-            "none_devices": "该小米账户下没有设备"
+            "none_devices": "该小米账户下没有设备",
+            "need_verify": "本次登录需要安全验证，请打开验证网页发送手机/邮箱验证码，收到验证码后不要在网页验证，回到HomeAssistant填入下方输入框"
         },
         "abort": {
-            "show_customizes": "[![添加集成](https://my.home-assistant.io/badges/config_flow_start.svg)](/_my_redirect/config_flow_start?domain=xiaomi_miot)\n请再次添加[`Xiaomi Miot Auto`](/_my_redirect/config_flow_start?domain=xiaomi_miot)集成来修改自定义选项\n{tip}"
+            "show_customizes": "请再次添加[`Xiaomi Miot`](/_my_redirect/config_flow_start?domain=xiaomi_miot)集成来修改自定义选项\n{link}\n{tip}"
         }
     },
     "system_health": {
@@ -136,7 +152,20 @@
         }
     },
     "entity": {
+        "button": {
+            "info": {"name": "信息"}
+        },
         "sensor": {
+            "clean_area": {"name": "清洁面积"},
+            "clean_time": {"name": "清洁时间"},
+            "power_cost_today": {"name": "日电量"},
+            "power_cost_month": {"name": "月电量"},
+            "power_cost_today_2": {"name": "日电量"},
+            "power_cost_month_2": {"name": "月电量"},
+            "prop_cal_day-power_cost-today": {"name": "日电量"},
+            "prop_cal_day-power_cost-month": {"name": "月电量"},
+            "props-clean_area": {"name": "清洁面积"},
+            "props-clean_time": {"name": "清洁时间"},
             "lock": {
                 "state": {
                     "bluetooth": "蓝牙",
@@ -254,13 +283,13 @@
             }
         },
         "select": {
-            "fan_control.fan_level": {
+            "fan_control-fan_level": {
                 "state": {
-                    "Auto": "自动",
-                    "Low": "低档",
-                    "Medium": "中档",
-                    "Middle": "中档",
-                    "High": "高档",
+                    "auto": "自动",
+                    "low": "低档",
+                    "medium": "中档",
+                    "middle": "中档",
+                    "high": "高档",
                     "Quiet": "静音",
                     "Turbo": "超强",
                     "Level1": "一档",
@@ -275,12 +304,38 @@
                     "Leve8": "八档"
                 }
             },
-            "light.mode": {
+            "light-mode": {
                 "Day": "日光",
                 "Night": "夜光",
                 "Color": "彩光",
                 "Scene": "场景",
                 "Music": "音乐"
+            }
+        },
+        "humidifier": {
+            "humidifier": {
+                "state_attributes": {
+                    "available_modes": {
+                        "state": {
+                            "Off": "关闭",
+                            "Sleep": "睡眠",
+                            "Strong": "强力",
+                            "Constant Humidity": "恒湿"
+                        }
+                    }
+                }
+            },
+            "dehumidifier": {
+                "state_attributes": {
+                    "available_modes": {
+                        "state": {
+                            "Off": "关闭",
+                            "Sleep": "睡眠",
+                            "Strong": "强力",
+                            "Constant Humidity": "恒湿"
+                        }
+                    }
+                }
             }
         }
     },

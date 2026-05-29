@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import re
 from typing import Callable
 
 from homeassistant.core import HomeAssistant
@@ -13,12 +14,14 @@ from .const import (
     CONF_CHAT_TIMEOUT,
     DEFAULT_HEALTH_CHECK_TIMEOUT,
     DEFAULT_CHAT_TIMEOUT,
+    DEFAULT_FAILOVER_WORKSPACE_SLUG,
 )
 from .mode_patterns import (
     MODE_KEYWORDS,
     MODE_QUERY_KEYWORDS,
     _MODE_PATTERN_REGEXES,
     MODE_SUGGESTION_THRESHOLD,
+    WORKSPACE_SLUG_ALIASES,
 )
 from .modes import (
     PROMPT_MODES,
@@ -29,6 +32,20 @@ from .modes import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def sanitize_slug(value: str) -> str:
+    """Sanitize a workspace or thread slug for safe URL interpolation.
+
+    Lowercases, strips surrounding whitespace, replaces any character that is
+    not a letter, digit, underscore, or hyphen with a hyphen, then collapses
+    repeated hyphens and trims leading/trailing ones.
+    """
+    if not value:
+        return value
+    slug = re.sub(r"[^a-z0-9_-]", "-", value.lower().strip())
+    slug = re.sub(r"-+", "-", slug).strip("-")
+    return slug
 
 
 # Legacy mode keys now map to workspace slugs.
@@ -162,10 +179,6 @@ class AnythingLLMClient:
         api_key: str,
         base_url: str,
         workspace_slug: str,
-        failover_api_key: str | None = None,
-        failover_base_url: str | None = None,
-        failover_workspace_slug: str | None = None,
-        failover_thread_slug: str | None = None,
         enable_health_check: bool = True,
         health_check_timeout: float = DEFAULT_HEALTH_CHECK_TIMEOUT,
         chat_timeout: float = DEFAULT_CHAT_TIMEOUT,
@@ -175,15 +188,10 @@ class AnythingLLMClient:
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self.workspace_slug = workspace_slug
-        self.failover_api_key = failover_api_key
-        self.failover_base_url = failover_base_url.rstrip("/") if failover_base_url else None
-        self.failover_workspace_slug = failover_workspace_slug
-        self.failover_thread_slug = failover_thread_slug
         self.enable_health_check = enable_health_check
         self.health_check_timeout = health_check_timeout
         self.chat_timeout = chat_timeout
         self.http_client = get_async_client(hass)
-        self.using_failover = False
 
         # Cached health state — updated by background task, never blocks a request.
         # None means "not yet checked"; True/False = last known result.
@@ -212,7 +220,10 @@ class AnythingLLMClient:
         if self._health_task and not self._health_task.done():
             return
         self._health_stop.clear()
-        self._health_task = asyncio.ensure_future(self._health_monitor_loop())
+        self._health_task = self.hass.async_create_task(
+            self._health_monitor_loop(),
+            name=f"anything_llm_health_monitor_{self.base_url}",
+        )
         _LOGGER.debug("Health monitor started for %s", self.base_url)
 
     def stop_health_monitor(self) -> None:
@@ -228,9 +239,11 @@ class AnythingLLMClient:
             await self._refresh_health()
             try:
                 await asyncio.wait_for(
-                    asyncio.shield(asyncio.ensure_future(self._health_stop.wait())),
+                    self._health_stop.wait(),
                     timeout=self._health_check_interval,
                 )
+                # Stop event was set — exit the loop cleanly.
+                break
             except asyncio.TimeoutError:
                 pass  # Normal — interval elapsed, run next check
             except asyncio.CancelledError:
@@ -238,29 +251,22 @@ class AnythingLLMClient:
 
     async def _refresh_health(self) -> None:
         """Run a single health check and update cached state."""
-        primary_healthy = await self._check_endpoint_health(self.base_url, self.api_key)
         previous = self._primary_healthy
-        if primary_healthy:
-            if self.using_failover:
-                _LOGGER.info("Primary endpoint is back online, switching from failover")
-                self.using_failover = False
-            self._primary_healthy = True
-        else:
-            self._primary_healthy = False
-            if self.failover_base_url and self.failover_api_key:
-                if not self.using_failover:
-                    _LOGGER.warning("Primary endpoint unavailable, switching to failover")
-                    self.using_failover = True
-            else:
-                _LOGGER.warning("Primary endpoint unavailable and no failover configured")
+        is_healthy = await self._check_endpoint_health(self.base_url, self.api_key)
+        self._primary_healthy = is_healthy
 
-        # Notify listeners when health status changes so UI updates immediately.
+        if is_healthy:
+            _LOGGER.debug("Primary endpoint healthy: %s", self.base_url)
+        else:
+            _LOGGER.warning("Primary endpoint unavailable: %s", self.base_url)
+
+        # Notify listeners when health status changes so the binary sensor updates.
         if self._primary_healthy != previous:
             for cb in list(self._health_listeners):
                 cb(self._primary_healthy)
 
     async def _check_endpoint_health(self, base_url: str, api_key: str) -> bool:
-        """Probe an AnythingLLM endpoint. Returns True if reachable."""
+        """Probe the AnythingLLM endpoint. Returns True if reachable."""
         try:
             health_url = f"{base_url}/v1/system"
             response = await self.http_client.get(
@@ -274,23 +280,24 @@ class AnythingLLMClient:
             return False
 
     def get_active_endpoint(self) -> tuple[str, str, str]:
-        """Return the active endpoint from cached health state (non-blocking)."""
+        """Return the primary endpoint (non-blocking).
+
+        Raises HomeAssistantError when health checks are enabled and the
+        primary endpoint is known to be unavailable.
+        """
         if not self.enable_health_check:
             return self.base_url, self.api_key, self.workspace_slug
 
-        # If we haven't completed the first check yet, optimistically use primary.
+        # If the first health check hasn't completed yet, optimistically use primary.
         if self._primary_healthy is None:
             _LOGGER.debug("Health not yet checked, optimistically using primary endpoint")
             return self.base_url, self.api_key, self.workspace_slug
 
-        if self._primary_healthy or not (self.failover_base_url and self.failover_api_key):
-            if not self._primary_healthy:
-                _LOGGER.error("Primary endpoint unavailable and no failover configured")
-                raise HomeAssistantError("AnythingLLM endpoint is unavailable")
-            return self.base_url, self.api_key, self.workspace_slug
+        if not self._primary_healthy:
+            _LOGGER.error("Primary endpoint is unavailable: %s", self.base_url)
+            raise HomeAssistantError("AnythingLLM endpoint is unavailable")
 
-        # Primary unhealthy and failover is configured
-        return self.failover_base_url, self.failover_api_key, self.failover_workspace_slug or self.workspace_slug
+        return self.base_url, self.api_key, self.workspace_slug
 
     async def chat_completion(
         self,
@@ -299,66 +306,43 @@ class AnythingLLMClient:
         max_tokens: int = 150,
         workspace_slug: str | None = None,
         thread_slug: str | None = None,
-        failover_thread_slug: str | None = None,
-        failover_workspace_slug: str | None = None,
     ) -> dict:
         """Send chat completion request to AnythingLLM."""
         base_url, api_key, active_workspace_slug = self.get_active_endpoint()
-        
-        # Update failover_thread_slug if provided (allows dynamic updates without client reload)
-        if failover_thread_slug is not None:
-            self.failover_thread_slug = failover_thread_slug
-        
-        # Update failover_workspace_slug if provided (allows per-agent override)
-        if failover_workspace_slug is not None:
-            active_failover_workspace = failover_workspace_slug
-        else:
-            active_failover_workspace = self.failover_workspace_slug
-        
-        # Determine which workspace and thread slug to use based on active endpoint
-        if self.using_failover:
-            # If failover_workspace_slug is not set, use a generic default and do not set a thread
-            if not active_failover_workspace:
-                final_workspace_slug = DEFAULT_FAILOVER_WORKSPACE_SLUG or "default-workspace"
-                active_thread_slug = None
-                _LOGGER.info("Using failover endpoint - generic default workspace: %s, no thread", final_workspace_slug)
-            else:
-                final_workspace_slug = active_failover_workspace
-                active_thread_slug = self.failover_thread_slug
-                _LOGGER.info("Using failover endpoint - workspace: %s, thread: %s", final_workspace_slug, active_thread_slug or "None")
-        else:
-            # Use the provided workspace override if set, otherwise default to active workspace
-            final_workspace_slug = workspace_slug or active_workspace_slug or self.workspace_slug
-            active_thread_slug = thread_slug
-            _LOGGER.info(
-                "Using primary endpoint - workspace: %s (override: %s, active: %s, default: %s), thread: %s",
-                final_workspace_slug,
-                workspace_slug or "None",
-                active_workspace_slug or "None",
-                self.workspace_slug,
-                active_thread_slug or "None"
-            )
-        
-        # Construct AnythingLLM API endpoint - use thread slug in URL if provided
+
+        # Workspace override (e.g. from per-conversation workspace switch).
+        final_workspace_slug = workspace_slug or active_workspace_slug or self.workspace_slug
+        # Sanitize thread slug before URL interpolation to prevent path traversal.
+        active_thread_slug = sanitize_slug(thread_slug) if thread_slug else thread_slug
+
+        _LOGGER.info(
+            "Using primary endpoint - workspace: %s (override: %s, default: %s), thread: %s",
+            final_workspace_slug,
+            workspace_slug or "None",
+            self.workspace_slug,
+            active_thread_slug or "None",
+        )
+
+        # Construct the API endpoint URL.
         if active_thread_slug:
             chat_url = f"{base_url}/v1/workspace/{final_workspace_slug}/thread/{active_thread_slug}/chat"
         else:
             chat_url = f"{base_url}/v1/workspace/{final_workspace_slug}/chat"
-        
+
         _LOGGER.info("API URL: %s", chat_url)
-        
-        # Extract the system prompt (first message with role 'system')
+
+        # Extract system prompt (first message with role 'system').
         system_prompt = None
         for msg in messages:
             if msg.get("role") == "system":
                 system_prompt = msg.get("content")
                 break
 
-        # Guard: never send an empty or system-only message to the API.
+        # Guard: never send an empty or system-only payload.
         if not messages or messages[-1].get("role") != "user":
             raise HomeAssistantError("No valid user message to send to AnythingLLM")
 
-        payload = {
+        payload: dict = {
             "message": messages[-1]["content"],
             "mode": "chat",
         }
@@ -368,16 +352,16 @@ class AnythingLLMClient:
         if system_prompt and not active_thread_slug:
             payload["prompt"] = system_prompt
 
-        # DEBUG: Uncomment the next line to log the outgoing payload (including prompt)
         _LOGGER.debug("Outgoing AnythingLLM payload: %r", payload)
-        
+
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
 
-        # Try up to 2 times on the selected endpoint
+        # Retry up to 2 times with exponential backoff.
         max_retries = 2
+        last_err: Exception | None = None
         for attempt in range(max_retries):
             try:
                 response = await self.http_client.post(
@@ -386,7 +370,11 @@ class AnythingLLMClient:
                     headers=headers,
                     timeout=self.chat_timeout,
                 )
-                _LOGGER.debug("AnythingLLM response status: %s, body: %s", response.status_code, response.text[:500])
+                _LOGGER.debug(
+                    "AnythingLLM response status: %s, body: %s",
+                    response.status_code,
+                    response.text[:500],
+                )
                 if not response.is_success:
                     _LOGGER.error(
                         "AnythingLLM HTTP %s for %s — response body: %s",
@@ -394,8 +382,7 @@ class AnythingLLMClient:
                         chat_url,
                         response.text[:1000],
                     )
-                    # Try to surface AnythingLLM's own error message instead of
-                    # a generic HTTP status error (e.g. "Ollama unreachable")
+                    # Surface AnythingLLM's own error message when available.
                     try:
                         body = response.json()
                         server_error = body.get("error")
@@ -407,43 +394,21 @@ class AnythingLLMClient:
                         pass
                 response.raise_for_status()
                 return response.json()
+            except HomeAssistantError:
+                raise
             except Exception as err:
-                _LOGGER.error("Error calling AnythingLLM API at %s (attempt %d/%d): %s", base_url, attempt + 1, max_retries, err)
-                
-                # If this was the last retry, try switching endpoints
-                if attempt == max_retries - 1:
-                    # If we were using failover and it failed, try primary one more time
-                    if self.using_failover and self.failover_base_url:
-                        _LOGGER.warning("Failover endpoint failed after retries, trying primary endpoint")
-                        try:
-                            # Construct primary URL with thread slug if provided
-                            if thread_slug:
-                                primary_url = f"{self.base_url}/v1/workspace/{self.workspace_slug}/thread/{thread_slug}/chat"
-                            else:
-                                primary_url = f"{self.base_url}/v1/workspace/{self.workspace_slug}/chat"
-                            primary_headers = {
-                                "Authorization": f"Bearer {self.api_key}",
-                                "Content-Type": "application/json",
-                            }
-                            response = await self.http_client.post(
-                                primary_url,
-                                json=payload,
-                                headers=primary_headers,
-                                timeout=DEFAULT_CHAT_TIMEOUT,
-                            )
-                            _LOGGER.debug("Primary retry response status: %s, body: %s", response.status_code, response.text[:500])
-                            response.raise_for_status()
-                            _LOGGER.info("Primary endpoint succeeded, switching back")
-                            self.using_failover = False
-                            return response.json()
-                        except Exception as primary_err:
-                            _LOGGER.error("Primary endpoint also failed: %s", primary_err)
-                    
-                    raise HomeAssistantError(f"AnythingLLM API error: {err}") from err
-                
-                # Wait a bit before retrying (exponential backoff)
-                await asyncio.sleep(0.5 * (attempt + 1))
+                last_err = err
+                _LOGGER.error(
+                    "Error calling AnythingLLM API at %s (attempt %d/%d): %s",
+                    base_url,
+                    attempt + 1,
+                    max_retries,
+                    err,
+                )
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(0.5 * (attempt + 1))
 
+        raise HomeAssistantError(f"AnythingLLM API error: {last_err}") from last_err
 
 
 async def get_anythingllm_client(
@@ -451,33 +416,28 @@ async def get_anythingllm_client(
     api_key: str,
     base_url: str,
     workspace_slug: str,
-    failover_api_key: str | None = None,
-    failover_base_url: str | None = None,
-    failover_workspace_slug: str | None = None,
-    failover_thread_slug: str | None = None,
     enable_health_check: bool = True,
     health_check_timeout: float = DEFAULT_HEALTH_CHECK_TIMEOUT,
     chat_timeout: float = DEFAULT_CHAT_TIMEOUT,
-) -> AnythingLLMClient:
-    """Create and validate AnythingLLM client."""
+) -> "AnythingLLMClient":
+    """Create and return an AnythingLLM client.
+
+    The health check is deferred until the background monitor starts — this
+    allows the integration to load even when the server is temporarily down.
+    """
     client = AnythingLLMClient(
         hass,
         api_key,
         base_url,
         workspace_slug,
-        failover_api_key,
-        failover_base_url,
-        failover_workspace_slug,
-        failover_thread_slug,
-        enable_health_check,
+        enable_health_check=enable_health_check,
         health_check_timeout=health_check_timeout,
         chat_timeout=chat_timeout,
     )
-    
-    # Skip health check during setup - it will be done at conversation time
-    # This allows installation even if the server is temporarily down
-    _LOGGER.info("AnythingLLM client created for %s (health check will occur at conversation time)", base_url)
-    
+    _LOGGER.info(
+        "AnythingLLM client created for %s (health check deferred to background monitor)",
+        base_url,
+    )
     return client
 
 

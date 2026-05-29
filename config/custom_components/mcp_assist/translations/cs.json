@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nastaveni profilu",
+        "description": "Vytvorte novy profil agenta s jedinecnym nazvem a osobnosti.",
+        "data": {
+          "profile_name": "Nazev profilu",
+          "server_type": "Typ serveru"
+        }
+      },
+      "server": {
+        "title": "Konfigurace serveru",
+        "description": "Nakonfigurujte URL inferncniho serveru a port MCP serveru.",
+        "data": {
+          "lmstudio_url": "URL serveru",
+          "api_key": "API klic",
+          "mcp_port": "Port MCP serveru"
+        }
+      },
+      "model": {
+        "title": "Model a instrukce",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "Nazev modelu",
+          "system_prompt": "Systemove instrukce",
+          "technical_prompt": "Technicke instrukce"
+        }
+      },
+      "advanced": {
+        "title": "Pokrocila nastaveni",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "Teplota",
+          "max_tokens": "Max tokenu odpovedi",
+          "max_history": "Max zprav historie",
+          "max_iterations": "Max iteraci nastroju",
+          "control_home_assistant": "Ovladat Home Assistant",
+          "response_mode": "Rezim odpovedi",
+          "follow_up_phrases": "Navazujici fraze",
+          "end_words": "Slova pro ukonceni konverzace",
+          "timeout": "Casovy limit odpovedi",
+          "debug_mode": "Rezim ladeni",
+          "ollama_keep_alive": "Udrzovat Ollama aktivni",
+          "ollama_num_ctx": "Kontextove okno Ollama",
+          "clean_responses": "Čisté odpovědi pro hlasový výstup"
+        }
+      },
+      "mcp_server": {
+        "title": "Sdilena nastaveni MCP serveru",
+        "description": "Tato nastaveni ovlivnuji VSECHNY profily. Zmeny zde ovlivni kazdeho konverzacniho agenta MCP Assist.",
+        "data": {
+          "mcp_port": "Port MCP serveru",
+          "search_provider": "Webove vyhledavani",
+          "brave_api_key": "API klic Brave Search",
+          "allowed_ips": "Dalsi povolene IP/rozsahy",
+          "enable_gap_filling": "Povolit inteligentni index entit",
+          "max_entities_per_discovery": "Max entit na vyhledavani (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nelze se pripojit k inferencnimu serveru. Ujistete se, ze bezi a je dostupny.",
+      "no_models": "Na serveru nejsou nacteny zadne modely. Nejprve prosim nactete model.",
+      "invalid_model": "Zadany model neni na serveru k dispozici.",
+      "invalid_port": "Port musi byt mezi 1024 a 65535.",
+      "invalid_ip": "Neplatny format IP adresy nebo CIDR rozsahu. Pouzijte hodnoty oddelene carkou jako: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "Nazev profilu je vyzadovan.",
+      "invalid_json": "Neplatny format JSON. Zkontrolujte prosim konfiguraci vasich MCP serveru.",
+      "invalid_api_key": "Neplatny API klic. Zkontrolujte prosim a zkuste to znovu.",
+      "auth_failed": "Autentizace selhala. Overte prosim svuj API klic.",
+      "unknown": "Doslo k nezname chybe."
+    },
+    "abort": {
+      "already_configured": "Profil s timto nazvem jiz existuje. Zvolte prosim jiny nazev."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nastaveni profilu",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "Nazev profilu",
+          "lmstudio_url": "URL serveru",
+          "api_key": "API klic",
+          "model_name": "Nazev modelu",
+          "system_prompt": "Systemove instrukce",
+          "technical_prompt": "Technicke instrukce",
+          "temperature": "Teplota",
+          "max_tokens": "Max tokenu odpovedi",
+          "max_history": "Max zprav historie",
+          "max_iterations": "Max iteraci nastroju",
+          "control_home_assistant": "Ovladat Home Assistant",
+          "response_mode": "Rezim odpovedi",
+          "follow_up_phrases": "Navazujici fraze",
+          "end_words": "Slova pro ukonceni konverzace",
+          "timeout": "Casovy limit odpovedi",
+          "debug_mode": "Rezim ladeni",
+          "ollama_keep_alive": "Udrzovat Ollama aktivni",
+          "ollama_num_ctx": "Kontextove okno Ollama",
+          "clean_responses": "Čisté odpovědi pro hlasový výstup"
+        }
+      },
+      "mcp_server": {
+        "title": "Sdilena nastaveni MCP serveru",
+        "description": "Tato nastaveni jsou sdilena mezi VSEMI profily",
+        "data": {
+          "mcp_port": "Port MCP serveru",
+          "search_provider": "Webove vyhledavani",
+          "brave_api_key": "API klic Brave Search",
+          "allowed_ips": "Dalsi povolene IP/rozsahy",
+          "enable_gap_filling": "Povolit inteligentni index entit",
+          "max_entities_per_discovery": "Max entit na vyhledavani (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Profil Ayarlari",
+        "description": "Benzersiz bir ad ve kisilige sahip yeni bir ajan profili olusturun.",
+        "data": {
+          "profile_name": "Profil Adi",
+          "server_type": "Sunucu Turu"
+        }
+      },
+      "server": {
+        "title": "Sunucu Yapilandirmasi",
+        "description": "Cikarim sunucusu URL'nizi ve MCP sunucu portunuzu yapilandirin.",
+        "data": {
+          "lmstudio_url": "Sunucu URL'si",
+          "api_key": "API Anahtari",
+          "mcp_port": "MCP Sunucu Portu"
+        }
+      },
+      "model": {
+        "title": "Model ve Yonergeler",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "Model Adi",
+          "system_prompt": "Sistem Yonergeleri",
+          "technical_prompt": "Teknik Talimatlar"
+        }
+      },
+      "advanced": {
+        "title": "Gelismis Ayarlar",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "Sicaklik",
+          "max_tokens": "Maksimum Yanit Tokenleri",
+          "max_history": "Maksimum Gecmis Mesajlari",
+          "max_iterations": "Maksimum Arac Yinelemeleri",
+          "control_home_assistant": "Home Assistant'i Kontrol Et",
+          "response_mode": "Yanit Modu",
+          "follow_up_phrases": "Takip Ifadeleri",
+          "end_words": "Konusmayi Bitirme Kelimeleri",
+          "timeout": "Yanit Zaman Asimi",
+          "debug_mode": "Hata Ayiklama Modu",
+          "ollama_keep_alive": "Ollama'yi Aktif Tut",
+          "ollama_num_ctx": "Ollama Baglam Penceresi",
+          "clean_responses": "Sesli Çıktı İçin Yanıtları Temizle"
+        }
+      },
+      "mcp_server": {
+        "title": "Paylasilan MCP Sunucu Ayarlari",
+        "description": "Bu ayarlar TUM profilleri etkiler. Buradaki degisiklikler her MCP Assist konusma ajanini etkileyecektir.",
+        "data": {
+          "mcp_port": "MCP Sunucu Portu",
+          "search_provider": "Web Arama",
+          "brave_api_key": "Brave Search API Anahtari",
+          "allowed_ips": "Ek Izin Verilen IP'ler/Araliklar",
+          "enable_gap_filling": "Akilli Varlik Indeksini Etkinlestir",
+          "max_entities_per_discovery": "Arama Basina Maks Varlik (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cikarim sunucusuna baglanilamiyor. Calistigini ve erisilebilir oldugunu kontrol edin.",
+      "no_models": "Sunucuda yuklenmis model yok. Lutfen once bir model yukleyin.",
+      "invalid_model": "Belirtilen model sunucuda mevcut degil.",
+      "invalid_port": "Port 1024 ile 65535 arasinda olmalidir.",
+      "invalid_ip": "Gecersiz IP adresi veya CIDR araligi formati. Virgullerle ayrilmis degerler kullanin: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "Profil adi gereklidir.",
+      "invalid_json": "Gecersiz JSON formati. Lutfen MCP sunuculari yapilandirmanizi kontrol edin.",
+      "invalid_api_key": "Gecersiz API anahtari. Lutfen kontrol edin ve tekrar deneyin.",
+      "auth_failed": "Kimlik dogrulama basarisiz oldu. Lutfen API anahtarinizi dogrulayin.",
+      "unknown": "Bilinmeyen bir hata olustu."
+    },
+    "abort": {
+      "already_configured": "Bu ada sahip bir profil zaten mevcut. Lutfen farkli bir ad secin."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Profil Ayarlari",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "Profil Adi",
+          "lmstudio_url": "Sunucu URL'si",
+          "api_key": "API Anahtari",
+          "model_name": "Model Adi",
+          "system_prompt": "Sistem Yonergeleri",
+          "technical_prompt": "Teknik Talimatlar",
+          "temperature": "Sicaklik",
+          "max_tokens": "Maksimum Yanit Tokenleri",
+          "max_history": "Maksimum Gecmis Mesajlari",
+          "max_iterations": "Maksimum Arac Yinelemeleri",
+          "control_home_assistant": "Home Assistant'i Kontrol Et",
+          "response_mode": "Yanit Modu",
+          "follow_up_phrases": "Takip Ifadeleri",
+          "end_words": "Konusmayi Bitirme Kelimeleri",
+          "timeout": "Yanit Zaman Asimi",
+          "debug_mode": "Hata Ayiklama Modu",
+          "ollama_keep_alive": "Ollama'yi Aktif Tut",
+          "ollama_num_ctx": "Ollama Baglam Penceresi",
+          "clean_responses": "Sesli Çıktı İçin Yanıtları Temizle"
+        }
+      },
+      "mcp_server": {
+        "title": "Paylasilan MCP Sunucu Ayarlari",
+        "description": "Bu ayarlar TUM profiller tarafindan paylasilir",
+        "data": {
+          "mcp_port": "MCP Sunucu Portu",
+          "search_provider": "Web Arama",
+          "brave_api_key": "Brave Search API Anahtari",
+          "allowed_ips": "Ek Izin Verilen IP'ler/Araliklar",
+          "enable_gap_filling": "Akilli Varlik Indeksini Etkinlestir",
+          "max_entities_per_discovery": "Arama Basina Maks Varlik (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

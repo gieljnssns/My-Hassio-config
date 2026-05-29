@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "配置文件设置",
+        "description": "创建一个具有唯一名称和个性的新代理配置文件。",
+        "data": {
+          "profile_name": "配置文件名称",
+          "server_type": "服务器类型"
+        }
+      },
+      "server": {
+        "title": "服务器配置",
+        "description": "配置您的推理服务器URL和MCP服务器端口。",
+        "data": {
+          "lmstudio_url": "服务器URL",
+          "api_key": "API密钥",
+          "mcp_port": "MCP服务器端口"
+        }
+      },
+      "model": {
+        "title": "模型和提示词",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "模型名称",
+          "system_prompt": "系统提示词",
+          "technical_prompt": "技术指令"
+        }
+      },
+      "advanced": {
+        "title": "高级设置",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "温度",
+          "max_tokens": "最大响应令牌数",
+          "max_history": "最大历史消息数",
+          "max_iterations": "最大工具迭代次数",
+          "control_home_assistant": "控制Home Assistant",
+          "response_mode": "响应模式",
+          "follow_up_phrases": "后续跟进短语",
+          "end_words": "结束对话词语",
+          "timeout": "响应超时",
+          "debug_mode": "调试模式",
+          "ollama_keep_alive": "保持Ollama活跃",
+          "ollama_num_ctx": "Ollama上下文窗口",
+          "clean_responses": "清理语音输出响应"
+        }
+      },
+      "mcp_server": {
+        "title": "共享MCP服务器设置",
+        "description": "这些设置影响所有配置文件。此处的更改将影响每个MCP Assist对话代理。",
+        "data": {
+          "mcp_port": "MCP服务器端口",
+          "search_provider": "网络搜索",
+          "brave_api_key": "Brave搜索API密钥",
+          "allowed_ips": "额外允许的IP/范围",
+          "enable_gap_filling": "启用智能实体索引",
+          "max_entities_per_discovery": "每次发现最大实体数 (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "无法连接到推理服务器。请确保服务器正在运行且可访问。",
+      "no_models": "服务器上没有加载模型。请先加载一个模型。",
+      "invalid_model": "指定的模型在服务器上不可用。",
+      "invalid_port": "端口必须在1024到65535之间。",
+      "invalid_ip": "IP地址或CIDR范围格式无效。请使用逗号分隔的值，如：172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "配置文件名称为必填项。",
+      "invalid_json": "JSON格式无效。请检查您的MCP服务器配置。",
+      "invalid_api_key": "API密钥无效。请检查后重试。",
+      "auth_failed": "身份验证失败。请验证您的API密钥。",
+      "unknown": "发生未知错误。"
+    },
+    "abort": {
+      "already_configured": "已存在同名配置文件。请选择其他名称。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "配置文件设置",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "配置文件名称",
+          "lmstudio_url": "服务器URL",
+          "api_key": "API密钥",
+          "model_name": "模型名称",
+          "system_prompt": "系统提示词",
+          "technical_prompt": "技术指令",
+          "temperature": "温度",
+          "max_tokens": "最大响应令牌数",
+          "max_history": "最大历史消息数",
+          "max_iterations": "最大工具迭代次数",
+          "control_home_assistant": "控制Home Assistant",
+          "response_mode": "响应模式",
+          "follow_up_phrases": "后续跟进短语",
+          "end_words": "结束对话词语",
+          "timeout": "响应超时",
+          "debug_mode": "调试模式",
+          "ollama_keep_alive": "保持Ollama活跃",
+          "ollama_num_ctx": "Ollama上下文窗口",
+          "clean_responses": "清理语音输出响应"
+        }
+      },
+      "mcp_server": {
+        "title": "共享MCP服务器设置",
+        "description": "这些设置在所有配置文件之间共享",
+        "data": {
+          "mcp_port": "MCP服务器端口",
+          "search_provider": "网络搜索",
+          "brave_api_key": "Brave搜索API密钥",
+          "allowed_ips": "额外允许的IP/范围",
+          "enable_gap_filling": "启用智能实体索引",
+          "max_entities_per_discovery": "每次发现最大实体数 (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

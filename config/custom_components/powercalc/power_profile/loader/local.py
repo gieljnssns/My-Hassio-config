@@ -1,3 +1,4 @@
+from functools import partial
 import json
 import logging
 import os
@@ -8,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from custom_components.powercalc.power_profile.error import LibraryLoadingError
 from custom_components.powercalc.power_profile.loader.protocol import Loader
-from custom_components.powercalc.power_profile.power_profile import DeviceType, PowerProfile
+from custom_components.powercalc.power_profile.power_profile import DeviceType, DiscoveryBy, PowerProfile
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,14 +26,24 @@ class LocalLoader(Loader):
         if not self._is_custom_directory:
             await self._hass.async_add_executor_job(self._load_custom_library)
 
-    async def get_manufacturer_listing(self, device_types: set[DeviceType] | None) -> set[tuple[str, str]]:
+    async def get_manufacturer_listing(
+        self,
+        device_types: set[DeviceType] | None,
+        discovery_by: DiscoveryBy | None = None,
+    ) -> set[tuple[str, str]]:
         """Get listing of all available manufacturers or filtered by model device_type."""
         if device_types is None:
-            return {(manufacturer, manufacturer) for manufacturer in self._manufacturer_model_listing}
+            if discovery_by is None:
+                return {(manufacturer, manufacturer) for manufacturer in self._manufacturer_model_listing}
+            return {
+                (manufacturer, manufacturer)
+                for manufacturer, profiles in self._manufacturer_model_listing.items()
+                if any(profile.discovery_by == discovery_by for profile in profiles.values())
+            }
 
         manufacturers: set[tuple[str, str]] = set()
         for manufacturer in self._manufacturer_model_listing:
-            models = await self.get_model_listing(manufacturer, device_types)
+            models = await self.get_model_listing(manufacturer, device_types, discovery_by)
             if not models:
                 continue
             manufacturers.add((manufacturer, manufacturer))
@@ -49,7 +60,12 @@ class LocalLoader(Loader):
 
         return set()
 
-    async def get_model_listing(self, manufacturer: str, device_types: set[DeviceType] | None) -> set[tuple[str, str]]:
+    async def get_model_listing(
+        self,
+        manufacturer: str,
+        device_types: set[DeviceType] | None,
+        discovery_by: DiscoveryBy | None = None,
+    ) -> set[tuple[str, str]]:
         """Get listing of available models for a given manufacturer.
 
         param manufacturer: manufacturer always handled in lower case
@@ -66,6 +82,8 @@ class LocalLoader(Loader):
 
         for profile in models.values():
             if device_types and profile.device_type not in device_types:
+                continue
+            if discovery_by and profile.discovery_by != discovery_by:
                 continue
             found_models.add((profile.model, profile.name or profile.model))
 
@@ -84,12 +102,9 @@ class LocalLoader(Loader):
         _model = model.lower()
 
         if self._is_custom_directory:
-            model_path = os.path.join(self._data_directory)
-            model_json_path = os.path.join(model_path, "model.json")
-            if not os.path.exists(model_json_path):
-                raise LibraryLoadingError(f"model.json not found for manufacturer {_manufacturer} " + f"and model {_model} in path {model_json_path}")
-
-            model_json = await self._hass.async_add_executor_job(self._load_json, model_json_path)
+            model_path, model_json = await self._hass.async_add_executor_job(
+                partial(self._load_custom_model, _manufacturer, _model),
+            )
             return model_json, model_path
 
         lib_models = self._manufacturer_model_listing.get(_manufacturer)
@@ -116,6 +131,10 @@ class LocalLoader(Loader):
 
         profile = next((models[model] for model in models if model.lower() in search_lower), None)
         return [profile.model] if profile else []
+
+    async def find_model_migration(self, manufacturer: str, model: str) -> str | None:
+        """Local custom libraries do not support metadata-driven legacy profile migrations."""
+        return None
 
     def _load_custom_library(self) -> None:
         """Loading custom models and aliases from file system.
@@ -183,6 +202,17 @@ class LocalLoader(Loader):
             return
 
         self._manufacturer_model_listing[manufacturer].update({search_key: profile})
+
+    def _load_custom_model(self, manufacturer: str, model: str) -> tuple[str, dict[str, Any]]:
+        """Load model.json from a directly configured custom model directory."""
+        model_path = os.path.join(self._data_directory)
+        model_json_path = os.path.join(model_path, "model.json")
+        if not os.path.exists(model_json_path):
+            raise LibraryLoadingError(
+                f"model.json not found for manufacturer {manufacturer} and model {model} in path {model_json_path}",
+            )
+
+        return model_path, self._load_json(model_json_path)
 
     def _load_json(self, model_json_path: str) -> dict[str, Any]:
         """Load model.json file for a given model."""

@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Profiloppsett",
+        "description": "Opprett en ny agentprofil med et unikt navn og personlighet.",
+        "data": {
+          "profile_name": "Profilnavn",
+          "server_type": "Servertype"
+        }
+      },
+      "server": {
+        "title": "Serverkonfigurasjon",
+        "description": "Konfigurer URL-en til inferensserveren og MCP-serverporten.",
+        "data": {
+          "lmstudio_url": "Server-URL",
+          "api_key": "API-nokkel",
+          "mcp_port": "MCP-serverport"
+        }
+      },
+      "model": {
+        "title": "Modell og instruksjoner",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "Modellnavn",
+          "system_prompt": "Systeminstruksjoner",
+          "technical_prompt": "Tekniske instruksjoner"
+        }
+      },
+      "advanced": {
+        "title": "Avanserte innstillinger",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "Temperatur",
+          "max_tokens": "Maks svartokens",
+          "max_history": "Maks historikkmeldinger",
+          "max_iterations": "Maks verktoyiterasjoner",
+          "control_home_assistant": "Styr Home Assistant",
+          "response_mode": "Svarmodus",
+          "follow_up_phrases": "Oppfolgingsfraser",
+          "end_words": "Avslutt samtale-ord",
+          "timeout": "Svartidsavbrudd",
+          "debug_mode": "Feilsokingsmodus",
+          "ollama_keep_alive": "Hold Ollama aktiv",
+          "ollama_num_ctx": "Ollama kontekstvindu",
+          "clean_responses": "Rens svar for stemmeoutput"
+        }
+      },
+      "mcp_server": {
+        "title": "Delte MCP-serverinnstillinger",
+        "description": "Disse innstillingene pavirker ALLE profiler. Endringer her vil pavirke hver MCP Assist-samtalagent.",
+        "data": {
+          "mcp_port": "MCP-serverport",
+          "search_provider": "Websok",
+          "brave_api_key": "Brave Search API-nokkel",
+          "allowed_ips": "Ekstra tillatte IP-er/omrader",
+          "enable_gap_filling": "Aktiver smart entitetsindeks",
+          "max_entities_per_discovery": "Maks entiteter per sok (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan ikke koble til inferensserveren. Sorg for at den kjorer og er tilgjengelig.",
+      "no_models": "Ingen modeller lastet pa serveren. Last inn en modell forst.",
+      "invalid_model": "Den angitte modellen er ikke tilgjengelig pa serveren.",
+      "invalid_port": "Porten ma vaere mellom 1024 og 65535.",
+      "invalid_ip": "Ugyldig IP-adresse- eller CIDR-omradeformat. Bruk kommaseparerte verdier som: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "Profilnavn er pavkrevd.",
+      "invalid_json": "Ugyldig JSON-format. Sjekk MCP-serverkonfigurasjonen din.",
+      "invalid_api_key": "Ugyldig API-nokkel. Sjekk og prov igjen.",
+      "auth_failed": "Autentisering mislyktes. Verifiser API-nokkelen din.",
+      "unknown": "En ukjent feil oppstod."
+    },
+    "abort": {
+      "already_configured": "En profil med dette navnet finnes allerede. Velg et annet navn."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Profilinnstillinger",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "Profilnavn",
+          "lmstudio_url": "Server-URL",
+          "api_key": "API-nokkel",
+          "model_name": "Modellnavn",
+          "system_prompt": "Systeminstruksjoner",
+          "technical_prompt": "Tekniske instruksjoner",
+          "temperature": "Temperatur",
+          "max_tokens": "Maks svartokens",
+          "max_history": "Maks historikkmeldinger",
+          "max_iterations": "Maks verktoyiterasjoner",
+          "control_home_assistant": "Styr Home Assistant",
+          "response_mode": "Svarmodus",
+          "follow_up_phrases": "Oppfolgingsfraser",
+          "end_words": "Avslutt samtale-ord",
+          "timeout": "Svartidsavbrudd",
+          "debug_mode": "Feilsokingsmodus",
+          "ollama_keep_alive": "Hold Ollama aktiv",
+          "ollama_num_ctx": "Ollama kontekstvindu",
+          "clean_responses": "Rens svar for stemmeoutput"
+        }
+      },
+      "mcp_server": {
+        "title": "Delte MCP-serverinnstillinger",
+        "description": "Disse innstillingene deles av ALLE profiler",
+        "data": {
+          "mcp_port": "MCP-serverport",
+          "search_provider": "Websok",
+          "brave_api_key": "Brave Search API-nokkel",
+          "allowed_ips": "Ekstra tillatte IP-er/omrader",
+          "enable_gap_filling": "Aktiver smart entitetsindeks",
+          "max_entities_per_discovery": "Maks entiteter per sok (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

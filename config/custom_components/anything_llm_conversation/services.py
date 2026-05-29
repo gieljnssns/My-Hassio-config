@@ -137,7 +137,7 @@ async def async_setup_services(hass: HomeAssistant, config: ConfigType) -> None:
 
         cleared = 0
         for subentry in entry.subentries.values():
-            entity = hass.data.get(f"{DOMAIN}_entity_{subentry.subentry_id}")
+            entity = hass.data.get(DOMAIN, {}).get(f"entity_{subentry.subentry_id}")
             if entity is not None:
                 entity.reset_threads(conversation_id)
                 cleared += 1

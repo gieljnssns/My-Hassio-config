@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Profiilin asetus",
+        "description": "Luo uusi agenttiprofiili yksilollisella nimella ja persoonallisuudella.",
+        "data": {
+          "profile_name": "Profiilin nimi",
+          "server_type": "Palvelintyyppi"
+        }
+      },
+      "server": {
+        "title": "Palvelimen maaritys",
+        "description": "Maarita paattelypalvelimesi URL ja MCP-palvelinportti.",
+        "data": {
+          "lmstudio_url": "Palvelimen URL",
+          "api_key": "API-avain",
+          "mcp_port": "MCP-palvelinportti"
+        }
+      },
+      "model": {
+        "title": "Malli ja ohjeet",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "Mallin nimi",
+          "system_prompt": "Jarjestelmaohjeet",
+          "technical_prompt": "Tekniset ohjeet"
+        }
+      },
+      "advanced": {
+        "title": "Lisaasetukset",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "Lampotila",
+          "max_tokens": "Vastauksen enimmais-tokenit",
+          "max_history": "Historian enimmaisviestit",
+          "max_iterations": "Tyokalujen enimmaisiteraatiot",
+          "control_home_assistant": "Ohjaa Home Assistantia",
+          "response_mode": "Vastaustila",
+          "follow_up_phrases": "Jatkokysymysfraasit",
+          "end_words": "Keskustelun lopetusSanat",
+          "timeout": "Vastauksen aikakatkaisu",
+          "debug_mode": "Virheenkorjaustila",
+          "ollama_keep_alive": "Pida Ollama aktiivisena",
+          "ollama_num_ctx": "Ollaman konteksti-ikkuna",
+          "clean_responses": "Puhdista vastaukset äänilähtöä varten"
+        }
+      },
+      "mcp_server": {
+        "title": "Jaetut MCP-palvelinasetukset",
+        "description": "Nama asetukset vaikuttavat KAIKKIIN profiileihin. Muutokset taalla vaikuttavat jokaiseen MCP Assist -keskusteluagenttiin.",
+        "data": {
+          "mcp_port": "MCP-palvelinportti",
+          "search_provider": "Verkkohaku",
+          "brave_api_key": "Brave Search API-avain",
+          "allowed_ips": "Lisat sallitut IP:t/alueet",
+          "enable_gap_filling": "Ota alyas entiteetti-indeksi kayttoon",
+          "max_entities_per_discovery": "Max entiteettia per haku (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Yhteyden muodostaminen paattelypalvelimeen ei onnistu. Varmista, etta se on kaynnissa ja saavutettavissa.",
+      "no_models": "Palvelimella ei ole ladattuja malleja. Lataa ensin malli.",
+      "invalid_model": "Maaritetty malli ei ole saatavilla palvelimella.",
+      "invalid_port": "Portin on oltava valilla 1024-65535.",
+      "invalid_ip": "Virheellinen IP-osoite- tai CIDR-aluemuoto. Kayta pilkulla erotettuja arvoja, kuten: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "Profiilin nimi vaaditaan.",
+      "invalid_json": "Virheellinen JSON-muoto. Tarkista MCP-palvelimien maaritys.",
+      "invalid_api_key": "Virheellinen API-avain. Tarkista ja yrita uudelleen.",
+      "auth_failed": "Todennus epaonnistui. Vahvista API-avaimesi.",
+      "unknown": "Tuntematon virhe tapahtui."
+    },
+    "abort": {
+      "already_configured": "Taman niminen profiili on jo olemassa. Valitse toinen nimi."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Profiilin asetukset",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "Profiilin nimi",
+          "lmstudio_url": "Palvelimen URL",
+          "api_key": "API-avain",
+          "model_name": "Mallin nimi",
+          "system_prompt": "Jarjestelmaohjeet",
+          "technical_prompt": "Tekniset ohjeet",
+          "temperature": "Lampotila",
+          "max_tokens": "Vastauksen enimmais-tokenit",
+          "max_history": "Historian enimmaisviestit",
+          "max_iterations": "Tyokalujen enimmaisiteraatiot",
+          "control_home_assistant": "Ohjaa Home Assistantia",
+          "response_mode": "Vastaustila",
+          "follow_up_phrases": "Jatkokysymysfraasit",
+          "end_words": "Keskustelun lopetusSanat",
+          "timeout": "Vastauksen aikakatkaisu",
+          "debug_mode": "Virheenkorjaustila",
+          "ollama_keep_alive": "Pida Ollama aktiivisena",
+          "ollama_num_ctx": "Ollaman konteksti-ikkuna",
+          "clean_responses": "Puhdista vastaukset äänilähtöä varten"
+        }
+      },
+      "mcp_server": {
+        "title": "Jaetut MCP-palvelinasetukset",
+        "description": "Nama asetukset jaetaan KAIKKIEN profiilien kesken",
+        "data": {
+          "mcp_port": "MCP-palvelinportti",
+          "search_provider": "Verkkohaku",
+          "brave_api_key": "Brave Search API-avain",
+          "allowed_ips": "Lisat sallitut IP:t/alueet",
+          "enable_gap_filling": "Ota alyas entiteetti-indeksi kayttoon",
+          "max_entities_per_discovery": "Max entiteettia per haku (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

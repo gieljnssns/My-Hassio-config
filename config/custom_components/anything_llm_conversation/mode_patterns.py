@@ -135,12 +135,53 @@ MODE_SUGGESTION_PATTERNS = {
 # How many pattern matches needed before suggesting a mode
 MODE_SUGGESTION_THRESHOLD = 2  # Require at least 2 pattern matches to reduce false positives
 
+# Maps spoken/alias names to their canonical workspace slug.
+# Used in _check_workspace_switch to normalise voice input like "research mode" → "research".
+WORKSPACE_SLUG_ALIASES: dict[str, str] = {
+    "adventure": "adventure",
+    "author": "adventure",
+    "story": "adventure",
+    "creative": "adventure",
+    "analysis": "analysis",
+    "analyze": "analysis",
+    "analyzer": "analysis",
+    "research": "research",
+    "researcher": "research",
+    "visual": "visual",
+    "vision": "visual",
+    "image": "visual",
+    "multimodal": "visual",
+    "investigation": "investigation",
+    "investigate": "investigation",
+    "forensics": "investigation",
+    "root-cause": "investigation",
+    "rootcause": "investigation",
+    "security": "security",
+    "secure": "security",
+    "alarm": "security",
+    "debug": "investigation",
+    "troubleshooting": "investigation",
+    "troubleshoot": "investigation",
+    "code-review": "investigation",
+    "code_review": "investigation",
+    "code": "investigation",
+    "default": "default",
+    "normal": "default",
+    "standard": "default",
+    "jarvis": "default",
+    "general": "default",
+    "assistant": "default",
+    "guest": "default",
+    "simple": "default",
+    "visitor": "default",
+}
+
 # Issue 18: compile each mode's pattern list into a single regex so detect_suggested_modes
 # scans the input text once per mode instead of doing N individual substring checks.
 # Patterns sorted longest-first so multi-word phrases take priority in alternation.
 _MODE_PATTERN_REGEXES: dict[str, re.Pattern] = {
     mode_key: re.compile(
-        r"(?:" + "|".join(re.escape(p) for p in sorted(patterns, key=len, reverse=True)) + r")",
+        r"\b(?:" + "|".join(re.escape(p) for p in sorted(patterns, key=len, reverse=True)) + r")\b",
         re.IGNORECASE,
     )
     for mode_key, patterns in MODE_SUGGESTION_PATTERNS.items()

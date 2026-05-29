@@ -33,7 +33,11 @@ import voluptuous as vol
 
 from .analytics.analytics import ANALYTICS_INTERVAL, Analytics
 from .common import validate_name_pattern
-from .configuration.global_config import FLAG_HAS_GLOBAL_GUI_CONFIG, get_global_configuration, get_global_gui_configuration
+from .configuration.global_config import (
+    FLAG_HAS_GLOBAL_GUI_CONFIG,
+    get_global_configuration,
+    get_global_gui_configuration,
+)
 from .const import (
     CONF_CREATE_DOMAIN_GROUPS,
     CONF_CREATE_ENERGY_SENSORS,
@@ -96,7 +100,7 @@ from .const import (
     UnitPrefix,
 )
 from .discovery import DiscoveryManager, DiscoveryStatus
-from .migrate import async_migrate_config_entry
+from .migrate import async_fix_legacy_profile_config_entry, async_migrate_config_entry
 from .power_profile.power_profile import DeviceType
 from .sensor import SENSOR_CONFIG
 from .sensors.group.config_entry_utils import (
@@ -258,7 +262,9 @@ async def create_discovery_manager_instance(
     global_powercalc_config: ConfigType,
 ) -> DiscoveryManager:
     discovery_config = global_powercalc_config.get(CONF_DISCOVERY, {})
-    exclude_device_types = [DeviceType(device_type) for device_type in discovery_config.get(CONF_EXCLUDE_DEVICE_TYPES, [])]
+    exclude_device_types = [
+        DeviceType(device_type) for device_type in discovery_config.get(CONF_EXCLUDE_DEVICE_TYPES, [])
+    ]
     exclude_self_usage = discovery_config.get(CONF_EXCLUDE_SELF_USAGE, False)
     enable_autodiscovery = discovery_config.get(CONF_ENABLED, True)
 
@@ -440,6 +446,7 @@ async def setup_yaml_sensors(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Powercalc integration from a config entry."""
 
+    await async_fix_legacy_profile_config_entry(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR, Platform.SELECT])
     # await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
 
@@ -544,7 +551,7 @@ async def repair_none_config_entries_issue(hass: HomeAssistant) -> None:
         try:
             unique_id = f"{int(time.time() * 1000)}_{random.randint(1000, 9999)}"  # noqa: S311
             object.__setattr__(entry, "unique_id", unique_id)
-            hass.config_entries._entries._index_entry(entry)  # noqa
+            hass.config_entries._entries._index_entry(entry)  # noqa: SLF001
             await hass.config_entries.async_remove(entry.entry_id)
         except Exception as e:  # pragma: no cover
             _LOGGER.error("problem while cleaning up None entities", exc_info=e)  # pragma: no cover

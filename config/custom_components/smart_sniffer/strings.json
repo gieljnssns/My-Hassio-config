@@ -1,0 +1,68 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to SMART Sniffer Agent",
+        "description": "Enter the connection details for the SMART Sniffer agent running on the target machine.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "token": "Bearer Token (optional)",
+          "scan_interval": "Polling Interval (seconds)"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the machine running the SMART Sniffer agent.",
+          "port": "HTTP port the agent is listening on (default 9099).",
+          "token": "Leave blank if the agent has no auth configured.",
+          "scan_interval": "How often to poll the agent for updated SMART data."
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "SMART Sniffer Agent Discovered",
+        "description": "Found agent on **{hostname}** ({host}:{port}) with {drives} drive(s).{agent_version_warning}",
+        "data": {
+          "token": "Bearer Token"
+        },
+        "data_description": {
+          "token": "Enter the bearer token if auth is enabled on this agent. Leave blank otherwise."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the SMART Sniffer agent. Check the host, port, and token.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This SMART Sniffer agent is already configured."
+    },
+    "flow_title": "SMART Sniffer ({hostname})"
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "SMART Sniffer Settings",
+        "description": "Adjust connection and polling settings. The host cannot be changed — remove and re-add the integration to change it.",
+        "data": {
+          "port": "Port",
+          "token": "Bearer Token",
+          "scan_interval": "Polling Interval (seconds)"
+        },
+        "data_description": {
+          "port": "HTTP port the agent is listening on.",
+          "token": "Leave blank if the agent has no auth configured.",
+          "scan_interval": "How often to poll for updated SMART data (in seconds)."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect with the new settings. Check the port and token.",
+      "unknown": "An unexpected error occurred."
+    }
+  },
+  "issues": {
+    "agent_outdated": {
+      "title": "SMART Sniffer: Update agent on {hostname} (v{current_version} → v{min_version})",
+      "description": "The agent on **{hostname}** is running version **{current_version}**, but this integration requires at least **{min_version}**.\n\nTo update, SSH into the host and run:\n```\ncurl -sSL https://raw.githubusercontent.com/DAB-LABS/smart-sniffer/main/install.sh | sudo bash\n```\nThe installer will detect the existing installation and upgrade in place. This repair will clear automatically once the agent reports a compatible version."
+    }
+  }
+}

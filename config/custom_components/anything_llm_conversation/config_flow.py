@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import re
 import types
 from typing import Any
 
@@ -29,6 +28,9 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
     TemplateSelector,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .const import (
@@ -39,10 +41,6 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_ATTACH_USERNAME,
     CONF_THREAD_SLUG,
-    CONF_FAILOVER_BASE_URL,
-    CONF_FAILOVER_API_KEY,
-    CONF_FAILOVER_WORKSPACE_SLUG,
-    CONF_FAILOVER_THREAD_SLUG,
     CONF_ENABLE_AGENT_PREFIX,
     CONF_AGENT_KEYWORDS,
     CONF_ENABLE_HEALTH_CHECK,
@@ -59,25 +57,15 @@ from .const import (
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_THREAD_SLUG,
-    DEFAULT_FAILOVER_THREAD_SLUG,
-    DEFAULT_FAILOVER_WORKSPACE_SLUG,
     DEFAULT_ENABLE_AGENT_PREFIX,
     DEFAULT_AGENT_KEYWORDS,
     DEFAULT_ENABLE_HEALTH_CHECK,
     DOMAIN,
 )
-from .helpers import get_anythingllm_client
+from .helpers import get_anythingllm_client, sanitize_slug
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def _sanitize_slug(value: str) -> str:
-    """Sanitize a workspace or thread slug for safe URL interpolation."""
-    if not value:
-        return value
-    slug = re.sub(r'[^a-z0-9_-]', '-', value.lower().strip())
-    slug = re.sub(r'-+', '-', slug).strip('-')
-    return slug
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -85,10 +73,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): str,
         vol.Optional(CONF_BASE_URL, default=DEFAULT_CONF_BASE_URL): str,
         vol.Optional(CONF_WORKSPACE_SLUG, default=DEFAULT_WORKSPACE_SLUG, description="AnythingLLM Workspace Slug"): str,
-        vol.Optional(CONF_FAILOVER_API_KEY, description="Failover API Key"): str,
-        vol.Optional(CONF_FAILOVER_BASE_URL, description="Failover Base URL"): str,
-        vol.Optional(CONF_FAILOVER_WORKSPACE_SLUG, description="Failover Workspace Slug"): str,
-        vol.Optional(CONF_ENABLE_HEALTH_CHECK, default=DEFAULT_ENABLE_HEALTH_CHECK, description="Enable health check (disable for single endpoint setups)"): bool,
+        vol.Optional(CONF_ENABLE_HEALTH_CHECK, default=DEFAULT_ENABLE_HEALTH_CHECK, description="Enable health check"): bool,
         vol.Optional(
             CONF_HEALTH_CHECK_TIMEOUT,
             default=DEFAULT_HEALTH_CHECK_TIMEOUT,
@@ -110,8 +95,6 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
         CONF_ATTACH_USERNAME: DEFAULT_ATTACH_USERNAME,
         CONF_THREAD_SLUG: DEFAULT_THREAD_SLUG,
-        CONF_FAILOVER_WORKSPACE_SLUG: DEFAULT_FAILOVER_WORKSPACE_SLUG,
-        CONF_FAILOVER_THREAD_SLUG: DEFAULT_FAILOVER_THREAD_SLUG,
         CONF_ENABLE_AGENT_PREFIX: DEFAULT_ENABLE_AGENT_PREFIX,
         CONF_AGENT_KEYWORDS: DEFAULT_AGENT_KEYWORDS,
         CONF_ENABLE_HEALTH_CHECK: DEFAULT_ENABLE_HEALTH_CHECK,
@@ -129,15 +112,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     api_key = data[CONF_API_KEY]
     base_url = data.get(CONF_BASE_URL, DEFAULT_CONF_BASE_URL)
     raw_slug = data.get(CONF_WORKSPACE_SLUG, DEFAULT_WORKSPACE_SLUG)
-    workspace_slug = re.sub(r'[^a-z0-9_-]', '-', raw_slug.lower().strip())
-    failover_api_key = data.get(CONF_FAILOVER_API_KEY)
-    failover_base_url = data.get(CONF_FAILOVER_BASE_URL)
-    raw_failover_slug = data.get(CONF_FAILOVER_WORKSPACE_SLUG)
-    failover_workspace_slug = (
-        re.sub(r'[^a-z0-9_-]', '-', raw_failover_slug.lower().strip())
-        if raw_failover_slug
-        else None
-    )
+    workspace_slug = sanitize_slug(raw_slug)
 
     # Ensure timeouts are float
     health_check_timeout = float(data.get(CONF_HEALTH_CHECK_TIMEOUT, DEFAULT_HEALTH_CHECK_TIMEOUT))
@@ -148,11 +123,40 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         api_key=api_key,
         base_url=base_url,
         workspace_slug=workspace_slug,
-        failover_api_key=failover_api_key,
-        failover_base_url=failover_base_url,
-        failover_workspace_slug=failover_workspace_slug,
         health_check_timeout=health_check_timeout,
         chat_timeout=chat_timeout,
+    )
+
+
+def _build_reconfigure_schema(data: dict[str, Any]) -> vol.Schema:
+    """Build the reconfigure form schema pre-filled with current values."""
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_API_KEY,
+                default=data.get(CONF_API_KEY, ""),
+            ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+            vol.Optional(
+                CONF_BASE_URL,
+                default=data.get(CONF_BASE_URL, DEFAULT_CONF_BASE_URL),
+            ): str,
+            vol.Optional(
+                CONF_WORKSPACE_SLUG,
+                default=data.get(CONF_WORKSPACE_SLUG, DEFAULT_WORKSPACE_SLUG),
+            ): str,
+            vol.Optional(
+                CONF_ENABLE_HEALTH_CHECK,
+                default=data.get(CONF_ENABLE_HEALTH_CHECK, DEFAULT_ENABLE_HEALTH_CHECK),
+            ): BooleanSelector(),
+            vol.Optional(
+                CONF_HEALTH_CHECK_TIMEOUT,
+                default=data.get(CONF_HEALTH_CHECK_TIMEOUT, DEFAULT_HEALTH_CHECK_TIMEOUT),
+            ): NumberSelector(NumberSelectorConfig(min=1, max=120, step=0.5)),
+            vol.Optional(
+                CONF_CHAT_TIMEOUT,
+                default=data.get(CONF_CHAT_TIMEOUT, DEFAULT_CHAT_TIMEOUT),
+            ): NumberSelector(NumberSelectorConfig(min=5, max=600, step=1)),
+        }
     )
 
 
@@ -188,11 +192,10 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 subentries=[
                     {
                         "subentry_type": "conversation",
-                        "data": (lambda opts: (
-                            opts.__setitem__(CONF_WORKSPACE_SLUG, user_input.get(CONF_WORKSPACE_SLUG, opts.get(CONF_WORKSPACE_SLUG))) or
-                            opts.__setitem__(CONF_FAILOVER_WORKSPACE_SLUG, user_input.get(CONF_FAILOVER_WORKSPACE_SLUG, opts.get(CONF_FAILOVER_WORKSPACE_SLUG))) or
-                            opts
-                        ))(dict(DEFAULT_OPTIONS)),
+                        "data": {
+                            **DEFAULT_OPTIONS,
+                            CONF_WORKSPACE_SLUG: user_input.get(CONF_WORKSPACE_SLUG, DEFAULT_WORKSPACE_SLUG),
+                        },
                         "title": DEFAULT_CONVERSATION_NAME,
                         "unique_id": None,
                     }
@@ -223,16 +226,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             
             # Show form again with errors
-            reconfigure_schema = vol.Schema(
-                {
-                    vol.Required(CONF_API_KEY, default=user_input.get(CONF_API_KEY)): str,
-                    vol.Optional(CONF_BASE_URL, default=user_input.get(CONF_BASE_URL, DEFAULT_CONF_BASE_URL)): str,
-                    vol.Optional(CONF_WORKSPACE_SLUG, default=user_input.get(CONF_WORKSPACE_SLUG, DEFAULT_WORKSPACE_SLUG)): str,
-                    vol.Optional(CONF_FAILOVER_API_KEY, default=user_input.get(CONF_FAILOVER_API_KEY, "")): str,
-                    vol.Optional(CONF_FAILOVER_BASE_URL, default=user_input.get(CONF_FAILOVER_BASE_URL, "")): str,
-                    vol.Optional(CONF_FAILOVER_WORKSPACE_SLUG, default=user_input.get(CONF_FAILOVER_WORKSPACE_SLUG, "")): str,
-                }
-            )
+            reconfigure_schema = _build_reconfigure_schema(user_input)
             return self.async_show_form(
                 step_id="reconfigure",
                 data_schema=reconfigure_schema,
@@ -240,17 +234,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         
         # Initial display - populate with current values
-        reconfigure_schema = vol.Schema(
-            {
-                vol.Required(CONF_API_KEY, default=entry.data.get(CONF_API_KEY)): str,
-                vol.Optional(CONF_BASE_URL, default=entry.data.get(CONF_BASE_URL, DEFAULT_CONF_BASE_URL)): str,
-                vol.Optional(CONF_WORKSPACE_SLUG, default=entry.data.get(CONF_WORKSPACE_SLUG, DEFAULT_WORKSPACE_SLUG)): str,
-                vol.Optional(CONF_FAILOVER_API_KEY, default=entry.data.get(CONF_FAILOVER_API_KEY, "")): str,
-                vol.Optional(CONF_FAILOVER_BASE_URL, default=entry.data.get(CONF_FAILOVER_BASE_URL, "")): str,
-                vol.Optional(CONF_FAILOVER_WORKSPACE_SLUG, default=entry.data.get(CONF_FAILOVER_WORKSPACE_SLUG, "")): str,
-                vol.Optional(CONF_ENABLE_HEALTH_CHECK, default=entry.data.get(CONF_ENABLE_HEALTH_CHECK, DEFAULT_ENABLE_HEALTH_CHECK)): BooleanSelector(),
-            }
-        )
+        reconfigure_schema = _build_reconfigure_schema(entry.data)
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=reconfigure_schema,
@@ -278,15 +262,11 @@ class AnythingLLMSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Add a subentry."""
-        # Start with default options and inherit workspace slugs from integration
+        """Add a subentry, inheriting workspace slug from parent integration."""
         self.options = dict(DEFAULT_OPTIONS)
         entry = self._get_entry()
-        # Inherit workspace slugs from integration settings
         if CONF_WORKSPACE_SLUG in entry.data:
             self.options[CONF_WORKSPACE_SLUG] = entry.data[CONF_WORKSPACE_SLUG]
-        if CONF_FAILOVER_WORKSPACE_SLUG in entry.data:
-            self.options[CONF_FAILOVER_WORKSPACE_SLUG] = entry.data[CONF_FAILOVER_WORKSPACE_SLUG]
         return await self.async_step_init()
 
     async def async_step_reconfigure(
@@ -308,11 +288,9 @@ class AnythingLLMSubentryFlowHandler(ConfigSubentryFlow):
             for _slug_key in (
                 CONF_WORKSPACE_SLUG,
                 CONF_THREAD_SLUG,
-                CONF_FAILOVER_WORKSPACE_SLUG,
-                CONF_FAILOVER_THREAD_SLUG,
             ):
                 if user_input.get(_slug_key):
-                    user_input[_slug_key] = _sanitize_slug(user_input[_slug_key])
+                    user_input[_slug_key] = sanitize_slug(user_input[_slug_key])
             if self._is_new:
                 title = user_input.get(CONF_NAME, DEFAULT_NAME)
                 if CONF_NAME in user_input:
@@ -373,16 +351,6 @@ class AnythingLLMSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_THREAD_SLUG,
                 description={"suggested_value": options.get(CONF_THREAD_SLUG)},
                 default=options.get(CONF_THREAD_SLUG, DEFAULT_THREAD_SLUG),
-            ): str,
-            vol.Optional(
-                CONF_FAILOVER_WORKSPACE_SLUG,
-                description={"suggested_value": options.get(CONF_FAILOVER_WORKSPACE_SLUG)},
-                default=options.get(CONF_FAILOVER_WORKSPACE_SLUG, entry.data.get(CONF_FAILOVER_WORKSPACE_SLUG, DEFAULT_FAILOVER_WORKSPACE_SLUG)),
-            ): str,
-            vol.Optional(
-                CONF_FAILOVER_THREAD_SLUG,
-                description={"suggested_value": options.get(CONF_FAILOVER_THREAD_SLUG)},
-                default=options.get(CONF_FAILOVER_THREAD_SLUG, DEFAULT_FAILOVER_THREAD_SLUG),
             ): str,
             vol.Optional(
                 CONF_ENABLE_AGENT_PREFIX,

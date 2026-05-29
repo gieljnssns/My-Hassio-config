@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Profiel instellen",
+        "description": "Maak een nieuw agentprofiel met een unieke naam en persoonlijkheid.",
+        "data": {
+          "profile_name": "Profielnaam",
+          "server_type": "Servertype"
+        }
+      },
+      "server": {
+        "title": "Serverconfiguratie",
+        "description": "Configureer de URL van je inferentieserver en de MCP-serverpoort.",
+        "data": {
+          "lmstudio_url": "Server-URL",
+          "api_key": "API-sleutel",
+          "mcp_port": "MCP-serverpoort"
+        }
+      },
+      "model": {
+        "title": "Model & instructies",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "Modelnaam",
+          "system_prompt": "Systeeminstructies",
+          "technical_prompt": "Technische instructies"
+        }
+      },
+      "advanced": {
+        "title": "Geavanceerde instellingen",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "Temperatuur",
+          "max_tokens": "Maximale antwoordtokens",
+          "max_history": "Maximale geschiedenisberichten",
+          "max_iterations": "Maximale tooliteraties",
+          "control_home_assistant": "Home Assistant bedienen",
+          "response_mode": "Antwoordmodus",
+          "follow_up_phrases": "Vervolgzinnen",
+          "end_words": "Gesprek-beeindigingswoorden",
+          "timeout": "Antwoord time-out",
+          "debug_mode": "Debugmodus",
+          "ollama_keep_alive": "Ollama actief houden",
+          "ollama_num_ctx": "Ollama contextvenster",
+          "clean_responses": "Antwoorden opschonen voor spraakuitvoer"
+        }
+      },
+      "mcp_server": {
+        "title": "Gedeelde MCP-serverinstellingen",
+        "description": "Deze instellingen zijn van invloed op ALLE profielen. Wijzigingen hier hebben invloed op elke MCP Assist-conversatieagent.",
+        "data": {
+          "mcp_port": "MCP-serverpoort",
+          "search_provider": "Webzoeken",
+          "brave_api_key": "Brave Search API-sleutel",
+          "allowed_ips": "Extra toegestane IPs/bereiken",
+          "enable_gap_filling": "Slimme entiteitsindex inschakelen",
+          "max_entities_per_discovery": "Max entiteiten per zoekopdracht (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met de inferentieserver. Zorg ervoor dat deze actief en bereikbaar is.",
+      "no_models": "Geen modellen geladen op de server. Laad eerst een model.",
+      "invalid_model": "Het opgegeven model is niet beschikbaar op de server.",
+      "invalid_port": "Poort moet tussen 1024 en 65535 liggen.",
+      "invalid_ip": "Ongeldig IP-adres of CIDR-bereikformaat. Gebruik kommagescheiden waarden zoals: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "Profielnaam is verplicht.",
+      "invalid_json": "Ongeldig JSON-formaat. Controleer je MCP-serversconfiguratie.",
+      "invalid_api_key": "Ongeldige API-sleutel. Controleer en probeer opnieuw.",
+      "auth_failed": "Authenticatie mislukt. Controleer je API-sleutel.",
+      "unknown": "Er is een onbekende fout opgetreden."
+    },
+    "abort": {
+      "already_configured": "Een profiel met deze naam bestaat al. Kies een andere naam."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Profielinstellingen",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "Profielnaam",
+          "lmstudio_url": "Server-URL",
+          "api_key": "API-sleutel",
+          "model_name": "Modelnaam",
+          "system_prompt": "Systeeminstructies",
+          "technical_prompt": "Technische instructies",
+          "temperature": "Temperatuur",
+          "max_tokens": "Maximale antwoordtokens",
+          "max_history": "Maximale geschiedenisberichten",
+          "max_iterations": "Maximale tooliteraties",
+          "control_home_assistant": "Home Assistant bedienen",
+          "response_mode": "Antwoordmodus",
+          "follow_up_phrases": "Vervolgzinnen",
+          "end_words": "Gesprek-beeindigingswoorden",
+          "timeout": "Antwoord time-out",
+          "debug_mode": "Debugmodus",
+          "ollama_keep_alive": "Ollama actief houden",
+          "ollama_num_ctx": "Ollama contextvenster",
+          "clean_responses": "Antwoorden opschonen voor spraakuitvoer"
+        }
+      },
+      "mcp_server": {
+        "title": "Gedeelde MCP-serverinstellingen",
+        "description": "Deze instellingen worden gedeeld door ALLE profielen",
+        "data": {
+          "mcp_port": "MCP-serverpoort",
+          "search_provider": "Webzoeken",
+          "brave_api_key": "Brave Search API-sleutel",
+          "allowed_ips": "Extra toegestane IPs/bereiken",
+          "enable_gap_filling": "Slimme entiteitsindex inschakelen",
+          "max_entities_per_discovery": "Max entiteiten per zoekopdracht (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

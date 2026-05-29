@@ -1,16 +1,22 @@
 from __future__ import annotations
 
 import asyncio
+import datetime
 import importlib.metadata
 import inspect
 import logging
-from collections import OrderedDict
 
+from awesomeversion import AwesomeVersion
+from awesomeversion.exceptions import (
+    AwesomeVersionCompareException,
+    AwesomeVersionStrategyException,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.util import dt
 from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.client.mixin import ModbusClientMixin
 from pymodbus.exceptions import ConnectionException, ModbusIOException
@@ -27,6 +33,7 @@ from .const import (
     DOMAIN,
     METER_REG_BASE,
     PYMODBUS_REQUIRED_VERSION,
+    STATUS_VENDOR4_VERSION,
     ConfDefaultFlag,
     ConfDefaultInt,
     ConfDefaultStr,
@@ -346,12 +353,18 @@ class SolarEdgeModbusMultiHub:
         try:
             for inverter in self.inverters:
                 await inverter.read_modbus_data()
-
             for meter in self.meters:
                 await meter.read_modbus_data()
-
             for battery in self.batteries:
                 await battery.read_modbus_data()
+
+            timestamp = dt.now()
+            for inverter in self.inverters:
+                inverter.set_last_update(timestamp)
+            for meter in self.meters:
+                meter.set_last_update(timestamp)
+            for battery in self.batteries:
+                battery.set_last_update(timestamp)
 
         except ModbusReadError as e:
             self.disconnect()
@@ -473,6 +486,14 @@ class SolarEdgeModbusMultiHub:
 
         if not self.keep_modbus_open:
             self.disconnect()
+
+        timestamp = dt.now()
+        for inverter in self.inverters:
+            inverter.set_last_update(timestamp)
+        for meter in self.meters:
+            meter.set_last_update(timestamp)
+        for battery in self.batteries:
+            battery.set_last_update(timestamp)
 
         return True
 
@@ -818,9 +839,9 @@ class SolarEdgeInverter:
         self.inverter_unit_id = device_id
         self.hub = hub
         self.mmppt_units = []
-        self.decoded_common = []
-        self.decoded_model = []
-        self.decoded_mmppt = []
+        self.decoded_common = {}
+        self.decoded_model = {}
+        self.decoded_mmppt = {}
         self.decoded_storage_control = None
         self.has_parent = False
         self.has_battery = None
@@ -828,6 +849,8 @@ class SolarEdgeInverter:
         self.advanced_power_control = None
         self.site_limit_control = None
         self._grid_status = None
+        self._last_update_timestamp = None
+        self._use_status_vendor4 = False
 
     async def init_device(self) -> None:
         """Set up data about the device from modbus."""
@@ -837,7 +860,7 @@ class SolarEdgeInverter:
                 unit=self.inverter_unit_id, address=40000, rcount=69
             )
 
-            self.decoded_common = OrderedDict(
+            self.decoded_common = dict(
                 [
                     (
                         "C_SunSpec_ID",
@@ -856,7 +879,7 @@ class SolarEdgeInverter:
             ]
             uint16_data = inverter_data.registers[2:4] + [inverter_data.registers[68]]
             self.decoded_common.update(
-                OrderedDict(
+                dict(
                     zip(
                         uint16_fields,
                         ModbusClientMixin.convert_from_registers(
@@ -868,7 +891,7 @@ class SolarEdgeInverter:
             )
 
             self.decoded_common.update(
-                OrderedDict(
+                dict(
                     [
                         (
                             "C_Manufacturer",  # string(32)
@@ -954,7 +977,7 @@ class SolarEdgeInverter:
                 unit=self.inverter_unit_id, address=40121, rcount=9
             )
 
-            self.decoded_mmppt = OrderedDict(
+            self.decoded_mmppt = dict(
                 [
                     (
                         "mmppt_DID",
@@ -1020,6 +1043,16 @@ class SolarEdgeInverter:
         self.name = f"{self.hub.hub_id.capitalize()} I{self.inverter_unit_id}"
         self.uid_base = f"{self.model}_{self.serial}"
 
+        try:
+            this_ver = AwesomeVersion(self.decoded_common["C_Version"])
+            self._use_status_vendor4 = this_ver >= AwesomeVersion(
+                STATUS_VENDOR4_VERSION
+            )
+        except (AwesomeVersionCompareException, AwesomeVersionStrategyException) as e:
+            _LOGGER.error(
+                f"Error checking inverter version: {e}. Please report this issue."
+            )
+
         if self.decoded_mmppt is not None:
             for unit_index in range(self.decoded_mmppt["mmppt_Units"]):
                 self.mmppt_units.append(SolarEdgeMMPPTUnit(self, self.hub, unit_index))
@@ -1069,7 +1102,7 @@ class SolarEdgeInverter:
                 + inverter_data.registers[26:28]
                 + [inverter_data.registers[29]]
             )
-            self.decoded_model = OrderedDict(
+            self.decoded_model = dict(
                 zip(
                     uint16_fields,
                     ModbusClientMixin.convert_from_registers(
@@ -1111,8 +1144,9 @@ class SolarEdgeInverter:
                 + [inverter_data.registers[28]]
                 + inverter_data.registers[30:40]
             )
+
             self.decoded_model.update(
-                OrderedDict(
+                dict(
                     zip(
                         int16_fields,
                         ModbusClientMixin.convert_from_registers(
@@ -1125,7 +1159,7 @@ class SolarEdgeInverter:
             )
 
             self.decoded_model.update(
-                OrderedDict(
+                dict(
                     [
                         (
                             "AC_Energy_WH",
@@ -1137,6 +1171,24 @@ class SolarEdgeInverter:
                     ]
                 )
             )
+
+            if self.use_status_vendor4:
+                inverter_data = await self.hub.modbus_read_holding_registers(
+                    unit=self.inverter_unit_id, address=40119, rcount=2
+                )
+                self.decoded_model.update(
+                    dict(
+                        [
+                            (
+                                "I_Status_Vendor4",
+                                ModbusClientMixin.convert_from_registers(
+                                    inverter_data.registers[0:2],
+                                    data_type=ModbusClientMixin.DATATYPE.UINT32,
+                                ),
+                            ),
+                        ]
+                    )
+                )
 
             if (
                 self.decoded_model["C_SunSpec_DID"] == SunSpecNotImpl.UINT16
@@ -1183,7 +1235,7 @@ class SolarEdgeInverter:
                         inverter_data.registers[7]
                     ]
                     self.decoded_model.update(
-                        OrderedDict(
+                        dict(
                             zip(
                                 int16_fields,
                                 ModbusClientMixin.convert_from_registers(
@@ -1196,7 +1248,7 @@ class SolarEdgeInverter:
                     )
 
                     self.decoded_model.update(
-                        OrderedDict(
+                        dict(
                             [
                                 (
                                     "mmppt_Events",
@@ -1212,7 +1264,7 @@ class SolarEdgeInverter:
                     for mmppt_unit_id in mmppt_unit_ids:
                         unit_offset = mmppt_unit_id * 20
 
-                        mmppt_unit_data = OrderedDict(
+                        mmppt_unit_data = dict(
                             [
                                 (
                                     "IDStr",  # string(16)
@@ -1250,7 +1302,7 @@ class SolarEdgeInverter:
                             + [inverter_data.registers[25 + unit_offset]]
                         )
                         mmppt_unit_data.update(
-                            OrderedDict(
+                            dict(
                                 zip(
                                     uint16_fields,
                                     ModbusClientMixin.convert_from_registers(
@@ -1277,7 +1329,7 @@ class SolarEdgeInverter:
                             ]
                         )
                         mmppt_unit_data.update(
-                            OrderedDict(
+                            dict(
                                 zip(
                                     uint32_fields,
                                     ModbusClientMixin.convert_from_registers(
@@ -1290,7 +1342,7 @@ class SolarEdgeInverter:
                         )
 
                         self.decoded_model.update(
-                            OrderedDict([(f"mmppt_{mmppt_unit_id}", mmppt_unit_data)])
+                            dict([(f"mmppt_{mmppt_unit_id}", mmppt_unit_data)])
                         )
 
             except ModbusIOError:
@@ -1309,7 +1361,7 @@ class SolarEdgeInverter:
                     )
 
                     self.decoded_model.update(
-                        OrderedDict(
+                        dict(
                             [
                                 (
                                     "I_RRCR",
@@ -1396,7 +1448,7 @@ class SolarEdgeInverter:
                         + inverter_data.registers[66:70]
                     )
                     self.decoded_model.update(
-                        OrderedDict(
+                        dict(
                             zip(
                                 int32_fields,
                                 ModbusClientMixin.convert_from_registers(
@@ -1451,7 +1503,7 @@ class SolarEdgeInverter:
                         inverter_data.registers[10:66] + inverter_data.registers[70:86]
                     )
                     self.decoded_model.update(
-                        OrderedDict(
+                        dict(
                             zip(
                                 float32_fields,
                                 ModbusClientMixin.convert_from_registers(
@@ -1465,7 +1517,7 @@ class SolarEdgeInverter:
                     )
 
                     self.decoded_model.update(
-                        OrderedDict(
+                        dict(
                             [
                                 (
                                     "CommitPwrCtlSettings",
@@ -1546,7 +1598,7 @@ class SolarEdgeInverter:
                         + inverter_data.registers[56:84]
                     )
                     self.decoded_model.update(
-                        OrderedDict(
+                        dict(
                             zip(
                                 float32_fields,
                                 ModbusClientMixin.convert_from_registers(
@@ -1569,7 +1621,7 @@ class SolarEdgeInverter:
                         inverter_data.registers[32:36] + inverter_data.registers[52:56]
                     )
                     self.decoded_model.update(
-                        OrderedDict(
+                        dict(
                             zip(
                                 uint32_fields,
                                 ModbusClientMixin.convert_from_registers(
@@ -1627,7 +1679,7 @@ class SolarEdgeInverter:
                 )
 
                 self.decoded_model.update(
-                    OrderedDict(
+                    dict(
                         [
                             (
                                 "E_Lim_Ctl_Mode",
@@ -1677,7 +1729,7 @@ class SolarEdgeInverter:
                 )
 
                 self.decoded_model.update(
-                    OrderedDict(
+                    dict(
                         [
                             (
                                 "Ext_Prod_Max",
@@ -1712,7 +1764,7 @@ class SolarEdgeInverter:
                 )
 
                 self.decoded_model.update(
-                    OrderedDict(
+                    dict(
                         [
                             (
                                 "I_Grid_Status",
@@ -1783,7 +1835,7 @@ class SolarEdgeInverter:
                     + [inverter_data.registers[6]]
                     + [inverter_data.registers[9]]
                 )
-                self.decoded_storage_control = OrderedDict(
+                self.decoded_storage_control = dict(
                     zip(
                         uint16_fields,
                         ModbusClientMixin.convert_from_registers(
@@ -1805,7 +1857,7 @@ class SolarEdgeInverter:
                     inverter_data.registers[2:6] + inverter_data.registers[10:14]
                 )
                 self.decoded_storage_control.update(
-                    OrderedDict(
+                    dict(
                         zip(
                             float32_fields,
                             ModbusClientMixin.convert_from_registers(
@@ -1819,7 +1871,7 @@ class SolarEdgeInverter:
                 )
 
                 self.decoded_storage_control.update(
-                    OrderedDict(
+                    dict(
                         [
                             (
                                 "command_timeout",
@@ -1858,6 +1910,9 @@ class SolarEdgeInverter:
         """Write inverter register."""
         await self.hub.write_registers(self.inverter_unit_id, address, payload)
 
+    def set_last_update(self, timestamp) -> None:
+        self._last_update_timestamp = timestamp
+
     @property
     def online(self) -> bool:
         """Device is online."""
@@ -1889,6 +1944,14 @@ class SolarEdgeInverter:
             return False
 
         return True
+
+    @property
+    def last_update(self) -> datetime.datetime | None:
+        return self._last_update_timestamp
+
+    @property
+    def use_status_vendor4(self) -> bool:
+        return self._use_status_vendor4
 
 
 class SolarEdgeMMPPTUnit:
@@ -1937,13 +2000,14 @@ class SolarEdgeMeter:
     ) -> None:
         self.inverter_unit_id = device_id
         self.hub = hub
-        self.decoded_common = []
-        self.decoded_model = []
+        self.decoded_common = {}
+        self.decoded_model = {}
         self.meter_id = meter_id
         self.has_parent = True
         self.inverter_common = self.hub.inverter_common[self.inverter_unit_id]
         self.mmppt_common = self.hub.mmppt_common[self.inverter_unit_id]
         self._via_device = None
+        self._last_update_timestamp = None
 
         try:
             self.start_address = METER_REG_BASE[self.meter_id]
@@ -1980,7 +2044,7 @@ class SolarEdgeMeter:
             ]
             uint16_data = meter_info.registers[0:2] + [meter_info.registers[66]]
 
-            self.decoded_common = OrderedDict(
+            self.decoded_common = dict(
                 zip(
                     uint16_fields,
                     ModbusClientMixin.convert_from_registers(
@@ -1991,7 +2055,7 @@ class SolarEdgeMeter:
             )
 
             self.decoded_common.update(
-                OrderedDict(
+                dict(
                     [
                         (
                             "C_Manufacturer",  # string(32)
@@ -2088,7 +2152,7 @@ class SolarEdgeMeter:
                 rcount=107,
             )
 
-            self.decoded_model = OrderedDict(
+            self.decoded_model = dict(
                 [
                     (
                         "C_SunSpec_DID",
@@ -2155,7 +2219,7 @@ class SolarEdgeMeter:
                 + [meter_data.registers[104]]
             )
             self.decoded_model.update(
-                OrderedDict(
+                dict(
                     zip(
                         int16_fields,
                         ModbusClientMixin.convert_from_registers(
@@ -2208,7 +2272,7 @@ class SolarEdgeMeter:
                 + meter_data.registers[105:107]
             )
             self.decoded_model.update(
-                OrderedDict(
+                dict(
                     zip(
                         uint32_fields,
                         ModbusClientMixin.convert_from_registers(
@@ -2242,6 +2306,9 @@ class SolarEdgeMeter:
                 f"Meter {self.meter_id} ident incorrect or not installed."
             )
 
+    def set_last_update(self, timestamp) -> None:
+        self._last_update_timestamp = timestamp
+
     @property
     def online(self) -> bool:
         """Device is online."""
@@ -2269,6 +2336,10 @@ class SolarEdgeMeter:
     def via_device(self, device: str) -> None:
         self._via_device = (DOMAIN, device)
 
+    @property
+    def last_update(self) -> datetime.datetime | None:
+        return self._last_update_timestamp
+
 
 class SolarEdgeBattery:
     """Defines a SolarEdge battery."""
@@ -2278,13 +2349,14 @@ class SolarEdgeBattery:
     ) -> None:
         self.inverter_unit_id = device_id
         self.hub = hub
-        self.decoded_common = []
-        self.decoded_model = []
+        self.decoded_common = {}
+        self.decoded_model = {}
         self.start_address = None
         self.battery_id = battery_id
         self.has_parent = True
         self.inverter_common = self.hub.inverter_common[self.inverter_unit_id]
         self._via_device = None
+        self._last_update_timestamp = None
 
         try:
             self.start_address = BATTERY_REG_BASE[self.battery_id]
@@ -2297,7 +2369,7 @@ class SolarEdgeBattery:
                 unit=self.inverter_unit_id, address=self.start_address, rcount=68
             )
 
-            self.decoded_common = OrderedDict(
+            self.decoded_common = dict(
                 [
                     (
                         "B_Manufacturer",  # string(32)
@@ -2445,7 +2517,7 @@ class SolarEdgeBattery:
                 + battery_data.registers[40:50]
                 + battery_data.registers[58:66]
             )
-            self.decoded_model = OrderedDict(
+            self.decoded_model = dict(
                 zip(
                     float32_fields,
                     ModbusClientMixin.convert_from_registers(
@@ -2462,7 +2534,7 @@ class SolarEdgeBattery:
             ]
             uint64_data = battery_data.registers[50:58]
             self.decoded_model.update(
-                OrderedDict(
+                dict(
                     zip(
                         uint64_fields,
                         ModbusClientMixin.convert_from_registers(
@@ -2477,7 +2549,7 @@ class SolarEdgeBattery:
             uint32_fields = ["B_Status", "B_Status_Vendor"]
             uint32_data = battery_data.registers[66:70]
             self.decoded_model.update(
-                OrderedDict(
+                dict(
                     zip(
                         uint32_fields,
                         ModbusClientMixin.convert_from_registers(
@@ -2509,7 +2581,7 @@ class SolarEdgeBattery:
             ]
             uint16_data = battery_data.registers[70:86]
             self.decoded_model.update(
-                OrderedDict(
+                dict(
                     zip(
                         uint16_fields,
                         ModbusClientMixin.convert_from_registers(
@@ -2536,6 +2608,9 @@ class SolarEdgeBattery:
                 f"I{self.inverter_unit_id}B{self.battery_id}: "
                 f"{name} {display_value} {type(value)}"
             )
+
+    def set_last_update(self, timestamp) -> None:
+        self._last_update_timestamp = timestamp
 
     @property
     def online(self) -> bool:
@@ -2574,3 +2649,7 @@ class SolarEdgeBattery:
     @property
     def battery_energy_reset_cycles(self) -> int:
         return self.hub.battery_energy_reset_cycles
+
+    @property
+    def last_update(self) -> datetime.datetime | None:
+        return self._last_update_timestamp

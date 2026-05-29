@@ -1,0 +1,189 @@
+"""Config flow for Hermes Conversation."""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+import voluptuous as vol
+
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlow,
+)
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
+
+from .api import HermesApiClient, HermesAuthError, HermesConnectionError
+from .const import (
+    CONF_API_KEY,
+    CONF_CONTEXT_MAX_CHARS,
+    CONF_HOST,
+    CONF_USE_SSL,
+    CONF_VERIFY_SSL,
+    CONF_INCLUDE_EXPOSED_ENTITIES,
+    CONF_PORT,
+    CONF_PROMPT,
+    DEFAULT_CONTEXT_MAX_CHARS,
+    DEFAULT_INCLUDE_EXPOSED_ENTITIES,
+    DEFAULT_PORT,
+    DEFAULT_PROMPT,
+    DOMAIN,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class HermesConversationConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Hermes Conversation."""
+
+    VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Return the options flow handler."""
+        return HermesConversationOptionsFlow()
+
+    def _abort_if_host_port_configured(self, host: str, port: int) -> None:
+        """Abort if an entry with the same host:port already exists."""
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_HOST) == host and entry.data.get(CONF_PORT) == port:
+                raise AbortFlow("already_configured")
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Handle the configuration step."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
+            api_key = user_input.get(CONF_API_KEY, "") or None
+            use_ssl = user_input.get(CONF_USE_SSL, True)
+            verify_ssl = user_input.get(CONF_VERIFY_SSL, False)
+
+            session = async_get_clientsession(self.hass)
+            client = HermesApiClient(
+                session, host, port, api_key,
+                use_ssl=use_ssl, verify_ssl=verify_ssl,
+            )
+
+            try:
+                await client.async_check_connection()
+                self._abort_if_host_port_configured(host, port)
+                return self.async_create_entry(
+                    title="Hermes Agent",
+                    data={
+                        CONF_HOST: host,
+                        CONF_PORT: port,
+                        CONF_API_KEY: api_key or "",
+                        CONF_USE_SSL: use_ssl,
+                        CONF_VERIFY_SSL: verify_ssl,
+                    },
+                )
+            except HermesAuthError:
+                errors["base"] = "invalid_auth"
+            except HermesConnectionError:
+                errors["base"] = "cannot_connect"
+            except AbortFlow:
+                raise
+            except Exception:
+                _LOGGER.exception("Unexpected error during connection validation")
+                errors["base"] = "unknown"
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default="homeassistant.local"): str,
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Optional(CONF_API_KEY, default=""): TextSelector(
+                        TextSelectorConfig(type="password")
+                    ),
+                    vol.Optional(CONF_USE_SSL, default=True): bool,
+                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+                }
+            ),
+            errors=errors,
+        )
+
+
+class HermesConversationOptionsFlow(OptionsFlow):
+    """Handle options for Hermes Conversation."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Manage the options."""
+        if user_input is not None:
+            # Split: connection settings go into data, the rest into options
+            new_data = {}
+            new_options = {}
+            for key, value in user_input.items():
+                if key in (CONF_HOST, CONF_PORT, CONF_API_KEY, CONF_USE_SSL, CONF_VERIFY_SSL):
+                    new_data[key] = value
+                else:
+                    new_options[key] = value
+
+            # Update config entry data if connection settings changed
+            if new_data:
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data={**self.config_entry.data, **new_data}
+                )
+
+            return self.async_create_entry(title="", data=new_options)
+
+        data = self.config_entry.data
+        options = self.config_entry.options
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST,
+                        default=data.get(CONF_HOST, "homeassistant.local"),
+                    ): str,
+                    vol.Required(
+                        CONF_PORT,
+                        default=data.get(CONF_PORT, DEFAULT_PORT),
+                    ): int,
+                    vol.Optional(
+                        CONF_API_KEY,
+                        default=data.get(CONF_API_KEY, ""),
+                    ): TextSelector(
+                        TextSelectorConfig(type="password")
+                    ),
+                    vol.Optional(
+                        CONF_USE_SSL,
+                        default=data.get(CONF_USE_SSL, True),
+                    ): bool,
+                    vol.Optional(
+                        CONF_VERIFY_SSL,
+                        default=data.get(CONF_VERIFY_SSL, False),
+                    ): bool,
+                    vol.Optional(
+                        CONF_PROMPT,
+                        default=options.get(CONF_PROMPT, DEFAULT_PROMPT),
+                    ): TextSelector(TextSelectorConfig(multiline=True)),
+                    vol.Optional(
+                        CONF_INCLUDE_EXPOSED_ENTITIES,
+                        default=options.get(
+                            CONF_INCLUDE_EXPOSED_ENTITIES,
+                            DEFAULT_INCLUDE_EXPOSED_ENTITIES,
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_CONTEXT_MAX_CHARS,
+                        default=options.get(
+                            CONF_CONTEXT_MAX_CHARS, DEFAULT_CONTEXT_MAX_CHARS
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1000, max=200000)),
+                }
+            ),
+        )

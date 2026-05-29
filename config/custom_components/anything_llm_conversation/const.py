@@ -7,12 +7,6 @@ DEFAULT_CONVERSATION_NAME = "AnythingLLM Conversation"
 CONF_BASE_URL = "base_url"
 DEFAULT_CONF_BASE_URL = "http://localhost:3001/api"
 
-# Failover configuration
-CONF_FAILOVER_BASE_URL = "failover_base_url"
-CONF_FAILOVER_API_KEY = "failover_api_key"
-CONF_FAILOVER_WORKSPACE_SLUG = "failover_workspace_slug"
-
-
 # Timeout configuration (in seconds)
 CONF_HEALTH_CHECK_TIMEOUT = "health_check_timeout"
 DEFAULT_HEALTH_CHECK_TIMEOUT = 3.0  # Quick health check for endpoint availability
@@ -47,9 +41,7 @@ CONF_ATTACH_USERNAME = "attach_username"
 DEFAULT_ATTACH_USERNAME = False
 CONF_THREAD_SLUG = "thread_slug"
 DEFAULT_THREAD_SLUG = ""
-CONF_FAILOVER_THREAD_SLUG = "failover_thread_slug"
-DEFAULT_FAILOVER_THREAD_SLUG = ""
-DEFAULT_FAILOVER_WORKSPACE_SLUG = ""  # Default for per-agent override
+DEFAULT_FAILOVER_WORKSPACE_SLUG = ""  # kept as empty default for pre-existing option data
 CONF_ENABLE_AGENT_PREFIX = "enable_agent_prefix"
 DEFAULT_ENABLE_AGENT_PREFIX = True
 CONF_AGENT_KEYWORDS = "agent_keywords"

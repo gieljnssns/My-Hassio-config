@@ -5,13 +5,17 @@ Context providers are responsible for gathering and formatting relevant
 entity and state information to be injected into LLM prompts.
 """
 
-import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
+import logging
 from typing import Any
 
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from ..const import DOMAIN_SERVICE_MAPPINGS
 
@@ -380,6 +384,24 @@ class ContextProvider(ABC):
         result["aliases"] = aliases
         if include_labels:
             result["labels"] = labels
+
+        # Get area_name from area registry
+        try:
+            entity_registry = er.async_get(self.hass)
+            area_registry = ar.async_get(self.hass)
+            device_registry = dr.async_get(self.hass)
+
+            if entity_entry := entity_registry.async_get(entity_id):
+                area_id = entity_entry.area_id
+                if not area_id and entity_entry.device_id:
+                    device_entry = device_registry.async_get(entity_entry.device_id)
+                    if device_entry:
+                        area_id = device_entry.area_id
+                if area_id:
+                    if area := area_registry.async_get_area(area_id):
+                        result["Location"] = area.name
+        except (AttributeError, RuntimeError):
+            pass
 
         # Include filtered attributes or all attributes, ensuring JSON serializability
         if attribute_filter is not None:

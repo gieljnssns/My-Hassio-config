@@ -1,53 +1,69 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "data": {
-          "latitude": "Latitude",
-          "longitude": "Longitude",
-          "scan_interval": "Scan interval (minutes)",
-          "language": "Taal / Language"
+    "title": "Buienalarm",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Buienalarm",
+                "description": "Settings",
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Place / Name",
+                    "refresh_interval": "Refresh interval (sec)"
+                }
+            }
         },
-        "description": "Configure the BuienAlarm integration. By default, the coordinates of your Home Assistant installation are used.",
-        "title": "BuienAlarm"
-      }
-    },
-    "error": {
-      "cannot_connect": "Unable to connect to the BuienAlarm API, please check your internet connection."
-    },
-    "abort": {
-      "already_configured": "This location is already configured."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Scan interval (minutes)",
-          "language": "Taal / Language"
-        }
-      }
-    }
-  },
-  "selector": {
-    "language": {
-      "options": {
-        "nl": "Dutch",
-        "en": "English"
-      }
-    }
-  },
-  "entity": {
-    "sensor": {
-      "buienalarm": {
-        "state": {
-          "no_rain": "No rain expected"
+        "error": {
+            "api_key": "The given API key is incorrect."
         },
-        "state_attributes": {
-          "next_rain_forecast": "Next rain",
-          "rain_forecast": "Rain forecast"
+        "abort": {
+            "single_instance_allowed": "Only a single instance is allowed."
         }
-      }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "binary_sensor": "Binary sensor enabled",
+                    "sensor": "Sensor enabled",
+                    "weather": "Weather enabled",
+                    "refresh_interval": "Refresh interval (sec)"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "nowcastmessage": {
+                "name": "Weather message"
+            },
+            "mycastmessage": {
+                "name": "My weather message"
+            },
+            "precipitation_duration": {
+                "name": "Precipitation duration"
+            },
+            "precipitationrate_total": {
+                "name": "Total precipitation"
+            },
+            "precipitationrate_hour": {
+                "name": "Precipitation per hour"
+            },
+            "precipitationrate_now": {
+                "name": "Current precipitation"
+            },
+            "precipitationrate_now_description": {
+                "name": "Current precipitation description"
+            },
+            "precipitationtype_now": {
+                "name": "Current precipitation type"
+            },
+            "next_precipitation": {
+                "name": "Next precipitation in"
+            },
+            "rain_periods": {
+                "name": "Rain periods"
+            }
+        }
     }
-  }
 }

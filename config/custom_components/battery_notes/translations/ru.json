@@ -1,0 +1,348 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "New Battery Notes will be discovered if they are in the library.\nTo add new Battery Notes manually go into the integration page, select Add Battery Note and follow the instructions.\nIf you need help with the configuration have a look here: {documentation_url}",
+                "title": "Setup Battery Notes"
+            },
+            "battery": {
+                "description": "Название: {name}\nПроизводитель: {manufacturer}\nМодель: {model}\nID модели: {model_id}\nРевизия: {hw_version}",
+                "data": {
+                    "battery_type": "Тип батареи",
+                    "battery_quantity": "Количество батарей",
+                    "note": "Note",
+                    "battery_low_threshold": "Порог низкого заряда батареи"
+                },
+                "data_description": {
+                    "battery_low_threshold": "0 будет использовать общий порог по умолчанию"
+                },
+                "sections": {
+                    "advanced_settings": {
+                        "name": "Advanced settings",
+                        "data": {
+                            "battery_percentage_template": "Battery percentage template",
+                            "battery_low_template": "Шаблон низкого заряда батареи",
+                            "filter_outliers": "Фильтр скачков заряда"
+                        },
+                        "data_description": {
+                            "battery_percentage_template": "Template to create a battery percentage\nOnly needed for devices that do not have a standard battery percentage",
+                            "battery_low_template": "Шаблон низкого заряда батареи. В случае низкого заряда должен возвращать true.\nТребуется только для нестандартных уровней заряда батареи.",
+                            "filter_outliers": "Отфильтровать скачки заряда, уменьшая ложные срабатывания событий для устройств, которые иногда сообщают заряд батареи с ошибками"
+                        }
+                    }
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "Integration is already configured",
+            "integration_not_added": "Integration not added, please add the integration first",
+            "created_sub_entry": "Battery Note created successfully"
+        },
+        "error": {
+            "unknown": "Произошла неизвестная ошибка."
+        }
+    },
+    "config_subentries": {
+        "battery_note": {
+            "initiate_flow": {
+                "user": "Add battery note"
+            },
+            "entry_type": "Battery note",
+            "step": {
+                "user": {
+                    "description": "Если вам нужна помощь с настройкой, посмотрите здесь: {documentation_url}",
+                    "data": {
+                        "association_type": "Тип связи"
+                    },
+                    "menu_options": {
+                        "device": "Устройство (рекомендуется)",
+                        "entity": "Объект"
+                    },
+                    "title": "Выберите тип связи"
+                },
+                "device": {
+                    "data": {
+                        "device_id": "Устройство",
+                        "name": "Название"
+                    },
+                    "data_description": {
+                        "name": "Если оставить пустым, то название будет взято с исходного устройства"
+                    }
+                },
+                "entity": {
+                    "data": {
+                        "source_entity_id": "Объект",
+                        "name": "Название"
+                    },
+                    "data_description": {
+                        "name": "Если оставить пустым, то название будет взято с исходного устройства"
+                    }
+                },
+                "battery": {
+                    "description": "Название: {name}\nПроизводитель: {manufacturer}\nМодель: {model}\nID модели: {model_id}\nРевизия: {hw_version}",
+                    "data": {
+                        "battery_type": "Тип батареи",
+                        "battery_quantity": "Количество батарей",
+                        "note": "Note",
+                        "battery_low_threshold": "Порог низкого заряда батареи"
+                    },
+                    "data_description": {
+                        "battery_low_threshold": "0 будет использовать общий порог по умолчанию"
+                    },
+                    "sections": {
+                        "advanced_settings": {
+                            "name": "Advanced settings",
+                            "data": {
+                                "battery_percentage_template": "Battery percentage template",
+                                "battery_low_template": "Шаблон низкого заряда батареи",
+                                "filter_outliers": "Фильтр скачков заряда"
+                            },
+                            "data_description": {
+                                "battery_percentage_template": "Template to create a battery percentage\nOnly needed for devices that do not have a standard battery percentage",
+                                "battery_low_template": "Шаблон низкого заряда батареи. В случае низкого заряда должен возвращать true.\nТребуется только для нестандартных уровней заряда батареи.",
+                                "filter_outliers": "Отфильтровать скачки заряда, уменьшая ложные срабатывания событий для устройств, которые иногда сообщают заряд батареи с ошибками"
+                            }
+                        }
+                    }
+                },
+                "manual": {
+                    "description": "Это устройство помечено в библиотеке для настройки вручную, в разных версиях используются различные типы батарей, поэтому оно не может быть настроено автоматически.\nСледующий шаг позволит вам настроить тип батареи. Пожалуйста, не отправляйте запросы на добавление настроек устройства в библиотеку.",
+                    "title": "Ручная настройка устройства"
+                },
+                "reconfigure": {
+                    "description": "Производитель: {manufacturer}\nМодель: {model}\nID модели: {model_id}\nРевизия: {hw_version}",
+                    "data": {
+                        "name": "Название",
+                        "battery_type": "Тип батареи",
+                        "battery_quantity": "Количество батарей",
+                        "note": "Note",
+                        "battery_low_threshold": "Порог низкого заряда батареи"
+                    },
+                    "data_description": {
+                        "name": "Если оставить пустым, то название будет взято с исходного устройства",
+                        "battery_low_threshold": "0 будет использовать общий порог по умолчанию"
+                    },
+                    "sections": {
+                        "advanced_settings": {
+                            "name": "Advanced settings",
+                            "data": {
+                                "battery_percentage_template": "Battery percentage template",
+                                "battery_low_template": "Шаблон низкого заряда батареи",
+                                "filter_outliers": "Фильтр скачков заряда"
+                            },
+                            "data_description": {
+                                "battery_percentage_template": "Template to create a battery percentage\nOnly needed for devices that do not have a standard battery percentage",
+                                "battery_low_template": "Шаблон низкого заряда батареи. В случае низкого заряда должен возвращать true.\nТребуется только для нестандартных уровней заряда батареи.",
+                                "filter_outliers": "Отфильтровать скачки заряда, уменьшая ложные срабатывания событий для устройств, которые иногда сообщают заряд батареи с ошибками"
+                            }
+                        }
+                    }
+                }
+            },
+            "abort": {
+                "reconfigure_successful": "Re-configuration was successful",
+                "already_configured": "Устройство уже настроено"
+            },
+            "error": {
+                "unknown": "Произошла неизвестная ошибка.",
+                "unconfigurable_entity": "Невозможно добавить этот элемент в Battery Notes.",
+                "orphaned_battery_note": "Привязанное к этой заметке устройство или объект больше не существует."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_devices": "Show all devices",
+                    "hide_battery": "Hide battery",
+                    "round_battery": "Round battery",
+                    "default_battery_low_threshold": "Default battery low threshold",
+                    "battery_increase_threshold": "Battery increase threshold"
+                },
+                "data_description": {
+                    "show_all_devices": "Show all devices in the device dropdown, otherwise only those with batteries will be shown.",
+                    "hide_battery": "Hide the standard battery when adding Battery+.",
+                    "round_battery": "Round Battery+ to whole percentages.",
+                    "default_battery_low_threshold": "The default threshold where a devices battery_low entity is set to true and the battery_notes_battery_threshold event is fired if the battery is below this threshold, can be overriden per device in device configuration.",
+                    "battery_increase_threshold": "The threshold where the battery_notes_battery_increased event is fired, use this event for battery replaced automations. The threshold is the difference in increase between previous and current battery level."
+                },
+                "sections": {
+                    "advanced_settings": {
+                        "name": "Advanced settings",
+                        "data": {
+                            "enable_autodiscovery": "Auto discovery",
+                            "enable_replaced": "Enable battery replaced",
+                            "user_library": "User library"
+                        },
+                        "data_description": {
+                            "enable_autodiscovery": "Auto discovery of devices that are in the library.",
+                            "enable_replaced": "Enable the battery replaced button on each battery note.",
+                            "user_library": "If specified then a user library file will be searched prior to the main library, the user library must be in the same format as the library and placed in `config/.storage/battery_notes`."
+                        }
+                    }
+                }
+            }
+        },
+        "error": {
+            "unknown": "Произошла неизвестная ошибка."
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "battery_low": {
+                "name": "{device_name}Низкий заряд батареи",
+                "state_attributes": {
+                    "battery_low_threshold": {
+                        "name": "Порог низкого заряда батареи"
+                    }
+                }
+            }
+        },
+        "button": {
+            "battery_replaced": {
+                "name": "{device_name}Батарея заменена"
+            }
+        },
+        "sensor": {
+            "battery_plus": {
+                "name": "{device_name}Батарея+",
+                "state_attributes": {
+                    "battery_type": {
+                        "name": "Тип батареи"
+                    },
+                    "battery_quantity": {
+                        "name": "Количество батарей"
+                    },
+                    "battery_type_and_quantity": {
+                        "name": "Тип и количество батарей"
+                    },
+                    "note": {
+                        "name": "Note"
+                    },
+                    "battery_last_replaced": {
+                        "name": "Последняя замена батареи"
+                    },
+                    "battery_low": {
+                        "name": "Низкий заряд батареи"
+                    },
+                    "battery_low_threshold": {
+                        "name": "Порог низкого заряда батареи"
+                    },
+                    "battery_last_reported": {
+                        "name": "Последняя информация по батарее"
+                    },
+                    "battery_last_reported_level": {
+                        "name": "Последний уровень заряда батареи"
+                    },
+                    "source_entity_id": {
+                        "name": "ID исходного объекта"
+                    },
+                    "device_id": {
+                        "name": "Id устройства"
+                    },
+                    "device_name": {
+                        "name": "Название устройства"
+                    }
+                }
+            },
+            "battery_type": {
+                "name": "{device_name}Тип батареи",
+                "state_attributes": {
+                    "battery_type": {
+                        "name": "Тип батареи"
+                    },
+                    "battery_quantity": {
+                        "name": "Количество батарей"
+                    },
+                    "note": {
+                        "name": "Note"
+                    }
+                }
+            },
+            "battery_last_replaced": {
+                "name": "{device_name}Последняя замена батареи"
+            }
+        }
+    },
+    "services": {
+        "set_battery_replaced": {
+            "description": "Установите последнюю замену батареи.",
+            "fields": {
+                "device_id": {
+                    "description": "Устройство, в котором была заменена батарея.",
+                    "name": "Устройство"
+                },
+                "entity_id": {
+                    "description": "Объект, в котором была заменена батарея.",
+                    "name": "Объект"
+                },
+                "datetime_replaced": {
+                    "description": "Дата замены.",
+                    "name": "Дата"
+                }
+            },
+            "name": "Отметить замену батареи"
+        },
+        "check_battery_last_replaced": {
+            "description": "Get a response or raise events for devices that haven't had their battery replaced.",
+            "fields": {
+                "days_last_reported": {
+                    "description": "Number of days since a device last had its battery replaced.",
+                    "name": "Дней"
+                },
+                "raise_events": {
+                    "description": "Raise events for use in automation triggers.",
+                    "name": "Raise events"
+                }
+            },
+            "name": "Check battery last replaced"
+        },
+        "check_battery_last_reported": {
+            "description": "Get a response or raise events for devices that haven't reported their battery level.",
+            "fields": {
+                "days_last_reported": {
+                    "description": "Количество дней с последнего отчёта об уровне заряда батареи.",
+                    "name": "Дней"
+                },
+                "raise_events": {
+                    "description": "Raise events for use in automation triggers.",
+                    "name": "Raise events"
+                }
+            },
+            "name": "Последняя информация по батарее"
+        },
+        "check_battery_low": {
+            "description": "Get a response or raise events for devices that have a low battery.",
+            "fields": {
+                "raise_events": {
+                    "description": "Raise events for use in automation triggers.",
+                    "name": "Raise events"
+                }
+            },
+            "name": "Проверить низкий заряд батареи"
+        }
+    },
+    "issues": {
+        "missing_device": {
+            "title": "Непривязанная заметка о батарее",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Непривязанная заметка о батарее",
+                        "description": "Привязанное устройство или объект больше не существует, привязанную заметку {name}, необходимо удалить.\nВыберите **Отправить** для удаления этой заметки."
+                    }
+                }
+            }
+        },
+        "deprecated_yaml": {
+            "title": "The {integration_title} YAML configuration is being removed",
+            "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+        }
+    },
+    "exceptions": {
+        "not_configured_in_battery_notes": {
+            "message": "{source} is not configured in Battery Notes."
+        }
+    }
+}

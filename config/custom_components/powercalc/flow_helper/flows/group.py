@@ -429,7 +429,11 @@ class GroupConfigFlow(GroupFlow):
             user_input[CONF_NAME] = "Tracked / Untracked"
 
         async def _next(ui: dict[str, Any]) -> Step | None:
-            return Step.GROUP_TRACKED_UNTRACKED_AUTO if bool(ui.get("group_tracked_auto", True)) else Step.GROUP_TRACKED_UNTRACKED_MANUAL
+            return (
+                Step.GROUP_TRACKED_UNTRACKED_AUTO
+                if bool(ui.get("group_tracked_auto", True))
+                else Step.GROUP_TRACKED_UNTRACKED_MANUAL
+            )
 
         return await self.handle_group_step(
             GroupType.TRACKED_UNTRACKED,
@@ -471,7 +475,9 @@ class GroupOptionsFlow(GroupFlow):
     async def async_step_group_custom(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle the group options flow."""
         return await self.flow.async_handle_options_step(
-            user_input, create_schema_group_custom(self.flow.hass, self.flow.config_entry, True), Step.GROUP_CUSTOM
+            user_input,
+            create_schema_group_custom(self.flow.hass, self.flow.config_entry, True),
+            Step.GROUP_CUSTOM,
         )
 
     async def async_step_group_domain(self, user_input: dict[str, Any] | None = None) -> FlowResult:

@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "प्रोफ़ाइल सेटअप",
+        "description": "एक अद्वितीय नाम और व्यक्तित्व के साथ नई एजेंट प्रोफ़ाइल बनाएं।",
+        "data": {
+          "profile_name": "प्रोफ़ाइल नाम",
+          "server_type": "सर्वर प्रकार"
+        }
+      },
+      "server": {
+        "title": "सर्वर कॉन्फ़िगरेशन",
+        "description": "अपने इन्फ़रेंस सर्वर URL और MCP सर्वर पोर्ट कॉन्फ़िगर करें।",
+        "data": {
+          "lmstudio_url": "सर्वर URL",
+          "api_key": "API कुंजी",
+          "mcp_port": "MCP सर्वर पोर्ट"
+        }
+      },
+      "model": {
+        "title": "मॉडल और प्रॉम्प्ट",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "मॉडल नाम",
+          "system_prompt": "सिस्टम प्रॉम्प्ट",
+          "technical_prompt": "तकनीकी निर्देश"
+        }
+      },
+      "advanced": {
+        "title": "उन्नत सेटिंग्स",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "तापमान",
+          "max_tokens": "अधिकतम प्रतिक्रिया टोकन",
+          "max_history": "अधिकतम इतिहास संदेश",
+          "max_iterations": "अधिकतम टूल पुनरावृत्तियां",
+          "control_home_assistant": "Home Assistant नियंत्रण",
+          "response_mode": "प्रतिक्रिया मोड",
+          "follow_up_phrases": "अनुवर्ती वाक्यांश",
+          "end_words": "बातचीत समाप्त करने के शब्द",
+          "timeout": "प्रतिक्रिया समय समाप्त",
+          "debug_mode": "डीबग मोड",
+          "ollama_keep_alive": "Ollama जीवित रखें",
+          "ollama_num_ctx": "Ollama संदर्भ विंडो",
+          "clean_responses": "वॉइस आउटपुट के लिए साफ़ प्रतिक्रियाएँ"
+        }
+      },
+      "mcp_server": {
+        "title": "साझा MCP सर्वर सेटिंग्स",
+        "description": "⚠️ ये सेटिंग्स सभी प्रोफ़ाइलों को प्रभावित करती हैं। यहां किए गए परिवर्तन हर MCP Assist वार्तालाप एजेंट को प्रभावित करेंगे।",
+        "data": {
+          "mcp_port": "MCP सर्वर पोर्ट",
+          "search_provider": "वेब खोज",
+          "brave_api_key": "Brave Search API कुंजी",
+          "allowed_ips": "अतिरिक्त अनुमत IP/रेंज",
+          "enable_gap_filling": "स्मार्ट एंटिटी इंडेक्स सक्षम करें",
+          "max_entities_per_discovery": "प्रति खोज अधिकतम एंटिटी (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "इन्फ़रेंस सर्वर से कनेक्ट नहीं हो सकता। सुनिश्चित करें कि यह चल रहा है और पहुंच योग्य है।",
+      "no_models": "सर्वर पर कोई मॉडल लोड नहीं है। कृपया पहले एक मॉडल लोड करें।",
+      "invalid_model": "निर्दिष्ट मॉडल सर्वर पर उपलब्ध नहीं है।",
+      "invalid_port": "पोर्ट 1024 और 65535 के बीच होना चाहिए।",
+      "invalid_ip": "अमान्य IP पता या CIDR रेंज प्रारूप। अल्पविराम से अलग किए गए मान का उपयोग करें जैसे: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "प्रोफ़ाइल नाम आवश्यक है।",
+      "invalid_json": "अमान्य JSON प्रारूप। कृपया अपना MCP सर्वर कॉन्फ़िगरेशन जांचें।",
+      "invalid_api_key": "अमान्य API कुंजी। कृपया जांचें और पुनः प्रयास करें।",
+      "auth_failed": "प्रमाणीकरण विफल। कृपया अपनी API कुंजी सत्यापित करें।",
+      "unknown": "एक अज्ञात त्रुटि हुई।"
+    },
+    "abort": {
+      "already_configured": "इस नाम की प्रोफ़ाइल पहले से मौजूद है। कृपया कोई अलग नाम चुनें।"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "प्रोफ़ाइल सेटिंग्स",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "प्रोफ़ाइल नाम",
+          "lmstudio_url": "सर्वर URL",
+          "api_key": "API कुंजी",
+          "model_name": "मॉडल नाम",
+          "system_prompt": "सिस्टम प्रॉम्प्ट",
+          "technical_prompt": "तकनीकी निर्देश",
+          "temperature": "तापमान",
+          "max_tokens": "अधिकतम प्रतिक्रिया टोकन",
+          "max_history": "अधिकतम इतिहास संदेश",
+          "max_iterations": "अधिकतम टूल पुनरावृत्तियां",
+          "control_home_assistant": "Home Assistant नियंत्रण",
+          "response_mode": "प्रतिक्रिया मोड",
+          "follow_up_phrases": "अनुवर्ती वाक्यांश",
+          "end_words": "बातचीत समाप्त करने के शब्द",
+          "timeout": "प्रतिक्रिया समय समाप्त",
+          "debug_mode": "डीबग मोड",
+          "ollama_keep_alive": "Ollama जीवित रखें",
+          "ollama_num_ctx": "Ollama संदर्भ विंडो",
+          "clean_responses": "वॉइस आउटपुट के लिए साफ़ प्रतिक्रियाएँ"
+        }
+      },
+      "mcp_server": {
+        "title": "साझा MCP सर्वर सेटिंग्स",
+        "description": "⚠️ ये सेटिंग्स सभी प्रोफ़ाइलों में साझा की जाती हैं",
+        "data": {
+          "mcp_port": "MCP सर्वर पोर्ट",
+          "search_provider": "वेब खोज",
+          "brave_api_key": "Brave Search API कुंजी",
+          "allowed_ips": "अतिरिक्त अनुमत IP/रेंज",
+          "enable_gap_filling": "स्मार्ट एंटिटी इंडेक्स सक्षम करें",
+          "max_entities_per_discovery": "प्रति खोज अधिकतम एंटिटी (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

@@ -5,8 +5,7 @@ from __future__ import annotations
 
 from typing import Any
 import re
-import logging
-from .log_collector import get_vtherm_logger
+from vtherm_api.log_collector import get_vtherm_logger
 import copy
 from collections.abc import Mapping  # pylint: disable=import-error
 import voluptuous as vol
@@ -23,7 +22,7 @@ from homeassistant.data_entry_flow import FlowHandler, FlowResult
 
 from .const import *  # pylint: disable=wildcard-import, unused-wildcard-import
 from .config_schema import *  # pylint: disable=wildcard-import, unused-wildcard-import
-from .vtherm_api import VersatileThermostatAPI
+from .vtherm_central_api import VersatileThermostatAPI
 from .commons import check_and_extract_service_configuration
 
 COMES_FROM = "comes_from"
@@ -725,11 +724,11 @@ class VersatileThermostatBaseConfigFlow(FlowHandler):
 
         if self._infos[CONF_THERMOSTAT_TYPE] == CONF_THERMOSTAT_SWITCH:
             return await self.generic_step(
-                "type", STEP_THERMOSTAT_SWITCH, user_input, self.async_step_menu
+                "type", build_step_thermostat_switch_schema(), user_input, self.async_step_menu
             )
         elif self._infos[CONF_THERMOSTAT_TYPE] == CONF_THERMOSTAT_VALVE:
             return await self.generic_step(
-                "type", STEP_THERMOSTAT_VALVE, user_input, self.async_step_menu
+                "type", build_step_thermostat_valve_schema(), user_input, self.async_step_menu
             )
         else:
             return await self.generic_step(
@@ -776,7 +775,7 @@ class VersatileThermostatBaseConfigFlow(FlowHandler):
             "Into ConfigFlow.async_step_valve_regulation user_input=%s", user_input
         )
 
-        schema = STEP_VALVE_REGULATION
+        schema = build_step_valve_regulation_schema()
         self._infos[COMES_FROM] = None
         next_step = self.async_step_menu
 

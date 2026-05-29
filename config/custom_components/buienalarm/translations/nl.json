@@ -1,53 +1,121 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "data": {
-          "latitude": "Breedtegraad",
-          "longitude": "Lengtegraad",
-          "scan_interval": "Scan interval (minuten)",
-          "language": "Taal / Language"
+    "title": "Buienalarm",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Buienalarm",
+                "description": "Instellingen:",
+                "data": {
+                    "name": "Plaats / Naam",
+                    "place": "Plaats",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "notification_limit": "Limiet voor meldingen (mm/u)",
+                    "refresh_interval": "Interval voor verversen van data (sec)"
+                },
+                "data_description": {
+                    "name": "Naam",
+                    "place": "Plaats",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "notification_limit": "Limiet voor meldingen (mm/u)",
+                    "refresh_interval": "Zet de vernieuwinterval minimaal op 300 seconden."
+                }
+            }
         },
-        "description": "Configureer de BuienAlarm integratie. Standaard worden de coördinaten van je Home Assistant-installatie gebruikt.",
-        "title": "BuienAlarm"
-      }
-    },
-    "error": {
-      "cannot_connect": "Kan geen verbinding maken met de BuienAlarm API, controleer je internetverbinding."
-    },
-    "abort": {
-      "already_configured": "Deze locatie is al geconfigureerd."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Scan interval (minuten)",
-          "language": "Taal / Language"
-        }
-      }
-    }
-  },
-  "selector": {
-    "language": {
-      "options": {
-        "nl": "Nederlands",
-        "en": "Engels"
-      }
-    }
-  },
-  "entity": {
-    "sensor": {
-      "buienalarm": {
-        "state": {
-          "no_rain": "Geen regen verwacht"
+        "error": {
+            "general": "Onbekende fout bij het ophalen van weergegevens, probeer het later opnieuw.",
+            "invalid_coordinates": "De opgegeven coördinaten zijn ongeldig. Controleer de breedte- en lengtegraad en probeer het opnieuw.",
+            "cannot_connect": "Kan geen verbinding maken met de Buienalarm API. Controleer je internetverbinding en probeer het later opnieuw."
         },
-        "state_attributes": {
-          "next_rain_forecast": "Volgende bui",
-          "rain_forecast": "Regenvoorspelling"
+        "abort": {
+            "single_instance_allowed": "Al geconfigureerd. Slechts één configuratie mogelijk.",
+            "already_configured" : "Een plaats met deze coördinaten is al geconfigureerd. Probeer een andere plaats of wijzig de coördinaten.",
+            "invalid_coordinates": "De opgegeven coördinaten zijn ongeldig. Controleer de breedte- en lengtegraad en probeer het opnieuw.",
+            "cannot_connect": "Kan geen verbinding maken met de Buienalarm API. Controleer je internetverbinding en probeer het later opnieuw."
+        },
+        "base": {
+            "invalid_coordinates": "Coördinaten ongeldig",
+            "cannot_connect": "Kan geen verbinding maken met de Buienalarm API. Controleer je internetverbinding en probeer het later opnieuw."
         }
-      }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "title": "Instellingen",
+                "description": "Opties voor Buienalarm:",
+                "data": {
+                    "name": "Naam",
+                    "place": "Plaats",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "notification_limit": "Limiet voor meldingen (mm/u)",
+                    "refresh_interval": "Interval voor verversen van data (sec)"
+                },
+                "data_description": {
+                    "name": "Naam",
+                    "place": "Plaats",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "notification_limit": "Limiet voor meldingen (mm/u)",
+                    "refresh_interval": "Zet de vernieuwinterval minimaal op 300 seconden."
+                }
+            },
+            "init": {
+                "title": "Instellingen",
+                "description": "Opties voor Buienalarm:",
+                "data": {
+                    "name": "Naam",
+                    "place": "Plaats",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "notification_limit": "Limiet voor meldingen (mm/u)",
+                    "refresh_interval": "Interval voor verversen van data (sec)"
+                },
+                "data_description": {
+                    "name": "Naam",
+                    "place": "Plaats",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "notification_limit": "Limiet voor meldingen (mm/u)",
+                    "refresh_interval": "Zet de vernieuw interval minimaal op 300 seconden."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "nowcastmessage": {
+                "name": "Weermelding"
+            },
+            "mycastmessage": {
+                "name": "Mijn weermelding"
+            },
+            "precipitation_duration": {
+                "name": "Neerslagduur"
+            },
+            "precipitationrate_total": {
+                "name": "Totale neerslag"
+            },
+            "precipitationrate_hour": {
+                "name": "Neerslag per uur"
+            },
+            "precipitationrate_now": {
+                "name": "Huidige neerslag"
+            },
+            "precipitationrate_now_description": {
+                "name": "Huidige neerslag beschrijving",
+                "description": "Beschrijving van de actuele neerslagintensiteit."
+            },
+            "precipitationtype_now": {
+                "name": "Huidig neerslagtype"
+            },
+            "next_precipitation": {
+                "name": "Volgende neerslag over"
+            },
+            "rain_periods": {
+                "name": "Regenperiodes"
+            }
+        }
     }
-  }
 }

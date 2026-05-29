@@ -16,7 +16,7 @@ This integration exposes the information and functions made available by Huawei 
 - [FAQ - Troubleshooting](#faq---troubleshooting)
 
 Looking for more information? The [Wiki](https://github.com/wlcrs/huawei_solar/wiki) contains in-depth documentation and support materials.
- 
+
 ## Screenshots
 
 | **Inverter**                                                           | **Battery**                                                  |
@@ -47,11 +47,17 @@ To enable these advanced features, you need to select 'Elevate permissions' duri
 
 **Connection**
 
-This integration supports two connection modes to SUN2000 inverters:
-- direct serial connection to the RS485A1 and RS485B1 pins of the COM port
+This integration supports two connection modes to Huawei solar devices:
+- direct serial connection to the RS485A1 and RS485B1 pins of the COM port of SUN2000 inverters
 - network connection
 
 Detailed information can be found on the ['Connecting to the inverter' Wiki-page](https://github.com/wlcrs/huawei_solar/wiki/Connecting-to-the-inverter)
+
+> [!NOTE]
+> Modbus devices only support **one connection at a time**.
+> 
+> Make sure that nothing else is trying to connect to your Huawei solar installation.
+> Otherwise the connection from this integration to your installation will constantly be interrupted.
 
 **Firmware**
 
@@ -62,7 +68,7 @@ This integration supports inverters running firmware versions released in 2023 a
 1. Install this integration with HACS, or copy the contents of this
 repository into the `custom_components/huawei_solar` directory
    [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=wlcrs&repository=huawei_solar&category=integration)
-   
+
 3. Restart HA
 4. Start the configuration flow:
    - [![Start Config Flow](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=huawei_solar)
@@ -142,7 +148,7 @@ The integration will poll the inverter for new values every 30 seconds. If you w
 
 **Q**: The Daily Yield/Total Yield is incorrect: it also goes up when the battery is discharging.
 
-**A**: Huawei does not provide a Modbus register that represents the *output* of the inverter produced by energy coming only from the solar panels. It does provide a register that represents the *input* of the solar panels, but that does not take into account the conversion losses of the inverter. cfr. the Wiki page '[Daily Solar Yield](https://github.com/wlcrs/huawei_solar/wiki/Daily-Solar-Yield)' for some possible workarounds. cfr. [#1](https://github.com/wlcrs/huawei_solar/issues/1) for more context. 
+**A**: Huawei does not provide a Modbus register that represents the *output* of the inverter produced by energy coming only from the solar panels. It does provide a register that represents the *input* of the solar panels, but that does not take into account the conversion losses of the inverter. cfr. the Wiki page '[Daily Solar Yield](https://github.com/wlcrs/huawei_solar/wiki/Daily-Solar-Yield)' for some possible workarounds. cfr. [#1](https://github.com/wlcrs/huawei_solar/issues/1) for more context.
 
 ---
 
@@ -166,7 +172,7 @@ The integration will poll the inverter for new values every 30 seconds. If you w
 
 **Q**: How do I change the connection parameters (IP, port, USB device, installer password) of this integration?
 
-**A**: Changing connection parameters is not supported. You need to delete the integration and install it again. You typically do not lose any history attached to your entities in Home Assistant.
+**A**: 'Reconfigure' the integration. This action is available from the dropdown menu on the [integration settings page](https://my.home-assistant.io/redirect/integration/?domain=huawei_solar).
 
 ---
 <a name="daily-yield"></a>
@@ -186,7 +192,7 @@ The integration will poll the inverter for new values every 30 seconds. If you w
 ```yaml
 logger:
   logs:
-    pymodbus: debug # only include this if you're having connectivity issues
+    tmodbus: debug # only include this if you're having connectivity issues
     huawei_solar: debug
     homeassistant.components.huawei_solar: debug
 ```

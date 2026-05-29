@@ -2,7 +2,7 @@
 """TPI algorithm handler for ThermostatProp."""
 
 import logging
-from .log_collector import get_vtherm_logger
+from vtherm_api.log_collector import get_vtherm_logger
 from typing import Any, TYPE_CHECKING
 from datetime import datetime
 
@@ -12,9 +12,8 @@ from .prop_algo_tpi import TpiAlgorithm
 from .auto_tpi_manager import AutoTpiManager
 from .const import *  # pylint: disable=wildcard-import, unused-wildcard-import
 from .vtherm_hvac_mode import VThermHvacMode_OFF, VThermHvacMode_HEAT, VThermHvacMode_COOL
-from .vtherm_api import VersatileThermostatAPI
+from .vtherm_central_api import VersatileThermostatAPI
 from .commons import write_event_log
-from .const import EventType
 from .cycle_scheduler import calculate_cycle_times
 
 if TYPE_CHECKING:
@@ -229,6 +228,10 @@ class TPIHandler:
             scheduler.register_cycle_start_callback(self._auto_tpi_manager.on_cycle_started)
             scheduler.register_cycle_end_callback(self._auto_tpi_manager.on_cycle_completed)
 
+    def should_publish_intermediate(self) -> bool:
+        """TPI always publishes the current control iteration."""
+        return True
+
     def _is_central_boiler_off(self) -> bool:
         """Check if the central boiler is configured but currently off."""
         t = self._thermostat
@@ -296,8 +299,9 @@ class TPIHandler:
             "hvac_mode": str(t.vtherm_hvac_mode),
         }
 
-    async def control_heating(self, force=False):
+    async def control_heating(self, timestamp=None, force=False):
         """TPI-specific control heating logic."""
+        del timestamp
         t = self._thermostat
 
         # Feed the Auto TPI manager
@@ -373,8 +377,9 @@ class TPIHandler:
                 force,
             )
 
-    async def on_state_changed(self):
+    async def on_state_changed(self, changed: bool):
         """Handle state changes."""
+        del changed
         # Cycle management is now passive, no need to start/stop loop
         pass
 
@@ -621,7 +626,7 @@ class TPIHandler:
 
         # Fire event to notify listeners
         t.hass.bus.async_fire(
-            EventType.AUTO_TPI_EVENT.value,
+            AUTO_TPI_EVENT,
             {
                 "entity_id": t.entity_id,
                 "auto_tpi_mode": self._auto_tpi_manager.learning_active,

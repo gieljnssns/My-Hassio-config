@@ -1,0 +1,348 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Le nuove Battery Notes verranno rilevate automaticamente se presenti nella libreria.\nPer aggiungere manualmente una nuova Battery Note, vai alla pagina dell’integrazione, seleziona “Aggiungi Battery Note” e segui le istruzioni.\nSe hai bisogno di aiuto con la configurazione, consulta la documentazione qui: {documentation_url}",
+                "title": "Configura Battery Notes"
+            },
+            "battery": {
+                "description": "Nome: {name}\nProduttore: {manufacturer}\nModello: {model}\nID Modello: {model_id}\nVersione hardware: {hw_version}",
+                "data": {
+                    "battery_type": "Tipo di batteria",
+                    "battery_quantity": "Quantità di batterie",
+                    "note": "Note",
+                    "battery_low_threshold": "Soglia batteria bassa"
+                },
+                "data_description": {
+                    "battery_low_threshold": "0 utilizzerà la soglia globale predefinita"
+                },
+                "sections": {
+                    "advanced_settings": {
+                        "name": "Impostazioni avanzate",
+                        "data": {
+                            "battery_percentage_template": "Template percentuale batteria",
+                            "battery_low_template": "Template batteria scarica",
+                            "filter_outliers": "Filtra valori anomali"
+                        },
+                        "data_description": {
+                            "battery_percentage_template": "Template per calcolare la percentuale della batteria.\nNecessario solo per dispositivi che non forniscono una percentuale standard.",
+                            "battery_low_template": "Template per determinare se la batteria è scarica; deve restituire vero quando la batteria è bassa.\nNecessario solo per livelli di batteria non standard.",
+                            "filter_outliers": "Filtra cali improvvisi e anomali della batteria, riducendo falsi allarmi su dispositivi che riportano valori errati occasionalmente."
+                        }
+                    }
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "L’integrazione è già configurata",
+            "integration_not_added": "Integrazione non aggiunta, aggiungi prima l’integrazione",
+            "created_sub_entry": "Battery Note creata con successo"
+        },
+        "error": {
+            "unknown": "Errore sconosciuto."
+        }
+    },
+    "config_subentries": {
+        "battery_note": {
+            "initiate_flow": {
+                "user": "Aggiungi Battery Note"
+            },
+            "entry_type": "Battery Note",
+            "step": {
+                "user": {
+                    "description": "Se hai bisogno di aiuto per la configurazione, consulta la documentazione qui: {documentation_url}",
+                    "data": {
+                        "association_type": "Tipo di associazione"
+                    },
+                    "menu_options": {
+                        "device": "Dispositivo (consigliato)",
+                        "entity": "Entità"
+                    },
+                    "title": "Scegli il tipo di associazione"
+                },
+                "device": {
+                    "data": {
+                        "device_id": "Dispositivo",
+                        "name": "Nome"
+                    },
+                    "data_description": {
+                        "name": "Se lasci vuoto, verrà utilizzato il nome del dispositivo di origine"
+                    }
+                },
+                "entity": {
+                    "data": {
+                        "source_entity_id": "Entità",
+                        "name": "Nome"
+                    },
+                    "data_description": {
+                        "name": "Se lasci vuoto, verrà utilizzato il nome dell’entità di origine"
+                    }
+                },
+                "battery": {
+                    "description": "Nome: {name}\nProduttore: {manufacturer}\nModello: {model}\nID Modello: {model_id}\nVersione hardware: {hw_version}",
+                    "data": {
+                        "battery_type": "Tipo di batteria",
+                        "battery_quantity": "Quantità di batterie",
+                        "note": "Note",
+                        "battery_low_threshold": "Soglia batteria bassa"
+                    },
+                    "data_description": {
+                        "battery_low_threshold": "0 utilizzerà la soglia globale predefinita"
+                    },
+                    "sections": {
+                        "advanced_settings": {
+                            "name": "Impostazioni avanzate",
+                            "data": {
+                                "battery_percentage_template": "Template percentuale batteria",
+                                "battery_low_template": "Template batteria scarica",
+                                "filter_outliers": "Filtra valori anomali"
+                            },
+                            "data_description": {
+                                "battery_percentage_template": "Template per calcolare la percentuale della batteria.\nNecessario solo per dispositivi che non forniscono una percentuale standard.",
+                                "battery_low_template": "Template per determinare se la batteria è scarica; deve restituire vero quando la batteria è bassa.\nNecessario solo per livelli di batteria non standard.",
+                                "filter_outliers": "Filtra cali improvvisi e anomali della batteria, riducendo falsi allarmi su dispositivi che riportano valori errati occasionalmente."
+                            }
+                        }
+                    }
+                },
+                "manual": {
+                    "description": "Questo dispositivo è contrassegnato nella libreria come manuale. Le varianti utilizzano diversi tipi di batteria, quindi non può essere configurato automaticamente.\nNel passo successivo potrai scegliere manualmente il tipo di batteria. Non inviare richieste di aggiunta dispositivo.",
+                    "title": "Configurazione manuale del dispositivo"
+                },
+                "reconfigure": {
+                    "description": "Produttore: {manufacturer}\nModello: {model}\nID Modello: {model_id}\nVersione hardware: {hw_version}",
+                    "data": {
+                        "name": "Nome",
+                        "battery_type": "Tipo di batteria",
+                        "battery_quantity": "Quantità di batterie",
+                        "note": "Note",
+                        "battery_low_threshold": "Soglia batteria bassa"
+                    },
+                    "data_description": {
+                        "name": "Se lasci vuoto, verrà utilizzato il nome del dispositivo di origine",
+                        "battery_low_threshold": "0 utilizzerà la soglia globale predefinita"
+                    },
+                    "sections": {
+                        "advanced_settings": {
+                            "name": "Impostazioni avanzate",
+                            "data": {
+                                "battery_percentage_template": "Template percentuale batteria",
+                                "battery_low_template": "Template batteria scarica",
+                                "filter_outliers": "Filtra valori anomali"
+                            },
+                            "data_description": {
+                                "battery_percentage_template": "Template per calcolare la percentuale della batteria.\nNecessario solo per dispositivi che non forniscono una percentuale standard.",
+                                "battery_low_template": "Template per determinare se la batteria è scarica; deve restituire vero quando la batteria è bassa.\nNecessario solo per livelli di batteria non standard.",
+                                "filter_outliers": "Filtra cali improvvisi e anomali della batteria, riducendo falsi allarmi su dispositivi che riportano valori errati occasionalmente."
+                            }
+                        }
+                    }
+                }
+            },
+            "abort": {
+                "reconfigure_successful": "La riconfigurazione è avvenuta con successo",
+                "already_configured": "Il dispositivo è già configurato"
+            },
+            "error": {
+                "unknown": "Errore sconosciuto.",
+                "unconfigurable_entity": "Non è possibile aggiungere questa entità a Battery Notes.",
+                "orphaned_battery_note": "L’entità o il dispositivo associato a questa Battery Note non esiste più."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_devices": "Mostra tutti i dispositivi",
+                    "hide_battery": "Nascondi batteria standard",
+                    "round_battery": "Arrotonda Batteria+",
+                    "default_battery_low_threshold": "Soglia predefinita batteria bassa",
+                    "battery_increase_threshold": "Soglia aumento batteria"
+                },
+                "data_description": {
+                    "show_all_devices": "Mostra tutti i dispositivi nel menu a tendina; altrimenti verranno mostrati solo quelli con batteria.",
+                    "hide_battery": "Nasconde la batteria standard quando si aggiunge Batteria+.",
+                    "round_battery": "Arrotonda il valore Batteria+ a percentuali intere.",
+                    "default_battery_low_threshold": "Soglia predefinita sotto la quale l’entità battery_low viene impostata su vero e viene generato l’evento battery_notes_battery_threshold. Può essere sovrascritta nella configurazione del singolo dispositivo.",
+                    "battery_increase_threshold": "La soglia di aumento tra il livello precedente e quello attuale che genera l’evento battery_notes_battery_increased. Utilizzalo per automazioni basate sulla sostituzione della batteria."
+                },
+                "sections": {
+                    "advanced_settings": {
+                        "name": "Impostazioni avanzate",
+                        "data": {
+                            "enable_autodiscovery": "Rilevamento automatico",
+                            "enable_replaced": "Abilita batteria sostituita",
+                            "user_library": "Libreria utente"
+                        },
+                        "data_description": {
+                            "enable_autodiscovery": "Rilevamento automatico dei dispositivi presenti nella libreria.",
+                            "enable_replaced": "Abilita il pulsante di sostituzione batteria su ogni Battery Note.",
+                            "user_library": "Se specificata, verrà utilizzata una libreria utente prima di quella principale. Deve avere lo stesso formato della libreria principale e trovarsi in 'config/storage/battery_note'."
+                        }
+                    }
+                }
+            }
+        },
+        "error": {
+            "unknown": "Errore sconosciuto."
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "battery_low": {
+                "name": "{device_name}Batteria bassa",
+                "state_attributes": {
+                    "battery_low_threshold": {
+                        "name": "Soglia batteria bassa"
+                    }
+                }
+            }
+        },
+        "button": {
+            "battery_replaced": {
+                "name": "{device_name}Batteria sostituita"
+            }
+        },
+        "sensor": {
+            "battery_plus": {
+                "name": "{device_name}Batteria+",
+                "state_attributes": {
+                    "battery_type": {
+                        "name": "Tipo di batteria"
+                    },
+                    "battery_quantity": {
+                        "name": "Quantità di batterie"
+                    },
+                    "battery_type_and_quantity": {
+                        "name": "Tipo e quantità della batteria"
+                    },
+                    "note": {
+                        "name": "Note"
+                    },
+                    "battery_last_replaced": {
+                        "name": "Ultima sostituzione batteria"
+                    },
+                    "battery_low": {
+                        "name": "Batteria bassa"
+                    },
+                    "battery_low_threshold": {
+                        "name": "Soglia batteria bassa"
+                    },
+                    "battery_last_reported": {
+                        "name": "Ultima segnalazione batteria"
+                    },
+                    "battery_last_reported_level": {
+                        "name": "Ultimo livello batteria segnalato"
+                    },
+                    "source_entity_id": {
+                        "name": "ID entità sorgente"
+                    },
+                    "device_id": {
+                        "name": "ID dispositivo"
+                    },
+                    "device_name": {
+                        "name": "Nome dispositivo"
+                    }
+                }
+            },
+            "battery_type": {
+                "name": "{device_name}Tipo di batteria",
+                "state_attributes": {
+                    "battery_type": {
+                        "name": "Tipo di batteria"
+                    },
+                    "battery_quantity": {
+                        "name": "Quantità di batterie"
+                    },
+                    "note": {
+                        "name": "Note"
+                    }
+                }
+            },
+            "battery_last_replaced": {
+                "name": "{device_name}Ultima sostituzione batteria"
+            }
+        }
+    },
+    "services": {
+        "set_battery_replaced": {
+            "description": "Imposta la data dell’ultima sostituzione della batteria.",
+            "fields": {
+                "device_id": {
+                    "description": "Dispositivo a cui è stata sostituita la batteria.",
+                    "name": "Dispositivo"
+                },
+                "entity_id": {
+                    "description": "Entità a cui è stata sostituita la batteria (usato solo per entità associate a Battery Notes).",
+                    "name": "Entità"
+                },
+                "datetime_replaced": {
+                    "description": "Data della sostituzione.",
+                    "name": "Data"
+                }
+            },
+            "name": "Imposta batteria sostituita"
+        },
+        "check_battery_last_replaced": {
+            "description": "Ottieni una risposta o genera eventi per dispositivi che non hanno avuto una sostituzione della batteria da troppo tempo.",
+            "fields": {
+                "days_last_reported": {
+                    "description": "Numero di giorni dall’ultima sostituzione della batteria.",
+                    "name": "Giorni"
+                },
+                "raise_events": {
+                    "description": "Genera eventi da utilizzare nei trigger delle automazioni.",
+                    "name": "Genera eventi"
+                }
+            },
+            "name": "Verifica ultima sostituzione batteria"
+        },
+        "check_battery_last_reported": {
+            "description": "Ottieni una risposta o genera eventi per dispositivi che non hanno riportato il livello della batteria.",
+            "fields": {
+                "days_last_reported": {
+                    "description": "Numero di giorni dall’ultima segnalazione del livello della batteria.",
+                    "name": "Giorni"
+                },
+                "raise_events": {
+                    "description": "Genera eventi da utilizzare nei trigger delle automazioni.",
+                    "name": "Genera eventi"
+                }
+            },
+            "name": "Verifica ultima segnalazione livello batteria"
+        },
+        "check_battery_low": {
+            "description": "Ottieni una risposta o genera eventi per dispositivi con batteria bassa.",
+            "fields": {
+                "raise_events": {
+                    "description": "Genera eventi da utilizzare nei trigger delle automazioni.",
+                    "name": "Genera eventi"
+                }
+            },
+            "name": "Verifica batteria scarica"
+        }
+    },
+    "issues": {
+        "missing_device": {
+            "title": "Battery Note orfana",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Battery Note orfana",
+                        "description": "Il dispositivo o l’entità associato alla Battery Note {name} non esiste più e deve essere eliminato.\nSeleziona **Invia** per rimuovere questa Battery Note."
+                    }
+                }
+            }
+        },
+        "deprecated_yaml": {
+            "title": "La configurazione YAML di {integration_title} è stata rimossa",
+            "description": "La configurazione di {integration_title} tramite YAML è stata rimossa.\n\nLa tua configurazione YAML esistente è stata importata automaticamente nell’interfaccia.\n\nRimuovi la configurazione `{domain}` dal file configuration.yaml e riavvia Home Assistant per risolvere il problema."
+        }
+    },
+    "exceptions": {
+        "not_configured_in_battery_notes": {
+            "message": "{source} non è configurato in Battery Notes."
+        }
+    }
+}

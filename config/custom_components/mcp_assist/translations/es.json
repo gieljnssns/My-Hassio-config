@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuracion del perfil",
+        "description": "Crea un nuevo perfil de agente con un nombre unico y personalidad.",
+        "data": {
+          "profile_name": "Nombre del perfil",
+          "server_type": "Tipo de servidor"
+        }
+      },
+      "server": {
+        "title": "Configuracion del servidor",
+        "description": "Configura la URL de tu servidor de inferencia y el puerto del servidor MCP.",
+        "data": {
+          "lmstudio_url": "URL del servidor",
+          "api_key": "Clave API",
+          "mcp_port": "Puerto del servidor MCP"
+        }
+      },
+      "model": {
+        "title": "Modelo e instrucciones",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "Nombre del modelo",
+          "system_prompt": "Instrucciones del sistema",
+          "technical_prompt": "Instrucciones tecnicas"
+        }
+      },
+      "advanced": {
+        "title": "Configuracion avanzada",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "Temperatura",
+          "max_tokens": "Tokens de respuesta maximos",
+          "max_history": "Mensajes de historial maximos",
+          "max_iterations": "Iteraciones de herramientas maximas",
+          "control_home_assistant": "Controlar Home Assistant",
+          "response_mode": "Modo de respuesta",
+          "follow_up_phrases": "Frases de seguimiento",
+          "end_words": "Palabras para terminar conversacion",
+          "timeout": "Tiempo de espera de respuesta",
+          "debug_mode": "Modo de depuracion",
+          "ollama_keep_alive": "Mantener Ollama activo",
+          "ollama_num_ctx": "Ventana de contexto de Ollama",
+          "clean_responses": "Limpiar respuestas para salida de voz"
+        }
+      },
+      "mcp_server": {
+        "title": "Configuracion compartida del servidor MCP",
+        "description": "Esta configuracion afecta a TODOS los perfiles. Los cambios aqui impactaran a cada agente de conversacion de MCP Assist.",
+        "data": {
+          "mcp_port": "Puerto del servidor MCP",
+          "search_provider": "Busqueda web",
+          "brave_api_key": "Clave API de Brave Search",
+          "allowed_ips": "IPs/Rangos adicionales permitidos",
+          "enable_gap_filling": "Habilitar indice inteligente de entidades",
+          "max_entities_per_discovery": "Max entidades por busqueda (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No se puede conectar al servidor de inferencia. Asegurate de que este funcionando y sea accesible.",
+      "no_models": "No hay modelos cargados en el servidor. Por favor, carga un modelo primero.",
+      "invalid_model": "El modelo especificado no esta disponible en el servidor.",
+      "invalid_port": "El puerto debe estar entre 1024 y 65535.",
+      "invalid_ip": "Formato de direccion IP o rango CIDR invalido. Usa valores separados por comas como: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "El nombre del perfil es obligatorio.",
+      "invalid_json": "Formato JSON invalido. Por favor, verifica la configuracion de tus servidores MCP.",
+      "invalid_api_key": "Clave API invalida. Por favor, verifica e intenta de nuevo.",
+      "auth_failed": "Autenticacion fallida. Por favor, verifica tu clave API.",
+      "unknown": "Ha ocurrido un error desconocido."
+    },
+    "abort": {
+      "already_configured": "Ya existe un perfil con este nombre. Por favor, elige un nombre diferente."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configuracion del perfil",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "Nombre del perfil",
+          "lmstudio_url": "URL del servidor",
+          "api_key": "Clave API",
+          "model_name": "Nombre del modelo",
+          "system_prompt": "Instrucciones del sistema",
+          "technical_prompt": "Instrucciones tecnicas",
+          "temperature": "Temperatura",
+          "max_tokens": "Tokens de respuesta maximos",
+          "max_history": "Mensajes de historial maximos",
+          "max_iterations": "Iteraciones de herramientas maximas",
+          "control_home_assistant": "Controlar Home Assistant",
+          "response_mode": "Modo de respuesta",
+          "follow_up_phrases": "Frases de seguimiento",
+          "end_words": "Palabras para terminar conversacion",
+          "timeout": "Tiempo de espera de respuesta",
+          "debug_mode": "Modo de depuracion",
+          "ollama_keep_alive": "Mantener Ollama activo",
+          "ollama_num_ctx": "Ventana de contexto de Ollama",
+          "clean_responses": "Limpiar respuestas para salida de voz"
+        }
+      },
+      "mcp_server": {
+        "title": "Configuracion compartida del servidor MCP",
+        "description": "Esta configuracion se comparte entre TODOS los perfiles",
+        "data": {
+          "mcp_port": "Puerto del servidor MCP",
+          "search_provider": "Busqueda web",
+          "brave_api_key": "Clave API de Brave Search",
+          "allowed_ips": "IPs/Rangos adicionales permitidos",
+          "enable_gap_filling": "Habilitar indice inteligente de entidades",
+          "max_entities_per_discovery": "Max entidades por busqueda (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

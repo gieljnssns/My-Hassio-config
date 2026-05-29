@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Настройка профиля",
+        "description": "Создайте новый профиль агента с уникальным именем и личностью.",
+        "data": {
+          "profile_name": "Название профиля",
+          "server_type": "Тип сервера"
+        }
+      },
+      "server": {
+        "title": "Конфигурация сервера",
+        "description": "Настройте URL вашего сервера вывода и порт сервера MCP.",
+        "data": {
+          "lmstudio_url": "URL сервера",
+          "api_key": "API-ключ",
+          "mcp_port": "Порт сервера MCP"
+        }
+      },
+      "model": {
+        "title": "Модель и инструкции",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "Название модели",
+          "system_prompt": "Системные инструкции",
+          "technical_prompt": "Технические инструкции"
+        }
+      },
+      "advanced": {
+        "title": "Расширенные настройки",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "Температура",
+          "max_tokens": "Максимум токенов ответа",
+          "max_history": "Максимум сообщений истории",
+          "max_iterations": "Максимум итераций инструментов",
+          "control_home_assistant": "Управление Home Assistant",
+          "response_mode": "Режим ответа",
+          "follow_up_phrases": "Фразы продолжения",
+          "end_words": "Слова завершения разговора",
+          "timeout": "Тайм-аут ответа",
+          "debug_mode": "Режим отладки",
+          "ollama_keep_alive": "Поддерживать Ollama активным",
+          "ollama_num_ctx": "Контекстное окно Ollama",
+          "clean_responses": "Очистка ответов для голосового вывода"
+        }
+      },
+      "mcp_server": {
+        "title": "Общие настройки сервера MCP",
+        "description": "Эти настройки влияют на ВСЕ профили. Изменения здесь повлияют на каждого агента разговора MCP Assist.",
+        "data": {
+          "mcp_port": "Порт сервера MCP",
+          "search_provider": "Веб-поиск",
+          "brave_api_key": "API-ключ Brave Search",
+          "allowed_ips": "Дополнительные разрешённые IP/диапазоны",
+          "enable_gap_filling": "Включить умный индекс сущностей",
+          "max_entities_per_discovery": "Макс сущностей на поиск (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Невозможно подключиться к серверу вывода. Убедитесь, что он запущен и доступен.",
+      "no_models": "На сервере не загружены модели. Сначала загрузите модель.",
+      "invalid_model": "Указанная модель недоступна на сервере.",
+      "invalid_port": "Порт должен быть между 1024 и 65535.",
+      "invalid_ip": "Неверный формат IP-адреса или CIDR-диапазона. Используйте значения через запятую, например: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "Название профиля обязательно.",
+      "invalid_json": "Неверный формат JSON. Проверьте конфигурацию ваших MCP-серверов.",
+      "invalid_api_key": "Неверный API-ключ. Проверьте и попробуйте снова.",
+      "auth_failed": "Аутентификация не удалась. Проверьте ваш API-ключ.",
+      "unknown": "Произошла неизвестная ошибка."
+    },
+    "abort": {
+      "already_configured": "Профиль с таким именем уже существует. Выберите другое имя."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Настройки профиля",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "Название профиля",
+          "lmstudio_url": "URL сервера",
+          "api_key": "API-ключ",
+          "model_name": "Название модели",
+          "system_prompt": "Системные инструкции",
+          "technical_prompt": "Технические инструкции",
+          "temperature": "Температура",
+          "max_tokens": "Максимум токенов ответа",
+          "max_history": "Максимум сообщений истории",
+          "max_iterations": "Максимум итераций инструментов",
+          "control_home_assistant": "Управление Home Assistant",
+          "response_mode": "Режим ответа",
+          "follow_up_phrases": "Фразы продолжения",
+          "end_words": "Слова завершения разговора",
+          "timeout": "Тайм-аут ответа",
+          "debug_mode": "Режим отладки",
+          "ollama_keep_alive": "Поддерживать Ollama активным",
+          "ollama_num_ctx": "Контекстное окно Ollama",
+          "clean_responses": "Очистка ответов для голосового вывода"
+        }
+      },
+      "mcp_server": {
+        "title": "Общие настройки сервера MCP",
+        "description": "Эти настройки используются ВСЕМИ профилями",
+        "data": {
+          "mcp_port": "Порт сервера MCP",
+          "search_provider": "Веб-поиск",
+          "brave_api_key": "API-ключ Brave Search",
+          "allowed_ips": "Дополнительные разрешённые IP/диапазоны",
+          "enable_gap_filling": "Включить умный индекс сущностей",
+          "max_entities_per_discovery": "Макс сущностей на поиск (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

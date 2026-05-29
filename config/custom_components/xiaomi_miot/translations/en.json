@@ -1,6 +1,6 @@
 {
     "config": {
-        "flow_title": "Xiaomi Miot Auto",
+        "flow_title": "Xiaomi Miot",
         "step": {
             "user": {
                 "title": "Select Action",
@@ -23,14 +23,16 @@
                     "username": "Xiaomi Account ID / Email",
                     "password": "Password",
                     "captcha": "Captcha",
+                    "verify_ticket": "Two-factor verification code",
                     "server_country": "Server location of MiCloud",
                     "conn_mode": "Connection mode for device",
+                    "trans_options": "Translation property value description",
                     "filter_models": "Filter devices via model/home/WiFi (Advanced)"
                 }
             },
             "cloud_filter": {
                 "title": "Filter cloud devices",
-                "description": "You can include or exclude devices to integrate only the devices you want. In the exclude mode, if you do not check any option in the list, it is equivalent to including all options.\n{tip}",
+                "description": "You can include or exclude devices to integrate only the devices you want.\n{tip}",
                 "data": {
                     "filter_model": "Filter Device Model",
                     "model_list": "Device Model List",
@@ -43,6 +45,10 @@
                     "filter_did": "Filter Device",
                     "did_list": "Device List",
                     "home_ids": "Filter Home (Leave blank to save)"
+                },
+                "data_description": {
+                    "filter_did": "In the exclude mode, if you do not check any option in the list, it is equivalent to including all devices.",
+                    "home_ids": "After checking this option and submitting, you will return to the current page,\nand the device list will refresh and filter out the devices of the checked homes."
                 }
             },
             "customizing": {
@@ -54,6 +60,8 @@
                     "model": "Select device model",
                     "model_specified": "Specified device model (Optional)",
                     "only_main_entity": "Only main (parent) entities",
+                    "yaml_mode": "YAML Mode",
+                    "yaml_customizes": "Customizes YAML Code",
                     "reset_customizes": "Reset to default customizes",
 
                     "binary_sensor_attributes": "binary_sensor_attributes",
@@ -68,24 +76,23 @@
                     "close_texts": "close_texts",
                     "closed_position": "closed_position",
                     "cloud_delay_update": "cloud_delay_update",
+                    "configuration_entities": "configuration_entities",
                     "coord_type": "coord_type",
-                    "cover_properties": "cover_properties",
                     "current_temp_property": "current_temp_property",
                     "descriptions_for_on": "descriptions_for_on",
                     "descriptions_for_off": "descriptions_for_off",
                     "deviated_position": "deviated_position",
                     "device_class": "device_class",
+                    "diagnostic_entities": "diagnostic_entities",
                     "disable_location_name": "disable_location_name",
                     "disable_preset_modes": "disable_preset_modes",
                     "entity_category": "entity_category",
                     "exclude_miot_properties": "exclude_miot_properties",
                     "exclude_miot_services": "exclude_miot_services",
                     "exclude_type": "exclude_type",
-                    "fan_services": "fan_services",
                     "feeding_measure": "feeding_measure",
                     "filter_home": "filter_home",
                     "interval_seconds": "interval_seconds",
-                    "light_services": "light_services",
                     "main_miot_services": "main_miot_services",
                     "miot_did": "miot_did",
                     "mitv_lan_host": "mitv_lan_host",
@@ -108,6 +115,7 @@
                     "state_class": "state_class",
                     "state_property": "state_property",
                     "switch_properties": "switch_properties",
+                    "target_position_properties": "target_position_properties",
                     "television_name": "television_name",
                     "text_actions": "text_actions",
                     "turn_on_hvac": "turn_on_hvac",
@@ -125,8 +133,9 @@
             "cannot_connect": "Failed to connect to the device",
             "cannot_login": "Failed to login to the Xiaomi account. Please check your account credentials. If login attempts fail multiple times, please try logging in again on the Xiaomi official website (mi.com) using the same network environment.",
             "cannot_reach": "Unable to access the Xiaomi API interface",
-            "tzinfo_error": "There seems to be an issue with your Hass environment. Please refer to: https://github.com/al-one/hass-xiaomi-miot/issues/260",
-            "none_devices": "No devices found under this Xiaomi account"
+            "tzinfo_error": "There seems to be an issue with your Hass environment. Check your time zone configuration",
+            "none_devices": "No devices found under this Xiaomi account",
+            "need_verify": "This login requires security verification. Please open the verification page to send the mobile/email verification code. After receiving the verification code, do not verify it on the webpage. Go back to HomeAssistant and enter it in the input box below."
         },
         "abort": {
             "config_saved": "Configuration saved! [Customize again](/_my_redirect/config_flow_start?domain=xiaomi_miot).\n{tip}\n\nSome custom options may require [reloading the integration](/developer-tools/yaml) to take effect.",
@@ -152,16 +161,18 @@
                     "username": "Xiaomi Account ID / Email",
                     "password": "Password",
                     "captcha": "Captcha",
+                    "verify_ticket": "Two-factor verification code",
                     "server_country": "Server location of MiCloud",
                     "conn_mode": "Connection mode for device",
                     "renew_devices": "Force renew devices",
+                    "trans_options": "Translation property value description",
                     "disable_message": "Disable Mihome notification sensor",
                     "disable_scene_history": "Disable Mihome scene history sensor"
                 }
             },
             "cloud_filter": {
                 "title": "Filter cloud devices",
-                "description": "You can include or exclude devices to integrate only the devices you want. In the exclude mode, if you do not check any option in the list, it is equivalent to including all options.\n{tip}",
+                "description": "You can include or exclude devices to integrate only the devices you want.\n{tip}",
                 "data": {
                     "filter_model": "Filter Device Model",
                     "model_list": "Device Model List",
@@ -174,6 +185,10 @@
                     "filter_did": "Filter Device",
                     "did_list": "Device List",
                     "home_ids": "Filter Home (Leave blank to save)"
+                },
+                "data_description": {
+                    "filter_did": "In the exclude mode, if you do not check any option in the list, it is equivalent to including all devices.",
+                    "home_ids": "After checking this option and submitting, you will return to the current page,\nand the device list will refresh and filter out the devices of the checked homes."
                 }
             }
         },
@@ -181,11 +196,12 @@
             "cannot_connect": "Failed to connect to the device",
             "cannot_login": "Failed to login to the Xiaomi account. Please check your account credentials. If login attempts fail multiple times, please try logging in again on the Xiaomi official website (mi.com) using the same network environment.",
             "cannot_reach": "Unable to access the Xiaomi API interface",
-            "tzinfo_error": "There seems to be an issue with your Hass environment. Please refer to: https://github.com/al-one/hass-xiaomi-miot/issues/260",
-            "none_devices": "No devices found under this Xiaomi account"
+            "tzinfo_error": "There seems to be an issue with your Hass environment. Check your time zone configuration",
+            "none_devices": "No devices found under this Xiaomi account",
+            "need_verify": "This login requires security verification. Please open the verification page to send the mobile/email verification code. After receiving the verification code, do not verify it on the webpage. Go back to HomeAssistant and enter it in the input box below."
         },
         "abort": {
-            "show_customizes": "[![Add new integration](https://my.home-assistant.io/badges/config_flow_start.svg)](/_my_redirect/config_flow_start?domain=xiaomi_miot)\n[Add a new integration](/_my_redirect/config_flow_start?domain=xiaomi_miot) to modify customization.\n{tip}"
+            "show_customizes": "Add a new integration to modify customization.\n{link}\n{tip}"
         }
     },
     "system_health": {
@@ -198,7 +214,18 @@
         }
     },
     "entity": {
+        "button": {
+            "info": {"name": "Info"}
+        },
         "sensor": {
+            "clean_area": {"name": "Clean Area"},
+            "clean_time": {"name": "Clean Time"},
+            "power_cost_today": {"name": "Energy Today"},
+            "power_cost_month": {"name": "Energy Month"},
+            "power_cost_today_2": {"name": "Energy Today"},
+            "power_cost_month_2": {"name": "Energy Month"},
+            "props-clean_area": {"name": "Clean Area"},
+            "props-clean_time": {"name": "Clean Time"},
             "lock": {
                 "state": {
                     "bluetooth": "Bluetooth",

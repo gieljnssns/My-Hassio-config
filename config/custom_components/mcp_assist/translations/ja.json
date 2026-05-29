@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "プロファイル設定",
+        "description": "ユニークな名前と個性を持つ新しいエージェントプロファイルを作成します。",
+        "data": {
+          "profile_name": "プロファイル名",
+          "server_type": "サーバータイプ"
+        }
+      },
+      "server": {
+        "title": "サーバー設定",
+        "description": "推論サーバーのURLとMCPサーバーポートを設定します。",
+        "data": {
+          "lmstudio_url": "サーバーURL",
+          "api_key": "APIキー",
+          "mcp_port": "MCPサーバーポート"
+        }
+      },
+      "model": {
+        "title": "モデルとプロンプト",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "モデル名",
+          "system_prompt": "システムプロンプト",
+          "technical_prompt": "技術的な指示"
+        }
+      },
+      "advanced": {
+        "title": "詳細設定",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "温度",
+          "max_tokens": "最大応答トークン数",
+          "max_history": "最大履歴メッセージ数",
+          "max_iterations": "最大ツール反復回数",
+          "control_home_assistant": "Home Assistantを制御",
+          "response_mode": "応答モード",
+          "follow_up_phrases": "フォローアップフレーズ",
+          "end_words": "会話終了ワード",
+          "timeout": "応答タイムアウト",
+          "debug_mode": "デバッグモード",
+          "ollama_keep_alive": "Ollamaを維持",
+          "ollama_num_ctx": "Ollamaコンテキストウィンドウ",
+          "clean_responses": "音声出力用にレスポンスを整形"
+        }
+      },
+      "mcp_server": {
+        "title": "共有MCPサーバー設定",
+        "description": "これらの設定はすべてのプロファイルに影響します。ここでの変更はすべてのMCP Assist会話エージェントに影響します。",
+        "data": {
+          "mcp_port": "MCPサーバーポート",
+          "search_provider": "Web検索",
+          "brave_api_key": "Brave Search APIキー",
+          "allowed_ips": "追加の許可IP/範囲",
+          "enable_gap_filling": "スマートエンティティインデックスを有効化",
+          "max_entities_per_discovery": "検索あたりの最大エンティティ数 (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "推論サーバーに接続できません。サーバーが起動していてアクセス可能であることを確認してください。",
+      "no_models": "サーバーにモデルがロードされていません。まずモデルをロードしてください。",
+      "invalid_model": "指定されたモデルはサーバーで利用できません。",
+      "invalid_port": "ポートは1024から65535の間である必要があります。",
+      "invalid_ip": "IPアドレスまたはCIDR範囲の形式が無効です。カンマ区切りの値を使用してください。例：172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "プロファイル名は必須です。",
+      "invalid_json": "JSON形式が無効です。MCPサーバーの設定を確認してください。",
+      "invalid_api_key": "APIキーが無効です。確認してもう一度お試しください。",
+      "auth_failed": "認証に失敗しました。APIキーを確認してください。",
+      "unknown": "不明なエラーが発生しました。"
+    },
+    "abort": {
+      "already_configured": "この名前のプロファイルは既に存在します。別の名前を選択してください。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "プロファイル設定",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "プロファイル名",
+          "lmstudio_url": "サーバーURL",
+          "api_key": "APIキー",
+          "model_name": "モデル名",
+          "system_prompt": "システムプロンプト",
+          "technical_prompt": "技術的な指示",
+          "temperature": "温度",
+          "max_tokens": "最大応答トークン数",
+          "max_history": "最大履歴メッセージ数",
+          "max_iterations": "最大ツール反復回数",
+          "control_home_assistant": "Home Assistantを制御",
+          "response_mode": "応答モード",
+          "follow_up_phrases": "フォローアップフレーズ",
+          "end_words": "会話終了ワード",
+          "timeout": "応答タイムアウト",
+          "debug_mode": "デバッグモード",
+          "ollama_keep_alive": "Ollamaを維持",
+          "ollama_num_ctx": "Ollamaコンテキストウィンドウ",
+          "clean_responses": "音声出力用にレスポンスを整形"
+        }
+      },
+      "mcp_server": {
+        "title": "共有MCPサーバー設定",
+        "description": "これらの設定はすべてのプロファイルで共有されます",
+        "data": {
+          "mcp_port": "MCPサーバーポート",
+          "search_provider": "Web検索",
+          "brave_api_key": "Brave Search APIキー",
+          "allowed_ips": "追加の許可IP/範囲",
+          "enable_gap_filling": "スマートエンティティインデックスを有効化",
+          "max_entities_per_discovery": "検索あたりの最大エンティティ数 (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

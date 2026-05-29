@@ -55,17 +55,17 @@ def get_numeric_state_schema() -> vol.Schema:
     return make_entity_id_optional(cv.NUMERIC_STATE_CONDITION_SCHEMA.validators[0])
 
 
-def get_state_condition_attribute_schema(value: Any) -> dict[str, Any]:  # noqa: ANN401
+def get_state_condition_attribute_schema(value: object) -> dict[str, Any]:
     """Return the state attribute condition schema. We need to modify it to make entity_id optional."""
     return make_entity_id_optional(cv.STATE_CONDITION_ATTRIBUTE_SCHEMA)(value)  # type: ignore
 
 
-def get_state_condition_state_schema(value: Any) -> dict[str, Any]:  # noqa: ANN401
+def get_state_condition_state_schema(value: object) -> dict[str, Any]:
     """Return the state condition schema. We need to modify it to make entity_id optional."""
     return make_entity_id_optional(cv.STATE_CONDITION_STATE_SCHEMA)(value)  # type: ignore
 
 
-def get_state_schema(value: Any) -> dict[str, Any]:  # noqa: ANN401
+def get_state_schema(value: object) -> dict[str, Any]:
     """Validate a state condition."""
     if not isinstance(value, dict):
         raise vol.Invalid("Expected a dictionary")  # pragma: no cover
@@ -158,7 +158,9 @@ class CompositeStrategy(PowerCalculationStrategyInterface):
             if isinstance(strategy, PlaybookStrategy):
                 await self.activate_playbook(strategy)
 
-            if (entity_state.state == STATE_OFF and strategy.can_calculate_standby()) or entity_state.state != STATE_OFF:
+            if (
+                entity_state.state == STATE_OFF and strategy.can_calculate_standby()
+            ) or entity_state.state != STATE_OFF:
                 value = await strategy.calculate(entity_state)
                 if value is not None:
                     if self.mode == CompositeMode.STOP_AT_FIRST:
@@ -204,7 +206,9 @@ class CompositeStrategy(PowerCalculationStrategyInterface):
                     track_templates,
                 )
 
-        track_entities = [entity for sub_strategy in self.strategies for entity in sub_strategy.strategy.get_entities_to_track()]
+        track_entities = [
+            entity for sub_strategy in self.strategies for entity in sub_strategy.strategy.get_entities_to_track()
+        ]
         return track_templates + track_entities
 
     def can_calculate_standby(self) -> bool:

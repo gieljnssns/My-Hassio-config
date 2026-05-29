@@ -1,0 +1,212 @@
+{
+    "config": {
+        "step": {
+            "menu": {
+                "title": "Person Location Configuration Menu",
+                "description": "You can come back to update the configuration later by clicking ` ⋮ → Reconfigure`.",
+                "data": {
+                    "menu_selection": "Step through or choose a configuration section:"
+                }
+            },
+            "geocode": {
+                "title": "Person Location Geocode Configuration (1 of 2)",
+                "description": "Reverse geocoding and mapping can be done using one (or more) external services.  The key for services that are not used should be entered as `not used`.",
+                "data": {
+                    "language": "Google Language",
+                    "region": "Google Country Code",
+                    "google_api_key": "Google API Key",
+                    "mapbox_api_key": "Mapbox Access Token",
+                    "mapquest_api_key": "MapQuest API Key",
+                    "osm_api_key": "OSM Nomination API Key (your eMail Address)",
+                    "radar_api_key": "Radar API Key (publishable)"
+                }
+            },
+            "source": {
+                "title": "Person Location Geocode Configuration (2 of 2)",
+                "description": "Driving distance and duration can be obtained using one of the following external services.",
+                "data": {
+                    "distance_duration_source": "Source for driving distance and duration"
+                }
+            },
+            "sensors": {
+                "title": "Person Location Sensor Configuration",
+                "description": "We can create individual sensors so that template sensors do not need to be manually configured. Choose from this list: altitude, bread_crumbs, direction, driving_miles, driving_minutes, geocoded, latitude, longitude, meters_from_home, miles_from_home.",
+                "data": {
+                    "create_sensors": "Sensors to be created (comma separated)",
+                    "altitude": "altitude",
+                    "bread_crumbs": "bread_crumbs",
+                    "direction": "direction",
+                    "driving_miles": "driving_miles",
+                    "driving_minutes": "driving_minutes",
+                    "geocoded": "geocoded",
+                    "latitude": "latitude",
+                    "longitude": "longitude",
+                    "meters_from_home": "meters_from_home",
+                    "miles_from_home": "miles_from_home",
+                    "platform": "Platform for output sensor (experimental)"
+                }
+            },
+            "triggers": {
+                "title": "Person Location Trigger Configuration",
+                "description": "You can choose to follow updates of all Person entities rather than configuring individual trigger devices. Individual triggers may be added or edited below.",
+                "data": {
+                    "follow_person_integration": "Follow Person Integration?",
+                    "new_device_entity": "Trigger Entity (device) to add",
+                    "new_person_name": "Person Name for the new trigger",
+                    "device_choice": "Choose a trigger to edit, or return to menu:"
+                }
+            },
+            "trigger_edit": {
+                "title": "Person Location Trigger Edit",
+                "description": "Edit the Person Location trigger.",
+                "data": {
+                    "edit_action": "Action to be taken on {device}:",
+                    "new_device_entity": "Trigger Entity (device)",
+                    "new_person_name": "Person Name for the trigger"
+                }
+            },
+            "providers": {
+                "title": "Person Location Map Camera Configuration",
+                "description": "The integration provides a camera platform that can be used to provide a dynamic map image. Some knowledge of the 3rd-party mapping API is necessary to adjust these maps, so get into it only if you enjoy coding and figuring things out.\n\nMap camera providers may be selected below.",
+                "data": {
+                    "provider_choice": "Choose the provider to edit, add a new one, or return to menu:"
+                }
+            },
+            "provider_add": {
+                "title": "Person Location Map Camera Add",
+                "description": "The integration provides a camera platform that can be used to provide a dynamic map image. Some knowledge of the 3rd-party mapping API is necessary to adjust these maps, so get into it only if you enjoy coding and figuring things out.\n\nAdd information for a new Map Camera. You may find it helpful to copy/paste the templates from an editor (like Developer tools > Template).",
+                "data": {
+                    "name": "Map Camera Name",
+                    "state": "Map Camera State Template",
+                    "still_image_url": "Map Camera URL Template"
+                }
+            },
+            "provider_edit": {
+                "title": "Person Location Map Camera Edit",
+                "description": "Some knowledge of the 3rd-party mapping API is necessary to adjust these maps, so get into it only if you enjoy coding and figuring things out.\n\nYou may find it helpful to copy/paste the templates from an editor (like Developer tools > Template).",
+                "data": {
+                    "edit_action": "Action to be taken on map camera {provider}:",
+                    "state": "Map Camera State Template",
+                    "still_image_url": "Map Camera URL Template"
+                }
+            },
+            "provider_preview": {
+                "title": "Person Location Map Camera Preview",
+                "description": "**Map Camera Name:** `camera.{provider_name}`\n\n **Map Camera State Preview:** `{provider_state_preview}` \n{state_missing_entities} \n\n**Map Camera URL Preview:** `{provider_url_preview}` \n{url_missing_entities}",
+                "data": {
+                    "next_action": "Action to be taken on Submit:",
+                    "state": "Map Camera State Template",
+                    "still_image_url": "Map Camera URL Template"
+                }
+            }
+        },
+        "error": {
+            "sensor_invalid": "Invalid sensor entered.",
+            "duplicate_device": "Trigger Entity is already used.",
+            "duplicate_name": "Name is already used",
+            "missing_person": "Person Name must also be specified.",
+            "missing_device": "Trigger Entity must also be specified.",
+            "missing_three": "All three must be specified if any are.",
+            "invalid_state_template": "Invalid State template. [{state_error}]",
+            "invalid_url_template": "Invalid URL template. [{url_error}]",
+            "invalid_key": "API key not accepted.",
+            "invalid_email": "eMail address is not valid.",
+            "nothing_was_changed": "No changes were entered for the configuration."
+        },
+        "abort": {
+            "already_configured": "Already configured and only a single instance is allowed.",
+            "reconfigure_successful": "The pre-existing entry has been updated."
+        }
+    },
+    "options": {
+        "step": {
+            "general": {
+                "title": "Person Location Options",
+                "description": "Options for the Person Location integration that do not affect the entity structure.",
+                "data": {
+                    "extended_away": "Hours Extended Away",
+                    "just_arrived": "Minutes Just Arrived",
+                    "just_left": "Minutes Just Left",
+                    "show_zone_when_away": "Show zone in state when away?",
+                    "friendly_name_template": "Friendly Name Template",
+                    "_preview_friendly_name": "{friendly_preview}"
+                }
+            }
+        },
+        "error": {
+            "nothing_was_changed": "No changes were entered for the configuration.",
+            "template_required": "Template required."
+        },
+        "abort": {
+            "normal_exit": "Configuration finished."
+        }
+
+    },
+    "services": {
+        "reverse_geocode": {
+            "name": "Reverse Geocode",
+            "description": "Service to reverse geocode the location in a person status sensor.",
+            "fields": {
+                "entity_id": {
+                    "name": "Entity ID",
+                    "description": "Name of the entitity to examine and update."
+                },
+                "force_update": {
+                    "name": "Force Update",
+                    "description": "Should geocoding be done even if the distance is less than MIN_DISTANCE_TRAVELLED (5 meters) (optional)?"
+                },
+                "friendly_name_template": {
+                    "name": "Friendly Name Template",
+                    "description": "Template for the entitiy's friendly_name (optional)."
+                }
+            }
+        },
+        "geocode_api_on": {
+            "name": "Geocode API On",
+            "description": "Resume using the Person Location services."
+        },
+        "geocode_api_off": {
+            "name": "Geocode API Off",
+            "description": "Pause using the Person Location services. This may be necessary if a malfunction causes an excessive number of calls or if the external site is unreachable. The Nominatim Usage Policy says, 'Apps must make sure that they can switch off the service at our request at any time (in particular, switching should be possible without requiring a software update).' This also pauses the WazeRouteCalculator calls."
+        },
+        "process_trigger": {
+            "name": "Process Trigger",
+            "description": "Service to process the changes of a device tracker or sensor.",
+            "fields": {
+                "entity_id": {
+                    "name": "Entity ID",
+                    "description": "Name of the device tracker or sensor that has changed."
+                },
+                "from_state": {
+                    "name": "From State",
+                    "description": "The previous state."
+                },
+                "to_state": {
+                    "name": "To State",
+                    "description": "The updated state."
+                }
+            }
+        }
+    },
+    "issues": {
+        "provider_disabled": {
+        "title": "API provider disabled",
+        "description": "The provider {provider} was disabled due to an error: {error}"
+        }
+    },
+    "entity": {
+        "sensor": {
+            "person_location_target_state": {
+                "state": {
+                    "home": "Home",
+                    "not_home": "Away",
+                    "just_arrived": "Just Arrived",
+                    "just_left": "Just Left",
+                    "extended_away": "Extended Away",
+                    "unknown": "Unknown"
+                }
+            }
+        }
+    }
+
+}

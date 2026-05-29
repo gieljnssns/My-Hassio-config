@@ -1,0 +1,72 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please add the ENTSO-e Transparency Platform API key and area",
+        "data": {
+          "api_key": "Your API Key",
+          "area": "Area*",
+          "advanced_options": "I want to set VAT, template and calculation method (next step)",
+          "modifyer": "Price Modifyer Template (Optional)",
+          "currency": "Currency of the modified price (Optional)",
+          "energy_scale": "Energy scale (Optional)",
+          "name": "Name (Optional)"
+        }
+      },
+      "extra": {
+        "data": {
+          "VAT_value": "VAT tariff (example: for 21% VAT enter 0.21)",
+          "modifyer": "Price Modifyer Template (Optional)",
+          "currency": "Currency of the modified price (Optional)",
+          "energy_scale": "Energy scale (Optional)"
+        }
+      }
+    },
+    "error": {
+      "invalid_template": "Invalid template",
+      "missing_current_price": "'current_price' is missing from the template",
+      "already_configured": "Integration instance with the same name already exists"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Please add the ENTSO-e Transparency Platform API key and area",
+        "data": {
+          "api_key": "Your API Key",
+          "area": "Area*",
+          "modifyer": "Price Modifyer Template (Optional)",
+          "currency": "Currency of the modified price (Optional)",
+          "energy_scale": "Energy scale (Optional)",
+          "VAT_value": "VAT tariff (example: for 21% VAT enter 0.21)",
+          "name": "Name (Optional)"
+        }
+      }
+    },
+    "error": {
+      "invalid_template": "Invalid Template",
+      "missing_current_price": "'current_price' is missing from the template",
+      "already_configured": "Integration instance with the same name already exists"
+    }
+  },
+  "services": {
+    "get_energy_prices": {
+      "name": "Get energy prices",
+      "description": "Request prices for a specified range from entso-e",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this service."
+        },
+        "start": {
+          "name": "Start",
+          "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted."
+        },
+        "end": {
+          "name": "End",
+          "description": "Specifies the date and time until which to retrieve prices. Defaults to today if omitted."
+        }
+      }
+    }
+  }
+}

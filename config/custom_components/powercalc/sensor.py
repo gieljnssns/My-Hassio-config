@@ -130,6 +130,7 @@ from .const import (
     SERVICE_ACTIVATE_PLAYBOOK,
     SERVICE_CALIBRATE_ENERGY,
     SERVICE_CALIBRATE_UTILITY_METER,
+    SERVICE_DEBUG_GROUP,
     SERVICE_GET_ACTIVE_PLAYBOOK,
     SERVICE_GET_GROUP_ENTITIES,
     SERVICE_INCREASE_DAILY_ENERGY,
@@ -429,12 +430,11 @@ def _register_entity_id_change_listener(
         """Only dispatch the listener for update events concerning the source entity"""
 
         # Breaking change in 2024.4.0, check for Event for versions prior to this
-        if type(event) is Event:  # Intentionally avoid `isinstance` because it's slow and we trust `Event` is not subclassed
-            event = event.data  # pragma: no cover
+        event_data = event.data if isinstance(event, Event) else event
         return (
-            event["action"] == "update"  # type: ignore
-            and "old_entity_id" in event  # type: ignore
-            and event["old_entity_id"] == source_entity_id  # type: ignore
+            event_data["action"] == "update"
+            and "old_entity_id" in event_data
+            and event_data["old_entity_id"] == source_entity_id
         )
 
     hass.bus.async_listen(
@@ -548,6 +548,13 @@ def register_entity_services() -> None:
         supports_response=SupportsResponse.ONLY,
     )
 
+    platform.async_register_entity_service(
+        SERVICE_DEBUG_GROUP,
+        {},
+        "debug_group",
+        supports_response=SupportsResponse.ONLY,
+    )
+
 
 def convert_config_entry_to_sensor_config(config_entry: ConfigEntry, hass: HomeAssistant) -> ConfigType:  # noqa: C901
     """Convert the config entry structure to the sensor config used to create the entities."""
@@ -572,7 +579,9 @@ def convert_config_entry_to_sensor_config(config_entry: ConfigEntry, hass: HomeA
         """Convert on_time dictionary to timedelta."""
         on_time = config.get(CONF_ON_TIME)
         config[CONF_ON_TIME] = (
-            timedelta(hours=on_time["hours"], minutes=on_time["minutes"], seconds=on_time["seconds"]) if on_time else timedelta(days=1)
+            timedelta(hours=on_time["hours"], minutes=on_time["minutes"], seconds=on_time["seconds"])
+            if on_time
+            else timedelta(days=1)
         )
 
     def process_states_power(states_power: dict | list) -> dict:
@@ -582,7 +591,10 @@ def convert_config_entry_to_sensor_config(config_entry: ConfigEntry, hass: HomeA
         """
         if isinstance(states_power, list):
             states_power = {item[CONF_STATE]: item[CONF_POWER] for item in states_power}
-        return {key: Template(value, hass) if isinstance(value, str) and "{{" in value else value for key, value in states_power.items()}
+        return {
+            key: Template(value, hass) if isinstance(value, str) and "{{" in value else value
+            for key, value in states_power.items()
+        }
 
     def process_daily_fixed_energy() -> None:
         """Process daily fixed energy configuration."""
@@ -871,14 +883,9 @@ async def create_individual_sensors(
     source_entity = await create_source_entity(sensor_config[CONF_ENTITY_ID], hass)
 
     # For device-based profiles, attach the device entry to the source entity
-    if source_entity.entity_id == DUMMY_ENTITY_ID and "device" in sensor_config:
-        device_registry = dr.async_get(hass)
-        device_entry = device_registry.async_get(sensor_config["device"])
-        if device_entry:
-            source_entity = source_entity._replace(device_entry=device_entry)
+    source_entity = _attach_configured_device_entry(hass, sensor_config, source_entity)
 
-    if (used_unique_ids := hass.data[DOMAIN].get(DATA_USED_UNIQUE_IDS)) is None:
-        used_unique_ids = hass.data[DOMAIN][DATA_USED_UNIQUE_IDS] = []  # pragma: no cover
+    used_unique_ids = hass.data[DOMAIN].get(DATA_USED_UNIQUE_IDS, [])
 
     try:
         await check_entity_not_already_configured(
@@ -914,8 +921,8 @@ async def create_individual_sensors(
         entities_to_add.extend(await create_utility_meters(hass, energy_sensor, sensor_config, config_entry))
 
     await attach_entities_to_source_device(config_entry, entities_to_add, hass, source_entity)
-
     update_registries(hass, source_entity, entities_to_add, context)
+
     unique_id = sensor_config.get(CONF_UNIQUE_ID) or source_entity.unique_id
     if unique_id:
         used_unique_ids.append(unique_id)
@@ -923,6 +930,21 @@ async def create_individual_sensors(
     collect_analytics(hass, config_entry).inc(DATA_SOURCE_DOMAINS, source_entity.domain)
 
     return EntitiesBucket(new=entities_to_add, existing=[])
+
+
+def _attach_configured_device_entry(
+    hass: HomeAssistant,
+    sensor_config: dict,
+    source_entity: SourceEntity,
+) -> SourceEntity:
+    if source_entity.entity_id != DUMMY_ENTITY_ID or "device" not in sensor_config:
+        return source_entity
+
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get(sensor_config["device"])
+    if device_entry:
+        return source_entity._replace(device_entry=device_entry)
+    return source_entity
 
 
 async def handle_energy_sensor_creation(
@@ -950,7 +972,11 @@ async def create_energy_sensor_if_needed(
     source_entity: SourceEntity,
 ) -> EnergySensor | None:
     """Create an energy sensor if it is needed."""
-    if sensor_config.get(CONF_CREATE_ENERGY_SENSOR) or sensor_config.get(CONF_FORCE_ENERGY_SENSOR_CREATION) or CONF_ENERGY_SENSOR_ID in sensor_config:
+    if (
+        sensor_config.get(CONF_CREATE_ENERGY_SENSOR)
+        or sensor_config.get(CONF_FORCE_ENERGY_SENSOR_CREATION)
+        or CONF_ENERGY_SENSOR_ID in sensor_config
+    ):
         return await create_energy_sensor(hass, sensor_config, power_sensor, source_entity)
     return None
 

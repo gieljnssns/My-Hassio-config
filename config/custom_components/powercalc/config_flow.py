@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import SchemaFlowError
@@ -47,7 +47,12 @@ from .const import (
 )
 from .errors import ModelNotSupportedError, StrategyConfigurationError
 from .flow_helper.common import FlowType, PowercalcFormStep, Step, fill_schema_defaults
-from .flow_helper.flows.daily_energy import SCHEMA_DAILY_ENERGY_OPTIONS, DailyEnergyConfigFlow, DailyEnergyOptionsFlow, build_daily_energy_config
+from .flow_helper.flows.daily_energy import (
+    SCHEMA_DAILY_ENERGY_OPTIONS,
+    DailyEnergyConfigFlow,
+    DailyEnergyOptionsFlow,
+    build_daily_energy_config,
+)
 from .flow_helper.flows.global_configuration import (
     GlobalConfigurationConfigFlow,
     GlobalConfigurationOptionsFlow,
@@ -65,6 +70,7 @@ from .flow_helper.flows.virtual_power import (
     VirtualPowerConfigFlow,
     VirtualPowerOptionsFlow,
 )
+from .flow_helper.profile_preview import async_setup_preview as async_setup_powercalc_preview
 from .flow_helper.schema import (
     SCHEMA_ENERGY_SENSOR_TOGGLE,
     SCHEMA_SENSOR_ENERGY_OPTIONS,
@@ -158,6 +164,11 @@ class PowercalcCommonFlow(ABC, ConfigEntryBaseFlow):
 
         super().__init__()
 
+    @staticmethod
+    async def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up the config flow preview websocket command."""
+        await async_setup_powercalc_preview(hass)
+
     @abstractmethod
     @callback
     def persist_config_entry(self) -> FlowResult:
@@ -189,7 +200,12 @@ class PowercalcCommonFlow(ABC, ConfigEntryBaseFlow):
         )
         factory = PowerCalculatorStrategyFactory(self.hass)
         try:
-            await factory.create(user_input or self.sensor_config, strategy_name, self.selected_profile, self.source_entity)  # type: ignore
+            await factory.create(
+                user_input or self.sensor_config,
+                strategy_name,
+                self.selected_profile,
+                self.source_entity,  # type: ignore[arg-type]
+            )
         except StrategyConfigurationError as error:
             _LOGGER.error(str(error))
             raise SchemaFlowError(error.get_config_flow_translate_key() or "unknown") from error
@@ -315,7 +331,7 @@ class PowercalcCommonFlow(ABC, ConfigEntryBaseFlow):
 class PowercalcConfigFlow(PowercalcCommonFlow, ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PowerCalc."""
 
-    VERSION = 7
+    VERSION = 8
 
     def __init__(self) -> None:
         """Initialize options flow."""
@@ -449,7 +465,10 @@ class PowercalcOptionsFlow(PowercalcCommonFlow, OptionsFlow):
 
         if self.config_entry.unique_id == ENTRY_GLOBAL_CONFIG_UNIQUE_ID:
             self.global_config = get_global_powercalc_config(self)
-            return self.async_show_menu(step_id=Step.INIT, menu_options=self.flow_handlers[FlowType.GLOBAL_CONFIGURATION].build_global_config_menu())
+            return self.async_show_menu(
+                step_id=Step.INIT,
+                menu_options=self.flow_handlers[FlowType.GLOBAL_CONFIGURATION].build_global_config_menu(),
+            )
 
         self.sensor_config = dict(self.config_entry.data)
         if self.source_entity_id:
@@ -529,9 +548,19 @@ class PowercalcOptionsFlow(PowercalcCommonFlow, OptionsFlow):
 
     async def async_step_utility_meter_options(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle the basic options flow."""
-        return await self.async_handle_options_step(user_input, SCHEMA_UTILITY_METER_OPTIONS, Step.UTILITY_METER_OPTIONS)
+        return await self.async_handle_options_step(
+            user_input,
+            SCHEMA_UTILITY_METER_OPTIONS,
+            Step.UTILITY_METER_OPTIONS,
+        )
 
-    async def async_handle_options_step(self, user_input: dict[str, Any] | None, schema: vol.Schema, step: Step) -> FlowResult:
+    async def async_handle_options_step(
+        self,
+        user_input: dict[str, Any] | None,
+        schema: vol.Schema,
+        step: Step,
+        form_kwarg: dict[str, Any] | None = None,
+    ) -> FlowResult:
         """
         Generic handler for all the option steps.
         processes user input against the select schema.
@@ -543,11 +572,13 @@ class PowercalcOptionsFlow(PowercalcCommonFlow, OptionsFlow):
             errors = await self.process_all_options(user_input, schema)
             if not errors:
                 return self.persist_config_entry()
-        return self.async_show_form(step_id=step, data_schema=schema, errors=errors)
+        return self.async_show_form(step_id=step, data_schema=schema, errors=errors, **(form_kwarg or {}))
 
     def persist_config_entry(self) -> FlowResult:
         """Persist changed options on the config entry."""
-        data = (self.config_entry.unique_id == ENTRY_GLOBAL_CONFIG_UNIQUE_ID and self.global_config) or self.sensor_config
+        data = (
+            self.config_entry.unique_id == ENTRY_GLOBAL_CONFIG_UNIQUE_ID and self.global_config
+        ) or self.sensor_config
 
         self.hass.config_entries.async_update_entry(
             self.config_entry,
@@ -597,7 +628,7 @@ class PowercalcOptionsFlow(PowercalcCommonFlow, OptionsFlow):
     ) -> None:
         """
         Process the provided user input against the schema.
-        Update the current_config dictionary with the new options. We use that to save the data to config entry later on.
+        Update current_config with the new options. Used to save the data to the config entry later.
         """
         for key in schema.schema:
             if isinstance(key, vol.Marker):

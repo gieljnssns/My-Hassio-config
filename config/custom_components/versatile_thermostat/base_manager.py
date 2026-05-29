@@ -1,10 +1,10 @@
 """ Implements a base Feature Manager for Versatile Thermostat """
 
-import logging
-from .log_collector import get_vtherm_logger
 from typing import Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+
+from vtherm_api.log_collector import get_vtherm_logger
 
 from .const import *  # pylint: disable=wildcard-import, unused-wildcard-import
 from .commons_type import ConfigData

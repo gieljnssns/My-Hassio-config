@@ -1,7 +1,7 @@
 # pylint: disable=line-too-long, abstract-method
 """ A climate over switch classe """
 import logging
-from .log_collector import get_vtherm_logger
+from vtherm_api.log_collector import get_vtherm_logger
 from datetime import timedelta, datetime
 
 from homeassistant.helpers.event import (
@@ -257,6 +257,12 @@ class ThermostatOverValve(ThermostatProp[UnderlyingValve]):  # pylint: disable=a
         async def callback_recalculate(_):
             """Callback to set the valve percent"""
             self.recalculate()
+            current_on_percent = self.safe_on_percent
+            if self._cycle_scheduler and current_on_percent is not None:
+                await self._cycle_scheduler.apply_valve_update(
+                    self.vtherm_hvac_mode or VThermHvacMode_OFF,
+                    current_on_percent,
+                )
             self.update_custom_attributes()
             self.async_write_ha_state()
 

@@ -1,0 +1,940 @@
+{
+  "title": "Termostat VTherm",
+  "config": {
+    "flow_title": "Konfiguracja termostatu VTherm",
+    "step": {
+      "user": {
+        "title": "Typ termostatu VTherm",
+        "description": "Wybierz typ termostatu, który chcesz utworzyć",
+        "data": {
+          "thermostat_type": "Typ termostatu"
+        },
+        "data_description": {
+          "thermostat_type": "Dostępna jest wyłącznie konfiguracja centralna"
+        }
+      },
+      "menu": {
+        "title": "Menu",
+        "description": "Skonfiguruj termostat. Konfiguracja zostanie zakończona po wprowadzeniu wszystkich wymaganych parametrów.",
+        "menu_options": {
+          "main": "Arybuty podstawowe",
+          "central_boiler": "Kocioł centralny",
+          "type": "Urządzenia",
+          "tpi": "Parametry TPI",
+          "features": "Funkcje",
+          "presets": "Preset",
+          "window": "Detekcja okna",
+          "motion": "Detekcja ruchu",
+          "power": "Zarządzanie energią",
+          "presence": "Detekcja obecności",
+          "advanced": "Parametry zaawansowane",
+          "auto_start_stop": "AutoSTART i autoSTOP",
+          "valve_regulation": "Konfiguracja regulacji zaworu",
+          "sync_device_internal_temp": "Synchronizacja temperatury urządzenia",
+          "lock": "Zarządzanie blokadą",
+          "finalize": "Wszystko zrobione",
+          "configuration_not_complete": "Konfiguracja niekompletna",
+          "heating_failure_detection": "Wykrywanie awarii ogrzewania"
+        }
+      },
+      "lock": {
+        "title": "Zarządzanie blokadą",
+        "description": "Funkcja blokady uniemożliwia modyfikacje termostatu z poziomu interfejsu użytkownika lub automatyzacji, przy jednoczesnym zachowaniu działania termostatu.",
+        "data": {
+          "use_lock_central_config": "Użyj centralnej konfiguracji blokady",
+          "lock_code": "Opcjonalny kod PIN (4 cyfry)",
+          "lock_users": "Blokada uniemożliwi wykonywanie poleceń użytkowników",
+          "lock_automations": "Blokada uniemożliwi wykonywanie poleceń przez automatyzacje i integracje (np. harmonogram)",
+          "auto_relock_sec": "Automatyczne ponowne zablokowanie"
+        },
+        "data_description": {
+          "use_lock_central_config": "Zaznacz, aby używać centralnej konfiguracji blokady. Odznacz, aby używać konfiguracji blokady dedykowanej dla tego termostatu VTherm",
+          "auto_relock_sec": "Opóźnienie w sekundach przed automatycznym ponownym zablokowaniem po odblokowaniu. Ustaw 0, aby wyłączyć. Domyślna wartość to 30 sekund."
+        }
+      },
+      "main": {
+        "title": "Dodaj nowy termostat VTherm",
+        "description": "Wymagane atrybuty podstawowe",
+        "data": {
+          "name": "Nazwa",
+          "thermostat_type": "Typ termostatu",
+          "temperature_sensor_entity_id": "Temperatura pomieszczenia",
+          "last_seen_temperature_sensor_entity_id": "Czas ostatniego odczytu temperatury pomieszczenia",
+          "external_temperature_sensor_entity_id": "Identyfikator encji sensora temperatury zewnętrznej",
+          "cycle_min": "Czas trwania cyklu (w min.)",
+          "temp_min": "Minimalna temperatura dopuszczalna",
+          "temp_max": "Maksymalna temperatura dopuszczalna",
+          "step_temperature": "Krok temperatury",
+          "device_power": "Moc urządzenia",
+          "use_central_mode": "Załączenie sterowania przez encję centralną (wymaga konfiguracji centralnej). Zaznacz, aby załączyć sterowanie termostatu wybranymi encjami.",
+          "use_main_central_config": "Użyj dodatkowej konfiguracji centralnej. Zaznacz, aby korzystać z podstawowej konfiguracji centralnej (temperatura zewnętrzna, min, max, krok, itp.).",
+          "used_by_controls_central_boiler": "Używane przez kocioł centralny. Zaznacz, jeśli termostat ma sterować kotłem centralnym."
+        },
+        "data_description": {
+          "cycle_min": "Minimalna długość jednego cyklu ogrzewania/chłodzenia w minutach, aby uniknąć zbyt częstego przełączania",
+          "temp_min": "Minimalna temperatura dopuszczalna dla termostatu",
+          "temp_max": "Maksymalna temperatura dopuszczalna dla termostatu",
+          "step_temperature": "Krok temperatury do ustawiania temperatury docelowej",
+          "temperature_sensor_entity_id": "Identyfikator encji sensora temperatury pomieszczenia",
+          "last_seen_temperature_sensor_entity_id": "Czas ostatniego odczytu temperatury pomieszczenia. Powinien być sensorem typu 'data/czas'",
+          "external_temperature_sensor_entity_id": "Identyfikator encji sensora temperatury zewnętrznej. Nie będzie używany, gdy wybrano konfigurację centralną"
+        }
+      },
+      "features": {
+        "title": "Funkcje",
+        "description": "Funkcje termostatu",
+        "data": {
+          "use_window_feature": "Użyj detekcji okna",
+          "use_motion_feature": "Użyj detekcji ruchu",
+          "use_power_feature": "Użyj zarządzania energią",
+          "use_presence_feature": "Użyj detekcji obecności",
+          "use_central_boiler_feature": "Użyj kotła centralnego. Zaznacz, aby dodać sterowanie kotłem centralnym. Po zaznaczeniu tej opcji musisz skonfigurować termostat sterujący kotłem centralnym. Jeśli któryś z termostatów zażąda ogrzewania, kocioł się załączy. Jeśli żaden termostat nie będzie żądał ogrzewania, kocioł pozostanie wyłączony. Polecenia załączenia i wyłączenia kotła centralnego są podane na odpowiedniej stronie konfiguracyjnej",
+          "use_auto_start_stop_feature": "Użyj funkcji autoSTART i autoSTOP",
+          "use_heating_failure_detection_feature": "Użyj wykrywania awarii ogrzewania"
+        }
+      },
+      "type": {
+        "title": "Encje powiązane",
+        "description": "Atrybuty encji powiązanych",
+        "data": {
+          "underlying_entity_ids": "Sterowane urządzenia",
+          "heater_keep_alive": "Czas podtrzymania (w sek.)",
+          "proportional_function": "Algorytm",
+          "ac_mode": "Tryb AC",
+          "sync_device_internal_temp": "Synchronizacja wewnętrznej temperatury urządzenia",
+          "auto_regulation_mode": "Autoregulacja",
+          "auto_regulation_dtemp": "Próg regulacji",
+          "auto_regulation_periode_min": "Minimalny okres regulacji",
+          "auto_regulation_use_device_temp": "Użyj temperatury wewnętrznej urządzenia",
+          "inverse_switch_command": "Polecenie odwrócenia przełącznika",
+          "auto_fan_mode": "Tryb autowentylacji",
+          "on_command_text": "Dostosowanie polecenia załączenia",
+          "vswitch_on_command": "Opcjonalne polecenia załączenia",
+          "off_command_text": "Dostosowanie polecenia wyłączenia",
+          "vswitch_off_command": "Opcjonalne polecenia wyłączenia"
+        },
+        "data_description": {
+          "underlying_entity_ids": "Sterowane urządzenia. Wybierz co najmniej jedno urządzenie",
+          "heater_keep_alive": "Opcjonalna zwłoka odświeżania stanu przełącznika ogrzewania. Jeśli nie jest wymagana, pozostaw puste.",
+          "proportional_function": "Używaj algorytmu (aktualnie tylko TPI)",
+          "ac_mode": "Użyj trybu AC",
+          "sync_device_internal_temp": "Konfiguracja do synchronizacji wewnętrznej temperatury urządzeń bazowych z wybranymi encjami",
+          "auto_regulation_mode": "Automatyczna regulacja temperatury docelowej",
+          "auto_regulation_dtemp": "Próg otwarcia w ° (dla zaworu w %), poniżej którego zmiana temperatury nie będzie uwzględniana",
+          "auto_regulation_periode_min": "Czas (w min.) między dwiema aktualizacjami regulacji",
+          "auto_regulation_use_device_temp": "Użyj ewentualnego wewnętrznego czujnika temperatury urządzenia, aby przyspieszyć autoregulację (w większości przypadków nie jest to konieczne)",
+          "inverse_switch_command": "W przypadku przełącznika z przewodem sterującym może być konieczne odwrócenie kolejności poleceń",
+          "auto_fan_mode": "Automatycznie uruchom wentylator, gdy konieczne jest intensywne ogrzewanie/chłodzenie",
+          "on_command_text": "W przypadku typu `select` lub `climate` należy dostosować polecenia sterujące."
+        }
+      },
+      "tpi": {
+        "title": "TPI",
+        "description": "Atrybuty TPI",
+        "data": {
+          "tpi_coef_int": "Delta temperatury wewnętrznej",
+          "tpi_coef_ext": "Delta temperatury zewnętrznej",
+          "tpi_threshold_low": "Niski próg TPI",
+          "tpi_threshold_high": "Wysoki próg TPI",
+          "use_tpi_central_config": "Użyj centralnej konfiguracji TPI",
+          "minimal_activation_delay": "Minimalna zwłoka czasowa aktywacji",
+          "minimal_deactivation_delay": "Minimalna zwłoka czasowa deaktywacji",
+          "auto_tpi_mode": "Aktywuj naukę Auto TPI"
+        },
+        "data_description": {
+          "tpi_coef_int": "Współczynnik do zastosowania w przypadku delty temperatury wewnętrznej",
+          "tpi_coef_ext": "Współczynnik do zastosowania w przypadku delty temperatury zewnętrznej",
+          "tpi_threshold_low": "Próg w °, poniżej którego algorytm TPI będzie aktywny. 0 oznacza brak progu.",
+          "tpi_threshold_high": "Próg w °, powyżej którego algorytm TPI będzie nieaktywny. 0 oznacza brak progu.",
+          "use_tpi_central_config": "Zaznacz, aby używać centralnej konfiguracji TPI. Odznacz, aby używać konfiguracji TPI dedykowanej wyłącznie dla tego termostatu",
+          "minimal_activation_delay": "Zwłoka (w sek.), w czasie której urządzenie nie zostanie aktywowane",
+          "minimal_deactivation_delay": "Zwłoka (w sek.), w czasie której urządzenie będzie utrzymywane w stanie gotowości",
+          "auto_tpi_mode": "Sesje nauki TPI są uruchamiane ręcznie, najpierw przeczytaj dokumentację."
+        }
+      },
+      "presets": {
+        "title": "Presety",
+        "description": "Wybierz, jeśli termostat ma używać presetów podstawowych. Wyłącz, jeśli termostat ma używać swoich własnych presetów",
+        "data": {
+          "use_presets_central_config": "Użyj konfiguracji presetów podstawowych"
+        }
+      },
+      "window": {
+        "title": "Okna",
+        "description": "Zarządzanie otwarciem okna.\nMożesz także skonfigurować automatyczną detekcję otwarcia okna w oparciu o spadek temperatury",
+        "data": {
+          "window_sensor_entity_id": "Identyfikator encji sensora otwarcia okna",
+          "window_delay": "Zwłoka otwarcia okna (w sek.)",
+          "window_off_delay": "Zwłoka zamknięcia okna (w sek.)",
+          "window_auto_open_threshold": "Próg spadku temperatury dla automatycznej detekcji otwarcia okna (w °/godz.)",
+          "window_auto_close_threshold": "Próg wzrostu temperatury dla automatycznej detekcji zamknięcia okna (w °/godz.)",
+          "window_auto_max_duration": "Maksymalny czas trwania detekcji otwarcia okna (w min)",
+          "use_window_central_config": "Użyj centralnej konfiguracji okna",
+          "window_action": "Akcja"
+        },
+        "data_description": {
+          "window_sensor_entity_id": "Pozostaw puste, jeśli nie chcesz używać sensora okna i chcesz użyć automatycznej detekcji",
+          "window_delay": "Zwłoka (w sek.) przed detekcją otwarcia okna",
+          "window_off_delay": "Zwłoka (w sek.) przed detekcją zamknięcia okna. Pozostaw puste, aby użyć tej samej wartości, jak dla detekcji otwarcia okna",
+          "window_auto_open_threshold": "Zalecana wartość: między 3 a 10. Pozostaw puste, jeśli automatyczna detekcja otwarcia okna nie jest używana.",
+          "window_auto_close_threshold": "Zalecana wartość: 0. Pozostaw puste, jeśli automatyczna detekcja otwarcia okna nie jest używana",
+          "window_auto_max_duration": "Zalecana wartość: 60 (w min.). Pozostaw puste, jeśli automatyczna detekcja otwarcia okna nie jest używana",
+          "use_window_central_config": "Wybierz, aby użyć centralnej konfiguracji okna. Wyłącz wybór, aby użyć konfiguracji okna dedykowanej dla tego termostatu",
+          "window_action": "Akcja do wykonania, gdy wykryte zostanie otwarcie okna"
+        }
+      },
+      "motion": {
+        "title": "Ruch",
+        "description": "Zarządzanie sensorem ruchu. Presety mogą przełączać się automatycznie w zależności od wykrycia ruchu. Parametry `Preset ruchu` i `Preset braku ruchu` powinny być ustawione jako odpowiednie presety. ",
+        "data": {
+          "motion_sensor_entity_id": "Identyfikator encji sensora ruchu",
+          "motion_delay": "Zwłoka aktywacji",
+          "motion_off_delay": "Zwłoka deaktywacji",
+          "motion_preset": "Preset ruchu",
+          "no_motion_preset": "Preset braku ruchu",
+          "use_motion_central_config": "Użyj centralnej konfiguracji ruchu"
+        },
+        "data_description": {
+          "motion_sensor_entity_id": "Identyfikator encji sensora ruchu",
+          "motion_delay": "Zwłoka aktywacji (w sek.)",
+          "motion_off_delay": "Zwłoka deaktywacji (w sek.)",
+          "motion_preset": "Preset, gdy wykryto ruch",
+          "no_motion_preset": "Preset, gdy brak wykrycia ruchu",
+          "use_motion_central_config": "Wybierz, aby użyć centralnej konfiguracji ruchu. Wyłącz wybór, aby użyć konfiguracji ruchu dedykowanej dla tego termostatu"
+        }
+      },
+      "power": {
+        "title": "Energia",
+        "description": "Atrybuty zarządzania energią.\nWskazują moc i maksymalną moc sensora.\nOkreślają pobór mocy grzejnika, gdy jest włączony.\nWszystkie sensory i urządzenia powinny mieć tę samą jednostkę mocy (kW lub W).",
+        "data": {
+          "power_sensor_entity_id": "Moc",
+          "max_power_sensor_entity_id": "Moc maksymalna",
+          "power_temp": "Temperatura progowa redukująca zużycie energii",
+          "use_power_central_config": "Użyj centralnej konfiguracji energii"
+        },
+        "data_description": {
+          "power_sensor_entity_id": "Identyfikator encji sensora energii",
+          "max_power_sensor_entity_id": "Identyfikator encji sensora energii maksymalnej",
+          "power_temp": "Temperatura progowa redukująca zużycie energii",
+          "use_power_central_config": "Wybierz, aby użyć centralnej konfiguracji energii. Wyłącz wybór, aby użyć konfiguracji energii dedykowanej dla tego termostatu"
+        }
+      },
+      "presence": {
+        "title": "Obecność",
+        "description": "Atrybuty zarządzania obecnością.\nWskazują stan sensora obecności (PRAWDA, gdy wykrywana jest czyjaś obecność) oraz odpowiednie presety temperatury",
+        "data": {
+          "presence_sensor_entity_id": "Sensor obecności",
+          "use_presence_central_config": "Wybierz, aby użyć centralnej konfiguracji temperatury dla wykrytej obecności. Wyłącz wybór, aby użyć wybranych encji temperatury"
+        },
+        "data_description": {
+          "presence_sensor_entity_id": "Identyfikator encji sensora obecności"
+        }
+      },
+      "advanced": {
+        "title": "Parametry zaawansowane",
+        "description": "Konfiguracja parametrów zaawansowanych. Pozostaw wartości domyślne, jeśli nie wiesz, co zrobić.\nNieprawidłowa zmiana tych parametrów może prowadzić do błędnej kontroli temperatur lub błędnej regulacji mocy",
+        "data": {
+          "safety_delay_min": "Zwłoka trybu bezpiecznego (w min.)",
+          "safety_min_on_percent": "Minimalny procent mocy do przejścia w tryb bezpieczny",
+          "safety_default_on_percent": "Procent mocy do użycia trybu bezpiecznego",
+          "repair_incorrect_state": "Napraw nieprawidłowy stan",
+          "use_advanced_central_config": "Użyj zaawansowanej konfiguracji centralnej"
+        },
+        "data_description": {
+          "safety_delay_min": "Maksymalna dopuszczalna zwłoka (w min.) między dwoma pomiarami temperatury. Powyżej tej zwłoki termostat przełączy się w stan wyłączenia trybu bezpiecznego.",
+          "safety_min_on_percent": "Minimalna wartość procentowa ogrzewania dla załączenia trybu bezpiecznego. Poniżej tej wartości termostat nie załączy trybu bezpiecznego.",
+          "safety_default_on_percent": "Domyślna wartość procentowa mocy grzewczej w trybie bezpiecznym. Ustaw na 0, aby wyłączyć ogrzewanie w bezpiecznym presecie",
+          "repair_incorrect_state": "Automatycznie napraw nieprawidłowy stan jednostek bazowych po wykryciu. Funkcja ponownie wyśle żądane polecenie, jeśli stan urządzenia bazowego nie odpowiada oczekiwanemu stanowi.",
+          "use_advanced_central_config": "Wybierz, aby użyć zaawansowanej konfiguracji centralnej. Wyłącz wybór, aby użyć konfiguracji zaawansowanej dedykowanej dla tego termostatu"
+        }
+      },
+      "central_boiler": {
+        "title": "Sterowanie kotłem centralnym",
+        "description": "Wprowadź polecenia załączające i wyłączające kocioł centralny. Polecenia muszą mieć następujący format: `id_encji/nazwa_polecenia[/atrybut:wartość]` (/atrybut:wartość jest opcjonalny)\nNa przykład:\n- aby załączyć przełącznik: `switch.sterownik_pieca/switch.turn_on`\n- aby wyłączyć przełącznik: `switch.sterownik_pieca/switch.turn_off`\n- aby zaprogramować temperaturę kotła na 25° i tym samym wymusić jego zapłon: `climate.termostat_pieca/climate.set_temperature/temperature:25`\n- aby ustawić temperaturę kotła na 10° i tym samym wymusić jego wygaszenie: `climate.termostat_pieca/climate.set_temperature/temperature:10`",
+        "data": {
+          "central_boiler_activation_service": "Polecenie załączenia",
+          "central_boiler_deactivation_service": "Polecenie wyłączenia",
+          "central_boiler_activation_delay_sec": "Opóźnienie załączenia (w sekundach)",
+          "keep_alive_boiler_delay_sec": "Opóźnienie keep-alive (sekundy)"
+        },
+        "data_description": {
+          "central_boiler_activation_service": "Polecenie załączenia kotła centralnego w formacie: id_encji/nazwa_polecenia[/atrybut:wartość]",
+          "central_boiler_deactivation_service": "Polecenie wyłączenia kotła centralnego w formacie: id_encji/nazwa_polecenia[/atrybut:wartość]",
+          "central_boiler_activation_delay_sec": "Opóźnienie (w sekundach) przed załączeniem kotła centralnego po tym, jak VTherm zażądał włączenia",
+          "keep_alive_boiler_delay_sec": "Opóźnienie w sekundach do okresowego ponownego wysłania polecenia kotła, jeśli keep-alive jest włączony. Ustaw na 0, aby wyłączyć keep-alive."
+        }
+      },
+      "valve_regulation": {
+        "title": "Autoregulacja zaworu",
+        "description": "Konfiguracja autoregulacji z bezpośrednim sterowaniem zaworem",
+        "data": {
+          "offset_calibration_entity_ids": "Encje kalibracji",
+          "opening_degree_entity_ids": "Encje stopnia otwarcia",
+          "closing_degree_entity_ids": "Encje stopnia zamknięcia",
+          "proportional_function": "Algorytm",
+          "opening_threshold_degree": "Próg otwarcia zaworu",
+          "min_opening_degrees": "Minimalny stopień otwarcia",
+          "max_opening_degrees": "Maksymalny stopień otwarcia",
+          "max_closing_degree": "Maksymalny stopień zamknięcia"
+        },
+        "data_description": {
+          "offset_calibration_entity_ids": "Lista encji kalibracji. Ustaw, jeśli zawór wyposażony jest w encję korekty regulacji. Dla każdego termostatu powinna istnieć maksymalnie jedna taka encja",
+          "opening_degree_entity_ids": "Lista encji 'stopnia otwarcia'. Powinna istnieć jedna dla każdego termostatu głównego.",
+          "closing_degree_entity_ids": "Lista encji 'stopnia zamknięcia'. Ustaw, jeśli zawór wyposażony jest w encję korekty regulacji. Dla każdego termostatu powinna istnieć co najwyżej jedna taka encja",
+          "proportional_function": "Używaj algorytmu (aktualnie tylko TPI)",
+          "opening_threshold_degree": "Próg otwarcia zaworu, poniżej którego zawór powinien być uważany za zamknięty (wówczas będzie obowiązywał parametr maksymalnego stopnia zamknięcia)",
+          "min_opening_degrees": "Minimalne wartości stopnia otwarcia zaworu dla każdego urządzenia, oddzielone przecinkiem. Domyślnie: 0. Przykład: 20, 25, 30",
+          "max_opening_degrees": "Maksymalna wartość stopnia otwarcia zaworu. Zawór nigdy się nie otworzy więcej niż ta wartość",
+          "max_closing_degree": "Maksymalna wartość stopnia zamknięcia zaworu. Powyżej tej wartości zawór nigdy nie zostanie zamknięty. Ustaw wartość tego parametru na `100`, aby całkowicie zamknąć zawór, jeśli ogrzewanie jest już niepotrzebne"
+        }
+      },
+      "sync_device_internal_temp": {
+        "title": "Synchronizuj wewnętrzną temperaturę urządzenia",
+        "description": "Konfiguracja umożliwiająca synchronizację temperatury wewnętrznej urządzeń bazowych z wybranymi encjami",
+        "data": {
+          "sync_with_calibration": "Zastosuj kalibrację offsetu",
+          "sync_entity_ids": "Identyfikatory encji używanych w synchronizacji"
+        },
+        "data_description": {
+          "sync_with_calibration": "Zaznacz, aby zastosować kalibrację offsetu podczas synchronizacji temperatury wewnętrznej. Odznacz, aby skopiować temperaturę bezpośrednio z wybranych encji.",
+          "sync_entity_ids": "Lista encji używanych do synchronizacji temperatury wewnętrznej urządzeń bazowych. Każde urządzenie bazowe musi mieć jedną taką encję. Jeśli pole wyboru jest zaznaczone, powinna to być encja kalibracji. W przeciwnym razie powinna to być encja temperatury. Obie encje mają typ numeryczny `number`."
+        }
+      },
+      "heating_failure_detection": {
+        "title": "Wykrywanie awarii ogrzewania",
+        "description": "Konfiguracja funkcji wykrywania awarii ogrzewania. Wykrywa anomalie, gdy ogrzewanie jest oczekiwane, ale temperatura nie wzrasta, lub gdy ogrzewanie jest wyłączone, ale temperatura nadal rośnie.",
+        "data": {
+          "use_heating_failure_detection_feature": "Włącz wykrywanie awarii ogrzewania",
+          "use_heating_failure_detection_central_config": "Użyj centralnej konfiguracji wykrywania awarii",
+          "heating_failure_threshold": "Próg awarii ogrzewania",
+          "cooling_failure_threshold": "Próg awarii chłodzenia",
+          "heating_failure_detection_delay": "Opóźnienie wykrywania (minuty)",
+          "temperature_change_tolerance": "Tolerancja zmiany temperatury (°C)",
+          "failure_detection_enable_template": "Szablon włączenia wykrywania"
+        },
+        "data_description": {
+          "use_heating_failure_detection_feature": "Włącz wykrywanie anomalii ogrzewania dla VTherm z TPI",
+          "use_heating_failure_detection_central_config": "Zaznacz, aby użyć centralnej konfiguracji wykrywania awarii. Odznacz, aby użyć specyficznych parametrów dla tego VTherm",
+          "heating_failure_threshold": "Próg procentowy włączenia, powyżej którego ogrzewanie powinno powodować wzrost temperatury (0.9 = 90%)",
+          "cooling_failure_threshold": "Próg procentowy włączenia, poniżej którego temperatura nie powinna wzrastać (0.0 = 0%)",
+          "heating_failure_detection_delay": "Czas w minutach do odczekania przed sprawdzeniem, czy temperatura zmieniła się zgodnie z oczekiwaniami",
+          "temperature_change_tolerance": "Minimalna zmiana temperatury w stopniach uznawana za znaczącą. Mniejsze zmiany są ignorowane w celu filtrowania szumu czujnika (domyślnie: 0.5°C)",
+          "failure_detection_enable_template": "Opcjonalny szablon Jinja2, który musi zwrócić True, aby włączyć wykrywanie. Przydatne do tymczasowego wyłączenia wykrywania, gdy zewnętrzne źródło ciepła jest aktywne (np. `is_state('binary_sensor.piec_na_drewno', 'off')` w podwójnych nawiasach klamrowych). Jeśli pusty, wykrywanie jest zawsze włączone."
+        }
+      }
+    },
+    "error": {
+      "unknown": "Nieoczekiwany błąd",
+      "unknown_entity": "Nieznany identyfikator encji",
+      "window_open_detection_method": "Może być używana tylko jedna metoda detekcji otwarcia okna. Użyj sensora okna lub automatycznej detekcji przekroczenia progu temperatury, ale nie używaj obu tych metod jednocześnie.",
+      "no_central_config": "Nie możesz wybrać konfiguracji centralnej, ponieważ jej nie znaleziono. Aby jej użyć, najpierw musisz utworzyć Termostat VTherm typu `Konfiguracja Centralna`.",
+      "service_configuration_format": "Błędny format konfiguracji polecenia lub usługi",
+      "valve_regulation_nb_entities_incorrect": "Liczba encji zaworu wymagana do jego regulacji powinna być równa ilości zaworów",
+      "sync_device_internal_temp_nb_entities_incorrect": "The number of entities for synchronize device internal temperature should be equal to the number of underlyings",
+      "min_opening_degrees_format": "Oczekiwany separator przecinkowy listy lub dodatnia liczba całkowita. Przykład: 20, 25, 30",
+      "max_opening_degrees_format": "Oczekiwana jest lista dodatnich liczb całkowitych między 0 a 100 oddzielonych przecinkami. Przykład: 80, 85, 90",
+      "min_max_opening_degrees_inconsistent": "Dla każdego urządzenia bazowego max_opening_degrees musi być ściśle większy niż min_opening_degrees. Sprawdź swoją konfigurację.",
+      "vswitch_configuration_incorrect": "Błąd konfiguracji poleceń własnych. Wymagane są one dla urządzeń nie będących przełącznikami. Ich format musi być następujący: `service_name[/attribute:value]`. Więcej informacji znajdziesz w dokumentacji"
+    },
+    "abort": {
+      "already_configured": "Urządzenie jest już skonfigurowane"
+    }
+  },
+  "options": {
+    "flow_title": "Konfiguracja termostatu VTherm",
+    "step": {
+      "user": {
+        "title": "Typ - {name}",
+        "description": "Wybierz typ termostatu, który chcesz utworzyć",
+        "data": {
+          "thermostat_type": "Typ termostatu"
+        },
+        "data_description": {
+          "thermostat_type": "Możliwy jest tylko jeden typ konfiguracji centralnej"
+        }
+      },
+      "menu": {
+        "title": "Menu",
+        "description": "Skonfiguruj termostat. Dokończysz konfigurację, gdy wszystkie wymagane parametry zostaną wprowadzone.",
+        "menu_options": {
+          "main": "Arybuty podstawowe",
+          "central_boiler": "Kocioł centralny",
+          "type": "Urządzenia",
+          "tpi": "Parametry TPI",
+          "features": "Funkcje",
+          "presets": "Presety",
+          "window": "Detekcja okna",
+          "motion": "Detekcja ruchu",
+          "power": "Zarządzanie energią",
+          "presence": "Detekcja obecności",
+          "advanced": "Parametry zaawansowane",
+          "auto_start_stop": "AutoSTART i autoSTOP",
+          "valve_regulation": "Konfiguracja regulacji zaworu",
+          "sync_device_internal_temp": "Synchronizacja temperatury urządzenia",
+          "lock": "Blokada",
+          "auto_tpi_configuration": "Auto TPI - Ogólne",
+          "auto_tpi_avg_settings": "Auto TPI - Średnia",
+          "auto_tpi_ema_settings": "Auto TPI - EMA",
+          "finalize": "Wszystko zrobione",
+          "configuration_not_complete": "Konfiguracja niekompletna",
+          "heating_failure_detection": "Wykrywanie awarii ogrzewania"
+        }
+      },
+      "lock": {
+        "title": "Zarządzanie blokadą - {name}",
+        "description": "Funkcja blokady zapobiega modyfikacjom termostatu z interfejsu użytkownika lub automatyzacji, jednocześnie utrzymując termostat w stanie pracy.",
+        "data": {
+          "use_lock_central_config": "Użyj centralnej konfiguracji blokady",
+          "lock_code": "Opcjonalny kod PIN (4 cyfry)",
+          "lock_users": "Blokada uniemożliwi polecenia użytkowników",
+          "lock_automations": "Blokada uniemożliwi polecenia z automatyzacji i integracji (np. harmonogram)",
+          "auto_relock_sec": "Automatyczne ponowne zablokowanie"
+        },
+        "data_description": {
+          "use_lock_central_config": "Zaznacz aby używać centralnej konfiguracji blokady. Odznacz aby używać konfiguracji blokady specyficznej dla tego VTherm",
+          "auto_relock_sec": "Opóźnienie w sekundach przed automatycznym ponownym zablokowaniem po odblokowaniu. Ustaw 0, aby wyłączyć. Domyślna wartość to 30 sekund."
+        }
+      },
+      "main": {
+        "title": "Główne - {name}",
+        "description": "Wymagane atrybuty podstawowe",
+        "data": {
+          "name": "Nazwa",
+          "thermostat_type": "Typ termostatu",
+          "temperature_sensor_entity_id": "Temperatura pomieszczenia",
+          "last_seen_temperature_sensor_entity_id": "Czas ostatniego odczytu temperatury pomieszczenia",
+          "external_temperature_sensor_entity_id": "Identyfikator encji sensora temperatury zewnętrznej",
+          "cycle_min": "Czas trwania cyklu (w min.)",
+          "temp_min": "Minimalna dopuszczalna temperatura",
+          "temp_max": "Maksymalna dopuszczalna temperatura",
+          "step_temperature": "Krok temperatury",
+          "device_power": "Moc urządzenia",
+          "use_central_mode": "Załączenie sterowania przez encję główną (wymaga konfiguracji centralnej). Zaznacz, aby załączyć sterowanie termostatu wybranymi encjami.",
+          "use_main_central_config": "Użyj dodatkowej konfiguracji centralnej. Zaznacz, aby używać konfiguracji centralnej (temperatura zewnętrzna, min, max, krok, itp.).",
+          "used_by_controls_central_boiler": "Używane przez kocioł centralny. Zaznacz, jeśli ten termostat powinien sterować kotłem centralnym"
+        },
+        "data_description": {
+          "cycle_min": "Minimalna długość jednego cyklu ogrzewania/chłodzenia w minutach, aby uniknąć zbyt częstego przełączania",
+          "temp_min": "Minimalna temperatura dopuszczalna dla termostatu",
+          "temp_max": "Maksymalna temperatura dopuszczalna dla termostatu",
+          "step_temperature": "Krok temperatury do ustawiania temperatury docelowej",
+          "temperature_sensor_entity_id": "Identyfikator encji sensora temperatury pomieszczenia",
+          "last_seen_temperature_sensor_entity_id": "Czas ostatniego odczytu temperatury pomieszczenia. Powinien być sensorem typu 'data/czas'",
+          "external_temperature_sensor_entity_id": "Identyfikator encji sensora temperatury zewnętrznej. Nie będzie używany, gdy wybrano konfigurację centalną"
+        }
+      },
+      "features": {
+        "title": "Funkcje - {name}",
+        "description": "Funkcje termostatu",
+        "data": {
+          "use_window_feature": "Użyj detekcji okna",
+          "use_motion_feature": "Użyj detekcji ruchu",
+          "use_power_feature": "Użyj zarządzania energią",
+          "use_presence_feature": "Użyj detekcji obecności",
+          "use_central_boiler_feature": "Użyj kotła centralnego. Zaznacz, aby dodać sterowanie kotłem centralnym. Po zaznaczeniu tej opcji musisz skonfigurować termostat sterujący kotłem centralnym. Jeśli któryś z termostatów będzie wymagał ogrzewania, kocioł się załączy. Jeśli żaden termostat nie będzie wymagał ogrzewania, kocioł pozostanie wyłączony. Polecenia załączenia i wyłączenia kotła centralnego są podane na odpowiedniej stronie konfiguracyjnej",
+          "use_auto_start_stop_feature": "Użyj funkcji autoSTART i autoSTOP",
+          "use_heating_failure_detection_feature": "Użyj wykrywania awarii ogrzewania"
+        }
+      },
+      "type": {
+        "title": "Encje - {name}",
+        "description": "Atrybuty encji powiązanych",
+        "data": {
+          "underlying_entity_ids": "Sterowane urządzenie(-a)",
+          "heater_keep_alive": "Czas podtrzymania (w sek.)",
+          "proportional_function": "Algorytm",
+          "ac_mode": "Tryb AC",
+          "sync_device_internal_temp": "Synchronizacja wewnętrznej temperatury urządzenia",
+          "auto_regulation_mode": "Autoregulacja",
+          "auto_regulation_dtemp": "Próg regulacji",
+          "auto_regulation_periode_min": "Minimalny okres regulacji",
+          "auto_regulation_use_device_temp": "Użyj temperatury wewnętrznej z urządzenia",
+          "inverse_switch_command": "Polecenie odwrócenia przełącznika",
+          "auto_fan_mode": "Tryb autowentylacji",
+          "on_command_text": "Dostosowanie polecenia załączenia",
+          "vswitch_on_command": "Opcjonalne polecenia załączenia",
+          "off_command_text": "Dostosowanie polecenia wyłączenia",
+          "vswitch_off_command": "Opcjonalne polecenia wyłączenia"
+        },
+        "data_description": {
+          "underlying_entity_ids": "Sterowane urządzenia. Wybierz co najmniej jedno urządzenie",
+          "heater_keep_alive": "Opcjonalny interwał odświeżania stanu przełącznika ogrzewania. Jeśli nie jest wymagany, pozostał pusty.",
+          "proportional_function": "Używaj algorytmu (aktualnie tylko TPI)",
+          "ac_mode": "Użyj trybu AC",
+          "sync_device_internal_temp": "Konfiguracja do synchronizacji wewnętrznej temperatury urządzeń bazowych z wybranymi encjami",
+          "auto_regulation_mode": "Automatyczna regulacja temperatury docelowej",
+          "auto_regulation_dtemp": "Próg otwarcia w ° (dla zaworu w %), poniżej którego zmiana temperatury nie będzie uwzględniana",
+          "auto_regulation_periode_min": "Czas (w min.) między dwiema aktualizacjami regulacji",
+          "auto_regulation_use_device_temp": "Użyj ewentualnego wewnętrznego sensora temperatury urządzenia, aby przyspieszyć autoregulację (w większości przypadków nie jest to konieczne)",
+          "inverse_switch_command": "W przypadku przełącznika z przewodem sterującym może być konieczna odwrotna kolejność polecenia",
+          "auto_fan_mode": "Automatycznie aktywuj wentylator, gdy konieczne jest intensywne ogrzewanie/chłodzenie",
+          "on_command_text": "W przypadku typu `select` lub `climate` należy dostosować polecenia."
+        }
+      },
+      "tpi": {
+        "title": "TPI - {name}",
+        "description": "Atrybuty TPI",
+        "data": {
+          "tpi_coef_int": "Delta temperatury wewnętrznej",
+          "tpi_coef_ext": "Delta temperatury zewnętrznej",
+          "tpi_threshold_low": "Niski próg TPI",
+          "tpi_threshold_high": "Wysoki próg TPI",
+          "use_tpi_central_config": "Użyj centralnej konfiguracji TPI",
+          "minimal_activation_delay": "Minimalna zwłoka czasowa aktywacji",
+          "minimal_deactivation_delay": "Minimalna zwłoka czasowa deaktywacji",
+          "auto_tpi_mode": "Aktywuj naukę Auto TPI"
+        },
+        "data_description": {
+          "tpi_coef_int": "Współczynnik do zastosowania w przypadku delty temperatury wewnętrznej",
+          "tpi_coef_ext": "Współczynnik do zastosowania w przypadku delty temperatury zewnętrznej",
+          "tpi_threshold_low": "Próg w °, poniżej którego algorytm TPI będzie aktywny. 0 oznacza brak progu.",
+          "tpi_threshold_high": "Próg w °, powyżej którego algorytm TPI będzie nieaktywny. 0 oznacza brak progu.",
+          "use_tpi_central_config": "Zaznacz, aby używać centralnej konfiguracji TPI. Odznacz, aby używać konfiguracji TPI dedykowanej wyłącznie dla tego termostatu",
+          "minimal_activation_delay": "Zwłoka (w sek.), w czasie której urządzenie nie zostanie aktywowane",
+          "minimal_deactivation_delay": "Zwłoka (w sek.), w czasie której urządzenie będzie utrzymywane w stanie gotowości",
+          "auto_tpi_mode": "Sesje nauki TPI są uruchamiane ręcznie, najpierw przeczytaj dokumentację."
+        }
+      },
+      "presets": {
+        "title": "Presety - {name}",
+        "description": "Wybierz, jeśli termostat ma używać presetów podstawowych - wyłącz wybór, jeśli termostat ma używać swoich własnych presetów",
+        "data": {
+          "use_presets_central_config": "Użyj centralnej konfiguracji presetów"
+        }
+      },
+      "window": {
+        "title": "Okno - {name}",
+        "description": "Zarządzanie otwarciem okna.\nMożesz także skonfigurować automatyczną detekcję otwarcia okna w oparciu o spadek temperatury",
+        "data": {
+          "window_sensor_entity_id": "Identyfikator encji sensora otwarcia okna",
+          "window_delay": "Zwłoka otwarcia okna (w sek.)",
+          "window_off_delay": "Zwłoka zamknięcia okna (w sek.)",
+          "window_auto_open_threshold": "Próg spadku temperatury dla automatycznej detekcji otwarcia okna (w °/godz.)",
+          "window_auto_close_threshold": "Próg wzrostu temperatury dla automatycznej detekcji zamknięcia okna (w °/godz.)",
+          "window_auto_max_duration": "Maksymalny czas trwania detekcji otwarcia okna (w min)",
+          "use_window_central_config": "Użyj centralnej konfiguracji okna",
+          "window_action": "Akcja"
+        },
+        "data_description": {
+          "window_sensor_entity_id": "Pozostaw puste, jeśli nie chcesz używać sensora okna i chcesz użyć automatycznej detekcji",
+          "window_delay": "Zwłoka (w sek.) przed detekcją otwarcia okna",
+          "window_off_delay": "Zwłoka (w sek.) przed detekcją zamknięcia okna. Pozostaw puste, aby użyć tej samej wartości, jak dla detekcji otwarcia okna",
+          "window_auto_open_threshold": "Zalecana wartość: między 3 a 10. Pozostaw puste, jeśli automatyczna detekcja otwarcia okna nie jest używana.",
+          "window_auto_close_threshold": "Zalecana wartość: 0. Pozostaw puste, jeśli automatyczna detekcja otwarcia okna nie jest używana",
+          "window_auto_max_duration": "Zalecana wartość: 60 (jedna godzina). Pozostaw puste, jeśli automatyczna detekcja otwarcia okna nie jest używana",
+          "use_window_central_config": "Wybierz, aby użyć centralnej konfiguracji okna. Wyłącz wybór, aby użyć konfiguracji okna dedykowanej dla tego termostatu",
+          "window_action": "Akcja do wykonania, gdy wykryte zostanie otwarte okno"
+        }
+      },
+      "motion": {
+        "title": "Ruch - {name}",
+        "description": "Zarządzanie sensorem ruchu. Presety mogą przełączać się automatycznie w zależności od wykrycia ruchu. Parametry `preset ruchu` i `preset braku ruchu` powinny być ustawione jako odpowiednie presety. ",
+        "data": {
+          "motion_sensor_entity_id": "Identyfikator encji sensora ruchu",
+          "motion_delay": "Zwłoka aktywacji",
+          "motion_off_delay": "Zwłoka deaktywacji",
+          "motion_preset": "Preset ruchu",
+          "no_motion_preset": "Preset braku ruchu",
+          "use_motion_central_config": "Użyj centralnej konfiguracji ruchu"
+        },
+        "data_description": {
+          "motion_sensor_entity_id": "Identyfikator encji sensora ruchu",
+          "motion_delay": "Zwłoka aktywacji (w sek.)",
+          "motion_off_delay": "Zwłoka deaktywacji (w sek.)",
+          "motion_preset": "Preset, gdy wykryto ruch",
+          "no_motion_preset": "Preset, gdy brak wykrycia ruchu",
+          "use_motion_central_config": "Wybierz, aby użyć centralnej konfiguracji ruchu. Wyłącz wybór, aby użyć konfiguracji ruchu dedykowanej dla tego termostatu"
+        }
+      },
+      "power": {
+        "title": "Energia - {name}",
+        "description": "Atrybuty zarządzania energią.\nWskazują moc i maksymalną moc sensora.\nOkreślają pobór mocy grzejnika, gdy jest włączony.\nWszystkie sensory i urządzenia powinny mieć tę samą jednostkę mocy (kW lub W)",
+        "data": {
+          "power_sensor_entity_id": "Moc",
+          "max_power_sensor_entity_id": "Moc maksymalna",
+          "power_temp": "Temperatura progowa, redukująca zużycie energii",
+          "use_power_central_config": "Użyj centralnej konfiguracji energii"
+        },
+        "data_description": {
+          "power_sensor_entity_id": "Identyfikator encji sensora energii",
+          "max_power_sensor_entity_id": "Identyfikator encji sensora energii maksymalnej",
+          "power_temp": "Temperatura progowa redukująca zużycie energii",
+          "use_power_central_config": "Wybierz, aby użyć centralnej konfiguracji energii. Wyłącz wybór, aby użyć konfiguracji energii dedykowanej dla tego termostatu"
+        }
+      },
+      "presence": {
+        "title": "Obecność - {name}",
+        "description": "Atrybuty zarządzania obecnością.\nWskazują stan sensora obecności (PRAWDA, gdy wykrywana jest czyjaś obecność) oraz odpowiednie presety temperatury",
+        "data": {
+          "presence_sensor_entity_id": "Sensor obecności",
+          "use_presence_central_config": "Wybierz, aby użyć centralnej konfiguracji temperatury dla wykrytej obecności. Wyłącz wybór, aby użyć wybranych encji temperatury"
+        },
+        "data_description": {
+          "presence_sensor_entity_id": "Identyfikator encji sensora obecności"
+        }
+      },
+      "advanced": {
+        "title": "Zaawansowane - {name}",
+        "description": "Konfiguracja parametrów zaawansowanych. Pozostaw wartości domyślne, jeśli nie wiesz, co zrobić.\nNieprawidłowa zmiana tych parametrów może prowadzić do błędnej kontroli temperatur lub błędnej regulacji mocy",
+        "data": {
+          "minimal_activation_delay": "Minimalna zwłoka aktywacji",
+          "minimal_deactivation_delay": "Minimalna zwłoka deaktywacji",
+          "safety_delay_min": "Zwłoka trybu bezpiecznego (w min.)",
+          "safety_min_on_percent": "Minimalny procent mocy do przejścia w tryb bezpieczny",
+          "safety_default_on_percent": "Procent mocy do użycia trybu bezpiecznego",
+          "repair_incorrect_state": "Napraw nieprawidłowy stan",
+          "use_advanced_central_config": "Użyj zaawansowanej konfiguracji centralnej"
+        },
+        "data_description": {
+          "minimal_activation_delay": "Zwłoka (w sek.), w czasie której urządzenie nie zostanie aktywowane",
+          "minimal_deactivation_delay": "Zwłoka (w sek.), w czasie której urządzenie będzie utrzymywane w stanie gotowości",
+          "safety_delay_min": "Maksymalna dopuszczalna zwłoka (w min.) między dwoma pomiarami temperatury. Powyżej tej zwłoki termostat przełączy się w stan wyłączenia trybu bezpiecznego.",
+          "safety_min_on_percent": "Minimalna wartość procentowa ogrzewania dla załączenia trybu bezpiecznego. Poniżej tej wartości termostat nie załączy trybu bezpiecznego.",
+          "safety_default_on_percent": "Domyślna wartość procentowa mocy grzewczej w trybie bezpiecznym. Ustaw na 0, aby wyłączyć ogrzewanie w bezpiecznym presecie",
+          "repair_incorrect_state": "Automatycznie napraw nieprawidłowy stan jednostek bazowych po wykryciu. Funkcja ponownie wyśle żądane polecenie, jeśli stan urządzenia bazowego nie odpowiada oczekiwanemu stanowi.",
+          "use_advanced_central_config": "Wybierz, aby użyć zaawansowanej konfiguracji centralnej. Wyłącz wybór, aby użyć konfiguracji zaawansowanej dedykowanej dla tego termostatu"
+        }
+      },
+      "central_boiler": {
+        "title": "Sterowanie kotłem centralnym - {name}",
+        "description": "Wprowadź polecenia załączające i wyłączające kocioł centralny. Polecenia muszą mieć następujacy format: `id_encji/nazwa_polecenia[/atrybut:wartość]` (/atrybut:wartość jest opcjonalny)\nNa przykład:\n- aby załączyć przełącznik: `switch.sterownik_pieca/switch.turn_on`\n- aby wyłączyć przełącznik: `switch.sterownik_pieca/switch.turn_off`\n- aby zaprogramować temperaturę kotła na 25° i w ten sposób wymusić jego zapłon: `climate.termostat_pieca/climate.set_temperature/temperature:25`\n- aby ustawić temperaturę kotła na 10° i w ten sposób wymusić jego wygaszenie: `climate.termostat_pieca/climate.set_temperature/temperature:10`",
+        "data": {
+          "central_boiler_activation_service": "Polecenie załączenia",
+          "central_boiler_deactivation_service": "Polecenie wyłączenia",
+          "central_boiler_activation_delay_sec": "Opóźnienie załączenia (w sekundach)",
+          "keep_alive_boiler_delay_sec": "Opóźnienie keep-alive (sekundy)"
+        },
+        "data_description": {
+          "central_boiler_activation_service": "Polecenie załączenia kotła centralnego w formacie: `id_encji/nazwa_polecenia[/atrybut:wartość]`",
+          "central_boiler_deactivation_service": "Polecenie wyłączenia kotła centralnego w formacie: `id_encji/nazwa_polecenia[/atrybut:wartość]`",
+          "central_boiler_activation_delay_sec": "Opóźnienie (w sekundach) przed załączeniem kotła centralnego po tym, jak VTherm zażądał włączenia",
+          "keep_alive_boiler_delay_sec": "Opóźnienie w sekundach do okresowego ponownego wysłania polecenia kotła, jeśli keep-alive jest włączony. Ustaw na 0, aby wyłączyć keep-alive."
+        }
+      },
+      "valve_regulation": {
+        "title": "Autoregulacja zaworu - {name}",
+        "description": "Konfiguracja autoregulacji z bezpośrednim sterowaniem zaworem",
+        "data": {
+          "offset_calibration_entity_ids": "Encje kalibracji",
+          "opening_degree_entity_ids": "Encje stopnia otwarcia",
+          "closing_degree_entity_ids": "Encje stopnia zamknięcia",
+          "proportional_function": "Algorytm",
+          "opening_threshold_degree": "Próg otwarcia zaworu",
+          "min_opening_degrees": "Minimalny stopień otwarcia",
+          "max_opening_degrees": "Maksymalny stopień otwarcia",
+          "max_closing_degree": "Maksymalny stopień zamknięcia"
+        },
+        "data_description": {
+          "offset_calibration_entity_ids": "Lista encji kalibracji. Ustaw, jeśli zawór wyposażony jest w encję korekty regulacji. Dla każdego termostatu powinna istnieć maksymalnie jedna taka encja",
+          "opening_degree_entity_ids": "Lista encji 'stopnia otwarcia'. Powinna istnieć jedna dla każdego termostatu głównego.",
+          "closing_degree_entity_ids": "Lista encji 'stopnia zamknięcia'. Ustaw, jeśli zawór wyposażony jest w encję korekty regulacji. Dla każdego termostatu powinna istnieć maksymalnie jedna taka encja",
+          "proportional_function": "Używaj algorytmu (aktualnie tylko TPI)",
+          "opening_threshold_degree": "Próg otwarcia zaworu, poniżej którego zawór powinien być uważany za zamknięty (wówczas będzie obowiązywał parametr maksymalnego stopnia zamknięcia)",
+          "min_opening_degrees": "Minimalne wartości stopnia otwarcia zaworu dla każdego urządzenia, oddzielone przecinkiem. Domyślnie: 0. Przykład: 20, 25, 30",
+          "max_opening_degrees": "Maksymalna wartość stopnia otwarcia zaworu. Zawór nigdy się nie otworzy więcej niż ta wartość",
+          "max_closing_degree": "Maksymalna wartość stopnia zamknięcia zaworu. Powyżej tej wartości zawór nigdy nie zostanie zamknięty. Ustaw wartość tego parametru na `100`, aby całkowicie zamknąć zawór, jeśli ogrzewanie jest już niepotrzebne"
+        }
+      },
+      "auto_tpi_configuration": {
+        "title": "Auto TPI - Ogólne - {name}",
+        "description": "Ogólne parametry nauki Auto TPI.",
+        "data": {
+          "auto_tpi_enable_update_config": "Aktualizuj konfigurację",
+          "auto_tpi_enable_notification": "Powiadomienia",
+          "auto_tpi_keep_ext_learning": "Kontynuuj naukę współczynnika zewnętrznego",
+          "auto_tpi_continuous_learning": "Ciągłe uczenie",
+          "heater_heating_time": "Czas nagrzewania się grzejnika (w min.)",
+          "heater_cooling_time": "Czas wychładzania się grzejnika (w min.)",
+          "auto_tpi_max_coef_int": "Maksymalna wartość współczynnika wewnętrznego",
+          "auto_tpi_heating_rate": "Szybkość nagrzewania (°C/h)",
+          "auto_tpi_cooling_rate": "Szybkość wystudzania (°C/h)"
+        },
+        "data_description": {
+          "auto_tpi_enable_update_config": "Automatycznie aktualizuj konfigurację o wyuczone współczynniki",
+          "auto_tpi_enable_notification": "Wyślij powiadomienie, gdy nauka zostanie zakończona",
+          "auto_tpi_keep_ext_learning": "Nauka wpółczynnika zewnętrznego będzie kontynuowana nawet po osiągnieciu 50 cykli, dopóki współczynnik wewnętrzny nie ustabilizuje się.",
+          "auto_tpi_continuous_learning": "Po zakończeniu procesu nauki system będzie obliczał i aplikował w tle nowe wartości współczynników (zalecana metoda EMA).",
+          "heater_heating_time": "Czas osiągnięcia pełnej mocy (w min.)",
+          "heater_cooling_time": "Czas wychłodzenia po zatrzymaniu (w min.)",
+          "auto_tpi_max_coef_int": "Maksymalna dopuszczalna wartość współczynnika wewnętrznego"
+        }
+      },
+      "auto_tpi_avg_settings": {
+        "title": "Auto TPI - Średnia - {name}",
+        "description": "Parametry metody uśredniania.",
+        "data": {
+          "auto_tpi_avg_initial_weight": "Waga początkowa"
+        },
+        "data_description": {
+          "auto_tpi_avg_initial_weight": "Waga początkowej/poprzedniej wartości w obliczaniu średniej"
+        }
+      },
+      "auto_tpi_ema_settings": {
+        "title": "Auto TPI - EMA - {name}",
+        "description": "Parametry metody EMA.\n\nZalecenia:\n| Sytuacja | Alfa (ema_alpha) | Tempo rozkładu (ema_decay_rate) |\n| :--- | :--- | :--- |\n| Początkowe uczenie | 0.15 | 0.08 |\n| Dokładne uczenie | 0.08 | 0.12 |\n| Ciągłe uczenie | 0.05 | 0.02 |",
+        "data": {
+          "auto_tpi_ema_alpha": "Alfa",
+          "auto_tpi_ema_decay_rate": "Wpółczynnik rozkładu"
+        },
+        "data_description": {
+          "auto_tpi_ema_alpha": "Współczynnik wygładzania (0-1). Im wyższy, tym szybsza adaptacja",
+          "auto_tpi_ema_decay_rate": "Tempo, w jakim rozkład alfa maleje w czasie (stabilizacja)"
+        }
+      },
+      "heating_failure_detection": {
+        "title": "Wykrywanie awarii ogrzewania",
+        "description": "Konfiguracja funkcji wykrywania awarii ogrzewania. Wykrywa anomalie, gdy ogrzewanie jest oczekiwane, ale temperatura nie wzrasta, lub gdy ogrzewanie jest wyłączone, ale temperatura nadal rośnie.",
+        "data": {
+          "use_heating_failure_detection_feature": "Włącz wykrywanie awarii ogrzewania",
+          "use_heating_failure_detection_central_config": "Użyj centralnej konfiguracji wykrywania awarii",
+          "heating_failure_threshold": "Próg awarii ogrzewania",
+          "cooling_failure_threshold": "Próg awarii chłodzenia",
+          "heating_failure_detection_delay": "Opóźnienie wykrywania (minuty)",
+          "temperature_change_tolerance": "Tolerancja zmiany temperatury (°C)",
+          "failure_detection_enable_template": "Szablon włączenia wykrywania"
+        },
+        "data_description": {
+          "use_heating_failure_detection_feature": "Włącz wykrywanie anomalii ogrzewania dla VTherm z TPI",
+          "use_heating_failure_detection_central_config": "Zaznacz, aby użyć centralnej konfiguracji wykrywania awarii. Odznacz, aby użyć specyficznych parametrów dla tego VTherm",
+          "heating_failure_threshold": "Próg procentowy włączenia, powyżej którego ogrzewanie powinno powodować wzrost temperatury (0.9 = 90%)",
+          "cooling_failure_threshold": "Próg procentowy włączenia, poniżej którego temperatura nie powinna wzrastać (0.0 = 0%)",
+          "heating_failure_detection_delay": "Czas w minutach do odczekania przed sprawdzeniem, czy temperatura zmieniła się zgodnie z oczekiwaniami",
+          "temperature_change_tolerance": "Minimalna zmiana temperatury w stopniach uznawana za znaczącą. Mniejsze zmiany są ignorowane w celu filtrowania szumu czujnika (domyślnie: 0.5°C)",
+          "failure_detection_enable_template": "Opcjonalny szablon Jinja2, który musi zwrócić True, aby włączyć wykrywanie. Przydatne do tymczasowego wyłączenia wykrywania, gdy zewnętrzne źródło ciepła jest aktywne (np. `is_state('binary_sensor.piec_na_drewno', 'off')` w podwójnych nawiasach klamrowych). Jeśli pusty, wykrywanie jest zawsze włączone."
+        }
+      }
+    },
+    "error": {
+      "unknown": "Nieoczekiwany błąd",
+      "unknown_entity": "Nieznany identyfikator encji",
+      "window_open_detection_method": "Może być używana tylko jedna metoda detekcji otwarcia okna. Użyj sensora okna lub automatycznej detekcji przekroczenia progu temperatury, ale nie używaj obu tych metod jednocześnie.",
+      "no_central_config": "Nie możesz wybrać konfiguracji centralnej z powodu jej braku. Aby jej użyć, najpierw musisz utworzyć termostat VTherm typu `Konfiguracja Centralna`.",
+      "service_configuration_format": "Błędny format konfiguracji polecenia lub usługi",
+      "valve_regulation_nb_entities_incorrect": "Liczba encji zaworu wymagana do jego regulacji powinna być równa ilości zaworów",
+      "min_opening_degrees_format": "Oczekiwany separator przecinkowy listy lub dodatnia liczba całkowita. Przykład: 20, 25, 30",
+      "max_opening_degrees_format": "Oczekiwana jest lista dodatnich liczb całkowitych między 0 a 100 oddzielonych przecinkami. Przykład: 80, 85, 90",
+      "min_max_opening_degrees_inconsistent": "Dla każdego urządzenia bazowego max_opening_degrees musi być ściśle większy niż min_opening_degrees. Sprawdź swoją konfigurację.",
+      "vswitch_configuration_incorrect": "Błąd konfiguracji poleceń własnych. Wymagane są one dla urządzeń nie będących przełącznikami. Ich format musi być następujący: `service_name[/attribute:value]`. Więcej informacji znajdziesz w dokumentacji"
+    },
+    "abort": {
+      "already_configured": "Urządzenie jest już skonfigurowane"
+    }
+  },
+  "selector": {
+    "thermostat_type": {
+      "options": {
+        "thermostat_central_config": "Konfiguracja Centralna",
+        "thermostat_over_switch": "Termostat na Przełączniku",
+        "thermostat_over_climate": "Termostat na Klimacie",
+        "thermostat_over_valve": "Termostat na Zaworze"
+      }
+    },
+    "auto_regulation_mode": {
+      "options": {
+        "auto_regulation_slow": "Powolna",
+        "auto_regulation_strong": "Silna",
+        "auto_regulation_medium": "Średnia",
+        "auto_regulation_light": "Słaba",
+        "auto_regulation_expert": "Ekspert",
+        "auto_regulation_none": "Brak autoregulacji",
+        "auto_regulation_valve": "Bezpośrednie sterowanie zaworu"
+      }
+    },
+    "auto_fan_mode": {
+      "options": {
+        "auto_fan_none": "Brak autowentylacji",
+        "auto_fan_low": "Niski",
+        "auto_fan_medium": "Średni",
+        "auto_fan_high": "Wysoki",
+        "auto_fan_turbo": "Turbo"
+      }
+    },
+    "window_action": {
+      "options": {
+        "window_turn_off": "Wyłączone",
+        "window_fan_only": "Tylko wentylacja",
+        "window_frost_temp": "Ochrona przed mrozem",
+        "window_eco_temp": "Eko"
+      }
+    },
+    "presets": {
+      "options": {
+        "frost": "Ochrona przed mrozem",
+        "eco": "Eko",
+        "comfort": "Komfort",
+        "boost": "Boost"
+      }
+    },
+    "auto_start_stop": {
+      "options": {
+        "auto_start_stop_none": "Brak autoSTART/autoSTOP",
+        "auto_start_stop_very_slow": "Bardzo powolna detekcja",
+        "auto_start_stop_slow": "Powolna detekcja",
+        "auto_start_stop_medium": "Średnia detekcja",
+        "auto_start_stop_fast": "Szybka detekcja"
+      }
+    },
+    "auto_tpi_calculation_method": {
+      "options": {
+        "average": "Średnia",
+        "ema": "Zmienna Średnia Wykładnicza (EMA)"
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "versatile_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "power": "Ograniczony",
+              "safety": "Bezpieczny",
+              "none": "Ręczny",
+              "frost": "Ochrona przed mrozem"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "frost_temp": {
+        "name": "Ochrona przed mrozem"
+      },
+      "eco_temp": {
+        "name": "Eko"
+      },
+      "comfort_temp": {
+        "name": "Komfort"
+      },
+      "boost_temp": {
+        "name": "Boost"
+      },
+      "frost_ac_temp": {
+        "name": "Ochrona przd mrozem AC"
+      },
+      "eco_ac_temp": {
+        "name": "Eko AC"
+      },
+      "comfort_ac_temp": {
+        "name": "Komfort AC"
+      },
+      "boost_ac_temp": {
+        "name": "Boost AC"
+      },
+      "frost_away_temp": {
+        "name": "Ochrona przed mrozem w trybie poza domem"
+      },
+      "eco_away_temp": {
+        "name": "Eko poza domem"
+      },
+      "comfort_away_temp": {
+        "name": "Komfort poza domem"
+      },
+      "boost_away_temp": {
+        "name": "Boost poza domem"
+      },
+      "eco_ac_away_temp": {
+        "name": "Eko AC poza domem"
+      },
+      "comfort_ac_away_temp": {
+        "name": "Komfort AC poza domem"
+      },
+      "boost_ac_away_temp": {
+        "name": "Boost AC poza domem"
+      }
+    }
+  },
+  "services": {
+    "set_auto_tpi_mode": {
+      "name": "Tryb Auto TPI",
+      "description": "Załącz lub wyłącz tryb nauki Auto TPI",
+      "fields": {
+        "auto_tpi_mode": {
+          "name": "Tryb Auto TPI",
+          "description": "Załącza (`true`) lub wyłącza (`false`) proces uczenia Auto TPI"
+        },
+        "reinitialise": {
+          "name": "Zresetuj dane wyuczone",
+          "description": "Resetuje wszystkie dane wyuczone podczas aktywności trybu Auto TPI (domyślnie `true`)"
+        }
+      }
+    },
+    "reset_auto_tpi_capacities": {
+      "name": "Reset wydajności Auto TPI",
+      "description": "Zresetuj zapamiętane maksymalne wydajności grzania i chłodzenia do 1,0 °C/h. Zapamiętane współczynniki NIE są resetowane."
+    },
+    "auto_tpi_calibrate_capacity": {
+      "name": "Kalibracja wydajności Auto TPI",
+      "description": "Skalibruj wydajność ogrzewania/chłodzenia (w °C/godzinę) za pomocą regresji liniowej na danych historycznych obiektu. Wyuczone współczynniki NIE są aktualizowane.",
+      "fields": {
+        "start_date": {
+          "name": "Historia od dnia",
+          "description": "Data, od której ma zostać pobrana historia (domyślnie: 30 dni temu)."
+        },
+        "end_date": {
+          "name": "Historia do dnia",
+          "description": "Data, do której ma zostać pobrana historia (domyślnie: dzisiaj)."
+        },
+        "hvac_mode": {
+          "name": "Tryb HVAC",
+          "description": "Który tryb ma być kalibrowany (grzanie lub chłodzenie)."
+        },
+        "save_to_config": {
+          "name": "Zapis w konfiguracji",
+          "description": "Zastosuj obliczone wydajności do konfiguracji Auto TPI."
+        },
+        "min_power_threshold": {
+          "name": "Próg mocy minimalnej",
+          "description": "Minimalny procent mocy, przy którym cykl jest uznawany za nasycony (domyślnie: 95%). Niższe wartości uwzględniają więcej cykli, ale mogą być mniej dokładne."
+        }
+      }
+    },
+    "set_tpi_parameters": {
+      "name": "Ustawienia parametrów TPI",
+      "description": "Zmień parametry TPI",
+      "fields": {
+        "minimal_activation_delay": {
+          "name": "Minimalna zwłoka aktywacji",
+          "description": "Zwłoka (w sek.) aktywacji urządzeń"
+        },
+        "minimal_deactivation_delay": {
+          "name": "Minimalna zwłoka deaktywacji",
+          "description": "Zwłoka (w sek.) deaktywacji urządzeń (czas podtrzymania działania)"
+        },
+        "tpi_threshold_low": {
+          "name": "Dolny próg TPI",
+          "description": "Próg w °, poniżej którego algorytm TPI zostanie załączony. `0` oznacza brak progu."
+        },
+        "tpi_threshold_high": {
+          "name": "Górny próg TPI",
+          "description": "Próg w °, powyżej którego algorytm TPI zostanie wyłączony. `0` oznacza brak progu."
+        }
+      }
+    },
+    "lock": {
+      "name": "Blokada",
+      "description": "Blokada termostatu przed zmianą jego konfiguracji przez użytkownika lub automatyzacje.",
+      "fields": {
+        "code": {
+          "name": "Kod blokady",
+          "description": "Opcjonalny kod blokady"
+        }
+      }
+    },
+    "unlock": {
+      "name": "Odblokowanie",
+      "description": "Odblokowuje termostat, umozliwiając zmianę jego konfiguracji.",
+      "fields": {
+        "code": {
+          "name": "Kod blokady",
+          "description": "Opcjonalny kod blokady"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "auto_tpi_learning_stopped": {
+      "message": "Nauka Auto TPI dla {name} została zatrzymana z powodu 3-ech kolejnych błędów. Powód: {reason}. Sprawdź swoją konfigurację."
+    }
+  }
+}

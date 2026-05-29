@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENABLED, CONF_ID, CONF_PATH
+from homeassistant.const import CONF_ENABLED, CONF_ID, CONF_PATH, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.issue_registry import async_create_issue
@@ -19,9 +19,12 @@ from custom_components.powercalc.const import (
     CONF_FORCE_UPDATE_FREQUENCY_DEPRECATED,
     CONF_GROUP_ENERGY_UPDATE_INTERVAL,
     CONF_GROUP_UPDATE_INTERVAL_DEPRECATED,
+    CONF_MANUFACTURER,
+    CONF_MODEL,
     CONF_PLAYBOOK,
     CONF_PLAYBOOKS,
     CONF_POWER,
+    CONF_POWER_SENSOR_CATEGORY,
     CONF_POWER_TEMPLATE,
     CONF_SENSOR_TYPE,
     CONF_STATE,
@@ -31,6 +34,7 @@ from custom_components.powercalc.const import (
     DOMAIN,
     ENTRY_GLOBAL_CONFIG_UNIQUE_ID,
 )
+from custom_components.powercalc.power_profile.library import ModelInfo, ProfileLibrary
 
 
 async def async_migrate_config_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -38,43 +42,107 @@ async def async_migrate_config_entry(hass: HomeAssistant, config_entry: ConfigEn
     data = {**config_entry.data}
 
     if version <= 1:
-        conf_fixed = data.get(CONF_FIXED, {})
-        if CONF_POWER in conf_fixed and CONF_POWER_TEMPLATE in conf_fixed:
-            conf_fixed.pop(CONF_POWER, None)
+        _migrate_power_template(data)
 
     if version <= 2 and data.get(CONF_SENSOR_TYPE) and CONF_CREATE_ENERGY_SENSOR not in data:
         data[CONF_CREATE_ENERGY_SENSOR] = True
 
     if version <= 3:
-        conf_playbook = data.get(CONF_PLAYBOOK, {})
-        if CONF_STATES_TRIGGER in conf_playbook:
-            data[CONF_PLAYBOOK][CONF_STATE_TRIGGER] = conf_playbook.pop(CONF_STATES_TRIGGER)
+        _migrate_playbook_trigger(data)
 
     if version <= 4 and config_entry.entry_id == ENTRY_GLOBAL_CONFIG_UNIQUE_ID:
-        discovery_config = {
-            CONF_ENABLED: data.get(CONF_ENABLE_AUTODISCOVERY_DEPRECATED, True),
-            CONF_EXCLUDE_DEVICE_TYPES: data.get(CONF_DISCOVERY_EXCLUDE_DEVICE_TYPES_DEPRECATED, []),
-            CONF_EXCLUDE_SELF_USAGE: data.get(CONF_DISCOVERY_EXCLUDE_SELF_USAGE_DEPRECATED, False),
-        }
-        data[CONF_DISCOVERY] = discovery_config
-        for key in [
-            CONF_ENABLE_AUTODISCOVERY_DEPRECATED,
-            CONF_DISCOVERY_EXCLUDE_DEVICE_TYPES_DEPRECATED,
-            CONF_DISCOVERY_EXCLUDE_SELF_USAGE_DEPRECATED,
-        ]:
-            data.pop(key, None)
+        _migrate_global_discovery_config(data)
 
     if version <= 5:
-        conf_playbook = data.get(CONF_PLAYBOOK, {})
-        if CONF_PLAYBOOKS in conf_playbook:
-            data[CONF_PLAYBOOK][CONF_PLAYBOOKS] = [{CONF_ID: key, CONF_PATH: val} for key, val in conf_playbook.pop(CONF_PLAYBOOKS).items()]
+        _migrate_playbooks(data)
 
     if version <= 6:
-        conf_fixed = data.get(CONF_FIXED, {})
-        if CONF_STATES_POWER in conf_fixed and isinstance(conf_fixed[CONF_STATES_POWER], dict):
-            data[CONF_FIXED][CONF_STATES_POWER] = [{CONF_STATE: key, CONF_POWER: val} for key, val in conf_fixed[CONF_STATES_POWER].items()]
+        _migrate_states_power(data)
 
-    hass.config_entries.async_update_entry(config_entry, data=data, version=7)
+    if version <= 7:
+        _migrate_invalid_power_sensor_category(data)
+
+    hass.config_entries.async_update_entry(config_entry, data=data, version=8)
+
+
+def _migrate_power_template(data: dict) -> None:
+    conf_fixed = data.get(CONF_FIXED, {})
+    if CONF_POWER in conf_fixed and CONF_POWER_TEMPLATE in conf_fixed:
+        conf_fixed.pop(CONF_POWER, None)
+
+
+def _migrate_playbook_trigger(data: dict) -> None:
+    conf_playbook = data.get(CONF_PLAYBOOK, {})
+    if CONF_STATES_TRIGGER in conf_playbook:
+        data[CONF_PLAYBOOK][CONF_STATE_TRIGGER] = conf_playbook.pop(CONF_STATES_TRIGGER)
+
+
+def _migrate_global_discovery_config(data: dict) -> None:
+    data[CONF_DISCOVERY] = {
+        CONF_ENABLED: data.get(CONF_ENABLE_AUTODISCOVERY_DEPRECATED, True),
+        CONF_EXCLUDE_DEVICE_TYPES: data.get(CONF_DISCOVERY_EXCLUDE_DEVICE_TYPES_DEPRECATED, []),
+        CONF_EXCLUDE_SELF_USAGE: data.get(CONF_DISCOVERY_EXCLUDE_SELF_USAGE_DEPRECATED, False),
+    }
+    for key in [
+        CONF_ENABLE_AUTODISCOVERY_DEPRECATED,
+        CONF_DISCOVERY_EXCLUDE_DEVICE_TYPES_DEPRECATED,
+        CONF_DISCOVERY_EXCLUDE_SELF_USAGE_DEPRECATED,
+    ]:
+        data.pop(key, None)
+
+
+def _migrate_playbooks(data: dict) -> None:
+    conf_playbook = data.get(CONF_PLAYBOOK, {})
+    if CONF_PLAYBOOKS in conf_playbook:
+        data[CONF_PLAYBOOK][CONF_PLAYBOOKS] = [
+            {CONF_ID: key, CONF_PATH: val} for key, val in conf_playbook.pop(CONF_PLAYBOOKS).items()
+        ]
+
+
+def _migrate_states_power(data: dict) -> None:
+    conf_fixed = data.get(CONF_FIXED, {})
+    if CONF_STATES_POWER in conf_fixed and isinstance(conf_fixed[CONF_STATES_POWER], dict):
+        data[CONF_FIXED][CONF_STATES_POWER] = [
+            {CONF_STATE: key, CONF_POWER: val} for key, val in conf_fixed[CONF_STATES_POWER].items()
+        ]
+
+
+def _migrate_invalid_power_sensor_category(data: dict) -> None:
+    if data.get(CONF_POWER_SENSOR_CATEGORY) == EntityCategory.CONFIG:
+        data.pop(CONF_POWER_SENSOR_CATEGORY)
+
+
+async def async_fix_legacy_profile_config_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Always normalize legacy profile references on setup, based on library metadata."""
+    manufacturer = config_entry.data.get(CONF_MANUFACTURER)
+    model = config_entry.data.get(CONF_MODEL)
+    if not manufacturer or not model:
+        return
+
+    model_id = str(model)
+    sub_profile = ""
+    if "/" in model_id:
+        model_id, sub_profile = model_id.split("/", 1)
+
+    library = await ProfileLibrary.factory(hass)
+    migrated_profile = await library.find_model_migration(ModelInfo(str(manufacturer), model_id))
+    if migrated_profile is None:
+        return
+
+    resolved_manufacturer = migrated_profile.manufacturer
+    migrated_model = migrated_profile.model
+    if migrated_model == model_id and str(manufacturer).lower() == resolved_manufacturer.lower():
+        return
+
+    updated_model = f"{migrated_model}/{sub_profile}" if sub_profile else migrated_model
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_MANUFACTURER: resolved_manufacturer,
+            CONF_MODEL: updated_model,
+        },
+    )
 
 
 async def handle_legacy_discovery_config(hass: HomeAssistant, global_config: dict, yaml_config: dict) -> None:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 import re
-from typing import Any, NamedTuple, Protocol
+from typing import NamedTuple, Protocol
 
 from homeassistant.core import HomeAssistant, State
 
@@ -13,6 +13,7 @@ from custom_components.powercalc.errors import PowercalcSetupError
 class SubProfileMatcherType(StrEnum):
     ATTRIBUTE = "attribute"
     ENTITY_ID = "entity_id"
+    ENTITY_REGISTRY = "entity_registry"
     ENTITY_STATE = "entity_state"
     INTEGRATION = "integration"
     MODEL_ID = "model_id"
@@ -57,6 +58,7 @@ class SubProfileSelector:
             SubProfileMatcherType.ATTRIBUTE: AttributeMatcher,
             SubProfileMatcherType.ENTITY_STATE: EntityStateMatcher,
             SubProfileMatcherType.ENTITY_ID: EntityIdMatcher,
+            SubProfileMatcherType.ENTITY_REGISTRY: EntityRegistryMatcher,
             SubProfileMatcherType.INTEGRATION: IntegrationMatcher,
             SubProfileMatcherType.MODEL_ID: ModelIdMatcher,
         }
@@ -77,7 +79,13 @@ class SubProfileSelectConfig(NamedTuple):
 
 class SubProfileMatcher(Protocol):
     @classmethod
-    def from_config(cls, config: dict, **kwargs: Any) -> SubProfileMatcher:  # noqa: ANN401
+    def from_config(
+        cls,
+        config: dict,
+        *,
+        hass: HomeAssistant | None = None,
+        source_entity: SourceEntity | None = None,
+    ) -> SubProfileMatcher:
         """Create a matcher from a config dict."""
 
     def match(self, entity_state: State, source_entity: SourceEntity) -> str | None:
@@ -112,8 +120,15 @@ class EntityStateMatcher(SubProfileMatcher):
         return self._mapping.get(state.state)
 
     @classmethod
-    def from_config(cls, config: dict, **kwargs: Any) -> EntityStateMatcher:  # noqa: ANN401
-        return cls(kwargs["hass"], kwargs["source_entity"], config["entity_id"], config["map"])
+    def from_config(
+        cls,
+        config: dict,
+        *,
+        hass: HomeAssistant | None = None,
+        source_entity: SourceEntity | None = None,
+    ) -> EntityStateMatcher:
+        assert hass is not None
+        return cls(hass, source_entity, config["entity_id"], config["map"])
 
     def get_tracking_entities(self) -> list[str]:
         return [self._entity_id]
@@ -132,7 +147,13 @@ class AttributeMatcher(SubProfileMatcher):
         return self._mapping.get(val)
 
     @classmethod
-    def from_config(cls, config: dict, **kwargs: Any) -> AttributeMatcher:  # noqa: ANN401
+    def from_config(
+        cls,
+        config: dict,
+        *,
+        hass: HomeAssistant | None = None,
+        source_entity: SourceEntity | None = None,
+    ) -> AttributeMatcher:
         return cls(config["attribute"], config["map"])
 
     def get_tracking_entities(self) -> list[str]:
@@ -151,7 +172,13 @@ class EntityIdMatcher(SubProfileMatcher):
         return None
 
     @classmethod
-    def from_config(cls, config: dict, **kwargs: Any) -> EntityIdMatcher:  # noqa: ANN401
+    def from_config(
+        cls,
+        config: dict,
+        *,
+        hass: HomeAssistant | None = None,
+        source_entity: SourceEntity | None = None,
+    ) -> EntityIdMatcher:
         return cls(config["pattern"], config["profile"])
 
     def get_tracking_entities(self) -> list[str]:
@@ -174,11 +201,60 @@ class IntegrationMatcher(SubProfileMatcher):
         return None
 
     @classmethod
-    def from_config(cls, config: dict, **kwargs: Any) -> IntegrationMatcher:  # noqa: ANN401
+    def from_config(
+        cls,
+        config: dict,
+        *,
+        hass: HomeAssistant | None = None,
+        source_entity: SourceEntity | None = None,
+    ) -> IntegrationMatcher:
         return cls(config["integration"], config["profile"])
 
     def get_tracking_entities(self) -> list[str]:
         return []
+
+
+class EntityRegistryMatcher(SubProfileMatcher):
+    def __init__(self, property_name: str, value: object, profile: str) -> None:
+        self._property_name = property_name
+        self._value = value
+        self._profile = profile
+
+    def match(self, entity_state: State, source_entity: SourceEntity) -> str | None:
+        registry_entry = source_entity.entity_entry
+        if not registry_entry or not hasattr(registry_entry, self._property_name):
+            return None
+
+        registry_value = getattr(registry_entry, self._property_name)
+        if registry_value is None:
+            return None
+
+        if self._matches_registry_value(registry_value):
+            return self._profile
+
+        return None
+
+    @classmethod
+    def from_config(
+        cls,
+        config: dict,
+        *,
+        hass: HomeAssistant | None = None,
+        source_entity: SourceEntity | None = None,
+    ) -> EntityRegistryMatcher:
+        return cls(config["property"], config["value"], config["profile"])
+
+    def get_tracking_entities(self) -> list[str]:
+        return []
+
+    def _matches_registry_value(self, registry_value: object) -> bool:
+        if registry_value == self._value:
+            return True
+
+        if isinstance(registry_value, list | set | tuple | frozenset):
+            return self._value in registry_value
+
+        return str(registry_value) == str(self._value)
 
 
 class ModelIdMatcher(SubProfileMatcher):
@@ -197,7 +273,13 @@ class ModelIdMatcher(SubProfileMatcher):
         return None
 
     @classmethod
-    def from_config(cls, config: dict, **kwargs: Any) -> ModelIdMatcher:  # noqa: ANN401
+    def from_config(
+        cls,
+        config: dict,
+        *,
+        hass: HomeAssistant | None = None,
+        source_entity: SourceEntity | None = None,
+    ) -> ModelIdMatcher:
         return cls(config["model_id"], config["profile"])
 
     def get_tracking_entities(self) -> list[str]:

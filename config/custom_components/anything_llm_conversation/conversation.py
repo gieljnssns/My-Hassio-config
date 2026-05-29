@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import logging
 import re
+import time
 from typing import Literal
 
 from homeassistant.components import conversation
@@ -28,6 +29,7 @@ from homeassistant.helpers import (
     intent,
     template,
 )
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.chat_session import async_get_chat_session
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -35,12 +37,10 @@ from . import AnythingLLMConfigEntry
 from .const import (
     CONF_ATTACH_USERNAME,
     CONF_WORKSPACE_SLUG,
-    CONF_FAILOVER_WORKSPACE_SLUG,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_THREAD_SLUG,
-    CONF_FAILOVER_THREAD_SLUG,
     CONF_ENABLE_AGENT_PREFIX,
     CONF_AGENT_KEYWORDS,
     CONF_ENABLE_HEALTH_CHECK,
@@ -50,8 +50,6 @@ from .const import (
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_THREAD_SLUG,
-    DEFAULT_FAILOVER_THREAD_SLUG,
-    DEFAULT_FAILOVER_WORKSPACE_SLUG,
     DEFAULT_ENABLE_AGENT_PREFIX,
     DEFAULT_AGENT_KEYWORDS,
     DEFAULT_ENABLE_HEALTH_CHECK,
@@ -66,7 +64,9 @@ from .helpers import (
     get_mode_prompt,
     get_workspace_prompt,
     get_workspace_prompt_config,
+    sanitize_slug,
     should_apply_tts_cleaning_for_workspace,
+    WORKSPACE_SLUG_ALIASES,
 )
 from .response_processor import (
     clean_response_for_tts,
@@ -78,6 +78,14 @@ _LOGGER = logging.getLogger(__name__)
 
 # Issue 19: cap conversation-keyed dicts so they don't grow unbounded over months.
 _MAX_CONVERSATION_CACHE = 50
+
+# Phase 4.2: cap non-thread message history per conversation.
+_MAX_HISTORY = 20
+
+# Phase 4.3: maximum age (seconds) for a pending mode suggestion before it is discarded.
+_SUGGESTION_TTL = 60.0
+
+_STORAGE_VERSION = 1
 
 
 def _capped_set(d: dict, key: str, value) -> None:
@@ -93,14 +101,16 @@ _RE_AFFIRMATIVE = re.compile(
     re.IGNORECASE,
 )
 
-# L5: maps the lowercase display-name fragment to its mode key, used to detect
-# when the LLM's response is asking the user to confirm a mode switch.
+# L5: maps the lowercase display-name fragment to its canonical workspace slug, used
+# to detect when the LLM's response is asking the user to confirm a mode switch.
+# Values MUST match actual AnythingLLM workspace slugs — they are stored directly in
+# conversation_workspaces and used in API URL construction without further alias lookup.
 _RESPONSE_MODE_HINTS: dict[str, str] = {
     "analysis mode": "analysis",
     "research mode": "research",
-    "code review mode": "code_review",
-    "troubleshooting mode": "troubleshooting",
-    "guest mode": "guest",
+    "code review mode": "investigation",
+    "troubleshooting mode": "investigation",
+    "guest mode": "default",
     "security mode": "security",
     "default mode": "default",
 }
@@ -114,46 +124,6 @@ _RE_UNSAFE_PROMPT = re.compile(r'[\r\n\t`|{},]')
 def _sanitize_prompt_value(value: str) -> str:
     """Strip control/structural characters from a value before prompt insertion."""
     return _RE_UNSAFE_PROMPT.sub(' ', str(value)).strip()
-
-
-WORKSPACE_SLUG_ALIASES = {
-    "adventure": "adventure",
-    "author": "adventure",
-    "story": "adventure",
-    "creative": "adventure",
-    "analysis": "analysis",
-    "analyze": "analysis",
-    "analyzer": "analysis",
-    "research": "research",
-    "researcher": "research",
-    "visual": "visual",
-    "vision": "visual",
-    "image": "visual",
-    "multimodal": "visual",
-    "investigation": "investigation",
-    "investigate": "investigation",
-    "forensics": "investigation",
-    "root-cause": "investigation",
-    "rootcause": "investigation",
-    "security": "security",
-    "secure": "security",
-    "alarm": "security",
-    "debug": "investigation",
-    "troubleshooting": "investigation",
-    "troubleshoot": "investigation",
-    "code-review": "investigation",
-    "code_review": "investigation",
-    "code": "investigation",
-    "default": "default",
-    "normal": "default",
-    "standard": "default",
-    "jarvis": "default",
-    "general": "default",
-    "assistant": "default",
-    "guest": "default",
-    "simple": "default",
-    "visitor": "default",
-}
 
 
 async def async_setup_entry(
@@ -193,30 +163,25 @@ class AnythingLLMAgentEntity(
         self.subentry = subentry
         self.history: dict[str, list[dict]] = {}
 
-        # Mode management - track mode per conversation
-        self.conversation_modes: dict[str, str] = {}  # conversation_id -> mode_key
-
         # Workspace management - track workspace per conversation
         self.conversation_workspaces: dict[str, str] = {}  # conversation_id -> workspace_slug
         self.conversation_threads: dict[str, str | None] = {}  # conversation_id -> thread_slug override
 
         # Issue 7: restore state from hass.data so reloading the integration
         # doesn't silently reset every user's mode/workspace.
-        _saved = hass.data.get(f"{DOMAIN}_state_{subentry.subentry_id}", {})
+        _saved = hass.data.get(DOMAIN, {}).get(f"state_{subentry.subentry_id}", {})
         if _saved:
-            self.conversation_modes.update(_saved.get("modes", {}))
             self.conversation_workspaces.update(_saved.get("workspaces", {}))
             self.conversation_threads.update(_saved.get("threads", {}))
             _LOGGER.debug(
-                "Restored conversation state for subentry %s: modes=%s workspaces=%s",
+                "Restored conversation state for subentry %s: workspaces=%s",
                 subentry.subentry_id,
-                self.conversation_modes,
                 self.conversation_workspaces,
             )
 
         self.options = subentry.data
         self._attr_unique_id = subentry.subentry_id
-        
+
         # Caching for performance optimization
         # NOTE: Only entity list is cached; system prompt is NOT cached because it
         # embeds live entity states and would return stale data after state changes.
@@ -228,7 +193,12 @@ class AnythingLLMAgentEntity(
         self._agent_keywords_regex: re.Pattern | None = None
 
         # L5: pending mode suggestion per conversation (LLM asked; user hasn't confirmed yet).
-        self._pending_mode_suggestions: dict[str, str] = {}
+        # Value is (workspace_slug, monotonic_timestamp) so stale suggestions are discarded.
+        self._pending_mode_suggestions: dict[str, tuple[str, float]] = {}
+
+        # Fix 3: track the pending Store write task so we can cancel it before
+        # scheduling a new one, preventing unbounded task pile-up on rapid switches.
+        self._save_state_task: asyncio.Task | None = None
 
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
@@ -239,11 +209,36 @@ class AnythingLLMAgentEntity(
         )
         self.client = entry.runtime_data
         # Register entity reference so reset_thread service can look it up by subentry_id.
-        hass.data[f"{DOMAIN}_entity_{subentry.subentry_id}"] = self
+        # Stored under hass.data[DOMAIN] to avoid polluting the top-level namespace.
+        hass.data.setdefault(DOMAIN, {})[f"entity_{subentry.subentry_id}"] = self
+
+        self._store: Store = Store(
+            hass, _STORAGE_VERSION, f"{DOMAIN}.state.{subentry.subentry_id}"
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up entity reference when removed."""
-        self.hass.data.pop(f"{DOMAIN}_entity_{self._attr_unique_id}", None)
+        self.hass.data.get(DOMAIN, {}).pop(f"entity_{self._attr_unique_id}", None)
+
+    async def async_added_to_hass(self) -> None:
+        """Load persisted state from Store when the entity is first added.
+
+        hass.data already populates state after a config-entry reload (in the
+        same HA process), so only fall back to the disk Store when hass.data
+        has no entry — i.e. on a full HA restart where hass.data is empty.
+        """
+        await super().async_added_to_hass()
+        if self.hass.data.get(DOMAIN, {}).get(f"state_{self._attr_unique_id}"):
+            # In-memory copy from a reload is more recent than the store — use it.
+            return
+        data = await self._store.async_load()
+        if data:
+            self.conversation_workspaces.update(data.get("workspaces", {}))
+            self.conversation_threads.update(data.get("threads", {}))
+            _LOGGER.debug(
+                "Restored persisted state for subentry %s from Store",
+                self.subentry.subentry_id,
+            )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -287,7 +282,11 @@ class AnythingLLMAgentEntity(
         
         # L5: if the previous response suggested a workspace switch and this reply
         # is affirmative, apply the pending switch without an extra API call.
-        pending_mode = self._pending_mode_suggestions.pop(conversation_id, None)
+        _pending_entry = self._pending_mode_suggestions.pop(conversation_id, None)
+        if _pending_entry and time.monotonic() - _pending_entry[1] <= _SUGGESTION_TTL:
+            pending_mode: str | None = _pending_entry[0]
+        else:
+            pending_mode = None
         if pending_mode and _RE_AFFIRMATIVE.match(user_input.text):
             old_workspace = current_workspace
             _capped_set(self.conversation_workspaces, conversation_id, pending_mode)
@@ -407,6 +406,9 @@ class AnythingLLMAgentEntity(
         if not using_thread:
             assistant_message = {"role": "assistant", "content": query_response.text}
             messages.append(assistant_message)
+            # Phase 4.2: cap history while preserving the system message at index 0.
+            if len(messages) > _MAX_HISTORY and messages and messages[0]["role"] == "system":
+                messages = [messages[0]] + messages[-((_MAX_HISTORY - 1) or 1):]
             self.history[conversation_id] = messages
         elif conversation_id in self.history:
             # Clean up any stale history if we've switched to thread mode
@@ -417,8 +419,8 @@ class AnythingLLMAgentEntity(
         if '?' in query_response.text:
             text_lower = query_response.text.lower()
             for _hint_name, _hint_key in _RESPONSE_MODE_HINTS.items():
-                if _hint_name in text_lower and _hint_key != current_mode:
-                    _capped_set(self._pending_mode_suggestions, conversation_id, _hint_key)
+                if _hint_name in text_lower and _hint_key != current_workspace:
+                    _capped_set(self._pending_mode_suggestions, conversation_id, (_hint_key, time.monotonic()))
                     _LOGGER.debug(
                         "Pending mode suggestion stored: %s for conversation %s",
                         _hint_key,
@@ -518,15 +520,15 @@ class AnythingLLMAgentEntity(
         
         # Pattern 2: "switch to <name> workspace"
         elif text_lower.startswith("switch to ") and " workspace" in text_lower:
-            # Extract workspace name between "switch to" and "workspace"
-            parts = text_lower.replace("switch to ", "").replace(" workspace", "").strip()
-            new_workspace = parts
+            m = re.match(r"switch to (.+?) workspace$", text_lower)
+            if m:
+                new_workspace = m.group(1).strip()
         
         # Pattern 3: "use <name> workspace"
         elif text_lower.startswith("use ") and " workspace" in text_lower:
-            # Extract workspace name between "use" and "workspace"
-            parts = text_lower.replace("use ", "").replace(" workspace", "").strip()
-            new_workspace = parts
+            m = re.match(r"use (.+?) workspace$", text_lower)
+            if m:
+                new_workspace = m.group(1).strip()
         
         # Pattern 4: "change workspace to <name>"
         elif text_lower.startswith("change workspace to "):
@@ -538,13 +540,15 @@ class AnythingLLMAgentEntity(
 
         # Pattern 6: "switch to <name> mode"
         elif text_lower.startswith("switch to ") and " mode" in text_lower:
-            parts = text_lower.replace("switch to ", "").replace(" mode", "").strip()
-            new_workspace = parts
+            m = re.match(r"switch to (.+?) mode$", text_lower)
+            if m:
+                new_workspace = m.group(1).strip()
 
         # Pattern 7: "use <name> mode"
         elif text_lower.startswith("use ") and " mode" in text_lower:
-            parts = text_lower.replace("use ", "").replace(" mode", "").strip()
-            new_workspace = parts
+            m = re.match(r"use (.+?) mode$", text_lower)
+            if m:
+                new_workspace = m.group(1).strip()
 
         # Pattern 8: "change mode to <name>"
         elif text_lower.startswith("change mode to "):
@@ -566,12 +570,7 @@ class AnythingLLMAgentEntity(
             # normalize spaces to hyphens, and lowercase. This prevents trailing
             # punctuation from voice input (e.g. "finance.") from becoming part
             # of the workspace slug used for API calls.
-            new_workspace = new_workspace.strip().lower()
-            # Replace ALL characters that are not letters, digits, underscore, or hyphen
-            # with hyphens. Prevents path traversal via slug interpolated into the URL.
-            new_workspace = re.sub(r'[^a-z0-9_-]', '-', new_workspace)
-            # Collapse repeated hyphens and strip leading/trailing hyphens
-            new_workspace = re.sub(r'-+', '-', new_workspace).strip('-')
+            new_workspace = sanitize_slug(new_workspace)
             # Normalize common spoken aliases to canonical workspace slugs.
             # If exact match fails (e.g. "the-analysis" from "switch to the analysis workspace"),
             # scan for any known alias as a substring, longest first to avoid partial matches.
@@ -656,15 +655,9 @@ class AnythingLLMAgentEntity(
         
         return None
 
-    def _get_default_workspace(self) -> str:
-        """Get the configured default workspace slug."""
-        opt_workspace_slug = self.options.get(CONF_WORKSPACE_SLUG, DEFAULT_WORKSPACE_SLUG)
-        data_workspace_slug = self.entry.data.get(CONF_WORKSPACE_SLUG, DEFAULT_WORKSPACE_SLUG)
-        return opt_workspace_slug if opt_workspace_slug != DEFAULT_WORKSPACE_SLUG else data_workspace_slug
-
     def _get_active_workspace(self, conversation_id: str) -> str:
         """Get currently active workspace slug for this conversation."""
-        return self.conversation_workspaces.get(conversation_id, self._get_default_workspace())
+        return self.conversation_workspaces.get(conversation_id, self._default_workspace_slug())
 
     def _should_use_agent_prefix(self, user_text: str) -> bool:
         """Determine if @agent prefix should be added based on keywords."""
@@ -687,17 +680,26 @@ class AnythingLLMAgentEntity(
         return bool(self._agent_keywords_regex and self._agent_keywords_regex.search(user_text))
 
     def _save_state(self) -> None:
-        """Persist conversation state to hass.data.
+        """Persist conversation state to hass.data and schedule a Store write.
 
-        Survives integration reloads (hass.data is in-memory on the hass object
-        and outlives individual config entries). Does not survive full HA restarts —
-        use HA Store for that if needed in the future.
+        hass.data write is synchronous and survives integration reloads within
+        the same HA process. The async Store write persists the state to disk so
+        it survives full HA restarts.
+
+        Any pending Store write task is cancelled before a new one is created so
+        that rapid workspace switches do not pile up concurrent disk writes.
         """
-        self.hass.data[f"{DOMAIN}_state_{self._attr_unique_id}"] = {
-            "modes": dict(self.conversation_modes),
+        state = {
             "workspaces": dict(self.conversation_workspaces),
             "threads": dict(self.conversation_threads),
         }
+        self.hass.data.setdefault(DOMAIN, {})[f"state_{self._attr_unique_id}"] = state
+        if self._save_state_task and not self._save_state_task.done():
+            self._save_state_task.cancel()
+        self._save_state_task = self.hass.async_create_task(
+            self._store.async_save(state),
+            name=f"anythingllm_save_state_{self._attr_unique_id}",
+        )
 
     def reset_threads(self, conversation_id: str | None = None) -> None:
         """Clear thread slug overrides.
@@ -860,11 +862,6 @@ class AnythingLLMAgentEntity(
             # String value - use that specific thread
             thread_slug = thread_override
         
-        failover_thread_slug = self.options.get(CONF_FAILOVER_THREAD_SLUG, DEFAULT_FAILOVER_THREAD_SLUG)
-        opt_failover_workspace_slug = self.options.get(CONF_FAILOVER_WORKSPACE_SLUG, DEFAULT_FAILOVER_WORKSPACE_SLUG)
-        data_failover_workspace_slug = self.entry.data.get(CONF_FAILOVER_WORKSPACE_SLUG, DEFAULT_FAILOVER_WORKSPACE_SLUG)
-        failover_workspace_slug = opt_failover_workspace_slug or data_failover_workspace_slug
-
         _LOGGER.info("Sending request to AnythingLLM workspace '%s' with %d messages", workspace_slug, len(messages))
 
         # Call AnythingLLM API
@@ -875,8 +872,6 @@ class AnythingLLMAgentEntity(
                 max_tokens=max_tokens,
                 workspace_slug=workspace_slug if workspace_slug else None,
                 thread_slug=thread_slug if thread_slug else None,
-                failover_thread_slug=failover_thread_slug if failover_thread_slug else None,
-                failover_workspace_slug=failover_workspace_slug if failover_workspace_slug else None,
             )
         except Exception as err:
             _LOGGER.error("Error from AnythingLLM: %s", err)

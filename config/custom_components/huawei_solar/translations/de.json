@@ -1,42 +1,102 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Das Gerät ist bereits konfiguriert"
+            "already_configured": "Das Gerät ist bereits konfiguriert",
+            "reauth_successful": "Re-Authentifikation erfolgreich",
+            "reconfigure_successful": "Neukonfiguration war erfolgreich"
         },
         "error": {
             "cannot_connect": "Verbindungsversuch fehlgeschlagen",
+            "connection_interrupted": "Connection interrupted — the inverter only supports one Modbus connection at a time. Check whether another app or device (SCharger, EMS, ...) is connected and close it, then try again.",
             "invalid_auth": "Ungültige Authentifikation",
             "invalid_slave_ids": "Slave IDs muss aus einer kommagetrennten Liste von Integern bestehen",
-            "read_error": "Auslesen des Inverters fehlgeschlagen.",
-            "slave_cannot_connect": "Verbindungsversuch mit Zusatz-Slave fehlgeschlagen",
+            "read_error": "Auslesen des Wechselrichters fehlgeschlagen.",
+            "slave_cannot_connect": "Verbindungsversuch mit weiterem Slave fehlgeschlagen",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "auto_discovery": {
+                "title": "Auto-discovering devices",
+                "description": "Scanning {host}:{port} for Huawei Solar devices using the Huawei discovery protocol. This may take up to a minute."
+            },
+            "scan_discovery": {
+                "title": "Scanning for devices",
+                "description": "Auto-discovery found no devices on {host}:{port}. Scanning frequently used slave IDs individually. This may take up to a minute."
+            },
+            "serial_auto_discovery": {
+                "title": "Auto-discovering devices",
+                "description": "Scanning {serial_port} for Huawei Solar devices using the Huawei discovery protocol. This may take up to a minute."
+            },
+            "serial_scan_discovery": {
+                "title": "Scanning for devices",
+                "description": "Auto-discovery found no devices on {serial_port}. Scanning frequently used slave IDs individually. This may take up to a minute."
+            },
+            "serial_finish_setup": {
+                "title": "Connecting",
+                "description": "Connecting to the devices discovered on {serial_port} and reading their configuration."
+            },
+            "cannot_connect_serial": {
+                "title": "Could not connect",
+                "description": "Could not open serial port {serial_port}. Please verify that:\n- The device is connected and the port is correct\n- No other application is using the port\n\nPress Submit to go back and try again."
+            },
+            "connection_interrupted_serial": {
+                "title": "Connection interrupted",
+                "description": "The connection to the inverter on {serial_port} was interrupted. The inverter only supports **one Modbus connection at a time**.\n\nCheck whether another application or device is currently connected to the inverter, such as:\n- The Huawei SCharger\n- The Huawei FusionSolar Android/iPhone App (device commissioning via dongle or direct connection)\n- SolarmanPV or another monitoring tool\n\nClose the other connection and press Submit to try again."
+            },
+            "no_device_found_serial": {
+                "title": "No device found",
+                "description": "Connected to {serial_port} but no Huawei Solar device responded on slave ID {slave_id}. Please verify that:\n- The slave ID is correct\n- The inverter is powered on and its RS485 interface is enabled\n\nPress Submit to go back and try again."
+            },
+            "manual_connect": {
+                "title": "Connecting",
+                "description": "Connecting to {host}:{port} on slave ID(s): {slave_ids}."
+            },
+            "finish_network_setup": {
+                "title": "Connecting",
+                "description": "Connecting to the devices discovered at {host}:{port} and reading their configuration."
+            },
+            "confirm_setup": {
+                "title": "Device found",
+                "description": "Successfully connected to **{model_name}** (serial number: {serial_number}) on slave ID(s): {slave_ids}.\n\nPress Submit to add this device to Home Assistant."
+            },
+            "cannot_connect": {
+                "title": "Could not connect",
+                "description": "Could not connect to {host}:{port}. Please verify that:\n- The IP address and port are correct\n- The device is powered on and reachable on your network\n- No firewall is blocking the connection\n\nPress Submit to go back and try again."
+            },
+            "connection_interrupted": {
+                "title": "Connection interrupted",
+                "description": "The connection to {host}:{port} was interrupted. The inverter only supports **one Modbus connection at a time**.\n\nCheck whether another application or device is currently connected to the inverter, such as:\n- The Huawei SCharger\n- The Huawei FusionSolar Android/iPhone App (device commissioning via dongle or direct connection)\n- SolarmanPV or another monitoring tool\n\nClose the other connection and press Submit to try again."
+            },
+            "no_device_found": {
+                "title": "No device found",
+                "description": "Connected to {host}:{port} but no Huawei Solar device responded on slave ID {slave_id}. Please verify that:\n- The slave ID is correct\n- The inverter's Modbus TCP interface is enabled\n- The inverter is not in a state that blocks communication (e.g. night mode on some models)\n\nPress Submit to go back and try again."
+            },
             "network_login": {
                 "data": {
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
-                "description": "Anmeldedaten eingeben"
+                "description": "Bitte geben Sie die Installateur-Zugangsdaten ein"
             },
             "setup_network": {
                 "data": {
                     "enable_parameter_configuration": "Fortgeschritten: Berechtigungen erhöhen",
                     "host": "Host",
                     "port": "Port",
-                    "slave_ids": "Slave IDs (kommagetrennt)"
+                    "slave_ids": "Slave-IDs: AUTO für automatische Entdeckung, sonst eine kommaseparierte Liste"
                 }
             },
             "setup_serial": {
                 "data": {
                     "port": "Gerät auswählen",
-                    "slave_ids": "Slave IDs (kommagetrennt)"
+                    "slave_ids": "Slave-IDs: AUTO für automatische Entdeckung, sonst eine kommaseparierte Liste"
                 },
                 "title": "Gerät"
             },
             "setup_serial_manual_path": {
                 "data": {
-                    "port": "Pfad des USB Gerätes"
+                    "port": "Pfad des USB Gerätes",
+                    "slave_ids": "Slave-IDs: AUTO für automatische Entdeckung, sonst eine kommaseparierte Liste"
                 },
                 "title": "Pfad"
             },
@@ -48,8 +108,57 @@
             }
         }
     },
+    "device": {
+        "battery_1": {
+            "name": "Batterie 1"
+        },
+        "battery_2": {
+            "name": "Batterie 2"
+        },
+        "charger": {
+            "name": "Wallbox"
+        },
+        "connected_energy_storage": {
+            "name": "Batterien"
+        },
+        "emma": {
+            "name": "EMMA"
+        },
+        "inverter": {
+            "name": "Wechselrichter"
+        },
+        "power_meter": {
+            "name": "Stromzähler"
+        },
+        "smartlogger": {
+            "name": "SmartLogger"
+        }
+    },
     "entity": {
+        "button": {
+            "stop_forcible_charge": {
+                "name": "Zwangsladung stoppen"
+            }
+        },
         "number": {
+            "active_power_fixed_value_derating": {
+                "name": "Leistungsbegrenzung"
+            },
+            "active_power_percentage_derating": {
+                "name": "Eingangsleistung Wechselrichter in %"
+            },
+            "emma_maximum_feed_grid_power_percent": {
+                "name": "Maximale Netzeinspeiseleistung (%)"
+            },
+            "emma_maximum_feed_grid_power_watt": {
+                "name": "Maximale Netzeinspeiseleistung"
+            },
+            "emma_tou_maximum_power_for_charging_batteries_from_grid": {
+                "name": "Maximale Netzleistung zum Laden der Batterie"
+            },
+            "mppt_scanning_interval": {
+                "name": "MPPT-Scan Intervall"
+            },
             "storage_backup_power_state_of_charge": {
                 "name": "Backup-Power Ladestand"
             },
@@ -57,13 +166,13 @@
                 "name": "Peak-Shaving Ladestand"
             },
             "storage_charging_cutoff_capacity": {
-                "name": "Ladeende-Ladestand"
+                "name": "Maximaler Ladestand"
             },
             "storage_discharging_cutoff_capacity": {
-                "name": "Entlade-Ende Ladestand"
+                "name": "minimaler Ladestand"
             },
             "storage_grid_charge_cutoff_state_of_charge": {
-                "name": "Netz-Ladeabschalt-Ladestand"
+                "name": "Netz Ladeabschaltung"
             },
             "storage_maximum_charging_power": {
                 "name": "Maximale Ladeleistung"
@@ -76,6 +185,24 @@
             }
         },
         "select": {
+            "emma_ess_control_mode": {
+                "name": "ESS-Kontroll-Modus",
+                "state": {
+                    "fully_fed_to_grid": "Volle Einspeisung ins Netz",
+                    "maximum_self_consumption": "Maximaler Eigenverbrauch",
+                    "reserved_1": "Reserviert 1",
+                    "reserved_3": "Reserviert 3",
+                    "third_party_dispatch": "Drittanbieter-System im Energiespeichersystem wurde eingerichtet",
+                    "time_of_use": "Zeitbasierte Nutzung"
+                }
+            },
+            "emma_tou_preferred_use_of_surplus_pv_power": {
+                "name": "Verwendung überschüssiger PV-Energie in TOU",
+                "state": {
+                    "charge": "Laden",
+                    "fed_to_grid": "Einspeisen ins Netz"
+                }
+            },
             "storage_capacity_control_mode": {
                 "name": "Kapazitätsregelungsmodus",
                 "state": {
@@ -105,7 +232,7 @@
         },
         "sensor": {
             "accumulated_energy_yield": {
-                "name": "Kumulierter Energieertrag"
+                "name": "Gesamte Energie"
             },
             "accumulated_yield_energy": {
                 "name": "Gesamtenergieertrag"
@@ -113,17 +240,26 @@
             "active_grid_a_b_voltage": {
                 "name": "A-B-Netzspannung"
             },
+            "active_grid_a_current": {
+                "name": "Phase A Strom"
+            },
             "active_grid_a_power": {
                 "name": "Phase A Wirkleistung"
             },
             "active_grid_b_c_voltage": {
                 "name": "B-C-Netzspannung"
             },
+            "active_grid_b_current": {
+                "name": "Phase B Strom"
+            },
             "active_grid_b_power": {
                 "name": "Phase B Wirkleistung"
             },
             "active_grid_c_a_voltage": {
                 "name": "C-A-Netzspannung"
+            },
+            "active_grid_c_current": {
+                "name": "Phase C Strom"
             },
             "active_grid_c_power": {
                 "name": "Phase C Wirkleistung"
@@ -137,11 +273,65 @@
             "active_power": {
                 "name": "Wirkleistung"
             },
+            "active_power_built_in_energy": {
+                "name": "Wirkleistung"
+            },
+            "active_power_control_mode": {
+                "name": "Wirkleistungssteuerung Modus"
+            },
+            "active_power_external_energy": {
+                "name": "Wirkleistung"
+            },
             "alarm": {
                 "name": "Alarm"
             },
             "alarms": {
                 "name": "Alarme"
+            },
+            "apparent_power_built_in_energy": {
+                "name": "Scheinleistung"
+            },
+            "apparent_power_external_energy": {
+                "name": "Scheinleistung"
+            },
+            "backup_power_state_of_charge": {
+                "name": "Backup power Ladezustand"
+            },
+            "battery_charge_discharge_power": {
+                "name": "Akkuaufladung/Entladung"
+            },
+            "battery_remaining_charge_discharge_time": {
+                "name": "Verbleibende Lade-/Entladezeit"
+            },
+            "battery_working_mode": {
+                "name": "Arbeitsmodus"
+            },
+            "bms_temperature": {
+                "name": "BMS Temperatur"
+            },
+            "charger_phase_a_voltage": {
+                "name": "Phase A Spannung"
+            },
+            "charger_phase_b_voltage": {
+                "name": "Phase B Spannung"
+            },
+            "charger_phase_c_voltage": {
+                "name": "Phase C Spannung"
+            },
+            "charger_rated_power": {
+                "name": "Nennleistung"
+            },
+            "charger_temperature": {
+                "name": "Temperatur"
+            },
+            "charger_total_energy_charged": {
+                "name": "Gesamte Ladeenergie"
+            },
+            "consumption_today": {
+                "name": "Verbrauch heute"
+            },
+            "current_electricity_generation_statistics_time": {
+                "name": "Aktuelle Stromgenerierungsstatistik Zeit"
             },
             "daily_yield_energy": {
                 "name": "Tagesertrag"
@@ -155,8 +345,32 @@
             "efficiency": {
                 "name": "Effizienz"
             },
-            "grid_a_current": {
-                "name": "Phase A Strom"
+            "energy_charged_today": {
+                "name": "Heute geladene Energie"
+            },
+            "energy_discharged_today": {
+                "name": "Heutige entladene Energie"
+            },
+            "ess_chargeable_capacity": {
+                "name": "ESS aufladbare Kapazität"
+            },
+            "ess_chargeable_energy": {
+                "name": "ESS aufladbare Energie"
+            },
+            "ess_dischargeable_capacity": {
+                "name": "ESS entladbare Kapazität"
+            },
+            "ess_dischargeable_energy": {
+                "name": "ESS entladbare Energie"
+            },
+            "feed_in_power": {
+                "name": "Einspeiseleistung"
+            },
+            "feed_in_to_grid_today": {
+                "name": "Einspeisung heute"
+            },
+            "forcible_charge_summary": {
+                "name": "Erzwungene Ladung"
             },
             "grid_a_voltage": {
                 "name": "Phase A Spannung"
@@ -167,20 +381,17 @@
             "grid_accumulated_reactive_power": {
                 "name": "Blindleistung"
             },
-            "grid_b_current": {
-                "name": "Phase B Strom"
-            },
             "grid_b_voltage": {
                 "name": "Phase B Spannung"
-            },
-            "grid_c_current": {
-                "name": "Phase C Strom"
             },
             "grid_c_voltage": {
                 "name": "Phase C Spannung"
             },
             "grid_exported_energy": {
                 "name": "Exportierte Energie"
+            },
+            "hourly_yield_energy": {
+                "name": "Stündlicher Ertrag"
             },
             "input_current": {
                 "name": "Eingangsstrom"
@@ -191,20 +402,62 @@
             "input_voltage": {
                 "name": "Eingangsspannung"
             },
+            "insulation_resistance": {
+                "name": "Isolationswiderstand"
+            },
             "internal_temperature": {
                 "name": "Interne Temperatur"
             },
+            "inverter_active_power": {
+                "name": "Wechselrichter Wirkleistung"
+            },
+            "inverter_energy_yield_today": {
+                "name": "Heutiger Wechselrichterertrag"
+            },
+            "inverter_rated_power": {
+                "name": "Nennleistung Wechselrichter"
+            },
+            "inverter_total_absorbed_energy": {
+                "name": "Gesamt entladen"
+            },
+            "inverter_total_energy_yield": {
+                "name": "Gesamtertrag Wechselrichters"
+            },
             "line_voltage_a_b": {
+                "name": "A-B-Netzspannung"
+            },
+            "line_voltage_a_b_built_in_energy": {
+                "name": "A-B-Netzspannung"
+            },
+            "line_voltage_a_b_external_energy": {
                 "name": "A-B-Netzspannung"
             },
             "line_voltage_b_c": {
                 "name": "B-C-Netzspannung"
             },
+            "line_voltage_b_c_built_in_energy": {
+                "name": "B-C-Netzspannung"
+            },
+            "line_voltage_b_c_external_energy": {
+                "name": "B-C-Netzspannung"
+            },
             "line_voltage_c_a": {
                 "name": "C-A-Netzspannung"
             },
+            "line_voltage_c_a_built_in_energy": {
+                "name": "C-A-Netzspannung"
+            },
+            "line_voltage_c_a_external_energy": {
+                "name": "C-A-Netzspannung"
+            },
+            "load_power": {
+                "name": "Ladestrom"
+            },
             "meter_status": {
                 "name": "Zählerstatus"
+            },
+            "monthly_yield_energy": {
+                "name": "Monatlicher Ertrag"
             },
             "nb_online_optimizers": {
                 "name": "Online-Optimierer"
@@ -218,25 +471,196 @@
             "output_voltage": {
                 "name": "Ausgangsspannung"
             },
+            "p_max": {
+                "name": "Maximale Wirkleistung"
+            },
+            "pack_1_charge_discharge_power": {
+                "name": "Pack 1 Lade- und Entladeleistung"
+            },
+            "pack_1_current": {
+                "name": "Pack 1 Strom"
+            },
+            "pack_1_firmware_version": {
+                "name": "Pack 1 Firmware Version"
+            },
+            "pack_1_max_temperature": {
+                "name": "Pack 1 max Temperatur"
+            },
+            "pack_1_min_temperature": {
+                "name": "Pack 1 min Temperatur"
+            },
+            "pack_1_serial_number": {
+                "name": "Pack 1 Serienummer"
+            },
+            "pack_1_soh_calibration_status": {
+                "name": "Pack 1 SOH Kalibrationsstatus"
+            },
+            "pack_1_state_of_capacity": {
+                "name": "Batterie Pack 1 Ladestand"
+            },
+            "pack_1_total_charge": {
+                "name": "Pack 1 Gesamte Ladung"
+            },
+            "pack_1_total_discharge": {
+                "name": "Pack 1 Gesamte Entladung"
+            },
+            "pack_1_voltage": {
+                "name": "Pack 1 Spannung"
+            },
+            "pack_1_working_status": {
+                "name": "Pack 1 Arbeitsstatus"
+            },
+            "pack_2_charge_discharge_power": {
+                "name": "Pack 2 Lade- und Entladeleistung"
+            },
+            "pack_2_current": {
+                "name": "Pack 2 Strom"
+            },
+            "pack_2_firmware_version": {
+                "name": "Pack 2 Firmware Version"
+            },
+            "pack_2_max_temperature": {
+                "name": "Pack 2 max Temperatur"
+            },
+            "pack_2_min_temperature": {
+                "name": "Pack 2 min Temperatur"
+            },
+            "pack_2_serial_number": {
+                "name": "Pack 2 Serienummer"
+            },
+            "pack_2_soh_calibration_status": {
+                "name": "Pack 2 SOH Kalibrationsstatus"
+            },
+            "pack_2_state_of_capacity": {
+                "name": "Batterie Pack 2 Ladestand"
+            },
+            "pack_2_total_charge": {
+                "name": "Pack 2 Gesamte Ladung"
+            },
+            "pack_2_total_discharge": {
+                "name": "Pack 2 Gesamte Entladung"
+            },
+            "pack_2_voltage": {
+                "name": "Pack 2 Spannung"
+            },
+            "pack_2_working_status": {
+                "name": "Pack 2 Arbeitsstatus"
+            },
+            "pack_3_charge_discharge_power": {
+                "name": "Pack 3 Lade- und Entladeleistung"
+            },
+            "pack_3_current": {
+                "name": "Pack 3 Strom"
+            },
+            "pack_3_firmware_version": {
+                "name": "Pack 3 Firmware Version"
+            },
+            "pack_3_max_temperature": {
+                "name": "Pack 3 max Temperatur"
+            },
+            "pack_3_min_temperature": {
+                "name": "Pack 3 min Temperatur"
+            },
+            "pack_3_serial_number": {
+                "name": "Pack 3 Serienummer"
+            },
+            "pack_3_soh_calibration_status": {
+                "name": "Pack 3 SOH Kalibrationsstatus"
+            },
+            "pack_3_state_of_capacity": {
+                "name": "Batterie Pack 3 Ladestand"
+            },
+            "pack_3_total_charge": {
+                "name": "Pack 3 Gesamte Ladung"
+            },
+            "pack_3_total_discharge": {
+                "name": "Pack 3 Gesamte Entladung"
+            },
+            "pack_3_voltage": {
+                "name": "Pack 3 Spannung"
+            },
+            "pack_3_working_status": {
+                "name": "Pack 3 Arbeitsstatus"
+            },
+            "phase_a_active_power_built_in_energy": {
+                "name": "Phase A Wirkleistung"
+            },
+            "phase_a_active_power_external_energy": {
+                "name": "Phase A Wirkleistung"
+            },
             "phase_a_current": {
+                "name": "Phase A Strom"
+            },
+            "phase_a_current_built_in_energy": {
+                "name": "Phase A Strom"
+            },
+            "phase_a_current_external_energy": {
                 "name": "Phase A Strom"
             },
             "phase_a_voltage": {
                 "name": "Phase A Spannung"
             },
+            "phase_a_voltage_built_in_energy": {
+                "name": "Phase A Spannung"
+            },
+            "phase_a_voltage_external_energy": {
+                "name": "Phase A Spannung"
+            },
+            "phase_b_active_power_built_in_energy": {
+                "name": "Phase B Wirkleistung"
+            },
+            "phase_b_active_power_external_energy": {
+                "name": "Phase B Wirkleistung"
+            },
             "phase_b_current": {
+                "name": "Phase B Strom"
+            },
+            "phase_b_current_built_in_energy": {
+                "name": "Phase B Strom"
+            },
+            "phase_b_current_external_energy": {
                 "name": "Phase B Strom"
             },
             "phase_b_voltage": {
                 "name": "Phase B Spannung"
             },
+            "phase_b_voltage_built_in_energy": {
+                "name": "Phase B Spannung"
+            },
+            "phase_b_voltage_external_energy": {
+                "name": "Phase B Spannung"
+            },
+            "phase_c_active_power_built_in_energy": {
+                "name": "Phase C Wirkleistung"
+            },
+            "phase_c_active_power_external_energy": {
+                "name": "Phase C Wirkleistung"
+            },
             "phase_c_current": {
+                "name": "Phase C Strom"
+            },
+            "phase_c_current_built_in_energy": {
+                "name": "Phase C Strom"
+            },
+            "phase_c_current_external_energy": {
                 "name": "Phase C Strom"
             },
             "phase_c_voltage": {
                 "name": "Phase C Spannung"
             },
+            "phase_c_voltage_built_in_energy": {
+                "name": "Phase C Spannung"
+            },
+            "phase_c_voltage_external_energy": {
+                "name": "Phase C Spannung"
+            },
             "power_factor": {
+                "name": "Leistungsfaktor"
+            },
+            "power_factor_built_in_energy": {
+                "name": "Leistungsfaktor"
+            },
+            "power_factor_external_energy": {
                 "name": "Leistungsfaktor"
             },
             "power_meter_active_power": {
@@ -389,11 +813,38 @@
             "pv_24_voltage": {
                 "name": "PV 24 Spannung"
             },
+            "pv_output_power": {
+                "name": "PV Ausgangsleistung"
+            },
+            "pv_yield_today": {
+                "name": "PV Ertrag heute"
+            },
+            "rated_ess_capacity": {
+                "name": "Nennkapazität ESS"
+            },
+            "rated_power": {
+                "name": "Nennleistung"
+            },
             "reactive_power": {
                 "name": "Blindleistung"
             },
             "running_status": {
                 "name": "Betriebsstatus"
+            },
+            "sdongle_grid_power": {
+                "name": "Netzleistung"
+            },
+            "sdongle_load_power": {
+                "name": "Ladestrom"
+            },
+            "sdongle_total_active_power": {
+                "name": "Gesamte Wirkleistung"
+            },
+            "sdongle_total_battery_power": {
+                "name": "Gesamte Batterieleistung"
+            },
+            "sdongle_total_input_power": {
+                "name": "Gesamte Eingangsleistung"
             },
             "shutdown_time": {
                 "name": "Ausschaltzeit"
@@ -403,6 +854,90 @@
             },
             "single_phase_meter_voltage": {
                 "name": "Spannung"
+            },
+            "smartlogger_a_b_line_voltage_of_grid": {
+                "name": "Grid A-B line voltage"
+            },
+            "smartlogger_active_ess_power": {
+                "name": "Active ESS power"
+            },
+            "smartlogger_active_power": {
+                "name": "Wirkleistung"
+            },
+            "smartlogger_active_pv_power": {
+                "name": "Active PV power"
+            },
+            "smartlogger_alarms": {
+                "name": "Alarme"
+            },
+            "smartlogger_array_in_operation": {
+                "name": "Array in operation"
+            },
+            "smartlogger_b_c_line_voltage_of_grid": {
+                "name": "Grid B-C line voltage"
+            },
+            "smartlogger_c_a_line_voltage_of_grid": {
+                "name": "Grid C-A line voltage"
+            },
+            "smartlogger_energy_charged_today": {
+                "name": "Heute geladene Energie"
+            },
+            "smartlogger_energy_discharged_today": {
+                "name": "Heutige entladene Energie"
+            },
+            "smartlogger_input_power": {
+                "name": "Eingangsleistung"
+            },
+            "smartlogger_phase_a_current_of_grid": {
+                "name": "Grid phase A current"
+            },
+            "smartlogger_phase_b_current_of_grid": {
+                "name": "Grid phase B current"
+            },
+            "smartlogger_phase_c_current_of_grid": {
+                "name": "Grid phase C current"
+            },
+            "smartlogger_plant_status": {
+                "name": "Plant status"
+            },
+            "smartlogger_power_factor": {
+                "name": "Leistungsfaktor"
+            },
+            "smartlogger_power_supply_from_grid_today": {
+                "name": "Netzbezug heute"
+            },
+            "smartlogger_rated_ess_power": {
+                "name": "Rated ESS power"
+            },
+            "smartlogger_rated_pv_power": {
+                "name": "Rated PV power"
+            },
+            "smartlogger_soc": {
+                "name": "Ladestatus"
+            },
+            "smartlogger_soe": {
+                "name": "Energiezustand"
+            },
+            "smartlogger_soh": {
+                "name": "Gesundheitszustand"
+            },
+            "smartlogger_total_energy_charged": {
+                "name": "Gesamt geladen"
+            },
+            "smartlogger_total_energy_discharge_d": {
+                "name": "Gesamt entladen"
+            },
+            "smartlogger_total_energy_yield": {
+                "name": "Gesamter PV Ertrag"
+            },
+            "smartlogger_total_power_supply_from_grid": {
+                "name": "Gesamter Netzbezug"
+            },
+            "smartlogger_yield_today": {
+                "name": "Tagesertrag"
+            },
+            "soh_calibration_status": {
+                "name": "SOH Kalibrationsstatus"
             },
             "startup_time": {
                 "name": "Startzeit"
@@ -414,16 +949,19 @@
                 "name": "Sperrstatus"
             },
             "state_2_1": {
-                "name": "PV-Verbindungsstatus"
+                "name": "PV Verbindungsstatus"
             },
             "state_2_2": {
                 "name": "DSP-Datenerfassung"
             },
             "state_3_0": {
-                "name": "Netzunabhängigkeitsstatus"
+                "name": "Netztrennung Status"
             },
             "state_3_1": {
-                "name": "Netzunabhängigkeitsschalter"
+                "name": "Netztrennung Schalter"
+            },
+            "state_of_capacity": {
+                "name": "Batterieladung"
             },
             "storage_bus_current": {
                 "name": "Busstrom"
@@ -443,8 +981,23 @@
             "storage_current_day_discharge_capacity": {
                 "name": "Tagesentladung"
             },
-            "storage_fixed_charging_and_discharging_periods": {
-                "name": "Feste Ladezeiten"
+            "storage_forcible_charge_discharge_write": {
+                "name": "Forcible charge/discharge"
+            },
+            "storage_huawei_luna2000_time_of_use_charging_and_discharging_periods": {
+                "name": "TOU Lade- und Entladezeiten"
+            },
+            "storage_lg_resu_time_of_use_price_periods": {
+                "name": "TOU-Preisperioden"
+            },
+            "storage_maximum_charge_power": {
+                "name": "Maximale Ladeleistung"
+            },
+            "storage_maximum_discharge_power": {
+                "name": "Maximale Entladeleistung"
+            },
+            "storage_rated_capacity": {
+                "name": "Akkukapazität"
             },
             "storage_running_status": {
                 "name": "Status"
@@ -452,213 +1005,275 @@
             "storage_state_of_capacity": {
                 "name": "Batterieladung"
             },
-            "storage_time_of_use_charging_and_discharging_periods": {
-                "name": "Zeiten der nutzungsabhängigen Ladung und Entladung"
-            },
             "storage_total_charge": {
                 "name": "Gesamtladung"
             },
             "storage_total_discharge": {
                 "name": "Gesamtentladung"
             },
+            "supply_from_grid_today": {
+                "name": "Netzbezug heute"
+            },
             "temperature": {
                 "name": "Temperatur"
             },
+            "total_active_energy_built_in_energy": {
+                "name": "Gesamte Wirkenergie"
+            },
+            "total_active_energy_external_energy": {
+                "name": "Gesamte Wirkenergie"
+            },
+            "total_charged_energy": {
+                "name": "Gesamt geladen"
+            },
+            "total_dc_input_power": {
+                "name": "Gesamte DC Eingangsenergie"
+            },
+            "total_discharged_energy": {
+                "name": "Gesamt entladen"
+            },
+            "total_energy_consumption": {
+                "name": "Gesamter Energieverbrauch"
+            },
+            "total_feed_in_to_grid": {
+                "name": "Gesamte Einspeisung ins Netz"
+            },
+            "total_negative_active_energy_built_in_energy": {
+                "name": "Gesamte negative Wirkenergie"
+            },
+            "total_negative_active_energy_external_energy": {
+                "name": "Gesamte negative Wirkenergie"
+            },
+            "total_positive_active_energy_built_in_energy": {
+                "name": "Gesamte positive Wirkenergie"
+            },
+            "total_positive_active_energy_external_energy": {
+                "name": "Gesamte positive Wirkenergie"
+            },
+            "total_pv_energy_yield": {
+                "name": "Gesamte PV Ertragsleistung"
+            },
+            "total_supply_from_grid": {
+                "name": "Gesamter Netzbezug"
+            },
             "voltage_to_ground": {
                 "name": "Spannung zu Erde"
+            },
+            "yearly_yield_energy": {
+                "name": "Jährlicher Ertrag"
             }
         },
         "switch": {
+            "mppt_multimodal_scanning": {
+                "name": "MPPT Scan"
+            },
             "startup": {
                 "name": "Inverter EIN/AUS"
             },
             "storage_charge_from_grid_function": {
                 "name": "Laden aus dem Netz"
             }
+        }
+    },
+    "exceptions": {
+        "config_entry_not_found": {
+            "message": "Eintrag für Gerät nicht gefunden: {device_id}"
         },
-        "services": {
-            "forcible_charge": {
-                "description": "Erzwungenes Laden der Batterie für eine bestimmte Zeit",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Batterie'-Gerät sein",
-                        "name": "Batterie"
-                    },
-                    "duration": {
-                        "description": "Dauer der Ladung",
-                        "name": "Dauer"
-                    },
-                    "power": {
-                        "description": "Verwendete Leistung für die Ladung",
-                        "name": "Leistung"
-                    }
+        "entry_not_loaded": {
+            "message": "Eintrag nicht geladen: {entry}"
+        },
+        "ha_device_not_found": {
+            "message": "Huawei Solar-Gerät konnte nicht abgerufen werden, das mit ID {device_id} verknüpft ist"
+        },
+        "invalid_device_id": {
+            "message": "Ungültige Geräte-ID angegeben: {device_id}"
+        },
+        "wrong_device_type": {
+            "message": "Fehler beim Huawei Solargerät Typ für ID- {device_id}: erwarteter {expected_type}, {actual_type} erhalten"
+        }
+    },
+    "services": {
+        "forcible_charge": {
+            "description": "Erzwinge Ladung des Akkus für eine bestimmte Zeit",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein 'Batterie' Gerät sein",
+                    "name": "Batterie"
                 },
-                "name": "Erzwungenes Laden"
+                "duration": {
+                    "description": "Dauer der Ladung",
+                    "name": "Dauer"
+                },
+                "power": {
+                    "description": "Maximale Ladeleistung",
+                    "name": "Leistung"
+                }
             },
-            "forcible_charge_soc": {
-                "description": "Erzwungenes Laden der Batterie auf einen bestimmten Ladestand",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Batterie'-Gerät sein",
-                        "name": "Batterie"
-                    },
-                    "power": {
-                        "description": "Verwendete Leistung für die Ladung",
-                        "name": "Leistung"
-                    },
-                    "target_soc": {
-                        "description": "Ladestand, der erreicht werden muss",
-                        "name": "Ziel-SoC"
-                    }
+            "name": "Erzwungene Ladung"
+        },
+        "forcible_charge_soc": {
+            "description": "Erzwungene Ladung der Batterie bis zu einem bestimmten Ladezustand",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein 'Batterie' Gerät sein",
+                    "name": "Batterie"
                 },
-                "name": "Zwangsweises Laden auf ein bestimmten Ladestand"
+                "power": {
+                    "description": "Für die Ladung verwendete Leistung",
+                    "name": "Leistung"
+                },
+                "target_soc": {
+                    "description": "Zu erreichender Ladezustand",
+                    "name": "Ziel SoC"
+                }
             },
-            "forcible_discharge": {
-                "description": "Erzwungenes Entladen der Batterie für eine bestimmte Zeit",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Batterie'-Gerät sein",
-                        "name": "Batterie"
-                    },
-                    "duration": {
-                        "description": "Dauer der Entladung",
-                        "name": "Dauer"
-                    },
-                    "power": {
-                        "description": "Verwendete Leistung für die Entladung",
-                        "name": "Leistung"
-                    }
+            "name": "Erzwungene Ladung bis SOC"
+        },
+        "forcible_discharge": {
+            "description": "Erzwinge Entladung des Akkus für eine bestimmte Zeit",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein 'Batterie' Gerät sein",
+                    "name": "Batterie"
                 },
-                "name": "Erzwungenes Entladen"
+                "duration": {
+                    "description": "Dauer der Entladung",
+                    "name": "Dauer"
+                },
+                "power": {
+                    "description": "Maximale Entladeleistung",
+                    "name": "Leistung"
+                }
             },
-            "forcible_discharge_soc": {
-                "description": "Erzwungenes Entladen der Batterie auf einen bestimmten Ladestand",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Batterie'-Gerät sein",
-                        "name": "Batterie"
-                    },
-                    "power": {
-                        "description": "Verwendete Leistung für die Entladung",
-                        "name": "Leistung"
-                    },
-                    "target_soc": {
-                        "description": "Ladestand, der erreicht werden muss",
-                        "name": "Ziel-SoC"
-                    }
+            "name": "Erzwinge Entladung"
+        },
+        "forcible_discharge_soc": {
+            "description": "Entlädt die Batterie bis zu einem vorher angegebenen Wert",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein 'Batterie' Gerät sein",
+                    "name": "Batterie"
                 },
-                "name": "Zwangsweises Entladen auf ein Ladezustand"
+                "power": {
+                    "description": "Einstellung wie hoch die Entladeleistung maximal sein darf",
+                    "name": "Energie"
+                },
+                "target_soc": {
+                    "description": "Zu erreichender Ladezustand",
+                    "name": "Ziel SoC"
+                }
             },
-            "reset_maximum_feed_grid_power": {
-                "description": "Setzen der aktiven Leistungsregelung auf den Standardmodus 'Unbegrenzt'",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Inverter'-Gerät sein",
-                        "name": "Inverter"
-                    }
-                },
-                "name": "Setzen der aktiven Leistungsregelung auf 'Maximale Netzeinspeisung'"
+            "name": "Erzwungenes Entladen"
+        },
+        "reset_maximum_feed_grid_power": {
+            "description": "Setze aktive Energiesteuerung in den Standardmodus zurück",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein \"Wechselrichter\"sein",
+                    "name": "Wechselrichter"
+                }
             },
-            "set_capacity_control_periods": {
-                "description": "Setzen von Kapazitätsregelungsperioden",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Batterie'-Gerät sein",
-                        "name": "Batterie"
-                    },
-                    "periods": {
-                        "description": "Eine Periode pro Zeile. Format: '[Startzeit]-[Endzeit]/[wirksame Tage]/[Leistung]W', mit 1=Montag, 7=Sonntag. Beispiel: '00:00-23:59/1234567/2500W'.",
-                        "name": "Perioden"
-                    }
+            "name": "Setze aktive Energiesteuerung auf maximale Netzexport-Leistung"
+        },
+        "set_capacity_control_periods": {
+            "description": "Kapazitätsregelungsperioden",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein 'Batterie' Gerät sein",
+                    "name": "Batterie"
                 },
-                "name": "Setzen von Kapazitätsregelungsperioden"
+                "periods": {
+                    "description": "Ein Zeitraum pro Zeile. Format: '[Startzeit]-[Endzeit]/[Wochentage]/[Leistung]W', mit 1=Montag, 7=Sonntag. Beispiel: '00:00-23:59/1234567/2500W'.",
+                    "name": "Perioden"
+                }
             },
-            "set_di_active_power_scheduling": {
-                "description": "Setzen der aktiven Leistungsregelung auf 'DI aktive Planung'",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Inverter'-Gerät sein",
-                        "name": "Inverter"
-                    }
-                },
-                "name": "Setzen der aktiven Leistungsregelung auf 'DI aktive Planung'"
+            "name": "Kapazitätsregelungsperioden"
+        },
+        "set_di_active_power_scheduling": {
+            "description": "Wirkleistungssteuerung auf 'DI active scheduling' setzen",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein \"Wechselrichter\"sein",
+                    "name": "Wechselrichter"
+                }
             },
-            "set_fixed_charge_periods": {
-                "description": "Setzen von festen Lade- und Entladungsperioden",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Batterie'-Gerät sein",
-                        "name": "Batterie"
-                    },
-                    "periods": {
-                        "description": "Eine Periode pro Zeile. Format: '[Startzeit]-[Endzeit]/[Leistung]W'. Beispiel: '12:00-15:59/-1000W'.",
-                        "name": "Perioden"
-                    }
+            "name": "Wirkleistungssteuerung auf 'DI active scheduling' setzen"
+        },
+        "set_fixed_charge_periods": {
+            "description": "Feste Ladungs- und Entladungszeiten festlegen",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein 'Batterie' Gerät sein",
+                    "name": "Batterie"
                 },
-                "name": "Setzen von festen Ladeperioden"
+                "periods": {
+                    "description": "Ein Zeitraum pro Zeile. Format: '[Startzeit]-[Endzeit]/[Leistung]W'. Beispiel: '12:00-15:59/-1000W'.",
+                    "name": "Perioden"
+                }
             },
-            "set_maximum_feed_grid_power": {
-                "description": "Setzen der aktiven Leistungsregelung auf 'Leistungsbeschränkte Netzeinspeisung' mit der angegebenen Leistung",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Inverter'-Gerät sein",
-                        "name": "Inverter"
-                    },
-                    "power": {
-                        "description": "Maximale Leistung",
-                        "name": "Leistung"
-                    }
+            "name": "Festgelegte Ladezeiten"
+        },
+        "set_maximum_feed_grid_power": {
+            "description": "Wirkleistungssteuerung auf 'Power-limited grid connection (%)' mit dem angegebenen Prozentsatz setzen",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein \"Wechselrichter\"sein",
+                    "name": "Gerät"
                 },
-                "name": "Begrenzen der Netzeinspeisung"
+                "power": {
+                    "description": "Maximale Leistung",
+                    "name": "Leistung"
+                }
             },
-            "set_maximum_feed_grid_power_percent": {
-                "description": "Setzen der aktiven Leistungsregelung auf 'Leistungsbeschränkte Netzeinspeisung (%)' mit dem angegebenen Prozentsatz",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Inverter'-Gerät sein",
-                        "name": "Inverter"
-                    },
-                    "power_percentage": {
-                        "description": "Maximaler Prozentsatz",
-                        "name": "Leistungsprozentsatz"
-                    }
+            "name": "Netzeinspeisung beschränken"
+        },
+        "set_maximum_feed_grid_power_percent": {
+            "description": "Wirkleistungssteuerung auf 'Power-limited grid connection (%)' mit dem angegebenen Prozentsatz setzen",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein \"Wechselrichter\"sein",
+                    "name": "Gerät"
                 },
-                "name": "Begrenzen der Netzeinspeisung auf Prozentsatz"
+                "power_percentage": {
+                    "description": "Maximaler Prozentsatz",
+                    "name": "Prozentsatz Leistung"
+                }
             },
-            "set_tou_periods": {
-                "description": "Setzen von Zeiten der nutzungsabhängigen Perioden",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Batterie'-Gerät sein",
-                        "name": "Batterie"
-                    },
-                    "periods": {
-                        "description": "Eine Periode pro Zeile. Für Huawei LUNA2000-Batterien: '[Startzeit]-[Endzeit]/[wirksame Tage]/[Ladung]', mit 1=Montag, 7=Sonntag (Beispiel: '12:00-14:00/1234567/-'). Für LG RESU-Batterien: '[Startzeit]-[Endzeit]/[Strompreis]' (Beispiel: 13:00-14:00/0,50)",
-                        "name": "Perioden"
-                    }
+            "name": "Netzeinspeisung auf Prozentsatz beschränken"
+        },
+        "set_tou_periods": {
+            "description": "Setzt Zeiten der Benutzung",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein \"Wechselrichter\"sein",
+                    "name": "Batterie"
                 },
-                "name": "Setzen von nutzungsabhängigen Perioden"
+                "periods": {
+                    "description": "Ein Zeitraum pro Zeile. Für Huawei LUNA2000 Batterien: '[Startzeit]-[Endzeit]/[Wochentage]/[Ladung]', mit 1=Montag, 7=Sonntag (Beispiel: '12:00-14:00/1234567/-'). Für LG RESU Batterien: '[Startzeit]-[Endzeit]/[Strompreis]' (Beispiel: 13:00-14:00/0.50)",
+                    "name": "Perioden"
+                }
             },
-            "set_zero_power_grid_connection": {
-                "description": "Setzen der aktiven Leistungsregelung auf 'Netzeinspeisung mit null Leistung'",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Inverter'-Gerät sein",
-                        "name": "Inverter"
-                    }
-                },
-                "name": "Setzen der aktiven Leistungsregelung auf 'Netzeinspeisung mit null Leistung'"
+            "name": "TOU-Perioden festlegen"
+        },
+        "set_zero_power_grid_connection": {
+            "description": "Wirkleistungssteuerung auf 'Zero power grid connection' setzen",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein \"Wechselrichter\"sein",
+                    "name": "Gerät"
+                }
             },
-            "stop_forcible_charge": {
-                "description": "Abbrechen des laufenden erzwungnen Ladebefehls",
-                "fields": {
-                    "device_id": {
-                        "description": "Muss ein 'Batterie'-Gerät sein",
-                        "name": "Batterie"
-                    }
-                },
-                "name": "Abbrechen des erzwungenen Ladens oder Entladens"
-            }
+            "name": "Wirkleistungssteuerung auf 'Zero power grid connection' setzen"
+        },
+        "stop_forcible_charge": {
+            "description": "Abbrechen des laufenden erzwungenen Entlade-Befehls",
+            "fields": {
+                "device_id": {
+                    "description": "Muss ein 'Batterie' Gerät sein",
+                    "name": "Batterie"
+                }
+            },
+            "name": "Zwangs-Ladung oder -Entladung stoppen"
         }
     }
 }

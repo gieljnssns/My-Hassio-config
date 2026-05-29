@@ -200,7 +200,7 @@ class VectorDBContextProvider(ContextProvider):
 
                 if entities:
                     entity_context = json.dumps(
-                        {"entities": entities, "count": len(entities)}, indent=2
+                        {"entities": entities, "count": len(entities)}, indent=2, default=str
                     )
 
             # Tier 2: Query additional collections (supplementary)
@@ -216,6 +216,7 @@ class VectorDBContextProvider(ContextProvider):
                             "count": len(additional_results),
                         },
                         indent=2,
+                        default=str,
                     )
 
             # Combine contexts

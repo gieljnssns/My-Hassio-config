@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "اعداد الملف الشخصي",
+        "description": "انشئ ملفا شخصيا جديدا للوكيل باسم فريد وشخصية مميزة.",
+        "data": {
+          "profile_name": "اسم الملف الشخصي",
+          "server_type": "نوع الخادم"
+        }
+      },
+      "server": {
+        "title": "تكوين الخادم",
+        "description": "قم بتكوين عنوان URL لخادم الاستدلال ومنفذ خادم MCP.",
+        "data": {
+          "lmstudio_url": "عنوان URL للخادم",
+          "api_key": "مفتاح API",
+          "mcp_port": "منفذ خادم MCP"
+        }
+      },
+      "model": {
+        "title": "النموذج والتعليمات",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "اسم النموذج",
+          "system_prompt": "تعليمات النظام",
+          "technical_prompt": "التعليمات التقنية"
+        }
+      },
+      "advanced": {
+        "title": "الاعدادات المتقدمة",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "درجة الحرارة",
+          "max_tokens": "الحد الاقصى لرموز الاستجابة",
+          "max_history": "الحد الاقصى لرسائل السجل",
+          "max_iterations": "الحد الاقصى لتكرارات الادوات",
+          "control_home_assistant": "التحكم في Home Assistant",
+          "response_mode": "وضع الاستجابة",
+          "follow_up_phrases": "عبارات المتابعة",
+          "end_words": "كلمات انهاء المحادثة",
+          "timeout": "انتهاء مهلة الاستجابة",
+          "debug_mode": "وضع التصحيح",
+          "ollama_keep_alive": "ابق Ollama نشطا",
+          "ollama_num_ctx": "نافذة سياق Ollama",
+          "clean_responses": "تنظيف الردود للإخراج الصوتي"
+        }
+      },
+      "mcp_server": {
+        "title": "اعدادات خادم MCP المشتركة",
+        "description": "تؤثر هذه الاعدادات على جميع الملفات الشخصية. ستؤثر التغييرات هنا على كل وكيل محادثة MCP Assist.",
+        "data": {
+          "mcp_port": "منفذ خادم MCP",
+          "search_provider": "البحث على الويب",
+          "brave_api_key": "مفتاح API لـ Brave Search",
+          "allowed_ips": "عناوين IP/نطاقات اضافية مسموح بها",
+          "enable_gap_filling": "تمكين فهرس الكيانات الذكي",
+          "max_entities_per_discovery": "الحد الاقصى للكيانات لكل اكتشاف (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "لا يمكن الاتصال بخادم الاستدلال. تاكد من انه يعمل ويمكن الوصول اليه.",
+      "no_models": "لا توجد نماذج محملة على الخادم. يرجى تحميل نموذج اولا.",
+      "invalid_model": "النموذج المحدد غير متوفر على الخادم.",
+      "invalid_port": "يجب ان يكون المنفذ بين 1024 و 65535.",
+      "invalid_ip": "تنسيق عنوان IP او نطاق CIDR غير صالح. استخدم قيما مفصولة بفواصل مثل: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "اسم الملف الشخصي مطلوب.",
+      "invalid_json": "تنسيق JSON غير صالح. يرجى التحقق من تكوين خوادم MCP الخاصة بك.",
+      "invalid_api_key": "مفتاح API غير صالح. يرجى التحقق والمحاولة مرة اخرى.",
+      "auth_failed": "فشلت المصادقة. يرجى التحقق من مفتاح API الخاص بك.",
+      "unknown": "حدث خطا غير معروف."
+    },
+    "abort": {
+      "already_configured": "يوجد ملف شخصي بهذا الاسم بالفعل. يرجى اختيار اسم مختلف."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "اعدادات الملف الشخصي",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "اسم الملف الشخصي",
+          "lmstudio_url": "عنوان URL للخادم",
+          "api_key": "مفتاح API",
+          "model_name": "اسم النموذج",
+          "system_prompt": "تعليمات النظام",
+          "technical_prompt": "التعليمات التقنية",
+          "temperature": "درجة الحرارة",
+          "max_tokens": "الحد الاقصى لرموز الاستجابة",
+          "max_history": "الحد الاقصى لرسائل السجل",
+          "max_iterations": "الحد الاقصى لتكرارات الادوات",
+          "control_home_assistant": "التحكم في Home Assistant",
+          "response_mode": "وضع الاستجابة",
+          "follow_up_phrases": "عبارات المتابعة",
+          "end_words": "كلمات انهاء المحادثة",
+          "timeout": "انتهاء مهلة الاستجابة",
+          "debug_mode": "وضع التصحيح",
+          "ollama_keep_alive": "ابق Ollama نشطا",
+          "ollama_num_ctx": "نافذة سياق Ollama",
+          "clean_responses": "تنظيف الردود للإخراج الصوتي"
+        }
+      },
+      "mcp_server": {
+        "title": "اعدادات خادم MCP المشتركة",
+        "description": "هذه الاعدادات مشتركة بين جميع الملفات الشخصية",
+        "data": {
+          "mcp_port": "منفذ خادم MCP",
+          "search_provider": "البحث على الويب",
+          "brave_api_key": "مفتاح API لـ Brave Search",
+          "allowed_ips": "عناوين IP/نطاقات اضافية مسموح بها",
+          "enable_gap_filling": "تمكين فهرس الكيانات الذكي",
+          "max_entities_per_discovery": "الحد الاقصى للكيانات لكل اكتشاف (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}

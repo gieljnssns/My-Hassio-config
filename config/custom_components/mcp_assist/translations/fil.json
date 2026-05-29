@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pag-setup ng Profile",
+        "description": "Lumikha ng bagong profile ng agent na may natatanging pangalan at personalidad.",
+        "data": {
+          "profile_name": "Pangalan ng Profile",
+          "server_type": "Uri ng Server"
+        }
+      },
+      "server": {
+        "title": "Pagsasaayos ng Server",
+        "description": "I-configure ang URL ng iyong inference server at ang port ng MCP server.",
+        "data": {
+          "lmstudio_url": "URL ng Server",
+          "api_key": "API Key",
+          "mcp_port": "Port ng MCP Server"
+        }
+      },
+      "model": {
+        "title": "Modelo at mga Tagubilin",
+        "description": "{server_info}",
+        "data": {
+          "model_name": "Pangalan ng Modelo",
+          "system_prompt": "Mga Tagubilin ng Sistema",
+          "technical_prompt": "Mga Teknikal na Tagubilin"
+        }
+      },
+      "advanced": {
+        "title": "Mga Advanced na Setting",
+        "description": "{advanced_info}",
+        "data": {
+          "temperature": "Temperatura",
+          "max_tokens": "Max na Token ng Tugon",
+          "max_history": "Max na Mensahe ng Kasaysayan",
+          "max_iterations": "Max na Pag-uulit ng Tool",
+          "control_home_assistant": "Kontrolin ang Home Assistant",
+          "response_mode": "Mode ng Tugon",
+          "follow_up_phrases": "Mga Follow-up na Parirala",
+          "end_words": "Mga Salita para Tapusin ang Usapan",
+          "timeout": "Response Time Out",
+          "debug_mode": "Debug Mode",
+          "ollama_keep_alive": "Panatilihing Aktibo ang Ollama",
+          "ollama_num_ctx": "Ollama Context Window",
+          "clean_responses": "Linisin ang mga Tugon para sa Voice Output"
+        }
+      },
+      "mcp_server": {
+        "title": "Mga Shared na Setting ng MCP Server",
+        "description": "Ang mga setting na ito ay nakakaapekto sa LAHAT ng profile. Ang mga pagbabago dito ay makakaapekto sa bawat MCP Assist conversation agent.",
+        "data": {
+          "mcp_port": "Port ng MCP Server",
+          "search_provider": "Web Search",
+          "brave_api_key": "Brave Search API Key",
+          "allowed_ips": "Karagdagang Pinapayagang IP/Saklaw",
+          "enable_gap_filling": "I-enable ang Smart Entity Index",
+          "max_entities_per_discovery": "Max na Entity Bawat Paghahanap (20-500)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Hindi makakonekta sa inference server. Tiyaking tumatakbo ito at naa-access.",
+      "no_models": "Walang naka-load na modelo sa server. Mag-load muna ng modelo.",
+      "invalid_model": "Ang tinukoy na modelo ay hindi available sa server.",
+      "invalid_port": "Ang port ay dapat nasa pagitan ng 1024 at 65535.",
+      "invalid_ip": "Hindi wastong format ng IP address o CIDR range. Gumamit ng mga halaga na pinaghihiwalay ng kuwit tulad ng: 172.30.0.0/16, 192.168.1.100",
+      "profile_name_required": "Kinakailangan ang pangalan ng profile.",
+      "invalid_json": "Hindi wastong format ng JSON. Suriin ang iyong pagsasaayos ng mga MCP server.",
+      "invalid_api_key": "Hindi wastong API key. Suriin at subukan muli.",
+      "auth_failed": "Nabigo ang pagpapatunay. I-verify ang iyong API key.",
+      "unknown": "Isang hindi kilalang error ang naganap."
+    },
+    "abort": {
+      "already_configured": "Mayroon nang profile na may ganitong pangalan. Pumili ng ibang pangalan."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Mga Setting ng Profile",
+        "description": "{server_info}",
+        "data": {
+          "profile_name": "Pangalan ng Profile",
+          "lmstudio_url": "URL ng Server",
+          "api_key": "API Key",
+          "model_name": "Pangalan ng Modelo",
+          "system_prompt": "Mga Tagubilin ng Sistema",
+          "technical_prompt": "Mga Teknikal na Tagubilin",
+          "temperature": "Temperatura",
+          "max_tokens": "Max na Token ng Tugon",
+          "max_history": "Max na Mensahe ng Kasaysayan",
+          "max_iterations": "Max na Pag-uulit ng Tool",
+          "control_home_assistant": "Kontrolin ang Home Assistant",
+          "response_mode": "Mode ng Tugon",
+          "follow_up_phrases": "Mga Follow-up na Parirala",
+          "end_words": "Mga Salita para Tapusin ang Usapan",
+          "timeout": "Response Time Out",
+          "debug_mode": "Debug Mode",
+          "ollama_keep_alive": "Panatilihing Aktibo ang Ollama",
+          "ollama_num_ctx": "Ollama Context Window",
+          "clean_responses": "Linisin ang mga Tugon para sa Voice Output"
+        }
+      },
+      "mcp_server": {
+        "title": "Mga Shared na Setting ng MCP Server",
+        "description": "Ang mga setting na ito ay ibinabahagi sa LAHAT ng profile",
+        "data": {
+          "mcp_port": "Port ng MCP Server",
+          "search_provider": "Web Search",
+          "brave_api_key": "Brave Search API Key",
+          "allowed_ips": "Karagdagang Pinapayagang IP/Saklaw",
+          "enable_gap_filling": "I-enable ang Smart Entity Index",
+          "max_entities_per_discovery": "Max na Entity Bawat Paghahanap (20-500)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "conversation": {
+      "mcp_assist": {
+        "name": "{profile_name}"
+      }
+    }
+  }
+}
