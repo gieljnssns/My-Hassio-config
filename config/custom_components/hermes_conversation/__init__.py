@@ -4,43 +4,44 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.conversation import (
-    async_set_agent,
-    async_unset_agent,
-)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import HermesApiClient
-from .const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_USE_SSL, CONF_VERIFY_SSL, DOMAIN
-from .conversation import HermesConversationAgent
+from .compat import entry_value, resolve_connection_config
+from .const import DEFAULT_TIMEOUT, DOMAIN, LEGACY_CONF_MODEL, LEGACY_CONF_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
+PLATFORMS: tuple[Platform, ...] = (Platform.CONVERSATION,)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Hermes Conversation from a config entry."""
     session = async_get_clientsession(hass)
 
+    connection = resolve_connection_config(entry)
     client = HermesApiClient(
         session=session,
-        host=entry.data[CONF_HOST],
-        port=entry.data[CONF_PORT],
-        api_key=entry.data.get(CONF_API_KEY) or None,
-        use_ssl=entry.data.get(CONF_USE_SSL, True),
-        verify_ssl=entry.data.get(CONF_VERIFY_SSL, False),
+        host=connection.host,
+        port=connection.port,
+        api_key=connection.api_key,
+        use_ssl=connection.use_ssl,
+        verify_ssl=connection.verify_ssl,
+        model=entry_value(entry, LEGACY_CONF_MODEL, None),
+        request_timeout=entry_value(entry, LEGACY_CONF_TIMEOUT, DEFAULT_TIMEOUT),
     )
 
-    agent = HermesConversationAgent(hass, entry, client)
-
     hass.data.setdefault(DOMAIN, {})
+    session_map: dict[str, dict[str, object]] = {}
+
     hass.data[DOMAIN][entry.entry_id] = {
         "client": client,
-        "agent": agent,
+        "sessions": session_map,
     }
 
-    async_set_agent(hass, entry, agent)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
@@ -50,11 +51,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    async_unset_agent(hass, entry)
-    hass.data[DOMAIN].pop(entry.entry_id, None)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN, None)
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN, None)
+
+    return unload_ok
 
 
 async def _async_update_listener(

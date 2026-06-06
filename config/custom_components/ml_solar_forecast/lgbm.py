@@ -58,18 +58,20 @@ class LGBM:
             "dataframe": self._df_to_arrow(df),
             "format": "arrow",
         }
-        # data = {
-        #     "model_name": self.modelname,
-        #     "target_column": target_column,
-        #     "dataframe": df.to_csv(index=False),
-        # }
 
         timeout = aiohttp.ClientTimeout(total=300)  # 5 minutes for training
+        connector = aiohttp.TCPConnector(limit=1)
 
         try:
-            async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with aiohttp.ClientSession(
+                timeout=timeout,
+                connector=connector,
+                connector_owner=True,
+            ) as session:
                 async with session.post(
-                    f"{self.hostname}/train", json=data
+                    f"{self.hostname}/train",
+                    json=data,
+                    headers={"Content-Type": "application/json"},
                 ) as response:
                     if response.status != 200:
                         error_text = await response.text()

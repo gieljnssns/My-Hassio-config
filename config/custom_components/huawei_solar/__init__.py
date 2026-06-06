@@ -2,6 +2,18 @@
 
 import logging
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from huawei_solar import (
     ConnectionException,
     ConnectionInterruptedException,
@@ -9,6 +21,7 @@ from huawei_solar import (
     HuaweiSolarException,
     InvalidCredentials,
     MeterDevice,
+    ReadException,
     SChargerDevice,
     SDongleDevice,
     SmartLoggerDevice,
@@ -21,19 +34,6 @@ from huawei_solar import (
 )
 from huawei_solar.device.base import HuaweiSolarDevice, HuaweiSolarDeviceWithLogin
 from huawei_solar.modbus_pdu import PermissionDeniedError
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    Platform,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
     CONF_ENABLE_PARAMETER_CONFIGURATION,
@@ -59,6 +59,50 @@ from .update_coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
+_MIGRATED_UNIQUE_ID_SUFFIXES: dict[str, str] = {
+    "phase_a_voltage_built_in_energy_sensor": "phase_a_voltage_built_in_energy",
+    "phase_b_voltage_built_in_energy_sensor": "phase_b_voltage_built_in_energy",
+    "phase_c_voltage_built_in_energy_sensor": "phase_c_voltage_built_in_energy",
+    "line_voltage_a_b_built_in_energy_sensor": "line_voltage_a_b_built_in_energy",
+    "line_voltage_b_c_built_in_energy_sensor": "line_voltage_b_c_built_in_energy",
+    "line_voltage_c_a_built_in_energy_sensor": "line_voltage_c_a_built_in_energy",
+    "phase_a_current_built_in_energy_sensor": "phase_a_current_built_in_energy",
+    "phase_b_current_built_in_energy_sensor": "phase_b_current_built_in_energy",
+    "phase_c_current_built_in_energy_sensor": "phase_c_current_built_in_energy",
+    "active_power_built_in_energy_sensor": "active_power_built_in_energy",
+    "power_factor_built_in_energy_sensor": "power_factor_built_in_energy",
+    "apparent_power_built_in_energy_sensor": "apparent_power_built_in_energy",
+    "phase_a_active_power_built_in_energy_sensor": "phase_a_active_power_built_in_energy",
+    "phase_b_active_power_built_in_energy_sensor": "phase_b_active_power_built_in_energy",
+    "phase_c_active_power_built_in_energy_sensor": "phase_c_active_power_built_in_energy",
+    "total_active_energy_built_in_energy_sensor": "total_active_energy_built_in_energy",
+    "total_negative_active_energy_built_in_energy_sensor": "total_negative_active_energy_built_in_energy",
+    "total_positive_active_energy_built_in_energy_sensor": "total_positive_active_energy_built_in_energy",
+    "phase_a_voltage_external_energy_sensor": "phase_a_voltage_external_energy",
+    "phase_b_voltage_external_energy_sensor": "phase_b_voltage_external_energy",
+    "phase_c_voltage_external_energy_sensor": "phase_c_voltage_external_energy",
+    "line_voltage_a_b_external_energy_sensor": "line_voltage_a_b_external_energy",
+    "line_voltage_b_c_external_energy_sensor": "line_voltage_b_c_external_energy",
+    "line_voltage_c_a_external_energy_sensor": "line_voltage_c_a_external_energy",
+    "phase_a_current_external_energy_sensor": "phase_a_current_external_energy",
+    "phase_b_current_external_energy_sensor": "phase_b_current_external_energy",
+    "phase_c_current_external_energy_sensor": "phase_c_current_external_energy",
+    "active_power_external_energy_sensor": "active_power_external_energy",
+    "power_factor_external_energy_sensor": "power_factor_external_energy",
+    "apparent_power_external_energy_sensor": "apparent_power_external_energy",
+    "phase_a_active_power_external_energy_sensor": "phase_a_active_power_external_energy",
+    "phase_b_active_power_external_energy_sensor": "phase_b_active_power_external_energy",
+    "phase_c_active_power_external_energy_sensor": "phase_c_active_power_external_energy",
+    "total_active_energy_external_energy_sensor": "total_active_energy_external_energy",
+    "total_negative_active_energy_external_energy_sensor": "total_negative_active_energy_external_energy",
+    "total_positive_active_energy_external_energy_sensor": "total_positive_active_energy_external_energy",
+    "charger_phase_a_voltage_sensor": "charger_phase_a_voltage",
+    "charger_phase_b_voltage_sensor": "charger_phase_b_voltage",
+    "charger_phase_c_voltage_sensor": "charger_phase_c_voltage",
+    "chager_total_energy_charged_sensor": "chager_total_energy_charged",
+    "charger_temperature_sensor": "charger_temperature",
+}
+
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.NUMBER,
@@ -66,6 +110,47 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entry data and entity unique IDs."""
+    if entry.version > 1 or entry.minor_version > 2:
+        return False
+
+    if entry.version == 1 and entry.minor_version < 2:
+        entity_registry = er.async_get(hass)
+
+        for entity_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+            for old_suffix, new_suffix in _MIGRATED_UNIQUE_ID_SUFFIXES.items():
+                old_unique_id_suffix = f"_{old_suffix}"
+                if not entity_entry.unique_id.endswith(old_unique_id_suffix):
+                    continue
+
+                new_unique_id = f"{entity_entry.unique_id[:-len(old_suffix)]}{new_suffix}"
+                try:
+                    entity_registry.async_update_entity(
+                        entity_entry.entity_id,
+                        new_unique_id=new_unique_id,
+                    )
+                except ValueError:
+                    _LOGGER.warning(
+                        "Skipping unique_id migration for %s from %s to %s because the target already exists",
+                        entity_entry.entity_id,
+                        entity_entry.unique_id,
+                        new_unique_id,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Migrated unique_id for %s from %s to %s",
+                        entity_entry.entity_id,
+                        entity_entry.unique_id,
+                        new_unique_id,
+                    )
+                break
+
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HuaweiSolarConfigEntry) -> bool:
@@ -371,12 +456,18 @@ async def _setup_inverter_device_data(
                 optimizers_device_infos,
                 OPTIMIZER_UPDATE_INTERVAL,
             )
-        except PermissionDeniedError as exception:
-            _LOGGER.info(
-                "Cannot create optimizer sensor entities as the integration has insufficient permissions. "
-                "Consider enabling elevated permissions to get more optimizer data",
-                exc_info=exception,
-            )
+        except ReadException as exception:
+            if exception.modbus_exception_code == PermissionDeniedError.error_code:
+                _LOGGER.info(
+                    "Cannot create optimizer sensor entities as the integration has insufficient permissions. "
+                    "Consider enabling elevated permissions to get more optimizer data",
+                    exc_info=exception,
+                )
+            else:
+                _LOGGER.exception(
+                    "Cannot create optimizer sensor entities due to a read error",
+                    exc_info=exception,
+                )
         except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Cannot create optimizer sensor entities due to an unexpected error",

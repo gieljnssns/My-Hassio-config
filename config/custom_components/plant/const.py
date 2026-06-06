@@ -1,11 +1,7 @@
 """Constants"""
 
 DOMAIN = "plant"
-DOMAIN_SENSOR = "sensor"
 DOMAIN_PLANTBOOK = "openplantbook"
-
-# Entity ID prefixes
-ENTITY_ID_PREFIX_SENSOR = f"{DOMAIN_SENSOR}."
 
 # URL patterns
 URL_SCHEME_HTTP = "http"
@@ -103,9 +99,14 @@ ATTR_CURRENT = "current"
 DEFAULT_MIN_BATTERY_LEVEL = 20
 DEFAULT_MIN_TEMPERATURE = 10
 DEFAULT_MAX_TEMPERATURE = 40
-# Absolute minimum/maximum allowed temperature values for thresholds
+# Absolute minimum/maximum allowed temperature values for thresholds, in °C.
 TEMPERATURE_MIN_VALUE = -50
 TEMPERATURE_MAX_VALUE = 100
+# Imperial counterparts. Chosen as round numbers in °F rather than literal
+# conversions of the °C bounds, so the slider extremes don't look like
+# "obviously converted from Celsius" (212, -58).
+TEMPERATURE_MIN_VALUE_FAHRENHEIT = -50
+TEMPERATURE_MAX_VALUE_FAHRENHEIT = 200
 DEFAULT_MIN_MOISTURE = 20
 DEFAULT_MAX_MOISTURE = 60
 DEFAULT_MIN_CONDUCTIVITY = 500
@@ -276,4 +277,6 @@ CONF_PLANTBOOK_MAPPING = {
     CONF_MAX_MMOL: "max_light_mmol",
     CONF_MIN_DLI: "min_dli",
     CONF_MAX_DLI: "max_dli",
+    CONF_MIN_SOIL_TEMPERATURE: "min_soil_temp",
+    CONF_MAX_SOIL_TEMPERATURE: "max_soil_temp",
 }

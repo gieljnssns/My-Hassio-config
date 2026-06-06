@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 import voluptuous as vol
 from homeassistant.components import websocket_api
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter.const import (
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
@@ -25,9 +26,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
@@ -68,7 +71,6 @@ from .const import (
     DEFAULT_MOISTURE_GRACE_PERIOD,
     DOMAIN,
     DOMAIN_PLANTBOOK,
-    ENTITY_ID_PREFIX_SENSOR,
     FLOW_CO2_TRIGGER,
     FLOW_CONDUCTIVITY_TRIGGER,
     FLOW_DLI_TRIGGER,
@@ -253,7 +255,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if (
             new_sensor
             and new_sensor != ""
-            and not new_sensor.startswith(ENTITY_ID_PREFIX_SENSOR)
+            and not new_sensor.startswith(f"{SENSOR_DOMAIN}.")
         ):
             _LOGGER.warning("%s is not a sensor", new_sensor)
             return False
@@ -1391,7 +1393,12 @@ class PlantDevice(Entity):
                 new_state,
             )
         self._attr_state = new_state
-        self.update_registry()
+        # Note: do NOT call self.update_registry() here. update() runs in
+        # an executor thread (HA's polling), and device_registry.async_get_or_create
+        # raises in HA 2026.5+ when called off the event loop. Device-registry
+        # updates are handled by the async paths (async_added_to_hass,
+        # update_plant_options, refresh_plant_from_openplantbook), which fire
+        # whenever model/manufacturer can actually change.
 
     @property
     def data_source(self) -> str | None:
