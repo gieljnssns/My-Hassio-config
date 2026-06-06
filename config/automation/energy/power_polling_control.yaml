@@ -21,6 +21,7 @@ triggers:
       - sensor.keuken_oven_vermogen
       - sensor.regenwaterpomp_vermogen
       - sensor.garage_ijskast_vermogen
+      - sensor.toestellen_4_vermogen
     above: 10
 
   - trigger: numeric_state
@@ -33,6 +34,7 @@ triggers:
       - sensor.keuken_oven_vermogen
       - sensor.regenwaterpomp_vermogen
       - sensor.garage_ijskast_vermogen
+      - sensor.toestellen_4_vermogen
     below: 10
 
   - trigger: numeric_state
@@ -110,6 +112,9 @@ actions:
           - condition: numeric_state
             entity_id: sensor.ventilator_kerstverlichting_vermogen
             above: 50
+          - condition: numeric_state
+            entity_id: sensor.toestellen_4_vermogen
+            above: 10
     then:
       - action: automation.turn_on
         target:

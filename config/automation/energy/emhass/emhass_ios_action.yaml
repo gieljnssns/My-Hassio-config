@@ -73,6 +73,22 @@ actions:
         {% else -%}
           input_boolean.afwasmachien_starten
         {% endif -%}
+      condition: >
+        {% if boolean == "input_boolean.wasmachien_starten" -%}
+          sensor.emhass_wasmachien
+        {% elif boolean == "input_boolean.droogkast_starten" -%}
+          sensor.emhass_droogkast
+        {% else -%}
+          sensor.emhass_afwasmachien
+        {% endif -%}
+      notification: >
+        {% if boolean == "input_boolean.wasmachien_starten" -%}
+          input_boolean.wasmachien_klaar
+        {% elif boolean == "input_boolean.droogkast_starten" -%}
+          input_boolean.droogkast_klaar
+        {% else -%}
+          input_boolean.afwasmachien_klaar
+        {% endif -%}
   - choose:
       - conditions:
           - condition: trigger
@@ -141,10 +157,34 @@ actions:
                   {% set dt = dt.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=rounded_minute) -%}
                 {% endif -%}
                 {{ dt.strftime('%Y-%m-%d %H:%M:%S') }}
-          - action: homeassistant.turn_on
-            target:
-              entity_id: >
-                {{ boolean }}
+          - if:
+              - condition: template
+                value_template: >
+                  {{ states(condition)|int == 0 }}
+            then:
+              - action: homeassistant.turn_on
+                target:
+                  entity_id: >
+                    {{ boolean }}
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: >
+                    {{ notification }}
+          - if:
+              - condition: template
+                value_template: >
+                  {{ states(condition)|int > 0 }}
+            then:
+              - wait_template: >
+                  {{ states(condition)|int == 0 }}
+              - action: homeassistant.turn_on
+                target:
+                  entity_id: >
+                    {{ boolean }}
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: >
+                    {{ notification }}
       - conditions:
           - condition: trigger
             id: "nasap"
@@ -179,7 +219,7 @@ actions:
                   - action: "MORGEN"
                     title: "Tegen morgen."
           - delay:
-              seconds: 20
+              seconds: 60
           - action: homeassistant.turn_on
             target:
               entity_id: >

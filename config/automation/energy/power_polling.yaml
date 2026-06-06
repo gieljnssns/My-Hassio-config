@@ -95,6 +95,15 @@ actions:
 
   - if:
       - condition: numeric_state
+        entity_id: sensor.toestellen_4_vermogen
+        above: 10
+    then:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.toestellen_4_vermogen
+
+  - if:
+      - condition: numeric_state
         entity_id: sensor.keuken_oven_vermogen
         above: 10
     then:

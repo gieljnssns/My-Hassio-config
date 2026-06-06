@@ -21,10 +21,53 @@ actions:
             id:
               - infesable
         sequence:
+          # - delay:
+          #     minutes: 1
+          # - condition: state
+          #   entity_id: binary_sensor.emhass_status
+          #   state: "on"
           - action: notify.mobile_app_gphone
             data:
               title: EMHASS
-              message: System has become infeasible
+              message: >
+                System has become infeasible. Probleem sensoren:
+                {% set problems = [] -%}
+                {% if states("sensor.emhass_optim_status") not in ["Optimal", "Optimal (Relaxed)"] -%}
+                  {% set problems = problems + ["EMHASS status: " ~ states("sensor.emhass_optim_status")] -%}
+                {% endif -%}
+                {% if states("sensor.electricity_meter_energieverbruik") in ["unavailable", "unknown"] -%}
+                  {% set problems = problems + ["Energieverbruik"] -%}
+                {% endif -%}
+                {% if states("sensor.electricity_meter_energieproductie") in ["unavailable", "unknown"] -%}
+                  {% set problems = problems + ["Energieproductie"] -%}
+                {% endif -%}
+                {% if states("sensor.meter_active_power_total") in ["unavailable", "unknown"] -%}
+                  {% set problems = problems + ["Active Power Total"] -%}
+                {% endif -%}
+                {% if states("sensor.battery_power") in ["unavailable", "unknown"] -%}
+                  {% set problems = problems + ["Battery Power"] -%}
+                {% endif -%}
+                {% if states("sensor.battery_state_of_charge") in ["unavailable", "unknown"] -%}
+                  {% set problems = problems + ["Battery SoC"] -%}
+                {% endif -%}
+                {% if states("sensor.huawei_active_power") in ["unavailable", "unknown"] -%}
+                  {% set problems = problems + ["Huawei Power"] -%}
+                {% endif -%}
+                {% if states("sensor.solaredge_i1_ac_power") in ["unavailable", "unknown"] -%}
+                  {% set problems = problems + ["SolarEdge Power"] -%}
+                {% endif -%}
+                {% if (states("sensor.ecopower_injectieprijzen_predicted") and states("sensor.ecopower_injectieprijzen")) in ["unavailable", "unknown"] -%}
+                  {% set problems = problems + ["Injectieprijzen"] -%}
+                {% endif -%}
+                {% if (states("sensor.ecopower_afnameprijzen_predicted") and states("sensor.ecopower_afnameprijzen")) in ["unavailable", "unknown"] -%}
+                  {% set problems = problems + ["Afnameprijzen"] -%}
+                {% endif -%}
+                {{ problems | join(", ") }}
+          - delay:
+              minutes: 5
+          - condition: state
+            entity_id: binary_sensor.emhass_status
+            state: "on"
           - action: select.select_option
             target:
               entity_id: select.goodwe_inverter_operation_mode

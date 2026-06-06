@@ -1,15 +1,14 @@
 alias: "Stofzuiger random"
 id: 33d24a7e-0c62-4802-aac4-ffa4bba81d11
-initial_state: "true"
 triggers:
   - trigger: state
-    entity_id: device_tracker.martine_not_so_binary
+    entity_id: sensor.martine_status
     from: "Juist Weg"
     to: "Afwezig"
     for:
       minutes: 10
   - trigger: state
-    entity_id: device_tracker.giel_not_so_binary
+    entity_id: sensor.giel_status
     from: "Juist Weg"
     to: "Afwezig"
     for:
@@ -68,10 +67,10 @@ actions:
       - condition: not
         conditions:
           - condition: state
-            entity_id: device_tracker.martine_not_so_binary
+            entity_id: sensor.martine_status
             state: "Thuis"
           - condition: state
-            entity_id: device_tracker.giel_not_so_binary
+            entity_id: sensor.giel_status
             state: "Thuis"
 
       # - action: script.roborock_set_manual_mode

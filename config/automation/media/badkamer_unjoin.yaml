@@ -16,6 +16,12 @@ conditions:
       - condition: state
         entity_id: media_player.mass_badkamer
         state: "playing"
+      - condition: state
+        entity_id: media_player.mass_badkamer
+        state: "idle"
+      - condition: state
+        entity_id: media_player.mass_badkamer
+        state: "paused"
 actions:
   - choose:
       - conditions:
@@ -35,7 +41,7 @@ actions:
               entity_id:
                 - media_player.mass_badkamer
     default:
-      - action: media_player.media_pause
+      - action: media_player.media_stop
         entity_id: media_player.mass_badkamer
       - delay:
           seconds: 5

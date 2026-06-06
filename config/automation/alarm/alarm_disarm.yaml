@@ -2,16 +2,16 @@ alias: "Alarm disarm"
 id: 94a4b642-8571-4080-8c7d-fed9b86375c1
 triggers:
   - trigger: state
-    entity_id: device_tracker.giel_not_so_binary
+    entity_id: sensor.giel_status
     to: "Juist Aangekomen"
   - trigger: state
-    entity_id: device_tracker.martine_not_so_binary
+    entity_id: sensor.martine_status
     to: "Juist Aangekomen"
   - trigger: state
-    entity_id: device_tracker.fien_not_so_binary
+    entity_id: sensor.fien_status
     to: "Juist Aangekomen"
   - trigger: state
-    entity_id: device_tracker.noor_not_so_binary
+    entity_id: sensor.noor_status
     to: "Juist Aangekomen"
   - trigger: state
     entity_id: media_player.mass_keuken
@@ -26,28 +26,28 @@ conditions:
     - condition: or
       conditions:
         - condition: state
-          entity_id: device_tracker.giel_not_so_binary
+          entity_id: sensor.giel_status
           state: "Thuis"
         - condition: state
-          entity_id: device_tracker.martine_not_so_binary
+          entity_id: sensor.martine_status
           state: "Thuis"
         - condition: state
-          entity_id: device_tracker.giel_not_so_binary
+          entity_id: sensor.giel_status
           state: "Juist Aangekomen"
         - condition: state
-          entity_id: device_tracker.martine_not_so_binary
+          entity_id: sensor.martine_status
           state: "Juist Aangekomen"
         - condition: state
-          entity_id: device_tracker.fien_not_so_binary
+          entity_id: sensor.fien_status
           state: "Thuis"
         - condition: state
-          entity_id: device_tracker.noor_not_so_binary
+          entity_id: sensor.noor_status
           state: "Thuis"
         - condition: state
-          entity_id: device_tracker.fien_not_so_binary
+          entity_id: sensor.fien_status
           state: "Juist Aangekomen"
         - condition: state
-          entity_id: device_tracker.noor_not_so_binary
+          entity_id: sensor.noor_status
           state: "Juist Aangekomen"
 actions:
   - action: alarm_control_panel.alarm_disarm

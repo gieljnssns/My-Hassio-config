@@ -23,6 +23,9 @@ actions:
           - condition: state
             entity_id: input_boolean.sonos_noor
             state: "off"
+          - condition: template
+            value_template: >
+              {{ state_attr("media_player.mass_slaapkamer_noor", "media_content_id") == "spotify" }}
         sequence:
           - action: input_boolean.turn_on
             target:

@@ -1,0 +1,37 @@
+alias: Notificatie Negatieve Prijzen
+id: 258cdddb-eaaf-447c-9c36-d3c220f9b331
+triggers:
+  - trigger: time
+    at: "07:00:00"
+    id: "ochtend"
+  - trigger: time
+    at: "19:00:00"
+    id: "avond"
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "ochtend"
+          - condition: template
+            value_template: >
+              {{ states('sensor.negatieve_prijzen_vandaag') != 'Geen negatieve prijzen' }}
+        sequence:
+          - action: notify.giel_en_martine
+            data:
+              title: "⚡ Vandaag gratis stroom!"
+              message: >
+                Gratis stroom tussen:
+                {{ states('sensor.negatieve_prijzen_vandaag') }}
+      - conditions:
+          - condition: trigger
+            id: "avond"
+          - condition: template
+            value_template: >
+              {{ states('sensor.negatieve_prijzen_morgen') != 'Geen negatieve prijzen' }}
+        sequence:
+          - action: notify.giel_en_martine
+            data:
+              title: "⚡ Morgen gratis stroom!"
+              message: >
+                Gratis stroom tussen:
+                {{ states('sensor.negatieve_prijzen_morgen') }}
