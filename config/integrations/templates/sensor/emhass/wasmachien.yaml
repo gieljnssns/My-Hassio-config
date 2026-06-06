@@ -23,11 +23,10 @@
       unique_id: 12e7093b-ea97-4f69-a47d-720106331e9f
       state: >
         {% from 'easy_time.jinja' import easy_relative_time -%}
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {% set load = (state_attr('sensor.' + best_model + '_p_deferrable0', 'deferrables_schedule')
-                |map(attribute=best_model + '_p_deferrable0')
+        {% set load = (state_attr('sensor.ridge_p_deferrable0', 'deferrables_schedule')
+                |map(attribute='ridge_p_deferrable0')
                 |list) -%}
-        {% set time = (state_attr('sensor.' + best_model + '_p_deferrable0', 'deferrables_schedule')
+        {% set time = (state_attr('sensor.ridge_p_deferrable0', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) -%}
         {% if is_state("input_boolean.emhass_wasmachien", "on") -%}
@@ -42,7 +41,7 @@
             {% endfor -%}
           {% endif -%}
       availability: >-
-        {{ states('sensor.best_emhass_model_load_7d') not in ('unknown', 'unavailable', 'None') }}
+        {{ states('sensor.ridge_p_deferrable0') not in ('unknown', 'unavailable', 'None') }}
 
     - name: Wasmachien end timesteps
       unique_id: 0c02daa5-efbc-4156-9ada-f402a878194a

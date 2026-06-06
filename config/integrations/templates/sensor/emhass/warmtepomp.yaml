@@ -24,11 +24,10 @@
       unique_id: ceff5121-3392-4bac-8fa5-a8cec3e3d331
       state: >
         {% from 'easy_time.jinja' import easy_relative_time -%}
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {% set load = (state_attr('sensor.' + best_model + '_p_deferrable4', 'deferrables_schedule')
-                |map(attribute=best_model + '_p_deferrable4')
+        {% set load = (state_attr('sensor.ridge_p_deferrable4', 'deferrables_schedule')
+                |map(attribute='ridge_p_deferrable4')
                 |list) -%}
-        {% set time = (state_attr('sensor.' + best_model + '_p_deferrable4', 'deferrables_schedule')
+        {% set time = (state_attr('sensor.ridge_p_deferrable4', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) -%}
         {% if is_state("input_boolean.emhass_warmtepomp", "on") or is_state("binary_sensor.warmtepomp_aan", "on") -%}
@@ -43,7 +42,7 @@
             {% endfor -%}
           {% endif -%}
       availability: >-
-        {{ states('sensor.best_emhass_model_load_7d') not in ('unknown', 'unavailable', 'None') }}
+        {{ states('sensor.ridge_p_deferrable4') not in ('unknown', 'unavailable', 'None') }}
 
     - name: Warmtepomp start timesteps
       unique_id: e3c01f29-feeb-4e07-be8b-1278b87323e9

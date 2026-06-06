@@ -24,10 +24,10 @@
         {% if states("sensor.buiten_dauwpunt") not in ["unavailable", "unknown"] -%}
           {% set dp = states('sensor.buiten_dauwpunt') | float(0) %}
         {% else -%}
-          {% set dp = states('sensor.tomorrow_io_home_dew_point') | float(0) %}
+          {% set dp = state_attr("weather.home_2", "dew_point") | float(0) %}
         {% endif %}
         {% set wind = states('sensor.openweathermap_windsnelheid') | float %}
-        {% set clouds = states('sensor.tomorrow_io_home_cloud_cover') | float %}
+        {% set clouds = state_attr("weather.home_2", "cloud_coverage") | float %}
 
         {{ tmin < 1 and rh > 85 and (tmin - dp) < 2 and wind < 3 and clouds < 30 }}
       device_class: cold

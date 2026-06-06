@@ -29,11 +29,10 @@
       unique_id: de867de0-7b23-4b42-b646-ab2f00a1c1b2
       state: >
         {% from 'easy_time.jinja' import easy_relative_time -%}
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {% set load = (state_attr('sensor.' + best_model + '_p_deferrable1', 'deferrables_schedule')
-                |map(attribute=best_model + '_p_deferrable1')
+        {% set load = (state_attr('sensor.ridge_p_deferrable1', 'deferrables_schedule')
+                |map(attribute='ridge_p_deferrable1')
                 |list) -%}
-        {% set time = (state_attr('sensor.' + best_model + '_p_deferrable1', 'deferrables_schedule')
+        {% set time = (state_attr('sensor.ridge_p_deferrable1', 'deferrables_schedule')
                 |map(attribute='date')
                 |list) -%}
         {% if is_state("input_boolean.emhass_droogkast", "on") -%}
@@ -48,7 +47,7 @@
             {% endfor -%}
           {% endif -%}
       availability: >-
-        {{ states('sensor.best_emhass_model_load_7d') not in ('unknown', 'unavailable', 'None') }}
+        {{ states('sensor.ridge_p_deferrable1') not in ('unknown', 'unavailable', 'None') }}
 
     - name: Droogkast end timesteps
       unique_id: 233e7698-caad-47b8-9917-5e228f3dabae

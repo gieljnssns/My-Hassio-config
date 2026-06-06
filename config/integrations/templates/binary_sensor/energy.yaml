@@ -71,5 +71,66 @@
     - name: Emhass status
       unique_id: 2b1b3d6a-2b3e-435f-9582-0d3f4bfddbec
       device_class: problem
+      delay_on:
+        minutes: 1
       state: >
-        {{ states("sensor.emhass_optim_status") not in ["Optimal", "Optimal (Relaxed)"] }}
+        {% set now_ts = now().timestamp() -%}
+        {% set verbruik_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieverbruik.last_updated, 0)) < 10 -%}
+        {% set productie_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieproductie.last_updated, 0)) < 10 -%}
+        {% set dsmr_fresh = verbruik_updated or productie_updated -%}
+        {{
+          states("sensor.emhass_optim_status") not in ["Optimal", "Optimal (Relaxed)"]
+          or not dsmr_fresh
+          or states("sensor.electricity_meter_energieverbruik") in ["unavailable", "unknown"]
+          or states("sensor.electricity_meter_energieproductie") in ["unavailable", "unknown"]
+          or states("sensor.meter_active_power_total") in ["unavailable", "unknown"]
+          or states("sensor.battery_power") in ["unavailable", "unknown"]
+          or states("sensor.battery_state_of_charge") in ["unavailable", "unknown"]
+          or (states("sensor.huawei_active_power") in ["unavailable", "unknown"] and states("sensor.solaredge_i1_ac_power")|int < 20)
+          or (states("sensor.solaredge_i1_ac_power") in ["unavailable", "unknown"] and states("sensor.huawei_active_power")|int < 20)
+          or (states("sensor.ecopower_injectieprijzen_predicted") and states("sensor.ecopower_injectieprijzen")) in ["unavailable", "unknown"]
+          or (states("sensor.ecopower_afnameprijzen_predicted") and states("sensor.ecopower_afnameprijzen")) in ["unavailable", "unknown"]
+        }}
+      attributes:
+        issues: >
+          {% set now_ts = now().timestamp() -%}
+          {% set issues = [] -%}
+
+          {% set verbruik_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieverbruik.last_updated, 0)) < 10 -%}
+          {% set productie_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieproductie.last_updated, 0)) < 10 -%}
+          {% set dsmr_fresh = verbruik_updated or productie_updated -%}
+
+          {% if states("sensor.emhass_optim_status") not in ["Optimal", "Optimal (Relaxed)"] -%}
+            {% set issues = issues + ["EMHASS niet optimaal"] -%}
+          {% endif -%}
+          {% if not dsmr_fresh -%}
+            {% set issues = issues + ["DSMR data niet vers"] -%}
+          {% endif -%}
+          {% if states("sensor.electricity_meter_energieverbruik") in ["unavailable", "unknown"] -%}
+            {% set issues = issues + ["Verbruik sensor unavailable"] -%}
+          {% endif -%}
+          {% if states("sensor.electricity_meter_energieproductie") in ["unavailable", "unknown"] -%}
+            {% set issues = issues + ["Productie sensor unavailable"] -%}
+          {% endif -%}
+          {% if states("sensor.meter_active_power_total") in ["unavailable", "unknown"] -%}
+            {% set issues = issues + ["Totaal vermogen unavailable"] -%}
+          {% endif -%}
+          {% if states("sensor.battery_power") in ["unavailable", "unknown"] -%}
+            {% set issues = issues + ["Battery power unavailable"] -%}
+          {% endif -%}
+          {% if states("sensor.battery_state_of_charge") in ["unavailable", "unknown"] -%}
+            {% set issues = issues + ["Battery SOC unavailable"] -%}
+          {% endif -%}
+          {% if states("sensor.huawei_active_power") in ["unavailable", "unknown"] and states("sensor.solaredge_i1_ac_power")|int < 20 -%}
+            {% set issues = issues + ["Huawei + SolarEdge conflict / missing"] -%}
+          {% endif -%}
+          {% if states("sensor.solaredge_i1_ac_power") in ["unavailable", "unknown"] and states("sensor.huawei_active_power")|int < 20 -%}
+            {% set issues = issues + ["SolarEdge + Huawei conflict / missing"] -%}
+          {% endif -%}
+          {% if (states("sensor.ecopower_injectieprijzen_predicted") and states("sensor.ecopower_injectieprijzen")) in ["unavailable", "unknown"] -%}
+            {% set issues = issues + ["Injectieprijzen probleem"] -%}
+          {% endif -%}
+          {% if (states("sensor.ecopower_afnameprijzen_predicted") and states("sensor.ecopower_afnameprijzen")) in ["unavailable", "unknown"] -%}
+            {% set issues = issues + ["Afnameprijzen probleem"] -%}
+          {% endif -%}
+          {{ issues }}

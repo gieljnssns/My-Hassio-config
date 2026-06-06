@@ -2,13 +2,16 @@
     # Prediction horizon steeds lager dan "num_lags" in de fit actie
     - name: Prediction horizon
       unique_id: 39144142-06b5-4c2a-897a-d24b0c8fd2e4
-      # {% set total = [buy, sell, pv] | min -%}
       unit_of_measurement: 5m
       state: >
-        {% set buy = state_attr('sensor.ecopower_afnameprijzen', 'prijzen') | length -%}
-        {% set sell = state_attr('sensor.ecopower_injectieprijzen', 'prijzen') | length -%}
-        {% set pv = state_attr('sensor.pv_power_forecast_list_interpolated', 'list') | length -%}
-        {% set total = [buy, sell, pv, 348] | min -%}
+        {% set buy_sensor = 'sensor.ecopower_afnameprijzen_predicted' if states('sensor.ecopower_afnameprijzen_predicted') not in ('unknown', 'unavailable', 'None') else 'sensor.ecopower_afnameprijzen' -%}
+        {% set sell_sensor = 'sensor.ecopower_injectieprijzen_predicted' if states('sensor.ecopower_injectieprijzen_predicted') not in ('unknown', 'unavailable', 'None') else 'sensor.ecopower_injectieprijzen' -%}
+
+        {% set buy = state_attr(buy_sensor, 'prijzen') | length if state_attr(buy_sensor, 'prijzen') else 0 -%}
+        {% set sell = state_attr(sell_sensor, 'prijzen') | length if state_attr(sell_sensor, 'prijzen') else 0 -%}
+        {% set pv = state_attr('sensor.pv_power_forecast_list_interpolated', 'list') | length if state_attr('sensor.pv_power_forecast_list_interpolated', 'list') else 0 -%}
+        {% set total = [buy, sell, pv, 360] | min -%}
+
         {% set droogkast = states("sensor.droogkast_end_timesteps") | int(0) if states("sensor.droogkast_end_timesteps") | int(0) < total else total -%}
         {% set wasmachien = states("sensor.wasmachien_end_timesteps") | int(0) if states("sensor.wasmachien_end_timesteps") | int(0) < total else total -%}
         {% set afwasmachien = states("sensor.afwasmachien_end_timesteps") | int(0) if states("sensor.afwasmachien_end_timesteps") | int(0) < total else total -%}
@@ -16,9 +19,11 @@
 
         {{ (total, endstep) | max }}
       availability: >
-        {{ states('sensor.ecopower_afnameprijzen') not in ('unknown', 'unavailable', 'None') and
-            states('sensor.ecopower_injectieprijzen') not in ('unknown', 'unavailable', 'None') and
-            states('sensor.pv_power_forecast_list_interpolated') not in ('unknown', 'unavailable', 'None') }}
+        {{ (states('sensor.ecopower_afnameprijzen_predicted') not in ('unknown', 'unavailable', 'None') or 
+            states('sensor.ecopower_afnameprijzen') not in ('unknown', 'unavailable', 'None')) and
+          (states('sensor.ecopower_injectieprijzen_predicted') not in ('unknown', 'unavailable', 'None') or 
+            states('sensor.ecopower_injectieprijzen') not in ('unknown', 'unavailable', 'None')) and
+          states('sensor.pv_power_forecast_list_interpolated') not in ('unknown', 'unavailable', 'None') }}
 
     # - name: Huidig verbruik zonder wp
     #   unique_id: 664ab9ff-3875-4a45-b53a-685b7a8f7f96
@@ -82,7 +87,7 @@
         {% elif soc < 90 -%}
           {% set charge_soc = 18 -%}
         {% elif soc < 100 -%}
-          {% set charge_soc = 5 -%}
+          {% set charge_soc = 8 -%}
         {% else -%}
           {% set charge_soc = 0 -%}
         {% endif -%}
@@ -246,7 +251,6 @@
     #       {% else -%}
     #         {{ 0.50 }}
     #       {% endif -%}
-
     - name: Soc maximum
       unique_id: 264ff207-7267-4425-ad74-a50722033556
       state: >
@@ -261,12 +265,26 @@
         {% if result.first_zero_index|int(0) < 12 -%}
           0.85
         {% else -%}
-          {% if soc < 90 -%}
-            0.9
-          {% else -%}
-            {{ [(soc + 1)/100, 0.95]|max }}
-          {% endif -%}
+          1
         {% endif -%}
+      # state: >
+      #   {% set forecast_list = state_attr('sensor.pv_power_forecast_list_interpolated', 'list') or [] -%}
+      #   {% set soc = states('sensor.battery_state_of_charge')|float(0) -%}
+      #   {% set result = namespace(first_zero_index = None) -%}
+      #   {% for value in forecast_list -%}
+      #     {% if value == 0 and result.first_zero_index is none -%}
+      #       {% set result.first_zero_index = loop.index0 -%}
+      #     {% endif -%}
+      #   {% endfor -%}
+      #   {% if result.first_zero_index|int(0) < 12 -%}
+      #     0.85
+      #   {% else -%}
+      #     {% if soc < 90 -%}
+      #       0.9
+      #     {% else -%}
+      #       {{ [(soc + 1)/100, 0.95]|max }}
+      #     {% endif -%}
+      #   {% endif -%}
 
     - name: Soc minimum
       unique_id: 3ec272b2-d5c5-41c3-a35f-e824a116bd14

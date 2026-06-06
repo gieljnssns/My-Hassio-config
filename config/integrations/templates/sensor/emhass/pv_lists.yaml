@@ -3,36 +3,14 @@
       unique_id: d0a3c2a5-b51e-4dd8-bc5b-4b9c6ab496de
       icon: mdi:sun-clock
       state: >
-        {% set today = state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast') or [] -%}
-        {% set tomorrow = state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast') or [] -%}
-        {% set raw = (today + tomorrow)
-            | selectattr('period_start', 'defined')
-            | rejectattr('period_start', 'equalto', '')
-            | selectattr('pv_estimate', 'defined')
-            | list
-            | sort(attribute='period_start') -%}
-        {% set ns = namespace(points=[]) -%}
-        {% for item in raw -%}
-          {% set ts = as_timestamp(item.period_start, default=0) | int -%}
-          {% if ts != 0 -%}
-            {% set ns.points = ns.points + [{'ts': ts, 'pv': item.pv_estimate | float(0)}] -%}
-          {% endif -%}
-        {% endfor -%}
-        {% if ns.points|length < 2 -%}
-          unavailable
-        {% else -%}
-          {% set start = as_timestamp(today_at('00:00')) | int -%}
-          {% set end = as_timestamp(today_at('00:00') + timedelta(days=2) - timedelta(minutes=5)) | int -%}
-          {% set now_ts = as_timestamp(now()) | int -%}
-          {% set target = [end, [now_ts, start] | max] | min -%}
-          {{ ((target - start) // 300) | int }}
-        {% endif -%}
+        {{ ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int }}
       attributes:
         interval_minutes: 5
         five_minute_series: >
           {% set today = state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast') or [] -%}
           {% set tomorrow = state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast') or [] -%}
-          {% set raw = (today + tomorrow)
+          {% set d3 = state_attr('sensor.solcast_solaredge_forecast_day_3', 'detailedForecast') or [] -%}
+          {% set raw = (today + tomorrow + d3)
               | selectattr('period_start', 'defined')
               | rejectattr('period_start', 'equalto', '')
               | selectattr('pv_estimate', 'defined')
@@ -43,13 +21,9 @@
             {% set ts = as_timestamp(item.period_start, default=0) | int -%}
             {% if ts != 0 -%}
               {% set pv_main = item.pv_estimate | float(0) -%}
-              {% set pv10 = item.pv_estimate10 if item.pv_estimate10 is defined else pv_main -%}
-              {% set pv90 = item.pv_estimate90 if item.pv_estimate90 is defined else pv_main -%}
               {% set ns.points = ns.points + [{
                 'ts': ts,
-                'pv': pv_main,
-                'pv10': pv10,
-                'pv90': pv90
+                'pv': pv_main
               }] -%}
             {% endif -%}
           {% endfor -%}
@@ -57,7 +31,7 @@
             {{ [] }}
           {% else -%}
             {% set start = as_timestamp(today_at('00:00')) | int -%}
-            {% set end = as_timestamp(today_at('00:00') + timedelta(days=2) - timedelta(minutes=5)) | int -%}
+            {% set end = as_timestamp(today_at('00:00') + timedelta(days=3) - timedelta(minutes=5)) | int -%}
             {% set out = namespace(values=[]) -%}
             {% for ts in range(start, end + 1, 300) -%}
               {% set before = ns.points | selectattr('ts', 'le', ts) | list -%}
@@ -81,7 +55,8 @@
         five_minute_series_p10: >
           {% set today = state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast') or [] -%}
           {% set tomorrow = state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast') or [] -%}
-          {% set raw = (today + tomorrow)
+          {% set d3 = state_attr('sensor.solcast_solaredge_forecast_day_3', 'detailedForecast') or [] -%}
+          {% set raw = (today + tomorrow + d3)
               | selectattr('period_start', 'defined')
               | rejectattr('period_start', 'equalto', '')
               | selectattr('pv_estimate', 'defined')
@@ -91,14 +66,10 @@
           {% for item in raw -%}
             {% set ts = as_timestamp(item.period_start, default=0) | int -%}
             {% if ts != 0 -%}
-              {% set pv_main = item.pv_estimate | float(0) -%}
-              {% set pv10 = item.pv_estimate10 if item.pv_estimate10 is defined else pv_main -%}
-              {% set pv90 = item.pv_estimate90 if item.pv_estimate90 is defined else pv_main -%}
+              {% set pv10 = item.pv_estimate10 | float(0) -%}
               {% set ns.points = ns.points + [{
                 'ts': ts,
-                'pv': pv_main,
-                'pv10': pv10,
-                'pv90': pv90
+                'pv10': pv10
               }] -%}
             {% endif -%}
           {% endfor -%}
@@ -106,7 +77,7 @@
             {{ [] }}
           {% else -%}
             {% set start = as_timestamp(today_at('00:00')) | int -%}
-            {% set end = as_timestamp(today_at('00:00') + timedelta(days=2) - timedelta(minutes=5)) | int -%}
+            {% set end = as_timestamp(today_at('00:00') + timedelta(days=3) - timedelta(minutes=5)) | int -%}
             {% set out = namespace(values=[]) -%}
             {% for ts in range(start, end + 1, 300) -%}
               {% set before = ns.points | selectattr('ts', 'le', ts) | list -%}
@@ -130,7 +101,8 @@
         five_minute_series_p90: >
           {% set today = state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast') or [] -%}
           {% set tomorrow = state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast') or [] -%}
-          {% set raw = (today + tomorrow)
+          {% set d3 = state_attr('sensor.solcast_solaredge_forecast_day_3', 'detailedForecast') or [] -%}
+          {% set raw = (today + tomorrow + d3)
               | selectattr('period_start', 'defined')
               | rejectattr('period_start', 'equalto', '')
               | selectattr('pv_estimate', 'defined')
@@ -140,13 +112,9 @@
           {% for item in raw -%}
             {% set ts = as_timestamp(item.period_start, default=0) | int -%}
             {% if ts != 0 -%}
-              {% set pv_main = item.pv_estimate | float(0) -%}
-              {% set pv10 = item.pv_estimate10 if item.pv_estimate10 is defined else pv_main -%}
-              {% set pv90 = item.pv_estimate90 if item.pv_estimate90 is defined else pv_main -%}
+              {% set pv90 = item.pv_estimate90 | float(0) -%}
               {% set ns.points = ns.points + [{
                 'ts': ts,
-                'pv': pv_main,
-                'pv10': pv10,
                 'pv90': pv90
               }] -%}
             {% endif -%}
@@ -155,7 +123,7 @@
             {{ [] }}
           {% else -%}
             {% set start = as_timestamp(today_at('00:00')) | int -%}
-            {% set end = as_timestamp(today_at('00:00') + timedelta(days=2) - timedelta(minutes=5)) | int -%}
+            {% set end = as_timestamp(today_at('00:00') + timedelta(days=3) - timedelta(minutes=5)) | int -%}
             {% set out = namespace(values=[]) -%}
             {% for ts in range(start, end + 1, 300) -%}
               {% set before = ns.points | selectattr('ts', 'le', ts) | list -%}
@@ -181,32 +149,15 @@
       unique_id: 1cf8427f-0c1d-4cdb-9db8-7f61522c8e73
       icon: mdi:weather-sunny-alert
       state: >
-        {% set today_data = state_attr('sensor.open_meteo_voorspelling_vandaag', 'watts') or {} -%}
-        {% set tomorrow_data = state_attr('sensor.open_meteo_voorspelling_morgen', 'watts') or {} -%}
-        {% set combined = (today_data | dictsort) + (tomorrow_data | dictsort) -%}
-        {% set ns = namespace(points=[]) -%}
-        {% for item in combined -%}
-          {% set ts = as_timestamp(item[0], default=0) | int -%}
-          {% if ts != 0 -%}
-            {% set ns.points = ns.points + [{'ts': ts, 'pv': item[1] | float(0)}] -%}
-          {% endif -%}
-        {% endfor -%}
-        {% if ns.points|length < 2 -%}
-          unavailable
-        {% else -%}
-          {% set start = as_timestamp(today_at('00:00')) | int -%}
-          {% set end = as_timestamp(today_at('00:00') + timedelta(days=2) - timedelta(minutes=5)) | int -%}
-          {% set now_ts = as_timestamp(now()) | int -%}
-          {% set target = [end, [now_ts, start] | max] | min -%}
-          {{ ((target - start) // 300) | int }}
-        {% endif -%}
+        {{ ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int }}
       attributes:
         interval_minutes: 5
         source_interval_minutes: 15
         five_minute_series: >
           {% set today_data = state_attr('sensor.open_meteo_voorspelling_vandaag', 'watts') or {} -%}
           {% set tomorrow_data = state_attr('sensor.open_meteo_voorspelling_morgen', 'watts') or {} -%}
-          {% set combined = (today_data | dictsort) + (tomorrow_data | dictsort) -%}
+          {% set d2_data = state_attr('sensor.open_meteo_voorspelling_overmorgen', 'watts') or {} -%}
+          {% set combined = (today_data | dictsort) + (tomorrow_data | dictsort) + (d2_data | dictsort) -%}
           {% set ns = namespace(points=[]) -%}
           {% for item in combined -%}
             {% set ts = as_timestamp(item[0], default=0) | int -%}
@@ -218,7 +169,7 @@
             {{ [] }}
           {% else -%}
             {% set start = as_timestamp(today_at('00:00')) | int -%}
-            {% set end = as_timestamp(today_at('00:00') + timedelta(days=2) - timedelta(minutes=5)) | int -%}
+            {% set end = as_timestamp(today_at('00:00') + timedelta(days=3) - timedelta(minutes=5)) | int -%}
             {% set out = namespace(values=[]) -%}
             {% for ts in range(start, end + 1, 300) -%}
               {% set before = ns.points | selectattr('ts', 'le', ts) | list -%}
@@ -258,6 +209,9 @@
           {% elif best_predictor == "openmeteo" -%}
             {% set entity = "sensor.open_meteo_interpolated_forecast" -%}
             {% set attribute = "five_minute_series" -%}
+          {% elif best_predictor == "ml" -%}
+            {% set entity = "sensor.ml_interpolated_forecast" -%}
+            {% set attribute = "five_minute_series" -%}
           {% else -%}
             {% set entity = none -%}
           {% endif -%}
@@ -266,13 +220,33 @@
           {% else -%}
             {% set data = state_attr(entity, attribute) or [] -%}
             {% if data is iterable and data|length > 0 -%}
-              {% set start = as_timestamp(today_at('00:00')) | int -%}
-              {% set end = as_timestamp(today_at('00:00') + timedelta(days=2) - timedelta(minutes=5)) | int -%}
-              {% set now_ts = as_timestamp(now()) | int -%}
-              {% set target = [end, [now_ts, start] | max] | min -%}
-              {% set slot = ((target - start) // 300) | int -%}
-              {{ data[slot + 1:] }}
+              {% set slot = ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int -%}
+              {{ data[slot:slot+576] }}
             {% else -%}
               {{ [] }}
             {% endif -%}
           {% endif -%}
+
+
+- trigger:
+    - trigger: time_pattern
+      # Matches every hour at 5 minutes past whole
+      minutes: 5
+  action:
+    - action: ml_solar_forecast.get_forecast
+      data:
+        entry_id: 01KST7XECNY256C5KYRJHKXRD4
+        end: >
+          {{ now().replace(hour=23, minute=55, second=0) + timedelta(days=2) }}
+      response_variable: ml_solar_forecast_response
+  sensor:
+    - name: Ml interpolated forecast
+      unique_id: 969b1fa4-d690-440c-b2da-661619184d97
+      icon: mdi:sun-clock
+      state: >
+        {{ ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int }}
+      attributes:
+        interval_minutes: 5
+        five_minute_series: >
+          {% set forecast = ml_solar_forecast_response -%}
+          {{ forecast | dictsort | map(attribute=1) | list }}

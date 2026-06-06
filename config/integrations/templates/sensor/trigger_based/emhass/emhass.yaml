@@ -85,185 +85,104 @@
         - script.emhass_publish_models
       from: "on"
       to: "off"
-
   sensor:
     - name: Emhass load
       unique_id: 9fdc600a-94c4-4bfc-b11a-2cad784faa46
       unit_of_measurement: W
       state_class: measurement
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_p_load_forecast') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
-        forecasts: >
-          {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-          {% set forecasts = state_attr('sensor.' + best_model + '_p_load_forecast', 'forecasts') -%}
-          {% set values = namespace(list=[]) -%}
-
-          {% if forecasts -%}
-            {% for forecast in forecasts -%}
-              {% set key = best_model + '_p_load_forecast' -%}
-              {% set values.list = values.list + [forecast[key] | float] -%}
-            {% endfor -%}
-          {% endif -%}
-          {{ values.list }}
+        {{ states('sensor.ridge_p_load_forecast') }}
 
     - name: Emhass grid2
       unique_id: 4906ce9a-ee07-4cb8-a13b-79aec92d9805
       unit_of_measurement: W
       state_class: measurement
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_p_grid_forecast') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
+        {{ states('sensor.ridge_p_grid_forecast') }}
 
     - name: Emhass PV
       unique_id: 66061a80-e5c9-45bc-b5d8-772e532f6896
       unit_of_measurement: W
       state_class: measurement
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_p_pv_forecast') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
+        {{ states('sensor.ridge_p_pv_forecast') }}
 
     - name: Emhass battery
       unique_id: 187c40b2-a247-4ec3-884e-7ce5e9f902c6
       unit_of_measurement: W
       state_class: measurement
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_p_batt_forecast') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
+        {{ states('sensor.ridge_p_batt_forecast') }}
 
     - name: Emhass soc
       unique_id: 79a3b8cb-e434-4132-a6ba-0f56b9580c26
       unit_of_measurement: "%"
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_soc_batt_forecast') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
+        {{ states('sensor.ridge_soc_batt_forecast') }}
 
     - name: Emhass cost
       unique_id: dfd183d6-d8da-46e8-962c-b980e54e84d0
       unit_of_measurement: "EUR/kWh"
       state_class: measurement
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_unit_load_cost') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
+        {{ states('sensor.ridge_unit_load_cost') }}
 
     - name: Emhass price
       unique_id: 16995e34-99e3-4c59-b2d0-489011ce6698
       unit_of_measurement: "EUR/kWh"
       state_class: measurement
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_unit_prod_price') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
+        {{ states('sensor.ridge_unit_prod_price') }}
 
     - name: "EMHASS Optim Status"
       unique_id: f7ff7731-ff33-4cd0-bc93-f070278dbac9
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_optim_status') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
+        {{ states('sensor.ridge_optim_status') }}
 
-    # Deferrable Load 0 - Wasmachine - Best Model
+    # Deferrable Load 0 - Wasmachine
     - name: "EMHASS Wasmachien"
       unique_id: 42ea7987-d8ff-4b1f-92a9-42b268d9f002
       unit_of_measurement: W
       state_class: measurement
       device_class: power
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_p_deferrable0') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
+        {{ states('sensor.ridge_p_deferrable0') }}
 
-    # Deferrable Load 1 - Droogkast - Best Model
+    # Deferrable Load 1 - Droogkast
     - name: "EMHASS Droogkast"
       unique_id: 84f52d3b-8af8-41e9-bc81-07fb74ed7317
       unit_of_measurement: W
       state_class: measurement
       device_class: power
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_p_deferrable1') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
+        {{ states('sensor.ridge_p_deferrable1') }}
 
-    # Deferrable Load 2 - Afwasmachine - Best Model
+    # Deferrable Load 2 - Afwasmachine
     - name: "EMHASS Afwasmachien"
       unique_id: 8947a526-71fc-4ea2-9163-b615f7cf740c
       unit_of_measurement: W
       state_class: measurement
       device_class: power
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_p_deferrable2') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
+        {{ states('sensor.ridge_p_deferrable2') }}
 
-    # Deferrable Load 3 - Warmtepompboiler - Best Model
+    # Deferrable Load 3 - Warmtepompboiler
     - name: "EMHASS Warmtepompboiler"
       unique_id: d64ffc91-a29e-4485-a5fa-9ba898422411
       unit_of_measurement: W
       state_class: measurement
       device_class: power
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_p_deferrable3') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
+        {{ states('sensor.ridge_p_deferrable3') }}
 
-    # Deferrable Load 4 - Warmtepomp - Best Model
+    # Deferrable Load 4 - Warmtepomp
     - name: "EMHASS Warmtepomp"
       unique_id: f9a9c1fc-cd3b-4294-b9f3-2249d5ac3688
       unit_of_measurement: W
       state_class: measurement
       device_class: power
       state: >
-        {% set best_model = states('sensor.best_emhass_model_load_7d') | lower -%}
-        {{ states('sensor.' + best_model + '_p_deferrable4') }}
-      attributes:
-        model_used: "{{ states('sensor.best_emhass_model_load_7d') }}"
-
-#####  Emhass test  #######
-- trigger:
-    - trigger: state
-      entity_id: sensor.lasso_p_load_forecast
-      not_to:
-        - unknown
-        - unavailable
-  sensor:
-    - name: Emhass load lasso
-      unique_id: 15a91351-f3f0-4b18-9578-7bc133f30d20
-      unit_of_measurement: W
-      state_class: measurement
-      state: >
-        {{ trigger.to_state.state }}
-
-- trigger:
-    - trigger: state
-      entity_id: sensor.lasso_p_grid_forecast
-      not_to:
-        - unknown
-        - unavailable
-  sensor:
-    - name: Emhass grid lasso
-      unique_id: f54f5e92-e74a-4847-b6f5-4cad39c1f516
-      unit_of_measurement: W
-      state_class: measurement
-      state: >
-        {{ trigger.to_state.state }}
+        {{ states('sensor.ridge_p_deferrable4') }}
 
 - trigger:
     - trigger: state
@@ -294,37 +213,26 @@
         {{ trigger.to_state.state }}
 
 - trigger:
-    - trigger: state
-      entity_id: sensor.linear_p_load_forecast
-      not_to:
-        - unknown
-        - unavailable
-  sensor:
-    - name: Emhass load linear
-      unique_id: fa1ff7b0-9965-4842-b798-7f96af7a33bc
-      unit_of_measurement: W
-      state_class: measurement
-      state: >
-        {{ trigger.to_state.state }}
-
-- trigger:
-    - trigger: state
-      entity_id: sensor.linear_p_grid_forecast
-      not_to:
-        - unknown
-        - unavailable
-  sensor:
-    - name: Emhass grid linear
-      unique_id: e1426666-c254-42b0-93b7-9fc846e70f3b
-      unit_of_measurement: W
-      state_class: measurement
-      state: >
-        {{ trigger.to_state.state }}
-
-- trigger:
     - trigger: time_pattern
       seconds: "/2"
+  # action:
+  #   - action: homeassistant.update_entity
+  #     data:
+  #       entity_id:
+  #         - sensor.electricity_meter_energieverbruik
+  #         - sensor.electricity_meter_energieproductie
+  #         - sensor.meter_active_power_total
+  #         - sensor.battery_power
+  #         - sensor.huawei_active_power
+  #         - sensor.solaredge_i1_ac_power
   sensor:
+    - name: Huidige opbrengst
+      unique_id: 6502aec2-df3d-420b-b8f5-2eb09184cbed
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.huawei_active_power") | float(0) + states("sensor.solaredge_i1_ac_power") | float(0)) | round(1) }}
+
     - name: Huidig verbruik
       unique_id: 88576813-0ac7-4deb-9b6d-15bb99a08752
       unit_of_measurement: "W"
@@ -333,22 +241,22 @@
         {% set verbruik_state = states('sensor.electricity_meter_energieverbruik') -%}
         {% set productie_state = states('sensor.electricity_meter_energieproductie') -%}
 
-        {# Check of de primaire sensoren beschikbaar en geldig zijn #}
+        {# Check of de primaire sensoren beschikbaar en geldig zijn -#}
         {% set primary_available = verbruik_state not in ['unavailable', 'unknown', 'none']
                                     and productie_state not in ['unavailable', 'unknown', 'none'] -%}
-        {# Check of de sensoren recent zijn geupdate (binnen 10 seconden) #}
+        {# Check of de sensoren recent zijn geupdate (binnen 10 seconden) -#}
         {% set now_ts = now().timestamp() -%}
         {% set verbruik_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieverbruik.last_updated, 0)) < 10 -%}
         {% set productie_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieproductie.last_updated, 0)) < 10 -%}
-        {% set primary_fresh = verbruik_updated and productie_updated -%}
+        {% set primary_fresh = verbruik_updated or productie_updated -%}
 
         {% if primary_available and primary_fresh -%}
-          {# Gebruik primaire sensoren #}
+          {# Gebruik primaire sensoren -#}
           {% set verbruik = verbruik_state | float(0) -%}
           {% set productie = productie_state | float(0) -%}
           {% set net_power = ((productie - verbruik) * 1000) | round(0) -%}
         {% else -%}
-          {# Fallback naar meter_active_power_total (IS AL IN WATT, negatief = import) #}
+          {# Fallback naar meter_active_power_total (IS AL IN WATT, negatief = import) -#}
           {% set meter_power_state = states('sensor.meter_active_power_total') -%}
           {% if meter_power_state not in ['unavailable', 'unknown', 'none'] -%}
             {% set net_power = meter_power_state | float(0) -%}
@@ -356,18 +264,18 @@
             {% set net_power = 0 -%}
           {% endif -%}
         {% endif -%}
-
-        {% set battery_power = states('sensor.battery_power') | float(0) -%}
+        {# Fallback naar sensor.emhass_battery (ALS battery_power unavailable is) -#}
+        {% set battery_power = states('sensor.battery_power') | float(states('sensor.emhass_battery')) -%}
         {% set solar_power = (states('sensor.huawei_active_power') | float(0)) + (states('sensor.solaredge_i1_ac_power') | float(0)) -%}
 
         {# Bereken verbruik: Solar - Net + Batterij
            Net_power is NEGATIEF bij import, dus Solar - (-waarde) = Solar + waarde
            Net_power is POSITIEF bij export, dus Solar - (+waarde) = Solar - waarde
-        #}
+        -#}
         {% set consumption = solar_power - net_power + battery_power -%}
 
-        {# Minimum 150W verbruik #}
-        {{ [150, consumption] | max | round(0) }}
+        {# Minimum 350W verbruik -#}
+        {{ [350, consumption] | max | round(0) }}
       availability: >
         {% set meter_available = states('sensor.meter_active_power_total') not in ['unavailable', 'unknown', 'none'] -%}
         {% set primary_available = states('sensor.electricity_meter_energieverbruik') not in ['unavailable', 'unknown', 'none'] -%}
@@ -384,8 +292,47 @@
                       states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
                       states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
                       states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) -%}
-        {% if use > 150 -%}
-            {{ use }}
-        {% else  -%}
-            {{ 150 | float(default=0) }}
+        {{ [350, use] | max | round(0) }}
+    # {% if use > 350 -%}
+    #     {{ use }}
+    # {% else  -%}
+    #     {{ 350 | float(default=0) }}
+    # {% endif -%}
+
+    - name: "Huidig fluvius"
+      unit_of_measurement: "W"
+      unique_id: 569e23f1-e47a-41f4-a81b-ecf5de0ac186
+      device_class: power
+      state_class: measurement
+      state: >
+        {% set verbruik_state = states('sensor.electricity_meter_energieverbruik') -%}
+        {% set productie_state = states('sensor.electricity_meter_energieproductie') -%}
+
+        {# Check of de primaire sensoren beschikbaar en geldig zijn -#}
+        {% set primary_available = verbruik_state not in ['unavailable', 'unknown', 'none']
+                                    and productie_state not in ['unavailable', 'unknown', 'none'] -%}
+
+        {# Check of de sensoren recent zijn geupdate (binnen 10 seconden) -#}
+        {% set now_ts = now().timestamp() -%}
+        {% set verbruik_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieverbruik.last_updated, 0)) < 10 -%}
+        {% set productie_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieproductie.last_updated, 0)) < 10 -%}
+        {% set primary_fresh = verbruik_updated or productie_updated -%}
+
+        {% if primary_available and primary_fresh -%}
+          {# Gebruik primaire sensoren -#}
+          {% set verbruik = verbruik_state | float(0) -%}
+          {% set productie = productie_state | float(0) -%}
+          {{ ((verbruik - productie) * 1000) | round(0) }}
+        {% else -%}
+          {# Fallback naar meter_active_power_total (negatief = import, dus vermenigvuldig met -1) -#}
+          {% set meter_power_state = states('sensor.meter_active_power_total') -%}
+          {% if meter_power_state not in ['unavailable', 'unknown', 'none'] -%}
+            {{ (meter_power_state | float(0) * -1) | round(0) }}
+          {% else -%}
+            {{ 0 }}
+          {% endif -%}
         {% endif -%}
+      availability: >
+        {% set meter_available = states('sensor.meter_active_power_total') not in ['unavailable', 'unknown', 'none'] -%}
+        {% set primary_available = states('sensor.electricity_meter_energieverbruik') not in ['unavailable', 'unknown', 'none'] -%}
+        {{ meter_available or primary_available }}

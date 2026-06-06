@@ -43,12 +43,12 @@
       availability: >
         {{ states('sensor.huawei_accumulated_energy_yield')|float(0) > 1 }}
 
-    - name: Huidige opbrengst
-      unique_id: 6502aec2-df3d-420b-b8f5-2eb09184cbed
-      unit_of_measurement: "W"
-      device_class: power
-      state: >
-        {{ (states("sensor.huawei_active_power") | float(0) + states("sensor.solaredge_i1_ac_power") | float(0)) | round(1) }}
+    # - name: Huidige opbrengst
+    #   unique_id: 6502aec2-df3d-420b-b8f5-2eb09184cbed
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   state: >
+    #     {{ (states("sensor.huawei_active_power") | float(0) + states("sensor.solaredge_i1_ac_power") | float(0)) | round(1) }}
 
     ##aanpassen
     # - name: Huidig verbruik
@@ -98,72 +98,72 @@
     #     {% set meter_available = states('sensor.meter_active_power_total') not in ['unavailable', 'unknown', 'none'] -%}
     #     {% set primary_available = states('sensor.electricity_meter_energieverbruik') not in ['unavailable', 'unknown', 'none'] -%}
     #     {{ meter_available or primary_available }}
-      # OUD
-      # state: >
-      #     {% set verbruik = states('sensor.electricity_meter_energieverbruik') | float(0) -%}
-      #     {% set productie = states('sensor.electricity_meter_energieproductie') | float(0) -%}
-      #     {% set net_power = ((productie - verbruik) * 1000) | round(0) -%}
-      #     {% set battery_power = states('sensor.battery_power') | float(0) -%}
-      #     {% set solar_power = (states('sensor.huawei_active_power') | float(0)) + (states('sensor.solaredge_i1_ac_power') | float(0)) -%}
+    # OUD
+    # state: >
+    #     {% set verbruik = states('sensor.electricity_meter_energieverbruik') | float(0) -%}
+    #     {% set productie = states('sensor.electricity_meter_energieproductie') | float(0) -%}
+    #     {% set net_power = ((productie - verbruik) * 1000) | round(0) -%}
+    #     {% set battery_power = states('sensor.battery_power') | float(0) -%}
+    #     {% set solar_power = (states('sensor.huawei_active_power') | float(0)) + (states('sensor.solaredge_i1_ac_power') | float(0)) -%}
 
-      #     {# Bereken het verbruik volgens energiebalans:
-      #        Verbruik = Solar - Net + Batterij
+    #     {# Bereken het verbruik volgens energiebalans:
+    #        Verbruik = Solar - Net + Batterij
 
-      #        Uitleg:
-      #        - Solar is altijd positief (opwekking)
-      #        - Net is negatief bij import (energie komt binnen), positief bij export (energie gaat weg)
-      #        - Batterij is negatief bij opladen (energie gaat weg), positief bij ontladen (energie komt binnen)
+    #        Uitleg:
+    #        - Solar is altijd positief (opwekking)
+    #        - Net is negatief bij import (energie komt binnen), positief bij export (energie gaat weg)
+    #        - Batterij is negatief bij opladen (energie gaat weg), positief bij ontladen (energie komt binnen)
 
-      #        Bij import (Net negatief): Solar - (-waarde) = Solar wordt groter
-      #        Bij export (Net positief): Solar - (+waarde) = Solar wordt kleiner
-      #        Bij ontladen (Batterij positief): wordt opgeteld bij beschikbare energie
-      #        Bij opladen (Batterij negatief): wordt afgetrokken van beschikbare energie
-      #     #}
-      #     {% set consumption = solar_power - net_power + battery_power -%}
-      #     {# Zorg dat verbruik minimaal 200W is (er is altijd verbruik) #}
-      #     {{ [200, consumption] | max | round(0) }}
+    #        Bij import (Net negatief): Solar - (-waarde) = Solar wordt groter
+    #        Bij export (Net positief): Solar - (+waarde) = Solar wordt kleiner
+    #        Bij ontladen (Batterij positief): wordt opgeteld bij beschikbare energie
+    #        Bij opladen (Batterij negatief): wordt afgetrokken van beschikbare energie
+    #     #}
+    #     {% set consumption = solar_power - net_power + battery_power -%}
+    #     {# Zorg dat verbruik minimaal 200W is (er is altijd verbruik) #}
+    #     {{ [200, consumption] | max | round(0) }}
 
-    - name: "Huidig fluvius"
-      unit_of_measurement: "W"
-      unique_id: 569e23f1-e47a-41f4-a81b-ecf5de0ac186
-      device_class: power
-      state_class: measurement
-      state: >
-        {% set verbruik_state = states('sensor.electricity_meter_energieverbruik') -%}
-        {% set productie_state = states('sensor.electricity_meter_energieproductie') -%}
+    # - name: "Huidig fluvius"
+    #   unit_of_measurement: "W"
+    #   unique_id: 569e23f1-e47a-41f4-a81b-ecf5de0ac186
+    #   device_class: power
+    #   state_class: measurement
+    #   state: >
+    #     {% set verbruik_state = states('sensor.electricity_meter_energieverbruik') -%}
+    #     {% set productie_state = states('sensor.electricity_meter_energieproductie') -%}
 
-        {# Check of de primaire sensoren beschikbaar en geldig zijn #}
-        {% set primary_available = verbruik_state not in ['unavailable', 'unknown', 'none']
-                                    and productie_state not in ['unavailable', 'unknown', 'none'] -%}
+    #     {# Check of de primaire sensoren beschikbaar en geldig zijn #}
+    #     {% set primary_available = verbruik_state not in ['unavailable', 'unknown', 'none']
+    #                                 and productie_state not in ['unavailable', 'unknown', 'none'] -%}
 
-        {# Check of de sensoren recent zijn geupdate (binnen 10 seconden) #}
-        {% set now_ts = now().timestamp() -%}
-        {% set verbruik_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieverbruik.last_updated, 0)) < 10 -%}
-        {% set productie_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieproductie.last_updated, 0)) < 10 -%}
-        {% set primary_fresh = verbruik_updated or productie_updated -%}
+    #     {# Check of de sensoren recent zijn geupdate (binnen 10 seconden) #}
+    #     {% set now_ts = now().timestamp() -%}
+    #     {% set verbruik_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieverbruik.last_updated, 0)) < 10 -%}
+    #     {% set productie_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieproductie.last_updated, 0)) < 10 -%}
+    #     {% set primary_fresh = verbruik_updated or productie_updated -%}
 
-        {% if primary_available and primary_fresh -%}
-          {# Gebruik primaire sensoren #}
-          {% set verbruik = verbruik_state | float(0) -%}
-          {% set productie = productie_state | float(0) -%}
-          {{ ((verbruik - productie) * 1000) | round(0) }}
-        {% else -%}
-          {# Fallback naar meter_active_power_total (negatief = import, dus vermenigvuldig met -1) #}
-          {% set meter_power_state = states('sensor.meter_active_power_total') -%}
-          {% if meter_power_state not in ['unavailable', 'unknown', 'none'] -%}
-            {{ (meter_power_state | float(0) * -1) | round(0) }}
-          {% else -%}
-            {{ 0 }}
-          {% endif -%}
-        {% endif -%}
-      availability: >
-        {% set meter_available = states('sensor.meter_active_power_total') not in ['unavailable', 'unknown', 'none'] -%}
-        {% set primary_available = states('sensor.electricity_meter_energieverbruik') not in ['unavailable', 'unknown', 'none'] -%}
-        {{ meter_available or primary_available }}
-      # state: >
-      #     {% set verbruik = states('sensor.electricity_meter_energieverbruik') | float(0) -%}
-      #     {% set productie = states('sensor.electricity_meter_energieproductie') | float(0) -%}
-      #     {{ ((verbruik - productie) * 1000) | round(0) }}
+    #     {% if primary_available and primary_fresh -%}
+    #       {# Gebruik primaire sensoren #}
+    #       {% set verbruik = verbruik_state | float(0) -%}
+    #       {% set productie = productie_state | float(0) -%}
+    #       {{ ((verbruik - productie) * 1000) | round(0) }}
+    #     {% else -%}
+    #       {# Fallback naar meter_active_power_total (negatief = import, dus vermenigvuldig met -1) #}
+    #       {% set meter_power_state = states('sensor.meter_active_power_total') -%}
+    #       {% if meter_power_state not in ['unavailable', 'unknown', 'none'] -%}
+    #         {{ (meter_power_state | float(0) * -1) | round(0) }}
+    #       {% else -%}
+    #         {{ 0 }}
+    #       {% endif -%}
+    #     {% endif -%}
+    #   availability: >
+    #     {% set meter_available = states('sensor.meter_active_power_total') not in ['unavailable', 'unknown', 'none'] -%}
+    #     {% set primary_available = states('sensor.electricity_meter_energieverbruik') not in ['unavailable', 'unknown', 'none'] -%}
+    #     {{ meter_available or primary_available }}
+    # state: >
+    #     {% set verbruik = states('sensor.electricity_meter_energieverbruik') | float(0) -%}
+    #     {% set productie = states('sensor.electricity_meter_energieproductie') | float(0) -%}
+    #     {{ ((verbruik - productie) * 1000) | round(0) }}
 
     ###  Combinatie  ###
     - name: Verlichting vermogen
@@ -212,9 +212,9 @@
             states("sensor.wled_noor_vermogen") | float(default=0) +
             states("sensor.zithoek_rechts_voor_vermogen") | float(default=0)) | round (1)}}
 
-    - name: Garage oplader vermogen
-      unique_id: 3fffa40d-41fd-4aee-a272-79f8cba32497
-      unit_of_measurement: "W"
-      device_class: power
-      state: >
-        {{ states("sensor.garage_oplader_vermogen_2") | float(default=0) | round(2) }}
+    # - name: Garage oplader vermogen
+    #   unique_id: 3fffa40d-41fd-4aee-a272-79f8cba32497
+    #   unit_of_measurement: "W"
+    #   device_class: power
+    #   state: >
+    #     {{ states("sensor.garage_oplader_vermogen_2") | float(default=0) | round(2) }}

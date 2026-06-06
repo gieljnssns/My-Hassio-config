@@ -2,15 +2,15 @@
     - trigger: template
       id: aan
       value_template: >
-        {{ states("sensor.wasmachien_vermogen") | float(0) >= 5 }}
+        {{ states("sensor.wasmachien_vermogen") | float(0) > 50 }}
       for:
         minutes: 2
     - trigger: template
       id: uit
       value_template: >
-        {{ states("sensor.wasmachien_vermogen") | float(0) < 10 }}
+        {{ states("sensor.wasmachien_vermogen") | float(0) < 50 }}
       for:
-        minutes: 5
+        minutes: 3
     - trigger: state
       entity_id: input_boolean.wasmachien_staat_op
       to: "off"
@@ -35,7 +35,7 @@
     - trigger: template
       id: aan
       value_template: >
-        {{ states("sensor.droogkast_vermogen") | float(0) >= 4 }}
+        {{ states("sensor.droogkast_vermogen") | float(0) >= 50 }}
       for:
         minutes: 2
     - trigger: template
@@ -68,7 +68,7 @@
     - trigger: template
       id: aan
       value_template: >
-        {{ states("sensor.afwasmachien_vermogen") | float(0) >= 3 }}
+        {{ states("sensor.afwasmachien_vermogen") | float(0) >= 50 }}
       for:
         minutes: 2
     - trigger: template
