@@ -18,8 +18,10 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import raise_if_invalid_filename, slugify
 from openplantbook_sdk import MissingClientIdOrSecret, OpenPlantBookApi
 from openplantbook_sdk.sdk import RateLimitError
@@ -29,8 +31,12 @@ from .const import (
     ATTR_API,
     ATTR_HOURS,
     ATTR_IMAGE,
+    ATTR_INCLUDE,
     ATTR_SPECIES,
     CACHE_TIME,
+    DATA_COMPONENT,
+    DATA_SEARCH_ENTITY,
+    DATA_SPECIES_ENTITIES,
     DOMAIN,
     FLOW_DOWNLOAD_IMAGES,
     FLOW_DOWNLOAD_PATH,
@@ -38,8 +44,8 @@ from .const import (
     MMOL_LUX_RATIO_MAX,
     MMOL_LUX_RATIO_MIN,
     MMOL_TO_DLI_FACTOR,
+    OPB_ATTR_INCLUDES,
     OPB_ATTR_RESULTS,
-    OPB_ATTR_SEARCH_RESULT,
     OPB_ATTR_TIMESTAMP,
     OPB_DISPLAY_PID,
     OPB_MAX_DLI,
@@ -54,6 +60,7 @@ from .const import (
     OPB_SERVICE_UPLOAD,
     PLANTBOOK_BASEURL,
 )
+from .entity import OpenPlantbookSearchResult, OpenPlantbookSpecies
 from .plantbook_exception import OpenPlantbookException
 from .uploader import (
     async_setup_upload_schedule,
@@ -113,6 +120,19 @@ def _enrich_plant_data_with_dli(plant_data: dict) -> None:
         plant_data[OPB_MIN_DLI] = round(float(min_mmol) * factor, 1)
 
 
+def _parse_includes(include: str | None) -> set[str]:
+    """Parse the comma-separated `include` service parameter into a set.
+
+    Empty/whitespace-only input yields an empty set, which is a subset of any
+    cached entry's satisfied categories — so a plain `get` never triggers an
+    include-driven refetch of an already-cached entry (a first fetch or normal
+    cache expiry still calls the API).
+    """
+    if not include:
+        return set()
+    return {part.strip() for part in include.split(",") if part.strip()}
+
+
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the OpenPlantBook component."""
     return True
@@ -134,6 +154,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if ATTR_SPECIES not in hass.data[DOMAIN]:
         hass.data[DOMAIN][ATTR_SPECIES] = {}
 
+    # Backfill a unique_id for entries created before this was set in the
+    # config flow, so existing installs also gain one (silences the repair
+    # warning for the entry). Done before the update listener is registered so
+    # it does not trigger an options-reload.
+    if entry.unique_id is None and (client_id := entry.data.get(CONF_CLIENT_ID)):
+        hass.config_entries.async_update_entry(entry, unique_id=client_id)
+
+    if DATA_COMPONENT not in hass.data[DOMAIN]:
+        # One EntityComponent owns all openplantbook.* entities for the life of
+        # this HA instance; it is reused across config-entry reloads.
+        hass.data[DOMAIN][DATA_COMPONENT] = EntityComponent(_LOGGER, DOMAIN, hass)
+    if DATA_SPECIES_ENTITIES not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][DATA_SPECIES_ENTITIES] = {}
+
     async def get_plant(call: ServiceCall) -> ServiceResponse:
         if DOMAIN not in hass.data:
             _LOGGER.error("no data found for domain %s", DOMAIN)
@@ -144,11 +178,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "invalid service call, required attribute %s missing", ATTR_SPECIES
             )
 
-        # Allow callers to bypass the cache (e.g. plant integration "Force refresh")
+        # Parse the optional `include` parameter (comma-separated extra data
+        # categories, e.g. "care"). An empty request is satisfied by any entry.
+        requested_includes = _parse_includes(call.data.get(ATTR_INCLUDE))
+
+        # Decide whether to drop a cached entry and refetch. We refetch when the
+        # caller bypasses the cache (cache: false) or when a cached entry does
+        # not already contain all the requested include categories. In both
+        # cases we require a *completed* entry (OPB_PID present), so we never
+        # delete the in-flight sentinel ({}) used by the concurrency guard
+        # below — a concurrent request waits for that fetch instead of starting
+        # a duplicate one.
         use_cache = call.data.get("cache", True)
-        if not use_cache and species in hass.data[DOMAIN][ATTR_SPECIES]:
+        cached = hass.data[DOMAIN][ATTR_SPECIES].get(species)
+        includes_unsatisfied = not requested_includes.issubset(
+            set((cached or {}).get(OPB_ATTR_INCLUDES, []))
+        )
+        if (
+            cached is not None
+            and OPB_PID in cached
+            and (not use_cache or includes_unsatisfied)
+        ):
             _LOGGER.debug(
-                "Cache bypass requested for %s, clearing cached data", species
+                "Refetching %s (bypass=%s, include=%s), clearing cached data",
+                species,
+                not use_cache,
+                sorted(requested_includes),
             )
             del hass.data[DOMAIN][ATTR_SPECIES][species]
 
@@ -156,10 +211,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # The first process creates an empty dict, and accesses the API
         # Later requests for the same species either wait for the first one to complete
         # or they return immediately if we already have the data we need
-        _LOGGER.debug("get_plant %s", species)
+        _LOGGER.debug("get_plant %s (include=%s)", species, sorted(requested_includes))
         if species not in hass.data[DOMAIN][ATTR_SPECIES]:
             _LOGGER.debug("I am the first process to get %s", species)
             hass.data[DOMAIN][ATTR_SPECIES][species] = {}
+            # Pass requested extra categories straight through to the API. The
+            # SDK merges `lang` in and treats an empty dict as no extra params.
+            extra_params = {}
+            if requested_includes:
+                extra_params["include"] = ",".join(sorted(requested_includes))
             try:
                 # Optionally pass Home Assistant language to OpenPlantbook API
                 send_lang = entry.options.get(FLOW_SEND_LANG, True)
@@ -171,11 +231,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         lang_code = "en"
                     plant_data = await hass.data[DOMAIN][
                         ATTR_API
-                    ].async_plant_detail_get(species, lang=lang_code)
+                    ].async_plant_detail_get(
+                        species, lang=lang_code, params=extra_params
+                    )
                 else:
                     plant_data = await hass.data[DOMAIN][
                         ATTR_API
-                    ].async_plant_detail_get(species)
+                    ].async_plant_detail_get(species, params=extra_params)
             except RateLimitError as err:
                 plant_data = None
                 _LOGGER.warning(
@@ -205,6 +267,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _LOGGER.debug("Got data for %s", species)
                 _enrich_plant_data_with_dli(plant_data)
                 plant_data[OPB_ATTR_TIMESTAMP] = datetime.now().isoformat()
+                plant_data[OPB_ATTR_INCLUDES] = sorted(requested_includes)
                 hass.data[DOMAIN][ATTR_SPECIES][species] = plant_data
                 entity_id = async_generate_entity_id(
                     f"{DOMAIN}.{{}}", plant_data[OPB_PID], current_ids={}
@@ -212,8 +275,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if entry.options.get(FLOW_DOWNLOAD_IMAGES) and plant_data.get(
                     ATTR_IMAGE
                 ):
+                    # Derive the filename from the URL path only, ignoring any
+                    # cache-busting query string (e.g. ...jpg?v=abc123) so the
+                    # saved filename stays stable across refreshes.
                     filename = slugify(
-                        urllib.parse.unquote(os.path.basename(plant_data[ATTR_IMAGE])),
+                        urllib.parse.unquote(
+                            os.path.basename(
+                                urllib.parse.urlparse(plant_data[ATTR_IMAGE]).path
+                            )
+                        ),
                         separator=" ",
                     ).replace(" jpg", ".jpg")
                     raise_if_invalid_filename(filename)
@@ -235,9 +305,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         )
 
                 _LOGGER.debug("data stored for %s: %s", species, plant_data)
-                hass.states.async_set(
-                    entity_id, plant_data[OPB_DISPLAY_PID], plant_data
-                )
+                # Key the entity holder by the canonical pid (not the raw
+                # service input), so different inputs that resolve to the same
+                # pid (casing/alias differences) map to the one entity instead
+                # of colliding on the shared entity_id/unique_id.
+                pid = plant_data[OPB_PID]
+                species_entities = hass.data[DOMAIN][DATA_SPECIES_ENTITIES]
+                existing_entity = species_entities.get(pid)
+                if existing_entity is None:
+                    species_entity = OpenPlantbookSpecies(entry, entity_id, plant_data)
+                    await hass.data[DOMAIN][DATA_COMPONENT].async_add_entities(
+                        [species_entity]
+                    )
+                    # Record the entity only after it is successfully added, so a
+                    # failed add does not leave a phantom (unattached) entity that
+                    # a later update would call async_write_ha_state() on.
+                    species_entities[pid] = species_entity
+                else:
+                    existing_entity.async_update_data(plant_data)
                 return plant_data
             del hass.data[DOMAIN][ATTR_SPECIES][species]
             return {}
@@ -245,7 +330,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # If more than one "get_plant" is triggered for the same species, we wait for up to
             # 10 seconds for the first process to complete the API request.
             # We don't want to return immediately, as we want the state object to be set by
-            # the running process before we return from this call
+            # the running process before we return from this call.
+            # Known limitation: if this request asked for extra `include`
+            # categories but the in-flight request did not, we return the
+            # in-flight (possibly base-only) result rather than refetching here.
+            # The next call for those categories will refetch, so this is a
+            # transient, self-correcting miss in the rare concurrent case.
             _LOGGER.debug(
                 "Another process is currently trying to get the data for %s",
                 species,
@@ -308,7 +398,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for plant in plant_data[OPB_ATTR_RESULTS]:
             pid = plant[OPB_PID]
             attrs[pid] = plant[OPB_DISPLAY_PID]
-        hass.states.async_set(f"{DOMAIN}.{OPB_ATTR_SEARCH_RESULT}", state, attrs)
+        hass.data[DOMAIN][DATA_SEARCH_ENTITY].async_update_results(state, attrs)
 
         return attrs
 
@@ -326,17 +416,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if hours is None or not isinstance(hours, int):
             hours = CACHE_TIME
         if ATTR_SPECIES in hass.data[DOMAIN]:
+            ent_reg = er.async_get(hass)
             for species in list(hass.data[DOMAIN][ATTR_SPECIES]):
                 value = hass.data[DOMAIN][ATTR_SPECIES][species]
+                # Skip in-flight entries: the get_plant concurrency guard stores
+                # an empty sentinel dict ({}) before the API call completes, so it
+                # has no timestamp/pid yet. It will be cleaned on a later pass.
+                if OPB_ATTR_TIMESTAMP not in value:
+                    continue
                 if datetime.now() > datetime.fromisoformat(
                     value[OPB_ATTR_TIMESTAMP]
                 ) + timedelta(hours=hours):
                     _LOGGER.debug("Removing %s from cache", species)
-                    entity_id = async_generate_entity_id(
-                        f"{DOMAIN}.{{}}", value[OPB_PID], current_ids={}
-                    )
-                    hass.states.async_remove(entity_id)
+                    pid = value[OPB_PID]
                     hass.data[DOMAIN][ATTR_SPECIES].pop(species)
+                    # The same pid can be cached under several input keys
+                    # (casing/alias differences map to one canonical pid, hence
+                    # one shared entity). Only tear the entity down once the last
+                    # cache entry referencing this pid is gone, so an expiring
+                    # key doesn't strand a still-cached one without its state.
+                    if any(
+                        v.get(OPB_PID) == pid
+                        for v in hass.data[DOMAIN][ATTR_SPECIES].values()
+                    ):
+                        continue
+                    entity = hass.data[DOMAIN][DATA_SPECIES_ENTITIES].pop(pid, None)
+                    if entity is not None:
+                        entity_id = entity.entity_id
+                        await entity.async_remove()
+                        # Purge the registry entry too, so dynamically-removed
+                        # species do not accumulate as stale "unavailable"
+                        # entities.
+                        if ent_reg.async_get(entity_id) is not None:
+                            ent_reg.async_remove(entity_id)
 
     def _write_file(path: str, data: bytes) -> None:
         """Write binary data to a file (runs in executor)."""
@@ -381,6 +493,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Setup optionFlow updates listener
     entry.async_on_unload(entry.add_update_listener(config_update_listener))
 
+    # Create the search-result entity BEFORE registering the services, so a
+    # `search` call that arrives as soon as the service appears always finds the
+    # stored entity (avoids a KeyError during the setup window).
+    search_entity = OpenPlantbookSearchResult(entry)
+    await hass.data[DOMAIN][DATA_COMPONENT].async_add_entities([search_entity])
+    hass.data[DOMAIN][DATA_SEARCH_ENTITY] = search_entity
+
+    # The per-species cache is in-memory only, so on a fresh start (e.g. after a
+    # restart) it is empty and clean_cache has nothing to expire. Purge any
+    # per-species entities left in the registry by a previous run so they don't
+    # linger as stale, unavailable entities. The persistent search_result entity
+    # is kept; no per-species entities are live yet at this point in setup.
+    ent_reg = er.async_get(hass)
+    for reg_entry in list(ent_reg.entities.values()):
+        if (
+            reg_entry.platform == DOMAIN
+            and reg_entry.domain == DOMAIN
+            and reg_entry.entity_id != search_entity.entity_id
+        ):
+            ent_reg.async_remove(reg_entry.entity_id)
+
     hass.services.async_register(
         DOMAIN, OPB_SERVICE_SEARCH, search_plantbook, None, SupportsResponse.OPTIONAL
     )
@@ -397,7 +530,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         None,
         SupportsResponse.OPTIONAL,
     )
-    hass.states.async_set(f"{DOMAIN}.{OPB_ATTR_SEARCH_RESULT}", 0)
 
     return True
 
@@ -414,13 +546,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # limit=30,
     )
     _LOGGER.debug("Removing search result")
-    hass.states.async_remove(f"{DOMAIN}.{OPB_ATTR_SEARCH_RESULT}")
+    search_entity = hass.data[DOMAIN].get(DATA_SEARCH_ENTITY)
+    if search_entity is not None:
+        await search_entity.async_remove()
     _LOGGER.debug("Removing services")
     hass.services.async_remove(DOMAIN, OPB_SERVICE_SEARCH)
     hass.services.async_remove(DOMAIN, OPB_SERVICE_GET)
     hass.services.async_remove(DOMAIN, OPB_SERVICE_CLEAN_CACHE)
-    # And we get rid of the rest
-    hass.data.pop(DOMAIN)
+    hass.services.async_remove(DOMAIN, OPB_SERVICE_UPLOAD)
+    # Clear per-entry data but keep the EntityComponent, which is reused across
+    # reloads (it owns the openplantbook.* entity platform).
+    component = hass.data[DOMAIN].get(DATA_COMPONENT)
+    hass.data[DOMAIN] = {DATA_COMPONENT: component} if component else {}
 
     return True
 

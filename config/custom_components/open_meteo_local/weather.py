@@ -42,7 +42,7 @@ class OpenMeteoWeatherEntity(
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_native_visibility_unit = UnitOfLength.METERS
+    _attr_native_visibility_unit = UnitOfLength.KILOMETERS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
     _attr_supported_features = (
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
@@ -91,7 +91,7 @@ class OpenMeteoWeatherEntity(
         return self.coordinator.data.apparent_temperature
 
     @property
-    def cloud_coverage(self) -> float | None:
+    def cloud_coverage(self) -> int | None:
         """Return the cloud coverage."""
         return self.coordinator.data.cloud_coverage
 
@@ -103,7 +103,9 @@ class OpenMeteoWeatherEntity(
     @property
     def native_visibility(self) -> float | None:
         """Return the visibility."""
-        return self.coordinator.data.visibility
+        if self.coordinator.data.visibility is None:
+            return None
+        return self.coordinator.data.visibility / 1000
 
     @property
     def native_wind_speed(self) -> float | None:

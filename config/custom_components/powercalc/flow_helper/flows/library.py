@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector, translation
 import voluptuous as vol
 
-from custom_components.powercalc import (
-    DOMAIN,
-    DeviceType,
-)
 from custom_components.powercalc.const import (
     CONF_AVAILABILITY_ENTITY,
     CONF_FIXED,
@@ -21,6 +16,7 @@ from custom_components.powercalc.const import (
     CONF_SELF_USAGE_INCLUDED,
     CONF_SUB_PROFILE,
     CONF_VARIABLES,
+    DOMAIN,
     DUMMY_ENTITY_ID,
     LIBRARY_URL,
     CalculationStrategy,
@@ -45,6 +41,7 @@ from custom_components.powercalc.power_profile.library import ModelInfo, Profile
 from custom_components.powercalc.power_profile.power_profile import (
     DEVICE_TYPE_DOMAIN,
     DOMAIN_DEVICE_TYPE_MAPPING,
+    DeviceType,
     DiscoveryBy,
     PowerProfile,
 )
@@ -80,7 +77,7 @@ class LibraryFlow:
     async def async_step_manufacturer(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Ask the user to select the manufacturer."""
 
         async def _create_schema() -> vol.Schema:
@@ -120,7 +117,7 @@ class LibraryFlow:
     async def async_step_model(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Ask the user to select the model."""
 
         def _build_model_label(model_id: str, model_name: str) -> str:
@@ -186,61 +183,68 @@ class LibraryFlow:
             user_input,
         )
 
-    async def async_step_post_library(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    async def async_step_post_library(self, _: dict[str, Any] | None = None) -> ConfigFlowResult:
         """
         Handles the logic after the user either selected manufacturer/model himself or confirmed autodiscovered.
         Forwards to the next step in the flow.
         """
         if not self.flow.selected_profile:
-            return self.flow.async_abort(reason="model_not_supported")  # type:ignore # pragma: no cover
+            return self.flow.async_abort(reason="model_not_supported")  # pragma: no cover
 
-        if Step.LIBRARY_CUSTOM_FIELDS not in self.flow.handled_steps and self.flow.selected_profile.has_custom_fields:
+        profile_step = await self._async_next_profile_step(self.flow.selected_profile)
+        if profile_step:
+            return profile_step
+
+        strategy_step = await self._async_next_strategy_step(self.flow.selected_profile)
+        if strategy_step:
+            return strategy_step
+
+        return await self.flow.flow_handlers[FlowType.GROUP].async_step_assign_groups()  # type: ignore[no-any-return]
+
+    async def _async_next_profile_step(self, profile: PowerProfile) -> ConfigFlowResult | None:
+        """Return the next step needed to complete the profile itself, or None when nothing is left to ask."""
+        handled_steps = self.flow.handled_steps
+
+        if Step.LIBRARY_CUSTOM_FIELDS not in handled_steps and profile.has_custom_fields:
             return await self.async_step_library_custom_fields()
 
-        if (
-            Step.AVAILABILITY_ENTITY not in self.flow.handled_steps
-            and self.flow.selected_profile.discovery_by == DiscoveryBy.DEVICE
-        ):
+        if Step.AVAILABILITY_ENTITY not in handled_steps and profile.discovery_by == DiscoveryBy.DEVICE:
             result = await self.async_step_availability_entity()
             if result:
                 return result
 
-        if (
-            Step.SUB_PROFILE not in self.flow.handled_steps
-            and await self.flow.selected_profile.requires_manual_sub_profile_selection
-        ):
+        if Step.SUB_PROFILE not in handled_steps and await profile.requires_manual_sub_profile_selection:
             return await self.async_step_sub_profile()
 
+        return None
+
+    async def _async_next_strategy_step(self, profile: PowerProfile) -> ConfigFlowResult | None:
+        """Return the next step needed to configure the calculation strategy, or None when nothing is left to ask."""
+        handled_steps = self.flow.handled_steps
+        virtual_power_flow = self.flow.flow_handlers[FlowType.VIRTUAL_POWER]
+
         if (
-            Step.SMART_SWITCH not in self.flow.handled_steps
-            and self.flow.selected_profile.device_type == DeviceType.SMART_SWITCH
-            and self.flow.selected_profile.calculation_strategy == CalculationStrategy.FIXED
+            Step.SMART_SWITCH not in handled_steps
+            and profile.device_type == DeviceType.SMART_SWITCH
+            and profile.calculation_strategy == CalculationStrategy.FIXED
         ):
             return await self.async_step_smart_switch()
 
-        if (
-            Step.FIXED not in self.flow.handled_steps and self.flow.selected_profile.needs_fixed_config
-        ):  # pragma: no cover
-            return await self.flow.flow_handlers[FlowType.VIRTUAL_POWER].async_step_fixed()  # type:ignore
+        if Step.FIXED not in handled_steps and profile.needs_fixed_config:  # pragma: no cover
+            return await virtual_power_flow.async_step_fixed()  # type: ignore[no-any-return]
 
-        if Step.LINEAR not in self.flow.handled_steps and self.flow.selected_profile.needs_linear_config:
-            return await self.flow.flow_handlers[FlowType.VIRTUAL_POWER].async_step_linear()  # type:ignore
+        if Step.LINEAR not in handled_steps and profile.needs_linear_config:
+            return await virtual_power_flow.async_step_linear()  # type: ignore[no-any-return]
 
-        if (
-            Step.MULTI_SWITCH not in self.flow.handled_steps
-            and self.flow.selected_profile.calculation_strategy == CalculationStrategy.MULTI_SWITCH
-        ):
-            return await self.flow.flow_handlers[FlowType.VIRTUAL_POWER].async_step_multi_switch()  # type:ignore
+        if Step.MULTI_SWITCH not in handled_steps and profile.calculation_strategy == CalculationStrategy.MULTI_SWITCH:
+            return await virtual_power_flow.async_step_multi_switch()  # type: ignore[no-any-return]
 
-        return await self.flow.flow_handlers[FlowType.GROUP].async_step_assign_groups()  # type:ignore
+        return None
 
-    async def async_step_library_custom_fields(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_library_custom_fields(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the flow for custom fields."""
 
-        async def _process_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
+        def _process_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
             return {CONF_VARIABLES: user_input}
 
         form_kwarg: dict[str, Any] | None = None
@@ -269,11 +273,11 @@ class LibraryFlow:
     async def async_step_sub_profile(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the flow for sub profile selection."""
         assert self.flow.selected_profile is not None
 
-        async def _validate(user_input: dict[str, Any]) -> dict[str, str]:
+        def _validate(user_input: dict[str, Any]) -> dict[str, str]:
             return {CONF_MODEL: f"{self.flow.sensor_config.get(CONF_MODEL)}/{user_input.get(CONF_SUB_PROFILE)}"}
 
         library = await ProfileLibrary.factory(self.flow.hass)
@@ -314,16 +318,16 @@ class LibraryFlow:
     async def async_step_sub_profile_per_device(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         return await self.async_step_sub_profile(user_input)
 
-    async def async_step_smart_switch(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_smart_switch(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Asks the user for the power of connect appliance for the smart switch."""
 
         if self.flow.selected_profile and not self.flow.selected_profile.needs_fixed_config:
             return self.flow.persist_config_entry()
 
-        async def _validate(user_input: dict[str, Any]) -> dict[str, Any]:
+        def _validate(user_input: dict[str, Any]) -> dict[str, Any]:
             return {
                 CONF_SELF_USAGE_INCLUDED: user_input.get(CONF_SELF_USAGE_INCLUDED),
                 CONF_MODE: CalculationStrategy.FIXED,
@@ -342,7 +346,7 @@ class LibraryFlow:
             user_input,
         )
 
-    async def async_step_availability_entity(self, user_input: dict[str, Any] | None = None) -> FlowResult | None:
+    async def async_step_availability_entity(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult | None:
         """Handle the flow for availability entity."""
         # Auto-resolve availability entity from profile placeholders
         auto_entity = self._resolve_availability_entity()
@@ -416,7 +420,7 @@ class LibraryConfigFlow(LibraryFlow):
     async def async_step_library_multi_profile(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult | ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """This step gets executed when multiple profiles are found for the source entity."""
         if user_input is not None:
             selected_model: str = user_input.get(CONF_MODEL)  # type: ignore
@@ -465,7 +469,7 @@ class LibraryConfigFlow(LibraryFlow):
     async def async_step_library(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Try to autodiscover manufacturer/model first.
         Ask the user to confirm this or forward to manual library selection.
         """
@@ -478,7 +482,7 @@ class LibraryConfigFlow(LibraryFlow):
 
         return self._show_autodiscovered_profile_form()
 
-    async def _handle_library_confirmation(self, user_input: dict[str, Any]) -> FlowResult:
+    async def _handle_library_confirmation(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle the user's response to an autodiscovered library profile."""
         if not user_input.get(CONF_CONFIRM_AUTODISCOVERED_MODEL) or not self.flow.selected_profile:
             return await self.async_step_manufacturer()
@@ -507,20 +511,17 @@ class LibraryConfigFlow(LibraryFlow):
                 self.flow.source_entity,
             )
 
-    def _show_autodiscovered_profile_form(self) -> FlowResult:
+    def _show_autodiscovered_profile_form(self) -> ConfigFlowResult:
         """Show the confirmation form for an autodiscovered library profile."""
         profile = self.flow.selected_profile
         assert profile is not None
 
-        return cast(
-            FlowResult,
-            self.flow.async_show_form(
-                step_id=Step.LIBRARY,
-                description_placeholders=self._build_library_description_placeholders(profile),
-                data_schema=SCHEMA_POWER_AUTODISCOVERED,
-                errors={},
-                last_step=False,
-            ),
+        return self.flow.async_show_form(
+            step_id=Step.LIBRARY,
+            description_placeholders=self._build_library_description_placeholders(profile),
+            data_schema=SCHEMA_POWER_AUTODISCOVERED,
+            errors={},
+            last_step=False,
         )
 
     def _build_library_description_placeholders(self, profile: PowerProfile) -> dict[str, Any]:
@@ -593,7 +594,7 @@ class LibraryOptionsFlow(LibraryFlow):
         super().__init__(flow)
         self.flow: PowercalcOptionsFlow = flow
 
-    async def async_step_library_options(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_library_options(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the basic options flow."""
         self.flow.is_library_flow = True
         self.flow.selected_sub_profile = self.flow.selected_profile.sub_profile  # type: ignore

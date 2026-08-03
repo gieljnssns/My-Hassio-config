@@ -12,7 +12,9 @@ from datetime import UTC, datetime, timedelta
 
 import numpy as np
 import pandas as pd
-from astral import Observer, sun
+import pvlib
+
+# from astral import Observer, sun
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -77,7 +79,8 @@ class MLSolarForecastCoordinator(DataUpdateCoordinator):
             config.data[CONF_APP_HOSTNAME],
         )
         # force retrain initially
-        self.last_train_time: datetime = datetime.now(UTC) - timedelta(days=1)
+        # self.last_train_time: datetime = datetime.now(UTC) - timedelta(days=1)
+        self.last_train_time: datetime | None = None
 
         self.curr_forecast: pd.DataFrame | None = None
         self.update_lock = asyncio.Lock()
@@ -100,11 +103,23 @@ class MLSolarForecastCoordinator(DataUpdateCoordinator):
             if len(self.weatherstore.data) == 0:
                 await self.weatherstore.load()
 
-            # Retrain nightly
-            if (
-                not await self.lgbm.is_trained()
-                or self.last_train_time.date() != datetime.now(UTC).date()
-            ):
+            # # Retrain nightly
+            # if (
+            #     not await self.lgbm.is_trained()
+            #     or self.last_train_time.date() != datetime.now(UTC).date()
+            # ):
+            #     await self.retrain_model()
+            
+            if self.last_train_time is None:
+                # Eerste update na (her)start
+                if await self.lgbm.is_trained():
+                    # Model bestaat al → vertrouw het, markeer als "vandaag getraind"
+                    self.last_train_time = datetime.now(UTC)
+                else:
+                    # Geen model → retrain noodzakelijk
+                    await self.retrain_model()  # zet zelf last_train_time aan het eind
+            elif self.last_train_time.date() != datetime.now(UTC).date():
+                # Datum gewisseld binnen dezelfde HA-sessie → nachtelijke retrain
                 await self.retrain_model()
 
             # for actual forecasting, start from beginning of today
@@ -193,12 +208,20 @@ class MLSolarForecastCoordinator(DataUpdateCoordinator):
                     else:
                         data[col] = data[col].round(decimals).astype("Int64")
 
-            observer = Observer(latitude=self.lat, longitude=self.lon)
-
-            data["azimuth"] = list(data.index.map(lambda t: sun.azimuth(observer, t)))
-            data["elevation"] = list(
-                data.index.map(lambda t: sun.elevation(observer, t))
+            solpos = pvlib.solarposition.get_solarposition(
+                time=data.index,
+                latitude=self.lat,
+                longitude=self.lon,
             )
+            data["azimuth"] = solpos["azimuth"].to_numpy()
+            data["elevation"] = solpos["elevation"].to_numpy()
+
+            # observer = Observer(latitude=self.lat, longitude=self.lon)
+
+            # data["azimuth"] = list(data.index.map(lambda t: sun.azimuth(observer, t)))
+            # data["elevation"] = list(
+            #     data.index.map(lambda t: sun.elevation(observer, t))
+            # )
             # Add hour as feature instead of using full timestamp
             data["hour"] = data.index.hour
             # Add cosine/sine features for daily solar cycle (helps model generalize across days)
@@ -231,7 +254,7 @@ class MLSolarForecastCoordinator(DataUpdateCoordinator):
             data["wind_direction_change"] = 0
             if "wind_direction_10m" in data.columns:
                 data["wind_direction_change"] = (
-                    data.index.shift(-1).wind_direction_10m - data["wind_direction_10m"]
+                    data["wind_direction_10m"].shift(-1) - data["wind_direction_10m"]
                 )
             # Add direct radiation to global tilted (model learns their correlation and handles missing values)
             if (

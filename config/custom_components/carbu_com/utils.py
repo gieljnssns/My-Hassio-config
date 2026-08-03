@@ -28,6 +28,14 @@ _DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.0%z"
 _DATE_FORMAT = "%d/%m/%Y"
 
 
+def _redact_url_secret(url):
+    return re.sub(
+        r"([?&](?:api_key|apikey|apiKey|key)=)[^&]+",
+        r"\1<redacted>",
+        url,
+    )
+
+
 def _extract_balanced_js_object(script_text, start=0):
     object_start = script_text.find("{", start)
     if object_start == -1:
@@ -176,9 +184,8 @@ def _fuel_prediction_from_echarts_option(option, script_text):
     return [trend, prediction_date.strftime(_DATE_FORMAT)]
 
 
-def _fuel_prediction_from_echarts(html):
-    soup = BeautifulSoup(html, 'html.parser')
-
+def _fuel_prediction_from_echarts(response_text):
+    soup = BeautifulSoup(response_text, 'html.parser')
     for script in soup.find_all('script'):
         script_text = script.string or script.get_text()
         if "echarts" not in script_text:
@@ -269,7 +276,7 @@ class ComponentSession(object):
     def __init__(self, GEO_API_KEY):
         self.s = requests.Session()
         self.s.headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
-        self.s.headers["Referer"] = "https://homeassistant.io"
+        self.s.headers["Referer"] = "https://carbu.com/"
         # self.API_KEY_GEOCODIFY = GEO_API_KEY
         # self.GEOCODIFY_BASE_URL = "https://api.geocodify.com/v2/"
         self.API_KEY_GEOAPIFY = GEO_API_KEY
@@ -282,8 +289,6 @@ class ComponentSession(object):
     def convertPostalCode(self, postalcode, country, town = ''):
         # _LOGGER.debug(f"convertPostalCode: postalcode: {postalcode}, country: {country}, town: {town}")
         header = {"Content-Type": "application/x-www-form-urlencoded"}
-        # https://carbu.com//commonFunctions/getlocation/controller.getlocation_JSON.php?location=1831&SHRT=1
-        # {"id":"FR_24_18_183_1813_18085","area_code":"FR_24_18_183_1813_18085","name":"Dampierre-en-GraÃ§ay","parent_name":"Centre","area_level":"","area_levelName":"","country":"FR","country_name":"France","lat":"47.18111","lng":"1.9425","postcode":"18310","region_name":""},{"id":"FR_24_18_183_1813_18100","area_code":"FR_24_18_183_1813_18100","name":"Genouilly","parent_name":"Centre","area_level":"","area_levelName":"","country":"FR","country_name":"France","lat":"47.19194","lng":"1.88417","postcode":"18310","region_name":""},{"id":"FR_24_18_183_1813_18103","area_code":"FR_24_18_183_1813_18103","name":"GraÃ§ay","parent_name":"Centre","area_level":"","area_levelName":"","country":"FR","country_name":"France","lat":"47.14389","lng":"1.84694","postcode":"18310","region_name":""},{"id":"FR_24_18_183_1813_18167","area_code":"FR_24_18_183_1813_18167","name":"Nohant-en-GraÃ§ay","parent_name":"Centre","area_level":"","area_levelName":"","country":"FR","country_name":"France","lat":"47.13667","lng":"1.89361","postcode":"18310","region_name":""},{"id":"FR_24_18_183_1813_18228","area_code":"FR_24_18_183_1813_18228","name":"Saint-Outrille","parent_name":"Centre","area_level":"","area_levelName":"","country":"FR","country_name":"France","lat":"47.14361","lng":"1.84","postcode":"18310","region_name":""},{"id":"BE_bf_279","area_code":"BE_bf_279","name":"Diegem","parent_name":"Machelen","area_level":"","area_levelName":"","country":"BE","country_name":"Belgique","lat":"50.892365","lng":"4.446127","postcode":"1831","region_name":""},{"id":"LU_lx_3287","area_code":"LU_lx_3287","name":"Luxembourg","parent_name":"Luxembourg","area_level":"","area_levelName":"","country":"LU","country_name":"Luxembourg","lat":"49.610004","lng":"6.129596","postcode":"1831","region_name":""}
         data ={"location":str(postalcode),"SHRT":1}
         response = self.s.get(f"https://carbu.com//commonFunctions/getlocation/controller.getlocation_JSON.php?location={postalcode}&SHRT=1",headers=header,timeout=30)
         if response.status_code != 200:
@@ -312,8 +317,6 @@ class ComponentSession(object):
     def convertPostalCodeMultiMatch(self, postalcode, country, town = ''):
         _LOGGER.debug(f"convertPostalCode: postalcode: {postalcode}, country: {country}, town: {town}")
         header = {"Content-Type": "application/x-www-form-urlencoded"}
-        # https://carbu.com//commonFunctions/getlocation/controller.getlocation_JSON.php?location=1831&SHRT=1
-        # {"id":"FR_24_18_183_1813_18085","area_code":"FR_24_18_183_1813_18085","name":"Dampierre-en-GraÃ§ay","parent_name":"Centre","area_level":"","area_levelName":"","country":"FR","country_name":"France","lat":"47.18111","lng":"1.9425","postcode":"18310","region_name":""},{"id":"FR_24_18_183_1813_18100","area_code":"FR_24_18_183_1813_18100","name":"Genouilly","parent_name":"Centre","area_level":"","area_levelName":"","country":"FR","country_name":"France","lat":"47.19194","lng":"1.88417","postcode":"18310","region_name":""},{"id":"FR_24_18_183_1813_18103","area_code":"FR_24_18_183_1813_18103","name":"GraÃ§ay","parent_name":"Centre","area_level":"","area_levelName":"","country":"FR","country_name":"France","lat":"47.14389","lng":"1.84694","postcode":"18310","region_name":""},{"id":"FR_24_18_183_1813_18167","area_code":"FR_24_18_183_1813_18167","name":"Nohant-en-GraÃ§ay","parent_name":"Centre","area_level":"","area_levelName":"","country":"FR","country_name":"France","lat":"47.13667","lng":"1.89361","postcode":"18310","region_name":""},{"id":"FR_24_18_183_1813_18228","area_code":"FR_24_18_183_1813_18228","name":"Saint-Outrille","parent_name":"Centre","area_level":"","area_levelName":"","country":"FR","country_name":"France","lat":"47.14361","lng":"1.84","postcode":"18310","region_name":""},{"id":"BE_bf_279","area_code":"BE_bf_279","name":"Diegem","parent_name":"Machelen","area_level":"","area_levelName":"","country":"BE","country_name":"Belgique","lat":"50.892365","lng":"4.446127","postcode":"1831","region_name":""},{"id":"LU_lx_3287","area_code":"LU_lx_3287","name":"Luxembourg","parent_name":"Luxembourg","area_level":"","area_levelName":"","country":"LU","country_name":"Luxembourg","lat":"49.610004","lng":"6.129596","postcode":"1831","region_name":""}
         data ={"location":str(postalcode),"SHRT":1}
         response = self.s.get(f"https://carbu.com//commonFunctions/getlocation/controller.getlocation_JSON.php?location={postalcode}&SHRT=1",headers=header,timeout=30)
         if response.status_code != 200:
@@ -390,7 +393,6 @@ class ComponentSession(object):
         
         #CARU.COM BE / FR / LU:
         header = {"Content-Type": "application/x-www-form-urlencoded"}
-        # https://carbu.com/belgie//liste-stations-service/GO/Diegem/1831/BE_bf_279
 
         response = self.s.get(f"https://carbu.com/belgie//liste-stations-service/{fueltype.code}/{town}/{postalcode}/{locationinfo}",headers=header,timeout=10)
         if response.status_code != 200:
@@ -415,28 +417,12 @@ class ComponentSession(object):
             stationcontents = div.find_all('div', class_='station-content')
             for stationcontent in stationcontents:
             
-                # <div id="item_21313"
-                 # data-lat="50.768739608759"
-                 # data-lng="4.2587584325408"
-                 # data-id="21313"
-                 # data-logo="texaco.gif"
-                 # data-name="Texaco Lot"
-                 # data-fuelname="Diesel (B7)"
-                 # data-price="1.609"
-                 # data-distance="5.5299623109514"
-                 # data-link="https://carbu.com/belgie/index.php/station/texaco/lot/1651/21313"
-                 # data-address="Bergensesteenweg 155<br/>1651 Lot"
-                 # class="stationItem panel panel-default">
                 
                 station_elem = stationcontent.find('div', {'id': lambda x: x and x.startswith('item_')})
                 
                 stationid = station_elem.get('data-id')
                 lat = station_elem.get('data-lat')
                 lng = station_elem.get('data-lng')
-                # logo_url = "https://carbucomstatic-5141.kxcdn.com//brandLogo/326_Capture%20d%E2%80%99%C3%A9cran%202021-09-27%20%C3%A0%2011.11.24.png"
-                # logo_url = "https://carbucomstatic-5141.kxcdn.com/brandLogo/"+ station_elem.get('data-logo').replace('’','%E2%80%99')
-                # logo_url = r"https://carbucomstatic-5141.kxcdn.com/brandLogo/"+ station_elem.get('data-logo').replace("’", "\\’")
-                # logo_url = r"https://carbucomstatic-5141.kxcdn.com/brandLogo/"+ urllib.parse.quote(station_elem.get('data-logo'))
                 logo_url = "https://carbucomstatic-5141.kxcdn.com/brandLogo/"+ station_elem.get('data-logo')
                 url = station_elem.get('data-link')
                 brand = url.split("https://carbu.com/belgie/index.php/station/")[1]
@@ -1138,8 +1124,13 @@ class ComponentSession(object):
         if self._MAZOUT_API_KEY is not None:
             return self._MAZOUT_API_KEY
         
-        header = {"Content-Type": "application/x-www-form-urlencoded"}
-        header = {"Accept-Language": "nl-BE"}
+        header = {
+            'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
+            "Accept-Language": "nl-BE",
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36'
+        }
+
         response = self.s.get(f"https://mazout.com/belgie",headers=header,timeout=30)
         if response.status_code != 200:
             _LOGGER.error(f"ERROR: {response.text}")
@@ -1151,9 +1142,9 @@ class ComponentSession(object):
         script_tag = soup.find('script', {'type': 'module'})
         src = script_tag['src']
         file_name = src.split('/')[-1]
-
         
-        response = self.s.get(f"https://mazout.com/assets/{file_name}",headers=header,timeout=30)
+        response = self.s.get(f"https://mazout.com/assets/js/{file_name}",headers=header,timeout=30)
+        _LOGGER.debug(f"DEBUG: https://mazout.com/assets/js/{file_name} response: {response.text}")
         if response.status_code != 200:
             _LOGGER.error(f"ERROR: {response.text}")
             self._MAZOUT_API_KEY = None
@@ -1161,7 +1152,7 @@ class ComponentSession(object):
 
         code = response.text
 
-        match = re.search(r'api_key:\s*"([^"]+)"', code)
+        match = re.search(r'api_key=\s*"([^"]+)"', code)
         api_key = match.group(1) if match else None
 
         return api_key
@@ -1171,11 +1162,10 @@ class ComponentSession(object):
     def getOilPrice(self, locationinfo, volume, oiltypecode):
         header = {"Content-Type": "application/x-www-form-urlencoded"}
         header = {"Accept-Language": "nl-BE"}
-        # https://api.carbu.com/mazout/v1/offers?[object%20Object]&api_key=elPb39PWhWJj9K2t73tlxyRL0cxEcTCr0cgceQ8q&maxLevel=6&minLevel=5&areaCode=BE_bf_223&productId=2&quantity=1000
         
         api_key = self.getMazoutApiKey()
         oildetails_url = f"https://api.carbu.com/mazout/v1/offers?[object%20Object]&api_key={api_key}&maxLevel=6&minLevel=5&areaCode={locationinfo}&productId={oiltypecode}&quantity={volume}&locale=nl-BE"
-        _LOGGER.debug(f"oildetails_url: {oildetails_url}")
+        _LOGGER.debug(f"oildetails_url: {_redact_url_secret(oildetails_url)}")
         
         response = self.s.get(oildetails_url,headers=header,timeout=30, verify=False)
         if response.status_code != 200:
@@ -1191,7 +1181,6 @@ class ComponentSession(object):
     def getOilPrediction(self):
         header = {"Content-Type": "application/x-www-form-urlencoded"}
         header = {"Accept-Language": "nl-BE"}
-        # https://api.carbu.com/mazout/v1/price-summary?api_key=elPb39PWhWJj9K2t73tlxyRL0cxEcTCr0cgceQ8q&sk=T211ck5hWEtySXFMRTlXRys5KzVydz09
 
 
         api_key = self.getMazoutApiKey()
@@ -1493,7 +1482,7 @@ class ComponentSession(object):
     @sleep_and_retry
     @limits(calls=100, period=60)
     def geocodeORS(self, country_code, postalcode, ors_api_key):
-        _LOGGER.debug(f"geocodeORS request: country_code: {country_code}, postalcode: {postalcode}, ors_api_key: {ors_api_key}")
+        _LOGGER.debug(f"geocodeORS request: country_code: {country_code}, postalcode: {postalcode}, ors_api_key: <redacted>")
         header = {"Content-Type": "application/x-www-form-urlencoded"}
         # header = {"Accept-Language": "nl-BE"}
         
@@ -1715,7 +1704,7 @@ class ComponentSession(object):
             
             response = self.s.get(f"{self.GEOAPIFY_BASE_URL}/reverse?lat={latitude}&lon={longitude}&api_key={self.API_KEY_GEOAPIFY}&format=json")
 
-            _LOGGER.debug(f"reverseGeocode geodata response {response}, {self.GEOAPIFY_BASE_URL}/reverse?lat={latitude}&lon={longitude}&api_key={self.API_KEY_GEOAPIFY}&format=json")
+            _LOGGER.debug(f"reverseGeocode geodata response {response}, {self.GEOAPIFY_BASE_URL}/reverse?lat={latitude}&lon={longitude}&api_key=<redacted>&format=json")
             # Check if the request was successful
             if response.status_code == 200:
                 data = response.json()
@@ -1887,76 +1876,3 @@ class ComponentSession(object):
         except (KeyError, TypeError):
             return None
     
-
-#manual tests - enable debug logging
-
-# _LOGGER = logging.getLogger(__name__)
-# _LOGGER.setLevel(logging.DEBUG)
-# if not logging.getLogger().hasHandlers():
-#     logging.basicConfig(level=logging.DEBUG)
-# _LOGGER.debug("Debug logging is now enabled.")
-
-# session = ComponentSession("GEO_API_KEY")
-
-#LOCAL TESTS
-
-# session.geocode("BE", "1000")
-
-#  test route
-# print(session.getPriceOnRoute("BE", FuelType.DIESEL, 1000, 2000))
-
-
-# test nl official
-#print(session.getFuelOfficial(FuelType.DIESEL_OFFICIAL_B7, "NL"))
-# session.getFuelOfficial(FuelType.LPG_OFFICIAL, "BE")
-
-#test US
-# ZIP Code 10001 - New York, New York
-# ZIP Code 90210 - Beverly Hills, California
-# ZIP Code 60611 - Chicago, Illinois
-# ZIP Code 02110 - Boston, Massachusetts
-# ZIP Code 33109 - Miami Beach, Florida
-
-# locationinfo= session.convertLocationBoundingBox("90210", "US", "Beverly Hills")
-# print(session.getFuelPrices("90210", "US", "Beverly Hills", locationinfo, FuelType.DIESEL, False))
-
-
-#test SP
-
-
-# locationinfo= session.convertLocationBoundingBox("28500", "ES", "Madrid")
-# print(session.getFuelPrices("28500", "ES", "Madrid", locationinfo, FuelType.DIESEL, False))
-
-# #test BE
-# locationinfo= session.convertPostalCode("3300", "BE", "Bost")
-# print(session.getOilPrice(locationinfo.get("id"), 1000, FuelType.OILSTD.code))
-# locationinfo= session.convertPostalCode("3300", "BE", "Bost")
-# print(session.getFuelPrices("3300", "BE", "Bost", locationinfo.get("id"), FuelType.LPG, False))
-# #test2
-# locationinfo= session.convertPostalCode("8380", "BE", "Brugge")
-# if locationinfo:
-#     print(session.getFuelPrices("8380", "BE", "Brugge", locationinfo.get("id"), FuelType.SUPER95, False))
-# #test3
-# locationinfo= session.convertPostalCode("31830", "FR")
-# if locationinfo:
-#     # print(session.getFuelPrices("31830", "FR", "Plaisance-du-Touch", locationinfo.get("id"), FuelType.SUPER95, True))
-#     print(session.getStationInfo("31830", "FR", FuelType.SUPER95, "Plaisance-du-Touch", 0, "", True))
-# test IT
-# locationinfo= session.convertLocationBoundingBox("07021", "IT", "Arzachena")
-# print(session.getFuelPrices("07021", "IT", "Arzachena", locationinfo, FuelType.SUPER95, False))
-#locationinfo= session.convertLocationBoundingBox("09040", "IT", "Settimo San Pietro")
-#print(session.getFuelPrices("09040", "IT", "Settimo San Pietro", locationinfo, FuelType.SUPER95, False))
-# test NL
-# locationinfo= session.convertLocationBoundingBox("2627AR", "NL", "Delft")
-# if len(locationinfo) > 0: 
-#     print(session.getFuelPrices("2627AR", "NL", "Delft", locationinfo, FuelType.DIESEL, False))
-    # print(session.getStationInfo("2627AR", "NL", FuelType.DIESEL, "Delft", 0, "", False))
-            
-# print(FuelType.DIESEL.code)
-# print(FuelType.SUPER95_PREDICTION.code)
-# print("FuelType.DIESEL_OFFICIAL_B10")
-# print(session.getFuelOfficial(FuelType.DIESEL_OFFICIAL_B10, "NL"))
-# print("FuelType.SUPER95_OFFICIAL_E10")
-# print(session.getFuelOfficial(FuelType.SUPER95_OFFICIAL_E10, "NL"))
-
-# print(FuelType.DIESEL.code)

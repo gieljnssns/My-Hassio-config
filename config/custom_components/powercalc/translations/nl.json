@@ -10,6 +10,7 @@
       "already_configured": "Sensor is reeds geconfigureerd, specifieer een uniek ID"
     },
     "error": {
+      "cost_price_mandatory": "U moet een energieprijs of een energieprijssensor aanleveren",
       "daily_energy_mandatory": "Je moet minimaal waarde of waarde template opgeven",
       "entity_mandatory": "Je moet verplicht een entiteit opgeven voor iedere andere strategie dan playbook",
       "fixed_mandatory": "Je dient minimaal een van de volgende velden te definiëren: Vermogen, Vermogen template of Vermogen per status",
@@ -48,7 +49,7 @@
       "daily_energy": {
         "data": {
           "create_utility_meters": "Creëer utiliteit meters",
-          "daily_energy_value": "Daily energy value",
+          "daily_energy_value": "Dagelijkse energiewaarde",
           "name": "Naam",
           "on_time": "Tijd aan per dag",
           "start_time": "Begintijd",
@@ -80,6 +81,7 @@
         "data": {
           "name": "Naam",
           "create_energy_sensor": "Creëer energie sensoren",
+          "create_cost_sensor": "Maak een kostensensor",
           "create_utility_meters": "Creëer utiliteit meters",
           "domain": "Entiteit domein",
           "exclude_entities": "Entiteiten uitsluiten"
@@ -88,39 +90,101 @@
       },
       "fixed": {
         "data": {
-          "fixed_value": "Fixed value"
+          "fixed_value": "Vaste waarde"
         },
         "data_description": {
-          "fixed_value": "Fixed value in Watts when the entity is ON"
+          "fixed_value": "Vaste waarde in watt wanneer de entiteit aan staat"
         },
-        "description": "Definieer een vast vermogen (in W) voor je entiteit. Eventueel kan je ook een vermogen per status instellen. Bijvoorbeeld:\n\n`playing: 8.3`\n`paused: 2.25`",
+        "description": "Definieer een vast vermogen (in W) voor je entiteit. Zie [documentatie]({docs_uri}) voor meer informatie. Eventueel kan je ook een vermogen per status instellen. Bijvoorbeeld:\n\n`playing: 8.3`\n`paused: 2.25`",
         "title": "Gefixeerde configuratie"
       },
       "global_configuration": {
         "title": "Globale configuratie",
-        "description": "Stel de globale configuratie in voor Powercalc. Voor meer informatie zie de [documentation]({docs_uri}). Extra opties voor energiesensors en nutsmeters kunnen in de volgende stappen worden geleverd.",
+        "description": "Stel de globale configuratie voor Powercalc in. Zie de [documentatie]({docs_uri}) voor meer informatie. Extra opties voor energiesensoren en nutsmeters kunnen in de volgende stappen worden ingesteld.",
+        "sections": {
+          "power_options": {
+            "name": "Vermogenssensor",
+            "data": {
+              "power_sensor_naming": "Patroon voor naam vermogenssensor",
+              "power_sensor_friendly_naming": "Patroon voor vriendelijke naam vermogenssensor",
+              "power_sensor_category": "Vermogen sensor categorie",
+              "power_sensor_precision": "Precisie van vermogenssensor"
+            }
+          },
+          "features": {
+            "name": "Sensoren aanmaken",
+            "data": {
+              "create_energy_sensors": "Creëer energie sensoren",
+              "create_cost_sensors": "Maak kostensensoren",
+              "create_standby_group": "Maak standby-groep",
+              "create_utility_meters": "Creëer utiliteit meters"
+            },
+            "data_description": {
+              "create_energy_sensors": "Of powercalc kWh sensoren moet maken",
+              "create_cost_sensors": "Of powercalc kostensensoren moet creëren. Vereist dat in de volgende stappen een energieprijs wordt geconfigureerd",
+              "create_standby_group": "Maak groep met een totaal van alle standby en eigen gebruik van IOT apparaten",
+              "create_utility_meters": "Laat powercalc utiliteit meters maken. Deze resetten dagelijks, elk uur, etc."
+            }
+          },
+          "advanced": {
+            "name": "Geavanceerd",
+            "data": {
+              "enable_analytics": "Verzend anonieme analytische data",
+              "ignore_unavailable_state": "Negeer onbeschikbaar status",
+              "include_non_powercalc_sensors": "Neem niet-powercalc sensoren mee",
+              "disable_extended_attributes": "Extra attributen uitschakelen",
+              "disable_library_download": "Schakel download van externe bibliotheek uit"
+            },
+            "data_description": {
+              "enable_analytics": "Sta Powercalc toe om anonieme en geaggregeerde gebruiksstatistieken te verzenden om de integratie te helpen verbeteren",
+              "ignore_unavailable_state": "Houd Powercalc sensoren beschikbaar, zelfs als de bron entiteit niet beschikbaar is",
+              "include_non_powercalc_sensors": "Bepaal of je niet-powercalc sensoren wilt opnemen in groepen",
+              "disable_extended_attributes": "Schakel alle extra attributen uit die Powercalc aan de energie, energie en groepsentiteit states toevoegt. Dit helpt de grootte van de database klein te houden",
+              "disable_library_download": "Uitschakelen van de Powercalc bibliotheek download functie"
+            }
+          }
+        }
+      },
+      "global_configuration_cost": {
+        "title": "Kosten opties",
+        "description": "Configureer de energieprijs die wordt gebruikt om kostensensoren te berekenen. Geef een vaste prijs op of een sensor die de huidige prijs per kWh levert. Zie [documentatie]({docs_uri}) voor meer informatie",
+        "sections": {
+          "cost_pricing": {
+            "name": "Prijzen",
+            "data": {
+              "energy_price": "Vaste energieprijs",
+              "energy_price_multiplier": "Multiplier voor energieprijzen",
+              "energy_price_sensor": "Energieprijssensor",
+              "energy_price_surcharge": "Toeslag energieprijs"
+            },
+            "data_description": {
+              "energy_price": "Een vaste prijs per kWh in uw lokale valuta",
+              "energy_price_multiplier": "Vermenigvuldiger toegepast na de toeslag. Gebruik dit voor procentuele belastingen of toeslagen, bijvoorbeeld 1,21 voor 21%",
+              "energy_price_sensor": "Een sensor die de actuele energieprijs per kWh weergeeft (bijvoorbeeld door een dynamische tariefintegratie). Laat de vaste prijs leeg om deze sensor te gebruiken",
+              "energy_price_surcharge": "Extra vast bedrag per kWh toegevoegd aan de vaste prijs of prijssensorwaarde"
+            }
+          },
+          "cost_naming": {
+            "name": "Naamgeving",
+            "data": {
+              "cost_sensor_friendly_naming": "Beschrijvend naampatroon voor kostensensor",
+              "cost_sensor_naming": "Naampatroon van kostensensor"
+            },
+            "data_description": {
+              "cost_sensor_friendly_naming": "Patroon voor de beschrijvende naam van de kostensensor. De bronnaam wordt ingevoegd op de plaatsaanduidingspositie",
+              "cost_sensor_naming": "Patroon dat wordt gebruikt om de naam van de kostensensor en de entiteits-ID samen te stellen. De bronnaam wordt ingevoegd op de plaatsaanduidingspositie"
+            }
+          }
+        }
+      },
+      "global_configuration_cost_apply": {
+        "title": "Pas kostensensoren toe",
+        "description": "U heeft de instelling voor globale kostensensoren gewijzigd. Wilt u deze wijziging toepassen op alle bestaande powercalc-sensoren die zijn gemaakt via de GUI?",
         "data": {
-          "create_energy_sensors": "Creëer energie sensoren",
-          "create_standby_group": "Maak standby-groep",
-          "create_utility_meters": "Creëer utiliteit meters",
-          "disable_extended_attributes": "Extra attributen uitschakelen",
-          "disable_library_download": "Schakel download van externe bibliotheek uit",
-          "enable_analytics": "Verzend anonieme analytische data",
-          "ignore_unavailable_state": "Negeer onbeschikbaar status",
-          "include_non_powercalc_sensors": "Neem niet-powercalc sensoren mee",
-          "power_sensor_category": "Vermogen sensor categorie",
-          "power_sensor_friendly_naming": "Patroon voor vriendelijke naam vermogenssensor",
-          "power_sensor_naming": "Patroon voor naam vermogenssensor"
+          "apply_to_all": "Toepassen op bestaande sensoren"
         },
         "data_description": {
-          "create_energy_sensors": "Of powercalc kWh sensoren moet maken",
-          "create_standby_group": "Maak groep met een totaal van alle standby en eigen gebruik van IOT apparaten",
-          "create_utility_meters": "Laat powercalc utiliteit meters maken. Deze resetten dagelijks, elk uur, etc.",
-          "disable_extended_attributes": "Schakel alle extra attributen uit die Powercalc aan de energie, energie en groepsentiteit states toevoegt. Dit helpt de grootte van de database klein te houden",
-          "disable_library_download": "Uitschakelen van de Powercalc bibliotheek download functie",
-          "enable_analytics": "Sta Powercalc toe om anonieme en geaggregeerde gebruiksstatistieken te verzenden om de integratie te helpen verbeteren",
-          "ignore_unavailable_state": "Houd Powercalc sensoren beschikbaar, zelfs als de bron entiteit niet beschikbaar is",
-          "include_non_powercalc_sensors": "Bepaal of je niet-powercalc sensoren wilt opnemen in groepen"
+          "apply_to_all": "Werk elke bestaande GUI-powercalc-sensor bij zodat deze overeenkomt met de nieuwe instelling voor kostensensoren"
         }
       },
       "global_configuration_discovery": {
@@ -173,41 +237,56 @@
       },
       "group_custom": {
         "data": {
-          "area": "Ruimte",
-          "floor": "Verdieping",
-          "create_energy_sensor": "Creëer energie sensoren",
-          "create_utility_meters": "Creëer utiliteit meters",
-          "device": "Apparaat",
-          "force_calculate_group_energy": "Forceer berekenen energie",
-          "group_energy_entities": "Additionele energie entiteiten",
-          "group_energy_start_at_zero": "Start op nul",
-          "group_member_devices": "Apparaten",
-          "group_member_sensors": "Individuele Powercalc sensoren",
-          "group_power_entities": "Additionele vermogen entiteiten",
-          "hide_members": "Verberg onderliggende sensoren",
-          "include_non_powercalc_sensors": "Niet-powercalc sensoren meenemen",
-          "name": "Naam",
-          "sub_groups": "Sub groepen"
+          "name": "Naam"
         },
-        "data_description": {
-          "area": "Voeg alle powercalc sensoren van de gespecificeerde ruimte toe",
-          "floor": "Voeg alle powercalc sensoren van de gespecificeerde verdieping toe",
-          "create_energy_sensor": "Laat powercalc een kWh meter maken",
-          "device": "Voeg de entiteiten toe aan een bestaand HA apparaat",
-          "force_calculate_group_energy": "Standaard worden de energiesensoren van de individuele sensoren opgeteld. Schakel deze optie in om een Riemann Sum sensor te forceren",
-          "group_energy_entities": "Additionele energie entiteiten (kWh)",
-          "group_energy_start_at_zero": "Wanneer ingeschakeld, start de energiesensor bij nul wanneer de sensor is aangemaakt. Anders worden alle huidige onderliggende energiesensor waarden opgeteld.",
-          "group_member_devices": "Energie- en stroomentiteiten van de geselecteerde apparaten toevoegen aan de groep",
-          "group_member_sensors": "Powercalc sensoren die je wil toevoegen aan de groep",
-          "group_power_entities": "Additionele vermogen entiteiten (W)",
-          "include_non_powercalc_sensors": "Bepaal of je niet-powercalc sensoren wilt opnemen bij gebruik van de ruimte optie",
-          "sub_groups": "Alle onderliggende sensoren van de geselecteerde sub-groepen worden ook automatisch aan deze groep toegevoegd."
+        "sections": {
+          "members": {
+            "name": "Leden",
+            "data": {
+              "group_member_sensors": "Individuele Powercalc sensoren",
+              "group_member_devices": "Apparaten",
+              "group_power_entities": "Additionele vermogen entiteiten",
+              "group_energy_entities": "Additionele energie entiteiten",
+              "sub_groups": "Sub groepen",
+              "area": "Ruimte",
+              "floor": "Verdieping"
+            },
+            "data_description": {
+              "group_member_sensors": "Powercalc sensoren die je wil toevoegen aan de groep",
+              "group_member_devices": "Energie- en stroomentiteiten van de geselecteerde apparaten toevoegen aan de groep",
+              "group_power_entities": "Additionele vermogen entiteiten (W)",
+              "group_energy_entities": "Additionele energie entiteiten (kWh)",
+              "sub_groups": "Alle onderliggende sensoren van de geselecteerde sub-groepen worden ook automatisch aan deze groep toegevoegd.",
+              "area": "Voeg alle powercalc sensoren van de gespecificeerde ruimte toe",
+              "floor": "Voeg alle powercalc sensoren van de gespecificeerde verdieping toe"
+            }
+          },
+          "options": {
+            "name": "Opties",
+            "data": {
+              "device": "Apparaat",
+              "hide_members": "Verberg onderliggende sensoren",
+              "include_non_powercalc_sensors": "Niet-powercalc sensoren meenemen",
+              "force_calculate_group_energy": "Forceer berekenen energie",
+              "group_energy_start_at_zero": "Start op nul",
+              "create_energy_sensor": "Creëer energie sensoren",
+              "create_utility_meters": "Creëer utiliteit meters"
+            },
+            "data_description": {
+              "device": "Voeg de entiteiten toe aan een bestaand HA apparaat",
+              "include_non_powercalc_sensors": "Bepaal of je niet-powercalc sensoren wilt opnemen bij gebruik van de ruimte optie",
+              "force_calculate_group_energy": "Standaard worden de energiesensoren van de individuele sensoren opgeteld. Schakel deze optie in om een Riemann Sum sensor te forceren",
+              "group_energy_start_at_zero": "Wanneer ingeschakeld, start de energiesensor bij nul wanneer de sensor is aangemaakt. Anders worden alle huidige onderliggende energiesensor waarden opgeteld.",
+              "create_energy_sensor": "Laat powercalc een kWh meter maken"
+            }
+          }
         },
         "title": "Creëer een groep sensor"
       },
       "group_subtract": {
         "data": {
           "create_energy_sensor": "Creëer energie sensoren",
+          "create_cost_sensor": "Maak een kostensensor",
           "create_utility_meters": "Creëer utiliteit meters",
           "entity_id": "Basis entiteit",
           "name": "Naam",
@@ -224,6 +303,7 @@
           "main_power_sensor": "Hoofd vermogen sensor (P1)",
           "group_tracked_auto": "Entiteiten automatisch toegevoegd",
           "create_energy_sensor": "Creëer energie sensor",
+          "create_cost_sensor": "Maak een kostensensor",
           "create_utility_meters": "Creëer utiliteit meters"
         },
         "data_description": {
@@ -260,12 +340,12 @@
         "title": "Bibliotheek"
       },
       "library_custom_fields": {
-        "title": "Profile configuration",
+        "title": "Profielconfiguratie",
         "data": {
-          "power_factor": "Power Factor"
+          "power_factor": "Machtsfactor"
         },
         "data_description": {
-          "power_factor": "Ratio of real power to apparent power. Use 0.6 for computers/electronics, 0.7 for mixed loads, 1.0 for resistive loads like heaters."
+          "power_factor": "Verhouding tussen werkelijk vermogen en schijnbaar vermogen. Gebruik 0,6 voor computers/elektronica, 0,7 voor gemengde belastingen, 1,0 voor resistieve belastingen zoals verwarmingstoestellen."
         }
       },
       "library_multi_profile": {
@@ -279,7 +359,7 @@
         "data": {
           "attribute": "Attribuut",
           "calibrate": "Kalibratie waardes",
-          "gamma_curve": "Gamma curve",
+          "gamma_curve": "Gamma-curve",
           "max_power": "Max vermogen",
           "min_power": "Min vermogen"
         },
@@ -287,7 +367,7 @@
           "attribute": "Specificeer een attribuut. Wanneer je dit leeg laat dan wordt helderheid gebruikt voor verlichting en percentage voor ventilatoren",
           "calibrate": "Kalibratiewaarde op iedere regel. Voorbeeld\n\n1: 20"
         },
-        "description": "Define the linear power calculation options. See the [documentation]({docs_uri}) for more information. Use either min/max power or calibration values which allows for more points of control.",
+        "description": "Definieer de lineaire vermogensberekeningsopties. Zie de [documentatie]({docs_uri}) voor meer informatie. Gebruik min/max vermogen of kalibratiewaarden die meer controlepunten mogelijk maken.",
         "title": "Lineaire configuratie"
       },
       "manufacturer": {
@@ -299,7 +379,7 @@
       },
       "model": {
         "data": {
-          "model": "Model ID"
+          "model": "Model-ID"
         },
         "description": "Selecteer het model. Zie de [lijst]({supported_models_link}) van ondersteunde apparaten voor meer informatie",
         "title": "Model configuratie"
@@ -325,13 +405,13 @@
           "power": "Vermogen voor één schakelaar wanneer ingeschakeld",
           "power_off": "Vermogen voor één enkele schakelaar wanneer uitgeschakeld"
         },
-        "description": "Define the Multi switch power calculation options. See the [documentation]({docs_uri}) for more information.",
+        "description": "Definieer de opties voor het berekenen van het vermogen van de Multi-switch. Zie de [documentatie]({docs_uri}) voor meer informatie.",
         "title": "Multi switch configuratie"
       },
       "playbook": {
         "data": {
           "autostart": "Automatisch starten",
-          "playbooks": "Playbooks",
+          "playbooks": "Speelboeken",
           "repeat": "Herhalen",
           "states_trigger": "Status trigger"
         },
@@ -340,7 +420,7 @@
           "repeat": "Zet aan wanneer je wilt dat het playbook opnieuw wordt afgespeeld nadat het is beëindigd",
           "states_trigger": "Start een bepaald playbook gebaseerd op status. Voorbeeld\n\nplaying: program1"
         },
-        "description": "Define the playbook options. See the [documentation]({docs_uri}) for more information.",
+        "description": "Definieer de playbook-opties. Zie de [documentatie]({docs_uri}) voor meer informatie.",
         "title": "Playbook configuratie"
       },
       "power_advanced": {
@@ -382,6 +462,35 @@
         "description": "Momenteel kunnen specifieke instellingen alleen globaal worden geconfigureerd",
         "title": "Maak een energiesensor voor een bestaande stroomsensor"
       },
+      "cost": {
+        "data": {
+          "energy_sensor_id": "Energiesensor",
+          "name": "Naam"
+        },
+        "data_description": {
+          "energy_sensor_id": "De bestaande energiesensor (kWh) waarvoor de kosten worden berekend. Dit kan een sensor van elke integratie zijn, niet alleen Powercalc",
+          "name": "Basisnaam voor de kostensensor. De volledige entiteitsnaam wordt ingesteld volgens de instelling cost_sensor_naming"
+        },
+        "description": "Maak een kostensensor voor een bestaande energiesensor. De energieprijs wordt overgenomen uit de globale Powercalc-configuratie.",
+        "sections": {
+          "cost_pricing": {
+            "name": "Prijs overschrijven",
+            "data": {
+              "energy_price": "Vaste energieprijs",
+              "energy_price_multiplier": "Multiplier voor energieprijzen",
+              "energy_price_sensor": "Energieprijssensor",
+              "energy_price_surcharge": "Toeslag energieprijs"
+            },
+            "data_description": {
+              "energy_price": "Een vaste prijs per kWh in uw lokale valuta. Laat dit leeg om de mondiale energieprijs te gebruiken",
+              "energy_price_multiplier": "Vermenigvuldiger toegepast na de toeslag. Gebruik dit voor op percentages gebaseerde belastingen of toeslagen, bijvoorbeeld 1,21 voor 21%. Laat leeg om de globale vermenigvuldiger te gebruiken",
+              "energy_price_sensor": "Een sensor die de actuele energieprijs per kWh weergeeft (bijvoorbeeld door een dynamische tariefintegratie). Laat de vaste prijs leeg om deze sensor te gebruiken",
+              "energy_price_surcharge": "Extra vast bedrag per kWh toegevoegd aan de vaste prijs of prijssensorwaarde. Laat leeg om de globale toeslag te gebruiken"
+            }
+          }
+        },
+        "title": "Kostensensor maken"
+      },
       "sub_profile": {
         "data": {
           "sub_profile": "Sub profiel"
@@ -413,6 +522,7 @@
           "sensor_type": "Type sensor"
         },
         "menu_options": {
+          "cost": "Kostensensor (van bestaande energiesensor)",
           "daily_energy": "Dagelijkse energie",
           "group": "Groep",
           "global_configuration": "Globale configuratie",
@@ -440,6 +550,7 @@
       "virtual_power": {
         "data": {
           "create_energy_sensor": "Creëer energie sensoren",
+          "create_cost_sensor": "Maak een kostensensor",
           "create_utility_meters": "Creëer utiliteit meters",
           "entity_id": "Bron entiteit",
           "mode": "Calculatie strategie",
@@ -466,7 +577,44 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_integration_method": {
+      "message": "Ongeldige integratiemethode \"{method}\". Moet een van de volgende zijn: {allowed_methods}."
+    },
+    "no_sub_profile_support": {
+      "message": "{entity_id} ondersteunt het wisselen van subprofielen niet. Deze actie is alleen beschikbaar voor sensoren die subprofielen hebben en geen automatische subprofielselectie."
+    },
+    "not_a_playbook_sensor": {
+      "message": "{entity_id} is geen playbook-sensor. Deze actie is alleen beschikbaar voor sensoren die de playbook-strategie gebruiken."
+    },
+    "unknown_sub_profile": {
+      "message": "\"{profile}\" is geen bekend subprofiel. Beschikbare subprofielen: {known_profiles}."
+    }
+  },
   "issues": {
+    "composite_device_id": {
+      "fix_flow": {
+        "abort": {
+          "entry_removed": "Het Powercalc-configuratie-item is verwijderd"
+        },
+        "error": {
+          "invalid_device": "Selecteer een bestaand apparaat of laat het veld leeg"
+        },
+        "step": {
+          "select_device": {
+            "data": {
+              "device": "Apparaat"
+            },
+            "data_description": {
+              "device": "Het apparaat waaraan de entiteiten die door deze Powercalc-configuratie zijn aangemaakt, moeten worden gekoppeld"
+            },
+            "description": "De Powercalc-configuratie {name} was gekoppeld aan een apparaat dat Home Assistant heeft opgesplitst in meerdere apparaten. De entiteiten kunnen niet aan de oude apparaat-ID worden gekoppeld.\n\nSelecteer het apparaat waaraan deze entiteiten moeten worden gekoppeld, of laat het veld leeg om ze niet aan een apparaat te koppelen.",
+            "title": "Selecteer apparaat voor {name}"
+          }
+        }
+      },
+      "title": "Het apparaat voor Powercalc-configuratie {name} moet opnieuw worden geselecteerd"
+    },
     "deprecated_platform_yaml": {
       "description": "Configuratie middels `sensor->platform` is verouderd. Verander je configratie naar `powercalc->sensors`. Klik op 'Meer informatie' voor verder uitleg.",
       "title": "Powercalc YAML configuratie is verplaatst"
@@ -495,6 +643,7 @@
       "model_not_support": "Model niet ondersteund"
     },
     "error": {
+      "cost_price_mandatory": "U moet een energieprijs of een energieprijssensor aanleveren",
       "fixed_mandatory": "Je dient minimaal een van de volgende velden te definieren: vermogen, vermogen template of vermogen per status",
       "fixed_states_power_only": "Deze entiteit kan alleen functioneren met 'states_power', niet 'power'",
       "group_mandatory": "Je dient minimaal een van de volgende velden te definieren: sub groepen, vermogen entiteiten of energie entiteiten",
@@ -526,6 +675,7 @@
         "title": "Basisopties",
         "data": {
           "create_energy_sensor": "Creëer energie sensoren",
+          "create_cost_sensor": "Maak een kostensensor",
           "create_utility_meters": "Creëer utiliteit meters",
           "entity_id": "Bron entiteit",
           "name": "Naam",
@@ -542,7 +692,7 @@
       "daily_energy": {
         "title": "Dagelijkse energie opties",
         "data": {
-          "daily_energy_value": "Daily energy value",
+          "daily_energy_value": "Dagelijkse energiewaarde",
           "name": "Naam",
           "on_time": "Tijd aan per dag",
           "start_time": "Begintijd",
@@ -570,9 +720,9 @@
         }
       },
       "fixed": {
-        "title": "Fixed opties",
+        "title": "Vaste instellingen",
         "data": {
-          "fixed_value": "Fixed value",
+          "fixed_value": "Vaste waarde",
           "self_usage_included": "Eigen verbruik inbegrepen"
         },
         "data_description": {
@@ -581,28 +731,90 @@
       },
       "global_configuration": {
         "title": "Basisopties",
+        "sections": {
+          "power_options": {
+            "name": "Vermogenssensor",
+            "data": {
+              "power_sensor_naming": "Vermogen sensor naampatroon",
+              "power_sensor_friendly_naming": "Vermogen sensor vriendelijke naampatroon",
+              "power_sensor_category": "Vermogen sensor categorie",
+              "power_sensor_precision": "Precisie van vermogenssensor"
+            }
+          },
+          "features": {
+            "name": "Sensoren aanmaken",
+            "data": {
+              "create_energy_sensors": "Creëer energie sensoren",
+              "create_cost_sensors": "Maak kostensensoren",
+              "create_standby_group": "Maak standby-groep",
+              "create_utility_meters": "Creëer utiliteit meters"
+            },
+            "data_description": {
+              "create_energy_sensors": "Of powercalc kWh sensoren moet maken",
+              "create_cost_sensors": "Of powercalc kostensensoren moet creëren. Vereist dat in de volgende stappen een energieprijs wordt geconfigureerd",
+              "create_standby_group": "Maak groep met een totaal van alle stand-by en zelfgebruik van IOT apparaten",
+              "create_utility_meters": "Laat powercalc utiliteit meters maken. Deze resetten dagelijks, uurlijks etc."
+            }
+          },
+          "advanced": {
+            "name": "Geavanceerd",
+            "data": {
+              "enable_analytics": "Anonieme analytics inschakelen",
+              "ignore_unavailable_state": "Negeer onbeschikbaar status",
+              "include_non_powercalc_sensors": "Niet-powercalc sensoren meenemen",
+              "disable_extended_attributes": "Extra attributen uitschakelen",
+              "disable_library_download": "Uitschakelen van externe bibliotheek download"
+            },
+            "data_description": {
+              "enable_analytics": "Sta Powercalc toe om anonieme en geaggregeerde gebruiksstatistieken te verzenden om de integratie te helpen verbeteren",
+              "ignore_unavailable_state": "Houd Powercalc sensoren beschikbaar, zelfs als de bron entiteit niet beschikbaar is",
+              "include_non_powercalc_sensors": "Bepaal of je niet-powercalc sensoren wilt opnemen in groepen",
+              "disable_extended_attributes": "Schakel alle extra attributen uit die Powercalc aan de energie, energie en groepsentiteit states toevoegt. Dit helpt de grootte van de database klein te houden",
+              "disable_library_download": "Uitschakelen van de Powercalc bibliotheek download functie"
+            }
+          }
+        }
+      },
+      "global_configuration_cost": {
+        "title": "Kosten opties",
+        "description": "Configureer de energieprijs die wordt gebruikt om kostensensoren te berekenen. Geef een vaste prijs op of een sensor die de huidige prijs per kWh levert. Zie [documentatie]({docs_uri}) voor meer informatie",
+        "sections": {
+          "cost_pricing": {
+            "name": "Prijzen",
+            "data": {
+              "energy_price": "Vaste energieprijs",
+              "energy_price_multiplier": "Multiplier voor energieprijzen",
+              "energy_price_sensor": "Energieprijssensor",
+              "energy_price_surcharge": "Toeslag energieprijs"
+            },
+            "data_description": {
+              "energy_price": "Een vaste prijs per kWh in uw lokale valuta",
+              "energy_price_multiplier": "Vermenigvuldiger toegepast na de toeslag. Gebruik dit voor procentuele belastingen of toeslagen, bijvoorbeeld 1,21 voor 21%",
+              "energy_price_sensor": "Een sensor die de actuele energieprijs per kWh weergeeft (bijvoorbeeld door een dynamische tariefintegratie). Laat de vaste prijs leeg om deze sensor te gebruiken",
+              "energy_price_surcharge": "Extra vast bedrag per kWh toegevoegd aan de vaste prijs of prijssensorwaarde"
+            }
+          },
+          "cost_naming": {
+            "name": "Naamgeving",
+            "data": {
+              "cost_sensor_friendly_naming": "Beschrijvend naampatroon voor kostensensor",
+              "cost_sensor_naming": "Naampatroon van kostensensor"
+            },
+            "data_description": {
+              "cost_sensor_friendly_naming": "Patroon voor de beschrijvende naam van de kostensensor. De bronnaam wordt ingevoegd op de plaatsaanduidingspositie",
+              "cost_sensor_naming": "Patroon dat wordt gebruikt om de naam van de kostensensor en de entiteits-ID samen te stellen. De bronnaam wordt ingevoegd op de plaatsaanduidingspositie"
+            }
+          }
+        }
+      },
+      "global_configuration_cost_apply": {
+        "title": "Pas kostensensoren toe",
+        "description": "U heeft de instelling voor globale kostensensoren gewijzigd. Wilt u deze wijziging toepassen op alle bestaande powercalc-sensoren die zijn gemaakt via de GUI?",
         "data": {
-          "create_energy_sensors": "Creëer energie sensoren",
-          "create_standby_group": "Maak standby-groep",
-          "create_utility_meters": "Creëer utiliteit meters",
-          "disable_extended_attributes": "Extra attributen uitschakelen",
-          "disable_library_download": "Uitschakelen van externe bibliotheek download",
-          "enable_analytics": "Anonieme analytics inschakelen",
-          "ignore_unavailable_state": "Negeer onbeschikbaar status",
-          "include_non_powercalc_sensors": "Niet-powercalc sensoren meenemen",
-          "power_sensor_category": "Vermogen sensor categorie",
-          "power_sensor_friendly_naming": "Vermogen sensor vriendelijke naampatroon",
-          "power_sensor_naming": "Vermogen sensor naampatroon"
+          "apply_to_all": "Toepassen op bestaande sensoren"
         },
         "data_description": {
-          "create_energy_sensors": "Of powercalc kWh sensoren moet maken",
-          "create_standby_group": "Maak groep met een totaal van alle stand-by en zelfgebruik van IOT apparaten",
-          "create_utility_meters": "Laat powercalc utiliteit meters maken. Deze resetten dagelijks, uurlijks etc.",
-          "disable_extended_attributes": "Schakel alle extra attributen uit die Powercalc aan de energie, energie en groepsentiteit states toevoegt. Dit helpt de grootte van de database klein te houden",
-          "disable_library_download": "Uitschakelen van de Powercalc bibliotheek download functie",
-          "enable_analytics": "Sta Powercalc toe om anonieme en geaggregeerde gebruiksstatistieken te verzenden om de integratie te helpen verbeteren",
-          "ignore_unavailable_state": "Houd Powercalc sensoren beschikbaar, zelfs als de bron entiteit niet beschikbaar is",
-          "include_non_powercalc_sensors": "Bepaal of je niet-powercalc sensoren wilt opnemen in groepen"
+          "apply_to_all": "Werk elke bestaande GUI-powercalc-sensor bij zodat deze overeenkomt met de nieuwe instelling voor kostensensoren"
         }
       },
       "global_configuration_discovery": {
@@ -620,7 +832,7 @@
       },
       "global_configuration_energy": {
         "title": "Energie opties",
-        "description": "Definieer hier de standaard instellingen voor energiesensoren. Zie [documentation]({docs_uri}) voor meer informatie",
+        "description": "Definieer hier de standaardinstellingen voor energiesensoren. Zie [documentatie]({docs_uri}) voor meer informatie",
         "data": {
           "energy_integration_method": "Energie integratie methode",
           "energy_sensor_category": "Energie sensor categorie",
@@ -648,7 +860,7 @@
       },
       "global_configuration_utility_meter": {
         "title": "Nutsmeter opties",
-        "description": "Definieer hier de standaard instellingen voor nutsmeters. Zie [documentation]({docs_uri}) voor meer informatie",
+        "description": "Definieer hier de standaardinstellingen voor nutsmeters. Zie [documentatie]({docs_uri}) voor meer informatie",
         "data": {
           "utility_meter_net_consumption": "Netto verbruik",
           "utility_meter_tariffs": "Nutsmeter tarieven",
@@ -657,30 +869,42 @@
       },
       "group_custom": {
         "title": "Groep opties",
-        "data": {
-          "area": "Ruimte",
-          "floor": "Verdieping",
-          "device": "Apparaat",
-          "force_calculate_group_energy": "Forceer berekenen energie",
-          "group_energy_entities": "Additionele energie entiteiten",
-          "group_member_devices": "Apparaten",
-          "group_member_sensors": "Individuele Powercalc sensoren",
-          "group_power_entities": "Additionele vermogen entiteiten",
-          "hide_members": "Verberg onderliggende sensoren",
-          "include_non_powercalc_sensors": "Niet-powercalc sensoren meenemen",
-          "sub_groups": "Sub groepen"
-        },
-        "data_description": {
-          "area": "Voeg alle powercalc sensoren van de gespecificeerde ruimte toe",
-          "floor": "Voeg alle powercalc sensoren van de gespecificeerde verdieping toe",
-          "device": "Voeg de entiteiten toe aan een bestaand HA apparaat",
-          "force_calculate_group_energy": "Standaard worden de energiesensoren van de individuele sensoren opgeteld. Schakel deze optie in om een Riemann Sum sensor te forceren",
-          "group_energy_entities": "Additionele energie entiteiten (kWh)",
-          "group_member_devices": "Energie- en stroomentiteiten van de geselecteerde apparaten toevoegen aan de groep",
-          "group_member_sensors": "Powercalc sensoren die je wil toevoegen aan de groep",
-          "group_power_entities": "Additionele vermogen entiteiten (W)",
-          "include_non_powercalc_sensors": "Bepaal of je niet-powercalc sensoren wilt opnemen bij gebruik van de ruimte optie",
-          "sub_groups": "Alle onderliggende sensoren van de geselecteerde sub-groepen worden ook automatisch aan deze groep toegevoegd."
+        "sections": {
+          "members": {
+            "name": "Leden",
+            "data": {
+              "group_member_sensors": "Individuele Powercalc sensoren",
+              "group_member_devices": "Apparaten",
+              "group_power_entities": "Additionele vermogen entiteiten",
+              "group_energy_entities": "Additionele energie entiteiten",
+              "sub_groups": "Sub groepen",
+              "area": "Ruimte",
+              "floor": "Verdieping"
+            },
+            "data_description": {
+              "group_member_sensors": "Powercalc sensoren die je wil toevoegen aan de groep",
+              "group_member_devices": "Energie- en stroomentiteiten van de geselecteerde apparaten toevoegen aan de groep",
+              "group_power_entities": "Additionele vermogen entiteiten (W)",
+              "group_energy_entities": "Additionele energie entiteiten (kWh)",
+              "sub_groups": "Alle onderliggende sensoren van de geselecteerde sub-groepen worden ook automatisch aan deze groep toegevoegd.",
+              "area": "Voeg alle powercalc sensoren van de gespecificeerde ruimte toe",
+              "floor": "Voeg alle powercalc sensoren van de gespecificeerde verdieping toe"
+            }
+          },
+          "options": {
+            "name": "Opties",
+            "data": {
+              "device": "Apparaat",
+              "hide_members": "Verberg onderliggende sensoren",
+              "include_non_powercalc_sensors": "Niet-powercalc sensoren meenemen",
+              "force_calculate_group_energy": "Forceer berekenen energie"
+            },
+            "data_description": {
+              "device": "Voeg de entiteiten toe aan een bestaand HA apparaat",
+              "include_non_powercalc_sensors": "Bepaal of je niet-powercalc sensoren wilt opnemen bij gebruik van de ruimte optie",
+              "force_calculate_group_energy": "Standaard worden de energiesensoren van de individuele sensoren opgeteld. Schakel deze optie in om een Riemann Sum sensor te forceren"
+            }
+          }
         }
       },
       "group_subtract": {
@@ -699,6 +923,7 @@
           "main_power_sensor": "Hoofd vermogen sensor (P1)",
           "group_tracked_auto": "Entiteiten automatisch toegevoegd",
           "create_energy_sensor": "Creëer energie sensor",
+          "create_cost_sensor": "Maak een kostensensor",
           "create_utility_meters": "Creëer utiliteit meters"
         },
         "data_description": {
@@ -719,9 +944,10 @@
         "menu_options": {
           "advanced_options": "Geavanceerde opties",
           "basic_options": "Basisopties",
+          "cost": "Kostenopties",
           "daily_energy": "Dagelijkse energie opties",
           "energy_options": "Energie opties",
-          "fixed": "Fixed opties",
+          "fixed": "Vaste instellingen",
           "group_custom": "Groep opties",
           "group_subtract": "Groep opties",
           "group_tracked_untracked": "Groep opties",
@@ -730,9 +956,10 @@
           "linear": "Lineaire opties",
           "playbook": "Playbook opties",
           "multi_switch": "Multi switch opties",
-          "real_power": "Real power opties",
+          "real_power": "Opties voor werkelijk vermogen",
           "utility_meter_options": "Nutsmeter opties",
-          "wled": "WLED opties"
+          "wled": "WLED opties",
+          "cost_options": "Kosten opties"
         }
       },
       "library_options": {
@@ -744,7 +971,7 @@
         "data": {
           "attribute": "Attribuut",
           "calibrate": "Kalibratie waardes",
-          "gamma_curve": "Gamma curve",
+          "gamma_curve": "Gamma-curve",
           "max_power": "Max vermogen",
           "min_power": "Min vermogen"
         },
@@ -770,7 +997,7 @@
         "title": "Playbook opties",
         "data": {
           "autostart": "Automatisch starten",
-          "playbooks": "Playbooks",
+          "playbooks": "Speelboeken",
           "repeat": "Herhalen",
           "states_trigger": "Status trigger"
         },
@@ -781,13 +1008,39 @@
         }
       },
       "real_power": {
-        "title": "Real power opties",
+        "title": "Opties voor werkelijk vermogen",
         "data": {
           "device": "Apparaat"
         },
         "data_description": {
           "device": "Voeg de gecreëerde energiesensor toe aan een specifiek apparaat"
         }
+      },
+      "cost": {
+        "data": {
+          "energy_sensor_id": "Energiesensor"
+        },
+        "data_description": {
+          "energy_sensor_id": "De bestaande energiesensor (kWh) waarvoor de kosten worden berekend"
+        },
+        "sections": {
+          "cost_pricing": {
+            "name": "Prijs overschrijven",
+            "data": {
+              "energy_price": "Vaste energieprijs",
+              "energy_price_multiplier": "Multiplier voor energieprijzen",
+              "energy_price_sensor": "Energieprijssensor",
+              "energy_price_surcharge": "Toeslag energieprijs"
+            },
+            "data_description": {
+              "energy_price": "Een vaste prijs per kWh in uw lokale valuta. Laat dit leeg om de mondiale energieprijs te gebruiken",
+              "energy_price_multiplier": "Vermenigvuldiger toegepast na de toeslag. Gebruik dit voor op percentages gebaseerde belastingen of toeslagen, bijvoorbeeld 1,21 voor 21%. Laat leeg om de globale vermenigvuldiger te gebruiken",
+              "energy_price_sensor": "Een sensor die de actuele energieprijs per kWh weergeeft (bijvoorbeeld door een dynamische tariefintegratie). Laat de vaste prijs leeg om deze sensor te gebruiken",
+              "energy_price_surcharge": "Extra vast bedrag per kWh toegevoegd aan de vaste prijs of prijssensorwaarde. Laat leeg om de globale toeslag te gebruiken"
+            }
+          }
+        },
+        "title": "Kostenopties"
       },
       "utility_meter_options": {
         "title": "Nutsmeter opties",
@@ -808,6 +1061,22 @@
           "power_factor": "Vermogensfactor",
           "voltage": "Spanning"
         }
+      },
+      "cost_options": {
+        "data": {
+          "energy_price": "Vaste energieprijs",
+          "energy_price_multiplier": "Multiplier voor energieprijzen",
+          "energy_price_sensor": "Energieprijssensor",
+          "energy_price_surcharge": "Toeslag energieprijs"
+        },
+        "data_description": {
+          "energy_price": "Een vaste prijs per kWh in uw lokale valuta. Laat dit leeg om de mondiale energieprijs te gebruiken",
+          "energy_price_multiplier": "Vermenigvuldiger toegepast na de toeslag. Gebruik dit voor op percentages gebaseerde belastingen of toeslagen, bijvoorbeeld 1,21 voor 21%. Laat leeg om de globale vermenigvuldiger te gebruiken",
+          "energy_price_sensor": "Een sensor die de actuele energieprijs per kWh weergeeft (bijvoorbeeld door een dynamische tariefintegratie). Laat de vaste prijs leeg om deze sensor te gebruiken",
+          "energy_price_surcharge": "Extra vast bedrag per kWh toegevoegd aan de vaste prijs of prijssensorwaarde. Laat leeg om de globale toeslag te gebruiken"
+        },
+        "description": "Overschrijf alleen de globaal geconfigureerde energieprijs voor deze sensor. Laat alle velden leeg om de globale prijs te blijven gebruiken. Zie [documentatie]({docs_uri}) voor meer informatie",
+        "title": "Kosten opties"
       }
     }
   },
@@ -815,14 +1084,14 @@
     "daily_energy_value": {
       "choices": {
         "value": "Value",
-        "value_template": "Value template"
+        "value_template": "Sjabloon"
       }
     },
     "fixed_value": {
       "choices": {
         "power": "Power",
-        "power_template": "Power template",
-        "states_power": "States power"
+        "power_template": "Sjabloon",
+        "states_power": "Statuskoppeling"
       }
     }
   },
@@ -832,7 +1101,7 @@
       "fields": {
         "playbook_id": {
           "description": "Playbook identificatie.",
-          "name": "Playbook"
+          "name": "Speelboek"
         }
       },
       "name": "Activeer playbook"
@@ -846,6 +1115,16 @@
         }
       },
       "name": "Kalibreer energiesensor"
+    },
+    "calibrate_cost": {
+      "description": "Stelt de kostensensor in op een bepaalde geldwaarde.",
+      "fields": {
+        "value": {
+          "description": "De waarde die moet worden ingesteld.",
+          "name": "Waarde"
+        }
+      },
+      "name": "Kalibreer de kostensensor"
     },
     "calibrate_utility_meter": {
       "description": "Kalibreert een utiliteitsmeter.",
@@ -872,8 +1151,8 @@
       "name": "GUI configuratie wijzigen"
     },
     "debug_group": {
-      "description": "Get a debug overview of a group power or energy sensor including current member values.",
-      "name": "Debug group"
+      "description": "Krijg een foutopsporingsoverzicht van een groepsvermogen- of energiesensor, inclusief huidige lidwaarden.",
+      "name": "Foutopsporingsgroep"
     },
     "get_active_playbook": {
       "description": "Laad huidige actieve playbook",
@@ -900,6 +1179,10 @@
     "reset_energy": {
       "description": "Herstel een energiesensor naar 0 kWh.",
       "name": "Herstel energiesensor"
+    },
+    "reset_cost": {
+      "description": "Reset een kostensensor naar nul.",
+      "name": "Kostensensor resetten"
     },
     "stop_playbook": {
       "description": "Stop huidige actieve playbook.",

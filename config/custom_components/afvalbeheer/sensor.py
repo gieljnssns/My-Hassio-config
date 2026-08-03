@@ -1,15 +1,14 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from homeassistant.config_entries import ConfigEntry
-
-from homeassistant.const import CONF_RESOURCES
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import *
 from .API import get_wastedata_from_config
+from .const import *
+from .translation import async_prepare_translations, resolve_language, text, translate_date_text
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +30,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     config_data = discovery_info["config"] if discovery_info and "config" in discovery_info else config
     _LOGGER.debug("Configuration data: %s", config_data)
 
+    await async_prepare_translations(hass, resolve_language(config_data))
+
     data = hass.data[DOMAIN].get(config_data[CONF_ID], None) if not schedule_update else get_wastedata_from_config(hass, config)
     _LOGGER.debug("Data source: %s", data)
 
@@ -48,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         entities.append(WasteUpcomingSensor(data, config_data))
         _LOGGER.debug("Added upcoming waste sensors.")
 
-    async_add_entities(entities)
+    async_add_entities(entities, True)
     _LOGGER.debug("Entities added to Home Assistant.")
 
     if schedule_update:
@@ -86,14 +87,14 @@ class BaseSensor(RestoreEntity, SensorEntity):
         self.built_in_icons = config.get(CONF_BUILT_IN_ICONS)
         self.built_in_icons_new = config.get(CONF_BUILT_IN_ICONS_NEW)
         self.disable_icons = config.get(CONF_DISABLE_ICONS)
-        self.dutch_days = config.get(CONF_TRANSLATE_DAYS)
+        self.language = resolve_language(config)
         self.day_of_week = config.get(CONF_DAY_OF_WEEK)
         self.day_of_week_only = config.get(CONF_DAY_OF_WEEK_ONLY)
         self.always_show_day = config.get(CONF_ALWAYS_SHOW_DAY)
         self.waste_types = config[CONF_RESOURCES]
         self.date_only = 1 if self.date_object else config.get(CONF_DATE_ONLY)
-        self._today = TODAY_STRING['nl'] if self.dutch_days else TODAY_STRING['en']
-        self._tomorrow = TOMORROW_STRING['nl'] if self.dutch_days else TOMORROW_STRING['en']
+        self._today = text(self.language, "today")
+        self._tomorrow = text(self.language, "tomorrow")
         self._hidden = False
         self._state = None
         self._attrs = {}
@@ -158,17 +159,9 @@ class BaseSensor(RestoreEntity, SensorEntity):
             _LOGGER.debug("Restored entity picture: %s", self._entity_picture)
 
     def _translate_state(self, state):
-        translations = {
-            "%B": DUTCH_TRANSLATION_MONTHS,
-            "%b": DUTCH_TRANSLATION_MONTHS_SHORT,
-            "%A": DUTCH_TRANSLATION_DAYS,
-            "%a": DUTCH_TRANSLATION_DAYS_SHORT,
-        }
-        for fmt, trans_dict in translations.items():
-            for en_term, nl_term in trans_dict.items():
-                state = state.replace(en_term, nl_term)
-        _LOGGER.debug("Translated state: %s", state)
-        return state
+        translated = translate_date_text(self.language, state)
+        _LOGGER.debug("Translated state: %s", translated)
+        return translated
 
     def _format_date(self, collection_date):
         """
@@ -185,9 +178,10 @@ class BaseSensor(RestoreEntity, SensorEntity):
                 if self.day_of_week_only:
                     formatted = collection_date.strftime("%A")
                 else:
-                    if "%A" not in self.date_format:
-                        self.date_format = "%A, " + self.date_format
-                    formatted = collection_date.strftime(self.date_format)
+                    date_format = self.date_format
+                    if "%A" not in date_format:
+                        date_format = "%A, " + date_format
+                    formatted = collection_date.strftime(date_format)
             else:
                 formatted = collection_date.strftime(self.date_format)
         elif date_diff == 1:
@@ -197,7 +191,7 @@ class BaseSensor(RestoreEntity, SensorEntity):
         else:
             formatted = collection_date.strftime(self.date_format)
 
-        if self.dutch_days:
+        if self.language != LANGUAGE_EN:
             formatted = self._translate_state(formatted)
 
         return formatted
@@ -263,6 +257,10 @@ class WasteTypeSensor(BaseSensor):
         if collection:
             self._attrs[ATTR_SORT_DATE] = int(collection.date.strftime("%Y%m%d"))
             self._attrs[ATTR_DAYS_UNTIL] = self._days_until
+        else:
+            self._attrs.pop(ATTR_SORT_DATE, None)
+            self._attrs.pop(ATTR_DAYS_UNTIL, None)
+
         _LOGGER.debug("Attributes set for %s: %s", self._name, self._attrs)
 
     def _set_picture(self, collection):
@@ -292,11 +290,14 @@ class WasteDateSensor(BaseSensor):
         super().__init__(data, config)
         self.date_delta = date_delta
         if self.date_delta.days == 0:
-            day = TODAY_STRING['nl'].lower() if self.dutch_days else TODAY_STRING['en'].lower()
+            display_day = text(self.language, "today").lower()
+            unique_day = "vandaag"
         else:
-            day = TOMORROW_STRING['nl'].lower() if self.dutch_days else TOMORROW_STRING['en'].lower()
-        self._name = _format_sensor(config.get(CONF_NAME), config.get(CONF_NAME_PREFIX), self.waste_collector, day)
-        self._attr_unique_id = _format_unique_id(config.get(CONF_NAME), config.get(CONF_NAME_PREFIX), self.waste_collector, day, self.entry_id, config.get(CONF_POSTCODE), config.get(CONF_STREET_NUMBER)).lower()
+            display_day = text(self.language, "tomorrow").lower()
+            unique_day = "morgen"
+
+        self._name = _format_sensor(config.get(CONF_NAME), config.get(CONF_NAME_PREFIX), self.waste_collector, display_day)
+        self._attr_unique_id = _format_unique_id(config.get(CONF_NAME), config.get(CONF_NAME_PREFIX), self.waste_collector, unique_day, self.entry_id, config.get(CONF_POSTCODE), config.get(CONF_STREET_NUMBER)).lower()
 
     @property
     def name(self):
@@ -309,7 +310,7 @@ class WasteDateSensor(BaseSensor):
         collections = self.data.collections.get_by_date(date, self.waste_types)
         if not collections:
             self._hidden = True
-            self._state = NO_DATE_STRING['nl'] if self.dutch_days else NO_DATE_STRING['en']
+            self._state = text(self.language, "none")
         else:
             self._hidden = False
             self._state = ", ".join(sorted({x.waste_type for x in collections}))
@@ -330,9 +331,9 @@ class WasteUpcomingSensor(BaseSensor):
     """
     def __init__(self, data, config):
         super().__init__(data, config)
-        self.first_upcoming = "eerstvolgende" if self.dutch_days else "first upcoming"
+        self.first_upcoming = text(self.language, "first_upcoming")
         self._name = _format_sensor(config.get(CONF_NAME), config.get(CONF_NAME_PREFIX), self.waste_collector, self.first_upcoming)
-        self._attr_unique_id = _format_unique_id(config.get(CONF_NAME), config.get(CONF_NAME_PREFIX), self.waste_collector, self.first_upcoming, self.entry_id, config.get(CONF_POSTCODE), config.get(CONF_STREET_NUMBER)).lower()
+        self._attr_unique_id = _format_unique_id(config.get(CONF_NAME), config.get(CONF_NAME_PREFIX), self.waste_collector, "eerstvolgende", self.entry_id, config.get(CONF_POSTCODE), config.get(CONF_STREET_NUMBER)).lower()
         self.upcoming_day = None
         self.upcoming_waste_types = None
 
@@ -346,13 +347,15 @@ class WasteUpcomingSensor(BaseSensor):
         collections = self.data.collections.get_first_upcoming(self.waste_types)
         if not collections:
             self._hidden = True
-            self._state = NO_DATE_STRING['nl'] if self.dutch_days else NO_DATE_STRING['en']
-            return
+            self._state = text(self.language, "none")
+            self.upcoming_day = None
+            self.upcoming_waste_types = None
         else:
             self._hidden = False
             self.upcoming_day = self._format_date(collections[0].date)
             self.upcoming_waste_types = ", ".join(sorted([x.waste_type for x in collections]))
             self._state = f"{self.upcoming_day}: {self.upcoming_waste_types}"
+
         self._set_attr()
 
     def _set_attr(self):

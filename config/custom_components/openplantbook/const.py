@@ -6,7 +6,13 @@ ATTR_ALIAS = "alias"
 ATTR_PLANT_INSTANCE = "plant_instance"
 ATTR_SPECIES = "species"
 ATTR_API = "api"
+
+# hass.data[DOMAIN] keys for the entity layer
+DATA_COMPONENT = "component"
+DATA_SEARCH_ENTITY = "search_entity"
+DATA_SPECIES_ENTITIES = "species_entities"
 ATTR_HOURS = "hours"
+ATTR_INCLUDE = "include"
 ATTR_IMAGE = "image_url"
 CACHE_TIME = 24
 
@@ -15,6 +21,9 @@ OPB_ATTR_SEARCH_RESULT = "search_result"
 OPB_ATTR_RESULT = "result"
 OPB_ATTR_RESULTS = "results"
 OPB_ATTR_TIMESTAMP = "timestamp"
+# Internal marker stored on a cached plant_data dict: the list of extra
+# `include` categories that the cached entry already satisfies (e.g. ["care"]).
+OPB_ATTR_INCLUDES = "_fetched_includes"
 
 OPB_SERVICE_SEARCH = "search"
 OPB_SERVICE_GET = "get"

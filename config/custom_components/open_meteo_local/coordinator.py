@@ -42,6 +42,61 @@ from .const import (
 
 type OpenMeteoConfigEntry = ConfigEntry[OpenMeteoDataUpdateCoordinator]
 
+# (api_field_name, data_key, value_converter)
+# data_key=None: condition computation only (weather_code / is_day)
+# _CURRENT_MAP → OpenMeteoData field names; _DAILY/_HOURLY_MAP → HA forecast attribute keys
+_CURRENT_MAP: tuple[tuple[str, str | None, type], ...] = (
+    ("weather_code", None, int),
+    ("is_day", None, bool),
+    ("cloud_cover", "cloud_coverage", int),
+    ("relative_humidity_2m", "humidity", float),
+    ("apparent_temperature", "apparent_temperature", float),
+    ("dew_point_2m", "dew_point", float),
+    ("pressure_msl", "pressure", float),
+    ("temperature_2m", "temperature", float),
+    ("visibility", "visibility", float),
+    ("wind_gusts_10m", "wind_gust_speed", float),
+    ("wind_speed_10m", "wind_speed", float),
+    ("uv_index", "uv_index", float),
+    ("wind_direction_10m", "wind_bearing", float),
+)
+
+# (api_field_name, forecast_ha_key, value_converter)
+# ha_key=None: condition computation only (weather_code / is_day)
+_DAILY_MAP: tuple[tuple[str, str | None, type], ...] = (
+    ("weather_code", None, int),
+    ("cloud_cover_mean", CLOUD_COVERAGE, int),
+    ("relative_humidity_2m_mean", HUMIDITY, float),
+    ("apparent_temperature_mean", NATIVE_APPARENT_TEMP, float),
+    ("dew_point_2m_mean", NATIVE_DEW_POINT, float),
+    ("precipitation_sum", NATIVE_PRECIPITATION, float),
+    ("pressure_msl_mean", NATIVE_PRESSURE, float),
+    ("temperature_2m_max", NATIVE_TEMP, float),
+    ("temperature_2m_min", NATIVE_TEMP_LOW, float),
+    ("wind_gusts_10m_max", NATIVE_WIND_GUST_SPEED, float),
+    ("wind_speed_10m_max", NATIVE_WIND_SPEED, float),
+    ("precipitation_probability_max", PRECIPITATION_PROBABILITY, int),
+    ("uv_index_max", UV_INDEX, float),
+    ("wind_direction_10m_dominant", WIND_BEARING, float),
+)
+
+_HOURLY_MAP: tuple[tuple[str, str | None, type], ...] = (
+    ("weather_code", None, int),
+    ("is_day", None, bool),
+    ("cloud_cover", CLOUD_COVERAGE, int),
+    ("relative_humidity_2m", HUMIDITY, float),
+    ("apparent_temperature", NATIVE_APPARENT_TEMP, float),
+    ("dew_point_2m", NATIVE_DEW_POINT, float),
+    ("precipitation", NATIVE_PRECIPITATION, float),
+    ("pressure_msl", NATIVE_PRESSURE, float),
+    ("temperature_2m", NATIVE_TEMP, float),
+    ("wind_gusts_10m", NATIVE_WIND_GUST_SPEED, float),
+    ("wind_speed_10m", NATIVE_WIND_SPEED, float),
+    ("precipitation_probability", PRECIPITATION_PROBABILITY, int),
+    ("uv_index", UV_INDEX, float),
+    ("wind_direction_10m", WIND_BEARING, float),
+)
+
 
 @dataclass
 class OpenMeteoData:
@@ -52,7 +107,7 @@ class OpenMeteoData:
     humidity: float | None
     dew_point: float | None
     apparent_temperature: float | None
-    cloud_coverage: float | None
+    cloud_coverage: int | None
     pressure: float | None
     visibility: float | None
     wind_speed: float | None
@@ -86,9 +141,9 @@ class OpenMeteoDataUpdateCoordinator(DataUpdateCoordinator[OpenMeteoData]):
         params = {
             "latitude": zone.attributes[ATTR_LATITUDE],
             "longitude": zone.attributes[ATTR_LONGITUDE],
-            "current": "weather_code,is_day,temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,cloud_cover,pressure_msl,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index",
-            "daily": "weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,wind_gusts_10m_max,uv_index_max",
-            "hourly": "weather_code,is_day,temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation,precipitation_probability,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index",
+            "current": ",".join(f for f, *_ in _CURRENT_MAP),
+            "daily": ",".join(f for f, *_ in _DAILY_MAP),
+            "hourly": ",".join(f for f, *_ in _HOURLY_MAP),
             # Required by: https://github.com/open-meteo/open-meteo/issues/699
             "forecast_hours": "168",
             "format": "flatbuffers",
@@ -106,137 +161,84 @@ class OpenMeteoDataUpdateCoordinator(DataUpdateCoordinator[OpenMeteoData]):
         except Exception as err:
             raise UpdateFailed("Open-Meteo API communication error") from err
 
-        # Parse length-prefixed FlatBuffers frames
-        responses: list[WeatherApiResponse] = []
+        # Parse the first length-prefixed FlatBuffers frame.
+        # Additional frames are ignored with a warning.
         total = len(data)
-        pos = 0
-        while pos < total:
-            length = int.from_bytes(
-                data[pos : pos + FLATBUFFERS_PREFIX], byteorder="little"
-            )
-            if length == FLATBUFFERS_ERROR_MARKER:
-                raise UpdateFailed(data[pos:total].decode())
-            responses.append(
-                WeatherApiResponse.GetRootAs(data, pos + FLATBUFFERS_PREFIX)
-            )
-            pos += length + FLATBUFFERS_PREFIX
+        if total < FLATBUFFERS_PREFIX:
+            raise UpdateFailed("Malformed response frame header")
 
-        response = responses[0]
+        length = int.from_bytes(data[:FLATBUFFERS_PREFIX], byteorder="little")
+        if length == FLATBUFFERS_ERROR_MARKER:
+            raise UpdateFailed(data.decode())
+        if length <= 0:
+            raise UpdateFailed("Malformed response frame length")
+
+        frame_end = FLATBUFFERS_PREFIX + length
+        if frame_end > total:
+            raise UpdateFailed("Malformed response frame length")
+
+        response = WeatherApiResponse.GetRootAs(data, FLATBUFFERS_PREFIX)
+
+        if frame_end < total:
+            LOGGER.warning(
+                "Received %s extra bytes from Open-Meteo for %s; using first frame only",
+                total - frame_end,
+                self.config_entry.data[CONF_ZONE],
+            )
+
         tz = timezone(timedelta(seconds=response.UtcOffsetSeconds()))
 
-        # Current weather — variable order matches "current" list above
+        # Current weather
         condition: str | None = None
-        temperature: float | None = None
-        humidity: float | None = None
-        dew_point: float | None = None
-        apparent_temperature: float | None = None
-        cloud_coverage: float | None = None
-        pressure: float | None = None
-        visibility: float | None = None
-        wind_speed: float | None = None
-        wind_bearing: float | None = None
-        wind_gust_speed: float | None = None
-        uv_index: float | None = None
+        current_fields: dict[str, float | None] = {
+            data_key: None for _, data_key, _ in _CURRENT_MAP if data_key is not None
+        }
         if (current := response.Current()) is not None:
             condition = resolve_condition(
                 int(current.Variables(0).Value()),
                 bool(current.Variables(1).Value()),
             )
-            temperature = current.Variables(2).Value()
-            humidity = current.Variables(3).Value()
-            dew_point = current.Variables(4).Value()
-            apparent_temperature = current.Variables(5).Value()
-            cloud_coverage = current.Variables(6).Value()
-            pressure = current.Variables(7).Value()
-            visibility = current.Variables(8).Value()
-            wind_speed = current.Variables(9).Value()
-            wind_bearing = current.Variables(10).Value()
-            wind_gust_speed = current.Variables(11).Value()
-            uv_index = current.Variables(12).Value()
+            for j, (_, data_key, conv) in enumerate(_CURRENT_MAP):
+                if data_key is not None:
+                    current_fields[data_key] = conv(current.Variables(j).Value())
 
-        # Daily forecast — variable order matches "daily" list above
+        # Daily forecast
         daily_forecast: list[Forecast] = []
         if (daily := response.Daily()) is not None:
-            weather_code = daily.Variables(0)
-            temp_max = daily.Variables(1)
-            temp_min = daily.Variables(2)
-            apparent_temp_max = daily.Variables(3)
-            precip_sum = daily.Variables(4)
-            precip_prob_max = daily.Variables(5)
-            wind_spd = daily.Variables(6)
-            wind_dir = daily.Variables(7)
-            wind_gust_max = daily.Variables(8)
-            uv_index_max = daily.Variables(9)
-            for i, ts in enumerate(
-                range(daily.Time(), daily.TimeEnd(), daily.Interval())
-            ):
-                _dt = datetime.fromtimestamp(ts, tz=tz)
-                entry: Forecast = Forecast(datetime=_dt.isoformat())
-                entry[CONDITION] = resolve_condition(int(weather_code.Values(i)))
-                entry[NATIVE_TEMP] = temp_max.Values(i)
-                entry[NATIVE_TEMP_LOW] = temp_min.Values(i)
-                entry[NATIVE_APPARENT_TEMP] = apparent_temp_max.Values(i)
-                entry[NATIVE_PRECIPITATION] = precip_sum.Values(i)
-                entry[PRECIPITATION_PROBABILITY] = int(precip_prob_max.Values(i))
-                entry[NATIVE_WIND_SPEED] = wind_spd.Values(i)
-                entry[WIND_BEARING] = wind_dir.Values(i)
-                entry[NATIVE_WIND_GUST_SPEED] = wind_gust_max.Values(i)
-                entry[UV_INDEX] = uv_index_max.Values(i)
-                daily_forecast.append(entry)
+            daily_forecast = [
+                Forecast(datetime=datetime.fromtimestamp(ts, tz=tz).isoformat())
+                for ts in range(daily.Time(), daily.TimeEnd(), daily.Interval())
+            ]
+            wc = daily.Variables(0)
+            for i, entry in enumerate(daily_forecast):
+                entry[CONDITION] = resolve_condition(int(wc.Values(i)))
+            for j, (_, ha_key, conv) in enumerate(_DAILY_MAP):
+                if ha_key is not None:
+                    var = daily.Variables(j)
+                    for i, entry in enumerate(daily_forecast):
+                        entry[ha_key] = conv(var.Values(i))
 
-        # Hourly forecast — variable order matches "hourly" list above
+        # Hourly forecast
         hourly_forecast: list[Forecast] = []
         if (hourly := response.Hourly()) is not None:
-            weather_code_h = hourly.Variables(0)
-            is_day_h = hourly.Variables(1)
-            temperature_2m = hourly.Variables(2)
-            humidity_h = hourly.Variables(3)
-            dew_point_h = hourly.Variables(4)
-            apparent_temp_h = hourly.Variables(5)
-            precipitation = hourly.Variables(6)
-            precip_prob_h = hourly.Variables(7)
-            cloud_cover_h = hourly.Variables(8)
-            pressure_h = hourly.Variables(9)
-            wind_spd_h = hourly.Variables(10)
-            wind_dir_h = hourly.Variables(11)
-            wind_gust_h = hourly.Variables(12)
-            uv_index_h = hourly.Variables(13)
-            for i, ts in enumerate(
-                range(hourly.Time(), hourly.TimeEnd(), hourly.Interval())
-            ):
-                _dt = datetime.fromtimestamp(ts, tz=tz)
-                entry = Forecast(datetime=_dt.isoformat())
+            hourly_forecast = [
+                Forecast(datetime=datetime.fromtimestamp(ts, tz=tz).isoformat())
+                for ts in range(hourly.Time(), hourly.TimeEnd(), hourly.Interval())
+            ]
+            wc_h, is_day_h = hourly.Variables(0), hourly.Variables(1)
+            for i, entry in enumerate(hourly_forecast):
                 entry[CONDITION] = resolve_condition(
-                    int(weather_code_h.Values(i)),
-                    bool(is_day_h.Values(i)),
+                    int(wc_h.Values(i)), bool(is_day_h.Values(i))
                 )
-                entry[NATIVE_TEMP] = temperature_2m.Values(i)
-                entry[HUMIDITY] = humidity_h.Values(i)
-                entry[NATIVE_DEW_POINT] = dew_point_h.Values(i)
-                entry[NATIVE_APPARENT_TEMP] = apparent_temp_h.Values(i)
-                entry[NATIVE_PRECIPITATION] = precipitation.Values(i)
-                entry[PRECIPITATION_PROBABILITY] = int(precip_prob_h.Values(i))
-                entry[CLOUD_COVERAGE] = int(cloud_cover_h.Values(i))
-                entry[NATIVE_PRESSURE] = pressure_h.Values(i)
-                entry[NATIVE_WIND_SPEED] = wind_spd_h.Values(i)
-                entry[WIND_BEARING] = wind_dir_h.Values(i)
-                entry[NATIVE_WIND_GUST_SPEED] = wind_gust_h.Values(i)
-                entry[UV_INDEX] = uv_index_h.Values(i)
-                hourly_forecast.append(entry)
+            for j, (_, ha_key, conv) in enumerate(_HOURLY_MAP):
+                if ha_key is not None:
+                    var = hourly.Variables(j)
+                    for i, entry in enumerate(hourly_forecast):
+                        entry[ha_key] = conv(var.Values(i))
 
         return OpenMeteoData(
             condition=condition,
-            temperature=temperature,
-            humidity=humidity,
-            dew_point=dew_point,
-            apparent_temperature=apparent_temperature,
-            cloud_coverage=cloud_coverage,
-            pressure=pressure,
-            visibility=visibility,
-            wind_speed=wind_speed,
-            wind_bearing=wind_bearing,
-            wind_gust_speed=wind_gust_speed,
-            uv_index=uv_index,
+            **current_fields,
             daily_forecast=daily_forecast,
             hourly_forecast=hourly_forecast,
         )

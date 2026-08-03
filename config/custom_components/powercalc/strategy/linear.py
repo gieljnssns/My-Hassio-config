@@ -119,7 +119,7 @@ class LinearStrategy(PowerCalculationStrategyInterface):
 
     def is_enabled(self, entity_state: State) -> bool:
         """Return if this strategy is enabled based on entity state."""
-        return not (self._source_entity.domain == media_player.DOMAIN and entity_state.state is not STATE_PLAYING)
+        return not (self._source_entity.domain == media_player.DOMAIN and entity_state.state != STATE_PLAYING)
 
     def get_min_calibrate(self, value: int) -> tuple[int, float]:
         """Get closest lower value from calibration table."""
@@ -157,7 +157,7 @@ class LinearStrategy(PowerCalculationStrategyInterface):
 
         return sorted(calibration_list, key=lambda tup: tup[0])
 
-    def get_entity_value_range(self) -> tuple:
+    def get_entity_value_range(self) -> tuple[int, int]:
         """Get the min/max range for a given entity domain."""
         if self.get_initialized_value_entity().domain == light.DOMAIN:
             return 0, 255
@@ -176,7 +176,7 @@ class LinearStrategy(PowerCalculationStrategyInterface):
             return self.get_value_from_attribute(entity_state)
 
         value_entity = self.get_initialized_value_entity()
-        if value_entity.entity_id is not self._source_entity.entity_id:
+        if value_entity.entity_id != self._source_entity.entity_id:
             # If the value entity is different from the source entity, we need to fetch the state of the value entity
             entity_state = self._hass.states.get(value_entity.entity_id)
             if not entity_state:
@@ -267,7 +267,7 @@ class LinearStrategy(PowerCalculationStrategyInterface):
                     "No battery entity found for vacuum cleaner",
                     "linear_no_battery_entity",
                 )
-            return await create_source_entity(related_entity, self._hass)
+            return create_source_entity(related_entity, self._hass)
 
         return self._value_entity or self._source_entity
 

@@ -165,13 +165,13 @@ class BatteryNotesStorage:
 
     @callback
     def async_get_device(self, device_id) -> dict[str, Any] | None:
-        """Get an existing DeviceEntry by id."""
+        """Get an existing device by id."""
         res = self.devices.get(device_id)
         return attr.asdict(res) if res else None
 
     @callback
     def async_get_devices(self):
-        """Get an existing DeviceEntry by id."""
+        """Get all existing devices."""
         res = {}
         for key, val in self.devices.items():
             res[key] = attr.asdict(val)
@@ -203,6 +203,17 @@ class BatteryNotesStorage:
         new = self.devices[device_id] = attr.evolve(old, **changes)
         self.async_schedule_save()
         return new
+
+    @callback
+    def async_change_device_id(self, old_device_id: str, new_device_id: str) -> None:
+        """Change an existing DeviceEntry ID."""
+        if new_device_id in self.devices:
+            raise ValueError(f"Device {new_device_id} already exists")
+
+        old = self.devices.pop(old_device_id, None)
+        if old is not None:
+            self.devices[new_device_id] = attr.evolve(old, device_id=new_device_id)
+            self.async_schedule_save()
 
     @callback
     def async_get_entity(self, entity_id) -> dict[str, Any] | None:

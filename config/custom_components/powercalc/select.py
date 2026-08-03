@@ -12,12 +12,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from custom_components.powercalc import DOMAIN
 from custom_components.powercalc.analytics.analytics import collect_analytics
-from custom_components.powercalc.const import DATA_ENTITY_TYPES, EntityType
+from custom_components.powercalc.const import DATA_ENTITY_TYPES, DOMAIN, EntityType
 
 SIGNAL_CREATE_SELECT_ENTITIES = "powercalc_create_select_entities_{}"
 DATA_PENDING_SELECT_ENTITIES = "powercalc_pending_select_entities"
+
+# The tariff select doesn't poll, so updates don't have to be serialized.
+PARALLEL_UPDATES = 0
 
 
 def _key(entry: ConfigEntry | None) -> str:
@@ -47,9 +49,9 @@ def delayed_add_entities_handler(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    _config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    _discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Setup sensors from YAML config sensor entries."""
     key = _key(None)

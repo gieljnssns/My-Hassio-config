@@ -9,6 +9,11 @@ from typing import Final
 DOMAIN = "solaredge_modbus_multi"
 DEFAULT_NAME = "SolarEdge"
 
+SETUP_TYPE = "setup_type"
+SETUP_SCAN_FAST = "scan_fast"  # Scan IDs 1-32
+SETUP_SCAN_FULL = "scan_full"  # Scan IDs 1-247
+SETUP_MANUAL = "manual_list"
+
 # raise a startup exception if pymodbus version is less than this
 PYMODBUS_REQUIRED_VERSION = "3.8.3"
 
@@ -30,7 +35,13 @@ DOMAIN_REGEX = re.compile(
     re.IGNORECASE,
 )
 
-STATUS_VENDOR4_VERSION = "3.20.0"
+DETECT_EVSE_REGEX = re.compile(
+    r"^(?:SE-EV-SA)",  # Add additional prefixes with |OTHER-PREFIX
+    re.IGNORECASE,
+)
+
+STATUS_VENDOR4_VERSION = "3.20.0"  # solaredge firmware version
+INVERTED_POWER_VERSION = "2026.2.0"  # home assistant core version
 
 
 class ModbusExceptions:
@@ -228,7 +239,7 @@ DEVICE_STATUS_TEXT = {
 }
 
 VENDOR_STATUS = {
-    SunSpecNotImpl.INT16: None,
+    SunSpecNotImpl.UINT16: None,
     0: "No Error",
     17: "Temperature Too High",
     25: "Isolation Faults",

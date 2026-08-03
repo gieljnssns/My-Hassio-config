@@ -20,6 +20,7 @@ from homeassistant.helpers.temperature import display_temp
 
 from .const import (
     ATTR_BRIGHTNESS,
+    ATTR_CARE,
     ATTR_CO2,
     ATTR_CONDUCTIVITY,
     ATTR_ILLUMINANCE,
@@ -30,6 +31,7 @@ from .const import (
     ATTR_SOIL_TEMPERATURE,
     ATTR_SPECIES,
     ATTR_TEMPERATURE,
+    CARE_FIELDS,
     CONF_MAX_BRIGHTNESS,
     CONF_MAX_CO2,
     CONF_MAX_CONDUCTIVITY,
@@ -72,8 +74,10 @@ from .const import (
     DEFAULT_MIN_MOISTURE,
     DEFAULT_MIN_SOIL_TEMPERATURE,
     DEFAULT_MIN_TEMPERATURE,
+    DLI_SANITY_MAX,
     DOMAIN_PLANTBOOK,
     FLOW_FORCE_SPECIES_UPDATE,
+    FLOW_LIMITS_TEMPERATURE_UNIT,
     FLOW_PLANT_IMAGE,
     FLOW_PLANT_INFO,
     FLOW_SENSOR_CO2,
@@ -82,11 +86,12 @@ from .const import (
     FLOW_SENSOR_MOISTURE,
     FLOW_SENSOR_SOIL_TEMPERATURE,
     FLOW_SENSOR_TEMPERATURE,
+    OPB_ATTR_INCLUDE,
     OPB_DISPLAY_PID,
     OPB_GET,
+    OPB_INCLUDE_CARE,
     OPB_SEARCH,
     PLANTBOOK_DOMAIN,
-    PPFD_DLI_FACTOR,
     REQUEST_TIMEOUT,
 )
 
@@ -118,6 +123,46 @@ def _to_int(value: Any, default: int) -> int:
             "Could not convert '%s' to int, using default %s", value, default
         )
         return default
+
+
+def _to_float(value: Any, default: float) -> float:
+    """Safely convert a value to float, returning default on failure.
+
+    OpenPlantbook (and imported config) may carry values as strings or empty
+    placeholders. Mirrors _to_int so a non-numeric value never crashes config
+    entry generation. A legitimate 0 is preserved; None/"" fall back.
+    """
+    if value is None or value == "":
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        _LOGGER.warning(
+            "Could not convert '%s' to float, using default %s", value, default
+        )
+        return default
+
+
+def _clamp_dli(value: float, bound: str, species: str | None) -> float:
+    """Clamp a DLI threshold to the physical maximum, warning if exceeded.
+
+    OpenPlantbook aggregates loosely validated data from several sources, and a
+    stray unit mix-up (or an older OPB version that still inflated DLI) can yield
+    a threshold above ~65 mol/d⋅m², which is biologically impossible. Rather than
+    persist an absurd value, clamp to DLI_SANITY_MAX and log it. There is
+    deliberately no lower guard — legitimate deep-shade minimums round toward 0.
+    """
+    if value > DLI_SANITY_MAX:
+        _LOGGER.warning(
+            "%s DLI %s mol/d⋅m² for '%s' exceeds the plausible maximum %s; "
+            "clamping (check the OpenPlantbook source data)",
+            bound,
+            value,
+            species or "unknown",
+            DLI_SANITY_MAX,
+        )
+        return DLI_SANITY_MAX
+    return value
 
 
 class PlantHelper:
@@ -174,7 +219,10 @@ class PlantHelper:
         if not species or species == "":
             return None
 
-        service_data = {ATTR_SPECIES: species.lower()}
+        service_data = {
+            ATTR_SPECIES: species.lower(),
+            OPB_ATTR_INCLUDE: OPB_INCLUDE_CARE,
+        }
         if not cache:
             service_data["cache"] = False
 
@@ -195,6 +243,7 @@ class PlantHelper:
                 )
         except TimeoutError:
             _LOGGER.warning("OpenPlantbook request timed out")
+            return None
         except Exception as ex:
             _LOGGER.warning("OpenPlantbook does not work, error: %s", ex)
             return None
@@ -237,14 +286,14 @@ class PlantHelper:
 
         try:
             session = async_get_clientsession(self.hass)
-            async with timeout(IMAGE_VALIDATION_TIMEOUT):
-                async with session.head(url, allow_redirects=True) as response:
-                    if response.status == 200:
-                        return True
-                    _LOGGER.warning(
-                        "Image URL %s returned status %s", url, response.status
-                    )
-                    return False
+            async with (
+                timeout(IMAGE_VALIDATION_TIMEOUT),
+                session.head(url, allow_redirects=True) as response,
+            ):
+                if response.status == 200:
+                    return True
+                _LOGGER.warning("Image URL %s returned status %s", url, response.status)
+                return False
         except TimeoutError:
             _LOGGER.warning("Image URL validation timed out for %s", url)
             return False
@@ -294,6 +343,7 @@ class PlantHelper:
         entity_picture = None
         display_species = None
         data_source = DATA_SOURCE_DEFAULT
+        care_data: dict[str, Any] = {}
 
         # If we have image defined in the config, or a local file
         # prefer that.  If neither, image will be set to openplantbook
@@ -387,24 +437,32 @@ class PlantHelper:
                 UnitOfTemperature.CELSIUS,
                 0,
             )
-            # Prefer pre-computed DLI from openplantbook integration (includes
-            # ratio-based detection). Fall back to mmol × PPFD_DLI_FACTOR.
+            # Prefer the pre-computed DLI from the openplantbook integration.
+            # Fall back to mmol / 1000 to convert daily mmol/m²/d → mol/m²/d
+            # (a plain unit conversion; the daily integral is already integrated
+            # over the day, so no PPFD×photoperiod factor applies).
+            # Use an explicit None/"" check so a legitimate 0 is not treated as
+            # missing and silently replaced by the default.
             opb_max_dli = opb_plant.get(CONF_PLANTBOOK_MAPPING[CONF_MAX_DLI])
-            if opb_max_dli is not None:
-                max_dli = round(float(opb_max_dli))
+            if opb_max_dli not in (None, ""):
+                max_dli = round(_to_float(opb_max_dli, DEFAULT_MAX_DLI), 1)
             else:
                 opb_mmol = opb_plant.get(CONF_PLANTBOOK_MAPPING[CONF_MAX_MMOL])
-                if opb_mmol:
-                    max_dli = round(float(opb_mmol) * PPFD_DLI_FACTOR)
+                if opb_mmol not in (None, ""):
+                    max_dli = round(
+                        _to_float(opb_mmol, DEFAULT_MAX_DLI * 1000) / 1000, 1
+                    )
                 else:
                     max_dli = DEFAULT_MAX_DLI
             opb_min_dli = opb_plant.get(CONF_PLANTBOOK_MAPPING[CONF_MIN_DLI])
-            if opb_min_dli is not None:
-                min_dli = round(float(opb_min_dli))
+            if opb_min_dli not in (None, ""):
+                min_dli = round(_to_float(opb_min_dli, DEFAULT_MIN_DLI), 1)
             else:
                 opb_mmol = opb_plant.get(CONF_PLANTBOOK_MAPPING[CONF_MIN_MMOL])
-                if opb_mmol:
-                    min_dli = round(float(opb_mmol) * PPFD_DLI_FACTOR)
+                if opb_mmol not in (None, ""):
+                    min_dli = round(
+                        _to_float(opb_mmol, DEFAULT_MIN_DLI * 1000) / 1000, 1
+                    )
                 else:
                     min_dli = DEFAULT_MIN_DLI
             max_conductivity = _to_int(
@@ -423,6 +481,9 @@ class PlantHelper:
                 opb_plant.get(CONF_PLANTBOOK_MAPPING[CONF_MIN_HUMIDITY]),
                 DEFAULT_MIN_HUMIDITY,
             )
+            care_data = {
+                field: opb_plant[field] for field in CARE_FIELDS if opb_plant.get(field)
+            }
             _LOGGER.info("Picture: %s", entity_picture)
             if (
                 entity_picture is None
@@ -459,6 +520,18 @@ class PlantHelper:
         _LOGGER.debug("Parsing input config: %s", config)
         _LOGGER.debug("Display pid: %s", display_species)
 
+        # Clamp the persisted DLI thresholds to the physical maximum, covering
+        # every source — OPB-derived, defaults, and any value already in
+        # `config` (e.g. a YAML import). _clamp_dli only lowers impossible
+        # highs, so valid values and defaults pass through untouched.
+        dli_species = config.get(ATTR_SPECIES)
+        max_dli = _clamp_dli(
+            _to_float(config.get(CONF_MAX_DLI, max_dli), max_dli), "max", dli_species
+        )
+        min_dli = _clamp_dli(
+            _to_float(config.get(CONF_MIN_DLI, min_dli), min_dli), "min", dli_species
+        )
+
         ret = {
             DATA_SOURCE: data_source,
             FLOW_PLANT_INFO: {
@@ -466,6 +539,7 @@ class PlantHelper:
                 ATTR_SPECIES: config.get(ATTR_SPECIES) or "",
                 ATTR_ENTITY_PICTURE: entity_picture or "",
                 OPB_DISPLAY_PID: display_species or "",
+                ATTR_CARE: care_data,
                 ATTR_LIMITS: {
                     CONF_MAX_ILLUMINANCE: config.get(
                         CONF_MAX_BRIGHTNESS,
@@ -495,9 +569,12 @@ class PlantHelper:
                     CONF_MIN_SOIL_TEMPERATURE: config.get(
                         CONF_MIN_SOIL_TEMPERATURE, min_soil_temperature
                     ),
-                    CONF_MAX_DLI: config.get(CONF_MAX_DLI, max_dli),
-                    CONF_MIN_DLI: config.get(CONF_MIN_DLI, min_dli),
+                    CONF_MAX_DLI: max_dli,
+                    CONF_MIN_DLI: min_dli,
                 },
+                # Record the unit that temperature limits are stored in.
+                # generate_configentry converts temps to the user's system unit.
+                FLOW_LIMITS_TEMPERATURE_UNIT: self.hass.config.units.temperature_unit,
                 FLOW_SENSOR_TEMPERATURE: config[ATTR_SENSORS].get(ATTR_TEMPERATURE),
                 FLOW_SENSOR_MOISTURE: config[ATTR_SENSORS].get(ATTR_MOISTURE),
                 FLOW_SENSOR_CONDUCTIVITY: config[ATTR_SENSORS].get(ATTR_CONDUCTIVITY),

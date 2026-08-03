@@ -173,11 +173,13 @@
                         "data": {
                             "enable_autodiscovery": "Descobrir automaticamente",
                             "enable_replaced": "Habilitar botão de substituição de bateria",
+                            "hide_battery_low": "Ocultar bateria fraca",
                             "user_library": "Biblioteca de usuário"
                         },
                         "data_description": {
                             "enable_autodiscovery": "Descobrir automaticamente dispositivos que estão na biblioteca.",
                             "enable_replaced": "Habilitar o botão de substituição de bateria em cada nota de bateria.",
+                            "hide_battery_low": "Ocultar o sensor binário de bateria fraca quando uma porcentagem de bateria está disponível, evitando duplicação em paineis gerados.",
                             "user_library": "Se especificado, um arquivo de biblioteca de usuário será pesquisado antes da biblioteca principal, a biblioteca do usuário deve estar no mesmo formato que a biblioteca e colocada em `config/.storage/battery_notes`."
                         }
                     }
@@ -334,6 +336,29 @@
                     }
                 }
             }
+        },
+        "composite_device_id": {
+            "fix_flow": {
+                "abort": {
+                    "entry_removed": "A entrada de configuração do Battery Note foi removida"
+                },
+                "error": {
+                    "invalid_device": "Selecione um dispositivo existente ou deixe o campo vazio"
+                },
+                "step": {
+                    "select_device": {
+                        "data": {
+                            "device_id": "Dispositivo"
+                        },
+                        "data_description": {
+                            "device_id": "O dispositivo ao qual esta nota de bateria deve estar vinculada."
+                        },
+                        "description": "A nota da bateria {name} estava vinculada a um dispositivo que foi dividido em vários dispositivos.\n\nSelecione o dispositivo ao qual esta nota de bateria deve estar vinculada, ou deixe vazio para remover a nota da bateria.",
+                        "title": "Selecione o dispositivo para {name}"
+                    }
+                }
+            },
+            "title": "O dispositivo para a nota de bateria {name} precisa ser selecionado novamente"
         },
         "deprecated_yaml": {
             "title": "A configuração YAML {integration_title} está sendo removida",

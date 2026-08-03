@@ -8,6 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.powercalc.const import (
+    CONF_COST_SENSOR_NAMING,
+    CONF_CREATE_COST_SENSORS,
     CONF_CREATE_DOMAIN_GROUPS,
     CONF_CREATE_ENERGY_SENSORS,
     CONF_CREATE_STANDBY_GROUP,
@@ -32,6 +34,7 @@ from custom_components.powercalc.const import (
     CONF_POWER_SENSOR_PRECISION,
     CONF_UTILITY_METER_OFFSET,
     CONF_UTILITY_METER_TYPES,
+    DEFAULT_COST_NAME_PATTERN,
     DEFAULT_ENERGY_INTEGRATION_METHOD,
     DEFAULT_ENERGY_NAME_PATTERN,
     DEFAULT_ENERGY_SENSOR_PRECISION,
@@ -53,7 +56,7 @@ FLAG_HAS_GLOBAL_GUI_CONFIG = "has_global_gui_config"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def get_global_configuration(hass: HomeAssistant, config: ConfigType) -> ConfigType:
+def get_global_configuration(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     # Default configuration values
     default_config = {
         CONF_ENABLE_ANALYTICS: False,
@@ -72,6 +75,8 @@ async def get_global_configuration(hass: HomeAssistant, config: ConfigType) -> C
         CONF_IGNORE_UNAVAILABLE_STATE: False,
         CONF_CREATE_DOMAIN_GROUPS: [],
         CONF_CREATE_ENERGY_SENSORS: True,
+        CONF_CREATE_COST_SENSORS: False,
+        CONF_COST_SENSOR_NAMING: DEFAULT_COST_NAME_PATTERN,
         CONF_CREATE_STANDBY_GROUP: True,
         CONF_CREATE_UTILITY_METERS: False,
         CONF_DISCOVERY: {
@@ -92,12 +97,12 @@ async def get_global_configuration(hass: HomeAssistant, config: ConfigType) -> C
         global_config.update(get_global_gui_configuration(global_config_entry))
 
     # Then override with YAML configuration if available
-    yaml_config: dict = config.get(DOMAIN, {})
+    yaml_config: ConfigType = config.get(DOMAIN, {})
     if yaml_config:
         global_config.update(yaml_config)
 
-    await handle_legacy_discovery_config(hass, global_config, yaml_config)
-    await handle_legacy_update_interval_config(hass, global_config, yaml_config)
+    handle_legacy_discovery_config(hass, global_config, yaml_config)
+    handle_legacy_update_interval_config(hass, global_config, yaml_config)
 
     return global_config
 

@@ -10,7 +10,7 @@ from functools import partial
 import gzip
 import logging
 import os
-from typing import Any, TextIO, TypeVar, cast
+from typing import Any, TextIO, cast
 
 from homeassistant.components import light
 from homeassistant.components.light import (
@@ -71,12 +71,16 @@ class _EffectEntry:
     table: EffectTableType
 
 
+# manufacturer, model, lookup mode, sub profile
+_CacheKey = tuple[str, str, LookupMode, str | None]
+
+
 class LutRegistry:
     def __init__(self, hass: HomeAssistant) -> None:
         self._hass = hass
-        self._lut_entries: dict[tuple, _LutEntry] = {}
-        self._effect_entries: dict[tuple, _EffectEntry] = {}
-        self._supported_modes: dict[tuple, set[LookupMode]] = {}
+        self._lut_entries: dict[_CacheKey, _LutEntry] = {}
+        self._effect_entries: dict[_CacheKey, _EffectEntry] = {}
+        self._supported_modes: dict[tuple[str, str, str], set[LookupMode]] = {}
 
     async def get_lookup_entry(
         self,
@@ -109,7 +113,11 @@ class LutRegistry:
         supported_modes = self._supported_modes.get(cache_key)
         if supported_modes is None:
             supported_modes = set()
-            for filename in await self._hass.async_add_executor_job(os.listdir, power_profile.get_model_directory()):
+            filenames = cast(
+                list[str],
+                await self._hass.async_add_executor_job(os.listdir, power_profile.get_model_directory()),
+            )
+            for filename in filenames:
                 if filename.endswith((".csv.gz", ".csv")):
                     base_name = filename.split(".", 1)[0]
                     supported_modes.add(LookupMode(base_name))
@@ -117,7 +125,7 @@ class LutRegistry:
         return supported_modes
 
     @staticmethod
-    def _cache_key(power_profile: PowerProfile, lookup_mode: LookupMode) -> tuple:
+    def _cache_key(power_profile: PowerProfile, lookup_mode: LookupMode) -> _CacheKey:
         return power_profile.manufacturer, power_profile.model, lookup_mode, power_profile.sub_profile
 
     @classmethod
@@ -184,7 +192,7 @@ class LutRegistry:
             _LOGGER.debug("Loading LUT data file: %s", path)
             return open(path)
 
-        raise LutFileNotFoundError("Data file not found: %s")
+        raise LutFileNotFoundError(f"Data file not found: {path}")
 
 
 class LutStrategy(PowerCalculationStrategyInterface):
@@ -209,7 +217,7 @@ class LutStrategy(PowerCalculationStrategyInterface):
 
         brightness = attrs.get(ATTR_BRIGHTNESS)
         if brightness is None:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "%s: Could not calculate power. no brightness set",
                 entity_state.entity_id,
             )
@@ -308,7 +316,7 @@ class LutStrategy(PowerCalculationStrategyInterface):
                 )
                 light_setting.hue = int(hs[0] / 360 * 65535)
                 light_setting.saturation = int(hs[1] / 100 * 255)
-            except (KeyError, TypeError, ValueError):
+            except KeyError, TypeError, ValueError:
                 _LOGGER.error(
                     "%s: Could not calculate power. no hue/sat set. "
                     "Please check the attributes of your light in the developer tools.",
@@ -408,10 +416,11 @@ class LutStrategy(PowerCalculationStrategyInterface):
         sat_values = self.get_nearest(hs_table, light_setting.hue or 0)
         return self.get_nearest(sat_values, light_setting.saturation or 0)
 
-    # Generic nearest lookup for both float values and nested saturation dicts
-    _NearestT = TypeVar("_NearestT", float, dict[int, float])
-
-    def get_nearest(self, lookup_dict: dict[int, _NearestT], search_key: int) -> _NearestT:
+    def get_nearest[NearestT: (float, dict[int, float])](
+        self,
+        lookup_dict: dict[int, NearestT],
+        search_key: int,
+    ) -> NearestT:
         """Return the value mapped at search_key or the nearest neighbour key."""
         value = lookup_dict.get(search_key)
         if value is not None:

@@ -411,10 +411,11 @@ class PersonLocationClient:
         _LOGGER.debug("[_api_wrapper] %s", url.split("?", 1)[0])
 
         last_error = None
+        response = None
 
-        for attempt in range(1, RETRIES + 1):
+        for attempt in range(1, retries + 1):
             try:
-                async with async_timeout.timeout(TIMEOUT):
+                async with async_timeout.timeout(timeout):
                     if method == "get":
                         response = await self._session.get(url, headers=headers)
                     elif method == "put":
@@ -438,7 +439,7 @@ class PersonLocationClient:
                         _LOGGER.debug(
                             "Attempt %s/%s %sfailed due to: %s",
                             attempt,
-                            RETRIES,
+                            retries,
                             "(no retry) " if no_retry else "",
                             last_error,
                         )
@@ -455,7 +456,7 @@ class PersonLocationClient:
                 _LOGGER.debug(
                     "Attempt %s/%s failed: %s",
                     attempt,
-                    RETRIES,
+                    retries,
                     last_error,
                 )
 
@@ -464,7 +465,7 @@ class PersonLocationClient:
                 _LOGGER.debug(
                     "Attempt %s/%s failed due to client error: %s",
                     attempt,
-                    RETRIES,
+                    retries,
                     last_error,
                 )
 
@@ -473,14 +474,14 @@ class PersonLocationClient:
                 _LOGGER.debug(
                     "Attempt %s/%s failed due to unexpected error: %s",
                     attempt,
-                    RETRIES,
+                    retries,
                     last_error,
                 )
                 _LOGGER.debug(traceback.format_exc())
 
-            if attempt < RETRIES:
+            if attempt < retries:
                 # ------- Pause and then retry error:
-                if response and response.status and response.status == 429:
+                if response is not None and response.status == 429:
                     delay = get_retry_delay(response.headers)
                 else:
                     delay = 2 ** (attempt - 1)
@@ -490,10 +491,12 @@ class PersonLocationClient:
         # ------- Return error response:
         _LOGGER.debug("All attempts failed for %s", url)
         return {
-            "status": response.status,
+            "status": response.status if response is not None else None,
             "ok": False,
             "data": None,
             "error": last_error or "Unknown error",
+            "headers": dict(response.headers) if response is not None else {},
+            "url": str(response.url) if response is not None else url,
         }
 
 
@@ -502,12 +505,21 @@ class PersonLocationClient:
 
 async def async_test_google_api_key(hass: HomeAssistant, key: str) -> bool:
     """Test to see if the API key is valid."""
-    pli = hass.data[DOMAIN].get(DATA_INTEGRATION, {})
     if key == DEFAULT_API_KEY_NOT_SET:
         return True
+
     latitude, longitude = get_home_coordinates(hass)
     if latitude is None:
         return False
+
+    pli = hass.data.get(DOMAIN, {}).get(DATA_INTEGRATION, {})
+    if not pli:
+        _LOGGER.debug(
+            "Integration data not yet initialized: DOMAIN=%s DATA_INTEGRATION=%s",
+            DOMAIN,
+            DATA_INTEGRATION,
+        )
+        return True
 
     resp = await async_get_google_maps_geocoding(hass, key, latitude, longitude)
     if resp.get("ok"):
@@ -533,13 +545,22 @@ async def async_test_google_api_key(hass: HomeAssistant, key: str) -> bool:
 
 async def async_test_mapbox_api_key(hass: HomeAssistant, key: str) -> bool:
     """Test to see if the API key is valid."""
-    # pli = hass.data[DOMAIN].get(DATA_INTEGRATION, {})
-    # cfg = hass.data[DOMAIN].get(DATA_CONFIGURATION, {})
     if key == DEFAULT_API_KEY_NOT_SET:
         return True
+
     latitude, longitude = get_home_coordinates(hass)
     if latitude is None:
         return False
+
+    pli = hass.data.get(DOMAIN, {}).get(DATA_INTEGRATION, {})
+    if not pli:
+        _LOGGER.debug(
+            "Integration data not yet initialized: DOMAIN=%s DATA_INTEGRATION=%s",
+            DOMAIN,
+            DATA_INTEGRATION,
+        )
+        return True
+
     resp = await async_get_mapbox_static_image(hass, key, latitude, longitude)
     if resp.get("ok"):
         return True
@@ -549,12 +570,21 @@ async def async_test_mapbox_api_key(hass: HomeAssistant, key: str) -> bool:
 
 async def async_test_mapquest_api_key(hass: HomeAssistant, key: str) -> bool:
     """Test to see if the API key is valid."""
-    pli = hass.data[DOMAIN].get(DATA_INTEGRATION, {})
     if key == DEFAULT_API_KEY_NOT_SET:
         return True
     latitude, longitude = get_home_coordinates(hass)
     if latitude is None:
         return False
+
+    pli = hass.data.get(DOMAIN, {}).get(DATA_INTEGRATION, {})
+    if not pli:
+        _LOGGER.debug(
+            "Integration data not yet initialized: DOMAIN=%s DATA_INTEGRATION=%s",
+            DOMAIN,
+            DATA_INTEGRATION,
+        )
+        return True
+
     resp = await async_get_mapquest_reverse_geocoding(hass, key, latitude, longitude)
     if resp.get("ok"):
         # Save home_state and home_country_code for later comparisons
@@ -583,7 +613,7 @@ async def async_test_mapquest_api_key(hass: HomeAssistant, key: str) -> bool:
 
 async def async_test_osm_api_key(hass: HomeAssistant, key: str) -> bool:
     """Test to see if the API key is valid."""
-    pli = hass.data[DOMAIN].get(DATA_INTEGRATION, {})
+    pli = hass.data.get(DOMAIN, {}).get(DATA_INTEGRATION, {})
     import re
 
     if key == DEFAULT_API_KEY_NOT_SET:
@@ -594,6 +624,16 @@ async def async_test_osm_api_key(hass: HomeAssistant, key: str) -> bool:
             latitude, longitude = get_home_coordinates(hass)
             if latitude is None:
                 return False
+
+            pli = hass.data.get(DOMAIN, {}).get(DATA_INTEGRATION, {})
+            if not pli:
+                _LOGGER.debug(
+                    "Integration data not yet initialized: DOMAIN=%s DATA_INTEGRATION=%s",
+                    DOMAIN,
+                    DATA_INTEGRATION,
+                )
+                return True
+
             resp = await async_get_open_street_map_reverse_geocoding(
                 hass, key, latitude, longitude
             )
@@ -621,12 +661,22 @@ async def async_test_osm_api_key(hass: HomeAssistant, key: str) -> bool:
 
 async def async_test_radar_api_key(hass: HomeAssistant, key: str) -> bool:
     """Test to see if the API key is valid."""
-    pli = hass.data[DOMAIN].get(DATA_INTEGRATION, {})
     if key == DEFAULT_API_KEY_NOT_SET:
         return True
+
     latitude, longitude = get_home_coordinates(hass)
     if latitude is None:
         return False
+
+    pli = hass.data.get(DOMAIN, {}).get(DATA_INTEGRATION, {})
+    if not pli:
+        _LOGGER.debug(
+            "Integration data not yet initialized: DOMAIN=%s DATA_INTEGRATION=%s",
+            DOMAIN,
+            DATA_INTEGRATION,
+        )
+        return True
+
     resp = await async_get_radar_reverse_geocoding(hass, key, latitude, longitude)
     if resp.get("ok"):
         # Save home_state and home_country_code for later comparisons

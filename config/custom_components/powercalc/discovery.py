@@ -33,6 +33,7 @@ from .const import (
     MANUFACTURER_WLED,
     CalculationStrategy,
 )
+from .device_binding import is_composite_device_id
 from .group_include.filter import (
     CategoryFilter,
     CompositeFilter,
@@ -51,35 +52,38 @@ _LOGGER = logging.getLogger(__name__)
 _DiscoverySourceT = TypeVar("_DiscoverySourceT", er.RegistryEntry, dr.DeviceEntry)
 
 
-async def get_power_profile_by_source_entity(hass: HomeAssistant, source_entity: SourceEntity) -> PowerProfile | None:
-    """Given a certain entity, lookup the manufacturer and model and return the power profile."""
+def get_discovery_manager(hass: HomeAssistant) -> DiscoveryManager:
+    """Return the shared discovery manager, creating a throwaway one when not yet set up."""
     try:
-        discovery_manager: DiscoveryManager = hass.data[DOMAIN][DATA_DISCOVERY_MANAGER]
+        return hass.data[DOMAIN][DATA_DISCOVERY_MANAGER]  # type: ignore[no-any-return]
     except KeyError:
-        discovery_manager = DiscoveryManager(hass, {})
+        return DiscoveryManager(hass, {})
+
+
+async def _get_power_profile_by_source(
+    hass: HomeAssistant,
+    source_entity: SourceEntity,
+    discovery_by: DiscoveryBy,
+) -> PowerProfile | None:
+    """Look up a power profile for a source entity, discovered either by entity or by device."""
+    discovery_manager = get_discovery_manager(hass)
     model_info = await discovery_manager.extract_model_info_from_device_info(source_entity.entity_entry)
     if not model_info:
         return None
-    profiles = await discovery_manager.find_power_profiles(model_info, source_entity, DiscoveryBy.ENTITY)
+    profiles = await discovery_manager.find_power_profiles(model_info, source_entity, discovery_by)
     return profiles[0] if profiles else None
+
+
+async def get_power_profile_by_source_entity(hass: HomeAssistant, source_entity: SourceEntity) -> PowerProfile | None:
+    """Given a certain entity, lookup the manufacturer and model and return the power profile."""
+    return await _get_power_profile_by_source(hass, source_entity, DiscoveryBy.ENTITY)
 
 
 async def get_power_profile_by_source_device(hass: HomeAssistant, source_entity: SourceEntity) -> PowerProfile | None:
     """Look up a device-discovered power profile for a source entity's device."""
     if not source_entity.device_entry or not source_entity.entity_entry:
         return None
-
-    try:
-        discovery_manager: DiscoveryManager = hass.data[DOMAIN][DATA_DISCOVERY_MANAGER]
-    except KeyError:
-        discovery_manager = DiscoveryManager(hass, {})
-
-    model_info = await discovery_manager.extract_model_info_from_device_info(source_entity.entity_entry)
-    if not model_info:
-        return None
-
-    profiles = await discovery_manager.find_power_profiles(model_info, source_entity, DiscoveryBy.DEVICE)
-    return profiles[0] if profiles else None
+    return await _get_power_profile_by_source(hass, source_entity, DiscoveryBy.DEVICE)
 
 
 class DiscoveryStatus(StrEnum):
@@ -175,7 +179,7 @@ class DiscoveryManager:
             if not entity_id or entity_id == DUMMY_ENTITY_ID:
                 continue
 
-            entity = await create_source_entity(str(entity_id), self.hass)
+            entity = create_source_entity(str(entity_id), self.hass)
             if entity and entity.device_entry:
                 self.initialized_flows.add(f"pc_{entity.device_entry.id}")
             self.initialized_flows.add(entity_id)
@@ -246,7 +250,7 @@ class DiscoveryManager:
 
     async def create_entity_source(self, entity_entry: er.RegistryEntry) -> SourceEntity:
         """Create SourceEntity for an entity."""
-        return await create_source_entity(entity_entry.entity_id, self.hass)
+        return create_source_entity(entity_entry.entity_id, self.hass)
 
     @staticmethod
     async def create_device_source(device_entry: dr.DeviceEntry) -> SourceEntity:
@@ -379,11 +383,15 @@ class DiscoveryManager:
             ],
             FilterOperator.OR,
         )
-        return await get_filtered_entity_list(self.hass, NotFilter(entity_filter))
+        return get_filtered_entity_list(self.hass, NotFilter(entity_filter))
 
     async def get_devices(self) -> list[dr.DeviceEntry]:
         """Fetch device entries."""
-        return list(dr.async_get(self.hass).devices.values())
+        return [
+            device
+            for device in dr.async_get(self.hass).devices.values()
+            if not is_composite_device_id(self.hass, device.id)
+        ]
 
     def enable(self) -> None:
         """Enable the discovery."""
@@ -401,7 +409,6 @@ class DiscoveryManager:
             if flow["context"]["source"] != SOURCE_INTEGRATION_DISCOVERY:
                 continue  # pragma: no cover
             self.hass.config_entries.flow.async_abort(flow["flow_id"])
-        return
 
     async def extract_model_info_from_device_info(
         self,
@@ -481,7 +488,7 @@ class DiscoveryManager:
         source_entity: SourceEntity,
         log_identifier: str,
         power_profiles: list[PowerProfile] | None,
-        extra_discovery_data: dict | None,
+        extra_discovery_data: dict[str, Any] | None,
     ) -> None:
         """Dispatch the discovery flow for a given entity."""
 
@@ -564,7 +571,7 @@ class DiscoveryManager:
 
         return entities
 
-    def _find_entity_ids_in_yaml_config(self, search_dict: dict) -> list[str]:
+    def _find_entity_ids_in_yaml_config(self, search_dict: ConfigType) -> list[str]:
         """Takes a dict with nested lists and dicts,
         and searches all dicts for a key of the field
         provided.
@@ -573,7 +580,7 @@ class DiscoveryManager:
         self._extract_entity_ids(search_dict, found_entity_ids)
         return found_entity_ids
 
-    def _extract_entity_ids(self, search_dict: dict, found_entity_ids: list[str]) -> None:
+    def _extract_entity_ids(self, search_dict: ConfigType, found_entity_ids: list[str]) -> None:
         """Helper function to recursively extract entity IDs."""
         for key, value in search_dict.items():
             if key == CONF_ENTITY_ID:
@@ -583,7 +590,7 @@ class DiscoveryManager:
             elif isinstance(value, list):
                 self._process_list_items(value, found_entity_ids)
 
-    def _process_list_items(self, items: list, found_entity_ids: list[str]) -> None:
+    def _process_list_items(self, items: list[Any], found_entity_ids: list[str]) -> None:
         """Helper function to process list items."""
         for item in items:
             if isinstance(item, dict):

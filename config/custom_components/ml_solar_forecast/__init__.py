@@ -3,6 +3,7 @@
 from datetime import UTC, datetime, timedelta
 
 import voluptuous as vol
+import pandas as pd
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
@@ -51,6 +52,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 log.warning("No forecast data available for entry_id %s", entry_id)
                 return {}
 
+            # Gaten (None/NaN) in de power-kolom dichten vóór we verder filteren/serialiseren.
+            # to_numeric(errors="coerce") vangt zowel None als eventuele andere
+            # niet-numerieke waarden op en zet ze om naar NaN, zodat interpolate()
+            # daar altijd consistent mee kan werken, ongeacht hoe het gat ontstond.
+            fc = fc.copy()
+            n_missing = (
+                fc["power"].isna().sum()
+                + (fc["power"].apply(lambda v: v is None)).sum()
+            )
+            if n_missing:
+                log.warning(
+                    "Forecast for entry_id %s has %d missing power value(s), interpolating",
+                    entry_id,
+                    n_missing,
+                )
+            fc["power"] = (
+                pd.to_numeric(fc["power"], errors="coerce")
+                .interpolate(method="linear", limit_direction="both")
+                .fillna(0)
+            )
+
             local_tz = dt_util.get_time_zone(hass.config.time_zone)
 
             # Parse start/end times with defaults in local time
@@ -81,11 +103,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 }
 
             return await hass.async_add_executor_job(convert_and_serialize, data)
-            # # Converteer index naar locale tijd voor de output
-            # data = data.copy()
-            # data.index = data.index.tz_convert(local_tz)
-
-            # return {k.isoformat(): v for k, v in data["power"].to_dict().items()}
 
         except Exception as e:
             log.error("Error getting forecast for entry_id %s: %s", entry_id, e)

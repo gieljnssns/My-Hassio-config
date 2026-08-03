@@ -5,12 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_ENTITY_ID, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 import voluptuous as vol
 
-from custom_components.powercalc import SensorType
+from custom_components.powercalc.const import SensorType
 from custom_components.powercalc.flow_helper.common import PowercalcFormStep, Step
 from custom_components.powercalc.flow_helper.schema import SCHEMA_UTILITY_METER_TOGGLE
 
@@ -39,7 +39,7 @@ class RealPowerConfigFlow:
     def __init__(self, flow: PowercalcConfigFlow) -> None:
         self.flow: PowercalcConfigFlow = flow
 
-    async def async_step_real_power(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_real_power(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the flow for real power sensor"""
 
         self.flow.selected_sensor_type = SensorType.REAL_POWER
@@ -57,6 +57,6 @@ class RealPowerOptionsFlow:
     def __init__(self, flow: PowercalcOptionsFlow) -> None:
         self.flow: PowercalcOptionsFlow = flow
 
-    async def async_step_real_power(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_real_power(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the real power options flow."""
         return await self.flow.async_handle_options_step(user_input, SCHEMA_REAL_POWER_OPTIONS, Step.REAL_POWER)

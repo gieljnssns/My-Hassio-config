@@ -1,5 +1,7 @@
 """Constants"""
 
+from datetime import timedelta
+
 DOMAIN = "plant"
 DOMAIN_PLANTBOOK = "openplantbook"
 
@@ -9,6 +11,14 @@ URL_SCHEME_MEDIA_SOURCE = "media-source://"
 PLANTBOOK_DOMAIN = "plantbook.io"
 
 REQUEST_TIMEOUT = 30
+
+# How long, after startup, restored entity values are held while the source
+# sensor has not yet delivered a live reading. Bounds the restore window so a
+# source that never recovers (e.g. a dead sensor) stops masking a stale value.
+# Sized well above the observed worst-case BLE broadcast gap (~3 min across the
+# plant sensors): 10 min gives ample margin while still failing over to the
+# real (unavailable) state promptly for a genuinely dead sensor.
+RESTORE_GRACE_PERIOD = timedelta(minutes=10)
 
 # ATTRs are used by machines
 ATTR_BATTERY = "battery"
@@ -36,9 +46,15 @@ ATTR_ENTITY = "entity"
 ATTR_SELECT = "select"
 ATTR_OPTIONS = "options"
 ATTR_PLANT = "plant"
+ATTR_PROBLEMS = "problems"
 ATTR_SPECIES = "species"
 ATTR_IMAGE = "image"
 ATTR_SEARCH_FOR = "search_for"
+ATTR_CARE = "care"
+# Public state-attribute prefix for per-field care guidance (e.g. care_watering).
+# Kept separate from ATTR_CARE (the internal storage key) so the public attribute
+# names stay stable even if the storage key is ever renamed.
+ATTR_CARE_PREFIX = "care_"
 
 # Readings are used by humans
 READING_BATTERY = "battery"
@@ -125,6 +141,11 @@ DEFAULT_MIN_MOL = 2
 DEFAULT_MAX_MOL = 30
 DEFAULT_MIN_DLI = 2
 DEFAULT_MAX_DLI = 30
+# Physical ceiling for DLI (mol/d⋅m²): ~65 is the maximum daily light integral
+# attainable at Earth's surface. A converted OpenPlantbook value above this is
+# biologically impossible and signals suspect source data, so it is clamped.
+# No lower guard: legitimate deep-shade minimums round toward 0.
+DLI_SANITY_MAX = 65.0
 DEFAULT_MIN_VPD = 0.4
 DEFAULT_MAX_VPD = 1.6
 
@@ -158,6 +179,7 @@ FLOW_PLANT_SPECIES = "plant_species"
 FLOW_PLANT_NAME = "plant_name"
 FLOW_PLANT_IMAGE = "image_url"
 FLOW_PLANT_LIMITS = "limits"
+FLOW_LIMITS_TEMPERATURE_UNIT = "limits_temperature_unit"
 
 FLOW_SENSOR_TEMPERATURE = "temperature_sensor"
 FLOW_SENSOR_MOISTURE = "moisture_sensor"
@@ -196,10 +218,14 @@ OPB_SEARCH = "search"
 OPB_SEARCH_RESULT = "search_result"
 OPB_PID = "pid"
 OPB_DISPLAY_PID = "display_pid"
+OPB_ATTR_INCLUDE = "include"
+OPB_INCLUDE_CARE = "care"
 
-# Hysteresis: fraction of (max - min) range that the value must clear
-# before a problem state is removed. Prevents flapping when a sensor
-# value oscillates near a threshold.
+# Hysteresis: fraction of the crossed threshold (min or max) that the value
+# must clear by before a problem state is removed. Prevents flapping when a
+# sensor value oscillates near a threshold. Relative to the threshold itself
+# (not the max-min span) so wide-range sensors with a small minimum don't get
+# an over-inflated low-side margin (see issue #465).
 HYSTERESIS_FRACTION = 0.05
 
 # Grace period after watering: delay before reporting moisture "high" problem
@@ -280,3 +306,7 @@ CONF_PLANTBOOK_MAPPING = {
     CONF_MIN_SOIL_TEMPERATURE: "min_soil_temp",
     CONF_MAX_SOIL_TEMPERATURE: "max_soil_temp",
 }
+
+# OpenPlantbook `include: care` returns these free-text fields per species.
+# Order is the canonical attribute order used when exposing them.
+CARE_FIELDS = ["watering", "sunlight", "soil", "pruning", "fertilization"]

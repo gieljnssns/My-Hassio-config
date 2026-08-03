@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 import voluptuous as vol
 from homeassistant.components import websocket_api
+from homeassistant.components.logbook import log_entry
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter.const import (
     DATA_TARIFF_SENSORS,
@@ -34,12 +35,16 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
-from . import group as group  # noqa: F401 - needed for HA group discovery
+from . import group as group
 from .config_flow import update_plant_options
 from .const import (
     ATTR_BRIGHTNESS,
+    ATTR_CARE,
+    ATTR_CARE_PREFIX,
     ATTR_CO2,
     ATTR_CONDUCTIVITY,
     ATTR_CURRENT,
@@ -53,6 +58,7 @@ from .const import (
     ATTR_MOISTURE,
     ATTR_NEW_SENSOR,
     ATTR_PLANT,
+    ATTR_PROBLEMS,
     ATTR_SENSOR,
     ATTR_SENSORS,
     ATTR_SOIL_TEMPERATURE,
@@ -85,6 +91,7 @@ from .const import (
     HYSTERESIS_FRACTION,
     MOISTURE_INCREASE_THRESHOLD,
     OPB_DISPLAY_PID,
+    RESTORE_GRACE_PERIOD,
     SERVICE_REPLACE_SENSOR,
     STATE_HIGH,
     STATE_LOW,
@@ -93,6 +100,11 @@ from .plant_helpers import PlantHelper
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
+
+# Key under hass.data[DOMAIN] holding the single shared EntityComponent that
+# owns the plant.<name> entities. The leading underscore keeps it out of the
+# per-entry bookkeeping in async_unload_entry (which skips "_"-prefixed keys).
+DATA_COMPONENT = "_component"
 
 # Schema for native HA plant YAML configuration import
 # Matches format from https://www.home-assistant.io/integrations/plant/
@@ -151,6 +163,7 @@ def _async_find_matching_config_entry(hass: HomeAssistant) -> ConfigEntry | None
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.source == SOURCE_IMPORT:
             return entry
+    return None
 
 
 async def async_migrate_plant(hass: HomeAssistant, plant_id: str, config: dict) -> None:
@@ -167,12 +180,39 @@ async def async_migrate_plant(hass: HomeAssistant, plant_id: str, config: dict) 
     )
 
 
+def _get_plant_component(hass: HomeAssistant) -> EntityComponent:
+    """Return the single shared EntityComponent for the plant domain.
+
+    The plant.<name> entities live on the ``plant`` domain, which this
+    integration owns because it shadows Home Assistant's built-in plant
+    component. Those entities must be added through one domain-level
+    EntityComponent so each gets a valid ``platform`` reference: HA Core
+    2026.7 warns for platform-less entities and removes the compatibility
+    guard in 2026.8. Previously a throwaway EntityComponent was created per
+    config entry, which left the entity without a stable platform on the
+    reload/teardown paths.
+
+    Created once and reused across all config entries. Recreated lazily if
+    the domain data was torn down after the last plant was removed.
+    """
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    component = domain_data.get(DATA_COMPONENT)
+    if component is None:
+        component = EntityComponent(_LOGGER, DOMAIN, hass)
+        domain_data[DATA_COMPONENT] = component
+    return component
+
+
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the plant integration from YAML configuration.
 
     This function handles importing plants from the native Home Assistant
     plant integration's YAML configuration format.
     """
+    # Create the shared domain-level EntityComponent up front, mirroring how
+    # HA's built-in plant component registers its domain in async_setup.
+    _get_plant_component(hass)
+
     if config.get(DOMAIN):
         # Only import if we haven't already imported
         config_entry = _async_find_matching_config_entry(hass)
@@ -212,10 +252,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         plant,
     ]
 
-    # Add all the entities to Hass
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    # Add the entities to Hass via the single shared domain-level component
+    # (see _get_plant_component), so each entity has a valid platform.
+    component = _get_plant_component(hass)
+    # On a reload the previous plant.<name> entity leaves a stale, non-restored
+    # state behind that keeps the entity_id "in use"; core would then abort the
+    # re-add with a duplicate unique_id. Clear any such orphan (no live entity
+    # backing it) right before adding so the id can be reclaimed.
+    erreg = er.async_get(hass)
+    existing_entity_id = erreg.async_get_entity_id(DOMAIN, DOMAIN, entry.entry_id)
+    if existing_entity_id and not hass.states.async_available(existing_entity_id):
+        existing_state = hass.states.get(existing_entity_id)
+        if existing_state is not None and not existing_state.attributes.get("restored"):
+            hass.states.async_remove(existing_entity_id)
     await component.async_add_entities(plant_entities)
-    hass.data[DOMAIN][entry.entry_id]["component"] = component
 
     # Add the entities to device registry and tie to config entry
     device_id = plant.device_id
@@ -251,24 +301,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.warning(
                 "Refuse to update non-%s entities: %s", DOMAIN, meter_entity
             )
-            return False
+            return
         if (
             new_sensor
             and new_sensor != ""
             and not new_sensor.startswith(f"{SENSOR_DOMAIN}.")
         ):
             _LOGGER.warning("%s is not a sensor", new_sensor)
-            return False
+            return
 
         if new_sensor and new_sensor != "":
             try:
                 test = hass.states.get(new_sensor)
             except AttributeError:
-                _LOGGER.error("New sensor entity %s not found", new_sensor)
-                return False
+                _LOGGER.exception("New sensor entity %s not found", new_sensor)
+                return
             if test is None:
                 _LOGGER.error("New sensor entity %s not found", new_sensor)
-                return False
+                return
         else:
             new_sensor = None
 
@@ -371,10 +421,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if ATTR_PLANT in plant_data:
         plant_data[ATTR_PLANT].plant_complete = False
 
-    # Remove the plant entity from the EntityComponent so reloads don't
+    # Remove the plant entity from the shared EntityComponent so reloads don't
     # hit a duplicate unique_id error
     plant = plant_data.get(ATTR_PLANT)
-    component = plant_data.get("component")
+    component = hass.data.get(DOMAIN, {}).get(DATA_COMPONENT)
     if component and plant and plant.entity_id:
         await component.async_remove_entity(plant.entity_id)
 
@@ -390,21 +440,31 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Skip internal settings keys
             if entry_id.startswith("_") or entry_id.endswith("_store"):
                 continue
-            if isinstance(hass.data[DOMAIN][entry_id], dict):
-                if len(hass.data[DOMAIN][entry_id]) == 0:
-                    _LOGGER.debug("Removing empty entry %s", entry_id)
-                    del hass.data[DOMAIN][entry_id]
+            if (
+                isinstance(hass.data[DOMAIN][entry_id], dict)
+                and len(hass.data[DOMAIN][entry_id]) == 0
+            ):
+                _LOGGER.debug("Removing empty entry %s", entry_id)
+                del hass.data[DOMAIN][entry_id]
 
         # Check if only settings keys remain (no actual plant entries)
         remaining_plant_entries = [
             k
-            for k in hass.data[DOMAIN].keys()
+            for k in hass.data[DOMAIN]
             if not k.startswith("_") and not k.endswith("_store")
         ]
         if len(remaining_plant_entries) == 0:
             _LOGGER.debug("Removing domain %s (no more plants)", DOMAIN)
             hass.services.async_remove(DOMAIN, SERVICE_REPLACE_SENSOR)
-            del hass.data[DOMAIN]
+            # Preserve the shared EntityComponent: it is domain-level
+            # infrastructure created in async_setup (which does not re-run on a
+            # reload or a later re-add). Tearing it down here would orphan its
+            # EntityPlatform and make the next add hit a duplicate unique_id.
+            component = hass.data[DOMAIN].get(DATA_COMPONENT)
+            if component is not None:
+                hass.data[DOMAIN] = {DATA_COMPONENT: component}
+            else:
+                del hass.data[DOMAIN]
     return unload_ok
 
 
@@ -475,7 +535,7 @@ def ws_get_info(
     return
 
 
-class PlantDevice(Entity):
+class PlantDevice(RestoreEntity):
     """Base device for plants"""
 
     def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
@@ -495,6 +555,11 @@ class PlantDevice(Entity):
         self.species = self._config.options.get(
             ATTR_SPECIES, self._config.data[FLOW_PLANT_INFO].get(ATTR_SPECIES)
         )
+        # Static per-species care text from OpenPlantbook (include: care).
+        # Stored at config/refresh time; only fields OPB returned are present.
+        # Copy on read: ConfigEntry.data is treated as immutable, so avoid sharing
+        # a reference to the entry's internal care dict.
+        self.care = dict(self._config.data[FLOW_PLANT_INFO].get(ATTR_CARE, {}))
         # Get display_species from options or from initial config
         # Capitalize first letter for proper binomial nomenclature (genus capitalized)
         raw_display_species = (
@@ -514,8 +579,17 @@ class PlantDevice(Entity):
             f"{DOMAIN}.{{}}", self.name, current_ids={}
         )
 
+        self._restored_state_active = (
+            False  # True while showing restored startup values
+        )
         self.plant_complete = False
         self._device_id = None
+        self._problems = []
+        # Problem sensor_types already written to the logbook, used to
+        # de-duplicate onset/recovery entries. Restored in async_added_to_hass
+        # from the persisted `problems` attribute so active problems are not
+        # re-logged as new onsets after a restart / reload.
+        self._logged_problem_types: set[str] = set()
 
         self._check_days = None
 
@@ -678,7 +752,10 @@ class PlantDevice(Entity):
             f"{ATTR_DLI}_status": self.dli_status,
             f"{ATTR_VPD}_status": self.vpd_status,
             f"{ATTR_SPECIES}_original": self.species,
+            ATTR_PROBLEMS: self._problems,
         }
+        for field, value in self.care.items():
+            attributes[f"{ATTR_CARE_PREFIX}{field}"] = value
         return attributes
 
     def _get_entity_icon(self, entity: Entity) -> str | None:
@@ -696,15 +773,16 @@ class PlantDevice(Entity):
             return False
         try:
             has_state = self.hass.states.get(sensor.entity_id) is not None
+        except (AttributeError, TypeError) as e:
+            _LOGGER.debug("Error checking sensor availability for %s: %s", sensor, e)
+            return False
+        else:
             if not has_state:
                 _LOGGER.debug(
                     "Sensor %s has no hass state (disabled or not loaded), skipping",
                     sensor.entity_id,
                 )
             return has_state
-        except (AttributeError, TypeError) as e:
-            _LOGGER.debug("Error checking sensor availability for %s: %s", sensor, e)
-            return False
 
     def _sensor_info(self, attr_name, sensor, max_entity, min_entity) -> dict | None:
         """Build websocket info dict for a single sensor, or None if unavailable."""
@@ -712,8 +790,12 @@ class PlantDevice(Entity):
             _LOGGER.debug("Skipping %s: sensor %s not available", attr_name, sensor)
             return None
         try:
-            max_val = self._safe_float(max_entity.state, max_entity.entity_id)
-            min_val = self._safe_float(min_entity.state, min_entity.entity_id)
+            max_val = self._safe_float(
+                self._entity_state(max_entity), max_entity.entity_id
+            )
+            min_val = self._safe_float(
+                self._entity_state(min_entity), min_entity.entity_id
+            )
             return {
                 ATTR_MAX: max_val if max_val is not None else max_entity._default_value,
                 ATTR_MIN: min_val if min_val is not None else min_entity._default_value,
@@ -781,8 +863,8 @@ class PlantDevice(Entity):
         # DLI uses its own entity (not a meter sensor)
         if self._sensor_available(self.dli):
             response[ATTR_DLI] = {
-                ATTR_MAX: self.max_dli.state,
-                ATTR_MIN: self.min_dli.state,
+                ATTR_MAX: self._entity_state(self.max_dli),
+                ATTR_MIN: self._entity_state(self.min_dli),
                 ATTR_CURRENT: STATE_UNAVAILABLE,
                 ATTR_ICON: self._get_entity_icon(self.dli),
                 ATTR_UNIT_OF_MEASUREMENT: self.dli.unit_of_measurement,
@@ -794,9 +876,10 @@ class PlantDevice(Entity):
 
         # Add rolling 24h DLI if available
         if self.dli_24h is not None and self._sensor_available(self.dli_24h):
+            # Same thresholds as regular DLI
             response[ATTR_DLI_24H] = {
-                ATTR_MAX: self.max_dli.state,  # Same thresholds as regular DLI
-                ATTR_MIN: self.min_dli.state,
+                ATTR_MAX: self._entity_state(self.max_dli),
+                ATTR_MIN: self._entity_state(self.min_dli),
                 ATTR_CURRENT: STATE_UNAVAILABLE,
                 ATTR_ICON: self._get_entity_icon(self.dli_24h),
                 ATTR_UNIT_OF_MEASUREMENT: self.dli_24h.unit_of_measurement,
@@ -1043,6 +1126,27 @@ class PlantDevice(Entity):
             _LOGGER.debug("Sensor %s has non-numeric value: %s", entity_id, value)
             return None
 
+    def _entity_state(self, entity) -> str | None:
+        """Safely read an entity's current state string.
+
+        Prefers the state machine (hass.states) over the entity's own
+        `.state` property: that property requires the entity to be fully
+        added to hass (self.hass set, entity_id assigned) and can raise
+        AttributeError while the entity is still being set up or is being
+        torn down (see issue #485). Falls back to the property directly,
+        guarded against that AttributeError, for entities not (yet) tracked
+        by the state machine.
+        """
+        entity_id = getattr(entity, "entity_id", None)
+        if entity_id is not None:
+            state = self.hass.states.get(entity_id)
+            if state is not None:
+                return state.state
+        try:
+            return entity.state
+        except AttributeError:
+            return None
+
     def _check_threshold(self, value, min_entity, max_entity, current_status):
         """Check a value against min/max thresholds with hysteresis.
 
@@ -1050,28 +1154,46 @@ class PlantDevice(Entity):
         When already in a problem state, require the value to cross back
         by a margin (hysteresis band) before clearing.
         """
+        min_state = self._entity_state(min_entity)
+        max_state = self._entity_state(max_entity)
         try:
-            min_val = float(min_entity.state)
-            max_val = float(max_entity.state)
+            min_val = float(min_state)
+            max_val = float(max_state)
         except (ValueError, TypeError):
             _LOGGER.warning(
                 "Threshold entity has non-numeric state "
                 "(min=%s [%s], max=%s [%s]) — skipping check",
-                min_entity.entity_id,
-                min_entity.state,
-                max_entity.entity_id,
-                max_entity.state,
+                getattr(min_entity, "entity_id", None),
+                min_state,
+                getattr(max_entity, "entity_id", None),
+                max_state,
             )
             return current_status
-        band = (max_val - min_val) * HYSTERESIS_FRACTION
+        # Band is relative to the threshold being crossed, not the full
+        # (max - min) span. A span-based band over-inflates the LOW margin for
+        # wide-range sensors with a small minimum (e.g. conductivity 500-3000:
+        # span band = 125, so a LOW would only clear above 625 -- far above the
+        # 500 minimum, trapping clearly-recovered readings as a problem; see
+        # issue #465). A threshold-relative band keeps a consistent ~5% margin
+        # around each edge regardless of where the other bound sits.
+        # Use the magnitude of the threshold so a negative threshold (e.g. a
+        # sub-zero temperature minimum) still yields a positive band rather than
+        # removing/reversing the hysteresis.
+        # Cap each band at a span-based value so a wide threshold-relative band
+        # can't exceed a narrow OK range (e.g. min=98, max=100): otherwise a
+        # clear point would fall outside [min, max] and the state could never
+        # return to OK (it would stick or flip straight to the opposite state).
+        span_band = (max_val - min_val) * HYSTERESIS_FRACTION
+        band_low = min(abs(min_val) * HYSTERESIS_FRACTION, span_band)
+        band_high = min(abs(max_val) * HYSTERESIS_FRACTION, span_band)
 
         if value < min_val:
             new_status = STATE_LOW
         elif value > max_val:
             new_status = STATE_HIGH
-        elif current_status == STATE_LOW and value <= min_val + band:
+        elif current_status == STATE_LOW and value <= min_val + band_low:
             new_status = STATE_LOW
-        elif current_status == STATE_HIGH and value >= max_val - band:
+        elif current_status == STATE_HIGH and value >= max_val - band_high:
             new_status = STATE_HIGH
         else:
             new_status = STATE_OK
@@ -1089,11 +1211,128 @@ class PlantDevice(Entity):
             )
         return new_status
 
+    def _log_problem_changes(self, problem_sensors: dict[str, tuple]) -> None:
+        """Build self._problems from triggered sensors and log new/resolved problems to the HA logbook.
+
+        Writes to the activity feed when a problem first appears or clears, but stays
+        silent when the same problems persist across updates (avoids repeated entries).
+        problem_sensors maps sensor_type -> (current_val, status, min_entity, max_entity).
+        """
+
+        def _threshold_str(threshold_entity) -> str:
+            """Stringify a min/max threshold value, or 'unknown' if not numeric.
+
+            A threshold entity can momentarily be unavailable/unknown; avoid
+            writing a raw 'unavailable' into the problem entry or logbook.
+            """
+            raw = self._entity_state(threshold_entity)
+            try:
+                float(raw)
+            except (ValueError, TypeError):
+                return "unknown"
+            return str(raw)
+
+        self._problems = [
+            {
+                "sensor_type": st,
+                "status": info[1],
+                "current": str(info[0]),
+                "min": _threshold_str(info[2]),
+                "max": _threshold_str(info[3]),
+            }
+            for st, info in problem_sensors.items()
+        ]
+
+        new_problem_types = {p["sensor_type"] for p in self._problems}
+        appeared = new_problem_types - self._logged_problem_types
+
+        # A previously-logged problem is only "resolved" if its sensor now has a
+        # reading (status not None) and is back in range. A sensor that dropped
+        # out (unavailable -> status None) is *held*: not reported "back in
+        # range" (we don't know if it recovered) and kept tracked so it isn't
+        # re-logged as a new onset when it returns.
+        cleared = self._logged_problem_types - new_problem_types
+        resolved = {
+            sensor_type
+            for sensor_type in cleared
+            if getattr(self, f"{sensor_type}_status", None) is not None
+        }
+        held = cleared - resolved
+
+        # Log each newly appeared problem — result: one logbook entry per sensor per onset,
+        # e.g. "moisture low — current: 15, min: 20"
+        for p in self._problems:
+            if p["sensor_type"] in appeared:
+                threshold_label = "min" if p["status"] == STATE_LOW else "max"
+                threshold_value = p["min"] if p["status"] == STATE_LOW else p["max"]
+                log_entry(
+                    self.hass,
+                    self.name,
+                    f"{p['sensor_type'].replace('_', ' ')} {p['status'].lower()}"
+                    f" — current: {p['current']}, {threshold_label}: {threshold_value}",
+                    domain=DOMAIN,
+                    entity_id=self.entity_id,
+                )
+
+        # Log each resolved problem — result: one logbook entry per sensor per recovery,
+        # e.g. "moisture back in range"
+        for sensor_type in resolved:
+            log_entry(
+                self.hass,
+                self.name,
+                f"{sensor_type.replace('_', ' ')} back in range",
+                domain=DOMAIN,
+                entity_id=self.entity_id,
+            )
+
+        self._logged_problem_types = new_problem_types | held
+
+    def _has_live_source_data(self) -> bool:
+        """True once at least one upstream source sensor reports a numeric value."""
+        for sensor in (
+            self.sensor_moisture,
+            self.sensor_conductivity,
+            self.sensor_temperature,
+            self.sensor_humidity,
+            self.sensor_co2,
+            self.sensor_soil_temperature,
+            self.sensor_illuminance,
+        ):
+            if sensor is None:
+                continue
+
+            external_sensor = getattr(sensor, "external_sensor", None)
+            if not external_sensor:
+                continue
+
+            state = self.hass.states.get(external_sensor)
+            if (
+                state is not None
+                and self._safe_float(state.state, external_sensor) is not None
+            ):
+                return True
+
+        return False
+
     def update(self) -> None:
         """Run on every update of the entities"""
 
+        # Startup restore window: until a source delivers live data, keep the values
+        # restored in async_added_to_hass instead of recomputing them to UNKNOWN/None.
+        # Must sit ABOVE the per-sensor logic below -- that loop overwrites each
+        # *_status to None as it runs, so a guard at the bottom would be too late.
+        if self._restored_state_active:
+            if not self._has_live_source_data():
+                return
+            self._restored_state_active = False  # first live reading -> resume normal
+
         new_state = STATE_OK
         known_state = False
+        # Collects one compact tuple per triggered sensor: (current_val, status, min_entity, max_entity).
+        # Converted to self._problems at the end of update() — adding a new sensor type
+        # only requires one extra line at the trigger site.
+        # TODO: document "how to add a new sensor type" in DEVELOPMENT.md and reference it here.
+        _problem_sensors: dict[str, tuple] = {}
 
         if self.sensor_moisture is not None:
             moisture = getattr(
@@ -1136,6 +1375,12 @@ class PlantDevice(Entity):
                 if self.moisture_trigger:
                     if self.moisture_status == STATE_LOW:
                         new_state = STATE_PROBLEM
+                        _problem_sensors[ATTR_MOISTURE] = (
+                            moisture_val,
+                            self.moisture_status,
+                            self.min_moisture,
+                            self.max_moisture,
+                        )
                     elif self.moisture_status == STATE_HIGH:
                         now = dt_util.now()
                         if (
@@ -1155,6 +1400,12 @@ class PlantDevice(Entity):
                         else:
                             # Grace period expired or not active - report problem
                             new_state = STATE_PROBLEM
+                            _problem_sensors[ATTR_MOISTURE] = (
+                                moisture_val,
+                                self.moisture_status,
+                                self.min_moisture,
+                                self.max_moisture,
+                            )
                             if self._moisture_grace_end_time is not None:
                                 _LOGGER.debug(
                                     "Moisture grace period expired for %s - "
@@ -1193,6 +1444,12 @@ class PlantDevice(Entity):
                     and self.conductivity_trigger
                 ):
                     new_state = STATE_PROBLEM
+                    _problem_sensors[ATTR_CONDUCTIVITY] = (
+                        conductivity_val,
+                        self.conductivity_status,
+                        self.min_conductivity,
+                        self.max_conductivity,
+                    )
             else:
                 # Reset status when sensor is unavailable or non-numeric
                 self.conductivity_status = None
@@ -1220,6 +1477,12 @@ class PlantDevice(Entity):
                     and self.temperature_trigger
                 ):
                     new_state = STATE_PROBLEM
+                    _problem_sensors[ATTR_TEMPERATURE] = (
+                        temperature_val,
+                        self.temperature_status,
+                        self.min_temperature,
+                        self.max_temperature,
+                    )
             else:
                 # Reset status when sensor is unavailable or non-numeric
                 self.temperature_status = None
@@ -1245,6 +1508,12 @@ class PlantDevice(Entity):
                     and self.humidity_trigger
                 ):
                     new_state = STATE_PROBLEM
+                    _problem_sensors[ATTR_HUMIDITY] = (
+                        humidity_val,
+                        self.humidity_status,
+                        self.min_humidity,
+                        self.max_humidity,
+                    )
             else:
                 # Reset status when sensor is unavailable or non-numeric
                 self.humidity_status = None
@@ -1264,6 +1533,12 @@ class PlantDevice(Entity):
                 )
                 if self.co2_status in (STATE_LOW, STATE_HIGH) and self.co2_trigger:
                     new_state = STATE_PROBLEM
+                    _problem_sensors[ATTR_CO2] = (
+                        co2_val,
+                        self.co2_status,
+                        self.min_co2,
+                        self.max_co2,
+                    )
             else:
                 # Reset status when sensor is unavailable or non-numeric
                 self.co2_status = None
@@ -1293,6 +1568,12 @@ class PlantDevice(Entity):
                     and self.soil_temperature_trigger
                 ):
                     new_state = STATE_PROBLEM
+                    _problem_sensors[ATTR_SOIL_TEMPERATURE] = (
+                        soil_temp_val,
+                        self.soil_temperature_status,
+                        self.min_soil_temperature,
+                        self.max_soil_temperature,
+                    )
             else:
                 # Reset status when sensor is unavailable or non-numeric
                 self.soil_temperature_status = None
@@ -1331,6 +1612,12 @@ class PlantDevice(Entity):
                         and self.illuminance_trigger
                     ):
                         new_state = STATE_PROBLEM
+                        _problem_sensors[ATTR_ILLUMINANCE] = (
+                            illuminance_val,
+                            self.illuminance_status,
+                            self.min_illuminance,
+                            self.max_illuminance,
+                        )
                 else:
                     # Reset status when sensor is unavailable or non-numeric
                     self.illuminance_status = None
@@ -1363,6 +1650,12 @@ class PlantDevice(Entity):
                 self.dli_status = STATE_OK
             if self.dli_status in (STATE_LOW, STATE_HIGH) and self.dli_trigger:
                 new_state = STATE_PROBLEM
+                _problem_sensors[ATTR_DLI] = (
+                    dli_value,
+                    self.dli_status,
+                    self.min_dli,
+                    self.max_dli,
+                )
         else:
             # Reset DLI status when sensor is unavailable or removed
             self.dli_status = None
@@ -1377,6 +1670,12 @@ class PlantDevice(Entity):
                 )
                 if self.vpd_status in (STATE_LOW, STATE_HIGH) and self.vpd_trigger:
                     new_state = STATE_PROBLEM
+                    _problem_sensors[ATTR_VPD] = (
+                        vpd_val,
+                        self.vpd_status,
+                        self.min_vpd,
+                        self.max_vpd,
+                    )
             else:
                 self.vpd_status = None
         else:
@@ -1393,6 +1692,18 @@ class PlantDevice(Entity):
                 new_state,
             )
         self._attr_state = new_state
+
+        # Reconcile problems / write logbook entries only when we have live data.
+        # When known_state is False (a sensor dropout, or the restore window
+        # ending with no live reading), _problem_sensors is empty and running the
+        # diff would treat every active problem as resolved and emit false
+        # "back in range" entries. Skipping leaves _problems and
+        # _logged_problem_types untouched (last known state held). Placed after
+        # self._attr_state is set so the computed state is already stored for the
+        # next cycle even if a logbook write were to raise (which would otherwise
+        # make HA skip this cycle's state write).
+        if known_state:
+            self._log_problem_changes(_problem_sensors)
         # Note: do NOT call self.update_registry() here. update() runs in
         # an executor thread (HA's polling), and device_registry.async_get_or_create
         # raises in HA 2026.5+ when called off the event loop. Device-registry
@@ -1424,4 +1735,59 @@ class PlantDevice(Entity):
             self._device_id = device.id
 
     async def async_added_to_hass(self) -> None:
+        """Restore plant state and status attributes on startup."""
+        await super().async_added_to_hass()
         self.update_registry()
+
+        if last_state := await self.async_get_last_state():
+            if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                self._attr_state = last_state.state
+                self._restored_state_active = True  # only latch on a real restore
+
+            attrs = last_state.attributes
+            for attr in (
+                ATTR_MOISTURE,
+                ATTR_TEMPERATURE,
+                ATTR_CONDUCTIVITY,
+                ATTR_ILLUMINANCE,
+                ATTR_HUMIDITY,
+                ATTR_CO2,
+                ATTR_SOIL_TEMPERATURE,
+                ATTR_DLI,
+                ATTR_VPD,
+            ):
+                setattr(self, f"{attr}_status", attrs.get(f"{attr}_status"))
+
+            # Restore the active problems and which problem types were already
+            # logged, so they survive the restore window and active problems are
+            # not re-logged as new onsets after a restart / reload.
+            restored_problems = attrs.get(ATTR_PROBLEMS)
+            if isinstance(restored_problems, list) and restored_problems:
+                self._problems = list(restored_problems)
+                self._logged_problem_types = {
+                    problem["sensor_type"]
+                    for problem in restored_problems
+                    if isinstance(problem, dict) and problem.get("sensor_type")
+                }
+
+        # Bound the startup restore window: if no source ever delivers live
+        # data, end the window after the grace period so the restored plant
+        # state is not held indefinitely.
+        if self._restored_state_active:
+            self.async_on_remove(
+                async_call_later(
+                    self.hass, RESTORE_GRACE_PERIOD, self._end_restore_window
+                )
+            )
+
+    @callback
+    def _end_restore_window(self, _now: datetime | None = None) -> None:
+        """End the startup restore window once the grace period elapses."""
+        if not self._restored_state_active:
+            return
+        _LOGGER.debug(
+            "Restore grace period elapsed for %s; resuming live state",
+            self.entity_id,
+        )
+        self._restored_state_active = False
+        self.async_schedule_update_ha_state(True)

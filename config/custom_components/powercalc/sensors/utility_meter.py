@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import async_generate_entity_id
 import homeassistant.helpers.entity_registry as er
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util import slugify
 
 from custom_components.powercalc.const import (
@@ -41,10 +41,10 @@ _LOGGER = logging.getLogger(__name__)
 GENERAL_TARIFF = "general"
 
 
-async def create_utility_meters(
+def create_utility_meters(
     hass: HomeAssistant,
     energy_sensor: EnergySensor,
-    sensor_config: dict,
+    sensor_config: ConfigType,
     config_entry: ConfigEntry | None = None,
 ) -> list[VirtualUtilityMeter]:
     """Create the utility meters."""
@@ -62,7 +62,7 @@ async def create_utility_meters(
         unique_id = f"{energy_sensor.unique_id}_{meter_type}" if energy_sensor.unique_id else None
         if should_create_utility_meter(hass, unique_id, energy_sensor):
             utility_meters.extend(
-                await create_meters_for_type(
+                create_meters_for_type(
                     hass,
                     energy_sensor,
                     sensor_config,
@@ -98,10 +98,10 @@ def should_create_utility_meter(
     return not (existing_entity_id and hass.states.get(existing_entity_id))  # pragma: no cover
 
 
-async def create_meters_for_type(
+def create_meters_for_type(
     hass: HomeAssistant,
     energy_sensor: EnergySensor,
-    sensor_config: dict,
+    sensor_config: ConfigType,
     config_entry: ConfigEntry | None,
     unique_id: str | None,
     meter_type: str,
@@ -116,7 +116,7 @@ async def create_meters_for_type(
 
     # Create generic utility meter
     if not tariffs or GENERAL_TARIFF in tariffs:
-        utility_meter = await create_utility_meter(
+        utility_meter = create_utility_meter(
             hass,
             energy_sensor.entity_id,
             entity_id,
@@ -130,7 +130,7 @@ async def create_meters_for_type(
 
     # Create tariff-specific utility meters
     if tariffs:
-        new_tariff_sensors = await create_tariff_meters(
+        new_tariff_sensors = create_tariff_meters(
             hass,
             energy_sensor,
             entity_id,
@@ -148,12 +148,12 @@ async def create_meters_for_type(
     return utility_meters
 
 
-async def create_tariff_meters(
+def create_tariff_meters(
     hass: HomeAssistant,
     energy_sensor: EnergySensor,
     entity_id: str,
     name: str,
-    sensor_config: dict,
+    sensor_config: ConfigType,
     config_entry: ConfigEntry | None,
     meter_type: str,
     unique_id: str | None,
@@ -161,11 +161,11 @@ async def create_tariff_meters(
 ) -> list[VirtualUtilityMeter]:
     """Create utility meters for specific tariffs."""
     filtered_tariffs = [t for t in tariffs if t != GENERAL_TARIFF]
-    tariff_select = await create_tariff_select(config_entry, filtered_tariffs, hass, name, unique_id)
+    tariff_select = create_tariff_select(config_entry, filtered_tariffs, hass, name, unique_id)
 
     tariff_sensors = []
     for tariff in filtered_tariffs:
-        utility_meter = await create_utility_meter(
+        utility_meter = create_utility_meter(
             hass,
             energy_sensor.entity_id,
             entity_id,
@@ -181,9 +181,9 @@ async def create_tariff_meters(
     return tariff_sensors
 
 
-async def create_tariff_select(
+def create_tariff_select(
     config_entry: ConfigEntry | None,
-    tariffs: list,
+    tariffs: list[str],
     hass: HomeAssistant,
     name: str,
     unique_id: str | None,
@@ -215,12 +215,12 @@ async def create_tariff_select(
     return tariff_select
 
 
-async def create_utility_meter(
+def create_utility_meter(
     hass: HomeAssistant,
     source_entity: str,
     entity_id: str,
     name: str,
-    sensor_config: dict,
+    sensor_config: ConfigType,
     meter_type: str,
     unique_id: str | None = None,
     tariff: str | None = None,
@@ -261,13 +261,15 @@ async def create_utility_meter(
     utility_meter.rounding_digits = int(
         sensor_config.get(CONF_ENERGY_SENSOR_PRECISION, DEFAULT_ENERGY_SENSOR_PRECISION),
     )
+    utility_meter._sensor_config = sensor_config  # noqa: SLF001
     utility_meter.entity_id = entity_id
 
     return utility_meter
 
 
-class VirtualUtilityMeter(UtilityMeterSensor, BaseEntity):
+class VirtualUtilityMeter(BaseEntity, UtilityMeterSensor):
     rounding_digits: int = DEFAULT_ENERGY_SENSOR_PRECISION
+    _sensor_config: ConfigType
 
     @property
     def unique_id(self) -> str | None:
@@ -286,6 +288,6 @@ class VirtualUtilityMeter(UtilityMeterSensor, BaseEntity):
             self._state if hasattr(self, "_state") else self._attr_native_value
         )  # pre HA 2024.12 value was stored in _state
         if self.rounding_digits and value is not None:
-            return Decimal(round(value, self.rounding_digits))  # type: ignore
+            return Decimal(round(value, self.rounding_digits))  # type: ignore[arg-type]
 
-        return value  # type: ignore
+        return value  # type: ignore[return-value]

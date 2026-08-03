@@ -2,7 +2,6 @@ from functools import partial
 import json
 import logging
 import os
-import re
 from typing import Any, cast
 
 from homeassistant.core import HomeAssistant
@@ -89,7 +88,7 @@ class LocalLoader(Loader):
 
         return found_models
 
-    async def load_model(self, manufacturer: str, model: str) -> tuple[dict, str] | None:
+    async def load_model(self, manufacturer: str, model: str) -> tuple[dict[str, Any], str] | None:
         """Load a model.json file from disk for a given manufacturer.lower() and model.lower()
         by querying the custom library.
         If self._is_custom_directory == true model.json will be loaded directly from there.
@@ -154,8 +153,7 @@ class LocalLoader(Loader):
 
             manufacturer = manufacturer_dir.lower()
             for model_dir in next(os.walk(manufacturer_path))[1]:
-                pattern = re.compile(r"^\..*")
-                if pattern.match(model_dir):
+                if model_dir.startswith("."):
                     continue
 
                 model_path = os.path.join(manufacturer_path, model_dir)
