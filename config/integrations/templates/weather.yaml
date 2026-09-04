@@ -1,0 +1,298 @@
+- sensor:
+    - name: "Buiten dauwpunt"
+      unit_of_measurement: "°C"
+      unique_id: 91189b6a-b1a0-4e27-add3-261f05d3e67a
+      state: >
+        {% set T = states('sensor.buiten_temperatuur') | float -%}
+        {% set RH = states('sensor.buiten_luchtvochtigheid') | float -%}
+
+        {% set a = 17.27 -%}
+        {% set b = 237.7 -%}
+        {% set alpha = ((a * T) / (b + T)) + log(RH / 100) -%}
+        {{ ((b * alpha) / (a - alpha)) | round(1) }}
+
+    - name: "Buiten absolute luchtvochtigheid"
+      unit_of_measurement: "g/m³"
+      unique_id: 2d815f34-6c95-4242-ba24-70a991589027
+      state: >
+        {% set T = states('sensor.buiten_temperatuur') | float -%}
+        {% set RH = states('sensor.buiten_luchtvochtigheid') | float -%}
+
+        {% set es = 6.112 * e ** ((17.67 * T) / (T + 243.5)) -%}
+        {% set ah = (es * RH * 2.1674) / (100 * (273.15 + T)) * 100 -%}
+        {{ ah | round(1) }}
+
+    - name: Degree day
+      unique_id: 92076ed0-9e96-4912-b576-fb3b45dc51bc
+      state: >
+        {% set month = now().month -%}
+        {% if month in [4, 5, 6, 7, 8, 9] -%}
+          {{ [0, 0.8 *(18 - states('sensor.gemiddelde_buitentemperatuur')|float)] | max | round(2) }}
+        {% elif month in [3, 10] -%}
+          {{ [0, 18 - states('sensor.gemiddelde_buitentemperatuur')|float] | max | round(2) }}
+        {% else -%}
+          {{ [0, 1.1 * (18 - states('sensor.gemiddelde_buitentemperatuur')|float)] | max | round(2) }}
+        {% endif -%}
+      unit_of_measurement: "DD"
+      availability: >
+        {{ has_value("sensor.gemiddelde_buitentemperatuur") }}
+
+    - name: Degree day prediction
+      unique_id: c57c8b83-5b40-4ee7-817a-6681211a5153
+      state: >
+        {% set month = now().month -%}
+        {% if month in [4, 5, 6, 7, 8, 9] -%}
+          {{ [0, 0.8 *(18 - states('sensor.gemiddelde_temperatuur_buiten_voorspelling_2')|float)] | max | round(2) }}
+        {% elif month in [3, 10] -%}
+          {{ [0, 18 - states('sensor.gemiddelde_temperatuur_buiten_voorspelling_2')|float] | max | round(2) }}
+        {% else -%}
+          {{ [0, 1.1 * (18 - states('sensor.gemiddelde_temperatuur_buiten_voorspelling_2')|float)] | max | round(2) }}
+        {% endif -%}
+      unit_of_measurement: "DD"
+      availability: >
+        {{ has_value("sensor.gemiddelde_temperatuur_buiten_voorspelling_2") }}
+
+    - name: Regen komende 10 minuten
+      unique_id: ecf2f88b-e69f-4f6e-963d-b412ef724452
+      unit_of_measurement: mm
+      state: >
+        {% set now_ts = now().timestamp() | int -%}
+        {% set data = state_attr('sensor.neerslag_verwacht_zandhoven', 'precipitation_data') -%}
+        {% set next = data | selectattr('timestamp', '>', now_ts) | list -%}
+        {% set total = next[:2]
+            | map(attribute='precipitationrate')
+            | map('float')
+            | map('multiply', 1/12)
+            | sum -%}
+        {{ total | round(2) }}
+
+    - name: Sun azimut
+      unique_id: 1e84f750-7cef-4993-b47a-a88ca7947a8c
+      unit_of_measurement: "°"
+      state: >-
+        {{state_attr('sun.sun', 'azimuth')}}
+
+    - name: Sun elevation
+      unique_id: cce9c7ee-ce45-4f9b-86f5-fd1b4052c40d
+      unit_of_measurement: "°"
+      state: >-
+        {{state_attr('sun.sun', 'elevation')}}
+
+- binary_sensor:
+    - name: "Kans op Aanvriezen"
+      unique_id: a562950c-c161-4617-ac9c-0eb5f6b0b745
+      state: >
+        {% set tmin = states('sensor.min_temperatuur_buiten_voorspelling_12u') | float -%}
+        {% set rh = states('sensor.buiten_luchtvochtigheid') | float(0) -%}
+        {% if states("sensor.buiten_dauwpunt") not in ["unavailable", "unknown"] -%}
+          {% set dp = states('sensor.buiten_dauwpunt') | float(0) -%}
+        {% else -%}
+          {% set dp = state_attr("weather.home_2", "dew_point") | float(0) -%}
+        {% endif -%}
+        {% set wind = states('sensor.openweathermap_windsnelheid') | float -%}
+        {% set clouds = state_attr("weather.home_2", "cloud_coverage") | float -%}
+
+        {{ tmin < 1 and rh > 85 and (tmin - dp) < 2 and wind < 3 and clouds < 30 }}
+      device_class: cold
+
+- trigger:
+    - trigger: time_pattern
+      minutes: "/1"
+    - trigger: homeassistant
+      event: start
+  sensor:
+    - name: Buiten temperatuur
+      unique_id: e04b3353-a23c-41ee-9329-b5d3b2526ca6
+      state_class: measurement
+      state: >
+        {% set temps = [
+            states('sensor.poort_temperatuur'),
+            states('sensor.zijgevel_temperatuur'),
+            state_attr('weather.home', 'temperature'),
+            state_attr('weather.home_2', 'temperature'),
+            states('sensor.openweathermap_temperatuur')] -%}
+
+        {% set values = temps
+            | reject('in', ['unknown', 'unavailable', None])
+            | map('float')
+            | list -%}
+
+        {{ (values | sum / values | count) | round(1) if values | count > 0 else none }}
+      unit_of_measurement: "°C"
+      device_class: temperature
+
+    - name: Buiten luchtvochtigheid
+      unique_id: 31f36a9a-0182-4740-aeba-c0a76a16b5dc
+      state_class: measurement
+      state: >
+        {% set hum = [
+            states('sensor.poort_luchtvochtigheid'),
+            states('sensor.zijgevel_luchtvochtigheid'),
+            state_attr('weather.home_2', 'humidity'),
+            states('sensor.openweathermap_luchtvochtigheid')] -%}
+
+        {% set values = hum
+            | reject('in', ['unknown', 'unavailable', None])
+            | map('float')
+            | list -%}
+
+        {{ (values | sum / values | count) | round(1) if values | count > 0 else none }}
+      unit_of_measurement: "%"
+      device_class: humidity
+
+    - name: Buiten lichtsterkte
+      unique_id: 2668b502-27ec-4046-a4b7-c52444181fe1
+      state_class: measurement
+      state: >
+        {% set lux = [ states("sensor.achtergevel_lichtsterkte"),
+                        states("sensor.zonnetent_lichtsterkte"),
+                        states("sensor.zijgevel_lichtsterkte")] -%}
+        {% set values = lux
+            | reject('in', ['unknown', 'unavailable', None])
+            | map('int')
+            | list -%}
+        {{ (values | max) if values | count > 0 else none }}
+      unit_of_measurement: "lx"
+
+- trigger:
+    - trigger: event
+      event_type: refresh_20m
+    - trigger: event
+      event_type: event_template_reloaded
+  action:
+    - action: weather.get_forecasts
+      data:
+        type: hourly
+      target:
+        entity_id: weather.home
+      response_variable: hourly
+
+  sensor:
+    - name: Gemiddelde temperatuur buiten voorspelling 2
+      unique_id: 9e6ccce8-2acd-4132-98e8-e3e6087b4588
+      unit_of_measurement: "°C"
+      state: >
+        {% set forecast = hourly -%}
+        {{ forecast["weather.home"].forecast[:24]
+            | map(attribute='temperature')
+            | average
+            | round(1) }}
+
+    - name: Max temperatuur buiten voorspelling 12u
+      unique_id: 0db3033c-4643-428e-a38d-8be6d0139c80
+      unit_of_measurement: "°C"
+      state: >
+        {% set forecast = hourly -%}
+        {{ forecast["weather.home"].forecast[:12]
+            | map(attribute='temperature')
+            | max
+            | round(1) }}
+
+    - name: Min temperatuur buiten voorspelling 12u
+      unique_id: 3623b064-44c9-4e96-a597-0b981a654c77
+      unit_of_measurement: "°C"
+      state: >
+        {% set forecast = hourly -%}
+        {{ forecast["weather.home"].forecast[:12]
+            | map(attribute='temperature')
+            | min
+            | round(1) }}
+
+    - name: Maximum temperatuur morgen
+      unique_id: aac3691b-e083-48a2-9ea9-d9687341ea35
+      unit_of_measurement: "°C"
+      state: >
+        {% set forecast = hourly["weather.home"].forecast -%}
+        {% set tomorrow = (now().date() + timedelta(days=1)) -%}
+        {% set temps = forecast
+            | selectattr('datetime','defined')
+            | selectattr('temperature','defined')
+            | selectattr('datetime','search', tomorrow.isoformat())
+            | map(attribute='temperature')
+            | list -%}
+        {{ temps | max if temps|count > 0 else none }}
+
+- trigger:
+    - trigger: event
+      event_type: refresh_5m
+    - trigger: event
+      event_type: event_template_reloaded
+  action:
+    - action: weather.get_forecasts
+      data:
+        type: hourly
+      target:
+        entity_id: weather.home_2
+      response_variable: open_meteo
+    - action: weather.get_forecasts
+      data:
+        type: hourly
+      target:
+        entity_id: weather.home
+      response_variable: kmi
+  sensor:
+    - name: Openmeteo interpolated temperatures
+      unique_id: 2c2d8482-dc0d-483a-b8e8-a0d1dae8ed9f
+      state: >
+        {{ state_attr("weather.home_2", "temperature") }}
+      attributes:
+        list: >
+          {% set forecast = open_meteo['weather.home_2'].forecast -%}
+          {% set now_ts = as_timestamp(now()) -%}
+          {% set current_5min_ts = ((now_ts // 300) | int) * 300 -%}
+          {% set end_ts = as_timestamp(today_at("00:00") + timedelta(days=2)) -%}
+          {% set ns = namespace(result=[]) -%}
+          {% for i in range(forecast | length - 1) -%}
+            {% set t1 = as_timestamp(forecast[i].datetime) -%}
+            {% set t2 = as_timestamp(forecast[i+1].datetime) -%}
+            {% set temp1 = forecast[i].temperature -%}
+            {% set temp2 = forecast[i+1].temperature -%}
+            {% if t2 > current_5min_ts and t1 < end_ts and (t2 - t1) == 3600 -%}
+              {% set start_slot = 0 -%}
+              {% if t1 < current_5min_ts -%}
+                {% set start_slot = (((current_5min_ts - t1) / 300) | int) -%}
+              {% endif -%}
+              {% for j in range(start_slot, 12) -%}
+                {% set slot_ts = t1 + (j * 300) -%}
+                {% if slot_ts >= current_5min_ts and slot_ts < end_ts -%}
+                  {% set frac = j / 12 -%}
+                  {% set interp_temp = temp1 + ((temp2 - temp1) * frac) -%}
+                  {% set ns.result = ns.result + [interp_temp | round(1)] -%}
+                {% endif -%}
+              {% endfor -%}
+            {% endif -%}
+          {% endfor -%}
+          {{ ns.result }}
+
+    - name: Kmi interpolated temperatures
+      unique_id: 78e5598b-3b4b-4c99-8c84-548ae6616981
+      state: >
+        {{ state_attr("weather.home", "temperature") }}
+      attributes:
+        list: >
+          {% set forecast = kmi['weather.home'].forecast -%}
+          {% set now_ts = as_timestamp(now()) -%}
+          {% set current_5min_ts = ((now_ts // 300) | int) * 300 -%}
+          {% set end_ts = as_timestamp(today_at("00:00") + timedelta(days=2)) -%}
+          {% set ns = namespace(result=[]) -%}
+          {% for i in range(forecast | length - 1) -%}
+            {% set t1 = as_timestamp(forecast[i].datetime) -%}
+            {% set t2 = as_timestamp(forecast[i+1].datetime) -%}
+            {% set temp1 = forecast[i].temperature -%}
+            {% set temp2 = forecast[i+1].temperature -%}
+            {% if t2 > current_5min_ts and t1 < end_ts and (t2 - t1) == 3600 -%}
+              {% set start_slot = 0 -%}
+              {% if t1 < current_5min_ts -%}
+                {% set start_slot = (((current_5min_ts - t1) / 300) | int) -%}
+              {% endif -%}
+              {% for j in range(start_slot, 12) -%}
+                {% set slot_ts = t1 + (j * 300) -%}
+                {% if slot_ts >= current_5min_ts and slot_ts < end_ts -%}
+                  {% set frac = j / 12 -%}
+                  {% set interp_temp = temp1 + ((temp2 - temp1) * frac) -%}
+                  {% set ns.result = ns.result + [interp_temp | round(1)] -%}
+                {% endif -%}
+              {% endfor -%}
+            {% endif -%}
+          {% endfor -%}
+          {{ ns.result }}

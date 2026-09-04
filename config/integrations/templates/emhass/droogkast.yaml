@@ -1,0 +1,111 @@
+- sensor:
+    - name: "Droogkast uren"
+      unique_id: 59e14f81-ccd8-4099-b08d-d21c53ff3c70
+      unit_of_measurement: "uur"
+      state: >
+        {% if states("input_boolean.droogkast_starten") == 'on' -%}
+          {% if states("switch.droogkast") == 'off' and states("input_boolean.wasmachien_starten") == 'on' and states("input_boolean.afwasmachien_starten") == 'on' -%}
+            5.25
+          {% elif states("switch.droogkast") == 'off' and states("input_boolean.wasmachien_starten") == 'on' -%}
+            3.5
+          {% elif states("switch.droogkast") == 'off' and states("input_boolean.afwasmachien_starten") == 'on' -%}
+            3.5
+          {% elif states("switch.droogkast") == 'off' -%}
+            1.75
+          {% elif states("input_boolean.emhass_droogkast") == 'on' -%}
+            {% if (1.75 - ((as_timestamp(now()) - states("sensor.droogkast_is_gestart_op") | float(0)) / 3600) | round(1)) | float(0) > 0  -%}
+              {{ 1.75 - ((as_timestamp(now()) - states("sensor.droogkast_is_gestart_op") | float(0)) / 3600) | round(1) }}
+            {% else -%}
+              0
+            {% endif -%}
+          {% else -%}
+            0
+          {% endif -%}
+        {% else -%}
+          0
+        {% endif -%}
+
+    - name: Droogkast startuur
+      unique_id: de867de0-7b23-4b42-b646-ab2f00a1c1b2
+      state: >
+        {% from 'easy_time.jinja' import easy_relative_time -%}
+        {% set load = (state_attr('sensor.ridge_p_deferrable1', 'deferrables_schedule')
+                |map(attribute='ridge_p_deferrable1')
+                |list) -%}
+        {% set time = (state_attr('sensor.ridge_p_deferrable1', 'deferrables_schedule')
+                |map(attribute='date')
+                |list) -%}
+        {% if is_state("input_boolean.emhass_droogkast", "on") -%}
+          Staat op
+        {% else -%}
+          {% set new_list = namespace(all=[]) -%}
+            {% for i in range (load | length) -%}
+              {% if load[i] | float(0) > 1 -%}
+                {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
+                {% break -%}
+              {% endif -%}
+            {% endfor -%}
+          {% endif -%}
+      availability: >-
+        {{ states('sensor.ridge_p_deferrable1') not in ('unknown', 'unavailable', 'None') }}
+
+    - name: Droogkast end timesteps
+      unique_id: 233e7698-caad-47b8-9917-5e228f3dabae
+      unit_of_measurement: 5m
+      state: >
+        {% set steps = (((states("input_datetime.emhass_droogkast_end_time") | as_timestamp) - now() | as_timestamp) / 300) -%}
+        {% set hours_to_operate = states("sensor.droogkast_uren") | float(0) -%}
+        {% set op_blocks = (hours_to_operate * 12) | round(0, 'ceil') -%}
+        {% if is_state("input_boolean.droogkast_starten", "on") -%}
+          {% if is_state('input_boolean.emhass_droogkast', "on") -%}
+            {{ op_blocks }}
+          {% else -%}
+            {{ max(op_blocks, steps|int, 0) }}
+          {% endif -%}
+        {% else -%}
+          0
+        {% endif -%}
+
+- trigger:
+    - trigger: template
+      id: aan
+      value_template: >
+        {{ states("sensor.droogkast_vermogen") | float(0) >= 50 }}
+      for:
+        minutes: 2
+    - trigger: template
+      id: uit
+      value_template: >
+        {{ states("sensor.droogkast_vermogen") | float(0) < 4 }}
+      for:
+        minutes: 3
+    - trigger: state
+      entity_id: input_boolean.droogkast_staat_op
+      to: "off"
+  action:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: aan
+          sequence:
+            - action: input_boolean.turn_on
+              entity_id: input_boolean.droogkast_staat_op
+      default:
+        - action: input_boolean.turn_off
+          entity_id: input_boolean.droogkast_staat_op
+  binary_sensor:
+    - name: Droogkast staat op
+      unique_id: 733a97db-050f-46c7-b734-43d20a80a01e
+      state: >
+        {{ states("input_boolean.droogkast_staat_op") }}
+
+- trigger:
+    - trigger: state
+      entity_id: input_boolean.emhass_droogkast
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Droogkast is gestart op…"
+      unique_id: 37bd2a8b-a5eb-4428-aad3-d2571d21065a
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_droogkast.last_changed) }}

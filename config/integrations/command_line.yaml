@@ -9,10 +9,10 @@
     command: 'echo -n ''SRCH * HTTP/1.1 device-discovery-protocol-version:0003001'' | nc -u -w1 192.168.6.112 9302 | awk ''/HTTP\/1.1/ {print $2}'''
     scan_interval: 65
     value_template: >
-      {% if value == '200' %}
+      {% if value == '200' -%}
         on
       {% elif value == '620'%}
         rest
-      {% else %}
+      {% else -%}
         off
-      {% endif %}
+      {% endif -%}

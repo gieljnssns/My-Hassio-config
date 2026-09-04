@@ -1,0 +1,268 @@
+- sensor:
+    - name: "Warmtepomp uren"
+      unique_id: 5c252e9e-ae09-4100-aace-8bb8d4149e8e
+      unit_of_measurement: "uur"
+      state: >
+        {% set best_model = states('sensor.best_heating_predictor_30d') | lower -%}
+        {% set hours = ((states('input_number.voorspelde_uren_' + best_model)|float(0) - states('sensor.branduren_warmtepomp')|float(0)) * 4) | round(0) / 4  -%}
+
+        {% if states("input_boolean.verwarming_starten") == 'on' -%}
+          {% if states('sensor.temp_living')|float(18) > 21  and 12 < now().hour -%}
+            0
+          {% elif states('input_number.voorspelde_uren_' + best_model)|float(0)> 1 -%}
+            {{ hours }}
+          {% else -%}
+            0
+          {% endif -%}
+        {% else -%}
+          0
+        {% endif -%}
+      availability: >-
+        {{ states('sensor.best_heating_predictor_30d') not in ('unknown', 'unavailable', 'None') }}
+
+    - name: Verwarming startuur
+      unique_id: ceff5121-3392-4bac-8fa5-a8cec3e3d331
+      state: >
+        {% from 'easy_time.jinja' import easy_relative_time -%}
+        {% set load = (state_attr('sensor.ridge_p_deferrable4', 'deferrables_schedule')
+                |map(attribute='ridge_p_deferrable4')
+                |list) -%}
+        {% set time = (state_attr('sensor.ridge_p_deferrable4', 'deferrables_schedule')
+                |map(attribute='date')
+                |list) -%}
+        {% if is_state("input_boolean.emhass_warmtepomp", "on") or is_state("binary_sensor.warmtepomp_aan", "on") -%}
+          Staat op
+        {% else -%}
+          {% set new_list = namespace(all=[]) -%}
+            {% for i in range (load | length) -%}
+              {% if load[i] | float(0) > 1 -%}
+                {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
+                {% break -%}
+              {% endif -%}
+            {% endfor -%}
+          {% endif -%}
+      availability: >-
+        {{ states('sensor.ridge_p_deferrable4') not in ('unknown', 'unavailable', 'None') }}
+
+    - name: Warmtepomp start timesteps
+      unique_id: e3c01f29-feeb-4e07-be8b-1278b87323e9
+      unit_of_measurement: 5m
+      state: >
+        {% set start_time = states('input_datetime.starttijd_verwarming') -%}
+        {% if start_time not in ['unknown', 'unavailable'] -%}
+          {% set now_time = now().strftime('%H:%M:%S') -%}
+          {% set start_dt = today_at(start_time) -%}
+          {% set now_dt = now() -%}
+          {#- Check of warmtepomp minstens 30 minuten stil staat -#}
+          {% set actual_start_dt = start_dt -%}
+          {% if (as_timestamp(now()) - states("sensor.warmtepomp_is_gestopt_op")|float(0)) < 1800 -%}
+            {% set min_wait_time = states("sensor.warmtepomp_is_gestopt_op")|float(0) + 1800 -%}
+            {% set min_wait_dt = min_wait_time | timestamp_local -%}
+            {% if start_dt < as_datetime(min_wait_dt) -%}
+              {% set actual_start_dt = as_datetime(min_wait_dt) -%}
+            {% endif -%}
+          {% endif -%}
+
+          {#- Als de werkelijke starttijd al voorbij is of de warmtepomp al aan staat, geef 0 terug -#}
+          {% if actual_start_dt <= now_dt or is_state("binary_sensor.warmtepomp_aan", "on") -%}
+            0
+          {% else -%}
+            {% set time_diff = (actual_start_dt - now_dt).total_seconds() -%}
+            {% set timesteps = (time_diff / 300) | round(0, 'ceil') -%}
+            {{ timesteps | int }}
+          {% endif -%}
+        {% else -%}
+          0
+        {% endif -%}
+
+    - name: Warmtepomp end timesteps
+      unique_id: 2db655d5-f4d4-4687-a4e7-0029173bea99
+      unit_of_measurement: 5m
+      state: >
+        {% set end_time = states('input_datetime.eindtijd_verwarming') -%}
+        {% set operate = (states('sensor.warmtepomp_uren') | float(0) * 12) | int  -%}
+
+        {% if end_time not in ['unknown', 'unavailable'] -%}
+          {% set now_time = now().strftime('%H:%M:%S') -%}
+          {% set end_dt = today_at(end_time) -%}
+          {% set now_dt = now() -%}
+
+          {# Als de eindtijd al voorbij is vandaag, neem dan morgen -#}
+          {% if end_dt <= now_dt -%}
+            {% set end_dt = end_dt + timedelta(days=1) -%}
+          {% endif -%}
+
+          {% set time_diff = (end_dt - now_dt).total_seconds() -%}
+          {% set timesteps = (time_diff / 300) | round(0, 'ceil') -%}
+          {% if is_state('binary_sensor.warmtepomp_aan', 'off') -%}
+            {{ timesteps | int }}
+          {% else -%}
+            {{ operate }}
+          {% endif -%}
+        {% else -%}
+          0
+        {% endif -%}
+
+    # - name: Min temperatures schedule
+    #   unique_id: a1b2c3d4-min-temp-schedule
+    #   state: >
+    #     {% set temp_low = states('input_number.thermal_battery_minimum_low') | float(18.0) -%}
+    #     {% set temp_high = states('input_number.thermal_battery_minimum_high') | float(21.0) -%}
+    #     {% set start_time = state_attr('input_datetime.thermal_battery_start', 'timestamp') -%}
+    #     {% set end_time = state_attr('input_datetime.thermal_battery_end', 'timestamp') -%}
+    #     {% set now_ts = as_timestamp(now()) -%}
+    #     {% set current_5min_ts = ((now_ts // 300) | int) * 300 -%}
+    #     {% set end_ts = as_timestamp(today_at("00:00") + timedelta(days=2)) -%}
+    #     {% set ns = namespace(result=[]) -%}
+    #     {% set num_slots = ((end_ts - current_5min_ts) / 300) | int -%}
+    #     {% for i in range(num_slots) -%}
+    #       {% set slot_ts = current_5min_ts + (i * 300) -%}
+    #       {% set slot_datetime = slot_ts | timestamp_custom('%Y-%m-%d %H:%M:%S', true) | as_datetime -%}
+    #       {% set slot_time_seconds = (slot_datetime.hour * 3600) + (slot_datetime.minute * 60) -%}
+    #       {% if start_time < end_time -%}
+    #         {% if slot_time_seconds >= start_time and slot_time_seconds < end_time -%}
+    #           {% set temp = temp_high -%}
+    #         {% else -%}
+    #           {% set temp = temp_low -%}
+    #         {% endif -%}
+    #       {% else -%}
+    #         {% if slot_time_seconds >= start_time or slot_time_seconds < end_time -%}
+    #           {% set temp = temp_high -%}
+    #         {% else -%}
+    #           {% set temp = temp_low -%}
+    #         {% endif -%}
+    #       {% endif -%}
+    #       {% set ns.result = ns.result + [temp] -%}
+    #     {% endfor -%}
+    #     {{ ns.result[0] if ns.result | length > 0 else temp_low }}
+    #   attributes:
+    #     list: >
+    #       {% set temp_low = states('input_number.thermal_battery_minimum_low') | float(18.0) -%}
+    #       {% set temp_high = states('input_number.thermal_battery_minimum_high') | float(21.0) -%}
+    #       {% set start_time = state_attr('input_datetime.thermal_battery_start', 'timestamp') -%}
+    #       {% set end_time = state_attr('input_datetime.thermal_battery_end', 'timestamp') -%}
+    #       {% set now_ts = as_timestamp(now()) -%}
+    #       {% set current_5min_ts = ((now_ts // 300) | int) * 300 -%}
+    #       {% set end_ts = as_timestamp(today_at("00:00") + timedelta(days=2)) -%}
+    #       {% set ns = namespace(result=[]) -%}
+    #       {% set num_slots = ((end_ts - current_5min_ts) / 300) | int -%}
+    #       {% for i in range(num_slots) -%}
+    #         {% set slot_ts = current_5min_ts + (i * 300) -%}
+    #         {% set slot_datetime = slot_ts | timestamp_custom('%Y-%m-%d %H:%M:%S', true) | as_datetime -%}
+    #         {% set slot_time_seconds = (slot_datetime.hour * 3600) + (slot_datetime.minute * 60) -%}
+    #         {% if start_time < end_time -%}
+    #           {% if slot_time_seconds >= start_time and slot_time_seconds < end_time -%}
+    #             {% set temp = temp_high -%}
+    #           {% else -%}
+    #             {% set temp = temp_low -%}
+    #           {% endif -%}
+    #         {% else -%}
+    #           {% if slot_time_seconds >= start_time or slot_time_seconds < end_time -%}
+    #             {% set temp = temp_high -%}
+    #           {% else -%}
+    #             {% set temp = temp_low -%}
+    #           {% endif -%}
+    #         {% endif -%}
+    #         {% set ns.result = ns.result + [temp] -%}
+    #       {% endfor -%}
+    #       {{ ns.result }}
+
+    # - name: Max temperatures schedule
+    #   unique_id: e5f6g7h8-max-temp-schedule
+    #   state: >
+    #     {% set temp_low = states('input_number.thermal_battery_maximum_low') | float(22.0) -%}
+    #     {% set temp_high = states('input_number.thermal_battery_maximum_high') | float(26.0) -%}
+    #     {% set start_time = state_attr('input_datetime.thermal_battery_start', 'timestamp') -%}
+    #     {% set end_time = state_attr('input_datetime.thermal_battery_end', 'timestamp') -%}
+    #     {% set now_ts = as_timestamp(now()) -%}
+    #     {% set current_5min_ts = ((now_ts // 300) | int) * 300 -%}
+    #     {% set end_ts = as_timestamp(today_at("00:00") + timedelta(days=2)) -%}
+    #     {% set ns = namespace(result=[]) -%}
+    #     {% set num_slots = ((end_ts - current_5min_ts) / 300) | int -%}
+    #     {% for i in range(num_slots) -%}
+    #       {% set slot_ts = current_5min_ts + (i * 300) -%}
+    #       {% set slot_datetime = slot_ts | timestamp_custom('%Y-%m-%d %H:%M:%S', true) | as_datetime -%}
+    #       {% set slot_time_seconds = (slot_datetime.hour * 3600) + (slot_datetime.minute * 60) -%}
+    #       {% if start_time < end_time -%}
+    #         {% if slot_time_seconds >= start_time and slot_time_seconds < end_time -%}
+    #           {% set temp = temp_high -%}
+    #         {% else -%}
+    #           {% set temp = temp_low -%}
+    #         {% endif -%}
+    #       {% else -%}
+    #         {% if slot_time_seconds >= start_time or slot_time_seconds < end_time -%}
+    #           {% set temp = temp_high -%}
+    #         {% else -%}
+    #           {% set temp = temp_low -%}
+    #         {% endif -%}
+    #       {% endif -%}
+    #       {% set ns.result = ns.result + [temp] -%}
+    #     {% endfor -%}
+    #     {{ ns.result[0] if ns.result | length > 0 else temp_low }}
+    #   attributes:
+    #     list: >
+    #       {% set temp_low = states('input_number.thermal_battery_maximum_low') | float(22.0) -%}
+    #       {% set temp_high = states('input_number.thermal_battery_maximum_high') | float(26.0) -%}
+    #       {% set start_time = state_attr('input_datetime.thermal_battery_start', 'timestamp') -%}
+    #       {% set end_time = state_attr('input_datetime.thermal_battery_end', 'timestamp') -%}
+    #       {% set now_ts = as_timestamp(now()) -%}
+    #       {% set current_5min_ts = ((now_ts // 300) | int) * 300 -%}
+    #       {% set end_ts = as_timestamp(today_at("00:00") + timedelta(days=2)) -%}
+    #       {% set ns = namespace(result=[]) -%}
+    #       {% set num_slots = ((end_ts - current_5min_ts) / 300) | int -%}
+    #       {% for i in range(num_slots) -%}
+    #         {% set slot_ts = current_5min_ts + (i * 300) -%}
+    #         {% set slot_datetime = slot_ts | timestamp_custom('%Y-%m-%d %H:%M:%S', true) | as_datetime -%}
+    #         {% set slot_time_seconds = (slot_datetime.hour * 3600) + (slot_datetime.minute * 60) -%}
+    #         {% if start_time < end_time -%}
+    #           {% if slot_time_seconds >= start_time and slot_time_seconds < end_time -%}
+    #             {% set temp = temp_high -%}
+    #           {% else -%}
+    #             {% set temp = temp_low -%}
+    #           {% endif -%}
+    #         {% else -%}
+    #           {% if slot_time_seconds >= start_time or slot_time_seconds < end_time -%}
+    #             {% set temp = temp_high -%}
+    #           {% else -%}
+    #             {% set temp = temp_low -%}
+    #           {% endif -%}
+    #         {% endif -%}
+    #         {% set ns.result = ns.result + [temp] -%}
+    #       {% endfor -%}
+    #       {{ ns.result }}
+
+- binary_sensor:
+    - name: Warmtepomp aan
+      device_class: power
+      unique_id: c8bb853c-63ec-4fd1-b18f-05624ee48fde
+      state: >
+        {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0) > 25 }}
+    - name: Warmtepomp aan delay off
+      device_class: power
+      unique_id: befaae46-c7b5-4d6c-80ad-2b93d3eb6b96
+      state: >
+        {{ states('sensor.warmtepomp_huidig_verbruik') | float(default=0) > 25 }}
+      delay_off:
+        minutes: 10
+
+- trigger:
+    - trigger: state
+      entity_id: binary_sensor.warmtepomp_aan
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Warmtepomp is gestart op…"
+      unique_id: 80b7a7bd-0a7c-4dd2-bf0a-c277e273cc2f
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepomp_aan.last_changed) }}
+
+- trigger:
+    - trigger: state
+      entity_id: binary_sensor.warmtepomp_aan
+      from: "on"
+      to: "off"
+  sensor:
+    - name: "Warmtepomp is gestopt op…"
+      unique_id: d427fb27-4606-4cc7-a30a-e3421c367f60
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepomp_aan.last_changed) }}

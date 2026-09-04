@@ -1,0 +1,160 @@
+- sensor:
+    - name: Warmtepompboiler uren
+      unique_id: 8225bcd3-62ca-40af-8891-ba06a95eed91
+      unit_of_measurement: "uur"
+      state: >
+        {% set temp = (states("sensor.thermostaat") | float(45) * 4) | round(0) / 4 -%}
+        {% set temp_in = states("sensor.boiler_in") | float(18) -%}
+        {% set delta = (temp - temp_in) > 30 -%}
+
+        {% if states("input_boolean.warm_water_starten") == 'on' -%}
+            {% if states("input_boolean.op_verlof") == 'off' -%}
+              {% set target_temp = 49.2 -%}
+            {% else -%}
+              {% set target_temp = 46 -%}
+            {% endif -%}
+
+            {#- Bereken basis uren -#}
+            {% set base_hours = (max(0, (target_temp - temp) / 5) * 4) | round(0) / 4 -%}
+            {#- Extra uren bij waterverbruik -#}
+            {% if temp < (target_temp - 2) -%}
+              {% set extra_hours = 1.0 if delta else 0 -%}
+            {% elif temp < (target_temp - 1) -%}
+              {% set extra_hours = 0.5 if delta else 0 -%}
+            {% else -%}
+              {% set extra_hours = 0 -%}
+            {% endif -%}
+            {% set hours = base_hours + extra_hours -%}
+
+            {% if is_state("binary_sensor.warmtepompboiler_aan", "on") -%}
+              {{ hours }}
+            {% else -%}
+              {{ hours if hours >= 0.5 else 0 }}
+            {% endif -%}
+        {% else -%}
+          0
+        {% endif -%}
+
+    - name: Warm water startuur
+      unique_id: f4450d07-ad80-4ed5-a96a-852c84fec6ca
+      state: >
+        {% from 'easy_time.jinja' import easy_relative_time -%}
+        {% set load = (state_attr('sensor.ridge_p_deferrable3', 'deferrables_schedule')
+                |map(attribute='ridge_p_deferrable3')
+                |list) -%}
+        {% set time = (state_attr('sensor.ridge_p_deferrable3', 'deferrables_schedule')
+                |map(attribute='date')
+                |list) -%}
+        {% if is_state("input_boolean.emhass_warmtepompboiler", "on") -%}
+          Staat op
+        {% else -%}
+          {% set new_list = namespace(all=[]) -%}
+            {% for i in range (load | length) -%}
+              {% if load[i] | float(0) > 1 -%}
+                {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
+                {% break -%}
+              {% endif -%}
+            {% endfor -%}
+          {% endif -%}
+      availability: >-
+        {{ states('sensor.ridge_p_deferrable3') not in ('unknown', 'unavailable', 'None') }}
+
+    - name: Warmtepompboiler start timesteps
+      unique_id: b9a1f40e-00d6-48b4-9a9b-b7d558e78357
+      unit_of_measurement: 5m
+      state: >
+        {% if (as_timestamp(now()) - states("sensor.warmtepompboiler_is_gestopt_op")|float(0)) < 1500 -%}
+          6
+        {% else -%}
+          0
+        {% endif -%}
+
+    - name: Warmtepompboiler end timesteps
+      unique_id: 108e2881-9ac7-49ef-baab-2631da9ab3f4
+      unit_of_measurement: 5m
+      state: >
+        {% set uren = states("sensor.warmtepompboiler_uren") | float(0) -%}
+        {% set operate = uren * 12 -%}
+        {% if states("sensor.thermostaat") | int(43) < 43 or states("binary_sensor.warmtepompboiler_aan") == "on" -%}
+          {{ operate | int }}
+        {% elif uren == 0 -%}
+          {{ 100 }}
+        {% elif uren >= 1.5 -%}
+          {{ operate | int }}
+        {% else -%}
+          {% set max_blocks = 72 - (uren / 1.5) * (72 - operate) -%}
+          {{ max(0, max_blocks) | int }}
+        {% endif -%}
+
+- binary_sensor:
+    - name: Warmtepompboiler aan
+      device_class: power
+      unique_id: 7b3bdc4b-5335-4101-890b-75540ced60e1
+      state: >
+        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float(default=0) > 25 }}
+    - name: Warmtepompboiler aan delay off
+      device_class: power
+      unique_id: a1ca83c5-df8a-45e5-9845-21e49169a63e
+      state: >
+        {{ states('sensor.warmtepompboiler_huidig_verbruik') | float(default=0) > 25 }}
+      delay_off:
+        minutes: 25
+
+- trigger:
+    - trigger: template
+      id: aan
+      value_template: >
+        {{ states("sensor.thermostaat") | float(0) <= 42.5 }}
+    - trigger: template
+      id: uit
+      value_template: >
+        {{ states("sensor.thermostaat") | float(0) > 45 }}
+  action:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: aan
+          sequence:
+            - action: input_boolean.turn_on
+              entity_id: input_boolean.boiler_temperatuur_laag
+      default:
+        - action: input_boolean.turn_off
+          entity_id: input_boolean.boiler_temperatuur_laag
+  binary_sensor:
+    - name: Boiler temperatuur laag
+      unique_id: 59a5bc48-8fe3-478d-87ad-80c0d85b8ff5
+      state: >
+        {{ states("input_boolean.boiler_temperatuur_laag") }}
+
+- trigger:
+    - trigger: state
+      entity_id: binary_sensor.warmtepompboiler_aan
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Warmtepompboiler is gestart op…"
+      unique_id: 5bc4af6d-8e99-4ee3-9131-66f41132d66f
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepompboiler_aan.last_changed) }}
+
+- trigger:
+    - trigger: state
+      entity_id: binary_sensor.warmtepompboiler_aan
+      from: "on"
+      to: "off"
+  sensor:
+    - name: "Warmtepompboiler is gestopt op…"
+      unique_id: 1a5fb0a2-f6ca-4abb-b838-6aac508bd4e6
+      state: >
+        {{ as_timestamp(states.binary_sensor.warmtepompboiler_aan.last_changed) }}
+
+- trigger:
+    - trigger: state
+      entity_id: input_boolean.emhass_warmtepompboiler
+      from: "on"
+      to: "off"
+  sensor:
+    - name: "Warmtepompboiler is uitgezet op…"
+      unique_id: 9ddf6b51-d728-4264-b1ec-7ed93afd5185
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_warmtepompboiler.last_changed) }}

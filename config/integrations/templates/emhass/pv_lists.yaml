@@ -1,0 +1,481 @@
+- sensor:
+    - name: Solcast interpolated forecast
+      unique_id: d0a3c2a5-b51e-4dd8-bc5b-4b9c6ab496de
+      icon: mdi:sun-clock
+      state: >
+        {{ ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int }}
+      attributes:
+        interval_minutes: "5"
+        five_minute_series: >
+          {% set today = state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast') or [] -%}
+          {% set tomorrow = state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast') or [] -%}
+          {% set d3 = state_attr('sensor.solcast_solaredge_forecast_day_3', 'detailedForecast') or [] -%}
+          {% set raw = (today + tomorrow + d3)
+              | selectattr('period_start', 'defined')
+              | rejectattr('period_start', 'equalto', '')
+              | selectattr('pv_estimate', 'defined')
+              | list
+              | sort(attribute='period_start') -%}
+          {% set ns = namespace(points=[]) -%}
+          {% for item in raw -%}
+            {% set ts = as_timestamp(item.period_start, default=0) | int -%}
+            {% if ts != 0 -%}
+              {% set pv_main = item.pv_estimate | float(0) -%}
+              {% set ns.points = ns.points + [{
+                'ts': ts,
+                'pv': pv_main
+              }] -%}
+            {% endif -%}
+          {% endfor -%}
+          {% if ns.points|length < 2 -%}
+            {{ [] }}
+          {% else -%}
+            {% set start = as_timestamp(today_at('00:00')) | int -%}
+            {% set end = as_timestamp(today_at('00:00') + timedelta(days=3) - timedelta(minutes=5)) | int -%}
+            {% set out = namespace(values=[]) -%}
+            {% for ts in range(start, end + 1, 300) -%}
+              {% set before = ns.points | selectattr('ts', 'le', ts) | list -%}
+              {% set after = ns.points | selectattr('ts', 'ge', ts) | list -%}
+              {% set prev = before[-1] if before else ns.points[0] -%}
+              {% set nxt = after[0] if after else ns.points[-1] -%}
+              {% set t0 = prev.ts -%}
+              {% set t1 = nxt.ts -%}
+              {% set v0 = prev.pv -%}
+              {% set v1 = nxt.pv -%}
+              {% if t1 == t0 -%}
+                {% set value = v0 -%}
+              {% else -%}
+                {% set value = v0 + (v1 - v0) * ((ts - t0) / (t1 - t0)) -%}
+              {% endif -%}
+              {% set watts = (value * 1000) | int -%}
+              {% set out.values = out.values + [watts] -%}
+            {% endfor -%}
+            {{ out.values }}
+          {% endif -%}
+        five_minute_series_p10: >
+          {% set today = state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast') or [] -%}
+          {% set tomorrow = state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast') or [] -%}
+          {% set d3 = state_attr('sensor.solcast_solaredge_forecast_day_3', 'detailedForecast') or [] -%}
+          {% set raw = (today + tomorrow + d3)
+              | selectattr('period_start', 'defined')
+              | rejectattr('period_start', 'equalto', '')
+              | selectattr('pv_estimate', 'defined')
+              | list
+              | sort(attribute='period_start') -%}
+          {% set ns = namespace(points=[]) -%}
+          {% for item in raw -%}
+            {% set ts = as_timestamp(item.period_start, default=0) | int -%}
+            {% if ts != 0 -%}
+              {% set pv10 = item.pv_estimate10 | float(0) -%}
+              {% set ns.points = ns.points + [{
+                'ts': ts,
+                'pv10': pv10
+              }] -%}
+            {% endif -%}
+          {% endfor -%}
+          {% if ns.points|length < 2 -%}
+            {{ [] }}
+          {% else -%}
+            {% set start = as_timestamp(today_at('00:00')) | int -%}
+            {% set end = as_timestamp(today_at('00:00') + timedelta(days=3) - timedelta(minutes=5)) | int -%}
+            {% set out = namespace(values=[]) -%}
+            {% for ts in range(start, end + 1, 300) -%}
+              {% set before = ns.points | selectattr('ts', 'le', ts) | list -%}
+              {% set after = ns.points | selectattr('ts', 'ge', ts) | list -%}
+              {% set prev = before[-1] if before else ns.points[0] -%}
+              {% set nxt = after[0] if after else ns.points[-1] -%}
+              {% set t0 = prev.ts -%}
+              {% set t1 = nxt.ts -%}
+              {% set v0 = prev.pv10 -%}
+              {% set v1 = nxt.pv10 -%}
+              {% if t1 == t0 -%}
+                {% set value = v0 -%}
+              {% else -%}
+                {% set value = v0 + (v1 - v0) * ((ts - t0) / (t1 - t0)) -%}
+              {% endif -%}
+              {% set watts = (value * 1000) | int -%}
+              {% set out.values = out.values + [watts] -%}
+            {% endfor -%}
+            {{ out.values }}
+          {% endif -%}
+        five_minute_series_p90: >
+          {% set today = state_attr('sensor.solcast_solaredge_forecast_today', 'detailedForecast') or [] -%}
+          {% set tomorrow = state_attr('sensor.solcast_solaredge_forecast_tomorrow', 'detailedForecast') or [] -%}
+          {% set d3 = state_attr('sensor.solcast_solaredge_forecast_day_3', 'detailedForecast') or [] -%}
+          {% set raw = (today + tomorrow + d3)
+              | selectattr('period_start', 'defined')
+              | rejectattr('period_start', 'equalto', '')
+              | selectattr('pv_estimate', 'defined')
+              | list
+              | sort(attribute='period_start') -%}
+          {% set ns = namespace(points=[]) -%}
+          {% for item in raw -%}
+            {% set ts = as_timestamp(item.period_start, default=0) | int -%}
+            {% if ts != 0 -%}
+              {% set pv90 = item.pv_estimate90 | float(0) -%}
+              {% set ns.points = ns.points + [{
+                'ts': ts,
+                'pv90': pv90
+              }] -%}
+            {% endif -%}
+          {% endfor -%}
+          {% if ns.points|length < 2 -%}
+            {{ [] }}
+          {% else -%}
+            {% set start = as_timestamp(today_at('00:00')) | int -%}
+            {% set end = as_timestamp(today_at('00:00') + timedelta(days=3) - timedelta(minutes=5)) | int -%}
+            {% set out = namespace(values=[]) -%}
+            {% for ts in range(start, end + 1, 300) -%}
+              {% set before = ns.points | selectattr('ts', 'le', ts) | list -%}
+              {% set after = ns.points | selectattr('ts', 'ge', ts) | list -%}
+              {% set prev = before[-1] if before else ns.points[0] -%}
+              {% set nxt = after[0] if after else ns.points[-1] -%}
+              {% set t0 = prev.ts -%}
+              {% set t1 = nxt.ts -%}
+              {% set v0 = prev.pv90 -%}
+              {% set v1 = nxt.pv90 -%}
+              {% if t1 == t0 -%}
+                {% set value = v0 -%}
+              {% else -%}
+                {% set value = v0 + (v1 - v0) * ((ts - t0) / (t1 - t0)) -%}
+              {% endif -%}
+              {% set watts = (value * 1000) | int -%}
+              {% set out.values = out.values + [watts] -%}
+            {% endfor -%}
+            {{ out.values }}
+          {% endif -%}
+
+    - name: Helios interpolated forecast
+      unique_id: 6224f35e-add8-410d-a091-2ca3253c06db
+      icon: mdi:weather-sunny-alert
+      state: >
+        {{ ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int }}
+      attributes:
+        interval_minutes: "5"
+        source_interval_minutes: "15"
+        five_minute_series: >
+          {% set huawei = (state_attr('sensor.huawei_power_now', 'forecast') or [])[:240] -%}
+          {% set solaredge = (state_attr('sensor.solaredge_power_now', 'forecast') or [])[:240] -%}
+          {% set n = [huawei | length, solaredge | length] | min -%}
+          {% set watts = namespace(result=[]) -%}
+          {% for i in range(n) -%}
+            {% set watts.result = watts.result + [ huawei[i].watts | int + solaredge[i].watts | int ] -%}
+          {% endfor -%}
+          {% set fine = namespace(result=[]) -%}
+          {% for i in range(watts.result | length - 1) -%}
+            {% set v0 = watts.result[i] -%}
+            {% set v1 = watts.result[i + 1] -%}
+            {% for j in range(3) -%}
+              {% set fine.result = fine.result + [ (v0 + (v1 - v0) * j / 3) | round(0) | int ] -%}
+            {% endfor -%}
+          {% endfor -%}
+          {% set fine.result = fine.result + [ watts.result[-1] ] -%}
+          {{ fine.result }}
+
+    - name: Open Meteo interpolated forecast
+      unique_id: 1cf8427f-0c1d-4cdb-9db8-7f61522c8e73
+      icon: mdi:weather-sunny-alert
+      state: >
+        {{ ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int }}
+      attributes:
+        interval_minutes: "5"
+        source_interval_minutes: "15"
+        five_minute_series: >
+          {% set today_data = state_attr('sensor.open_meteo_voorspelling_vandaag', 'watts') or {} -%}
+          {% set tomorrow_data = state_attr('sensor.open_meteo_voorspelling_morgen', 'watts') or {} -%}
+          {% set d2_data = state_attr('sensor.open_meteo_voorspelling_overmorgen', 'watts') or {} -%}
+          {% set combined = (today_data | dictsort) + (tomorrow_data | dictsort) + (d2_data | dictsort) -%}
+          {% set ns = namespace(points=[]) -%}
+          {% for item in combined -%}
+            {% set ts = as_timestamp(item[0], default=0) | int -%}
+            {% if ts != 0 -%}
+              {% set ns.points = ns.points + [{'ts': ts, 'pv': item[1] | float(0)}] -%}
+            {% endif -%}
+          {% endfor -%}
+          {% if ns.points|length < 2 -%}
+            {{ [] }}
+          {% else -%}
+            {% set start = as_timestamp(today_at('00:00')) | int -%}
+            {% set end = as_timestamp(today_at('00:00') + timedelta(days=3) - timedelta(minutes=5)) | int -%}
+            {% set out = namespace(values=[]) -%}
+            {% for ts in range(start, end + 1, 300) -%}
+              {% set before = ns.points | selectattr('ts', 'le', ts) | list -%}
+              {% set after = ns.points | selectattr('ts', 'ge', ts) | list -%}
+              {% set prev = before[-1] if before else ns.points[0] -%}
+              {% set nxt = after[0] if after else ns.points[-1] -%}
+              {% set t0 = prev.ts -%}
+              {% set t1 = nxt.ts -%}
+              {% set v0 = prev.pv -%}
+              {% set v1 = nxt.pv -%}
+              {% if t1 == t0 -%}
+                {% set value = v0 -%}
+              {% else -%}
+                {% set value = v0 + (v1 - v0) * ((ts - t0) / (t1 - t0)) -%}
+              {% endif -%}
+              {% set out.values = out.values + [value | int] -%}
+            {% endfor -%}
+            {{ out.values }}
+          {% endif -%}
+
+    - name: Pv power forecast list interpolated
+      unique_id: 8dbbb6f0-3d69-4b0c-8347-ed723ca45717
+      state: >
+        {{ states('input_text.best_solar_predictor_interpolated') }}
+      attributes:
+        list: >
+          {% set best_predictor = states('input_text.best_solar_predictor_interpolated') -%}
+          {% if best_predictor == "solcast" -%}
+            {% set entity = "sensor.solcast_interpolated_forecast" -%}
+            {% set attribute = "five_minute_series" -%}
+          {% elif best_predictor == "solcast10" -%}
+            {% set entity = "sensor.solcast_interpolated_forecast" -%}
+            {% set attribute = "five_minute_series_p10" -%}
+          {% elif best_predictor == "solcast90" -%}
+            {% set entity = "sensor.solcast_interpolated_forecast" -%}
+            {% set attribute = "five_minute_series_p90" -%}
+          {% elif best_predictor == "openmeteo" -%}
+            {% set entity = "sensor.open_meteo_interpolated_forecast" -%}
+            {% set attribute = "five_minute_series" -%}
+          {% elif best_predictor == "ml" -%}
+            {% set entity = "sensor.ml_interpolated_forecast" -%}
+            {% set attribute = "five_minute_series" -%}
+          {% else -%}
+            {% set entity = none -%}
+          {% endif -%}
+          {% if entity is none -%}
+            {{ [] }}
+          {% else -%}
+            {% set data = state_attr(entity, attribute) or [] -%}
+            {% if data is iterable and data|length > 0 -%}
+              {% set slot = ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int -%}
+              {{ data[slot:slot+576] }}
+            {% else -%}
+              {{ [] }}
+            {% endif -%}
+          {% endif -%}
+        remaining: >
+          {% set best_predictor = states('input_text.best_solar_predictor_interpolated') -%}
+          {% if best_predictor == "solcast" -%}
+            {% set entity = "sensor.solcast_solaredge_forecast_remaining_today" -%}
+            {% set attribute = "estimate" -%}
+          {% elif best_predictor == "solcast10" -%}
+            {% set entity = "sensor.solcast_solaredge_forecast_remaining_today" -%}
+            {% set attribute = "estimate10" -%}
+          {% elif best_predictor == "solcast90" -%}
+            {% set entity = "sensor.solcast_solaredge_forecast_remaining_today" -%}
+            {% set attribute = "estimate90" -%}
+          {% elif best_predictor == "openmeteo" -%}
+            {% set entity = "sensor.open_meteo_voorspelling_resterend_vandaag" -%}
+          {% elif best_predictor == "ml" -%}
+            {% set entity = "sensor.ml_interpolated_forecast" -%}
+            {% set attribute = "remaining_kwh_today" -%}
+          {% endif -%}
+          {% if best_predictor == "openmeteo" -%}
+            {% set data = states(entity) -%}
+          {% else -%}
+            {% set data = state_attr(entity, attribute) -%}
+          {% endif -%}
+          {{ data|int }}
+
+- trigger:
+    - trigger: time_pattern
+      # Matches every hour at 5 minutes past whole
+      minutes: 5
+  action:
+    - action: ml_solar_forecast.get_forecast
+      data:
+        entry_id: 01KST7XECNY256C5KYRJHKXRD4
+        end: >
+          {{ now().replace(hour=23, minute=55, second=0) + timedelta(days=2) }}
+      response_variable: ml_solar_forecast_response
+  sensor:
+    - name: Ml interpolated forecast
+      unique_id: 969b1fa4-d690-440c-b2da-661619184d97
+      icon: mdi:sun-clock
+      state: >
+        {{ ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int }}
+      attributes:
+        interval_minutes: "5"
+        five_minute_series: >
+          {% set forecast = ml_solar_forecast_response -%}
+          {% set values = forecast | dictsort | map(attribute=1) | list -%}
+          {% set ns = namespace(last=0, cleaned=[]) -%}
+          {% for v in values -%}
+            {% if v is none -%}
+              {% set ns.cleaned = ns.cleaned + [ns.last | round(0) | int] -%}
+            {% else -%}
+              {% set ns.last = v -%}
+              {% set ns.cleaned = ns.cleaned + [v | round(0) | int] -%}
+            {% endif -%}
+          {% endfor -%}
+          {{ ns.cleaned }}
+        remaining_kwh_today: >
+          {% set forecast = ml_solar_forecast_response -%}
+          {% set values = forecast | dictsort | map(attribute=1) | list -%}
+          {% set ns = namespace(last=0, cleaned=[]) -%}
+          {% for v in values -%}
+            {% if v is none -%}
+              {% set ns.cleaned = ns.cleaned + [ns.last] -%}
+            {% else -%}
+              {% set ns.last = v -%}
+              {% set ns.cleaned = ns.cleaned + [v] -%}
+            {% endif -%}
+          {% endfor -%}
+          {% set idx = ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int -%}
+          {% set remaining_today = ns.cleaned[idx:288] -%}
+          {{ ((remaining_today | sum) * 5 / 60 / 1000) | round(2) }}
+
+- trigger:
+    - trigger: time_pattern
+      minutes: /5
+    - trigger: homeassistant
+      event: start
+  sensor:
+    - name: Open meteo voorspelling vandaag
+      unique_id: 0337653c-eaf4-485d-baed-4f283dc03d21
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state: >
+        {% set badkamer = states("sensor.energy_production_today_3") | float(0) -%}
+        {% set huis = states("sensor.energy_production_today_2") | float(0) -%}
+        {% set garage = states("sensor.energy_production_today") | float(0) -%}
+          {{ (garage + huis + badkamer) | round(2) }}
+      attributes:
+        watts: >-
+          {% if (
+            state_attr('sensor.energy_production_today', 'watts') != none and
+            state_attr('sensor.energy_production_today_2', 'watts') != none and
+            state_attr('sensor.energy_production_today_3', 'watts') != none
+          ) -%}
+            {% set garage = state_attr('sensor.energy_production_today', 'watts') -%}
+            {% set huis = state_attr('sensor.energy_production_today_2', 'watts') -%}
+            {% set badkamer = state_attr('sensor.energy_production_today_3', 'watts') -%}
+            {% set ns = namespace(output={}) -%}
+            {% for time, value in garage.items() -%}
+              {% set sum_value = value + huis.get(time, 0) + badkamer.get(time, 0) -%}
+              {% set ns.output = dict({time: sum_value}, **ns.output) -%}
+            {% endfor -%}
+            {{ ns.output }}
+          {% endif -%}
+        wh_period: >-
+          {% if (
+            state_attr('sensor.energy_production_today', 'wh_period') != none and
+            state_attr('sensor.energy_production_today_2', 'wh_period') != none and
+            state_attr('sensor.energy_production_today_3', 'wh_period') != none
+          ) -%}
+            {% set garage = state_attr('sensor.energy_production_today', 'wh_period') -%}
+            {% set huis = state_attr('sensor.energy_production_today_2', 'wh_period') -%}
+            {% set badkamer = state_attr('sensor.energy_production_today_3', 'wh_period') -%}
+            {% set ns = namespace(output={}) -%}
+            {% for time, value in garage.items() -%}
+              {% set sum_value = value + huis.get(time, 0) + badkamer.get(time, 0) -%}
+              {% set ns.output = dict({time: sum_value}, **ns.output) -%}
+            {% endfor -%}
+            {{ ns.output }}
+          {% endif -%}
+
+    - name: Open meteo voorspelling morgen
+      unique_id: 026dd8288-540a-46cf-9d70-553bfb28dc61
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state: >
+        {% set badkamer = states("sensor.energy_production_tomorrow_3") | float(0) -%}
+        {% set huis = states("sensor.energy_production_tomorrow_2") | float(0) -%}
+        {% set garage = states("sensor.energy_production_tomorrow") | float(0) -%}
+          {{ (garage + huis + badkamer) | round(2) }}
+      attributes:
+        watts: >-
+          {% if (
+            state_attr('sensor.energy_production_tomorrow', 'watts') != none and
+            state_attr('sensor.energy_production_tomorrow_2', 'watts') != none and
+            state_attr('sensor.energy_production_tomorrow_3', 'watts') != none) -%}
+
+            {% set garage = state_attr('sensor.energy_production_tomorrow', 'watts') -%}
+            {% set huis = state_attr('sensor.energy_production_tomorrow_2', 'watts') -%}
+            {% set badkamer = state_attr('sensor.energy_production_tomorrow_3', 'watts') -%}
+            {% set ns = namespace(output={}) -%}
+            {% for time, value in garage.items() -%}
+              {% set sum_value = value + huis.get(time, 0) + badkamer.get(time, 0) -%}
+              {% set ns.output = dict({time: sum_value}, **ns.output) -%}
+            {% endfor -%}
+            {{ ns.output }}
+          {% endif -%}
+        wh_period: >-
+          {% if (
+            state_attr('sensor.energy_production_tomorrow', 'wh_period') != none and
+            state_attr('sensor.energy_production_tomorrow_2', 'wh_period') != none and
+            state_attr('sensor.energy_production_tomorrow_3', 'wh_period') != none
+          ) -%}
+            {% set garage = state_attr('sensor.energy_production_tomorrow', 'wh_period') -%}
+            {% set huis = state_attr('sensor.energy_production_tomorrow_2', 'wh_period') -%}
+            {% set badkamer = state_attr('sensor.energy_production_tomorrow_3', 'wh_period') -%}
+            {% set ns = namespace(output={}) -%}
+            {% for time, value in garage.items() -%}
+              {% set sum_value = value + huis.get(time, 0) + badkamer.get(time, 0) -%}
+              {% set ns.output = dict({time: sum_value}, **ns.output) -%}
+            {% endfor -%}
+            {{ ns.output }}
+          {% endif -%}
+
+    - name: Open meteo voorspelling overmorgen
+      unique_id: 3e51f4a0-33d6-4e0c-9eb6-ab59871ad0a1
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state: >
+        {% set badkamer = states("sensor.energy_production_d2_3") | float(0) -%}
+        {% set huis = states("sensor.energy_production_d2_2") | float(0) -%}
+        {% set garage = states("sensor.energy_production_d2") | float(0) -%}
+          {{ (garage + huis + badkamer) | round(2) }}
+      attributes:
+        watts: >-
+          {% if (
+            state_attr('sensor.energy_production_d2', 'watts') != none and
+            state_attr('sensor.energy_production_d2_2', 'watts') != none and
+            state_attr('sensor.energy_production_d2_3', 'watts') != none) -%}
+
+            {% set garage = state_attr('sensor.energy_production_d2', 'watts') -%}
+            {% set huis = state_attr('sensor.energy_production_d2_2', 'watts') -%}
+            {% set badkamer = state_attr('sensor.energy_production_d2_3', 'watts') -%}
+            {% set ns = namespace(output={}) -%}
+            {% for time, value in garage.items() -%}
+              {% set sum_value = value + huis.get(time, 0) + badkamer.get(time, 0) -%}
+              {% set ns.output = dict({time: sum_value}, **ns.output) -%}
+            {% endfor -%}
+            {{ ns.output }}
+          {% endif -%}
+        wh_period: >-
+          {% if (
+            state_attr('sensor.energy_production_d2', 'wh_period') != none and
+            state_attr('sensor.energy_production_d2_2', 'wh_period') != none and
+            state_attr('sensor.energy_production_d2_3', 'wh_period') != none
+          ) -%}
+            {% set garage = state_attr('sensor.energy_production_d2', 'wh_period') -%}
+            {% set huis = state_attr('sensor.energy_production_d2_2', 'wh_period') -%}
+            {% set badkamer = state_attr('sensor.energy_production_d2_3', 'wh_period') -%}
+            {% set ns = namespace(output={}) -%}
+            {% for time, value in garage.items() -%}
+              {% set sum_value = value + huis.get(time, 0) + badkamer.get(time, 0) -%}
+              {% set ns.output = dict({time: sum_value}, **ns.output) -%}
+            {% endfor -%}
+            {{ ns.output }}
+          {% endif -%}
+
+    - name: Open meteo voorspelling resterend vandaag
+      unique_id: 2d19babc-2ce9-4f67-9b76-cbe630a8cf64
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state: >
+        {% set garage = states('sensor.energy_production_today_remaining') | float(default=0) -%}
+        {% set huis = states('sensor.energy_production_today_remaining_2') | float(default=0) -%}
+        {% set badkamer = states('sensor.energy_production_today_remaining_3') | float(default=0) -%}
+        {{ (garage + huis + badkamer) | round(2) }}
+
+    - name: Pv prediction now
+      unique_id: add11962-232a-4274-9654-4cabb3559f58
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: >
+        {{ state_attr('sensor.pv_power_forecast_list_interpolated', 'list')[:1][0] }}
+      availability: >
+        {{ states('sensor.pv_power_forecast_list_interpolated') not in ('unknown', 'unavailable', 'None') }}

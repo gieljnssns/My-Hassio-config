@@ -1,0 +1,56 @@
+- sensor:
+    # Nooit wegdoen - bevat geschiedenis sensor.grid_production_kwh_old
+    - name: "Grid production history"
+      unique_id: 2e2bc829-8d7e-4eec-a216-137044bb351a
+      device_class: energy
+      state_class: total
+      unit_of_measurement: "kWh"
+      state: >
+        {{ 13648.78 }}
+
+    # Nooit wegdoen - bevat geschiedenis sensor.grid_consumption_kwh_old
+    - name: "Grid consumption history"
+      unique_id: 9ac7f8df-9f77-4ec0-8fb4-1a0566cd00fe
+      device_class: energy
+      state_class: total
+      unit_of_measurement: "kWh"
+      state: >
+        {{ 14811.98 }}
+
+    - name: "Huawei energy"
+      unique_id: 25ef22b2-ff2f-4d79-88fb-9ab0905cfd65
+      icon: "mdi:counter"
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      state: >
+        {% set current_value = states('sensor.huawei_energy') | float(0) -%}
+        {% set source_state = states('sensor.huawei_accumulated_energy_yield') -%}
+        {% if source_state in ['unavailable', 'unknown', None] -%}
+          {{ current_value }}
+        {% else -%}
+          {% set new_value = states('sensor.huawei_accumulated_energy_yield')|float(0) | round(2) -%}
+          {{ current_value if new_value < current_value else new_value }}
+        {% endif -%}
+      availability: >
+        {{ states('sensor.huawei_accumulated_energy_yield')|float(0) > 1 }}
+
+- trigger:
+    - trigger: state
+      entity_id: sensor.solaredge_i1_ac_energy
+  sensor:
+    - name: "SolarEdge energy"
+      unique_id: f7e4ae3b-cb83-4e93-8955-c681d4025ea6
+      icon: "mdi:counter"
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      state: >
+        {% set current_value = states('sensor.solaredge_energy') | float(0) -%}
+        {% set source_state = states('sensor.solaredge_i1_ac_energy') -%}
+        {% if source_state in ['unavailable', 'unknown', None] -%}
+          {{ current_value }}
+        {% else -%}
+          {% set new_value = (states('sensor.solaredge_i1_ac_energy') | float(0)) | round(2) -%}
+          {{ current_value if new_value < current_value else new_value }}
+        {% endif -%}

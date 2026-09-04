@@ -1,0 +1,238 @@
+- sensor:
+    # Prediction horizon steeds lager dan "num_lags" in de fit actie
+    - name: Prediction horizon
+      unique_id: 39144142-06b5-4c2a-897a-d24b0c8fd2e4
+      unit_of_measurement: 5m
+      state: >
+        {% set buy_sensor = 'sensor.ecopower_afnameprijzen_predicted' if states('sensor.ecopower_afnameprijzen_predicted') not in ('unknown', 'unavailable', 'None') else 'sensor.ecopower_afnameprijzen' -%}
+        {% set sell_sensor = 'sensor.ecopower_injectieprijzen_predicted' if states('sensor.ecopower_injectieprijzen_predicted') not in ('unknown', 'unavailable', 'None') else 'sensor.ecopower_injectieprijzen' -%}
+
+        {% set buy = state_attr(buy_sensor, 'prijzen') | length if state_attr(buy_sensor, 'prijzen') else 0 -%}
+        {% set sell = state_attr(sell_sensor, 'prijzen') | length if state_attr(sell_sensor, 'prijzen') else 0 -%}
+        {% set pv = state_attr('sensor.pv_power_forecast_list_interpolated', 'list') | length if state_attr('sensor.pv_power_forecast_list_interpolated', 'list') else 0 -%}
+        {% set total = [buy, sell, pv, 360] | min -%}
+
+        {% set droogkast = states("sensor.droogkast_end_timesteps") | int(0) if states("sensor.droogkast_end_timesteps") | int(0) < total else total -%}
+        {% set wasmachien = states("sensor.wasmachien_end_timesteps") | int(0) if states("sensor.wasmachien_end_timesteps") | int(0) < total else total -%}
+        {% set afwasmachien = states("sensor.afwasmachien_end_timesteps") | int(0) if states("sensor.afwasmachien_end_timesteps") | int(0) < total else total -%}
+        {% set endstep = max(droogkast, wasmachien, afwasmachien) -%}
+
+        {{ (total, endstep) | max }}
+      availability: >
+        {{ (states('sensor.ecopower_afnameprijzen_predicted') not in ('unknown', 'unavailable', 'None') or 
+            states('sensor.ecopower_afnameprijzen') not in ('unknown', 'unavailable', 'None')) and
+          (states('sensor.ecopower_injectieprijzen_predicted') not in ('unknown', 'unavailable', 'None') or 
+            states('sensor.ecopower_injectieprijzen') not in ('unknown', 'unavailable', 'None')) and
+          states('sensor.pv_power_forecast_list_interpolated') not in ('unknown', 'unavailable', 'None') }}
+
+    - name: Prediction horizon span
+      unique_id: 4413a66d-72e7-498b-9a9d-56eb43907fae
+      state: >
+        {% set horizon = states("sensor.prediction_horizon")|int(0) -%}
+        {{ (((horizon*5)-30)|int(0)|string + "min")|string }}
+
+    - name: Days to retrieve
+      unique_id: 175a282e-93d8-428a-b702-954438886b79
+      unit_of_measurement: days
+      state: >
+        {% from 'easy_time.jinja' import count_the_days -%}
+        {% set days = count_the_days("2024-08-01 00:00:00") | int(0) -%}
+        {{ (((days * -1) - 1), 725) | min }}
+
+- binary_sensor:
+    - name: Emhass status
+      unique_id: 2b1b3d6a-2b3e-435f-9582-0d3f4bfddbec
+      device_class: problem
+      delay_on:
+        minutes: 1
+      state: >
+        {% set now_ts = now().timestamp() -%}
+        {% set verbruik_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieverbruik.last_updated, 0)) < 10 -%}
+        {% set productie_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieproductie.last_updated, 0)) < 10 -%}
+        {% set dsmr_fresh = verbruik_updated or productie_updated -%}
+        {% set forecast_length = 360 if state_attr("sensor.ridge_p_pv_forecast", "forecasts") is none else state_attr("sensor.ridge_p_pv_forecast", "forecasts") | length -%}
+        {{
+          states("sensor.emhass_optim_status") not in ["Optimal", "Optimal (Relaxed)"]
+          or not dsmr_fresh
+          or states("sensor.electricity_meter_energieverbruik") in ["unavailable", "unknown"]
+          or states("sensor.electricity_meter_energieproductie") in ["unavailable", "unknown"]
+          or states("sensor.meter_active_power_total") in ["unavailable", "unknown"]
+          or states("sensor.battery_power") in ["unavailable", "unknown"]
+          or states("sensor.battery_state_of_charge") in ["unavailable", "unknown"]
+          or (states("sensor.huawei_active_power") in ["unavailable", "unknown"] and states("sensor.solaredge_i1_ac_power")|int > 20)
+          or (states("sensor.solaredge_i1_ac_power") in ["unavailable", "unknown"] and states("sensor.huawei_active_power")|int > 20)
+          or states("sensor.ecopower_injectieprijzen_predicted") in ["unavailable", "unknown"]
+          or states("sensor.ecopower_injectieprijzen") in ["unavailable", "unknown"]
+          or states("sensor.ecopower_afnameprijzen") in ["unavailable", "unknown"]
+          or states("sensor.ecopower_afnameprijzen_predicted") in ["unavailable", "unknown"]
+          or forecast_length < 360
+        }}
+
+- trigger:
+    - trigger: state
+      entity_id:
+        - script.emhass_publish_models
+      from: "on"
+      to: "off"
+  sensor:
+    - name: Emhass load
+      unique_id: 9fdc600a-94c4-4bfc-b11a-2cad784faa46
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ states('sensor.ridge_p_load_forecast') }}
+
+    - name: Emhass grid2
+      unique_id: 4906ce9a-ee07-4cb8-a13b-79aec92d9805
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ states('sensor.ridge_p_grid_forecast') }}
+
+    - name: Emhass PV
+      unique_id: 66061a80-e5c9-45bc-b5d8-772e532f6896
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ states('sensor.ridge_p_pv_forecast') }}
+
+    - name: Emhass battery
+      unique_id: 187c40b2-a247-4ec3-884e-7ce5e9f902c6
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ states('sensor.ridge_p_batt_forecast') }}
+
+    - name: Emhass soc
+      unique_id: 79a3b8cb-e434-4132-a6ba-0f56b9580c26
+      unit_of_measurement: "%"
+      state: >
+        {{ states('sensor.ridge_soc_batt_forecast') }}
+
+    - name: Emhass cost
+      unique_id: dfd183d6-d8da-46e8-962c-b980e54e84d0
+      unit_of_measurement: "EUR/kWh"
+      state_class: measurement
+      state: >
+        {{ states('sensor.ridge_unit_load_cost') }}
+
+    - name: Emhass price
+      unique_id: 16995e34-99e3-4c59-b2d0-489011ce6698
+      unit_of_measurement: "EUR/kWh"
+      state_class: measurement
+      state: >
+        {{ states('sensor.ridge_unit_prod_price') }}
+
+    - name: "EMHASS Optim Status"
+      unique_id: f7ff7731-ff33-4cd0-bc93-f070278dbac9
+      state: >
+        {{ states('sensor.ridge_optim_status') }}
+
+    # Deferrable Load 0 - Wasmachine
+    - name: "EMHASS Wasmachien"
+      unique_id: 42ea7987-d8ff-4b1f-92a9-42b268d9f002
+      unit_of_measurement: W
+      state_class: measurement
+      device_class: power
+      state: >
+        {{ states('sensor.ridge_p_deferrable0') }}
+
+    # Deferrable Load 1 - Droogkast
+    - name: "EMHASS Droogkast"
+      unique_id: 84f52d3b-8af8-41e9-bc81-07fb74ed7317
+      unit_of_measurement: W
+      state_class: measurement
+      device_class: power
+      state: >
+        {{ states('sensor.ridge_p_deferrable1') }}
+
+    # Deferrable Load 2 - Afwasmachine
+    - name: "EMHASS Afwasmachien"
+      unique_id: 8947a526-71fc-4ea2-9163-b615f7cf740c
+      unit_of_measurement: W
+      state_class: measurement
+      device_class: power
+      state: >
+        {{ states('sensor.ridge_p_deferrable2') }}
+
+    # Deferrable Load 3 - Warmtepompboiler
+    - name: "EMHASS Warmtepompboiler"
+      unique_id: d64ffc91-a29e-4485-a5fa-9ba898422411
+      unit_of_measurement: W
+      state_class: measurement
+      device_class: power
+      state: >
+        {{ states('sensor.ridge_p_deferrable3') }}
+
+    # Deferrable Load 4 - Warmtepomp
+    - name: "EMHASS Warmtepomp"
+      unique_id: f9a9c1fc-cd3b-4294-b9f3-2249d5ac3688
+      unit_of_measurement: W
+      state_class: measurement
+      device_class: power
+      state: >
+        {{ states('sensor.ridge_p_deferrable4') }}
+
+- trigger:
+    - trigger: state
+      entity_id: sensor.ridge_p_load_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass load ridge
+      unique_id: 85246631-b80b-42b6-aa29-330df3a070a2
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ trigger.to_state.state }}
+
+- trigger:
+    - trigger: state
+      entity_id: sensor.ridge_p_grid_forecast
+      not_to:
+        - unknown
+        - unavailable
+  sensor:
+    - name: Emhass grid ridge
+      unique_id: b75b2736-cf8c-4e02-88b0-eb006d670547
+      unit_of_measurement: W
+      state_class: measurement
+      state: >
+        {{ trigger.to_state.state }}
+
+# SELECT COUNT(*)
+# FROM statistics
+# WHERE metadata_id = (SELECT id FROM statistics_meta WHERE statistic_id = 'sensor.grid_consumption_kwh_old')
+# AND start_ts >= strftime('%s', '2025-11-19 17:00:00');
+
+# SELECT COUNT(*)
+# FROM statistics_short_term
+# WHERE metadata_id = (SELECT id FROM statistics_meta WHERE statistic_id = 'sensor.grid_consumption_kwh_old')
+# AND start_ts >= strftime('%s', '2025-11-19 17:00:00');
+
+# DELETE FROM statistics
+# WHERE metadata_id = (SELECT id FROM statistics_meta WHERE statistic_id = 'sensor.grid_consumption_kwh_old')
+# AND start_ts >= strftime('%s', '2025-11-19 17:00:00');
+
+# DELETE FROM statistics_short_term
+# WHERE metadata_id = (SELECT id FROM statistics_meta WHERE statistic_id = 'sensor.grid_consumption_kwh_old')
+# AND start_ts >= strftime('%s', '2025-11-19 17:00:00');
+
+# SELECT COUNT(*)
+# FROM statistics
+# WHERE metadata_id = (SELECT id FROM statistics_meta WHERE statistic_id = 'sensor.grid_production_kwh_old')
+# AND start_ts >= strftime('%s', '2025-11-19 17:00:00');
+
+# SELECT COUNT(*)
+# FROM statistics_short_term
+# WHERE metadata_id = (SELECT id FROM statistics_meta WHERE statistic_id = 'sensor.grid_production_kwh_old')
+# AND start_ts >= strftime('%s', '2025-11-19 17:00:00');
+
+# DELETE FROM statistics
+# WHERE metadata_id = (SELECT id FROM statistics_meta WHERE statistic_id = 'sensor.grid_production_kwh_old')
+# AND start_ts >= strftime('%s', '2025-11-19 17:00:00');
+
+# DELETE FROM statistics_short_term
+# WHERE metadata_id = (SELECT id FROM statistics_meta WHERE statistic_id = 'sensor.grid_production_kwh_old')
+# AND start_ts >= strftime('%s', '2025-11-19 17:00:00');

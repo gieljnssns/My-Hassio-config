@@ -1,0 +1,13 @@
+- binary_sensor:
+    - name: Douchen
+      unique_id: a93c8715-f581-458e-986c-05a99e4839ba
+      state: >
+        {% if is_state("binary_sensor.badkamer_trend_up", "on" ) and is_state("binary_sensor.badkamer_trend_down", "off" ) -%}
+            on
+        {% else -%}
+            off
+        {% endif -%}
+      icon: mdi:shower-head
+  trigger:
+    - trigger: state
+      entity_id: binary_sensor.badkamer_trend_up, binary_sensor.badkamer_trend_down

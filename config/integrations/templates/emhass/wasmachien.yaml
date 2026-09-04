@@ -1,0 +1,105 @@
+- sensor:
+    - name: "Wasmachien uren"
+      unique_id: c7278411-c766-4fcd-81ea-0604db1b1f76
+      unit_of_measurement: "uur"
+      state: >
+        {% if states("input_boolean.wasmachien_starten") == 'on' -%}
+          {% if states("switch.wasmachien") == 'off' -%}
+            2.25
+          {% elif states("input_boolean.emhass_wasmachien") == 'on' -%}
+            {% if (2.25 - ((as_timestamp(now()) - states("sensor.wasmachien_is_gestart_op") | float(0)) / 3600) | round(1)) | float(0) > 0  -%}
+              {{ 2.25 - ((as_timestamp(now()) - states("sensor.wasmachien_is_gestart_op") | float(0)) / 3600) | round(1) }}
+            {% else -%}
+              0
+            {% endif -%}
+          {% else -%}
+            0
+          {% endif -%}
+        {% else -%}
+          0
+        {% endif -%}
+
+    - name: Wasmachien startuur
+      unique_id: 12e7093b-ea97-4f69-a47d-720106331e9f
+      state: >
+        {% from 'easy_time.jinja' import easy_relative_time -%}
+        {% set load = (state_attr('sensor.ridge_p_deferrable0', 'deferrables_schedule')
+                |map(attribute='ridge_p_deferrable0')
+                |list) -%}
+        {% set time = (state_attr('sensor.ridge_p_deferrable0', 'deferrables_schedule')
+                |map(attribute='date')
+                |list) -%}
+        {% if is_state("input_boolean.emhass_wasmachien", "on") -%}
+          Staat op
+        {% else -%}
+          {% set new_list = namespace(all=[]) -%}
+            {% for i in range (load | length) -%}
+              {% if load[i] | float(0) > 1 -%}
+                {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
+                {% break -%}
+              {% endif -%}
+            {% endfor -%}
+          {% endif -%}
+      availability: >-
+        {{ states('sensor.ridge_p_deferrable0') not in ('unknown', 'unavailable', 'None') }}
+
+    - name: Wasmachien end timesteps
+      unique_id: 0c02daa5-efbc-4156-9ada-f402a878194a
+      unit_of_measurement: 5m
+      state: >
+        {% set steps = (((states("input_datetime.emhass_wasmachien_end_time") | as_timestamp) - now() | as_timestamp) / 300) -%}
+        {% set hours_to_operate = states("sensor.wasmachien_uren") | float(0) -%}
+        {% set op_blocks = (hours_to_operate * 12) | round(0, 'ceil') -%}
+        {% if is_state("input_boolean.wasmachien_starten", "on") -%}
+          {% if is_state('input_boolean.emhass_wasmachien', "on") -%}
+            {{ op_blocks }}
+          {% else -%}
+            {{ max(op_blocks, steps|int, 0) }}
+          {% endif -%}
+        {% else -%}
+          0
+        {% endif -%}
+
+- trigger:
+    - trigger: template
+      id: aan
+      value_template: >
+        {{ states("sensor.wasmachien_vermogen") | float(0) > 50 }}
+      for:
+        minutes: 2
+    - trigger: template
+      id: uit
+      value_template: >
+        {{ states("sensor.wasmachien_vermogen") | float(0) < 50 }}
+      for:
+        minutes: 3
+    - trigger: state
+      entity_id: input_boolean.wasmachien_staat_op
+      to: "off"
+  action:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: aan
+          sequence:
+            - action: input_boolean.turn_on
+              entity_id: input_boolean.wasmachien_staat_op
+      default:
+        - action: input_boolean.turn_off
+          entity_id: input_boolean.wasmachien_staat_op
+  binary_sensor:
+    - name: Wasmachien staat op
+      unique_id: 6c5345d8-b4c3-46ca-b3d4-56cf5c5f6534
+      state: >
+        {{ states("input_boolean.wasmachien_staat_op") }}
+
+- trigger:
+    - trigger: state
+      entity_id: input_boolean.emhass_wasmachien
+      from: "off"
+      to: "on"
+  sensor:
+    - name: "Wasmachien is gestart op…"
+      unique_id: bbcf11b2-a7e6-4a2e-a45e-00bea49447b0
+      state: >
+        {{ as_timestamp(states.input_boolean.emhass_wasmachien.last_changed) }}

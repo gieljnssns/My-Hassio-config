@@ -1,0 +1,28 @@
+- sensor:
+    - name: Esp down
+      unique_id: 0922ebc6-e577-4e0b-9370-df23b76fa9f9
+      icon: mdi:car-esp
+      state: >
+        {% set now = now().timestamp() -%}
+        {% set min_unavailable_time = 5 -%}
+
+        {% set esp_sensors = states.binary_sensor
+            | selectattr('entity_id', 'search', '_status')
+            | selectattr('entity_id', 'in', integration_entities('esphome'))
+            | selectattr('state', 'eq', 'off')
+            | list -%}
+
+        {% set down_devices = namespace(all=[]) -%}
+        {% for entity in esp_sensors -%}
+          {% if entity.last_changed.timestamp() <= (now - min_unavailable_time) -%}
+            {% set device = device_attr(device_id(entity.entity_id)|string, 'name') | default('Onbekend') -%}
+            {% if device not in down_devices.all -%}
+              {% set down_devices.all = down_devices.all + [device] -%}
+            {% endif -%}
+          {% endif -%}
+        {% endfor -%}
+        {% if down_devices.all | length > 0 -%}
+          {{ down_devices.all | join(', ') }}
+        {% else -%}
+          Alles ok!
+        {% endif -%}

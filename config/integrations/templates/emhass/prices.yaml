@@ -1,0 +1,339 @@
+- sensor:
+    - name: "Ecopower Afnameprijzen"
+      unique_id: 16ccc75e-d8ab-4b79-ad3a-af3d289b1724
+      unit_of_measurement: "EUR/kWh"
+      state_class: measurement
+      state: >
+        {% set factor_A = 1.02 -%}
+        {% set factor_B = 0.004 -%}
+        {% set GSC = 0.011 -%}
+        {% set WKC = 0.00392 -%}
+        {% set nettarief = 0.0505027 -%}
+        {% set heffing = 0.0019261 -%}
+        {% set accijns = 0.04748 -%}
+        {% set VAT_scaling = 1.06 -%}
+        {% set quarter_index = (now().minute // 5) -%}
+        {% set current_hour = now().hour -%}
+        {% set current_time_index = current_hour * 12 + quarter_index -%}
+        {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') | list) -%}
+        {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') | list -%}
+        {% set all_prices = today_prices_data + tomorrow_prices_data -%}
+        {% set ns = namespace(result=[]) -%}
+        {% for price in all_prices -%}
+          {% set ns.result = ns.result + [price] * 3 -%}
+        {% endfor -%}
+        {% set prices = ns.result[current_time_index:] -%}
+        {% set calc = ((prices[0] * 0.001 * factor_A + factor_B + GSC + WKC + nettarief + heffing + accijns) * VAT_scaling) | round(3) -%}
+        {{ 0 if (calc | abs) <= 0.0002 else calc }}
+
+      attributes:
+        prijzen: >
+          {% set factor_A = 1.02 -%}
+          {% set factor_B = 0.004 -%}
+          {% set GSC = 0.011 -%}
+          {% set WKC = 0.00392 -%}
+          {% set nettarief = 0.0505027 -%}
+          {% set heffing = 0.0019261 -%}
+          {% set accijns = 0.04748 -%}
+          {% set VAT_scaling = 1.06 -%}
+          {% set quarter_index = (now().minute // 5) -%}
+          {% set current_hour = now().hour -%}
+          {% set current_time_index = current_hour * 12 + quarter_index -%}
+          {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') | list) -%}
+          {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') | list -%}
+          {% set all_prices = today_prices_data + tomorrow_prices_data -%}
+          {% set ns = namespace(result=[]) -%}
+          {% for price in all_prices -%}
+            {% set ns.result = ns.result + [price] * 3 -%}
+          {% endfor -%}
+          {% set prices = ns.result[current_time_index:] -%}
+          {% set ns2 = namespace(final=[]) -%}
+          {% for p in prices -%}
+            {% set calc = ((p * factor_A * 0.001 + factor_B + GSC + WKC + nettarief + heffing + accijns) * VAT_scaling) | round(3) -%}
+            {% set final = 0 if (calc | abs) <= 0.002 else calc -%}
+            {% set ns2.final = ns2.final + [final] -%}
+          {% endfor -%}
+          {{ ns2.final }}
+
+    - name: "Ecopower Injectieprijzen"
+      unique_id: 98d961f2-497a-440a-865b-bf2fe1897218
+      unit_of_measurement: "EUR/kWh"
+      state_class: measurement
+      state: >
+        {% set factor_C = 0.98 -%}
+        {% set factor_D = -0.015 -%}
+        {% set quarter_index = (now().minute // 5) -%}
+        {% set current_hour = now().hour -%}
+        {% set current_time_index = current_hour * 12 + quarter_index -%}
+        {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') | list) -%}
+        {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') | list -%}
+        {% set all_prices = today_prices_data + tomorrow_prices_data -%}
+        {% set ns = namespace(result=[]) -%}
+        {% for price in all_prices -%}
+          {% set ns.result = ns.result + [price] * 3 -%}
+        {% endfor -%}
+        {% set prices = ns.result[current_time_index:] -%}
+        {% set calc = (prices[0] * factor_C * 0.001 + factor_D) | round(3) -%}
+        {{ 0 if (calc | abs) <= 0.0002 else calc }}
+
+      attributes:
+        prijzen: >
+          {% set factor_C = 0.98 -%}
+          {% set factor_D = -0.015 -%}
+          {% set quarter_index = (now().minute // 5) -%}
+          {% set current_hour = now().hour -%}
+          {% set current_time_index = current_hour * 12 + quarter_index -%}
+          {% set today_prices_data = (state_attr("sensor.nordpool_raw", "raw_today_prices") | map(attribute='price') | list) -%}
+          {% set tomorrow_prices_data = state_attr("sensor.nordpool_raw", "raw_tomorrow_prices") | map(attribute='price') | list -%}
+          {% set all_prices = today_prices_data + tomorrow_prices_data -%}
+          {% set ns = namespace(result=[]) -%}
+          {% for price in all_prices -%}
+            {% set ns.result = ns.result + [price] * 3 -%}
+          {% endfor -%}
+          {% set prices = ns.result[current_time_index:] -%}
+          {% set ns2 = namespace(final=[]) -%}
+          {% for p in prices -%}
+            {% set calc = (p * factor_C * 0.001 + factor_D) | round(3) -%}
+            {% set final = 0 if (calc | abs) <= 0.002 else calc -%}
+            {% set ns2.final = ns2.final + [final] -%}
+          {% endfor -%}
+          {{ ns2.final }}
+
+- trigger:
+    - trigger: time_pattern
+      # Matches every hour at 5 minutes past whole
+      minutes: 5
+  action:
+    - action: rest_command.predict_epex_prices
+      response_variable: predict_epex_prices_response
+  sensor:
+    - name: "Epex predicted"
+      unique_id: 0f953f20-3b68-4b12-ab97-88eb2d262f95
+      state: >
+        {{ predict_epex_prices_response['content']['knownUntil'] }}
+      attributes:
+        start: >
+          {% set prices = predict_epex_prices_response['content']['prices'] | default([]) -%}
+          {{ prices[0]["startsAt"] }}
+        end: >
+          {% set prices = predict_epex_prices_response['content']['prices'] | default([]) -%}
+          {% set length = prices | length -%}
+          {{ prices[length-1]["startsAt"] }}
+        prijzen: >
+          {% set ns = namespace(result=[]) -%}
+          {% set prices = predict_epex_prices_response['content']['prices'] | default([]) -%}
+          {% for price in prices -%}
+            {% for i in range(3) -%}
+              {% set ns.result = ns.result + [price['total']] -%}
+            {% endfor -%}
+          {% endfor -%}
+          {{ns.result}}
+          
+- trigger:
+    - trigger: time_pattern
+      minutes: /5
+  sensor:
+    - name: "Ecopower Afnameprijzen predicted"
+      unique_id: 6a1f9467-a1bc-44ee-8ce3-f7a5249c14c4
+      unit_of_measurement: "EUR/kWh"
+      state_class: measurement
+      state: >
+        {% set factor_A = 1.02 -%}
+        {% set factor_B = 0.004 -%}
+        {% set GSC = 0.011 -%}
+        {% set WKC = 0.00392 -%}
+        {% set nettarief = 0.0505027 -%}
+        {% set heffing = 0.0019261 -%}
+        {% set accijns = 0.04748 -%}
+        {% set VAT_scaling = 1.06 -%}
+
+        {% set start = as_datetime(state_attr('sensor.epex_predicted','start')) -%}
+        {% set prices = state_attr('sensor.epex_predicted','prijzen') | default([], true) -%}
+        {% set diff = ((as_timestamp(now()) - as_timestamp(start)) / 300) | int(0) -%}
+        {% set price = prices[diff] -%}
+        {% set calc = ((price * factor_A + factor_B + GSC + WKC + nettarief + heffing + accijns) * VAT_scaling) | round(4) -%}
+
+        {{ 0 if (calc | abs) <= 0.0002 else calc }}
+
+      attributes:
+        prijzen: >
+          {% set factor_A = 1.02 -%}
+          {% set factor_B = 0.004 -%}
+          {% set GSC = 0.011 -%}
+          {% set WKC = 0.00392 -%}
+          {% set nettarief = 0.0505027 -%}
+          {% set heffing = 0.0019261 -%}
+          {% set accijns = 0.04748 -%}
+          {% set VAT_scaling = 1.06 -%}
+
+          {% set start = as_datetime(state_attr('sensor.epex_predicted','start')) -%}
+          {% set prices = state_attr('sensor.epex_predicted','prijzen') | default([], true) -%}
+          {% set diff = ((as_timestamp(now()) - as_timestamp(start)) / 300) | int(0) -%}
+
+          {% set ns2 = namespace(final=[]) -%}
+          {% for p in prices -%}
+            {% set calc = ((p * factor_A + factor_B + GSC + WKC + nettarief + heffing + accijns) * VAT_scaling) | round(3) -%}
+            {% set final = 0 if (calc | abs) <= 0.002 else calc -%}
+            {% set ns2.final = ns2.final + [final] -%}
+          {% endfor -%}
+
+          {{ ns2.final[diff:diff+576] }}
+      availability: >
+        {{ (state_attr("sensor.epex_predicted", "prijzen") | select("eq", 0.0) | list | length < 100) and has_value("sensor.epex_predicted") }}
+
+    - name: "Ecopower Injectieprijzen predicted"
+      unique_id: a4af64e1-dc18-4f50-be13-7d8f6b9ad600
+      unit_of_measurement: "EUR/kWh"
+      state_class: measurement
+      state: >
+        {% set factor_C = 0.98 -%}
+        {% set factor_D = -0.015 -%}
+
+        {% set start = as_datetime(state_attr('sensor.epex_predicted','start')) -%}
+        {% set prices = state_attr('sensor.epex_predicted','prijzen') | default([], true) -%}
+        {% set now_ts = now() -%}
+        {% set diff = ((as_timestamp(now_ts) - as_timestamp(start)) / 300) | int(0) -%}
+        {% set price = prices[diff] -%}
+        {% set calc = (price * factor_C + factor_D) | round(4) -%}
+
+        {{ 0 if (calc | abs) <= 0.0002 else calc }}
+
+      attributes:
+        prijzen: >
+          {% set factor_C = 0.98 -%}
+          {% set factor_D = -0.015 -%}
+
+          {% set start = as_datetime(state_attr('sensor.epex_predicted','start')) -%}
+          {% set prices = state_attr('sensor.epex_predicted','prijzen') | default([], true) -%}
+          {% set diff = ((as_timestamp(now()) - as_timestamp(start)) / 300) | int(0) -%}
+
+          {% set ns2 = namespace(final=[]) -%}
+          {% for p in prices -%}
+            {% set calc = (((p * factor_C) + factor_D)) | round(3) -%}
+            {% set final = 0 if (calc | abs) <= 0.002 else calc -%}
+            {% set ns2.final = ns2.final + [final] -%}
+          {% endfor -%}
+
+          {{ ns2.final[diff:diff+576] }}
+      availability: >
+        {{ (state_attr("sensor.epex_predicted", "prijzen") | select("eq", 0.0) | list | length < 100) and has_value("sensor.epex_predicted") }}
+
+    - name: "Negatieve Prijzen Vandaag"
+      unique_id: 53a1282a-3eca-40a9-b4b4-08590cf61eeb
+      state: >
+        {% set prijzen = state_attr("sensor.ecopower_afnameprijzen_predicted", "prijzen") -%}
+        {% if prijzen is none or prijzen | length == 0 -%}
+          Onbekend
+        {% else -%}
+          {% set nu = now().replace(minute=(now().minute // 5) * 5, second=0, microsecond=0) -%}
+          {% set vandaag = nu.date() -%}
+          {% set ns = namespace(in_negatief=false, start_idx=none, periodes=[]) -%}
+          
+          {% for prijs in prijzen -%}
+            {% set tijd = nu + timedelta(minutes=loop.index0 * 5) -%}
+            {% if tijd.date() == vandaag -%}
+              {% if prijs | float < 0 and not ns.in_negatief -%}
+                {% set ns.start_idx = loop.index0 -%}
+                {% set ns.in_negatief = true -%}
+              {% elif prijs | float >= 0 and ns.in_negatief -%}
+                {% set start_tijd = nu + timedelta(minutes=ns.start_idx * 5) -%}
+                {% set ns.periodes = ns.periodes + [start_tijd.strftime('%H:%M') ~ ' tot ' ~ tijd.strftime('%H:%M')] -%}
+                {% set ns.in_negatief = false -%}
+              {% endif -%}
+            {% endif -%}
+          {% endfor -%}
+          
+          {% if ns.in_negatief -%}
+            {% set start_tijd = nu + timedelta(minutes=ns.start_idx * 5) -%}
+            {% set eind_tijd = nu + timedelta(minutes=prijzen | length * 5) -%}
+            {% set ns.periodes = ns.periodes + [start_tijd.strftime('%H:%M') ~ ' tot ' ~ eind_tijd.strftime('%H:%M')] -%}
+          {% endif -%}
+          
+          {{ ns.periodes | join(', ') if ns.periodes | length > 0 else 'Geen negatieve prijzen' }}
+        {% endif -%}
+      icon: mdi:cash-minus
+
+    - name: "Negatieve Prijzen Morgen"
+      unique_id: 5298c647-2a16-41e8-937c-224558774cf0
+      state: >
+        {% if now().hour < 14 -%}
+          Geen negatieve prijzen
+        {% else -%}
+          {% set prijzen = state_attr("sensor.ecopower_afnameprijzen_predicted", "prijzen") -%}
+          {% if prijzen is none or prijzen | length == 0 -%}
+            Onbekend
+          {% else -%}
+            {% set nu = now().replace(minute=(now().minute // 5) * 5, second=0, microsecond=0) -%}
+            {% set morgen = (nu + timedelta(days=1)).date() -%}
+            {% set ns = namespace(in_negatief=false, start_idx=none, periodes=[]) -%}
+            
+            {% for prijs in prijzen -%}
+              {% set tijd = nu + timedelta(minutes=loop.index0 * 5) -%}
+              {% if tijd.date() == morgen -%}
+                {% if prijs | float < 0 and not ns.in_negatief -%}
+                  {% set ns.start_idx = loop.index0 -%}
+                  {% set ns.in_negatief = true -%}
+                {% elif prijs | float >= 0 and ns.in_negatief -%}
+                  {% set start_tijd = nu + timedelta(minutes=ns.start_idx * 5) -%}
+                  {% set ns.periodes = ns.periodes + [start_tijd.strftime('%H:%M') ~ ' tot ' ~ tijd.strftime('%H:%M')] -%}
+                  {% set ns.in_negatief = false -%}
+                {% endif -%}
+              {% endif -%}
+            {% endfor -%}
+            
+            {% if ns.in_negatief -%}
+              {% set start_tijd = nu + timedelta(minutes=ns.start_idx * 5) -%}
+              {% set eind_tijd = nu + timedelta(minutes=prijzen | length * 5) -%}
+              {% set ns.periodes = ns.periodes + [start_tijd.strftime('%H:%M') ~ ' tot ' ~ eind_tijd.strftime('%H:%M')] -%}
+            {% endif -%}
+            
+            {{ ns.periodes | join(', ') if ns.periodes | length > 0 else 'Geen negatieve prijzen' }}
+          {% endif -%}
+        {% endif -%}
+      icon: mdi:cash-minus
+
+- trigger:
+    - trigger: homeassistant
+      event: start
+    - trigger: time_pattern
+      minutes: "/5" # Update elke 5 minuten voor actuele prijs
+  action:
+    - variables:
+        today: "{{ now().strftime('%Y-%m-%d') }}"
+        tomorrow: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }}"
+    - action: nordpool.get_price_indices_for_date
+      data:
+        config_entry: "01K6AQ2E1S68NG1XCN4D99YVDC"
+        date: "{{ today }}"
+        resolution: "15"
+      response_variable: today_prices
+    - action: nordpool.get_price_indices_for_date
+      data:
+        config_entry: "01K6AQ2E1S68NG1XCN4D99YVDC"
+        date: "{{ tomorrow }}"
+        resolution: "15"
+      response_variable: tomorrow_prices
+  sensor:
+    - name: "NordPool raw"
+      unique_id: 755b77c7-468f-439b-b566-eea89f093b01
+      unit_of_measurement: "EUR/kWh"
+      state: >
+        {% set quarter_index = (now().minute // 15) -%}
+        {% set current_hour = now().hour -%}
+        {% set current_time_index = current_hour * 4 + quarter_index -%}
+
+        {% set today_prices_data = today_prices.BE if today_prices and 'BE' in today_prices else [] -%}
+        {% set tomorrow_prices_data = tomorrow_prices.BE if tomorrow_prices and 'BE' in tomorrow_prices else [] -%}
+
+        {% set today_remaining = today_prices_data[current_time_index:] if today_prices_data|length > current_time_index else [] -%}
+        {% set all_prices = today_remaining + tomorrow_prices_data -%}
+
+        {% if all_prices|length > 0 -%}
+          {% set current_price = (all_prices[0].price / 1000) -%}
+          {{ current_price }}
+        {% else -%}
+          {{ 0 }}
+        {% endif -%}
+      attributes:
+        raw_today_prices: "{{ today_prices.BE if today_prices and 'BE' in today_prices else [] }}"
+        raw_tomorrow_prices: "{{ tomorrow_prices.BE if tomorrow_prices and 'BE' in tomorrow_prices else [] }}"

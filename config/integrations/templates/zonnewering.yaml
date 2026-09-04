@@ -1,0 +1,22 @@
+- binary_sensor:
+    - name: Achtergevel closed
+      unique_id: 5d14e28f-0fc1-4749-91ad-364ce3e564c4
+      state: >
+        {{ states('input_boolean.achtergevel_closed') == 'on' }}
+      icon: >-
+        {% if is_state("binary_sensor.achtergevel_closed", "on") -%}
+          mdi:arrow-down-bold-box-outline
+        {% else -%}
+          mdi:arrow-up-bold-box-outline
+        {% endif -%}
+
+    - name: Zijgevel closed
+      unique_id: 53264cf3-92fa-493d-92f2-cf7d02724f22
+      state: >
+        {{ states('input_boolean.zijgevel_closed') == 'on' }}
+      icon: >-
+        {% if is_state("binary_sensor.zijgevel_closed", "on") -%}
+          mdi:arrow-down-bold-box-outline
+        {% else -%}
+          mdi:arrow-up-bold-box-outline
+        {% endif -%}

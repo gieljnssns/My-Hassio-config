@@ -1,0 +1,177 @@
+- sensor:
+    # Nooit wegdoen - dummy voor integration sensors
+    - name: Dummy
+      unique_id: f2af9801-c961-453c-9bf7-9054d423991e
+      device_class: power
+      unit_of_measurement: "W"
+      state: >
+        {{ 0 }}
+
+- binary_sensor:
+    - name: Huawei has power
+      unique_id: 57543201-3292-4817-97ad-3058f1184bf9
+      availability: >-
+        {{ has_value("sensor.huawei_active_power") }}
+      state: >
+        {{ states("sensor.huawei_active_power") | float(0) > 0 }}
+
+    - name: Solaredge has power
+      unique_id: a32f0b55-9a76-4e4b-b7da-09dff675cf1d
+      state: >
+        {{ states("sensor.solaredge_i1_ac_power") | float(0) > 0 }}
+
+- trigger:
+    - trigger: time_pattern
+      seconds: "/2"
+  sensor:
+    - name: Huidige opbrengst
+      unique_id: 6502aec2-df3d-420b-b8f5-2eb09184cbed
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.huawei_active_power") | float(0) + states("sensor.solaredge_i1_ac_power") | float(0)) | round(1) }}
+
+    - name: Huidig verbruik
+      unique_id: 88576813-0ac7-4deb-9b6d-15bb99a08752
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% set verbruik_state = states('sensor.electricity_meter_energieverbruik') -%}
+        {% set productie_state = states('sensor.electricity_meter_energieproductie') -%}
+
+        {# Check of de primaire sensoren beschikbaar en geldig zijn -#}
+        {% set primary_available = verbruik_state not in ['unavailable', 'unknown', 'none']
+                                    and productie_state not in ['unavailable', 'unknown', 'none'] -%}
+        {# Check of de sensoren recent zijn geupdate (binnen 10 seconden) -#}
+        {% set now_ts = now().timestamp() -%}
+        {% set verbruik_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieverbruik.last_updated, 0)) < 10 -%}
+        {% set productie_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieproductie.last_updated, 0)) < 10 -%}
+        {% set primary_fresh = verbruik_updated or productie_updated -%}
+
+        {% if primary_available and primary_fresh -%}
+          {# Gebruik primaire sensoren -#}
+          {% set verbruik = verbruik_state | float(0) -%}
+          {% set productie = productie_state | float(0) -%}
+          {% set net_power = ((productie - verbruik) * 1000) | round(0) -%}
+        {% else -%}
+          {# Fallback naar meter_active_power_total (IS AL IN WATT, negatief = import) -#}
+          {% set meter_power_state = states('sensor.meter_active_power_total') -%}
+          {% if meter_power_state not in ['unavailable', 'unknown', 'none'] -%}
+            {% set net_power = meter_power_state | float(0) -%}
+          {% else -%}
+            {% set net_power = 0 -%}
+          {% endif -%}
+        {% endif -%}
+        {# Fallback naar sensor.emhass_battery (ALS battery_power unavailable is) -#}
+        {% set battery_power = states('sensor.battery_power') | float(states('sensor.emhass_battery')|float) -%}
+        {% set solar_power = (states('sensor.huawei_active_power') | float(0)) + (states('sensor.solaredge_i1_ac_power') | float(0)) -%}
+
+        {# Bereken verbruik: Solar - Net + Batterij
+           Net_power is NEGATIEF bij import, dus Solar - (-waarde) = Solar + waarde
+           Net_power is POSITIEF bij export, dus Solar - (+waarde) = Solar - waarde
+        -#}
+        {% set consumption = solar_power - net_power + battery_power -%}
+
+        {# Minimum 325W verbruik -#}
+        {{ [325, consumption] | max | round(0) }}
+      availability: >
+        {% set meter_available = states('sensor.meter_active_power_total') not in ['unavailable', 'unknown', 'none'] -%}
+        {% set primary_available = states('sensor.electricity_meter_energieverbruik') not in ['unavailable', 'unknown', 'none'] -%}
+        {{ meter_available or primary_available }}
+
+    - name: Huidig verbruik zonder wp
+      unique_id: 664ab9ff-3875-4a45-b53a-685b7a8f7f96
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% set use = (states("sensor.huidig_verbruik") | float(default=0) -
+                      states("sensor.wasmachien_vermogen") | float(default=0) -
+                      states("sensor.droogkast_vermogen") | float(default=0) -
+                      states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
+                      states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
+                      states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) -%}
+        {{ [325, use] | max | round(0) }}
+
+    - name: "Huidig fluvius"
+      unit_of_measurement: "W"
+      unique_id: 569e23f1-e47a-41f4-a81b-ecf5de0ac186
+      device_class: power
+      state_class: measurement
+      state: >
+        {% set verbruik_state = states('sensor.electricity_meter_energieverbruik') -%}
+        {% set productie_state = states('sensor.electricity_meter_energieproductie') -%}
+
+        {# Check of de primaire sensoren beschikbaar en geldig zijn -#}
+        {% set primary_available = verbruik_state not in ['unavailable', 'unknown', 'none']
+                                    and productie_state not in ['unavailable', 'unknown', 'none'] -%}
+
+        {# Check of de sensoren recent zijn geupdate (binnen 10 seconden) -#}
+        {% set now_ts = now().timestamp() -%}
+        {% set verbruik_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieverbruik.last_updated, 0)) < 10 -%}
+        {% set productie_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieproductie.last_updated, 0)) < 10 -%}
+        {% set primary_fresh = verbruik_updated or productie_updated -%}
+
+        {% if primary_available and primary_fresh -%}
+          {# Gebruik primaire sensoren -#}
+          {% set verbruik = verbruik_state | float(0) -%}
+          {% set productie = productie_state | float(0) -%}
+          {{ ((verbruik - productie) * 1000) | round(0) }}
+        {% else -%}
+          {# Fallback naar meter_active_power_total (negatief = import, dus vermenigvuldig met -1) -#}
+          {% set meter_power_state = states('sensor.meter_active_power_total') -%}
+          {% if meter_power_state not in ['unavailable', 'unknown', 'none'] -%}
+            {{ (meter_power_state | float(0) * -1) | round(0) }}
+          {% else -%}
+            {{ 0 }}
+          {% endif -%}
+        {% endif -%}
+      availability: >
+        {% set meter_available = states('sensor.meter_active_power_total') not in ['unavailable', 'unknown', 'none'] -%}
+        {% set primary_available = states('sensor.electricity_meter_energieverbruik') not in ['unavailable', 'unknown', 'none'] -%}
+        {{ meter_available or primary_available }}
+
+    - name: Verlichting vermogen
+      unique_id: 98a0995b-5090-4ff9-be1a-a371a554915f
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {{ (states("sensor.danszaal_luster_vermogen") | float(default=0) +
+            states("sensor.zithoek_luster_vermogen") | float(default=0) +
+            states("sensor.gang_boven_vermogen") | float(default=0) +
+            states("sensor.gang_hal_1_vermogen") | float(default=0) +
+            states("sensor.gang_hal_2_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_hoog_vermogen") | float(default=0) +
+            states("sensor.keuken_inkom_vermogen") | float(default=0) +
+            states("sensor.keuken_spots_vermogen") | float(default=0) +
+            states("sensor.danszaal_spots_vermogen") | float(default=0) +
+            states("sensor.wc_vermogen") | float(default=0) +
+            states("sensor.garage_vermogen") | float(default=0) +
+            states("sensor.garage_werkbank_vermogen") | float(default=0) +
+            states("sensor.badkamer_hoog_vermogen") | float(default=0) +
+            states("sensor.badkamer_pombak_vermogen") | float(default=0) +
+            states("sensor.gang_beneden_vermogen") | float(default=0) +
+            states("sensor.keuken_luster_vermogen") | float(default=0) +
+            states("sensor.trap_vermogen") | float(default=0) +
+            states("sensor.waskot_vermogen") | float(default=0) +
+            states("sensor.paddeke_1_vermogen") | float(default=0) +
+            states("sensor.paddeke_2_vermogen") | float(default=0) +
+            states("sensor.garage_buiten_1_vermogen") | float(default=0) +
+            states("sensor.garage_buiten_2_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_fien_1_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_fien_2_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_fien_3_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_noor_1_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_noor_2_vermogen") | float(default=0) +
+            states("sensor.slaapkamer_spot_vermogen") | float(default=0) +
+            states("sensor.zithoek_links_achter_vermogen") | float(default=0) +
+            states("sensor.zithoek_links_midden_vermogen") | float(default=0) +
+            states("sensor.zithoek_links_voor_vermogen") | float(default=0) +
+            states("sensor.zithoek_rechts_achter_vermogen") | float(default=0) +
+            states("sensor.kelder_vermogen") | float(default=0) +
+            states("sensor.zithoek_rechts_midden_vermogen") | float(default=0) +
+            states("sensor.welcome_1_vermogen") | float(default=0) +
+            states("sensor.welcome_2_vermogen") | float(default=0) +
+            states("sensor.den_hof_spot_vermogen") | float(default=0) +
+            states("sensor.wled_fien_vermogen") | float(default=0) +
+            states("sensor.wled_noor_vermogen") | float(default=0) +
+            states("sensor.zithoek_rechts_voor_vermogen") | float(default=0)) | round (1)}}
