@@ -1,0 +1,26 @@
+emhass_discharge_to_98:
+  alias: EMHASS discharge to 98
+  sequence:
+    - wait_template: >
+        {{ states("sensor.battery_power")|int("kak") is number }}
+    - action: select.select_option
+      target:
+        entity_id: select.goodwe_inverter_operation_mode
+      data:
+        option: "eco_discharge"
+    - action: number.set_value
+      target:
+        entity_id: number.goodwe_eco_mode_power
+      data:
+        value: 100
+    - wait_template: >
+        {{  90 < states("sensor.battery_state_of_charge")|int(0) < 99 }}
+    - delay:
+        minutes: 1
+    - wait_template: >
+        {{ states("sensor.battery_power")|int("kak") is number }}
+    - action: select.select_option
+      target:
+        entity_id: select.goodwe_inverter_operation_mode
+      data:
+        option: "general"

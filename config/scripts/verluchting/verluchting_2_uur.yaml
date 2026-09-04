@@ -12,48 +12,22 @@ verluchting_2_uur:
     - action: input_datetime.set_datetime
       data:
         datetime: >
-          {% set current = states("input_datetime.luchtdroger_end_time") %}
-          {% if as_timestamp(current) > as_timestamp(now() + timedelta(minutes=170)) %}
+          {% set current = states("input_datetime.luchtdroger_end_time") -%}
+          {% if as_timestamp(current) > as_timestamp(now() + timedelta(minutes=170)) -%}
             {{ current }}
-          {% else %}
+          {% else -%}
             {{ now() + timedelta(minutes=170) }}
-          {% endif %}
+          {% endif -%}
       target:
         entity_id: input_datetime.luchtdroger_end_time
     - action: input_datetime.set_datetime
       data:
         datetime: >
-          {% set current = states("input_datetime.verluchting_end_time") %}
-          {% if as_timestamp(current) > as_timestamp(now() + timedelta(hours=3)) %}
+          {% set current = states("input_datetime.verluchting_end_time") -%}
+          {% if as_timestamp(current) > as_timestamp(now() + timedelta(hours=3)) -%}
             {{ current }}
-          {% else %}
+          {% else -%}
             {{ now() + timedelta(hours=3) }}
-          {% endif %}
+          {% endif -%}
       target:
         entity_id: input_datetime.verluchting_end_time
-    # - choose:
-    #     - conditions:
-    #         - condition: template
-    #           value_template: >
-    #             {% set buiten = states("sensor.poort_luchtvochtigheid") | float(0) %}
-    #             {% set binnen = states("sensor.living_luchtvochtigheid") | float(0) %}
-
-    #             {% set buiten_temp = states("sensor.buiten_buiten_temperatuur") | float(0) %}
-    #             {% set binnen_temp = states("sensor.living_dauwpunt") | float(0) %}
-
-    #             {% if buiten > 70 %}
-    #               {{ buiten_temp > binnen_temp }}
-    #             {% else %}
-    #               True
-    #             {% endif %}
-    #       sequence:
-    #         - action: switch.turn_on
-    #           entity_id: switch.verluchting
-    # - delay:
-    #     minutes: 120
-    # - action: fan.turn_off
-    #   entity_id: fan.ventilatie
-    # - action: switch.turn_off
-    #   entity_id: switch.badkamer_verluchting
-    # - action: switch.turn_off
-    #   entity_id: switch.zolder_verluchting

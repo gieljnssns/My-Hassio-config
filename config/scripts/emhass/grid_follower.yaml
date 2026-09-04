@@ -5,85 +5,129 @@ emhass_grid_follower:
         while:
           - condition: template
             value_template: >
-              {{ states('select.goodwe_inverter_operation_mode') in ['eco_charge', 'eco_discharge'] }}
+              {{ states('select.goodwe_inverter_operation_mode') in ['eco_charge', 'eco_discharge'] 
+                and states('sensor.battery_power') not in ['unavailable', 'unknown'] }}
         sequence:
+          # - variables:
+          #     p_grid_actual: "{{ states('sensor.huidig_fluvius') | float(0) }}"
+          #     p_grid_target: "{{ states('sensor.emhass_grid2') | float(0) }}"
+          #     current_step: "{{ states('number.goodwe_eco_mode_power') | float(0) }}"
+          #     current_mode: "{{ states('select.goodwe_inverter_operation_mode') }}"
+          #     error: "{{ p_grid_actual - p_grid_target }}"
+          #     max_charge_pct: >
+          #       {% set w = states('sensor.battery_p_charge_max') | float(8000) -%}
+          #       {{ [(w / 80) | round(0) | int, 100] | min }}
+          #     max_discharge_pct: >
+          #       {% set w = states('sensor.battery_p_discharge_max') | float(4448) -%}
+          #       {{ [(w / 80) | round(0) | int, 100] | min }}
+
+          #     # eco_charge:    more power → more grid consumption → error decreases
+          #     #                negative error (actual < target) → increase power
+          #     #                positive error (actual > target) → decrease power
+          #     # eco_discharge: more power → less grid consumption → error decreases
+          #     #                positive error (actual > target) → increase power
+          #     #                negative error (actual < target) → decrease power
+          #     # Conclusion: sign of correction is OPPOSITE per mode
+          #     corrected_error: >
+          #       {% if current_mode == 'eco_charge' -%}
+          #         {{ -(error | float) }}
+          #       {% else -%}
+          #         {{ error | float }}
+          #       {% endif -%}
+
+          #     # Larger hysteresis: only switch mode when deviation >300W
+          #     # and only if current_step is already at minimum (0-5%)
+          #     # This prevents oscillation between charge/discharge
+          #     target_mode: >
+          #       {% set e = error | float -%}
+          #       {% set cs = current_step | float -%}
+          #       {% if current_mode == 'eco_discharge' -%}
+          #         {% if e < -100 and cs <= 5 -%}
+          #           eco_charge
+          #         {% else -%}
+          #           eco_discharge
+          #         {% endif -%}
+          #       {% elif current_mode == 'eco_charge' -%}
+          #         {% if e > 100 and cs <= 5 -%}
+          #           eco_discharge
+          #         {% else -%}
+          #           eco_charge
+          #         {% endif -%}
+          #       {% else -%}
+          #         {{ current_mode }}
+          #       {% endif -%}
+
+          #     # Step size: proportional but capped at max 50% per step
+          #     step: >
+          #       {{ [(( corrected_error | abs) / 80) | round(0) | int, 50] | min }}
+
+          #     new_step: >
+          #       {% set ce = corrected_error | float -%}
+          #       {% set s = step | int -%}
+          #       {% set cs = current_step | float -%}
+          #       {% set soc = states('sensor.battery_state_of_charge') | float(states('sensor.emhass_soc')|float) -%}
+          #       {% set soc_block = (current_mode == 'eco_discharge' and soc <= 15) or (current_mode == 'eco_charge' and soc >= 100) -%}
+          #       {% set max_pct = max_charge_pct | int if current_mode == 'eco_charge' else max_discharge_pct | int -%}
+          #       {% if target_mode != current_mode or soc_block -%}
+          #         {% set ns = 0 -%}
+          #       {% elif ce | abs <= 50 -%}
+          #         {% set ns = cs -%}
+          #       {% elif ce > 0 -%}
+          #         {% set ns = cs + s -%}
+          #       {% else -%}
+          #         {% set ns = cs - s -%}
+          #       {% endif -%}
+          #       {% if ns > max_pct -%}
+          #         {{ max_pct }}
+          #       {% elif ns < 0 -%}
+          #         0
+          #       {% else -%}
+          #         {{ ns | round(0) | int }}
+          #       {% endif -%}
+
+          #     is_night: >
+          #       {% set h = now().hour -%}
+          #       {{ h >= 1 and h < 6 }}
+
+          #     interval: "{{ 60 if is_night else 10 }}"
+
           - variables:
               p_grid_actual: "{{ states('sensor.huidig_fluvius') | float(0) }}"
               p_grid_target: "{{ states('sensor.emhass_grid2') | float(0) }}"
               current_step: "{{ states('number.goodwe_eco_mode_power') | float(0) }}"
               current_mode: "{{ states('select.goodwe_inverter_operation_mode') }}"
-              error: "{{ p_grid_actual - p_grid_target }}"
               max_charge_pct: >
                 {% set w = states('sensor.battery_p_charge_max') | float(8000) -%}
                 {{ [(w / 80) | round(0) | int, 100] | min }}
               max_discharge_pct: >
                 {% set w = states('sensor.battery_p_discharge_max') | float(4448) -%}
                 {{ [(w / 80) | round(0) | int, 100] | min }}
-
-              # eco_charge:    more power → more grid consumption → error decreases
-              #                negative error (actual < target) → increase power
-              #                positive error (actual > target) → decrease power
-              # eco_discharge: more power → less grid consumption → error decreases
-              #                positive error (actual > target) → increase power
-              #                negative error (actual < target) → decrease power
-              # Conclusion: sign of correction is OPPOSITE per mode
-              corrected_error: >
-                {% if current_mode == 'eco_charge' -%}
-                  {{ -(error | float) }}
-                {% else -%}
-                  {{ error | float }}
-                {% endif -%}
-
-              # Larger hysteresis: only switch mode when deviation >300W
-              # and only if current_step is already at minimum (0-5%)
-              # This prevents oscillation between charge/discharge
+              battery_power_needed: >
+                {{ p_grid_actual + (states('sensor.battery_power') | float(0)) - p_grid_target }}
               target_mode: >
-                {% set e = error | float -%}
-                {% set cs = current_step | float -%}
-                {% if current_mode == 'eco_discharge' -%}
-                  {% if e < -100 and cs <= 5 -%}
-                    eco_charge
-                  {% else -%}
-                    eco_discharge
-                  {% endif -%}
-                {% elif current_mode == 'eco_charge' -%}
-                  {% if e > 100 and cs <= 5 -%}
-                    eco_discharge
-                  {% else -%}
-                    eco_charge
-                  {% endif -%}
+                {% set bpn = battery_power_needed | float -%}
+                {% if bpn < -50 -%}
+                  eco_charge
+                {% elif bpn > 50 -%}
+                  eco_discharge
                 {% else -%}
                   {{ current_mode }}
                 {% endif -%}
-
-              # Step size: proportional but capped at max 15% per step
-              step: >
-                {{ [(( corrected_error | abs) / 80) | round(0) | int, 15] | min }}
-
               new_step: >
-                {% set ce = corrected_error | float -%}
-                {% set s = step | int -%}
+                {% set bpn = battery_power_needed | float -%}
                 {% set cs = current_step | float -%}
-                {% set soc = states('sensor.battery_state_of_charge') | float(50) -%}
-                {% set soc_block = (current_mode == 'eco_discharge' and soc <= 15) or (current_mode == 'eco_charge' and soc >= 95) -%}
-                {% set max_pct = max_charge_pct | int if current_mode == 'eco_charge' else max_discharge_pct | int -%}
+                {% set soc = states('sensor.battery_state_of_charge') | float(states('sensor.emhass_soc')|float) -%}
+                {% set soc_block = (current_mode == 'eco_discharge' and soc <= 15) or (current_mode == 'eco_charge' and soc >= 100) -%}
+                {% set max_pct = max_charge_pct | int if target_mode == 'eco_charge' else max_discharge_pct | int -%}
                 {% if target_mode != current_mode or soc_block -%}
                   {% set ns = 0 -%}
-                {% elif ce | abs <= 50 -%}
-                  {% set ns = cs -%}
-                {% elif ce > 0 -%}
-                  {% set ns = cs + s -%}
                 {% else -%}
-                  {% set ns = cs - s -%}
+                  {% set ns = (bpn | abs / 80) | round(0) | int -%}
                 {% endif -%}
-                {% if ns > max_pct -%}
-                  {{ max_pct }}
-                {% elif ns < 0 -%}
-                  0
-                {% else -%}
-                  {{ ns | round(0) | int }}
+                {% if ns > max_pct -%}{{ max_pct }}
+                {% elif ns < 0 -%}0
+                {% else -%}{{ ns | round(0) | int }}
                 {% endif -%}
-
               is_night: >
                 {% set h = now().hour -%}
                 {{ h >= 1 and h < 6 }}
@@ -95,6 +139,8 @@ emhass_grid_follower:
               - condition: template
                 value_template: "{{ target_mode != current_mode }}"
             then:
+              - wait_template: >
+                  {{ states("sensor.battery_power")|int("kak") is number }}
               - action: number.set_value
                 target:
                   entity_id: number.goodwe_eco_mode_power
@@ -113,6 +159,8 @@ emhass_grid_follower:
               - condition: template
                 value_template: "{{ target_mode == current_mode and (new_step | int) != (current_step | int) }}"
             then:
+              - wait_template: >
+                  {{ states("sensor.battery_power")|int("kak") is number }}
               - action: number.set_value
                 target:
                   entity_id: number.goodwe_eco_mode_power
@@ -124,3 +172,154 @@ emhass_grid_follower:
 
   mode: single
   max_exceeded: silent
+# sequence:
+#           - variables:
+#               p_grid_actual: "{{ states('sensor.huidig_fluvius') | float(0) }}"
+#               {% set p_grid_actual = states('sensor.huidig_fluvius') | float(0) -%}
+#               p_grid_target: "{{ states('sensor.emhass_grid2') | float(0) }}"
+#               {% set p_grid_target = states('sensor.emhass_grid2') | float(0) -%}
+#               current_step: "{{ states('number.goodwe_eco_mode_power') | float(0) }}"
+#               {% set current_step = states('number.goodwe_eco_mode_power') | float(0) -%}
+#               current_mode: "{{ states('select.goodwe_inverter_operation_mode') }}"
+#               {% set current_mode = states('select.goodwe_inverter_operation_mode') -%}
+#               max_charge_pct: >
+#                 {% set w = states('sensor.battery_p_charge_max') | float(8000) -%}
+#                 {{ [(w / 80) | round(0) | int, 100] | min }}
+#               {% set max_charge_pct = [(w / 80) | round(0) | int, 100] | min -%}
+#               max_discharge_pct: >
+#                 {% set w = states('sensor.battery_p_discharge_max') | float(4448) -%}
+#                 {{ [(w / 80) | round(0) | int, 100] | min }}
+#               {% set max_discharge_pct = [(w / 80) | round(0) | int, 100] | min -%}
+
+#               battery_power_needed: >
+#                 {{ p_grid_actual + (states('sensor.battery_power') | float(0)) - p_grid_target }}
+#                 {% set battery_power_needed = p_grid_actual + (states('sensor.battery_power') | float(0)) - p_grid_target -%}
+
+#               target_mode: >
+#                 {% set bpn = battery_power_needed | float -%}
+#                 {% if bpn < -50 -%}
+#                   eco_charge
+#                   {% set target_mode = "eco_charge" -%}
+#                 {% elif bpn > 50 -%}
+#                   eco_discharge
+#                   {% set target_mode = "eco_discharge" -%}
+#                 {% else -%}
+#                   {{ current_mode }}
+#                   {% set target_mode = current_mode -%}
+#                 {% endif -%}
+
+#               new_step: >
+#                 {% set bpn = battery_power_needed | float -%}
+#                 {% set cs = current_step | float -%}
+#                 {% set soc = states('sensor.battery_state_of_charge') | float(states('sensor.emhass_soc')|float) -%}
+#                 {% set soc_block = (current_mode == 'eco_discharge' and soc <= 15) or (current_mode == 'eco_charge' and soc >= 100) -%}
+#                 {% set max_pct = max_charge_pct | int if target_mode == 'eco_charge' else max_discharge_pct | int -%}
+#                 {% if target_mode != current_mode or soc_block -%}
+#                   {% set ns = 0 -%}
+#                 {% else -%}
+#                   {% set ns = (bpn | abs / 80) | round(0) | int -%}
+#                 {% endif -%}
+#                 {% if ns > max_pct -%}{{ max_pct }}
+#                 {% elif ns < 0 -%}0
+#                 {% else -%}{{ ns | round(0) | int }}
+#                 {% endif -%}
+
+# sequence:
+#     - repeat:
+#         while:
+#           - condition: template
+#             value_template: >
+#               {{ states('select.goodwe_inverter_operation_mode') in ['eco_charge', 'eco_discharge'] }}
+#         sequence:
+#           - variables:
+#               p_grid_actual: "{{ states('sensor.huidig_fluvius') | float(0) }}"
+#               {% set p_grid_actual = states('sensor.huidig_fluvius') | float(0) -%}
+#               p_grid_target: "{{ states('sensor.emhass_grid2') | float(0) }}"
+#               {% set p_grid_target = states('sensor.emhass_grid2') | float(0) -%}
+#               current_step: "{{ states('number.goodwe_eco_mode_power') | float(0) }}"
+#               {% set current_step = states('number.goodwe_eco_mode_power') | float(0) -%}
+#               current_mode: "{{ states('select.goodwe_inverter_operation_mode') }}"
+#               {% set current_mode = states('select.goodwe_inverter_operation_mode') -%}
+#               error: "{{ p_grid_actual - p_grid_target }}"
+#               {% set error = p_grid_actual - p_grid_target -%}
+#               max_charge_pct: >
+#                 {% set w = states('sensor.battery_p_charge_max') | float(8000) -%}
+#                 {{ [(w / 80) | round(0) | int, 100] | min }}
+#               {% set max_charge_pct = [(w / 80) | round(0) | int, 100] | min -%}
+#               max_discharge_pct: >
+#                 {% set w = states('sensor.battery_p_discharge_max') | float(4448) -%}
+#                 {{ [(w / 80) | round(0) | int, 100] | min }}
+#               {% set max_discharge_pct = [(w / 80) | round(0) | int, 100] | min -%}
+#               # eco_charge:    more power → more grid consumption → error decreases
+#               #                negative error (actual < target) → increase power
+#               #                positive error (actual > target) → decrease power
+#               # eco_discharge: more power → less grid consumption → error decreases
+#               #                positive error (actual > target) → increase power
+#               #                negative error (actual < target) → decrease power
+#               # Conclusion: sign of correction is OPPOSITE per mode
+#               corrected_error: >
+#                 {% if current_mode == 'eco_charge' -%}
+#                   {{ -(error | float) }}
+#                   {% set corrected_error = -(error | float) -%}
+#                 {% else -%}
+#                   {{ error | float }}
+#                   {% set corrected_error = error | float -%}
+#                 {% endif -%}
+
+#               # Larger hysteresis: only switch mode when deviation >300W
+#               # and only if current_step is already at minimum (0-5%)
+#               # This prevents oscillation between charge/discharge
+#               target_mode: >
+#                 {% set e = error | float -%}
+#                 {% set cs = current_step | float -%}
+#                 {% if current_mode == 'eco_discharge' -%}
+#                   {% if e < -100 and cs <= 5 -%}
+#                     eco_charge
+#                     {% set target_mode = "eco_charge" -%}
+#                   {% else -%}
+#                     eco_discharge
+#                     {% set target_mode = "eco_discharge" -%}
+#                   {% endif -%}
+#                 {% elif current_mode == 'eco_charge' -%}
+#                   {% if e > 100 and cs <= 5 -%}
+#                     eco_discharge
+#                     {% set target_mode = "eco_discharge" -%}
+#                   {% else -%}
+#                     eco_charge
+#                     {% set target_mode = "eco_charge" -%}
+#                   {% endif -%}
+#                 {% else -%}
+#                   {{ current_mode }}
+#                   {% set target_mode = current_mode -%}
+#                 {% endif -%}
+
+#               # Step size: proportional but capped at max 50% per step
+#               step: >
+#                 {{ [(( corrected_error | abs) / 80) | round(0) | int, 50] | min }}
+#               {% set step = [(( corrected_error | abs) / 80) | round(0) | int, 50] | min -%}
+#               new_step: >
+#                 {% set ce = corrected_error | float -%}
+#                 {% set s = step | int -%}
+#                 {% set cs = current_step | float -%}
+#                 {% set soc = states('sensor.battery_state_of_charge') | float(states('sensor.emhass_soc')|float) -%}
+#                 {% set soc_block = (current_mode == 'eco_discharge' and soc <= 15) or (current_mode == 'eco_charge' and soc >= 100) -%}
+#                 {% set max_pct = max_charge_pct | int if current_mode == 'eco_charge' else max_discharge_pct | int -%}
+#                 {% if target_mode != current_mode or soc_block -%}
+#                   {% set ns = 0 -%}
+#                 {% elif ce | abs <= 50 -%}
+#                   {% set ns = cs -%}
+#                 {% elif ce > 0 -%}
+#                   {% set ns = cs + s -%}
+#                 {% else -%}
+#                   {% set ns = cs - s -%}
+#                 {% endif -%}
+#                 {% if ns > max_pct -%}
+#                   {{ max_pct }}
+#                   {% set new_step = max_pct -%}
+#                 {% elif ns < 0 -%}
+#                   0
+#                   {% set new_step = 0 -%}
+#                 {% else -%}
+#                   {{ ns | round(0) | int }}
+#                   {% set new_step = ns | round(0) | int -%}
+#                 {% endif -%}

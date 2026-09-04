@@ -8,15 +8,15 @@ notify_everyone_at_home:
                     | list }}
         sequence:
           - action: >
-              {% if repeat.item == "person.giel" %}
+              {% if repeat.item == "person.giel" -%}
                 notify.mobile_app_gphone
-              {% elif repeat.item == "person.martine" %}
+              {% elif repeat.item == "person.martine" -%}
                 notify.mobile_app_mphone
-              {% elif repeat.item == "person.noor" %}
+              {% elif repeat.item == "person.noor" -%}
                 notify.mobile_app_nphone
-              {% elif repeat.item == "person.fien" %}
+              {% elif repeat.item == "person.fien" -%}
                 notify.mobile_app_fphone
-              {% endif %}
+              {% endif -%}
             data:
               title: "{{ title }}"
               message: "{{ message }}"
