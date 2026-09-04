@@ -2,33 +2,55 @@ alias: EMHASS battery
 id: 66809bb1-c454-43a5-899a-c354840b11b6
 triggers:
   - trigger: state
-    entity_id: sensor.emhass_battery
+    entity_id: script.emhass_discharge_to_98
+    from: "on"
+    to: "off"
   - trigger: state
     entity_id: input_boolean.emhass_gridfollower
     from: "on"
     to: "off"
-  - trigger: homeassistant
-    event: start
-    id: start
+  - trigger: state
+    entity_id: binary_sensor.battery_dead_zone
+    from: "off"
+    to: "on"
+    id: deadzone
+  - trigger: state
+    entity_id:
+      - script.emhass_publish_models
+    from: "on"
+    to: "off"
 
 conditions:
   # Controleer of EMHASS sensoren beschikbaar zijn
   - condition: template
     value_template: >
-      {{ states("sensor.emhass_battery") not in ['unavailable', 'unknown'] }}
+      {{ states("sensor.ridge_p_batt_forecast") not in ['unavailable', 'unknown'] }}
   - condition: template
     value_template: >
-      {{ states("sensor.emhass_grid2") not in ['unavailable', 'unknown'] }}
+      {{ states("sensor.ridge_p_grid_forecast") not in ['unavailable', 'unknown'] }}
+  - condition: template
+    value_template: >
+      {{ states("sensor.battery_state_of_charge") not in ['unavailable', 'unknown'] }}
+  - condition: template
+    value_template: >
+      {{ states("number.goodwe_eco_mode_power") not in ['unavailable', 'unknown'] }}
+  - condition: template
+    value_template: >
+      {{ states("select.goodwe_inverter_operation_mode") not in ['unavailable', 'unknown'] }}
 
 variables:
   p_batt: >-
-    {{ states("sensor.emhass_battery") }}
+    {{ states("sensor.ridge_p_batt_forecast") }}
 
   p_grid: >-
-    {{ states("sensor.emhass_grid2") }}
+    {{ states("sensor.ridge_p_grid_forecast") }}
+
+  p_sol: >-
+    {{ states("sensor.ridge_p_pv_forecast") }}
 
   # Huidige SOC van batterij
-  soc: "{{ states('sensor.battery_state_of_charge') | float(0) }}"
+  soc: >-
+    {{ states('sensor.battery_state_of_charge') | float(states('sensor.ridge_soc_batt_forecast')|float) }}
 
   # Bepaal EMHASS batterij modus met originele logica
   emhass_battery_mode: >-
@@ -37,10 +59,15 @@ variables:
     {% else -%}
       {% set p_batt_val = p_batt | float(0) -%}
       {% set p_grid_val = p_grid | float(0) -%}
+      {% set p_sol_val = p_sol | float(0) -%}
       {% set soc_val = soc | float(0) -%}
       {% if p_grid_val == 0  -%}
-        {% if p_batt_val < 0  -%}
-          Forcible Charge
+        {% if p_sol_val > 0  -%}
+          {% if p_batt_val < 0  -%}
+            Forcible Charge
+          {% else -%}
+            Forcible Discharge
+          {% endif -%}
         {% else -%}
           Follow Grid
         {% endif -%}
@@ -79,12 +106,36 @@ variables:
 actions:
   # Stel GoodWe batterij mode in op basis van EMHASS mode
   - choose:
+      # DEADZONE
+      - conditions:
+          - condition: trigger
+            id: deadzone
+        sequence:
+          # Stop de grid-follower regelaar
+          - if:
+              - condition: state
+                entity_id: script.emhass_grid_follower
+                state: "on"
+            then:
+              - action: script.turn_off
+                target:
+                  entity_id: script.emhass_grid_follower
+          - condition: state
+            entity_id: script.emhass_discharge_to_98
+            state: "off"
+          - action: script.turn_on
+            target:
+              entity_id: script.emhass_discharge_to_98
+
       # FORCIBLE CHARGE
       - conditions:
           - condition: template
             value_template: "{{ emhass_battery_mode == 'Forcible Charge' }}"
           - condition: state
             entity_id: script.emhass_grid_follower
+            state: "off"
+          - condition: state
+            entity_id: script.emhass_discharge_to_98
             state: "off"
         sequence:
           # Controleer of mode wijziging nodig is
@@ -123,6 +174,9 @@ actions:
             value_template: "{{ emhass_battery_mode == 'Forcible Discharge' }}"
           - condition: state
             entity_id: script.emhass_grid_follower
+            state: "off"
+          - condition: state
+            entity_id: script.emhass_discharge_to_98
             state: "off"
         sequence:
           # Controleer of mode wijziging nodig is

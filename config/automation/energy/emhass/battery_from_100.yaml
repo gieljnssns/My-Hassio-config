@@ -1,0 +1,19 @@
+alias: Battery from 100
+id: ac64e6c3-ba49-405b-beb4-24e137fc8dfe
+triggers:
+  - trigger: state
+    entity_id: sensor.battery_state_of_charge
+    from: "100"
+
+conditions:
+  - condition: template
+    value_template: >
+      {{ states('sensor.battery_state_of_charge') | float < 100 }}
+
+actions:
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.soc_from_100
+    data:
+      datetime: >
+        {{ now().isoformat() }}

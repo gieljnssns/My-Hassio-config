@@ -6,7 +6,9 @@ triggers:
     entity_id: binary_sensor.emhass_status
     from: "off"
     to: "on"
-    id: infesable
+    id: infeasible
+    for:
+      minutes: 3
 
   - trigger: state
     entity_id: binary_sensor.emhass_status
@@ -19,7 +21,7 @@ actions:
       - conditions:
           - condition: trigger
             id:
-              - infesable
+              - infeasible
         sequence:
           # - delay:
           #     minutes: 1
@@ -30,10 +32,17 @@ actions:
             data:
               title: EMHASS
               message: >
+                {% set now_ts = now().timestamp() -%}
+                {% set verbruik_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieverbruik.last_updated, 0)) < 10 -%}
+                {% set productie_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieproductie.last_updated, 0)) < 10 -%}
+                {% set dsmr_fresh = verbruik_updated or productie_updated -%}
                 System has become infeasible. Probleem sensoren:
                 {% set problems = [] -%}
                 {% if states("sensor.emhass_optim_status") not in ["Optimal", "Optimal (Relaxed)"] -%}
                   {% set problems = problems + ["EMHASS status: " ~ states("sensor.emhass_optim_status")] -%}
+                {% endif -%}
+                {% if not dsmr_fresh -%}
+                  {% set problems = problems + ["DSMR data niet vers"] -%}
                 {% endif -%}
                 {% if states("sensor.electricity_meter_energieverbruik") in ["unavailable", "unknown"] -%}
                   {% set problems = problems + ["Energieverbruik"] -%}
@@ -62,7 +71,13 @@ actions:
                 {% if (states("sensor.ecopower_afnameprijzen_predicted") and states("sensor.ecopower_afnameprijzen")) in ["unavailable", "unknown"] -%}
                   {% set problems = problems + ["Afnameprijzen"] -%}
                 {% endif -%}
+                {% if state_attr("sensor.ridge_p_pv_forecast", "forecasts") | length < 360 -%}
+                  {% set problems = problems + ["Emhass waarschijnlijk infeasible, forecast length (raakt niet op tijd aan 100%)"] -%}
+                {% endif -%}
                 {{ problems | join(", ") }}
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.emhass_infeasible_notification
           - delay:
               minutes: 5
           - condition: state
@@ -76,10 +91,16 @@ actions:
       - conditions:
           - condition: trigger
             id: Optimal
+          - condition: state
+            entity_id: input_boolean.emhass_infeasible_notification
+            state: "on"
         sequence:
           - action: notify.mobile_app_gphone
             data:
               title: EMHASS
               message: System has become optimal
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.emhass_infeasible_notification
 mode: parallel
 max: 10

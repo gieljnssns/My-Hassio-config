@@ -1,0 +1,204 @@
+alias: EMHASS Grid Watchdog
+id: e274515a-574d-4c20-9254-ccca3ddcd053
+triggers:
+  - trigger: template
+    id: follower_faalt
+    value_template: >
+      {% set c = states('sensor.battery_p_charge_max') | float(8000) -%}
+      {% set max_charge_pct = [(c / 80) | round(0) | int, 100] | min -%}
+      {% set d = states('sensor.battery_p_discharge_max') | float(4448) -%}
+      {% set max_discharge_pct = [(d / 80) | round(0) | int, 100] | min -%}
+      {% set max_pct = max_charge_pct | int if states('select.goodwe_inverter_operation_mode') == 'eco_charge' else max_discharge_pct | int -%}
+      {{ states('script.emhass_grid_follower') == 'on' and
+        ((states('sensor.huidig_fluvius') | float(0) - states('sensor.emhass_grid2') | float(0)) | abs) > 300 and
+        (15 < states('sensor.battery_state_of_charge') | float(states('sensor.emhass_soc')|float) < 99) and 
+        states("number.goodwe_eco_mode_power")|int(0) < max_pct }}
+    for:
+      minutes: 2
+  - trigger: template
+    id: general_faalt
+    value_template: >
+      {{ states('select.goodwe_inverter_operation_mode') == "general" and
+        ((states('sensor.huidig_fluvius') | float(0) | abs) - 0) > 300 and 
+        (states("sensor.huidige_opbrengst")| int == 0) }}
+    for:
+      minutes: 2
+  - trigger: state
+    id: battery_power
+    entity_id: binary_sensor.battery_power_valid
+    from: "on"
+    to: "off"
+    # for:
+    #   minutes: 1
+actions:
+  - wait_template: >
+      {{ states('select.goodwe_inverter_operation_mode') not in ['unavailable', 'unknown']
+        and states('number.goodwe_eco_mode_power') not in ['unavailable', 'unknown'] 
+        and states('sensor.battery_power') not in ['unavailable', 'unknown'] }}
+    timeout:
+      minutes: 2
+    continue_on_timeout: true
+
+  # GoodWe bleef unavailable → altijd notificatie sturen
+  - if:
+      - condition: template
+        value_template: "{{ not wait.completed }}"
+    then:
+      - action: notify.mobile_app_gphone
+        data:
+          title: "⚠️ Grid Watchdog"
+          message: >
+            GoodWe bleef unavailable na 2 minuten, geen actie ondernomen.
+            Trigger: {{ trigger.id }},
+            Actual: {{ states('sensor.huidig_fluvius') }}W, target: {{ states('sensor.emhass_grid2') }}W.
+          data:
+            actions:
+              - action: "URI" # Must be set to URI if you plan to use a URI
+                title: "Energy"
+                uri: "/lovelace/emhass"
+    else:
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: battery_power
+            sequence:
+              - action: notify.mobile_app_gphone
+                data:
+                  title: "⚠️🪫 Battery Watchdog"
+                  message: >
+                    {% set operation_mode = states('select.goodwe_inverter_operation_mode') -%}
+                    {% set eco_power_percent = states('number.goodwe_eco_mode_power') | int("unavailable") -%}
+                    {% set power = (states('sensor.battery_power') | int("unavailable")) -%}
+                    Battery is in {{ operation_mode }} mode,
+                    Battery power = {{ power }}W.
+                    Power percent = {{ eco_power_percent }}
+                    Timeout remaining: {{ wait.remaining }}.
+              - action: script.turn_off
+                target:
+                  entity_id: script.emhass_grid_follower
+              - wait_template: >
+                  {{ states("sensor.battery_power")|int("kak") is number }}
+              - action: select.select_option
+                target:
+                  entity_id: select.goodwe_inverter_operation_mode
+                data:
+                  option: "general"
+              - action: number.set_value
+                target:
+                  entity_id: number.goodwe_eco_mode_power
+                data:
+                  value: 5
+              - delay:
+                  seconds: 3
+              - action: notify.mobile_app_gphone
+                data:
+                  title: "⚠️🪫 Battery Watchdog"
+                  message: >
+                    Grid follower gestopt wegens battery power not valid.
+                    {% if states('select.goodwe_inverter_operation_mode') == 'general' %}
+                      ✅ Omvormer succesvol naar general gezet.
+                    {% else %}
+                      ❌ Omvormer staat nog op {{ states('select.goodwe_inverter_operation_mode') }}, general mode mislukt.
+                    {% endif %}
+                  data:
+                    actions:
+                      - action: "URI" # Must be set to URI if you plan to use a URI
+                        title: "Energy"
+                        uri: "/lovelace/emhass"
+
+          - conditions:
+              - condition: trigger
+                id: follower_faalt
+            sequence:
+              - action: notify.mobile_app_gphone
+                data:
+                  title: "⚠️ Grid Follower Watchdog"
+                  message: >
+                    Grid follower te grote afwijking.
+                    Actual: {{ states('sensor.huidig_fluvius') }}W, target: {{ states('sensor.emhass_grid2') }}W.
+                    Timeout remaining: {{ wait.remaining }}.
+              - action: script.turn_off
+                target:
+                  entity_id: script.emhass_grid_follower
+              - wait_template: >
+                  {{ states("sensor.battery_power")|int("kak") is number }}
+              - action: select.select_option
+                target:
+                  entity_id: select.goodwe_inverter_operation_mode
+                data:
+                  option: "general"
+              - action: number.set_value
+                target:
+                  entity_id: number.goodwe_eco_mode_power
+                data:
+                  value: 5
+              - delay:
+                  seconds: 3
+              - action: notify.mobile_app_gphone
+                data:
+                  title: "⚠️ Grid Follower Watchdog"
+                  message: >
+                    Grid follower gestopt wegens te grote afwijking.
+                    {% if states('select.goodwe_inverter_operation_mode') == 'general' %}
+                      ✅ Omvormer succesvol naar general gezet.
+                    {% else %}
+                      ❌ Omvormer staat nog op {{ states('select.goodwe_inverter_operation_mode') }}, general mode mislukt.
+                    {% endif %}
+
+          - conditions:
+              - condition: trigger
+                id: general_faalt
+            sequence:
+              - action: notify.mobile_app_gphone
+                data:
+                  title: "⚠️ General Mode Watchdog"
+                  message: >
+                    Grid follower wordt gestart wegens te grote afwijking in general mode.
+                    Actual: {{ states('sensor.huidig_fluvius') }}W, target: 0W.
+                    Timeout remaining: {{ wait.remaining }}.
+              - wait_template: >
+                  {{ states("sensor.battery_power")|int("kak") is number }}
+              - action: select.select_option
+                target:
+                  entity_id: select.goodwe_inverter_operation_mode
+                data:
+                  option: "eco_discharge"
+              - action: number.set_value
+                target:
+                  entity_id: number.goodwe_eco_mode_power
+                data:
+                  value: >-
+                    {% set abs_power = (states("sensor.ridge_p_batt_forecast") | float) | abs -%}
+                    {% if abs_power > 8000 -%}
+                      {% set power_percentage = 100 -%}
+                    {% else -%}
+                      {% set power_percentage = (abs_power / 80) | round(0) -%}
+                    {% endif -%}
+                    {{ power_percentage }}
+              - action: script.turn_on
+                target:
+                  entity_id: script.emhass_grid_follower
+              - delay:
+                  seconds: 3
+              - action: notify.mobile_app_gphone
+                data:
+                  title: "⚠️ General Mode Watchdog"
+                  message: >
+                    Grid follower gestart wegens te grote afwijking in general mode.
+                    {% if states('script.emhass_grid_follower') == 'on' %}
+                      ✅ Grid follower succesvol gestart.
+                    {% else %}
+                      ❌ Grid follower kon niet gestart worden.
+                    {% endif %}
+                  data:
+                    actions:
+                      - action: "URI" # Must be set to URI if you plan to use a URI
+                        title: "Energy"
+                        uri: "/lovelace/emhass"
+
+  - wait_for_trigger:
+      - trigger: time_pattern
+        minutes: "/5"
+        seconds: "0"
+
+mode: single

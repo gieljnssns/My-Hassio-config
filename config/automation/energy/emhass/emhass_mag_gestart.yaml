@@ -18,25 +18,20 @@ triggers:
     event_data:
       entity_id: input_button.afwasmachien
     id: afwasmachien
-  # - trigger: state
-  #   entity_id: input_button.wasmachien
-  #   id: wasmachien
-  # - trigger: state
-  #   entity_id: input_button.droogkast
-  #   id: droogkast
-  # - trigger: state
-  #   entity_id: input_button.afwasmachien
-  #   id: afwasmachien
 actions:
   - variables:
       who: >
-        {% if trigger.event.context.user_id == '14a0b456772941eda81466d1807619b7' %}
+        {% if trigger.event.context.user_id == '14a0b456772941eda81466d1807619b7' -%}
           notify.mobile_app_gphone
-        {% elif trigger.event.context.user_id == 'db0ab875181d4af887c161d094fd9da4' %}
+        {% elif trigger.event.context.user_id == 'db0ab875181d4af887c161d094fd9da4' -%}
           notify.mobile_app_mphone
-        {% else %}
+        {% elif trigger.event.context.user_id == 'c44d83d869254e5087d7267250198d9b' -%}
+          notify.mobile_app_nphone
+        {% elif trigger.event.context.user_id == '8e928bb68e5c43eeb2b59141c9a17e09' -%}
+          notify.mobile_app_fphone
+        {% else -%}
           notify.iedereen
-        {% endif %}
+        {% endif -%}
   - choose:
       - conditions:
           - condition: trigger
@@ -79,13 +74,6 @@ actions:
                         title: "Het maakt niet uit."
                       - action: "CHOOSE"
                         title: "Zelf een uur kiezen."
-              # - action: homeassistant.turn_on
-              #   target:
-              #     entity_id: input_boolean.wasmachien_starten
-              # - action: rest_command.naive_mpc_optim
-              # - delay:
-              #     seconds: 40
-              # - action: rest_command.publish_data
       - conditions:
           - condition: trigger
             id: afwasmachien
@@ -127,9 +115,6 @@ actions:
                         title: "Maakt niet uit."
                       - action: "CHOOSE"
                         title: "Zelf een uur kiezen."
-              # - action: homeassistant.turn_on
-              #   target:
-              #     entity_id: input_boolean.afwasmachien_starten
       - conditions:
           - condition: trigger
             id: droogkast
@@ -171,6 +156,3 @@ actions:
                         title: "Maakt niet uit."
                       - action: "CHOOSE"
                         title: "Zelf een uur kiezen."
-              # - action: homeassistant.turn_on
-              #   target:
-              #     entity_id: input_boolean.droogkast_starten

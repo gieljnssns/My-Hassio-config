@@ -1,0 +1,15 @@
+alias: Battery to 100
+id: e5e123da-c95f-483e-953d-5036b06a0154
+triggers:
+  - trigger: state
+    entity_id: sensor.battery_state_of_charge
+    from: "99"
+    to: "100"
+
+actions:
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.soc_to_100
+    data:
+      datetime: >
+        {{ now().isoformat() }}
