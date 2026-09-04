@@ -41,7 +41,26 @@ from .const import (
     MATCH_MAE_PEAK_FLOOR,
     MATCH_MAE_REF_PEAK,
     MATCH_MAE_SCALE,
+    MAX_ALIGN_GRID_POINTS,
+    SMART_TERM_PREFIX_MAX_CANDIDATES,
+    SMART_TERM_PREFIX_MIN_COVERAGE,
+    SMART_TERM_PREFIX_MIN_POINTS,
+    SMART_TERM_PREFIX_MIN_RATIO,
+    STAGE4_INTEGRATED_ENERGY_DEVICE_TYPES,
 )
+
+
+def stage4_energy_mode(device_type: str | None) -> str:
+    """Return the Stage-4 ``energy_mode`` for a device type.
+
+    ``"integrated"`` for device types in
+    ``STAGE4_INTEGRATED_ENERGY_DEVICE_TYPES`` (washing machine / washer-dryer),
+    where same-duration temperature/spin variants make integrated energy the
+    right discriminator; ``"mean"`` (the historical default) otherwise. Single
+    source of truth for the gate, used by the manager, Playground and matching
+    tuner so all three stay consistent with the live matcher.
+    """
+    return "integrated" if device_type in STAGE4_INTEGRATED_ENERGY_DEVICE_TYPES else "mean"
 
 
 def _agreement(observed: float, expected: float, scale: float) -> float:
@@ -162,6 +181,32 @@ def find_best_alignment(
 
     return float(score), {"mae": float(mae), "corr": float(corr)}, final_offset
 
+def _dtw_lite_scalar(x: np.ndarray, y: np.ndarray, n: int, m: int, w: int) -> float:
+    """Verbatim original scalar fill for :func:`compute_dtw_lite` — kept as the
+    correctness reference and automatic fallback on unexpected errors."""
+    prev_row = np.full(m + 1, float("inf"))
+    curr_row = np.full(m + 1, float("inf"))
+    prev_row[0] = 0
+    for i in range(1, n + 1):
+        center = int(i * (m / n))
+        start_j = max(1, center - w)
+        end_j = min(m, center + w + 1)
+        curr_row.fill(float("inf"))
+        val_x = x[i - 1]
+        for j in range(start_j, end_j + 1):
+            cost = abs(float(val_x - y[j - 1]))
+            m1 = prev_row[j]
+            m2 = curr_row[j - 1]
+            m3 = prev_row[j - 1]
+            if m1 < m2:
+                best_prev = m1 if m1 < m3 else m3
+            else:
+                best_prev = m2 if m2 < m3 else m3
+            curr_row[j] = cost + best_prev
+        prev_row[:] = curr_row[:]
+    return float(prev_row[m])
+
+
 def compute_dtw_lite(
     x: np.ndarray, y: np.ndarray, band_width_ratio: float = 0.1,
     derivative: bool = False,
@@ -173,6 +218,16 @@ def compute_dtw_lite(
     When ``derivative`` is True this warps on the first derivative (slope) of the
     two curves (Derivative DTW): alignment is driven by shape/transitions rather
     than absolute power level, which is robust to amplitude offset and scale.
+
+    The inner loop operates on Python-native float lists (converted via ``.tolist()``
+    once per row) to avoid per-element NumPy scalar boxing overhead.  The results
+    for each row are written back as a single slice assignment.  For the typical
+    matching case (n=m=200, band=0.1 → w=20, ~41 cells/row) this is ~1.9× faster
+    than the original element-by-element NumPy indexing loop.  The anti-diagonal
+    vectorized fill from :func:`_dtw_cost_matrix_vectorized` is NOT used here
+    because its per-diagonal Python setup overhead dominates for small n (it is
+    2× *slower* than the scalar loop for n=200 — the opposite of its large-n
+    envelope-rebuild behaviour where it wins by 1.6–8×).
     """
     if derivative:
         x = np.gradient(np.asarray(x, dtype=float)) if len(x) > 1 else np.asarray(x, dtype=float)
@@ -181,56 +236,60 @@ def compute_dtw_lite(
     if n == 0 or m == 0:
         return float("inf")
 
-    # Band width
+    xf = np.asarray(x, dtype=float)
+    yf = np.asarray(y, dtype=float)
+
     w = max(1, int(min(n, m) * band_width_ratio))
 
-    # Use two rows to save memory and improve cache locality
-    prev_row = np.full(m + 1, float("inf"))
-    curr_row = np.full(m + 1, float("inf"))
-    prev_row[0] = 0
+    try:
+        # Precompute band bounds for all rows (eliminates per-row int/max/min calls).
+        i_idx = np.arange(1, n + 1, dtype=float)
+        centers = (i_idx * (m / n)).astype(np.intp)
+        start_js = np.maximum(1, centers - w)
+        end_js = np.minimum(m, centers + w + 1)
 
-    for i in range(1, n + 1):
-        center = int(i * (m / n))
-        start_j = max(1, center - w)
-        end_j = min(m, center + w + 1)
+        # Convert y to a plain Python list once so that inner-loop element access
+        # is native float retrieval rather than NumPy scalar unboxing.
+        ylist = yf.tolist()
 
-        curr_row.fill(float("inf"))
+        prev_row = np.full(m + 1, np.inf)
+        curr_row = np.full(m + 1, np.inf)
+        prev_row[0] = 0.0
 
-        # Pre-calculate costs for the current window to reduce Python overhead
-        # x is 0-indexed, so x[i-1]
-        val_x = x[i - 1]
+        for i in range(n):
+            sj = int(start_js[i])
+            ej = int(end_js[i])
+            curr_row[:] = np.inf
+            val_x = float(xf[i])
 
-        for j in range(start_j, end_j + 1):
-            cost = abs(float(val_x - y[j - 1]))
+            # Convert the relevant prev_row slice to Python lists once per row.
+            # prev_prev[k]  == prev_row[sj - 1 + k]   (diagonal predecessor of cell j=sj+k)
+            # prev_curr[k]  == prev_row[sj + k]         (up-predecessor of cell j=sj+k)
+            prev_prev = prev_row[sj - 1 : ej].tolist()   # length = ej - sj + 1
+            prev_curr = prev_row[sj     : ej + 1].tolist() # length = ej - sj + 1
 
-            # Standard DTW recursion
-            # curr_row[j] = cost + min(insertion, deletion, match)
-            # insertion: prev_row[j]
-            # deletion: curr_row[j-1]
-            # match: prev_row[j-1]
+            row_vals: list[float] = []
+            prev_j_val = np.inf  # curr_row[sj - 1] — left predecessor, maintained locally
+            for y_val, pr_j1, pr_j in zip(ylist[sj - 1 : ej], prev_prev, prev_curr):
+                cost = abs(val_x - y_val)
+                # min(up=pr_j, left=prev_j_val, diag=pr_j1)
+                best = pr_j if pr_j < prev_j_val else prev_j_val
+                if pr_j1 < best:
+                    best = pr_j1
+                prev_j_val = cost + best
+                row_vals.append(prev_j_val)
 
-            # Use a slightly faster min implementation if possible
-            m1 = prev_row[j]
-            m2 = curr_row[j - 1]
-            m3 = prev_row[j - 1]
+            curr_row[sj : ej + 1] = row_vals   # single slice write
 
-            if m1 < m2:
-                if m1 < m3:
-                    best_prev = m1
-                else:
-                    best_prev = m3
-            else:
-                if m2 < m3:
-                    best_prev = m2
-                else:
-                    best_prev = m3
+            prev_row, curr_row = curr_row, prev_row  # swap without copy
 
-            curr_row[j] = cost + best_prev
-
-        # Swap rows
-        prev_row[:] = curr_row[:]
-
-    return float(prev_row[m])
+        return float(prev_row[m])
+    except Exception:  # pylint: disable=broad-exception-caught
+        # The scalar reference is byte-identical (proven by tests), so degrade to it on
+        # any unexpected error rather than propagating out of the unguarded Stage-3
+        # refinement loop in compute_matches_worker. Mirrors compute_dtw_path.
+        _LOGGER.debug("compute_dtw_lite vectorized path failed; using scalar fallback", exc_info=True)
+        return _dtw_lite_scalar(xf, yf, n, m, w)
 
 def _resample_to(arr: np.ndarray, n: int) -> np.ndarray:
     """Linearly resample a 1-D array to exactly ``n`` points over its index span.
@@ -266,6 +325,51 @@ def _dtw_component_score(
     norm_dist = dtw_dist / MATCH_DTW_RESAMPLE_N
     scaled = norm_dist * MATCH_MAE_REF_PEAK / max(current_peak, MATCH_MAE_PEAK_FLOOR)
     return scale / (scale + scaled)
+
+
+def _stage3_dtw_score(
+    curr_arr: np.ndarray,
+    sample_arr: np.ndarray,
+    current_peak: float,
+    *,
+    dtw_mode: str,
+    dtw_bandwidth: float,
+    l1_scale: float,
+    ddtw_scale: float,
+    ensemble_w: float,
+    curr_resampled: np.ndarray | None = None,
+) -> tuple[float, float]:
+    """``(dtw_score, norm_dist)`` for one candidate: the four-way ``dtw_mode``
+    branch of the Stage-3 refinement.
+
+    Lifted verbatim out of ``compute_matches_worker`` so the Stage-3 loop and the
+    Stage-6 prefix pass (#364) share one implementation and cannot drift apart.
+    Behaviour-identical to the inlined version, including ``legacy`` mode's
+    ``dtw_dist / len(curr_arr)`` normalisation and its ``norm_dist`` bookkeeping.
+    """
+    if dtw_mode == "legacy":
+        # Original behaviour: raw sequences, distance / len(current),
+        # fixed absolute-watt scale (not peak-relative).
+        dtw_dist = compute_dtw_lite(curr_arr, sample_arr, band_width_ratio=dtw_bandwidth)
+        n_points = len(curr_arr)
+        norm_dist = (dtw_dist / n_points) if n_points > 0 else 999.0
+        return 1.0 / (1.0 + norm_dist / MATCH_DTW_DIST_SCALE), norm_dist
+    if dtw_mode == "ensemble":
+        # Blend the level-based (L1) and shape-based (derivative) DTW
+        # scores; they are complementary signals.
+        s_l1 = _dtw_component_score(curr_arr, sample_arr, current_peak, dtw_bandwidth, False, l1_scale, curr_resampled=curr_resampled)
+        s_dd = _dtw_component_score(curr_arr, sample_arr, current_peak, dtw_bandwidth, True, ddtw_scale, curr_resampled=curr_resampled)
+        # composite; per-component distance not meaningful
+        return ensemble_w * s_l1 + (1.0 - ensemble_w) * s_dd, 0.0
+    # "scaled" (default) or "ddtw": resample both onto one grid so the
+    # band and normalisation are consistent, then express the distance
+    # relative to the current peak (behaviour-neutral at
+    # MATCH_MAE_REF_PEAK), mirroring the Stage-2 MAE treatment.
+    use_deriv = dtw_mode == "ddtw"
+    scale = ddtw_scale if use_deriv else l1_scale
+    return _dtw_component_score(
+        curr_arr, sample_arr, current_peak, dtw_bandwidth, use_deriv, scale, curr_resampled=curr_resampled
+    ), 0.0
 
 
 def compute_matches_worker(
@@ -314,6 +418,10 @@ def compute_matches_worker(
                 "profile_duration": profile_duration,
                 "current": current_power,
                 "sample": sample_power,
+                # True wall-clock span of `sample`, for prefix truncation (#364).
+                # Falls back to profile_duration so the other snapshot builders
+                # (devtools, matching_tuner, playground) keep working unchanged.
+                "sample_span_s": float(item.get("sample_span_s") or profile_duration or 0.0),
                 "offset": offset
             })
 
@@ -337,31 +445,17 @@ def compute_matches_worker(
         for cand in to_refine:
             sample_arr = np.array(cand["sample"])
 
-            if dtw_mode == "legacy":
-                # Original behaviour: raw sequences, distance / len(current),
-                # fixed absolute-watt scale (not peak-relative).
-                dtw_dist = compute_dtw_lite(curr_arr, sample_arr, band_width_ratio=dtw_bandwidth)
-                n_points = len(curr_arr)
-                norm_dist = (dtw_dist / n_points) if n_points > 0 else 999.0
-                dtw_score = 1.0 / (1.0 + norm_dist / MATCH_DTW_DIST_SCALE)
-            elif dtw_mode == "ensemble":
-                # Blend the level-based (L1) and shape-based (derivative) DTW
-                # scores; they are complementary signals.
-                s_l1 = _dtw_component_score(curr_arr, sample_arr, current_peak, dtw_bandwidth, False, l1_scale, curr_resampled=curr_resampled)
-                s_dd = _dtw_component_score(curr_arr, sample_arr, current_peak, dtw_bandwidth, True, ddtw_scale, curr_resampled=curr_resampled)
-                dtw_score = ensemble_w * s_l1 + (1.0 - ensemble_w) * s_dd
-                norm_dist = 0.0  # composite; per-component distance not meaningful
-            else:
-                # "scaled" (default) or "ddtw": resample both onto one grid so the
-                # band and normalisation are consistent, then express the distance
-                # relative to the current peak (behaviour-neutral at
-                # MATCH_MAE_REF_PEAK), mirroring the Stage-2 MAE treatment.
-                use_deriv = dtw_mode == "ddtw"
-                scale = ddtw_scale if use_deriv else l1_scale
-                dtw_score = _dtw_component_score(
-                    curr_arr, sample_arr, current_peak, dtw_bandwidth, use_deriv, scale, curr_resampled=curr_resampled
-                )
-                norm_dist = 0.0
+            dtw_score, norm_dist = _stage3_dtw_score(
+                curr_arr,
+                sample_arr,
+                current_peak,
+                dtw_mode=dtw_mode,
+                dtw_bandwidth=dtw_bandwidth,
+                l1_scale=l1_scale,
+                ddtw_scale=ddtw_scale,
+                ensemble_w=ensemble_w,
+                curr_resampled=curr_resampled,
+            )
 
             cand["original_score"] = float(cand["score"])
             cand["score"] = float(blend * cand["score"] + (1.0 - blend) * dtw_score)
@@ -386,12 +480,18 @@ def compute_matches_worker(
         dur_w, en_w = dur_w / de_sum, en_w / de_sum
     shape_w = max(0.0, 1.0 - dur_w - en_w)
     if (dur_w > 0 or en_w > 0) and candidates and current_duration > 0:
-        cur_energy = float(np.mean(curr_arr))  # mean power (W) — no duration multiplication
+        # energy_mode: "mean" (default) compares whole-cycle mean power (W);
+        # "integrated" compares true integrated energy (mean x duration). Opt-in so
+        # the historical default is byte-for-byte preserved. See register item 99.
+        integrated = config.get("energy_mode", "mean") == "integrated"
+        cur_mean = float(np.mean(curr_arr))
+        cur_energy = cur_mean * current_duration if integrated else cur_mean
         for cand in candidates:
             prof_dur = float(cand.get("profile_duration") or 0.0)
             dur_ag = _agreement(current_duration, prof_dur, dur_scale)
             sample = cand.get("sample") or []
-            cand_energy = float(np.mean(sample)) if sample else 0.0
+            cand_mean = float(np.mean(sample)) if sample else 0.0
+            cand_energy = cand_mean * prof_dur if integrated else cand_mean
             en_ag = _agreement(cur_energy, cand_energy, en_scale)
             cand["shape_score"] = float(cand["score"])
             cand["score"] = float(
@@ -401,7 +501,196 @@ def compute_matches_worker(
             )
         candidates.sort(key=lambda x: x["score"], reverse=True)
 
+    # Stage 6 (#364): prefix scores for the few candidates materially LONGER than
+    # the winner. Purely additive - it writes `prefix_score` and never touches
+    # `score`, so ranking is provably unchanged. Must run after the Stage-4
+    # re-sort because the anchor is the winner's duration.
+    annotate_prefix_scores(candidates, curr_arr, current_duration, config)
+
     return candidates
+
+def _prefix_point_count(
+    n_points: int, current_duration: float, sample_span_s: float
+) -> int:
+    """Leading template samples that cover ``current_duration`` seconds.
+
+    0 when the span is unknown/non-positive, when the elapsed time already covers
+    the whole template (then it is not a prefix), or when too few points remain to
+    judge. Fraction-of-array is the right operator because every snapshot flavour
+    is uniform in time over its own span (envelope: np.linspace; sample cycle:
+    resample_uniform at a fixed dt; group aggregate: np.interp onto 200 points).
+    """
+    if n_points < SMART_TERM_PREFIX_MIN_POINTS or sample_span_s <= 0 or current_duration <= 0:
+        return 0
+    k = int(round(n_points * (current_duration / sample_span_s)))
+    if k < SMART_TERM_PREFIX_MIN_POINTS or k >= n_points:
+        return 0
+    return k
+
+
+def prefix_shape_score(
+    curr_arr: np.ndarray,
+    sample: list[float] | np.ndarray,
+    current_duration: float,
+    sample_span_s: float,
+    current_peak: float,
+    config: dict[str, Any],
+) -> float | None:
+    """Score the live trace against ``sample`` TRUNCATED to ``current_duration``.
+
+    The #288 landscape guard asks whether a longer candidate has a decent shape
+    score against its **whole** curve - which a part-way-through trace cannot
+    have. This asks the question that actually matters: does the trace look like
+    the *beginning* of that longer programme? (#364)
+
+    Same scale as ``shape_score`` by construction: identical Stage-2 formula
+    (``find_best_alignment``) and identical Stage-3 DTW blend, only the reference
+    array differs. Returns None when the template cannot be truncated meaningfully.
+
+    NB prefix scoring normalizes on the shared resample ``grid`` (both series are
+    resampled to it), so it does not support the non-default ``dtw_mode="legacy"``
+    absolute-watt/length normalization - under which cross-candidate prefix scores of
+    differing native length would not be comparable. This is inert in production: the
+    default is ``"ensemble"`` and the live ProfileStore path never sets ``dtw_mode``;
+    ``"legacy"`` exists only for the devtools re-sweep harness.
+    """
+    arr = np.asarray(sample, dtype=float)
+    k = _prefix_point_count(arr.size, current_duration, sample_span_s)
+    if k == 0:
+        return None
+    prefix = arr[:k]
+    # Put both series on one grid so index offset equals time offset regardless of
+    # the template's native cadence, and honour the #388 OOM cap.
+    grid = int(min(curr_arr.size, k, MAX_ALIGN_GRID_POINTS))
+    if grid < SMART_TERM_PREFIX_MIN_POINTS:
+        return None
+    a = _resample_to(curr_arr, grid)
+    b = _resample_to(prefix, grid)
+
+    corr_weight = float(config.get("corr_weight", MATCH_CORR_WEIGHT))
+    score, _metrics, _offset = find_best_alignment(a, b, 1.0, corr_weight=corr_weight)
+
+    dtw_bandwidth = float(config.get("dtw_bandwidth", 0.1))
+    if dtw_bandwidth > 0.0:
+        dtw_score, _ = _stage3_dtw_score(
+            a,
+            b,
+            current_peak,
+            dtw_mode=str(config.get("dtw_mode", DEFAULT_DTW_MODE)),
+            dtw_bandwidth=dtw_bandwidth,
+            l1_scale=float(config.get("dtw_l1_scale", MATCH_DTW_DIST_SCALE)),
+            ddtw_scale=float(config.get("dtw_ddtw_scale", MATCH_DDTW_DIST_SCALE)),
+            ensemble_w=float(config.get("dtw_ensemble_w", MATCH_DTW_ENSEMBLE_W)),
+        )
+        blend = float(config.get("dtw_blend", MATCH_DTW_BLEND))
+        return float(blend * score + (1.0 - blend) * dtw_score)
+    return float(score)
+
+
+def annotate_prefix_scores(
+    candidates: list[dict[str, Any]],
+    curr_arr: np.ndarray,
+    current_duration: float,
+    config: dict[str, Any],
+) -> None:
+    """Stage 6 (#364): write ``prefix_score`` on the few non-winning candidates
+    that are materially longer than the winner.
+
+    Mutates in place and never touches ``score``/``shape_score``, so candidate
+    ranking is unaffected - this only feeds the Smart-Termination prefix guard.
+    Every test before the first array touch is a scalar compare, so the common
+    case (no candidate is materially longer) costs nothing.
+    """
+    if current_duration <= 0 or len(candidates) < 2 or curr_arr.size == 0:
+        return
+    best_dur = float(candidates[0].get("profile_duration") or 0.0)
+    if best_dur <= 0:
+        return
+    min_dur = best_dur * SMART_TERM_PREFIX_MIN_RATIO
+    current_peak = float(np.max(curr_arr))
+    scored = 0
+    for cand in candidates[1:]:
+        prof_dur = float(cand.get("profile_duration") or 0.0)
+        if prof_dur <= min_dur:
+            continue  # not a longer look-alike
+        if prof_dur <= current_duration:
+            continue  # we already outlasted it, so we are not inside its prefix
+        span = float(cand.get("sample_span_s") or prof_dur)
+        if span < prof_dur * SMART_TERM_PREFIX_MIN_COVERAGE:
+            continue  # gap-truncated template: may not start at the programme's start
+        score = prefix_shape_score(
+            curr_arr, cand.get("sample") or [], current_duration, span, current_peak, config
+        )
+        if score is None:
+            continue
+        cand["prefix_score"] = float(score)
+        scored += 1
+        if scored >= SMART_TERM_PREFIX_MAX_CANDIDATES:
+            break
+
+
+def _dtw_cost_matrix_scalar(
+    x: np.ndarray, y: np.ndarray, n: int, m: int, w: int
+) -> np.ndarray:
+    """Reference (scalar) Sakoe-Chiba DTW cost-matrix fill. Kept verbatim as the
+    fallback for :func:`_dtw_cost_matrix_vectorized` so behavior can never regress."""
+    cost_matrix = np.full((n + 1, m + 1), float("inf"))
+    cost_matrix[0, 0] = 0
+    for i in range(1, n + 1):
+        center = i * (m / n)
+        start_j = max(1, int(center - w))
+        end_j = min(m, int(center + w) + 1)
+        for j in range(start_j, end_j + 1):
+            cost = abs(float(x[i - 1] - y[j - 1]))
+            cost_matrix[i, j] = cost + min(
+                cost_matrix[i - 1, j], cost_matrix[i, j - 1], cost_matrix[i - 1, j - 1]
+            )
+    return cost_matrix
+
+
+def _dtw_cost_matrix_vectorized(
+    x: np.ndarray, y: np.ndarray, n: int, m: int, w: int
+) -> np.ndarray:
+    """Bit-identical vectorized fill of the scalar cost matrix.
+
+    The DTW recurrence is sequential, but all cells on one anti-diagonal
+    (``i + j`` constant) depend only on earlier anti-diagonals, so each diagonal
+    is one vectorized NumPy update instead of thousands of Python ``min``/``abs``
+    calls. The Sakoe-Chiba band, the per-row bounds (``int`` truncation), the
+    ``local + min(up, left, diag)`` recurrence and out-of-band ``inf`` cells all
+    match the scalar loop exactly, so the resulting matrix - and the backtracked
+    path - is identical. (#311 follow-up: this fill dominates envelope rebuilds.)
+    """
+    xf = np.asarray(x, dtype=float)
+    yf = np.asarray(y, dtype=float)
+    cost_matrix = np.full((n + 1, m + 1), np.inf)
+    cost_matrix[0, 0] = 0.0
+    # Per-row band bounds, identical to the scalar start_j/end_j (int truncates
+    # toward zero, matching Python int()).
+    i_idx = np.arange(1, n + 1)
+    center = i_idx * (m / n)
+    lo = np.maximum(1, (center - w).astype(np.int64))
+    hi = np.minimum(m, (center + w).astype(np.int64) + 1)
+    for d in range(2, n + m + 1):
+        i_lo = max(1, d - m)
+        i_hi = min(n, d - 1)
+        if i_lo > i_hi:
+            continue
+        ii = np.arange(i_lo, i_hi + 1)
+        jj = d - ii
+        inb = (jj >= lo[ii - 1]) & (jj <= hi[ii - 1])
+        if not inb.any():
+            continue
+        ib = ii[inb]
+        jb = jj[inb]
+        local = np.abs(xf[ib - 1] - yf[jb - 1])
+        best = np.minimum(
+            np.minimum(cost_matrix[ib - 1, jb], cost_matrix[ib, jb - 1]),
+            cost_matrix[ib - 1, jb - 1],
+        )
+        cost_matrix[ib, jb] = local + best
+    return cost_matrix
+
 
 def compute_dtw_path(
     x: np.ndarray, y: np.ndarray, band_width_ratio: float = 0.1
@@ -414,21 +703,25 @@ def compute_dtw_path(
     if n == 0 or m == 0:
         return []
 
+    # Pre-flight memory guard: the cost matrix is (n+1)x(m+1) float64.  An
+    # uncapped call from a 1 Hz long cycle can request >1 GB here.  If the
+    # allocation would exceed ~80 MB, skip DTW and return an empty path so
+    # the caller falls back to linear interpolation (graceful degrade rather
+    # than OOM-killing Home Assistant — issue #388).
+    _DTW_CELL_BUDGET = 10_000_000  # 10 M cells x 8 B ≈ 80 MB
+    if (n + 1) * (m + 1) > _DTW_CELL_BUDGET:
+        _LOGGER.warning(
+            "DTW cost matrix %dx%d would need %.0f MB — skipping DTW refinement "
+            "(cap compute_envelope_worker inputs via MAX_ALIGN_GRID_POINTS to prevent this)",
+            n, m, (n + 1) * (m + 1) * 8 / 1e6,
+        )
+        return []
+
     w = max(1, int(min(n, m) * band_width_ratio))
-    cost_matrix = np.full((n + 1, m + 1), float("inf"))
-    cost_matrix[0, 0] = 0
-
-    # Cost Matrix
-    for i in range(1, n + 1):
-        center = i * (m / n)
-        start_j = max(1, int(center - w))
-        end_j = min(m, int(center + w) + 1)
-
-        for j in range(start_j, end_j + 1):
-            cost = abs(float(x[i - 1] - y[j - 1]))
-            cost_matrix[i, j] = cost + min(
-                cost_matrix[i - 1, j], cost_matrix[i, j - 1], cost_matrix[i - 1, j - 1]
-            )
+    try:
+        cost_matrix = _dtw_cost_matrix_vectorized(x, y, n, m, w)
+    except Exception:  # pylint: disable=broad-exception-caught
+        cost_matrix = _dtw_cost_matrix_scalar(x, y, n, m, w)
 
     # Backtracking
     if np.isinf(cost_matrix[n, m]):
@@ -527,6 +820,27 @@ def compute_envelope_worker(
         if len(offsets) < 3:
             continue
 
+        # Stored offsets are rounded to 0.1s, so two readings less than 0.1s apart
+        # collapse onto the same offset.  A single such duplicate must not discard the
+        # whole trace (#377): drop the duplicate sample(s) instead of the cycle.  Only
+        # exact duplicates are collapsed here; a genuinely out-of-order (decreasing)
+        # offset - which sorted storage never produces - is left for the strict check
+        # below to reject, exactly as before.
+        if offsets.size > 1:
+            diffs = np.diff(offsets)
+            if np.any(diffs == 0):
+                keep = np.concatenate(([True], diffs != 0))
+                dropped = int((~keep).sum())
+                offsets = offsets[keep]
+                values = values[keep]
+                _LOGGER.debug(
+                    "compute_envelope_worker: dropped %d duplicate sample offset(s) "
+                    "from a cycle trace (0.1s offset rounding)",
+                    dropped,
+                )
+            if len(offsets) < 3:
+                continue
+
         if not np.all(np.diff(offsets) > 0):
             continue
 
@@ -567,6 +881,9 @@ def compute_envelope_worker(
 
     align_dt = avg_sample_rate
     num_points = max(50, int(target_duration / align_dt))
+    if num_points > MAX_ALIGN_GRID_POINTS:
+        num_points = MAX_ALIGN_GRID_POINTS
+        align_dt = target_duration / num_points  # re-derive so per-cycle grids inherit the cap
     time_grid = np.linspace(0.0, target_duration, num_points)
 
     # Robust reference curve: the pointwise MEDIAN across all cycles resampled
@@ -599,7 +916,11 @@ def compute_envelope_worker(
 
     for offsets, values, dur in normalized_curves:
         this_dur = dur
-        this_num_points = max(10, int(this_dur / align_dt))
+        # Cap this grid too, not just the reference one: a cycle far longer than the
+        # median would otherwise size its own grid past the cap and push the cost
+        # matrix over compute_dtw_path's budget, which silently drops the outlier
+        # back to plain interpolation. Capping keeps DTW alignment available for it.
+        this_num_points = min(MAX_ALIGN_GRID_POINTS, max(10, int(this_dur / align_dt)))
         this_grid = np.linspace(0.0, this_dur, this_num_points)
         this_array = np.interp(this_grid, offsets, values)
 

@@ -3,7 +3,8 @@
     "source_entity": "Quell-Entität",
     "source_device": "Quell-Gerät",
     "remarks_smart_switch": "Dieses Profil liefert nur Werte für die Standby-Leistung. \n Wenn Sie ein Gerät haben, das beim Einschalten eine bestimmte Menge an Strom verbraucht, können Sie diesen Wert im nächsten Schritt des Konfigurationsablaufs angeben",
-    "remarks_smart_dimmer": "Dieses Profil bietet nur Standby-Leistungswerte. \n Im nächsten Schritt können Sie optional die Werte der angeschlossenen Lampe angeben"
+    "remarks_smart_dimmer": "Dieses Profil bietet nur Standby-Leistungswerte. \n Im nächsten Schritt können Sie optional die Werte der angeschlossenen Lampe angeben",
+    "view_measurement_details": "Messdetails anzeigen"
   },
   "config": {
     "abort": {
@@ -14,7 +15,6 @@
       "daily_energy_mandatory": "Du musst mindestens einen Wert oder ein Werte-Template angeben",
       "entity_mandatory": "Die Auswahl einer Entität ist für jede Strategie mit Ausnahme des Playbooks erforderlich",
       "fixed_mandatory": "Du musst mindestens Leistung, Leistungs-Template oder Leistung je Zustand angeben",
-      "fixed_states_power_only": "Diese Entität kann nur mit Leistung je Zustand und nicht mit Leistung arbeiten",
       "group_mandatory": "Du musst mindestens Untergruppen oder Leistungs- und Energie-Entitäten definieren",
       "linear_mandatory": "Du musst mindestens die minimale Leistung oder den Kalibrierungswert angeben",
       "linear_min_higher_as_max": "Die maximale Leistung kann nicht niedriger als die minimale Leistung sein",
@@ -336,7 +336,7 @@
         "data_description": {
           "confirm_autodisovered_model": "Wenn Sie nicht bestätigen möchten, können Sie den Hersteller und das Modell selbst eingeben"
         },
-        "description": "{source}\n\nHersteller \"{manufacturer}\" und Modell \"{model}\" wurden für Ihre Gerät automatisch erkannt.{remarks}",
+        "description": "{source}\n\nHersteller \"{manufacturer}\" und Modell \"{model}\" wurden für Ihre Gerät automatisch erkannt.{remarks}{profile_details}",
         "title": "Bibliothek"
       },
       "library_custom_fields": {
@@ -383,6 +383,16 @@
         },
         "description": "Wählen Sie das Gerätemodell. Siehe in der [list]({supported_models_link}) der unterstützten Modelle für weitere Informationen",
         "title": "Modelnummer Konfiguration"
+      },
+      "select_device": {
+        "data": {
+          "device": "Gerät"
+        },
+        "data_description": {
+          "device": "Das Gerät, mit dem die Powercalc-Entitäten verknüpft werden sollen"
+        },
+        "description": "Wählen Sie das Gerät aus, mit dem der Powercalc-Sensor verknüpft werden soll.",
+        "title": "Gerät auswählen"
       },
       "menu_group": {
         "menu_options": {
@@ -550,6 +560,7 @@
       "virtual_power": {
         "data": {
           "create_energy_sensor": "Energiesensor erstellen",
+          "create_standby_energy_sensor": "Standby-Energiesensor erstellen",
           "create_cost_sensor": "Kostensensor erstellen",
           "create_utility_meters": "Utilitymeter erstellen",
           "entity_id": "Quell-Entität",
@@ -559,6 +570,7 @@
         },
         "data_description": {
           "create_energy_sensor": "Ob Powercalc einen kWh Sensor erstellen soll",
+          "create_standby_energy_sensor": "Ob Powercalc einen kWh-Sensor erstellen soll, der nur den Standby-Verbrauch erfasst",
           "create_utility_meters": "Powercalc soll utility-Meter erstellen, die täglich, stündlich usw. zyklisch sind",
           "entity_id": "Entität, auf der die virtuelle Leistung basiert; der Leistungssensor wird auf Zustandsänderungen dieser Entität reagieren, um aktualisiert zu werden",
           "name": "Leer lassen wird den Namen von der Quell-Entität übernehmen",
@@ -569,11 +581,15 @@
       },
       "wled": {
         "data": {
+          "current_entity": "Strom-Entität",
           "power_factor": "Leistungs-Faktor",
           "voltage": "Volt"
         },
         "description": "Stelle sicher, dass der Helligkeitsbegrenzer in der WLED-Software aktiviert ist. Siehe auch {docs_uri}",
-        "title": "WLED Konfiguration"
+        "title": "WLED Konfiguration",
+        "data_description": {
+          "current_entity": "Optional einen Sensor auswählen, der den geschätzten Strom in mA bereitstellt. Nur erforderlich, wenn Powercalc den WLED-Sensor für den geschätzten Strom nicht automatisch finden kann, z. B. wenn der Helligkeitsbegrenzer pro Ausgang konfiguriert ist."
+        }
       }
     }
   },
@@ -589,6 +605,25 @@
     },
     "unknown_sub_profile": {
       "message": "\"{profile}\" ist kein bekanntes Unterprofil. Verfügbare Unterprofile: {known_profiles}."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "measure_session_status": {
+        "name": "Measure session status",
+        "state": {
+          "idle": "Idle",
+          "validating": "Validating",
+          "ready": "Ready",
+          "awaiting_confirmation": "Awaiting confirmation",
+          "running": "Running",
+          "cancelling": "Cancelling",
+          "cancelled": "Cancelled",
+          "completed": "Completed",
+          "failed": "Failed",
+          "resumable": "Resumable"
+        }
+      }
     }
   },
   "issues": {
@@ -645,7 +680,6 @@
     "error": {
       "cost_price_mandatory": "Du musst entweder einen Energiepreis oder einen Energiepreissensor angeben",
       "fixed_mandatory": "Sie müssen mindestens eines von Leistung, Leistung-Template oder Leistung je Zustand angeben",
-      "fixed_states_power_only": "Diese Entität kann nur mit Leistung je Zustand und nicht mit Leistung arbeiten",
       "group_mandatory": "Sie müssen mindestens Untergruppen oder Leistung- und Energie-Entitäten definieren",
       "linear_mandatory": "Sie müssen mindestens Maximale Leistung oder Kalibrierung angeben",
       "linear_min_higher_as_max": "Maximale Leistung kann nicht niedriger sein als Minimale Leistung",
@@ -675,6 +709,7 @@
         "title": "Grundeinstellungen",
         "data": {
           "create_energy_sensor": "Energiessensor erstellen",
+          "create_standby_energy_sensor": "Standby-Energiesensor erstellen",
           "create_cost_sensor": "Kostensensor erstellen",
           "create_utility_meters": "Utilitymeter erstellen",
           "entity_id": "Quell-Entität",
@@ -683,6 +718,7 @@
         },
         "data_description": {
           "create_energy_sensor": "Ob Powercalc einen kWh Sensor erstellen soll",
+          "create_standby_energy_sensor": "Ob Powercalc einen kWh-Sensor erstellen soll, der nur den Standby-Verbrauch erfasst",
           "create_utility_meters": "Powercalc soll Utility-Meter erstellen, die den Verbrauch täglich, stündlich usw. festhalten.",
           "entity_id": "Entität, auf der die virtuelle Leistung basiert; der Leistungssensor wird auf Zustandsänderungen dieser Entität reagieren, um aktualisiert zu werden",
           "name": "Leer lassen wird den Namen von der Quell-Entität übernehmen",
@@ -957,6 +993,7 @@
           "playbook": "Playbook-Optionen",
           "multi_switch": "Mehrfachschalter-Optionen",
           "real_power": "Optionen für reale Leistung",
+          "select_device": "Gerät",
           "utility_meter_options": "Verbrauchszähler-Optionen",
           "wled": "WLED Einstellung",
           "cost_options": "Kostenoptionen"
@@ -964,7 +1001,17 @@
       },
       "library_options": {
         "title": "Bibliotheksoptionen",
-        "description": "Derzeit ist folgendes Bibliotheksprofil ausgewählt: \n Hersteller: {manufacturer}\n Modell: {model}\n\nWenn du das Profil ändern möchtest, klicke auf Weiter."
+        "description": "Derzeit ist folgendes Bibliotheksprofil ausgewählt: \n Hersteller: {manufacturer}\n Modell: {model}\n\nWenn du das Profil ändern möchtest, klicke auf Weiter.{profile_details}"
+      },
+      "select_device": {
+        "data": {
+          "device": "Gerät"
+        },
+        "data_description": {
+          "device": "Das Gerät, mit dem die Powercalc-Entitäten verknüpft werden sollen"
+        },
+        "description": "Wählen Sie das Gerät aus, mit dem der Powercalc-Sensor verknüpft werden soll.",
+        "title": "Gerät auswählen"
       },
       "linear": {
         "title": "Lineare Optionen",
@@ -1058,8 +1105,12 @@
       "wled": {
         "title": "WLED-Einstellungen",
         "data": {
+          "current_entity": "Strom-Entität",
           "power_factor": "Leistungsfaktor",
           "voltage": "Spannung"
+        },
+        "data_description": {
+          "current_entity": "Optional einen Sensor auswählen, der den geschätzten Strom in mA bereitstellt. Nur erforderlich, wenn Powercalc den WLED-Sensor für den geschätzten Strom nicht automatisch finden kann, z. B. wenn der Helligkeitsbegrenzer pro Ausgang konfiguriert ist."
         }
       },
       "cost_options": {

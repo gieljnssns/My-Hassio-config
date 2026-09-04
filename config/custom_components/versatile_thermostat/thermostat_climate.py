@@ -8,6 +8,7 @@ from datetime import timedelta, datetime
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval, EventStateChangedData, async_call_later
 from homeassistant.components.climate import (
     HVACAction,
@@ -26,6 +27,9 @@ from .feature_auto_start_stop_manager import FeatureAutoStartStopManager
 from .vtherm_hvac_mode import VThermHvacMode
 
 _LOGGER = get_vtherm_logger(__name__)
+
+AUTO_FAN_PLUGIN_DOMAIN = "vtherm_auto_fan_extended"
+AUTO_FAN_PLUGIN_TARGET_VTHERM_KEY = "target_vtherm_unique_id"
 
 HVAC_ACTION_ON = [  # pylint: disable=invalid-name
     HVACAction.COOLING,
@@ -172,6 +176,29 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                 self,
                 self.target_temperature,
             )
+            return
+
+        if self.vtherm_hvac_mode not in (VThermHvacMode_HEAT, VThermHvacMode_COOL):
+            _LOGGER.debug(
+                "%s - auto-regulation is disabled cause VTherm hvac_mode is %s (not heat nor cool). Sending the raw target temperature",
+                self,
+                self.vtherm_hvac_mode,
+            )
+            # Outside of heat/cool the device is active but must receive the original
+            # (non regulated) target temperature. Force the regulated temperature to the
+            # target temperature and send it to all underlyings only when it differs from
+            # the last sent value, to avoid resending the same setpoint on each cycle.
+            self._regulated_target_temp = self.target_temperature
+            for under in self._underlyings:
+                if under.last_sent_temperature == self.target_temperature:
+                    continue
+                await under.set_temperature(
+                    self.target_temperature,
+                    self._attr_max_temp,
+                    self._attr_min_temp,
+                )
+            # Reset the timer of last regulation change to avoid time delta too high
+            self._last_regulation_change = self.now
             return
 
         _LOGGER.info(
@@ -416,8 +443,10 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                     DOMAIN,
                 )
 
-        if not self._regulation_algo:
-            # A default empty algo (which does nothing)
+        if self._auto_regulation_mode == CONF_AUTO_REGULATION_NONE or not self._regulation_algo:
+            # A default empty algo (which does nothing). It must also replace any
+            # previously active algo when switching to None at runtime, else the
+            # old regulator keeps sending regulated setpoints to the underlyings.
             self._regulation_algo = PITemperatureRegulator(self.target_temperature, 0, 0, 0, 0, 0, True)
 
     def choose_auto_fan_mode(self, auto_fan_mode: str):
@@ -440,8 +469,8 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                 return None
 
         def determine_fan_mode_contains_speed(fan_modes: list[str]) -> bool:
-            """Determine if the fan_modes contains speed modes by searching for the keywords "low"/"1"."""
-            for val in ["low", "1"]:
+            """Determine if the fan_modes contains speed modes by searching for the keywords "low"/"1"/"one"/"speed_1"/"on_low"."""
+            for val in ["low", "1", "one", "speed_1", "on_low"]:
                 if find_fan_mode(fan_modes, val):
                     return True
             return False
@@ -453,6 +482,12 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
                 index = speed_modes.index("low")
             elif "1" in speed_modes:
                 index = speed_modes.index("1")
+            elif "one" in speed_modes:
+                index = speed_modes.index("one")
+            elif "speed_1" in speed_modes:
+                index = speed_modes.index("speed_1")
+            elif "on_low" in speed_modes:
+                index = speed_modes.index("on_low")
 
             if index > -1 and index >= len(speed_modes) / 2:
                 speed_modes.reverse()
@@ -980,6 +1015,20 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
         return self._regulated_target_temp
 
     @property
+    def regulated_target_temperature(self) -> float | None:
+        """Return the regulated target temperature used to drive the underlying."""
+        return self._regulated_target_temp
+
+    @property
+    def underlying_fan_modes(self) -> list[str] | None:
+        """Return the fan modes exposed by the underlying climate(s)."""
+        return self.fan_modes
+
+    async def async_set_underlying_fan_mode(self, fan_mode: str) -> None:
+        """Send a fan mode to the underlying climate(s)."""
+        await self.async_set_fan_mode(fan_mode)
+
+    @property
     def is_regulated(self) -> bool:
         """Check if the ThermostatOverClimate is regulated"""
         return self.auto_regulation_mode != CONF_AUTO_REGULATION_NONE
@@ -1276,6 +1325,49 @@ class ThermostatOverClimate(BaseThermostat[UnderlyingClimate]):
 
         self.update_custom_attributes()
         self.async_write_ha_state()
+
+    async def service_set_auto_fan_mode_deprecated(self, auto_fan_mode: str):
+        """Deprecated service handler for auto fan mode.
+
+        Auto fan is now managed by the vtherm_auto_fan_extended plugin.
+        """
+        config_entries = getattr(self._hass, "config_entries", None)
+        plugin_is_configured = False
+        if config_entries is not None:
+            try:
+                plugin_entries = config_entries.async_entries(AUTO_FAN_PLUGIN_DOMAIN)
+            except Exception:  # pylint: disable=broad-except
+                plugin_entries = []
+
+            # If at least one entry targets this VTherm, plugin takes ownership.
+            plugin_is_configured = any(
+                entry.data.get(AUTO_FAN_PLUGIN_TARGET_VTHERM_KEY) == self.unique_id
+                for entry in plugin_entries
+            )
+
+            # Backward compatibility: old entries without target still mean plugin ownership.
+            if not plugin_is_configured and plugin_entries:
+                plugin_is_configured = any(
+                    AUTO_FAN_PLUGIN_TARGET_VTHERM_KEY not in entry.data
+                    for entry in plugin_entries
+                )
+
+        # If plugin is not configured for this VTherm, keep legacy core behavior.
+        if not plugin_is_configured:
+            await self.service_set_auto_fan_mode(auto_fan_mode)
+            return
+
+        _LOGGER.warning(
+            "%s - set_auto_fan_mode is deprecated in core and managed by the "
+            "vtherm_auto_fan_extended plugin (requested: %s)",
+            self,
+            auto_fan_mode,
+        )
+        raise HomeAssistantError(
+            "The set_auto_fan_mode service is now managed by the "
+            "vtherm_auto_fan_extended plugin and is no longer available in "
+            "Versatile Thermostat core."
+        )
 
     @overrides
     async def async_turn_off(self) -> None:

@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Helios Forecast — spjaldalína",
+        "description": "Ein spá fyrir eina spjaldalínu (hóp samstilltra spjalda). Bættu samþættingunni við aftur fyrir hverja viðbótarlínu. Skildu staðsetninguna eftir auða til að nota heimili Home Assistant.",
+        "data": {
+          "name": "Nafn (t.d. Suðurþak)",
+          "tilt": "Halli (gráður, 0 = flatt, 90 = lóðrétt)",
+          "azimuth": "Áttarhorn (gráður frá norðri, 90 = austur, 180 = suður, 270 = vestur)",
+          "kwp": "Hámarksafl (kWp)",
+          "line_inverter_max_kw": "Hámarksafköst invertera fyrir þessa línu (kW, valfrjálst)",
+          "tracker": "Sólarrakari",
+          "latitude": "Breiddargráða (valfrjálst)",
+          "longitude": "Lengdargráða (valfrjálst)",
+          "inverter_max_kw": "Hámarksafl invertara (kW, valfrjálst)",
+          "production_entity": "Skynjari sólarframleiðslu (fyrir lærða leiðréttingu)",
+          "trend_anchor_hour": "Viðmiðunarstund dagsleitni (0-23, sjálfgefið 6)",
+          "add_another": "Add another panel line",
+          "battery_capacity_kwh": "Nýtanleg rafhlöðugeta (kWh)",
+          "battery_soc_entity": "Skynjari fyrir hleðslustöðu rafhlöðu (%)",
+          "battery_max_charge_kw": "Hámarks hleðsluafl rafhlöðu (kW, valfrjálst)",
+          "battery_max_discharge_kw": "Hámarks afhleðsluafl rafhlöðu (kW, valfrjálst)",
+          "battery_min_soc": "Varaforði rafhlöðu — lágmarks hleðslustaða (%, sjálfgefið 10)",
+          "battery_efficiency": "Heildarnýtni rafhlöðu (%, sjálfgefið 90)"
+        },
+        "data_description": {
+          "battery_soc_entity": "Fylltu út getuna og þennan skynjara til að kveikja á spá um hleðslustöðu. Heimilisnotkunin er tekin af Orku-stjórnborðinu þínu, svo ekki þarf skynjara hér."
+        }
+      },
+      "line": {
+        "title": "Helios Forecast — additional panel line",
+        "description": "Panel line {index}: another group of co-oriented panels on the same installation (shared production sensor and inverter).",
+        "data": {
+          "tilt": "Halli (gráður, 0 = flatt, 90 = lóðrétt)",
+          "azimuth": "Áttarhorn (gráður frá norðri, 90 = austur, 180 = suður, 270 = vestur)",
+          "kwp": "Hámarksafl (kWp)",
+          "line_inverter_max_kw": "Hámarksafköst invertera fyrir þessa línu (kW, valfrjálst)",
+          "tracker": "Sólarrakari",
+          "latitude": "Breiddargráða fyrir þessa línu (valfrjálst)",
+          "longitude": "Lengdargráða fyrir þessa línu (valfrjálst)",
+          "add_another": "Add another panel line"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Helios Forecast",
+        "description": "Choose what to edit.",
+        "menu_options": {
+          "settings": "Edit settings (location, inverter, production sensor)",
+          "lines": "Edit panel lines"
+        }
+      },
+      "settings": {
+        "title": "Helios Forecast — settings",
+        "description": "Shared location, inverter cap, production sensor and trend anchor for every panel line in this entry.",
+        "data": {
+          "latitude": "Breiddargráða (valfrjálst)",
+          "longitude": "Lengdargráða (valfrjálst)",
+          "inverter_max_kw": "Hámarksafl invertara (kW, valfrjálst)",
+          "production_entity": "Skynjari sólarframleiðslu (fyrir lærða leiðréttingu)",
+          "trend_anchor_hour": "Viðmiðunarstund dagsleitni (0-23, sjálfgefið 6)",
+          "battery_capacity_kwh": "Nýtanleg rafhlöðugeta (kWh)",
+          "battery_soc_entity": "Skynjari fyrir hleðslustöðu rafhlöðu (%)",
+          "battery_max_charge_kw": "Hámarks hleðsluafl rafhlöðu (kW, valfrjálst)",
+          "battery_max_discharge_kw": "Hámarks afhleðsluafl rafhlöðu (kW, valfrjálst)",
+          "battery_min_soc": "Varaforði rafhlöðu — lágmarks hleðslustaða (%, sjálfgefið 10)",
+          "battery_efficiency": "Heildarnýtni rafhlöðu (%, sjálfgefið 90)"
+        },
+        "data_description": {
+          "battery_soc_entity": "Fylltu út getuna og þennan skynjara til að kveikja á spá um hleðslustöðu. Heimilisnotkunin er tekin af Orku-stjórnborðinu þínu, svo ekki þarf skynjara hér."
+        }
+      },
+      "lines": {
+        "title": "Helios Forecast — panel line {index}/{total}",
+        "description": "Edit panel line {index} of {total}, or tick to add another.",
+        "data": {
+          "tilt": "Halli (gráður, 0 = flatt, 90 = lóðrétt)",
+          "azimuth": "Áttarhorn (gráður frá norðri, 90 = austur, 180 = suður, 270 = vestur)",
+          "kwp": "Hámarksafl (kWp)",
+          "line_inverter_max_kw": "Hámarksafköst invertera fyrir þessa línu (kW, valfrjálst)",
+          "tracker": "Sólarrakari",
+          "latitude": "Breiddargráða fyrir þessa línu (valfrjálst)",
+          "longitude": "Lengdargráða fyrir þessa línu (valfrjálst)",
+          "remove_this_line": "Remove this panel line",
+          "add_another": "Add another panel line"
+        }
+      }
+    }
+  },
+  "selector": {
+    "tracker": {
+      "options": {
+        "none": "Enginn (fastur)",
+        "dual-axis": "Tvíása (fylgir sólinni)",
+        "single-axis-h": "Einása láréttur (halli fylgir)",
+        "single-axis-v": "Einása lóðréttur (áttarhorn fylgir)"
+      }
+    }
+  },
+  "services": {
+    "get_forecast": {
+      "name": "Sækja spá",
+      "description": "Skilar allri framleiðsluspánni (frá og með deginum í dag, einn punktur á 15 mínútna fresti, hver með spáðum vöttum og P10/P90 öryggisbili) sem svargögnum til notkunar í sjálfvirkni.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Uppsetning",
+          "description": "Hvaða Helios Forecast uppsetningu á að lesa. Valfrjálst þegar aðeins ein er stillt."
+        }
+      }
+    },
+    "get_battery_soc_forecast": {
+      "name": "Sækja spá um hleðslustöðu",
+      "description": "Skilar áætlaðri hleðslustöðu rafhlöðu fyrir næstu 48 klukkustundir (einn punktur á 15 mínútna fresti) sem svargögnum til notkunar í sjálfvirkni.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Uppsetning",
+          "description": "Hvaða Helios Forecast uppsetningu á að lesa. Valfrjálst þegar aðeins ein er stillt."
+        }
+      }
+    }
+  }
+}

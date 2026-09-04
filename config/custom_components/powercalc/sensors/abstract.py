@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 from typing import cast
 
@@ -19,9 +17,11 @@ from custom_components.powercalc.const import (
     CONF_ENERGY_SENSOR_NAMING,
     CONF_POWER_SENSOR_FRIENDLY_NAMING,
     CONF_POWER_SENSOR_NAMING,
+    CONF_STANDBY_ENERGY_SENSOR_NAMING,
     DEFAULT_COST_NAME_PATTERN,
     DEFAULT_ENERGY_NAME_PATTERN,
     DEFAULT_POWER_NAME_PATTERN,
+    DEFAULT_STANDBY_ENERGY_NAME_PATTERN,
     DOMAIN,
 )
 from custom_components.powercalc.device_binding import bind_entity_to_registry_metadata
@@ -39,7 +39,7 @@ class BaseEntity(Entity):
         bind_entity_to_registry_metadata(
             self.hass,
             self.entity_id,
-            cast(DeviceEntry | None, getattr(self, "device_entry", None)),
+            cast(DeviceEntry | None, getattr(self, "_powercalc_device_entry", None)),
             cast(ConfigType | None, getattr(self, "_sensor_config", None)),
         )
 
@@ -71,6 +71,22 @@ def generate_energy_sensor_name(
         CONF_ENERGY_SENSOR_NAMING,
         CONF_ENERGY_SENSOR_FRIENDLY_NAMING,
         DEFAULT_ENERGY_NAME_PATTERN,
+        name,
+        source_entity,
+    )
+
+
+def generate_standby_energy_sensor_name(
+    sensor_config: ConfigType,
+    name: str | None = None,
+    source_entity: SourceEntity | None = None,
+) -> str:
+    """Generate the name to use for a standby energy sensor."""
+    return _generate_sensor_name(
+        sensor_config,
+        CONF_STANDBY_ENERGY_SENSOR_NAMING,
+        CONF_STANDBY_ENERGY_SENSOR_NAMING,
+        DEFAULT_STANDBY_ENERGY_NAME_PATTERN,
         name,
         source_entity,
     )
@@ -146,6 +162,26 @@ def generate_energy_sensor_entity_id(
         sensor_config,
         CONF_ENERGY_SENSOR_NAMING,
         DEFAULT_ENERGY_NAME_PATTERN,
+        source_entity,
+        name,
+        unique_id,
+    )
+
+
+@callback
+def generate_standby_energy_sensor_entity_id(
+    hass: HomeAssistant,
+    sensor_config: ConfigType,
+    source_entity: SourceEntity | None = None,
+    name: str | None = None,
+    unique_id: str | None = None,
+) -> str:
+    """Generate the entity ID to use for a standby energy sensor."""
+    return _generate_sensor_entity_id(
+        hass,
+        sensor_config,
+        CONF_STANDBY_ENERGY_SENSOR_NAMING,
+        DEFAULT_STANDBY_ENERGY_NAME_PATTERN,
         source_entity,
         name,
         unique_id,

@@ -1,9 +1,9 @@
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import CONF_DEVICE
 from homeassistant.helpers import selector, translation
+from homeassistant.helpers.device_registry import DeviceEntry
 import voluptuous as vol
 
 from custom_components.powercalc.const import (
@@ -17,10 +17,10 @@ from custom_components.powercalc.const import (
     CONF_SUB_PROFILE,
     CONF_VARIABLES,
     DOMAIN,
-    DUMMY_ENTITY_ID,
     LIBRARY_URL,
     CalculationStrategy,
 )
+from custom_components.powercalc.device_binding import get_devices_for_config_entry, get_related_devices
 from custom_components.powercalc.discovery import (
     get_power_profile_by_source_device,
     get_power_profile_by_source_entity,
@@ -29,6 +29,7 @@ from custom_components.powercalc.flow_helper.common import FlowType, PowercalcFo
 from custom_components.powercalc.flow_helper.dynamic_field_builder import build_dynamic_field_schema
 from custom_components.powercalc.flow_helper.schema import (
     SCHEMA_ENERGY_SENSOR_TOGGLE,
+    SCHEMA_STANDBY_ENERGY_SENSOR_TOGGLE,
     SCHEMA_UTILITY_METER_TOGGLE,
     build_sub_profile_schema,
 )
@@ -38,6 +39,7 @@ from custom_components.powercalc.helpers import (
     resolve_related_entity_placeholder,
 )
 from custom_components.powercalc.power_profile.library import ModelInfo, ProfileLibrary
+from custom_components.powercalc.power_profile.library_url import profile_url
 from custom_components.powercalc.power_profile.power_profile import (
     DEVICE_TYPE_DOMAIN,
     DOMAIN_DEVICE_TYPE_MAPPING,
@@ -58,6 +60,7 @@ SCHEMA_POWER_AUTODISCOVERED = vol.Schema(
 SCHEMA_POWER_OPTIONS_LIBRARY = vol.Schema(
     {
         **SCHEMA_ENERGY_SENSOR_TOGGLE.schema,
+        **SCHEMA_STANDBY_ENERGY_SENSOR_TOGGLE.schema,
         **SCHEMA_UTILITY_METER_TOGGLE.schema,
     },
 )
@@ -208,6 +211,9 @@ class LibraryFlow:
         if Step.LIBRARY_CUSTOM_FIELDS not in handled_steps and profile.has_custom_fields:
             return await self.async_step_library_custom_fields()
 
+        if Step.SELECT_DEVICE not in handled_steps and profile.discovery_by == DiscoveryBy.CONFIG_ENTRY:
+            return await self.async_step_select_device()
+
         if Step.AVAILABILITY_ENTITY not in handled_steps and profile.discovery_by == DiscoveryBy.DEVICE:
             result = await self.async_step_availability_entity()
             if result:
@@ -217,6 +223,53 @@ class LibraryFlow:
             return await self.async_step_sub_profile()
 
         return None
+
+    async def async_step_select_device(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Ask which device should receive the entities created for a config-entry profile."""
+        return await self.flow.handle_form_step(
+            PowercalcFormStep(
+                step=Step.SELECT_DEVICE,
+                schema=self.build_select_device_schema(),
+                next_step=Step.POST_LIBRARY,
+            ),
+            user_input,
+        )
+
+    def build_select_device_schema(self) -> vol.Schema:
+        """Build the schema to select the device the Powercalc entities should be linked to."""
+        discovery_by = self.flow.selected_profile.discovery_by if self.flow.selected_profile else DiscoveryBy.ENTITY
+
+        if discovery_by == DiscoveryBy.CONFIG_ENTRY:
+            # The entities can only be linked to one of the devices of the source config entry.
+            return vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                selector.SelectOptionDict(
+                                    value=device.id,
+                                    label=device.name_by_user or device.name or device.id,
+                                )
+                                for device in self.get_selectable_devices()
+                            ],
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                        ),
+                    ),
+                },
+            )
+
+        return vol.Schema({vol.Required(CONF_DEVICE): selector.DeviceSelector()})
+
+    def get_selectable_devices(self) -> list[DeviceEntry]:
+        """Return the devices belonging to the same config entry as the source of the profile."""
+        config_entry_id = self.flow.source_entity.config_entry_id if self.flow.source_entity else None
+        if config_entry_id:
+            return get_devices_for_config_entry(self.flow.hass, config_entry_id)
+
+        # The options flow has no reference to the source config entry anymore,
+        # so resolve the candidates from the currently configured device instead.
+        device_id: str | None = self.flow.sensor_config.get(CONF_DEVICE)
+        return get_related_devices(self.flow.hass, device_id) if device_id else []
 
     async def _async_next_strategy_step(self, profile: PowerProfile) -> ConfigFlowResult | None:
         """Return the next step needed to configure the calculation strategy, or None when nothing is left to ask."""
@@ -397,7 +450,7 @@ class LibraryFlow:
 
     def _get_library_device_types(self) -> set[DeviceType] | None:
         """Determine which device types should be shown in the library selectors."""
-        if self._get_library_discovery_by() == DiscoveryBy.DEVICE:
+        if self._get_library_discovery_by() in (DiscoveryBy.CONFIG_ENTRY, DiscoveryBy.DEVICE):
             return None
 
         if self.flow.source_entity:
@@ -407,9 +460,33 @@ class LibraryFlow:
 
     def _get_library_discovery_by(self) -> DiscoveryBy | None:
         """Determine whether listing should be filtered by discovery mode."""
-        if self.flow.source_entity and self.flow.source_entity.entity_id == DUMMY_ENTITY_ID:
-            return DiscoveryBy.DEVICE
-        return None
+        source_entity = self.flow.source_entity
+        if not source_entity:
+            return None
+
+        if source_entity.config_entry_id:
+            return DiscoveryBy.CONFIG_ENTRY
+        if not source_entity.is_dummy:
+            return None
+
+        profile = self.flow.selected_profile
+        if profile and profile.discovery_by == DiscoveryBy.CONFIG_ENTRY:
+            return DiscoveryBy.CONFIG_ENTRY
+        return DiscoveryBy.DEVICE
+
+    def _build_profile_details(self, profile: PowerProfile) -> str:
+        """Build a link to the profile in the public library when available."""
+        if profile.is_custom_profile:
+            return ""
+
+        translations = translation.async_get_cached_translations(
+            self.flow.hass,
+            self.flow.hass.config.language,
+            "common",
+            DOMAIN,
+        )
+        label = translations[f"component.{DOMAIN}.common.view_measurement_details"]
+        return f"\n\n[{label}]({profile_url(profile.manufacturer, profile.model)})"
 
 
 class LibraryConfigFlow(LibraryFlow):
@@ -530,6 +607,7 @@ class LibraryConfigFlow(LibraryFlow):
             "remarks": self._build_library_remarks(profile),
             "manufacturer": profile.manufacturer,
             "model": profile.model,
+            "profile_details": self._build_profile_details(profile),
             "source": self._get_profile_source(profile),
         }
 
@@ -546,19 +624,22 @@ class LibraryConfigFlow(LibraryFlow):
 
     def _get_profile_source(self, profile: PowerProfile) -> str:
         """Build the autodiscovery source description."""
+        source_entity = self.flow.source_entity
+        if source_entity and profile.discovery_by == DiscoveryBy.CONFIG_ENTRY:
+            config_entry_id = source_entity.config_entry_id
+            if config_entry_id:
+                return source_entity.name or config_entry_id
+
         translations = translation.async_get_cached_translations(
             self.flow.hass,
             self.flow.hass.config.language,
             "common",
             DOMAIN,
         )
-        if (
-            profile.discovery_by == DiscoveryBy.DEVICE
-            and self.flow.source_entity
-            and self.flow.source_entity.device_entry
-        ):
+        device_entry = source_entity.device_entry if source_entity else None
+        if profile.discovery_by == DiscoveryBy.DEVICE and device_entry:
             label = translations.get(f"component.{DOMAIN}.common.source_device")
-            return f"{label}: {self.flow.source_entity.device_entry.name}"
+            return f"{label}: {device_entry.name}"
 
         return f"{translations.get(f'component.{DOMAIN}.common.source_entity')}: {self.flow.source_entity_id}"
 
@@ -594,6 +675,14 @@ class LibraryOptionsFlow(LibraryFlow):
         super().__init__(flow)
         self.flow: PowercalcOptionsFlow = flow
 
+    async def async_step_select_device(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Change the device the Powercalc entities are linked to."""
+        return await self.flow.async_handle_options_step(
+            user_input,
+            self.build_select_device_schema(),
+            Step.SELECT_DEVICE,
+        )
+
     async def async_step_library_options(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the basic options flow."""
         self.flow.is_library_flow = True
@@ -601,11 +690,14 @@ class LibraryOptionsFlow(LibraryFlow):
         if user_input is not None:
             return await self.async_step_manufacturer()
 
+        profile = self.flow.selected_profile
+        assert profile is not None
         return self.flow.async_show_form(
             step_id=Step.LIBRARY_OPTIONS,
             description_placeholders={
-                "manufacturer": self.flow.selected_profile.manufacturer,  # type: ignore
-                "model": self.flow.selected_profile.model,  # type: ignore
+                "manufacturer": profile.manufacturer,
+                "model": profile.model,
+                "profile_details": self._build_profile_details(profile),
             },
             last_step=False,
         )

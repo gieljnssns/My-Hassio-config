@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Helios Forecast — linie panelů",
+        "description": "Jedna předpověď pro jednu linii panelů (skupina shodně orientovaných panelů). Pro každou další linii přidejte integraci znovu. Ponechte pole polohy prázdné pro použití domácí polohy z Home Assistant.",
+        "data": {
+          "name": "Název (např. Jižní střecha)",
+          "tilt": "Sklon (stupně, 0 = vodorovně, 90 = svisle)",
+          "azimuth": "Azimut (stupně od severu, 90 = východ, 180 = jih, 270 = západ)",
+          "kwp": "Špičkový výkon (kWp)",
+          "line_inverter_max_kw": "Max. výkon střídače pro tuto linii (kW, volitelné)",
+          "tracker": "Sledovač slunce",
+          "latitude": "Zeměpisná šířka (volitelné)",
+          "longitude": "Zeměpisná délka (volitelné)",
+          "inverter_max_kw": "Maximální výkon střídače (kW, volitelné)",
+          "production_entity": "Senzor výroby FV (pro naučenou korekci)",
+          "trend_anchor_hour": "Referenční hodina denního trendu (0-23, výchozí 6)",
+          "add_another": "Add another panel line",
+          "battery_capacity_kwh": "Využitelná kapacita baterie (kWh)",
+          "battery_soc_entity": "Senzor stavu nabití baterie (%)",
+          "battery_max_charge_kw": "Max. nabíjecí výkon baterie (kW, volitelné)",
+          "battery_max_discharge_kw": "Max. vybíjecí výkon baterie (kW, volitelné)",
+          "battery_min_soc": "Rezerva baterie — minimální stav nabití (%, výchozí 10)",
+          "battery_efficiency": "Účinnost cyklu baterie (%, výchozí 90)"
+        },
+        "data_description": {
+          "battery_soc_entity": "Vyplňte kapacitu a tento senzor pro zapnutí projekce stavu nabití. Spotřeba domácnosti se přebírá z panelu Energie, zde není potřeba žádný senzor."
+        }
+      },
+      "line": {
+        "title": "Helios Forecast — additional panel line",
+        "description": "Panel line {index}: another group of co-oriented panels on the same installation (shared production sensor and inverter).",
+        "data": {
+          "tilt": "Sklon (stupně, 0 = vodorovně, 90 = svisle)",
+          "azimuth": "Azimut (stupně od severu, 90 = východ, 180 = jih, 270 = západ)",
+          "kwp": "Špičkový výkon (kWp)",
+          "line_inverter_max_kw": "Max. výkon střídače pro tuto linii (kW, volitelné)",
+          "tracker": "Sledovač slunce",
+          "latitude": "Zeměpisná šířka pro tuto linii (volitelné)",
+          "longitude": "Zeměpisná délka pro tuto linii (volitelné)",
+          "add_another": "Add another panel line"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Helios Forecast",
+        "description": "Choose what to edit.",
+        "menu_options": {
+          "settings": "Edit settings (location, inverter, production sensor)",
+          "lines": "Edit panel lines"
+        }
+      },
+      "settings": {
+        "title": "Helios Forecast — settings",
+        "description": "Shared location, inverter cap, production sensor and trend anchor for every panel line in this entry.",
+        "data": {
+          "latitude": "Zeměpisná šířka (volitelné)",
+          "longitude": "Zeměpisná délka (volitelné)",
+          "inverter_max_kw": "Maximální výkon střídače (kW, volitelné)",
+          "production_entity": "Senzor výroby FV (pro naučenou korekci)",
+          "trend_anchor_hour": "Referenční hodina denního trendu (0-23, výchozí 6)",
+          "battery_capacity_kwh": "Využitelná kapacita baterie (kWh)",
+          "battery_soc_entity": "Senzor stavu nabití baterie (%)",
+          "battery_max_charge_kw": "Max. nabíjecí výkon baterie (kW, volitelné)",
+          "battery_max_discharge_kw": "Max. vybíjecí výkon baterie (kW, volitelné)",
+          "battery_min_soc": "Rezerva baterie — minimální stav nabití (%, výchozí 10)",
+          "battery_efficiency": "Účinnost cyklu baterie (%, výchozí 90)"
+        },
+        "data_description": {
+          "battery_soc_entity": "Vyplňte kapacitu a tento senzor pro zapnutí projekce stavu nabití. Spotřeba domácnosti se přebírá z panelu Energie, zde není potřeba žádný senzor."
+        }
+      },
+      "lines": {
+        "title": "Helios Forecast — panel line {index}/{total}",
+        "description": "Edit panel line {index} of {total}, or tick to add another.",
+        "data": {
+          "tilt": "Sklon (stupně, 0 = vodorovně, 90 = svisle)",
+          "azimuth": "Azimut (stupně od severu, 90 = východ, 180 = jih, 270 = západ)",
+          "kwp": "Špičkový výkon (kWp)",
+          "line_inverter_max_kw": "Max. výkon střídače pro tuto linii (kW, volitelné)",
+          "tracker": "Sledovač slunce",
+          "latitude": "Zeměpisná šířka pro tuto linii (volitelné)",
+          "longitude": "Zeměpisná délka pro tuto linii (volitelné)",
+          "remove_this_line": "Remove this panel line",
+          "add_another": "Add another panel line"
+        }
+      }
+    }
+  },
+  "selector": {
+    "tracker": {
+      "options": {
+        "none": "Žádný (pevný)",
+        "dual-axis": "Dvouosý (sleduje slunce)",
+        "single-axis-h": "Jednoosý vodorovný (sleduje sklon)",
+        "single-axis-v": "Jednoosý svislý (sleduje azimut)"
+      }
+    }
+  },
+  "services": {
+    "get_forecast": {
+      "name": "Získat předpověď",
+      "description": "Vrátí úplnou předpověď výroby (ode dneška dál, jeden bod každých 15 minut, každý s předpokládanými watty a intervalem spolehlivosti P10/P90) jako data odpovědi pro použití v automatizacích.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Instalace",
+          "description": "Kterou instalaci Helios Forecast načíst. Nepovinné, když je nakonfigurována jen jedna."
+        }
+      }
+    },
+    "get_battery_soc_forecast": {
+      "name": "Získat předpověď stavu nabití",
+      "description": "Vrátí předpokládaný stav nabití baterie na příštích 48 hodin (jeden bod každých 15 minut) jako data odpovědi pro použití v automatizacích.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Instalace",
+          "description": "Kterou instalaci Helios Forecast načíst. Nepovinné, když je nakonfigurována jen jedna."
+        }
+      }
+    }
+  }
+}

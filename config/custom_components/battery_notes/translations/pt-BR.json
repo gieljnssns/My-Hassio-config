@@ -11,14 +11,16 @@
                     "battery_type": "Tipo de bateria",
                     "battery_quantity": "Quantidade de baterias",
                     "note": "Nota",
-                    "battery_low_threshold": "Limite de bateria fraca"
+                    "battery_low_threshold": "Limite de bateria fraca",
+                    "battery_increase_threshold": "Limite de aumento de bateria"
                 },
                 "data_description": {
-                    "battery_low_threshold": "0 irá usar o limite padrão global"
+                    "battery_low_threshold": "0 irá usar o limite padrão global",
+                    "battery_increase_threshold": "O limite é a diferença de aumento entre o nível anterior e atual da bateria\n0 usará o limite padrão global"
                 },
                 "sections": {
                     "advanced_settings": {
-                        "name": "Configurações avançadas",
+                        "name": "Configurações adicionais",
                         "data": {
                             "battery_percentage_template": "Template de percentual da bateria",
                             "battery_low_template": "Modelo de bateria fraca",
@@ -84,14 +86,16 @@
                         "battery_type": "Tipo de bateria",
                         "battery_quantity": "Quantidade de baterias",
                         "note": "Nota",
-                        "battery_low_threshold": "Limite de bateria fraca"
+                        "battery_low_threshold": "Limite de bateria fraca",
+                        "battery_increase_threshold": "Limite de aumento de bateria"
                     },
                     "data_description": {
-                        "battery_low_threshold": "0 irá usar o limite padrão global"
+                        "battery_low_threshold": "0 irá usar o limite padrão global",
+                        "battery_increase_threshold": "O limite é a diferença de aumento entre o nível anterior e atual da bateria\n0 usará o limite padrão global"
                     },
                     "sections": {
                         "advanced_settings": {
-                            "name": "Configurações avançadas",
+                            "name": "Configurações adicionais",
                             "data": {
                                 "battery_percentage_template": "Template de percentual da bateria",
                                 "battery_low_template": "Modelo de bateria fraca",
@@ -116,15 +120,17 @@
                         "battery_type": "Tipo de bateria",
                         "battery_quantity": "Quantidade de baterias",
                         "note": "Nota",
-                        "battery_low_threshold": "Limite de bateria fraca"
+                        "battery_low_threshold": "Limite de bateria fraca",
+                        "battery_increase_threshold": "Limite de aumento de bateria"
                     },
                     "data_description": {
                         "name": "Deixar em branco utilizará o nome do dispositivo de origem",
-                        "battery_low_threshold": "0 irá usar o limite padrão global"
+                        "battery_low_threshold": "0 irá usar o limite padrão global",
+                        "battery_increase_threshold": "O limite é a diferença de aumento entre o nível anterior e atual da bateria\n0 usará o limite padrão global"
                     },
                     "sections": {
                         "advanced_settings": {
-                            "name": "Configurações avançadas",
+                            "name": "Configurações adicionais",
                             "data": {
                                 "battery_percentage_template": "Template de percentual da bateria",
                                 "battery_low_template": "Modelo de bateria fraca",
@@ -158,18 +164,18 @@
                     "hide_battery": "Ocultar bateria",
                     "round_battery": "Bateria arredondada",
                     "default_battery_low_threshold": "Limite padrão de bateria baixa",
-                    "battery_increase_threshold": "Limite de aumento de bateria"
+                    "battery_increase_threshold": "Limite padrão de aumento de bateria"
                 },
                 "data_description": {
                     "show_all_devices": "Mostrar todos os dispositivos no menu suspenso do dispositivo, caso contrário, apenas aqueles com bateria serão mostrados.",
                     "hide_battery": "Ocultar a bateria padrão ao adicionar bateria+",
                     "round_battery": "Arredondar Bateria+ para porcentagens inteiras",
-                    "default_battery_low_threshold": "",
-                    "battery_increase_threshold": ""
+                    "default_battery_low_threshold": "Este é o limite padrão para o disparo do evento `battery_notes_battery_increased`; utilize-o para automações relacionadas à substituição da bateria. O limite refere-se à diferença de aumento entre o nível anterior e o atual da bateria e pode ser personalizado individualmente nas configurações de cada dispositivo.",
+                    "battery_increase_threshold": "Este é o limite padrão para o disparo do evento `battery_notes_battery_increased`; utilize-o para automações relacionadas à substituição da bateria. O limite refere-se à diferença de aumento entre o nível anterior e o atual da bateria e pode ser personalizado individualmente nas configurações de cada dispositivo."
                 },
                 "sections": {
                     "advanced_settings": {
-                        "name": "Configurações avançadas",
+                        "name": "Configurações adicionais",
                         "data": {
                             "enable_autodiscovery": "Descobrir automaticamente",
                             "enable_replaced": "Habilitar botão de substituição de bateria",
@@ -195,6 +201,9 @@
             "battery_low": {
                 "name": "{device_name}Bateria fraca",
                 "state_attributes": {
+                    "battery_increase_threshold": {
+                        "name": "Limite de aumento de bateria"
+                    },
                     "battery_low_threshold": {
                         "name": "Limite de bateria fraca"
                     }
@@ -224,6 +233,9 @@
                     },
                     "battery_last_replaced": {
                         "name": "Última substituição da bateria"
+                    },
+                    "battery_increase_threshold": {
+                        "name": "Limite de aumento de bateria"
                     },
                     "battery_low": {
                         "name": "Bateria fraca"

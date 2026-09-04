@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Helios Forecast — линия панелей",
+        "description": "Один прогноз для одной линии панелей (группы одинаково ориентированных панелей). Добавьте интеграцию заново для каждой дополнительной линии. Оставьте местоположение пустым, чтобы использовать дом Home Assistant.",
+        "data": {
+          "name": "Название (напр. Южная крыша)",
+          "tilt": "Наклон (градусы, 0 = горизонтально, 90 = вертикально)",
+          "azimuth": "Азимут (градусы от севера, 90 = восток, 180 = юг, 270 = запад)",
+          "kwp": "Пиковая мощность (kWp)",
+          "line_inverter_max_kw": "Макс. мощность инвертора для этой линии (кВт, необязательно)",
+          "tracker": "Солнечный трекер",
+          "latitude": "Широта (необязательно)",
+          "longitude": "Долгота (необязательно)",
+          "inverter_max_kw": "Макс. мощность инвертора (kW, необязательно)",
+          "production_entity": "Датчик выработки СЭС (для обучаемой коррекции)",
+          "trend_anchor_hour": "Опорный час дневного тренда (0-23, по умолчанию 6)",
+          "add_another": "Add another panel line",
+          "battery_capacity_kwh": "Полезная ёмкость батареи (kWh)",
+          "battery_soc_entity": "Датчик уровня заряда батареи (%)",
+          "battery_max_charge_kw": "Макс. мощность заряда батареи (kW, необязательно)",
+          "battery_max_discharge_kw": "Макс. мощность разряда батареи (kW, необязательно)",
+          "battery_min_soc": "Резерв батареи — минимальный уровень заряда (%, по умолчанию 10)",
+          "battery_efficiency": "КПД полного цикла батареи (%, по умолчанию 90)"
+        },
+        "data_description": {
+          "battery_soc_entity": "Заполните ёмкость и этот датчик, чтобы включить прогноз уровня заряда. Потребление дома берётся из панели «Энергия», датчик здесь не нужен."
+        }
+      },
+      "line": {
+        "title": "Helios Forecast — additional panel line",
+        "description": "Panel line {index}: another group of co-oriented panels on the same installation (shared production sensor and inverter).",
+        "data": {
+          "tilt": "Наклон (градусы, 0 = горизонтально, 90 = вертикально)",
+          "azimuth": "Азимут (градусы от севера, 90 = восток, 180 = юг, 270 = запад)",
+          "kwp": "Пиковая мощность (kWp)",
+          "line_inverter_max_kw": "Макс. мощность инвертора для этой линии (кВт, необязательно)",
+          "tracker": "Солнечный трекер",
+          "latitude": "Широта для этой линии (необязательно)",
+          "longitude": "Долгота для этой линии (необязательно)",
+          "add_another": "Add another panel line"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Helios Forecast",
+        "description": "Choose what to edit.",
+        "menu_options": {
+          "settings": "Edit settings (location, inverter, production sensor)",
+          "lines": "Edit panel lines"
+        }
+      },
+      "settings": {
+        "title": "Helios Forecast — settings",
+        "description": "Shared location, inverter cap, production sensor and trend anchor for every panel line in this entry.",
+        "data": {
+          "latitude": "Широта (необязательно)",
+          "longitude": "Долгота (необязательно)",
+          "inverter_max_kw": "Макс. мощность инвертора (kW, необязательно)",
+          "production_entity": "Датчик выработки СЭС (для обучаемой коррекции)",
+          "trend_anchor_hour": "Опорный час дневного тренда (0-23, по умолчанию 6)",
+          "battery_capacity_kwh": "Полезная ёмкость батареи (kWh)",
+          "battery_soc_entity": "Датчик уровня заряда батареи (%)",
+          "battery_max_charge_kw": "Макс. мощность заряда батареи (kW, необязательно)",
+          "battery_max_discharge_kw": "Макс. мощность разряда батареи (kW, необязательно)",
+          "battery_min_soc": "Резерв батареи — минимальный уровень заряда (%, по умолчанию 10)",
+          "battery_efficiency": "КПД полного цикла батареи (%, по умолчанию 90)"
+        },
+        "data_description": {
+          "battery_soc_entity": "Заполните ёмкость и этот датчик, чтобы включить прогноз уровня заряда. Потребление дома берётся из панели «Энергия», датчик здесь не нужен."
+        }
+      },
+      "lines": {
+        "title": "Helios Forecast — panel line {index}/{total}",
+        "description": "Edit panel line {index} of {total}, or tick to add another.",
+        "data": {
+          "tilt": "Наклон (градусы, 0 = горизонтально, 90 = вертикально)",
+          "azimuth": "Азимут (градусы от севера, 90 = восток, 180 = юг, 270 = запад)",
+          "kwp": "Пиковая мощность (kWp)",
+          "line_inverter_max_kw": "Макс. мощность инвертора для этой линии (кВт, необязательно)",
+          "tracker": "Солнечный трекер",
+          "latitude": "Широта для этой линии (необязательно)",
+          "longitude": "Долгота для этой линии (необязательно)",
+          "remove_this_line": "Remove this panel line",
+          "add_another": "Add another panel line"
+        }
+      }
+    }
+  },
+  "selector": {
+    "tracker": {
+      "options": {
+        "none": "Нет (фиксированный)",
+        "dual-axis": "Двухосевой (следует за солнцем)",
+        "single-axis-h": "Одноосевой горизонтальный (изменяется наклон)",
+        "single-axis-v": "Одноосевой вертикальный (изменяется азимут)"
+      }
+    }
+  },
+  "services": {
+    "get_forecast": {
+      "name": "Получить прогноз",
+      "description": "Возвращает полный прогноз производства (с сегодняшнего дня, по одной точке каждые 15 минут, каждая с прогнозируемыми ваттами и доверительным интервалом P10/P90) в виде данных ответа для использования в автоматизациях.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Установка",
+          "description": "Какую установку Helios Forecast читать. Необязательно, когда настроена только одна."
+        }
+      }
+    },
+    "get_battery_soc_forecast": {
+      "name": "Получить прогноз уровня заряда",
+      "description": "Возвращает прогнозируемый уровень заряда батареи на следующие 48 часов (по одной точке каждые 15 минут) в виде данных ответа для использования в автоматизациях.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Установка",
+          "description": "Какую установку Helios Forecast читать. Необязательно, когда настроена только одна."
+        }
+      }
+    }
+  }
+}

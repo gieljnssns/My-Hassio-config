@@ -1,10 +1,9 @@
-from __future__ import annotations
-
 from enum import StrEnum
 import re
 from typing import Any, NamedTuple, Protocol
 
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from custom_components.powercalc.common import SourceEntity
 from custom_components.powercalc.errors import PowercalcSetupError
@@ -199,7 +198,7 @@ class ModelIdMatcher(SubProfileMatcher):
 
     def match(self, entity_state: State, source_entity: SourceEntity) -> str | None:
         device_entry = source_entity.device_entry
-        if not device_entry:
+        if not isinstance(device_entry, DeviceEntry):
             return None
 
         if device_entry.model_id == self._model_id:

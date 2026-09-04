@@ -55,6 +55,7 @@ from homeassistant.util import dt as dt_util
 
 from .common import validate_is_float
 from .const import (
+    ATTR_BATTERY_INCREASE_THRESHOLD,
     ATTR_BATTERY_LAST_REPLACED,
     ATTR_BATTERY_LAST_REPORTED,
     ATTR_BATTERY_LOW_THRESHOLD,
@@ -139,7 +140,10 @@ async def async_setup_entry(
             | BatteryNotesBatteryPercentageTemplateLowSensor
         ] = []
 
-        if coordinator.battery_low_template is not None:
+        if (
+            coordinator.battery_low_template
+            and coordinator.battery_low_template.strip()
+        ):
             entities.append(
                 BatteryNotesBatteryLowBinaryTemplateSensor(
                     hass,
@@ -150,7 +154,10 @@ async def async_setup_entry(
                 )
             )
 
-        elif coordinator.battery_percentage_template is not None:
+        elif (
+            coordinator.battery_percentage_template
+            and coordinator.battery_percentage_template.strip()
+        ):
             entities.append(
                 BatteryNotesBatteryPercentageTemplateLowSensor(
                     hass,
@@ -208,6 +215,7 @@ class BatteryNotesBatteryLowBaseSensor(BatteryNotesEntity, BinarySensorEntity):
 
     _unrecorded_attributes = frozenset(
         {
+            ATTR_BATTERY_INCREASE_THRESHOLD,
             ATTR_BATTERY_LOW_THRESHOLD,
             ATTR_BATTERY_QUANTITY,
             ATTR_BATTERY_TYPE,
@@ -227,6 +235,7 @@ class BatteryNotesBatteryLowBaseSensor(BatteryNotesEntity, BinarySensorEntity):
 
         # Battery related attributes
         attrs = {
+            ATTR_BATTERY_INCREASE_THRESHOLD: self.coordinator.battery_increased_threshold,
             ATTR_BATTERY_LOW_THRESHOLD: self.coordinator.battery_low_threshold,
             ATTR_BATTERY_QUANTITY: self.coordinator.battery_quantity,
             ATTR_BATTERY_TYPE: self.coordinator.battery_type,
@@ -273,14 +282,20 @@ class BatteryNotesNonTemplateBatteryLowSensor(BatteryNotesBatteryLowBaseSensor):
             hass, entity_description=entity_description, coordinator=coordinator
         )
 
-        registry = er.async_get(hass)
-        entity = registry.async_get(self.entity_id)
+    async def async_added_to_hass(self) -> None:
+        """Handle added to Hass."""
+
+        await super().async_added_to_hass()
+
+        entity_registry = er.async_get(self.hass)
+        entity = entity_registry.async_get(self.entity_id)
 
         if entity is not None and entity.hidden_by != er.RegistryEntryHider.USER:
-            registry.async_update_entity(
+            entity_registry.async_update_entity(
                 self.entity_id,
                 hidden_by=er.RegistryEntryHider.INTEGRATION
-                if hass.data[MY_KEY].hide_battery_low
+                if self.hass.data[MY_KEY].hide_battery_low
+                and self.coordinator.wrapped_battery is not None
                 else None,
             )
 
@@ -572,7 +587,7 @@ class BatteryNotesBatteryWrappedLowSensor(BatteryNotesNonTemplateBatteryLowSenso
         self.async_write_ha_state()
 
         _LOGGER.debug(
-            "%s binary sensor battery_low set to: %s",
+            "%s binary sensor battery_low set to: %s via wrapped low sensor",
             self.coordinator.wrapped_battery.entity_id,
             self.coordinator.battery_low,
         )
@@ -707,6 +722,8 @@ class BatteryNotesBatteryBinaryLowSensor(BatteryNotesNonTemplateBatteryLowSensor
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
 
+        await super().async_added_to_hass()
+
         @callback
         async def _async_state_changed_listener(
             event: Event[EventStateChangedData] | None = None,
@@ -796,12 +813,12 @@ class BatteryNotesBatteryBinaryLowSensor(BatteryNotesNonTemplateBatteryLowSensor
             self.async_write_ha_state()
             return
 
-        self._attr_is_on = self.coordinator.battery_low_binary_state == "on"
+        self._attr_is_on = self.coordinator.battery_low_binary_state
 
         self.async_write_ha_state()
 
         _LOGGER.debug(
-            "%s binary sensor battery_low set to: %s",
+            "%s binary sensor battery_low set to: %s via binary low sensor",
             self.coordinator.wrapped_battery_low.entity_id,
             self.coordinator.battery_low,
         )

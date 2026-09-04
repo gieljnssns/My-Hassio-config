@@ -3,7 +3,8 @@
     "source_entity": "Zdrojová entita",
     "source_device": "Zdrojové zařízení",
     "remarks_smart_switch": "Tento profil poskytuje pouze hodnoty napájení v pohotovostním režimu. \n Pokud máte spotřebič, který zapnutí spotřebovává pevně dané množství energie, můžete zadat tuto hodnotu v dalším kroku v nastavení",
-    "remarks_smart_dimmer": "Tento profil poskytuje pouze hodnoty spotřeby energie v pohotovostním režimu. \n V dalším kroku můžete volitelně zadat hodnoty připojeného světla"
+    "remarks_smart_dimmer": "Tento profil poskytuje pouze hodnoty spotřeby energie v pohotovostním režimu. \n V dalším kroku můžete volitelně zadat hodnoty připojeného světla",
+    "view_measurement_details": "Zobrazit podrobnosti měření"
   },
   "config": {
     "abort": {
@@ -14,7 +15,6 @@
       "daily_energy_mandatory": "Musíte zadat alespoň jednu z možností „Hodnota“ nebo „Šablona hodnoty“",
       "entity_mandatory": "Pro všechny strategie kromě playbook je nutné vybrat entitu",
       "fixed_mandatory": "Musíte zadat alespoň jednu z následujících možností: pevnou hodnotu, šablonu nebo mapování stavů",
-      "fixed_states_power_only": "Tato entita může pracovat pouze s 'states_power', ne s 'power'",
       "group_mandatory": "Musíte definovat alespoň podskupiny nebo entity výkonu a energie",
       "linear_mandatory": "Musíte zadat alespoň jednu z možností max_power nebo calibrate",
       "linear_min_higher_as_max": "Maximální spotřeba nebůže být nižší, nežli minimální spotřeba",
@@ -336,7 +336,7 @@
         "data_description": {
           "confirm_autodisovered_model": "Pokud se rozhodnete nepotvrzovat, pak můžete zadat výrobce a model manuálně"
         },
-        "description": "{source}\n\nVýrobce \"{manufacturer}\" a model \"{model}\" byl automaticky detekován pro vaše zařízení.{remarks}",
+        "description": "{source}\n\nVýrobce \"{manufacturer}\" a model \"{model}\" byl automaticky detekován pro vaše zařízení.{remarks}{profile_details}",
         "title": "Knihovna"
       },
       "library_custom_fields": {
@@ -383,6 +383,16 @@
         },
         "description": "Vyberte model zařízení. Viz [list]({supported_models_link}) podporovaných modelů pro více informací",
         "title": "Nastavení modelu"
+      },
+      "select_device": {
+        "data": {
+          "device": "Zařízení"
+        },
+        "data_description": {
+          "device": "Zařízení, ke kterému mají být entity Powercalc připojeny"
+        },
+        "description": "Vyberte zařízení, ke kterému má být senzor Powercalc připojen.",
+        "title": "Vyberte zařízení"
       },
       "menu_group": {
         "menu_options": {
@@ -550,6 +560,7 @@
       "virtual_power": {
         "data": {
           "create_energy_sensor": "Vytvořit senzor energie",
+          "create_standby_energy_sensor": "Vytvořit senzor energie v pohotovostním režimu",
           "create_cost_sensor": "Vytvořit senzor nákladů",
           "create_utility_meters": "Vytvořit měřiče spotřeby",
           "entity_id": "Zdrojová entita",
@@ -559,6 +570,7 @@
         },
         "data_description": {
           "create_energy_sensor": "Zda má Powercalc vytvořit senzor kWh",
+          "create_standby_energy_sensor": "Zda má Powercalc vytvořit senzor kWh, který sleduje pouze spotřebu v pohotovostním režimu",
           "create_utility_meters": "Nechat Powercalc vytvořit měřiče spotřeby s denními, hodinovými apod. cykly",
           "entity_id": "Entita, na které je virtuální výkon založen. Senzor výkonu bude poslouchat změny stavu této entity, aby se aktualizoval",
           "name": "Při ponechání prázdné hodnoty se použije název ze zdrojové entity",
@@ -569,11 +581,15 @@
       },
       "wled": {
         "data": {
+          "current_entity": "Entita proudu",
           "power_factor": "Účiník",
           "voltage": "Napětí"
         },
         "description": "Ujistěte se, že je v softwaru WLED povolen omezovač jasu. Viz také {docs_uri}",
-        "title": "Konfigurace WLED"
+        "title": "Konfigurace WLED",
+        "data_description": {
+          "current_entity": "Volitelně vyberte senzor poskytující odhadovaný proud v mA. Je potřeba pouze tehdy, když Powercalc nemůže automaticky najít senzor odhadovaného proudu WLED, například když je omezovač jasu nastaven pro jednotlivé výstupy."
+        }
       }
     }
   },
@@ -589,6 +605,25 @@
     },
     "unknown_sub_profile": {
       "message": "\"{profile}\" není známý podprofil. Dostupné podprofily: {known_profiles}."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "measure_session_status": {
+        "name": "Measure session status",
+        "state": {
+          "idle": "Idle",
+          "validating": "Validating",
+          "ready": "Ready",
+          "awaiting_confirmation": "Awaiting confirmation",
+          "running": "Running",
+          "cancelling": "Cancelling",
+          "cancelled": "Cancelled",
+          "completed": "Completed",
+          "failed": "Failed",
+          "resumable": "Resumable"
+        }
+      }
     }
   },
   "issues": {
@@ -645,7 +680,6 @@
     "error": {
       "cost_price_mandatory": "Musíte zadat buď cenu energie, nebo senzor ceny energie",
       "fixed_mandatory": "Musíte zadat alespoň jednu z možností Výkon, šablona výkonu nebo výkon podle stavů",
-      "fixed_states_power_only": "Tato entita může pracovat pouze s 'states_power', ne s 'power'",
       "group_mandatory": "Musíte definovat alespoň podskupiny nebo entity výkonu a energie",
       "linear_mandatory": "Musíte zadat alespoň jednu z možností max_power nebo calibrate",
       "linear_min_higher_as_max": "Maximální spotřeba nebůže být nižší, nežli minimální spotřeba",
@@ -675,6 +709,7 @@
         "title": "Základní možnosti",
         "data": {
           "create_energy_sensor": "Vytvořit senzor energie",
+          "create_standby_energy_sensor": "Vytvořit senzor energie v pohotovostním režimu",
           "create_cost_sensor": "Vytvořit senzor nákladů",
           "create_utility_meters": "Vytvořit měřiče spotřeby",
           "entity_id": "Zdrojová entita",
@@ -683,6 +718,7 @@
         },
         "data_description": {
           "create_energy_sensor": "Zda má Powercalc vytvořit senzor kWh",
+          "create_standby_energy_sensor": "Zda má Powercalc vytvořit senzor kWh, který sleduje pouze spotřebu v pohotovostním režimu",
           "create_utility_meters": "Nechat Powercalc vytvořit měřiče spotřeby s denními, hodinovými apod. cykly",
           "entity_id": "Entita, na které je virtuální výkon založen. Senzor výkonu bude poslouchat změny stavu této entity, aby se aktualizoval",
           "name": "Při ponechání prázdné hodnoty se použije název ze zdrojové entity",
@@ -957,6 +993,7 @@
           "playbook": "Možnosti playbooku",
           "multi_switch": "Možnosti vícenásobného spínače",
           "real_power": "Možnosti skutečného výkonu",
+          "select_device": "Zařízení",
           "utility_meter_options": "Možnosti měřičů spotřeby",
           "wled": "Možnosti WLED",
           "cost_options": "Možnosti nákladů"
@@ -964,7 +1001,17 @@
       },
       "library_options": {
         "title": "Možnosti knihovny",
-        "description": "Aktuálně je vybrán následující profil knihovny: \n výrobce: {manufacturer}\n model: {model}\n\nPokud chcete profil změnit, klikněte na Další."
+        "description": "Aktuálně je vybrán následující profil knihovny: \n výrobce: {manufacturer}\n model: {model}\n\nPokud chcete profil změnit, klikněte na Další.{profile_details}"
+      },
+      "select_device": {
+        "data": {
+          "device": "Zařízení"
+        },
+        "data_description": {
+          "device": "Zařízení, ke kterému mají být entity Powercalc připojeny"
+        },
+        "description": "Vyberte zařízení, ke kterému má být senzor Powercalc připojen.",
+        "title": "Vyberte zařízení"
       },
       "linear": {
         "title": "Lineární možnosti",
@@ -1058,8 +1105,12 @@
       "wled": {
         "title": "Možnosti WLED",
         "data": {
+          "current_entity": "Entita proudu",
           "power_factor": "Účiník",
           "voltage": "Napětí"
+        },
+        "data_description": {
+          "current_entity": "Volitelně vyberte senzor poskytující odhadovaný proud v mA. Je potřeba pouze tehdy, když Powercalc nemůže automaticky najít senzor odhadovaného proudu WLED, například když je omezovač jasu nastaven pro jednotlivé výstupy."
         }
       },
       "cost_options": {

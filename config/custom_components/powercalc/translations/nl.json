@@ -3,18 +3,18 @@
     "source_entity": "Bron entiteit",
     "source_device": "Bron apparaat",
     "remarks_smart_switch": "Dit profiel biedt alleen stand-by stroomwaarden. \n Wanneer je een apparaat hebt dat een vaste hoeveelheid stroom verbruikt wanneer het is ingeschakeld, kunt u die waarde opgeven in de volgende stap van de configuratie flow",
-    "remarks_smart_dimmer": "Dit profiel biedt alleen waarden voor standby vermogen. \n In de volgende stap kunt u optioneel de waarden van het aangesloten licht opgeven"
+    "remarks_smart_dimmer": "Dit profiel biedt alleen waarden voor standby vermogen. \n In de volgende stap kunt u optioneel de waarden van het aangesloten licht opgeven",
+    "view_measurement_details": "Meetdetails bekijken"
   },
   "config": {
     "abort": {
       "already_configured": "Sensor is reeds geconfigureerd, specifieer een uniek ID"
     },
     "error": {
-      "cost_price_mandatory": "U moet een energieprijs of een energieprijssensor aanleveren",
+      "cost_price_mandatory": "U moet een energieprijs of een sensor van de energieprijs leveren",
       "daily_energy_mandatory": "Je moet minimaal waarde of waarde template opgeven",
       "entity_mandatory": "Je moet verplicht een entiteit opgeven voor iedere andere strategie dan playbook",
       "fixed_mandatory": "Je dient minimaal een van de volgende velden te definiëren: Vermogen, Vermogen template of Vermogen per status",
-      "fixed_states_power_only": "Deze entiteit kan alleen functioneren met 'states_power', niet 'power'",
       "group_mandatory": "Je dient minimaal een van de volgende velden te definiëren: sub groepen, vermogen entiteiten of energie entiteiten",
       "linear_mandatory": "Je moet tenminste één van Max vermogen of Kalibratie waardes opgeven",
       "linear_min_higher_as_max": "Maximale vermogen kan niet lager zijn dan minimale vermogen",
@@ -336,7 +336,7 @@
         "data_description": {
           "confirm_autodisovered_model": "Wanneer je niet bevestigd kan je in het volgende scherm zelf de fabrikant en het model kiezen."
         },
-        "description": "{source}\n\nFabrikant \"{manufacturer}\" en model \"{model}\" zijn automatisch gedecteerd voor het apparaat.{remarks}",
+        "description": "{source}\n\nFabrikant \"{manufacturer}\" en model \"{model}\" zijn automatisch gedecteerd voor het apparaat.{remarks}{profile_details}",
         "title": "Bibliotheek"
       },
       "library_custom_fields": {
@@ -383,6 +383,16 @@
         },
         "description": "Selecteer het model. Zie de [lijst]({supported_models_link}) van ondersteunde apparaten voor meer informatie",
         "title": "Model configuratie"
+      },
+      "select_device": {
+        "data": {
+          "device": "Apparaat"
+        },
+        "data_description": {
+          "device": "Het apparaat waaraan de Powercalc-entiteiten moeten worden gekoppeld"
+        },
+        "description": "Selecteer het apparaat waaraan de Powercalc-sensor moet worden gekoppeld.",
+        "title": "Apparaat selecteren"
       },
       "menu_group": {
         "menu_options": {
@@ -550,6 +560,7 @@
       "virtual_power": {
         "data": {
           "create_energy_sensor": "Creëer energie sensoren",
+          "create_standby_energy_sensor": "Stand-by-energiesensor maken",
           "create_cost_sensor": "Maak een kostensensor",
           "create_utility_meters": "Creëer utiliteit meters",
           "entity_id": "Bron entiteit",
@@ -559,6 +570,7 @@
         },
         "data_description": {
           "create_energy_sensor": "Laat Powercalc een kWh meter maken",
+          "create_standby_energy_sensor": "Of Powercalc een kWh-sensor moet maken die alleen het stand-byverbruik bijhoudt",
           "create_utility_meters": "Laat powercalc utiliteit meters maken. Deze resetten dagelijks, uurlijks etc.",
           "entity_id": "entiteit waarop de virtuele energie sensor is gebaseerd, de energiesensor update zichzelf wanneer deze entiteit van status wijzigt",
           "name": "Indien dit leeg gelaten wordt dan wordt de naam van de bron entiteit overgenomen",
@@ -569,11 +581,15 @@
       },
       "wled": {
         "data": {
+          "current_entity": "Stroomentiteit",
           "power_factor": "Vermogensfactor",
           "voltage": "Spanning"
         },
         "description": "Zorg ervoor dat u helderheidsbegrenzer inschakelt in WLED-software. Zie ook {docs_uri}",
-        "title": "WLED configuratie"
+        "title": "WLED configuratie",
+        "data_description": {
+          "current_entity": "Selecteer optioneel een sensor die de geschatte stroom in mA levert. Alleen nodig wanneer Powercalc de WLED-sensor voor geschatte stroom niet automatisch kan vinden, bijvoorbeeld wanneer de helderheidsbegrenzer per uitgang is geconfigureerd."
+        }
       }
     }
   },
@@ -589,6 +605,25 @@
     },
     "unknown_sub_profile": {
       "message": "\"{profile}\" is geen bekend subprofiel. Beschikbare subprofielen: {known_profiles}."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "measure_session_status": {
+        "name": "Measure session status",
+        "state": {
+          "idle": "Idle",
+          "validating": "Validating",
+          "ready": "Ready",
+          "awaiting_confirmation": "Awaiting confirmation",
+          "running": "Running",
+          "cancelling": "Cancelling",
+          "cancelled": "Cancelled",
+          "completed": "Completed",
+          "failed": "Failed",
+          "resumable": "Resumable"
+        }
+      }
     }
   },
   "issues": {
@@ -645,7 +680,6 @@
     "error": {
       "cost_price_mandatory": "U moet een energieprijs of een energieprijssensor aanleveren",
       "fixed_mandatory": "Je dient minimaal een van de volgende velden te definieren: vermogen, vermogen template of vermogen per status",
-      "fixed_states_power_only": "Deze entiteit kan alleen functioneren met 'states_power', niet 'power'",
       "group_mandatory": "Je dient minimaal een van de volgende velden te definieren: sub groepen, vermogen entiteiten of energie entiteiten",
       "linear_mandatory": "Je moet mimimaal max vermogen of kalibratie waardes instellen",
       "linear_min_higher_as_max": "Maximale vermogen kan niet lager zijn dan mimimale vermogen",
@@ -675,6 +709,7 @@
         "title": "Basisopties",
         "data": {
           "create_energy_sensor": "Creëer energie sensoren",
+          "create_standby_energy_sensor": "Stand-by-energiesensor maken",
           "create_cost_sensor": "Maak een kostensensor",
           "create_utility_meters": "Creëer utiliteit meters",
           "entity_id": "Bron entiteit",
@@ -683,6 +718,7 @@
         },
         "data_description": {
           "create_energy_sensor": "Laat powercalc een kWh meter maken",
+          "create_standby_energy_sensor": "Of Powercalc een kWh-sensor moet maken die alleen het stand-byverbruik bijhoudt",
           "create_utility_meters": "Laat powercalc utiliteit meters maken. Deze resetten dagelijks, uurlijks etc.",
           "entity_id": "entiteit waarop de virtuele energie sensor is gebaseerd, de energiesensor update zichzelf wanneer deze entiteit van status wijzigt",
           "name": "Indien dit leeg gelaten wordt dan wordt de naam van de bron entiteit overgenomen",
@@ -957,6 +993,7 @@
           "playbook": "Playbook opties",
           "multi_switch": "Multi switch opties",
           "real_power": "Opties voor werkelijk vermogen",
+          "select_device": "Apparaat",
           "utility_meter_options": "Nutsmeter opties",
           "wled": "WLED opties",
           "cost_options": "Kosten opties"
@@ -964,7 +1001,17 @@
       },
       "library_options": {
         "title": "Bibliotheek opties",
-        "description": "Momenteel is het huidige profiel geselecteerd: \nfabrikant: {manufacturer}\nmodel: {model}\n\nAls u het profiel wilt wijzigen, klikt u op volgende."
+        "description": "Momenteel is het huidige profiel geselecteerd: \nfabrikant: {manufacturer}\nmodel: {model}\n\nAls u het profiel wilt wijzigen, klikt u op volgende.{profile_details}"
+      },
+      "select_device": {
+        "data": {
+          "device": "Apparaat"
+        },
+        "data_description": {
+          "device": "Het apparaat waaraan de Powercalc-entiteiten moeten worden gekoppeld"
+        },
+        "description": "Selecteer het apparaat waaraan de Powercalc-sensor moet worden gekoppeld.",
+        "title": "Apparaat selecteren"
       },
       "linear": {
         "title": "Lineaire opties",
@@ -1058,8 +1105,12 @@
       "wled": {
         "title": "WLED opties",
         "data": {
+          "current_entity": "Stroomentiteit",
           "power_factor": "Vermogensfactor",
           "voltage": "Spanning"
+        },
+        "data_description": {
+          "current_entity": "Selecteer optioneel een sensor die de geschatte stroom in mA levert. Alleen nodig wanneer Powercalc de WLED-sensor voor geschatte stroom niet automatisch kan vinden, bijvoorbeeld wanneer de helderheidsbegrenzer per uitgang is geconfigureerd."
         }
       },
       "cost_options": {

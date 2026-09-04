@@ -3,7 +3,8 @@
     "source_entity": "Zdrojová entita",
     "source_device": "Zdrojové zariadenie",
     "remarks_smart_switch": "Tento profil poskytuje iba hodnoty spotreby energie v pohotovostnom režime. \n Keď máte spotrebič, ktorý po zapnutí spotrebúva pevné množstvo energie, môžete túto hodnotu zadať v ďalšom kroku konfiguračného postupu",
-    "remarks_smart_dimmer": "Tento profil poskytuje iba hodnoty spotreby energie v pohotovostnom režime. \n V ďalšom kroku môžete voliteľne zadať hodnoty pripojeného svetla"
+    "remarks_smart_dimmer": "Tento profil poskytuje iba hodnoty spotreby energie v pohotovostnom režime. \n V ďalšom kroku môžete voliteľne zadať hodnoty pripojeného svetla",
+    "view_measurement_details": "Zobraziť podrobnosti merania"
   },
   "config": {
     "abort": {
@@ -14,7 +15,6 @@
       "daily_energy_mandatory": "Musíte dodať aspoň jednu šablónu hodnoty alebo hodnoty",
       "entity_mandatory": "Výber subjektu je potrebný pre akúkoľvek inú stratégiu, než je stratégia playbook",
       "fixed_mandatory": "Musíte zadať aspoň jednu z možností: fixnú hodnotu, šablónu alebo mapovanie stavov",
-      "fixed_states_power_only": "Táto entita môže pracovať iba s 'states_power', nie 'power'",
       "group_mandatory": "Musíte definovať aspoň podskupiny alebo silové a energetické entity",
       "linear_mandatory": "Musíte dodať aspoň jeden z max_power alebo calibrate",
       "linear_min_higher_as_max": "Maximálny výkon nemôže byť nižší ako minimálny výkon",
@@ -336,7 +336,7 @@
         "data_description": {
           "confirm_autodisovered_model": "Ak sa rozhodnete nepotvrdiť, môžete zadať výrobcu a model sami"
         },
-        "description": "{source}\n\nVýrobca \"{manufacturer}\" a model \"{model}\" boli automaticky detekované pre vaše zariadenie.{remarks}",
+        "description": "{source}\n\nVýrobca \"{manufacturer}\" a model \"{model}\" boli automaticky detekované pre vaše zariadenie.{remarks}{profile_details}",
         "title": "Knižnica"
       },
       "library_custom_fields": {
@@ -383,6 +383,16 @@
         },
         "description": "Vyberte model zariadenia. Pozrite si [list]({supported_models_link}) podporovaných modelov, kde nájdete ďalšie informácie",
         "title": "Konfigurácia modelu"
+      },
+      "select_device": {
+        "data": {
+          "device": "Zariadenie"
+        },
+        "data_description": {
+          "device": "Zariadenie, ku ktorému majú byť priradené entity Powercalc"
+        },
+        "description": "Vyberte zariadenie, ku ktorému má byť priradený senzor Powercalc.",
+        "title": "Vyberte zariadenie"
       },
       "menu_group": {
         "menu_options": {
@@ -550,6 +560,7 @@
       "virtual_power": {
         "data": {
           "create_energy_sensor": "Vytvoriť snímač energie",
+          "create_standby_energy_sensor": "Vytvoriť snímač energie v pohotovostnom režime",
           "create_cost_sensor": "Vytvorte cenový senzor",
           "create_utility_meters": "Vytvorte merače spotreby",
           "entity_id": "Zdrojová entita",
@@ -559,6 +570,7 @@
         },
         "data_description": {
           "create_energy_sensor": "Či potrebuje powercalc vytvoriť kWh snímač",
+          "create_standby_energy_sensor": "Či má Powercalc vytvoriť snímač kWh, ktorý sleduje iba spotrebu v pohotovostnom režime",
           "create_utility_meters": "Nechajte powercalc vytvoriť merače spotreby, ktoré cyklujú denne, každú hodinu atď.",
           "entity_id": "entita, na ktorej je založená virtuálna sila, bude snímač výkonu počúvať zmeny stavu tejto entity, aby sa aktualizoval",
           "name": "Ak ponecháte prázdne, názov sa prevezme zo zdrojovej entity",
@@ -569,11 +581,15 @@
       },
       "wled": {
         "data": {
+          "current_entity": "Entita prúdu",
           "power_factor": "Účinník",
           "voltage": "Napätie"
         },
         "description": "Uistite sa, že ste povolili obmedzovač jasu v softvéri WLED. Pozri tiež {docs_uri}",
-        "title": "WLED konfigurácia"
+        "title": "WLED konfigurácia",
+        "data_description": {
+          "current_entity": "Voliteľne vyberte snímač poskytujúci odhadovaný prúd v mA. Potrebné len vtedy, keď Powercalc nedokáže automaticky nájsť snímač odhadovaného prúdu WLED, napríklad keď je obmedzovač jasu nastavený pre jednotlivé výstupy."
+        }
       }
     }
   },
@@ -589,6 +605,25 @@
     },
     "unknown_sub_profile": {
       "message": "\"{profile}\" nie je známy podprofil. Dostupné podprofily: {known_profiles}."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "measure_session_status": {
+        "name": "Measure session status",
+        "state": {
+          "idle": "Idle",
+          "validating": "Validating",
+          "ready": "Ready",
+          "awaiting_confirmation": "Awaiting confirmation",
+          "running": "Running",
+          "cancelling": "Cancelling",
+          "cancelled": "Cancelled",
+          "completed": "Completed",
+          "failed": "Failed",
+          "resumable": "Resumable"
+        }
+      }
     }
   },
   "issues": {
@@ -645,7 +680,6 @@
     "error": {
       "cost_price_mandatory": "Musíte dodať buď cenu energie, alebo snímač ceny energie",
       "fixed_mandatory": "Musíte zadať aspoň jednu z možností: fixnú hodnotu, šablónu alebo mapovanie stavov",
-      "fixed_states_power_only": "Táto entita môže pracovať iba s 'states_power', nie 'power'",
       "group_mandatory": "Musíte definovať aspoň podskupiny alebo výkonové a energetické entity",
       "linear_mandatory": "Musíte dodať aspoň jeden z max_power alebo calibrate",
       "linear_min_higher_as_max": "Maximálny výkon nemôže byť nižší ako minimálny výkon",
@@ -675,6 +709,7 @@
         "title": "Základné možnosti",
         "data": {
           "create_energy_sensor": "Vytvoriť snímač energie",
+          "create_standby_energy_sensor": "Vytvoriť snímač energie v pohotovostnom režime",
           "create_cost_sensor": "Vytvorte cenový senzor",
           "create_utility_meters": "Vytvorte merače spotreby",
           "entity_id": "Zdrojová entita",
@@ -683,6 +718,7 @@
         },
         "data_description": {
           "create_energy_sensor": "Či potrebuje powercalc vytvoriť kWh senzor",
+          "create_standby_energy_sensor": "Či má Powercalc vytvoriť snímač kWh, ktorý sleduje iba spotrebu v pohotovostnom režime",
           "create_utility_meters": "Nechajte powercalc vytvoriť merače spotreby, ktoré cyklujú denne, každú hodinu atď.",
           "entity_id": "entita, na ktorej je založená virtuálna sila, bude snímač výkonu počúvať zmeny stavu tejto entity, aby sa aktualizoval",
           "name": "Ak ponecháte prázdne, názov sa prevezme zo zdrojovej entity",
@@ -957,6 +993,7 @@
           "playbook": "Možnosti playbooku",
           "multi_switch": "Možnosti viacerých prepínačov",
           "real_power": "Skutočné možnosti napájania",
+          "select_device": "Zariadenie",
           "utility_meter_options": "Možnosti elektromera",
           "wled": "WLED možnosti",
           "cost_options": "Možnosti nákladov"
@@ -964,7 +1001,17 @@
       },
       "library_options": {
         "title": "Možnosti knižnice",
-        "description": "Momentálne je vybratý nasledujúci profil knižnice: \n výrobca: {manufacturer}\n model: {model}\n\nAk chcete profil zmeniť, kliknite na tlačidlo Ďalej."
+        "description": "Momentálne je vybratý nasledujúci profil knižnice: \n výrobca: {manufacturer}\n model: {model}\n\nAk chcete profil zmeniť, kliknite na tlačidlo Ďalej.{profile_details}"
+      },
+      "select_device": {
+        "data": {
+          "device": "Zariadenie"
+        },
+        "data_description": {
+          "device": "Zariadenie, ku ktorému majú byť priradené entity Powercalc"
+        },
+        "description": "Vyberte zariadenie, ku ktorému má byť priradený senzor Powercalc.",
+        "title": "Vyberte zariadenie"
       },
       "linear": {
         "title": "lineárne možnosti",
@@ -1058,8 +1105,12 @@
       "wled": {
         "title": "WLED možnosti",
         "data": {
+          "current_entity": "Entita prúdu",
           "power_factor": "Účiník",
           "voltage": "Napätie"
+        },
+        "data_description": {
+          "current_entity": "Voliteľne vyberte snímač poskytujúci odhadovaný prúd v mA. Potrebné len vtedy, keď Powercalc nedokáže automaticky nájsť snímač odhadovaného prúdu WLED, napríklad keď je obmedzovač jasu nastavený pre jednotlivé výstupy."
         }
       },
       "cost_options": {

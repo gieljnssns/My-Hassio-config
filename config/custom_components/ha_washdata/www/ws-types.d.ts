@@ -12,10 +12,16 @@ export interface AddMaintenanceEventResponse {
   event: Record<string, unknown>;
 }
 
+export interface AnalyzeImportResponse {
+  manifest: Record<string, unknown>;
+}
+
 export interface AnalyzeSplitResponse {
   segments: number[][];
   split_offsets: number[];
   samples: number[][];
+  sample_count: number;
+  decimated: boolean;
   full_duration_s: number;
 }
 
@@ -50,11 +56,13 @@ export interface DeviceInfo {
   current_power_w: number | null;
   cycle_progress_pct: number | null;
   suggestions_count: number;
+  suggestion_keys: string[];
   feedback_count: number;
   recording: boolean;
   is_user_paused: boolean;
   manual_program: boolean;
   options: Record<string, unknown>;
+  option_defaults: Record<string, unknown>;
 }
 
 export interface DismissAllFeedbacksResponse {
@@ -87,6 +95,8 @@ export interface ExportConfigResponse {
 }
 
 export interface GetConstantsResponse {
+  version: string;
+  icon_url: string | null;
   device_types: Record<string, unknown>[];
   state_colors: Record<string, unknown>;
   ml_lab_enabled: boolean;
@@ -96,11 +106,15 @@ export interface GetConstantsResponse {
   store_online_available: boolean;
   store_online_enabled: boolean;
   store_web_origin: string;
+  store_prefs: Record<string, unknown>;
+  pg_match_defaults: Record<string, unknown>;
 }
 
 export interface GetCyclePowerDataResponse {
   cycle_id?: string;
   samples?: number[][];
+  sample_count?: number;
+  decimated?: boolean;
   full_duration_s?: number;
   start_time?: string | null;
   end_time?: string | null;
@@ -110,12 +124,17 @@ export interface GetCyclePowerDataResponse {
   energy_kwh?: number | null;
   artifacts?: Record<string, unknown>[];
   restart_gaps?: unknown[];
+  is_reference?: boolean;
+  labelable?: boolean;
+  editable?: boolean;
+  cycle_origin?: string;
 }
 
 export interface GetDeviceCyclesResponse {
   entry_id: string;
   cycles: Record<string, unknown>[];
   reference_cycles: Record<string, unknown>[];
+  backfill_cycles: Record<string, unknown>[];
   total: number;
   has_more: boolean;
 }
@@ -140,6 +159,10 @@ export interface GetDtwDebugResponse {
   dtw: DtwScores;
   stage4: DtwStage4Scores;
   warp_path: number[][];
+}
+
+export interface GetExportInventoryResponse {
+  manifest: Record<string, unknown>;
 }
 
 export interface GetFeedbacksResponse {
@@ -190,6 +213,7 @@ export interface GetMlTrainingStatusResponse {
 
 export interface GetOptionsResponse {
   options: Record<string, unknown>;
+  defaults: Record<string, unknown>;
 }
 
 export interface GetPanelConfigResponse {
@@ -204,6 +228,16 @@ export interface GetPanelConfigResponse {
 export interface GetPhaseCatalogResponse {
   phases: Record<string, unknown>[];
   device_type: string | null;
+}
+
+export interface GetPlaygroundSettingsResponse {
+  effective: Record<string, unknown>;
+  presets: PlaygroundPreset[];
+  publishable: string[];
+  preset_limit: number;
+  classic_suggestions: Record<string, unknown>;
+  ml_suggestions: Record<string, unknown> | null;
+  ml_suggestions_enabled: boolean;
 }
 
 export interface GetPowerHistoryResponse {
@@ -269,10 +303,37 @@ export interface GetSetupStatusResponse {
 export interface GetShareableCyclesResponse {
   items?: unknown[];
   phase_programs?: unknown[];
+  all_programs?: unknown[];
 }
 
 export interface GetSuggestionsResponse {
   suggestions: Record<string, unknown>[];
+  locked_suggestions: string[];
+}
+
+export interface HistoryImportBeginResponse {
+  token: string;
+  max_bytes: number;
+  chunk_bytes: number;
+}
+
+export interface HistoryImportChunkResponse {
+  received_bytes: number;
+  next_seq: number;
+}
+
+export interface HistoryImportRecorderResponse {
+  token: string;
+  rows: number;
+  entity_id: string;
+  days: number;
+  start_date: string;
+  truncated: boolean;
+}
+
+export interface ImportConfigSelectiveResponse {
+  success: boolean;
+  summary: Record<string, unknown>;
 }
 
 export interface ListTasksResponse {
@@ -281,6 +342,18 @@ export interface ListTasksResponse {
 
 export interface OkResponse {
   ok: boolean;
+}
+
+export interface PlaygroundPreset {
+  name: string;
+  values: Record<string, unknown>;
+  created_at: unknown;
+  updated_at: unknown;
+}
+
+export interface PlaygroundPresetsResponse {
+  success: boolean;
+  presets: PlaygroundPreset[];
 }
 
 export interface ProfileEnvelope {
@@ -342,8 +415,20 @@ export interface RunSuggestionAnalysisResponse {
   count?: number;
 }
 
+export interface SetSuggestionLockResponse {
+  success: boolean;
+  locked_suggestions: string[];
+}
+
 export interface StartTaskResponse {
   task_id: string;
+}
+
+export interface StoreCatalogEntryResponse {
+  device_id?: string;
+  brand?: Record<string, unknown> | null;
+  device?: Record<string, unknown> | null;
+  disabled?: boolean;
 }
 
 export interface StoreConfirmResponse {
@@ -397,6 +482,11 @@ export interface StorePrefsResponse {
 export interface StoreQualityResponse {
   avg?: number | null;
   count?: number;
+  disabled?: boolean;
+}
+
+export interface StoreRefreshCatalogResponse {
+  ok?: boolean;
   disabled?: boolean;
 }
 
@@ -671,6 +761,30 @@ export interface ImportConfigRequest {
   json_data: string;
 }
 
+export interface GetExportInventoryRequest {
+  entry_id: string;
+}
+
+export interface AnalyzeImportRequest {
+  entry_id: string;
+  json_data: string;
+}
+
+export interface ExportConfigSelectiveRequest {
+  entry_id: string;
+  selection: Record<string, unknown>;
+}
+
+export interface ImportConfigSelectiveRequest {
+  entry_id: string;
+  json_data: string;
+  selection: Record<string, unknown>;
+  mode?: "merge" | "replace";
+  conflict_resolutions?: Record<string, unknown>;
+  cycle_destination?: "reference" | "real_history";
+  apply_settings?: boolean;
+}
+
 export interface GetConstantsRequest {
 }
 
@@ -685,6 +799,12 @@ export interface ApplySuggestionsRequest {
 
 export interface ClearSuggestionsRequest {
   entry_id: string;
+}
+
+export interface SetSuggestionLockRequest {
+  entry_id: string;
+  key: string;
+  locked: boolean;
 }
 
 export interface RunSuggestionAnalysisRequest {
@@ -836,6 +956,22 @@ export interface GetDtwDebugRequest {
   profile_name?: string | null;
 }
 
+export interface GetPlaygroundSettingsRequest {
+  entry_id: string;
+  include_suggestions?: boolean;
+}
+
+export interface SavePlaygroundPresetRequest {
+  entry_id: string;
+  name: string;
+  values: Record<string, unknown>;
+}
+
+export interface DeletePlaygroundPresetRequest {
+  entry_id: string;
+  name: string;
+}
+
 export interface ListTasksRequest {
   entry_id?: string | null;
 }
@@ -871,6 +1007,36 @@ export interface StartPlaygroundCycleDetailRequest {
   entry_id: string;
   cycle_id: string;
   settings_override?: Record<string, unknown>;
+  stress_tail?: boolean;
+  stress_idle_w?: number | null;
+}
+
+export interface HistoryImportBeginRequest {
+  entry_id: string;
+}
+
+export interface HistoryImportChunkRequest {
+  entry_id: string;
+  token: string;
+  seq: number;
+  text: string;
+}
+
+export interface HistoryImportRecorderRequest {
+  entry_id: string;
+  start_date?: string | null;
+  days?: number;
+}
+
+export interface StartHistoryImportScanRequest {
+  entry_id: string;
+  token: string;
+}
+
+export interface ApplyHistoryImportRequest {
+  entry_id: string;
+  scan_task_id: string;
+  accept: unknown[];
 }
 
 export interface StoreStatusRequest {
@@ -922,6 +1088,17 @@ export interface StoreGetDeviceProfilesRequest {
   brand: string;
   model: string;
   appliance_type: string;
+}
+
+export interface StoreGetCatalogEntryRequest {
+  entry_id: string;
+  brand: string;
+  model: string;
+  appliance_type: string;
+}
+
+export interface StoreRefreshCatalogRequest {
+  entry_id: string;
 }
 
 export interface StoreConfirmDeviceRequest {
@@ -1020,10 +1197,15 @@ export interface WashDataWsRequests {
   "ha_washdata/wipe_history": WipeHistoryRequest;
   "ha_washdata/export_config": ExportConfigRequest;
   "ha_washdata/import_config": ImportConfigRequest;
+  "ha_washdata/get_export_inventory": GetExportInventoryRequest;
+  "ha_washdata/analyze_import": AnalyzeImportRequest;
+  "ha_washdata/export_config_selective": ExportConfigSelectiveRequest;
+  "ha_washdata/import_config_selective": ImportConfigSelectiveRequest;
   "ha_washdata/get_constants": GetConstantsRequest;
   "ha_washdata/get_suggestions": GetSuggestionsRequest;
   "ha_washdata/apply_suggestions": ApplySuggestionsRequest;
   "ha_washdata/clear_suggestions": ClearSuggestionsRequest;
+  "ha_washdata/set_suggestion_lock": SetSuggestionLockRequest;
   "ha_washdata/run_suggestion_analysis": RunSuggestionAnalysisRequest;
   "ha_washdata/get_cycle_power_data": GetCyclePowerDataRequest;
   "ha_washdata/trim_cycle": TrimCycleRequest;
@@ -1052,6 +1234,9 @@ export interface WashDataWsRequests {
   "ha_washdata/run_playground_history": RunPlaygroundHistoryRequest;
   "ha_washdata/run_playground_sweep": RunPlaygroundSweepRequest;
   "ha_washdata/get_dtw_debug": GetDtwDebugRequest;
+  "ha_washdata/get_playground_settings": GetPlaygroundSettingsRequest;
+  "ha_washdata/save_playground_preset": SavePlaygroundPresetRequest;
+  "ha_washdata/delete_playground_preset": DeletePlaygroundPresetRequest;
   "ha_washdata/list_tasks": ListTasksRequest;
   "ha_washdata/subscribe_tasks": SubscribeTasksRequest;
   "ha_washdata/cancel_task": CancelTaskRequest;
@@ -1059,6 +1244,11 @@ export interface WashDataWsRequests {
   "ha_washdata/start_playground_history": StartPlaygroundHistoryRequest;
   "ha_washdata/start_playground_sweep": StartPlaygroundSweepRequest;
   "ha_washdata/start_playground_cycle_detail": StartPlaygroundCycleDetailRequest;
+  "ha_washdata/history_import_begin": HistoryImportBeginRequest;
+  "ha_washdata/history_import_chunk": HistoryImportChunkRequest;
+  "ha_washdata/history_import_recorder": HistoryImportRecorderRequest;
+  "ha_washdata/start_history_import_scan": StartHistoryImportScanRequest;
+  "ha_washdata/apply_history_import": ApplyHistoryImportRequest;
   "ha_washdata/store_status": StoreStatusRequest;
   "ha_washdata/store_connect": StoreConnectRequest;
   "ha_washdata/store_disconnect": StoreDisconnectRequest;
@@ -1068,6 +1258,8 @@ export interface WashDataWsRequests {
   "ha_washdata/store_get_cycles": StoreGetCyclesRequest;
   "ha_washdata/store_get_device_quality": StoreGetDeviceQualityRequest;
   "ha_washdata/store_get_device_profiles": StoreGetDeviceProfilesRequest;
+  "ha_washdata/store_get_catalog_entry": StoreGetCatalogEntryRequest;
+  "ha_washdata/store_refresh_catalog": StoreRefreshCatalogRequest;
   "ha_washdata/store_confirm_device": StoreConfirmDeviceRequest;
   "ha_washdata/store_rate_device": StoreRateDeviceRequest;
   "ha_washdata/store_set_online": StoreSetOnlineRequest;
@@ -1121,10 +1313,15 @@ export interface WashDataWsResponses {
   "ha_washdata/wipe_history": SuccessResponse;
   "ha_washdata/export_config": ExportConfigResponse;
   "ha_washdata/import_config": SuccessResponse;
+  "ha_washdata/get_export_inventory": GetExportInventoryResponse;
+  "ha_washdata/analyze_import": AnalyzeImportResponse;
+  "ha_washdata/export_config_selective": ExportConfigResponse;
+  "ha_washdata/import_config_selective": ImportConfigSelectiveResponse;
   "ha_washdata/get_constants": GetConstantsResponse;
   "ha_washdata/get_suggestions": GetSuggestionsResponse;
   "ha_washdata/apply_suggestions": ApplySuggestionsResponse;
   "ha_washdata/clear_suggestions": SuccessResponse;
+  "ha_washdata/set_suggestion_lock": SetSuggestionLockResponse;
   "ha_washdata/run_suggestion_analysis": RunSuggestionAnalysisResponse;
   "ha_washdata/get_cycle_power_data": GetCyclePowerDataResponse;
   "ha_washdata/trim_cycle": StartTaskResponse;
@@ -1153,6 +1350,9 @@ export interface WashDataWsResponses {
   "ha_washdata/run_playground_history": RunPlaygroundHistoryResponse;
   "ha_washdata/run_playground_sweep": RunPlaygroundSweepResponse;
   "ha_washdata/get_dtw_debug": GetDtwDebugResponse;
+  "ha_washdata/get_playground_settings": GetPlaygroundSettingsResponse;
+  "ha_washdata/save_playground_preset": PlaygroundPresetsResponse;
+  "ha_washdata/delete_playground_preset": PlaygroundPresetsResponse;
   "ha_washdata/list_tasks": ListTasksResponse;
   "ha_washdata/subscribe_tasks": SubscribeTasksResponse;
   "ha_washdata/cancel_task": CancelTaskResponse;
@@ -1160,6 +1360,11 @@ export interface WashDataWsResponses {
   "ha_washdata/start_playground_history": StartTaskResponse;
   "ha_washdata/start_playground_sweep": StartTaskResponse;
   "ha_washdata/start_playground_cycle_detail": StartTaskResponse;
+  "ha_washdata/history_import_begin": HistoryImportBeginResponse;
+  "ha_washdata/history_import_chunk": HistoryImportChunkResponse;
+  "ha_washdata/history_import_recorder": HistoryImportRecorderResponse;
+  "ha_washdata/start_history_import_scan": StartTaskResponse;
+  "ha_washdata/apply_history_import": StartTaskResponse;
   "ha_washdata/store_status": StoreStatusResponse;
   "ha_washdata/store_connect": StoreSimpleResponse;
   "ha_washdata/store_disconnect": StoreSimpleResponse;
@@ -1175,6 +1380,8 @@ export interface WashDataWsResponses {
   "ha_washdata/store_set_online": StoreOnlineResponse;
   "ha_washdata/store_set_prefs": StorePrefsResponse;
   "ha_washdata/store_get_device_profiles": StoreDeviceProfilesResponse;
+  "ha_washdata/store_get_catalog_entry": StoreCatalogEntryResponse;
+  "ha_washdata/store_refresh_catalog": StoreRefreshCatalogResponse;
   "ha_washdata/store_upload_device": StoreUploadDeviceResponse;
   "ha_washdata/store_download_device": StoreDownloadDeviceResponse;
   "ha_washdata/get_shareable_cycles": GetShareableCyclesResponse;

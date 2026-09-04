@@ -1,11 +1,19 @@
-from __future__ import annotations
-
 from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITIES, CONF_ENTITY_ID, CONF_ID, CONF_NAME, CONF_PATH, Platform
+from homeassistant.const import (
+    CONF_ATTRIBUTE,
+    CONF_ENTITIES,
+    CONF_ENTITY_ID,
+    CONF_ID,
+    CONF_NAME,
+    CONF_PATH,
+    Platform,
+    UnitOfElectricCurrent,
+)
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import SchemaFlowError
 import voluptuous as vol
@@ -16,7 +24,9 @@ from custom_components.powercalc.const import (
     CONF_CALCULATION_ENABLED_CONDITION,
     CONF_CALIBRATE,
     CONF_CREATE_ENERGY_SENSOR,
+    CONF_CREATE_STANDBY_ENERGY_SENSOR,
     CONF_CREATE_UTILITY_METERS,
+    CONF_CURRENT_ENTITY,
     CONF_FIXED,
     CONF_FIXED_VALUE,
     CONF_GAMMA_CURVE,
@@ -57,6 +67,7 @@ from custom_components.powercalc.flow_helper.profile_preview import PREVIEW_NAME
 from custom_components.powercalc.flow_helper.schema import (
     SCHEMA_ENERGY_SENSOR_TOGGLE,
     SCHEMA_SENSOR_ENERGY_OPTIONS,
+    SCHEMA_STANDBY_ENERGY_SENSOR_TOGGLE,
     SCHEMA_UTILITY_METER_TOGGLE,
 )
 from custom_components.powercalc.flow_helper.strategy_form import (
@@ -67,7 +78,7 @@ from custom_components.powercalc.flow_helper.strategy_form import (
     wrap_strategy_form_data,
 )
 from custom_components.powercalc.power_profile.power_profile import DeviceType
-from custom_components.powercalc.strategy.wled import CONFIG_SCHEMA as SCHEMA_POWER_WLED
+from custom_components.powercalc.strategy.wled import CONFIG_SCHEMA as CONFIG_SCHEMA_WLED
 
 if TYPE_CHECKING:
     from custom_components.powercalc.config_flow import PowercalcCommonFlow, PowercalcConfigFlow, PowercalcOptionsFlow
@@ -92,6 +103,7 @@ SCHEMA_POWER_OPTIONS = vol.Schema(
     {
         vol.Optional(CONF_STANDBY_POWER): vol.Coerce(float),
         **SCHEMA_ENERGY_SENSOR_TOGGLE.schema,
+        **SCHEMA_STANDBY_ENERGY_SENSOR_TOGGLE.schema,
         **SCHEMA_UTILITY_METER_TOGGLE.schema,
     },
 )
@@ -146,6 +158,21 @@ SCHEMA_POWER_LINEAR = vol.Schema(
                 multiple=True,
                 label_field=CONF_VALUE,
                 description_field=CONF_POWER,
+            ),
+        ),
+    },
+)
+
+# The WLED strategy config schema, with the current entity rendered as an entity picker in the GUI.
+SCHEMA_POWER_WLED = CONFIG_SCHEMA_WLED.extend(
+    {
+        vol.Optional(CONF_CURRENT_ENTITY): selector.EntitySelector(
+            selector.EntitySelectorConfig(
+                filter={
+                    "domain": "sensor",
+                    "device_class": SensorDeviceClass.CURRENT,
+                    "unit_of_measurement": UnitOfElectricCurrent.MILLIAMPERE,
+                },
             ),
         ),
     },
@@ -358,7 +385,9 @@ class VirtualPowerFlow:
             return self.flow.persist_config_entry()
 
         schema = SCHEMA_POWER_ADVANCED
-        if self.flow.sensor_config.get(CONF_CREATE_ENERGY_SENSOR):
+        if self.flow.sensor_config.get(CONF_CREATE_ENERGY_SENSOR) or self.flow.sensor_config.get(
+            CONF_CREATE_STANDBY_ENERGY_SENSOR,
+        ):
             schema = schema.extend(SCHEMA_SENSOR_ENERGY_OPTIONS.schema)
 
         return await self.flow.handle_form_step(

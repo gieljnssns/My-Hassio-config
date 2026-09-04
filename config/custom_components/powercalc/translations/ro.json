@@ -3,7 +3,8 @@
     "source_entity": "Entitatea sursă",
     "source_device": "Dispozitiv sursă",
     "remarks_smart_switch": "Acest profil furnizează doar valorile puterii de așteptare. \n Când aveți un aparat care consumă o cantitate fixă ​​de energie atunci când este pornit, puteți furniza acea valoare în următorul pas al fluxului de configurare",
-    "remarks_smart_dimmer": "Acest profil furnizează doar valorile puterii de așteptare. \n În pasul următor puteți furniza opțional valorile luminii conectate"
+    "remarks_smart_dimmer": "Acest profil furnizează doar valorile puterii de așteptare. \n În pasul următor puteți furniza opțional valorile luminii conectate",
+    "view_measurement_details": "Vedeți detaliile măsurătorii"
   },
   "config": {
     "abort": {
@@ -14,7 +15,6 @@
       "daily_energy_mandatory": "Trebuie să furnizați cel puțin o Valoare sau șablonul Valoare",
       "entity_mandatory": "Selectarea unei entități este necesară pentru orice altă strategie decât playbook",
       "fixed_mandatory": "Trebuie să furnizați cel puțin o putere, șablon putere sau State power",
-      "fixed_states_power_only": "Această entitate poate funcționa numai cu 'states_power' nu cu 'power'",
       "group_mandatory": "Trebuie să definiți cel puțin subgrupuri sau entități de putere și energie",
       "linear_mandatory": "Trebuie să furnizați cel puțin unul dintre max_power sau să calibrați",
       "linear_min_higher_as_max": "Puterea maximă nu poate fi mai mică decât puterea minimă",
@@ -336,7 +336,7 @@
         "data_description": {
           "confirm_autodisovered_model": "Dacă alegeți să nu confirmați, puteți introduce singur producătorul și modelul"
         },
-        "description": "{source}\n\nProducătorul \"{manufacturer}\" și modelul \"{model}\" au fost detectate automat pentru dispozitivul dvs.{remarks}",
+        "description": "{source}\n\nProducătorul \"{manufacturer}\" și modelul \"{model}\" au fost detectate automat pentru dispozitivul dvs.{remarks}{profile_details}",
         "title": "Bibliotecă"
       },
       "library_custom_fields": {
@@ -383,6 +383,16 @@
         },
         "description": "Selectați modelul dispozitivului. Consultați [list]({supported_models_link}) modelelor acceptate pentru mai multe informații",
         "title": "Configurare Model"
+      },
+      "select_device": {
+        "data": {
+          "device": "Dispozitiv"
+        },
+        "data_description": {
+          "device": "Dispozitivul la care trebuie asociate entitățile Powercalc"
+        },
+        "description": "Selectați dispozitivul la care trebuie asociat senzorul Powercalc.",
+        "title": "Selectați dispozitivul"
       },
       "menu_group": {
         "menu_options": {
@@ -550,6 +560,7 @@
       "virtual_power": {
         "data": {
           "create_energy_sensor": "Creați un senzor de energie",
+          "create_standby_energy_sensor": "Creați un senzor de energie în standby",
           "create_cost_sensor": "Creați un senzor de cost",
           "create_utility_meters": "Creați contoare",
           "entity_id": "Entitatea sursă",
@@ -559,6 +570,7 @@
         },
         "data_description": {
           "create_energy_sensor": "Dacă powercalc trebuie să creeze un senzor kWh",
+          "create_standby_energy_sensor": "Dacă Powercalc trebuie să creeze un senzor kWh care urmărește doar consumul în standby",
           "create_utility_meters": "Permiteți Powercalc să creeze contoare care se resetează zilnic, orar etc.",
           "entity_id": "entitate pe care se bazează puterea virtuală, senzorul de putere va asculta modificările de stare ale acestei entități pentru a fi actualizate",
           "name": "Dacă lăsați necompletat, numele va fi preluat de la entitatea sursă",
@@ -569,11 +581,15 @@
       },
       "wled": {
         "data": {
+          "current_entity": "Entitate de curent",
           "power_factor": "Factor de putere",
           "voltage": "Voltaj"
         },
         "description": "Asigurați-vă că activați limitatorul de luminozitate în software-ul WLED. Vedeți și {docs_uri}",
-        "title": "Configurare WLED"
+        "title": "Configurare WLED",
+        "data_description": {
+          "current_entity": "Selectați opțional un senzor care furnizează curentul estimat în mA. Necesar doar atunci când Powercalc nu poate găsi automat senzorul WLED pentru curentul estimat, de exemplu atunci când limitatorul de luminozitate este configurat pentru fiecare ieșire."
+        }
       }
     }
   },
@@ -589,6 +605,25 @@
     },
     "unknown_sub_profile": {
       "message": "\"{profile}\" nu este un subprofil cunoscut. Subprofiluri disponibile: {known_profiles}."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "measure_session_status": {
+        "name": "Measure session status",
+        "state": {
+          "idle": "Idle",
+          "validating": "Validating",
+          "ready": "Ready",
+          "awaiting_confirmation": "Awaiting confirmation",
+          "running": "Running",
+          "cancelling": "Cancelling",
+          "cancelled": "Cancelled",
+          "completed": "Completed",
+          "failed": "Failed",
+          "resumable": "Resumable"
+        }
+      }
     }
   },
   "issues": {
@@ -645,7 +680,6 @@
     "error": {
       "cost_price_mandatory": "Trebuie să furnizați fie un preț al energiei, fie un senzor al prețului energiei",
       "fixed_mandatory": "Trebuie să furnizați cel puțin o putere, șablon putere sau State power",
-      "fixed_states_power_only": "Această entitate poate funcționa numai cu 'states_power' nu cu 'power'",
       "group_mandatory": "Trebuie să definiți cel puțin subgrupuri sau entități de putere și energie",
       "linear_mandatory": "Trebuie să furnizați cel puțin unul dintre max_power sau să calibrați",
       "linear_min_higher_as_max": "Puterea maximă nu poate fi mai mică decât puterea minimă",
@@ -675,6 +709,7 @@
         "title": "Opțiuni de bază",
         "data": {
           "create_energy_sensor": "Creați un senzor de energie",
+          "create_standby_energy_sensor": "Creați un senzor de energie în standby",
           "create_cost_sensor": "Creați un senzor de cost",
           "create_utility_meters": "Creați contoare",
           "entity_id": "Entitatea sursă",
@@ -683,6 +718,7 @@
         },
         "data_description": {
           "create_energy_sensor": "Dacă Powercalc trebuie să creeze un senzor kWh",
+          "create_standby_energy_sensor": "Dacă Powercalc trebuie să creeze un senzor kWh care urmărește doar consumul în standby",
           "create_utility_meters": "Permiteți Powercalc să creeze contoare de utilitate care se resetează zilnic, orar etc.",
           "entity_id": "entitatea pe care se bazează puterea virtuală; senzorul de putere va asculta modificările de stare ale acestei entități pentru a se actualiza",
           "name": "Dacă lăsați necompletat, numele va fi preluat de la entitatea sursă",
@@ -957,6 +993,7 @@
           "playbook": "Opțiuni de playbook",
           "multi_switch": "Opțiuni de comutare multiplă",
           "real_power": "Opțiuni de putere reală",
+          "select_device": "Dispozitiv",
           "utility_meter_options": "Opțiuni de contor de utilitate",
           "wled": "Opțiuni WLED",
           "cost_options": "Opțiuni de cost"
@@ -964,7 +1001,17 @@
       },
       "library_options": {
         "title": "Opțiuni de bibliotecă",
-        "description": "În prezent este selectat următorul profil de bibliotecă: \n producator: {manufacturer}\n model: {model}\n\nDacă doriți să schimbați profilul, faceți clic pe următorul."
+        "description": "În prezent este selectat următorul profil de bibliotecă: \n producator: {manufacturer}\n model: {model}\n\nDacă doriți să schimbați profilul, faceți clic pe următorul.{profile_details}"
+      },
+      "select_device": {
+        "data": {
+          "device": "Dispozitiv"
+        },
+        "data_description": {
+          "device": "Dispozitivul la care trebuie asociate entitățile Powercalc"
+        },
+        "description": "Selectați dispozitivul la care trebuie asociat senzorul Powercalc.",
+        "title": "Selectați dispozitivul"
       },
       "linear": {
         "title": "Opțiuni liniare",
@@ -1058,8 +1105,12 @@
       "wled": {
         "title": "Opțiuni WLED",
         "data": {
+          "current_entity": "Entitate de curent",
           "power_factor": "Factorul de putere",
           "voltage": "Voltaj"
+        },
+        "data_description": {
+          "current_entity": "Selectați opțional un senzor care furnizează curentul estimat în mA. Necesar doar atunci când Powercalc nu poate găsi automat senzorul WLED pentru curentul estimat, de exemplu atunci când limitatorul de luminozitate este configurat pentru fiecare ieșire."
         }
       },
       "cost_options": {

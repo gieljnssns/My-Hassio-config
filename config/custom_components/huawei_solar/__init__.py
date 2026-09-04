@@ -36,10 +36,13 @@ from huawei_solar.device.base import HuaweiSolarDevice, HuaweiSolarDeviceWithLog
 from huawei_solar.modbus_pdu import PermissionDeniedError
 
 from .const import (
+    CONF_BAUDRATE,
     CONF_ENABLE_PARAMETER_CONFIGURATION,
     CONF_SLAVE_IDS,
     CONFIGURATION_UPDATE_INTERVAL,
+    CONFIGURATION_UPDATE_TIMEOUT,
     DATA_DEVICE_DATAS,
+    DEFAULT_BAUDRATE,
     DOMAIN,
     ENERGY_STORAGE_UPDATE_INTERVAL,
     INVERTER_UPDATE_INTERVAL,
@@ -120,13 +123,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.version == 1 and entry.minor_version < 2:
         entity_registry = er.async_get(hass)
 
-        for entity_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
             for old_suffix, new_suffix in _MIGRATED_UNIQUE_ID_SUFFIXES.items():
                 old_unique_id_suffix = f"_{old_suffix}"
                 if not entity_entry.unique_id.endswith(old_unique_id_suffix):
                     continue
 
-                new_unique_id = f"{entity_entry.unique_id[:-len(old_suffix)]}{new_suffix}"
+                new_unique_id = (
+                    f"{entity_entry.unique_id[: -len(old_suffix)]}{new_suffix}"
+                )
                 try:
                     entity_registry.async_update_entity(
                         entity_entry.entity_id,
@@ -183,7 +190,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiSolarConfigEntry) 
 
         if entry.data[CONF_HOST] is None:
             client = create_rtu_client(
-                port=entry.data[CONF_PORT], unit_id=entry.data[CONF_SLAVE_IDS][0]
+                port=entry.data[CONF_PORT],
+                baudrate=entry.data.get(CONF_BAUDRATE, DEFAULT_BAUDRATE),
+                unit_id=entry.data[CONF_SLAVE_IDS][0],
             )
         else:
             client = create_tcp_client(
@@ -217,7 +226,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiSolarConfigEntry) 
 
         for extra_unit_id in entry.data[CONF_SLAVE_IDS][1:]:
             sub_device = await create_sub_device_instance(primary_device, extra_unit_id)
-            sub_device_data = await _setup_device_data(hass, entry, sub_device)
+            sub_device_data = await _setup_device_data(
+                hass,
+                entry,
+                sub_device,
+                via_device_id=primary_device_data.ha_device_id,
+            )
 
             device_datas.append(sub_device_data)
 
@@ -324,7 +338,8 @@ async def _setup_inverter_device_data(
     hass: HomeAssistant,
     entry: ConfigEntry,
     device: SUN2000Device,
-    connecting_inverter_device_id: tuple[str, str] | None,
+    *,
+    via_device_id: str | None = None,
 ) -> HuaweiSolarInverterData:
     device_registry = dr.async_get(hass)
 
@@ -335,17 +350,18 @@ async def _setup_inverter_device_data(
         model=device.model_name,
         serial_number=device.serial_number,
         sw_version=device.software_version,
-        via_device=connecting_inverter_device_id,  # type: ignore[typeddict-item]
+        via_device_id=via_device_id,
     )
 
     # Add inverter device to device registery
-    device_registry.async_get_or_create(
+    ha_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, device.serial_number)},
         manufacturer="Huawei",
         name=device.model_name,
         model=device.model_name,
         sw_version=device.software_version,
+        via_device_id=via_device_id,
     )
 
     update_coordinator = HuaweiSolarUpdateCoordinator(
@@ -363,7 +379,7 @@ async def _setup_inverter_device_data(
                 (DOMAIN, f"{device.serial_number}/power_meter"),
             },
             translation_key="power_meter",
-            via_device=(DOMAIN, device.serial_number),
+            via_device_id=ha_device.id,
         )
         power_meter_update_coordinator = HuaweiSolarUpdateCoordinator(
             hass,
@@ -385,7 +401,7 @@ async def _setup_inverter_device_data(
             translation_key="connected_energy_storage",
             model="Batteries",
             manufacturer=inverter_device_info.get("manufacturer"),
-            via_device=(DOMAIN, device.serial_number),
+            via_device_id=ha_device.id,
         )
 
         energy_storage_update_coordinator = HuaweiSolarUpdateCoordinator(
@@ -407,7 +423,7 @@ async def _setup_inverter_device_data(
             translation_key="battery_1",
             manufacturer=_battery_product_model_to_manufacturer(device.battery_1_type),
             model=_battery_product_model_to_model(device.battery_1_type),
-            via_device=(DOMAIN, device.serial_number),
+            via_device_id=ha_device.id,
         )
     else:
         battery_1_device_info = None
@@ -420,7 +436,7 @@ async def _setup_inverter_device_data(
             translation_key="battery_2",
             manufacturer=_battery_product_model_to_manufacturer(device.battery_2_type),
             model=_battery_product_model_to_model(device.battery_2_type),
-            via_device=(DOMAIN, device.serial_number),
+            via_device_id=ha_device.id,
         )
     else:
         battery_2_device_info = None
@@ -445,7 +461,7 @@ async def _setup_inverter_device_data(
                     manufacturer="Huawei",
                     model=optimizer.model,
                     sw_version=optimizer.software_version,
-                    via_device=(DOMAIN, device.serial_number),
+                    via_device_id=ha_device.id,
                 )
                 for optimizer_id, optimizer in optimizer_system_infos.items()
             }
@@ -456,6 +472,8 @@ async def _setup_inverter_device_data(
                 optimizers_device_infos,
                 OPTIMIZER_UPDATE_INTERVAL,
             )
+        except ConfigEntryNotReady:
+            raise
         except ReadException as exception:
             if exception.modbus_exception_code == PermissionDeniedError.error_code:
                 _LOGGER.info(
@@ -468,6 +486,9 @@ async def _setup_inverter_device_data(
                     "Cannot create optimizer sensor entities due to a read error",
                     exc_info=exception,
                 )
+                raise ConfigEntryNotReady(
+                    "Cannot create optimizer sensor entities due to a read error. "
+                ) from exception
         except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Cannot create optimizer sensor entities due to an unexpected error",
@@ -481,12 +502,14 @@ async def _setup_inverter_device_data(
             device=device,
             name=f"{device.serial_number}_config_data_update_coordinator",
             update_interval=CONFIGURATION_UPDATE_INTERVAL,
+            update_timeout=CONFIGURATION_UPDATE_TIMEOUT,
         )
     else:
         configuration_update_coordinator = None
 
     return HuaweiSolarInverterData(
         device=device,
+        ha_device_id=ha_device.id,
         device_info=inverter_device_info,
         update_coordinator=update_coordinator,
         power_meter=power_meter_device_info,
@@ -514,10 +537,14 @@ async def _setup_device_data(
     hass: HomeAssistant,
     entry: ConfigEntry,
     device: HuaweiSolarDevice,
+    *,
+    via_device_id: str | None = None,
 ) -> HuaweiSolarDeviceData:
     """Create the correct DeviceInfo-objects, which can be used to correctly assign to entities in this integration."""
     if isinstance(device, SUN2000Device):
-        return await _setup_inverter_device_data(hass, entry, device, None)
+        return await _setup_inverter_device_data(
+            hass, entry, device, via_device_id=via_device_id
+        )
 
     device_registry = dr.async_get(hass)
 
@@ -530,16 +557,18 @@ async def _setup_device_data(
         model=device.model_name,
         serial_number=device.serial_number,
         sw_version=sw_version,
+        via_device_id=via_device_id,
     )
 
     # Add device to device registery
-    device_registry.async_get_or_create(
+    ha_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, device.serial_number)},
         manufacturer="Huawei",
         name=device.model_name,
         model=device.model_name,
         sw_version=sw_version,
+        via_device_id=via_device_id,
     )
 
     update_coordinator = HuaweiSolarUpdateCoordinator(
@@ -557,12 +586,14 @@ async def _setup_device_data(
             device=device,
             name=f"{device.serial_number}_config_data_update_coordinator",
             update_interval=CONFIGURATION_UPDATE_INTERVAL,
+            update_timeout=CONFIGURATION_UPDATE_TIMEOUT,
         )
     else:
         configuration_update_coordinator = None
 
     return HuaweiSolarDeviceData(
         device=device,
+        ha_device_id=ha_device.id,
         device_info=device_info,
         update_coordinator=update_coordinator,
         configuration_update_coordinator=configuration_update_coordinator,

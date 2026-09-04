@@ -3,7 +3,8 @@
     "source_entity": "Källentitet",
     "source_device": "Källenhet",
     "remarks_smart_switch": "Denna profil visar endast effekt i standby-läge. \n Har du apparater som förbrukar ett fast effekt-värde när de är påslagna, kan du ange detta värde i nästa steg",
-    "remarks_smart_dimmer": "Den här profilen ger endast standby-effektvärden. \n I nästa steg kan du ange värden för det anslutna ljuset som tillval"
+    "remarks_smart_dimmer": "Den här profilen ger endast standby-effektvärden. \n I nästa steg kan du ange värden för det anslutna ljuset som tillval",
+    "view_measurement_details": "Visa mätdetaljer"
   },
   "config": {
     "abort": {
@@ -14,7 +15,6 @@
       "daily_energy_mandatory": "Du måste ange minst ett värde eller en värdemall",
       "entity_mandatory": "Att välja en entitet krävs för alla strategier utom playbook",
       "fixed_mandatory": "Du måste ange minst en av Effekt, Effektmall eller effekttillstånd",
-      "fixed_states_power_only": "Den här entiteten kan bara jobba med 'state effekt' inte 'effekt'",
       "group_mandatory": "Du måste ange minst en subgrupp eller effekt och energi entititeter",
       "linear_mandatory": "Du måste ange minst en av max_effekt eller kalibrera",
       "linear_min_higher_as_max": "Max effekt kan inte vara lägre än min effekt",
@@ -336,7 +336,7 @@
         "data_description": {
           "confirm_autodisovered_model": "Om du väljer att inte bekräfta kan du ange tillverkare och modell själv"
         },
-        "description": "{source}\n\nTillverkare \"{manufacturer}\" och modell \"{model}\" var automatiskt detekterade för din lampa.{remarks}",
+        "description": "{source}\n\nTillverkare \"{manufacturer}\" och modell \"{model}\" var automatiskt detekterade för din lampa.{remarks}{profile_details}",
         "title": "Bibliotek"
       },
       "library_custom_fields": {
@@ -383,6 +383,16 @@
         },
         "description": "Välj enhetsmodell Se i [list]({supported_models_link}) För modeller som stöds eller mer information",
         "title": "Konfiguration för modell"
+      },
+      "select_device": {
+        "data": {
+          "device": "Enhet"
+        },
+        "data_description": {
+          "device": "Enheten som Powercalc-entiteterna ska länkas till"
+        },
+        "description": "Välj enheten som Powercalc-sensorn ska länkas till.",
+        "title": "Välj enhet"
       },
       "menu_group": {
         "menu_options": {
@@ -550,6 +560,7 @@
       "virtual_power": {
         "data": {
           "create_energy_sensor": "Skapa energisensor",
+          "create_standby_energy_sensor": "Skapa energisensor för vänteläge",
           "create_cost_sensor": "Skapa kostnadssensor",
           "create_utility_meters": "Skapa bruksmätare",
           "entity_id": "Källentitet",
@@ -559,6 +570,7 @@
         },
         "data_description": {
           "create_energy_sensor": "Ska powercalc skapa en kWh sensor",
+          "create_standby_energy_sensor": "Om Powercalc ska skapa en kWh-sensor som endast spårar förbrukning i vänteläge",
           "create_utility_meters": "Låt powercalc skapa bruksmätare, vilken cykel dag, timme etc.",
           "entity_id": "Entitet den virtuella effekten är baserad på, effektsensorn kommer lyssna på förändringar på denna entitet",
           "name": "Lämnas tom kommer namn tas från källentiteten",
@@ -569,11 +581,15 @@
       },
       "wled": {
         "data": {
+          "current_entity": "Strömenhet",
           "power_factor": "Effektfaktor",
           "voltage": "Spänning"
         },
         "description": "Se till att aktivera ljusstyrkebegränsning i WLED-programvaran. Se även {docs_uri}",
-        "title": "WLED konfig"
+        "title": "WLED konfig",
+        "data_description": {
+          "current_entity": "Välj valfritt en sensor som anger den uppskattade strömmen i mA. Behövs endast när Powercalc inte kan hitta WLED-sensorn för uppskattad ström automatiskt, till exempel när ljusstyrkebegränsaren är konfigurerad per utgång."
+        }
       }
     }
   },
@@ -589,6 +605,25 @@
     },
     "unknown_sub_profile": {
       "message": "\"{profile}\" är inte en känd underprofil. Tillgängliga underprofiler: {known_profiles}."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "measure_session_status": {
+        "name": "Measure session status",
+        "state": {
+          "idle": "Idle",
+          "validating": "Validating",
+          "ready": "Ready",
+          "awaiting_confirmation": "Awaiting confirmation",
+          "running": "Running",
+          "cancelling": "Cancelling",
+          "cancelled": "Cancelled",
+          "completed": "Completed",
+          "failed": "Failed",
+          "resumable": "Resumable"
+        }
+      }
     }
   },
   "issues": {
@@ -645,7 +680,6 @@
     "error": {
       "cost_price_mandatory": "Du måste ange antingen ett energipris eller en energiprissensor",
       "fixed_mandatory": "Du måste ange minst en av Effekt, Effektmall eller effekttillstånd",
-      "fixed_states_power_only": "Den här entiteten kan bara jobba med 'state effekt' inte 'effekt'",
       "group_mandatory": "Du måste ange minst en subgrupp eller effekt och energi entititeter",
       "linear_mandatory": "Du måste ange minst en av max_effekt eller kalibrera",
       "linear_min_higher_as_max": "Max effekt kan inte vara lägre än min effekt",
@@ -675,6 +709,7 @@
         "title": "Grundläggande inställningar",
         "data": {
           "create_energy_sensor": "Skapa energisensor",
+          "create_standby_energy_sensor": "Skapa energisensor för vänteläge",
           "create_cost_sensor": "Skapa kostnadssensor",
           "create_utility_meters": "Skapa bruksmätare",
           "entity_id": "Källentitet",
@@ -683,6 +718,7 @@
         },
         "data_description": {
           "create_energy_sensor": "Om powercalc behöver skapa en kWh-sensor",
+          "create_standby_energy_sensor": "Om Powercalc ska skapa en kWh-sensor som endast spårar förbrukning i vänteläge",
           "create_utility_meters": "Låt powercalc skapa verktygsmätare, som cyklar dagligen, varje timme etc.",
           "entity_id": "Entiteten som den virtuella effekten baseras på. Effektsensorn lyssnar på tillståndsändringar från denna entitet för att uppdateras",
           "name": "Om du lämnar tomt kommer namnet från källenheten",
@@ -957,6 +993,7 @@
           "playbook": "Playbook-alternativ",
           "multi_switch": "Alternativ för flera switchar",
           "real_power": "Verkliga kraftalternativ",
+          "select_device": "Enhet",
           "utility_meter_options": "Alternativ för verktygsmätare",
           "wled": "WLED alternativ",
           "cost_options": "Kostnadsalternativ"
@@ -964,7 +1001,17 @@
       },
       "library_options": {
         "title": "Biblioteksalternativ",
-        "description": "För närvarande är följande biblioteksprofil vald: \n tillverkare: {manufacturer}\n modell: {model}\n\nOm du vill ändra profilen klickar du på nästa."
+        "description": "För närvarande är följande biblioteksprofil vald: \n tillverkare: {manufacturer}\n modell: {model}\n\nOm du vill ändra profilen klickar du på nästa.{profile_details}"
+      },
+      "select_device": {
+        "data": {
+          "device": "Enhet"
+        },
+        "data_description": {
+          "device": "Enheten som Powercalc-entiteterna ska länkas till"
+        },
+        "description": "Välj enheten som Powercalc-sensorn ska länkas till.",
+        "title": "Välj enhet"
       },
       "linear": {
         "title": "Linjära alternativ",
@@ -1058,8 +1105,12 @@
       "wled": {
         "title": "WLED alternativ",
         "data": {
+          "current_entity": "Strömenhet",
           "power_factor": "Effektfaktor",
           "voltage": "Spänning"
+        },
+        "data_description": {
+          "current_entity": "Välj valfritt en sensor som anger den uppskattade strömmen i mA. Behövs endast när Powercalc inte kan hitta WLED-sensorn för uppskattad ström automatiskt, till exempel när ljusstyrkebegränsaren är konfigurerad per utgång."
         }
       },
       "cost_options": {

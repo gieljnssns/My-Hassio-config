@@ -1,10 +1,8 @@
-from __future__ import annotations
-
+from dataclasses import dataclass
 import math
 import re
-from typing import NamedTuple
+from typing import TYPE_CHECKING, cast
 
-from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant, split_entity_id
 import homeassistant.helpers.device_registry as dr
@@ -30,16 +28,54 @@ from .const import (
 )
 from .errors import SensorConfigurationError
 
+_HAS_CHILD_DEVICES = hasattr(dr, "ChildDeviceEntry")
 
-class SourceEntity(NamedTuple):
+if TYPE_CHECKING:
+    from homeassistant.helpers.device_registry import AnyDeviceEntry as AnyDeviceEntry
+else:
+    # AnyDeviceEntry was introduced together with child devices in HA 2026.9.
+    # Keep imports working on older supported versions, where every entry is a DeviceEntry.
+    AnyDeviceEntry = dr.DeviceEntry
+
+
+@dataclass(frozen=True)
+class SourceEntity:
+    """The appliance a powercalc sensor measures, resolved from the entity and device registry."""
+
     object_id: str
     entity_id: str
     domain: str
     unique_id: str | None = None
     name: str | None = None
-    supported_color_modes: list[ColorMode] | None = None
     entity_entry: er.RegistryEntry | None = None
-    device_entry: dr.DeviceEntry | None = None
+    device_entry: AnyDeviceEntry | None = None
+    config_entry_id: str | None = None
+
+    @property
+    def is_dummy(self) -> bool:
+        """Whether this source has no real entity behind it, such as a daily fixed energy or group sensor."""
+        return self.entity_id == DUMMY_ENTITY_ID
+
+    @property
+    def device_id(self) -> str | None:
+        """The ID of the device this source belongs to, when it is bound to one."""
+        return self.device_entry.id if self.device_entry else None
+
+    @property
+    def log_identifier(self) -> str:
+        """Build a label identifying this source, used as prefix for log messages about it."""
+        if self.config_entry_id:
+            return _label("config_entry", self.config_entry_id, self.name)
+        if self.entity_id and not self.is_dummy:
+            return self.entity_id
+        if self.device_entry:
+            return _label("device", self.device_entry.id, self.device_entry.name_by_user or self.device_entry.name)
+        return self.object_id  # pragma: no cover
+
+
+def _label(prefix: str, identifier: str, name: str | None) -> str:
+    """Build `prefix id (name)`, omitting the name when the registry does not have one."""
+    return f"{prefix} {identifier} ({name})" if name else f"{prefix} {identifier}"
 
 
 EXCLUDE_FROM_PARENT_CONFIG = (
@@ -66,6 +102,13 @@ def is_number(value: str) -> bool:
     return math.isfinite(fvalue)
 
 
+def get_main_device_entry(device_registry: dr.DeviceRegistry, device_id: str) -> dr.DeviceEntry | None:
+    """Return a main device entry, excluding child devices on versions which support them."""
+    if _HAS_CHILD_DEVICES:
+        return device_registry.async_get(device_id, include_child_devices=False)
+    return cast(dr.DeviceEntry | None, device_registry.async_get(device_id))  # pragma: no cover
+
+
 def create_source_entity(entity_id: str, hass: HomeAssistant) -> SourceEntity:
     """Create object containing all information about the source entity."""
 
@@ -86,19 +129,9 @@ def create_source_entity(entity_id: str, hass: HomeAssistant) -> SourceEntity:
     )
 
     unique_id = None
-    supported_color_modes: list[ColorMode] = []
     if entity_entry:
         source_entity_domain = entity_entry.domain
         unique_id = entity_entry.unique_id
-        if entity_entry.capabilities:
-            supported_color_modes = entity_entry.capabilities.get(
-                ATTR_SUPPORTED_COLOR_MODES,
-                [],
-            )
-
-    entity_state = hass.states.get(entity_id)
-    if entity_state:
-        supported_color_modes = entity_state.attributes.get(ATTR_SUPPORTED_COLOR_MODES, [])
 
     return SourceEntity(
         source_object_id,
@@ -112,7 +145,6 @@ def create_source_entity(entity_id: str, hass: HomeAssistant) -> SourceEntity:
             entity_entry,
             device_entry,
         ),
-        supported_color_modes or [],
         entity_entry,
         device_entry,
     )
@@ -123,7 +155,7 @@ def get_wrapped_entity_name(
     entity_id: str,
     object_id: str,
     entity_entry: er.RegistryEntry | None,
-    device_entry: dr.DeviceEntry | None,
+    device_entry: AnyDeviceEntry | None,
 ) -> str:
     """Construct entity name based on the wrapped entity"""
     if entity_entry is None:
@@ -141,7 +173,7 @@ def get_wrapped_entity_name(
 
 def _get_device_entity_name(
     entity_entry: er.RegistryEntry,
-    device_entry: dr.DeviceEntry | None,
+    device_entry: AnyDeviceEntry | None,
 ) -> str | None:
     if not entity_entry.has_entity_name or device_entry is None:
         return None

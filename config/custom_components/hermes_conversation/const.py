@@ -1,5 +1,7 @@
 """Constants for the Hermes Conversation integration."""
 
+from enum import Enum
+
 DOMAIN = "hermes_conversation"
 
 # ---------------------------------------------------------------------------
@@ -8,8 +10,17 @@ DOMAIN = "hermes_conversation"
 CONF_HOST = "host"
 CONF_PORT = "port"
 CONF_API_KEY = "api_key"
+CONF_PROFILE = "profile"
+CONF_PROFILE_ROUTE = "profile_route"
 CONF_USE_SSL = "use_ssl"
 CONF_VERIFY_SSL = "verify_ssl"
+
+
+class ProfileRouteFamily(str, Enum):
+    """Supported named-profile HTTP route families."""
+
+    ADDON = "addon"
+    NATIVE = "native"
 
 # ---------------------------------------------------------------------------
 # Options keys (user-changeable after setup)
@@ -37,6 +48,7 @@ LEGACY_CONF_INSTRUCTIONS = "instructions"
 # ---------------------------------------------------------------------------
 DEFAULT_HOST = "homeassistant.local"
 DEFAULT_PORT = 8443
+DEFAULT_PROFILE_ROUTE = ProfileRouteFamily.ADDON
 DEFAULT_CONTEXT_MAX_CHARS = 12000
 DEFAULT_INCLUDE_EXPOSED_ENTITIES = False
 DEFAULT_MODEL = "hermes-agent"
@@ -67,7 +79,10 @@ DEFAULT_PROMPT = (
     "{% if exposed_entities %}\n"
     "Available devices:\n"
     "{% for entity in exposed_entities %}"
-    "- {{ entity.entity_id }} ({{ entity.name }}): {{ entity.state }}\n"
+    "- {{ entity.entity_id }} ({{ entity.name }}): state={{ entity.state }}, "
+    "domain={{ entity.domain }}"
+    "{% if entity.aliases %}, aliases={{ entity.aliases | join(' / ') }}{% endif %}"
+    "{% if entity.area %}, area={{ entity.area }}{% endif %}\n"
     "{% endfor %}"
     "{% endif %}\n"
     "Answer in the user's language. Be concise for voice responses."
@@ -78,4 +93,4 @@ DEFAULT_PROMPT = (
 # ---------------------------------------------------------------------------
 API_CHAT_COMPLETIONS = "/v1/chat/completions"
 API_MODELS = "/v1/models"
-API_HEALTH = "/health"
+API_HEALTH = "/v1/health"

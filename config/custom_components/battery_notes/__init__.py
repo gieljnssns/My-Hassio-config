@@ -39,10 +39,10 @@ from .common import (
 )
 from .const import (
     CONF_ADVANCED_SETTINGS,
-    CONF_BATTERY_INCREASE_THRESHOLD,
     CONF_BATTERY_LOW_TEMPLATE,
     CONF_BATTERY_QUANTITY,
     CONF_BATTERY_TYPE,
+    CONF_DEFAULT_BATTERY_INCREASE_THRESHOLD,
     CONF_DEFAULT_BATTERY_LOW_THRESHOLD,
     CONF_DEVICE_NAME,
     CONF_ENABLE_AUTODISCOVERY,
@@ -99,7 +99,7 @@ CONFIG_SCHEMA = vol.Schema(
                         default=DEFAULT_BATTERY_LOW_THRESHOLD,
                     ): cv.positive_int,
                     vol.Optional(
-                        CONF_BATTERY_INCREASE_THRESHOLD,
+                        CONF_DEFAULT_BATTERY_INCREASE_THRESHOLD,
                         default=DEFAULT_BATTERY_INCREASE_THRESHOLD,
                     ): cv.positive_int,
                 },
@@ -154,7 +154,7 @@ async def async_setup_entry(
         CONF_DEFAULT_BATTERY_LOW_THRESHOLD
     ]
     domain_config.battery_increased_threshod = config_entry.options[
-        CONF_BATTERY_INCREASE_THRESHOLD
+        CONF_DEFAULT_BATTERY_INCREASE_THRESHOLD
     ]
 
     domain_config.enable_autodiscovery = config_entry.options[CONF_ADVANCED_SETTINGS][
@@ -183,7 +183,7 @@ async def async_setup_entry(
         if subentry.subentry_type == SUBENTRY_BATTERY_NOTE:
             device_id = subentry.data.get(CONF_DEVICE_ID, None)
 
-            # HA 2026.8 splits composite devices into multiple devices, so we need to check if the device_id is a composite device
+            # HACK: HA 2026.8 splits composite devices into multiple devices, so we need to check if the device_id is a composite device
             if device_id is not None and is_composite_device_id(hass, device_id):
                 # The device was split into one device per config entry; ask the user to
                 # select a device again
@@ -352,8 +352,8 @@ async def async_migrate_integration(hass: HomeAssistant, config: ConfigType) -> 
                         CONF_DEFAULT_BATTERY_LOW_THRESHOLD,
                         DEFAULT_BATTERY_LOW_THRESHOLD,
                     ),
-                    CONF_BATTERY_INCREASE_THRESHOLD: yaml_domain_config.get(
-                        CONF_BATTERY_INCREASE_THRESHOLD,
+                    CONF_DEFAULT_BATTERY_INCREASE_THRESHOLD: yaml_domain_config.get(
+                        CONF_DEFAULT_BATTERY_INCREASE_THRESHOLD,
                         DEFAULT_BATTERY_INCREASE_THRESHOLD,
                     ),
                     CONF_ADVANCED_SETTINGS: {
@@ -374,7 +374,7 @@ async def async_migrate_integration(hass: HomeAssistant, config: ConfigType) -> 
                     CONF_HIDE_BATTERY: False,
                     CONF_ROUND_BATTERY: False,
                     CONF_DEFAULT_BATTERY_LOW_THRESHOLD: DEFAULT_BATTERY_LOW_THRESHOLD,
-                    CONF_BATTERY_INCREASE_THRESHOLD: DEFAULT_BATTERY_INCREASE_THRESHOLD,
+                    CONF_DEFAULT_BATTERY_INCREASE_THRESHOLD: DEFAULT_BATTERY_INCREASE_THRESHOLD,
                     CONF_ADVANCED_SETTINGS: {
                         CONF_ENABLE_AUTODISCOVERY: True,
                         CONF_ENABLE_REPLACED: True,
@@ -431,7 +431,7 @@ async def async_migrate_integration(hass: HomeAssistant, config: ConfigType) -> 
 
         if source_device_id:
             try:
-                # New method in 2026.8 - remove legacy when reach minimum version
+                # HACK: New method in 2026.8 - remove legacy when reach minimum version
                 remove_helper_devices = getattr(
                     helper_integration, "async_remove_helper_devices", None
                 )

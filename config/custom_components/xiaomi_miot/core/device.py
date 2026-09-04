@@ -5,7 +5,13 @@ from typing import TYPE_CHECKING, Optional, Callable
 from datetime import timedelta
 from functools import cached_property
 from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_MODEL, CONF_USERNAME, EntityCategory
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_TOKEN,
+    CONF_MODEL,
+    CONF_USERNAME,
+    EntityCategory,
+)
 from homeassistant.util import dt
 from homeassistant.components import persistent_notification
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
@@ -23,9 +29,13 @@ from .const import (
 from .hass_entry import HassEntry
 from .hass_entity import XEntity, BasicEntity, convert_unique_id
 from .converters import (
-    BaseConv, InfoConv, MiotPropConv,
-    MiotPropValueConv, MiotActionConv,
-    AttrConv, MiotTargetPositionConv,
+    BaseConv,
+    InfoConv,
+    MiotPropConv,
+    MiotPropValueConv,
+    MiotActionConv,
+    AttrConv,
+    MiotTargetPositionConv,
 )
 from .coordinator import DataCoordinator
 from .miot_spec import MiotSpec, MiotProperty, MiotResults, MiotResult
@@ -46,8 +56,8 @@ if TYPE_CHECKING:
     from . import BasicEntity
 
 InfoConverter = InfoConv().with_option(
-    icon='mdi:information',
-    device_class='update',
+    icon="mdi:information",
+    device_class="update",
     entity_category=EntityCategory.DIAGNOSTIC,
 )
 
@@ -61,7 +71,7 @@ class DeviceInfo:
 
     @property
     def did(self):
-        return self.data.get('did', '')
+        return self.data.get("did", "")
 
     @cached_property
     def unique_id(self):
@@ -71,19 +81,19 @@ class DeviceInfo:
 
     @property
     def name(self):
-        return self.data.get('name') or DEFAULT_NAME
+        return self.data.get("name") or DEFAULT_NAME
 
     @cached_property
     def model(self):
-        return self.miio_info.model or ''
+        return self.miio_info.model or ""
 
     @cached_property
     def mac(self):
-        return self.data.get('mac') or self.miio_info.mac_address or ''
+        return self.data.get("mac") or self.miio_info.mac_address or ""
 
     @property
     def host(self):
-        return self.data.get('localip') or self.data.get(CONF_HOST) or ''
+        return self.data.get("localip") or self.data.get(CONF_HOST) or ""
 
     @property
     def token(self):
@@ -95,8 +105,8 @@ class DeviceInfo:
                 return token
             except ValueError:
                 pass
-        extra = self.data.get('extra') or {}
-        if token := extra.get('token', ''):
+        extra = self.data.get("extra") or {}
+        if token := extra.get("token", ""):
             try:
                 bytes.fromhex(token)
                 return token
@@ -106,7 +116,7 @@ class DeviceInfo:
 
     @cached_property
     def pid(self):
-        pid = self.data.get('pid')
+        pid = self.data.get("pid")
         if pid is not None:
             try:
                 pid = int(pid)
@@ -116,15 +126,15 @@ class DeviceInfo:
 
     @property
     def urn(self):
-        return self.data.get('urn') or self.data.get('spec_type') or ''
+        return self.data.get("urn") or self.data.get("spec_type") or ""
 
     @property
     def parent_id(self):
-        return self.data.get('parent_id', '')
+        return self.data.get("parent_id", "")
 
     @property
     def extra(self):
-        return self.data.get('extra') or {}
+        return self.data.get("extra") or {}
 
     @cached_property
     def firmware_version(self):
@@ -136,36 +146,40 @@ class DeviceInfo:
 
     @cached_property
     def home_name(self):
-        return self.data.get('home_name', '')
+        return self.data.get("home_name", "")
 
     @cached_property
     def room_name(self):
-        return self.data.get('room_name', '')
+        return self.data.get("room_name", "")
 
     @cached_property
     def home_room(self):
-        return f'{self.home_name} {self.room_name}'.strip()
+        return f"{self.home_name} {self.room_name}".strip()
 
     @cached_property
     def miio_info(self):
         info = self.data
-        data = info.get('miio_info') or {
-            'ap':     {'ssid': info.get('ssid'), 'bssid': info.get('bssid'), 'rssi': info.get('rssi')},
-            'netif':  {'localIp': self.host, 'gw': '', 'mask': ''},
-            'fw_ver': self.extra.get('fw_version', ''),
-            'hw_ver': info.get('hw_ver', ''),
-            'mac':    info.get('mac', ''),
-            'model':  info.get(CONF_MODEL, ''),
-            'token':  info.get(CONF_TOKEN, ''),
+        data = info.get("miio_info") or {
+            "ap": {
+                "ssid": info.get("ssid"),
+                "bssid": info.get("bssid"),
+                "rssi": info.get("rssi"),
+            },
+            "netif": {"localIp": self.host, "gw": "", "mask": ""},
+            "fw_ver": self.extra.get("fw_version", ""),
+            "hw_ver": info.get("hw_ver", ""),
+            "mac": info.get("mac", ""),
+            "model": info.get(CONF_MODEL, ""),
+            "token": info.get(CONF_TOKEN, ""),
         }
         return MiioInfo(data)
 
 
 class Device(CustomConfigHelper):
-    spec: Optional['MiotSpec'] = None
-    cloud: Optional['MiotCloud'] = None
-    local: Optional['MiotDevice'] = None
-    miio2miot: Optional['Miio2MiotHelper'] = None
+    spec: Optional["MiotSpec"] = None
+    cloud: Optional["MiotCloud"] = None
+    local: Optional["MiotDevice"] = None
+    miio2miot: Optional["Miio2MiotHelper"] = None
     available = True
     miot_entity = None
     miot_results = None
@@ -187,12 +201,12 @@ class Device(CustomConfigHelper):
         self.entry = entry
         self.cloud = entry.cloud
         self.props: dict = {}
-        self.entities: dict[str, 'BasicEntity'] = {}
+        self.entities: dict[str, "BasicEntity"] = {}
         self.listeners: list[Callable] = []
         self.converters: list[BaseConv] = []
         self.coordinators: list[DataCoordinator] = []
         self.main_coordinators: list[DataCoordinator] = []
-        self.log = logging.getLogger(f'{__name__}.{self.model}')
+        self.log = logging.getLogger(f"{__name__}.{self.model}")
 
     async def async_init(self):
         if not self.cloud_only:
@@ -200,34 +214,40 @@ class Device(CustomConfigHelper):
         spec = await self.get_spec()
         if spec and self.local and not self.cloud_only:
             self.miio2miot = Miio2MiotHelper.from_model(self.hass, self.model, spec)
-            mps = self.custom_config_list('miio_properties')
+            mps = self.custom_config_list("miio_properties")
             if mps and self.miio2miot:
                 self.miio2miot.extend_miio_props(mps)
 
         if self.info.pid not in [18]:
-            """ not proxy device """
+            """not proxy device"""
         elif parent := await self.get_parent_device():
             if parent.use_local:
                 self.local = parent.local
                 self._proxy_device = parent if self.local else None
-                self.log.info('Proxy local device: %s', self.local)
+                self.log.info("Proxy local device: %s", self.local)
 
-        self._exclude_miot_services = self.custom_config_list('exclude_miot_services', [])
-        self._exclude_miot_properties = self.custom_config_list('exclude_miot_properties', [])
-        self._unreadable_properties = self.custom_config_bool('unreadable_properties')
+        self._exclude_miot_services = self.custom_config_list(
+            "exclude_miot_services", []
+        )
+        self._exclude_miot_properties = self.custom_config_list(
+            "exclude_miot_properties", []
+        )
+        self._unreadable_properties = self.custom_config_bool("unreadable_properties")
 
         if not self.coordinators:
             await self.init_coordinators()
 
         if not self._unsub_purge:
-            self._unsub_purge = async_track_time_interval(self.hass, self.async_purge_entities, timedelta(hours=12))
+            self._unsub_purge = async_track_time_interval(
+                self.hass, self.async_purge_entities, timedelta(hours=12)
+            )
 
     async def async_unload(self):
         for coo in self.coordinators:
             await coo.async_shutdown()
 
         self.spec = None
-        self.hass.data[DOMAIN].setdefault('miot_specs', {}).pop(self.model, None)
+        self.hass.data[DOMAIN].setdefault("miot_specs", {}).pop(self.model, None)
 
         if self._unsub_purge:
             self._unsub_purge()
@@ -247,49 +267,49 @@ class Device(CustomConfigHelper):
 
     @cached_property
     def name_model(self):
-        return f'{self.name}({self.model})'
+        return f"{self.name}({self.model})"
 
     @cached_property
     def unique_id(self):
         if self.entry.get_config(CONF_TOKEN):
             return self.info.unique_id
-        return f'{self.info.unique_id}-{self.entry.id}'
+        return f"{self.info.unique_id}-{self.entry.id}"
 
     @cached_property
     def app_link(self):
-        uid = self.cloud.user_id if self.cloud else ''
+        uid = self.cloud.user_id if self.cloud else ""
         if not self.did:
-            return ''
-        return f'mihome://device?uid={uid}&did={self.did}'
+            return ""
+        return f"mihome://device?uid={uid}&did={self.did}"
 
     @property
     def conn_mode(self):
         if not self.entry.get_config(CONF_USERNAME):
-            return 'local'
+            return "local"
         return self.entry.get_config(CONF_CONN_MODE) or DEFAULT_CONN_MODE
 
     @property
     def local_only(self):
-        return self.conn_mode == 'local'
+        return self.conn_mode == "local"
 
     @property
     def cloud_only(self):
-        return self.conn_mode == 'cloud'
+        return self.conn_mode == "cloud"
 
     @property
     def sw_version(self):
         swv = self.info.firmware_version
         if self.info.hardware_version:
-            swv = f'{swv}@{self.info.hardware_version}'
-        updater = self.data.get('updater')
+            swv = f"{swv}@{self.info.hardware_version}"
+        updater = self.data.get("updater")
         emoji = {
-            'local': '🛜',
-            'cloud': '☁️',
+            "local": "🛜",
+            "cloud": "☁️",
         }.get(updater)
         if emoji:
-            swv = f'{swv} {emoji}'
+            swv = f"{swv} {emoji}"
         elif updater:
-            swv = f'{swv} ({updater})'
+            swv = f"{swv} ({updater})"
         return swv
 
     @property
@@ -298,19 +318,28 @@ class Device(CustomConfigHelper):
 
     @property
     def hass_device_info(self):
-        via_device = None
-        if self._proxy_device:
-            via_device = next(iter(self._proxy_device.identifiers))
-        return {
-            'identifiers': self.identifiers,
-            'name': self.name,
-            'model': self.model,
-            'manufacturer': (self.model or 'Xiaomi').split('.', 1)[0],
-            'sw_version': self.sw_version,
-            'suggested_area': self.info.room_name,
-            'via_device': via_device,
-            'configuration_url': f'https://home.miot-spec.com/s/{self.model}',
+        # via_device = None
+        # if self._proxy_device:
+        #     via_device = next(iter(self._proxy_device.identifiers))
+        # return {
+        device_info = {
+            "identifiers": self.identifiers,
+            "name": self.name,
+            "model": self.model,
+            "manufacturer": (self.model or "Xiaomi").split(".", 1)[0],
+            "sw_version": self.sw_version,
+            "suggested_area": self.info.room_name,
+            # 'via_device': via_device,
+            "configuration_url": f"https://home.miot-spec.com/s/{self.model}",
         }
+        if self._proxy_device:
+            dev_reg = dr.async_get(self.hass)
+            if hasattr(dev_reg, "async_get_device_by_identifier"):
+                if parent := self._proxy_device.hass_device:
+                    device_info["via_device_id"] = parent.id
+            else:
+                device_info["via_device"] = next(iter(self._proxy_device.identifiers))
+        return device_info
 
     @property
     def customizes(self):
@@ -325,11 +354,11 @@ class Device(CustomConfigHelper):
         if self.cloud_only:
             # only for local mode
             return None
-        ext = self.custom_config('extend_miot_specs')
+        ext = self.custom_config("extend_miot_specs")
         if ext and isinstance(ext, str):
-            ext = DEVICE_CUSTOMIZES.get(ext, {}).get('extend_miot_specs')
+            ext = DEVICE_CUSTOMIZES.get(ext, {}).get("extend_miot_specs")
         else:
-            ext = self.custom_config_list('extend_miot_specs')
+            ext = self.custom_config_list("extend_miot_specs")
         if ext and isinstance(ext, list):
             return ext
         return None
@@ -338,12 +367,16 @@ class Device(CustomConfigHelper):
         if self.spec:
             return self.spec
 
-        dat = self.hass.data[DOMAIN].setdefault('miot_specs', {})
+        dat = self.hass.data[DOMAIN].setdefault("miot_specs", {})
         obj = dat.get(self.model)
         if not obj:
-            trans_options = self.custom_config_bool('trans_options', self.entry.get_config('trans_options'))
+            trans_options = self.custom_config_bool(
+                "trans_options", self.entry.get_config("trans_options")
+            )
             urn = await self.get_urn()
-            obj = await MiotSpec.async_from_type(self.hass, urn, trans_options=trans_options)
+            obj = await MiotSpec.async_from_type(
+                self.hass, urn, trans_options=trans_options
+            )
             dat[self.model] = obj
         if obj:
             self.spec = copy.copy(obj)
@@ -354,17 +387,21 @@ class Device(CustomConfigHelper):
         return self.spec
 
     async def get_urn(self):
-        urn = self.custom_config('miot_type')
+        urn = self.custom_config("miot_type")
         if not urn:
             urn = self.info.urn
         if not urn:
             urn = await MiotSpec.async_get_model_type(self.hass, self.model)
-            self.info.data['urn'] = urn
+            self.info.data["urn"] = urn
         return urn
 
     @property
     def hass_device(self):
         dev_reg = dr.async_get(self.hass)
+        if hasattr(dev_reg, "async_get_device_by_identifier"):
+            return dev_reg.async_get_device_by_identifier(
+                next(iter(self.identifiers)), self.entry.id
+            )
         return dev_reg.async_get_device(self.identifiers)
 
     @property
@@ -377,11 +414,13 @@ class Device(CustomConfigHelper):
         if conv in self.converters:
             return
         if not force and self.find_converter(conv.full_name):
-            self.log.info('Converter for %s already exists. Ignored.', conv.full_name)
+            self.log.info("Converter for %s already exists. Ignored.", conv.full_name)
             return
         self.converters.append(conv)
 
-    def add_converter_by_property(self, prop: MiotProperty, domain=None, option=None, cls=None, **kwargs):
+    def add_converter_by_property(
+        self, prop: MiotProperty, domain=None, option=None, cls=None, **kwargs
+    ):
         if not cls:
             cls = MiotPropConv
         conv = cls(prop.full_name, domain=domain, prop=prop, **kwargs)
@@ -403,87 +442,121 @@ class Device(CustomConfigHelper):
         if not self.spec:
             return
 
-        appends = self.custom_config_list('append_converters') or []
+        appends = self.custom_config_list("append_converters") or []
         for cfg in [*GLOBAL_CONVERTERS, *appends]:
-            cls = cfg.get('class')
-            kwargs = cfg.get('kwargs', {})
-            if services := cfg.get('services'):
-                for service in self.spec.get_services(*services, excludes=self._exclude_miot_services):
+            cls = cfg.get("class")
+            kwargs = cfg.get("kwargs", {})
+            if services := cfg.get("services"):
+                for service in self.spec.get_services(
+                    *services, excludes=self._exclude_miot_services
+                ):
                     conv = None
-                    if cls and hasattr(cls, 'service'):
+                    if cls and hasattr(cls, "service"):
                         conv = cls(service=service, **kwargs)
-                        if not getattr(conv, 'prop', None) and getattr(conv, 'main_props', None):
-                            self.log.info('Converter has no main props: %s', conv)
+                        if not getattr(conv, "prop", None) and getattr(
+                            conv, "main_props", None
+                        ):
+                            self.log.info("Converter has no main props: %s", conv)
                             conv = None
                         elif exists := self.find_converter(conv.full_name):
                             conv = exists  # for append_converters
                         else:
                             self.add_converter(conv, True)
-                            self.log.debug('Add converter: %s', conv)
+                            self.log.debug("Add converter: %s", conv)
 
-                    for pc in cfg.get('converters') or []:
-                        if not (names := pc.get('props')):
+                    for pc in cfg.get("converters") or []:
+                        if not (names := pc.get("props")):
                             continue
-                        only_format = pc.get('only_format')
-                        exclude_format = pc.get('exclude_format')
+                        only_format = pc.get("only_format")
+                        exclude_format = pc.get("exclude_format")
                         for p in names:
-                            if '.' in p or pc.get('all_services'):
-                                props = self.spec.get_properties(p, only_format=only_format, exclude_format=exclude_format)
+                            if "." in p or pc.get("all_services"):
+                                props = self.spec.get_properties(
+                                    p,
+                                    only_format=only_format,
+                                    exclude_format=exclude_format,
+                                )
                             else:
-                                props = service.get_properties(p, only_format=only_format, exclude_format=exclude_format)
+                                props = service.get_properties(
+                                    p,
+                                    only_format=only_format,
+                                    exclude_format=exclude_format,
+                                )
                             if not props:
                                 continue
                             for prop in props:
-                                attr = pc.get('attr', prop.full_name)
-                                c = pc.get('class', MiotPropConv)
-                                d = pc.get('domain', None)
-                                ac = c(attr, domain=d, prop=prop, desc=pc.get('desc'))
+                                attr = pc.get("attr", prop.full_name)
+                                c = pc.get("class", MiotPropConv)
+                                d = pc.get("domain", None)
+                                ac = c(attr, domain=d, prop=prop, desc=pc.get("desc"))
                                 self.add_converter(ac)
-                                self.log.debug('Add converter: %s', [ac, pc])
+                                self.log.debug("Add converter: %s", [ac, pc])
                                 if conv and ac.full_name not in conv.attrs:
                                     conv.attrs.append(ac.full_name)
 
         for d in [
-            'button', 'sensor', 'binary_sensor', 'switch', 'number', 'select', 'text',
-            'number_select', 'scanner', 'target_position',
+            "button",
+            "sensor",
+            "binary_sensor",
+            "switch",
+            "number",
+            "select",
+            "text",
+            "number_select",
+            "scanner",
+            "target_position",
         ]:
-            pls = self.custom_config_list(f'{d}_properties') or []
+            pls = self.custom_config_list(f"{d}_properties") or []
             if not pls:
                 continue
             for prop in self.spec.get_properties(*pls):
-                if d == 'number_select':
+                if d == "number_select":
                     if prop.value_range:
-                        d = 'number'
+                        d = "number"
                     elif prop.value_list:
-                        d = 'select'
+                        d = "select"
                     else:
-                        self.log.warning(f'Unsupported customize entity: %s for %s', d, prop.full_name)
+                        self.log.warning(
+                            f"Unsupported customize entity: %s for %s",
+                            d,
+                            prop.full_name,
+                        )
                         continue
                 platform = {
-                    'scanner': 'device_tracker',
-                    'tracker': 'device_tracker',
-                    'target_position': 'cover',
+                    "scanner": "device_tracker",
+                    "tracker": "device_tracker",
+                    "target_position": "cover",
                 }.get(d) or d
-                if platform == 'button':
+                if platform == "button":
                     if prop.value_list:
                         for pv in prop.value_list:
-                            val = pv.get('value')
-                            des = pv.get('description') or val
-                            attr = f'{prop.full_name}-{val}'
-                            conv = MiotPropValueConv(attr, platform, prop=prop, value=val, description=des)
+                            val = pv.get("value")
+                            des = pv.get("description") or val
+                            attr = f"{prop.full_name}-{val}"
+                            conv = MiotPropValueConv(
+                                attr, platform, prop=prop, value=val, description=des
+                            )
                             self.add_converter(conv)
                     elif prop.is_bool:
-                        conv = MiotPropValueConv(prop.full_name, platform, prop=prop, value=True)
+                        conv = MiotPropValueConv(
+                            prop.full_name, platform, prop=prop, value=True
+                        )
                         self.add_converter(conv)
-                elif platform == 'number' and not prop.value_range:
-                    self.log.warning(f'Unsupported customize entity: %s for %s', platform, prop.full_name)
+                elif platform == "number" and not prop.value_range:
+                    self.log.warning(
+                        f"Unsupported customize entity: %s for %s",
+                        platform,
+                        prop.full_name,
+                    )
                     continue
-                elif d == 'target_position' and not prop.value_range:
-                    self.log.warning(f'Unsupported customize entity: %s for %s', d, prop.full_name)
+                elif d == "target_position" and not prop.value_range:
+                    self.log.warning(
+                        f"Unsupported customize entity: %s for %s", d, prop.full_name
+                    )
                     continue
                 else:
                     conv_cls = {
-                        'target_position': MiotTargetPositionConv,
+                        "target_position": MiotTargetPositionConv,
                     }.get(d) or MiotPropConv
                     conv = conv_cls(prop.full_name, platform, prop=prop)
                     conv.with_option(
@@ -491,47 +564,72 @@ class Device(CustomConfigHelper):
                     )
                     self.add_converter(conv)
 
-        for d in ['button', 'text', 'select']:
-            als = self.custom_config_list(f'{d}_actions') or []
+        for d in ["button", "text", "select"]:
+            als = self.custom_config_list(f"{d}_actions") or []
             if not als:
                 continue
             for srv in self.spec.services.values():
                 for action in srv.get_actions(*als):
-                    self.add_converter(MiotActionConv(action.full_name, d, action=action))
+                    self.add_converter(
+                        MiotActionConv(action.full_name, d, action=action)
+                    )
 
-        for d in ['sensor', 'binary_sensor']:
-            for attr in self.custom_config_list(f'{d}_attributes') or []:
+        for d in ["sensor", "binary_sensor"]:
+            for attr in self.custom_config_list(f"{d}_attributes") or []:
                 self.add_converter(AttrConv(attr, d))
 
     async def init_coordinators(self):
         if dby := self.hass_device_disabled:
-            self.log.debug('Device disabled by: %s', dby)
+            self.log.debug("Device disabled by: %s", dby)
             return
 
         interval = 60
-        interval = self.entry.get_config('scan_interval') or interval
-        interval = self.custom_config_integer('interval_seconds') or interval
+        interval = self.entry.get_config("scan_interval") or interval
+        interval = self.custom_config_integer("interval_seconds") or interval
         lst = await self.init_miot_coordinators(interval)
         if self.cloud_statistics_commands:
             lst.append(
-                DataCoordinator(self, self.update_cloud_statistics, update_interval=timedelta(seconds=interval*10)),
+                DataCoordinator(
+                    self,
+                    self.update_cloud_statistics,
+                    update_interval=timedelta(seconds=interval * 10),
+                ),
             )
         if self.miio_cloud_records:
-            seconds = self.custom_config_integer('miio_cloud_records_interval') or interval*10
+            seconds = (
+                self.custom_config_integer("miio_cloud_records_interval")
+                or interval * 10
+            )
             lst.append(
-                DataCoordinator(self, self.update_miio_cloud_records, update_interval=timedelta(seconds=seconds)),
+                DataCoordinator(
+                    self,
+                    self.update_miio_cloud_records,
+                    update_interval=timedelta(seconds=seconds),
+                ),
             )
         if self.miio_cloud_props:
             lst.append(
-                DataCoordinator(self, self.update_miio_cloud_props, update_interval=timedelta(seconds=interval*2)),
+                DataCoordinator(
+                    self,
+                    self.update_miio_cloud_props,
+                    update_interval=timedelta(seconds=interval * 2),
+                ),
             )
         if self.custom_miio_properties:
             lst.append(
-                DataCoordinator(self, self.update_miio_props, update_interval=timedelta(seconds=interval)),
+                DataCoordinator(
+                    self,
+                    self.update_miio_props,
+                    update_interval=timedelta(seconds=interval),
+                ),
             )
         if self.custom_miio_commands:
             lst.append(
-                DataCoordinator(self, self.update_miio_commands, update_interval=timedelta(seconds=interval)),
+                DataCoordinator(
+                    self,
+                    self.update_miio_commands,
+                    update_interval=timedelta(seconds=interval),
+                ),
             )
         self.coordinators.extend(lst)
 
@@ -546,47 +644,54 @@ class Device(CustomConfigHelper):
             return lst
 
         all_mapping = {**self.miot_mapping()}
-        chunks = self.custom_config_list('chunk_coordinators') or []
+        chunks = self.custom_config_list("chunk_coordinators") or []
         if self.miio2miot:
             chunks = []
 
         def update_factory(mapping, notify=False, chunk_services=None):
             async def _update():
-                result = await self.update_miot_status(mapping, chunk_services=chunk_services)
+                result = await self.update_miot_status(
+                    mapping, chunk_services=chunk_services
+                )
                 if notify:
                     for entity in self.entities.values():
                         if isinstance(entity, XEntity):
                             continue
                         if not isinstance(entity, BasicEntity):
                             continue
-                        if not hasattr(entity, 'async_update_from_device'):
+                        if not hasattr(entity, "async_update_from_device"):
                             continue
                         await entity.async_update_from_device()
                 return result
+
             return _update
 
         index = 0
         for chunk in chunks:
             index += 1
-            inter = chunk.get('interval', interval)
-            props = chunk.get('props')
+            inter = chunk.get("interval", interval)
+            props = chunk.get("props")
             if not props:
                 continue
             if isinstance(props, str):
-                props = props.split(',')
-            mapping = self.spec.services_mapping(
-                excludes=self._exclude_miot_services,
-                include_properties=props,
-                exclude_properties=self._exclude_miot_properties,
-                unreadable_properties=self._unreadable_properties,
-            ) or {}
+                props = props.split(",")
+            mapping = (
+                self.spec.services_mapping(
+                    excludes=self._exclude_miot_services,
+                    include_properties=props,
+                    exclude_properties=self._exclude_miot_properties,
+                    unreadable_properties=self._unreadable_properties,
+                )
+                or {}
+            )
             for k in mapping.keys():
                 all_mapping.pop(k, None)
-            notify = chunk.get('notify')
-            chunk_services = chunk.get('chunk_services', 0)
+            notify = chunk.get("notify")
+            chunk_services = chunk.get("chunk_services", 0)
             coo = DataCoordinator(
-                self, update_factory(mapping, notify, chunk_services=chunk_services),
-                name=f'chunk_{index}',
+                self,
+                update_factory(mapping, notify, chunk_services=chunk_services),
+                name=f"chunk_{index}",
                 update_interval=timedelta(seconds=inter),
             )
             lst.append(coo)
@@ -594,16 +699,17 @@ class Device(CustomConfigHelper):
                 self.main_coordinators.append(coo)
 
         if all_mapping:
-            chunk_services = self.custom_config_integer('chunk_services')
+            chunk_services = self.custom_config_integer("chunk_services")
             coo = DataCoordinator(
-                self, update_factory(all_mapping, True, chunk_services=chunk_services),
-                name='miot_status',
+                self,
+                update_factory(all_mapping, True, chunk_services=chunk_services),
+                name="miot_status",
                 update_interval=timedelta(seconds=interval),
             )
             lst.append(coo)
             if not self.main_coordinators:
                 self.main_coordinators.append(coo)
-        self.log.debug('Miot coordinators: %s', [*chunks, all_mapping])
+        self.log.debug("Miot coordinators: %s", [*chunks, all_mapping])
         return lst
 
     async def update_status(self):
@@ -619,33 +725,35 @@ class Device(CustomConfigHelper):
         for coo in self.coordinators:
             await coo.async_request_refresh()
             all.append(coo.name)
-        self.log.info('Update all coordinators: %s', all)
+        self.log.info("Update all coordinators: %s", all)
 
     def add_entities(self, domain):
         for conv in self.converters:
             if conv.domain != domain:
                 continue
-            unique = f'{domain}.{convert_unique_id(conv)}'
+            unique = f"{domain}.{convert_unique_id(conv)}"
             entity = self.entities.get(unique)
             if entity:
                 continue
             cls = XEntity.CLS.get(domain)
-            if entity_type := conv.option.get('entity_type'):
+            if entity_type := conv.option.get("entity_type"):
                 cls = XEntity.CLS.get(entity_type) or cls
             adder = self.entry.adders.get(domain)
             if not (cls and adder):
-                self.log.warning('Entity class/adder not found: %s', [domain, conv.attr, cls, adder])
+                self.log.warning(
+                    "Entity class/adder not found: %s", [domain, conv.attr, cls, adder]
+                )
                 continue
             entity = cls(self, conv)
             self.add_entity(entity, unique)
             adder([entity], update_before_add=False)
-            self.log.info('New entity: %s', entity)
+            self.log.info("New entity: %s", entity)
 
-        if domain == 'button':
+        if domain == "button":
             self.dispatch_info()
             async_call_later(self.hass, 5, self.update_all_status)
 
-    def add_entity(self, entity: 'BasicEntity', unique=None):
+    def add_entity(self, entity: "BasicEntity", unique=None):
         if unique is None:
             unique = entity.unique_id
         if unique in self.entities:
@@ -663,7 +771,7 @@ class Device(CustomConfigHelper):
 
     def dispatch(self, data: dict, only_info=False, log=True):
         if log:
-            self.log.info('Device updated: %s', {**data, 'only_info': only_info})
+            self.log.info("Device updated: %s", {**data, "only_info": only_info})
         for handler in self.listeners:
             handler(data, only_info=only_info)
 
@@ -683,25 +791,25 @@ class Device(CustomConfigHelper):
 
     def decode_one(self, payload: dict, value: dict):
         if not isinstance(value, dict):
-            self.log.warning('Value is not dict: %s', value)
+            self.log.warning("Value is not dict: %s", value)
             return
-        if value.get('code', 0):
+        if value.get("code", 0):
             return
-        siid = value.get('siid')
-        piid = value.get('piid')
+        siid = value.get("siid")
+        piid = value.get("piid")
         if siid and piid:
             mi = MiotSpec.unique_prop(siid, piid=piid)
             for conv in self.converters:
                 if conv.mi == mi:
-                    conv.decode(self, payload, value.get('value'))
+                    conv.decode(self, payload, value.get("value"))
 
     def decode_attrs(self, value: dict):
         if not isinstance(value, dict):
-            self.log.warning('Value is not dict: %s', value)
+            self.log.warning("Value is not dict: %s", value)
             return
         payload = {}
         for conv in self.converters:
-            val = get_value(value, conv.attr, None, ':')
+            val = get_value(value, conv.attr, None, ":")
             if val is not None:
                 conv.decode(self, payload, val)
         return payload
@@ -718,36 +826,36 @@ class Device(CustomConfigHelper):
     async def async_write(self, payload: dict):
         """Send command to device."""
         data = self.encode(payload)
-        self.log.info('Device write data: %s', [payload, data])
+        self.log.info("Device write data: %s", [payload, data])
         result = None
-        method = data.get('method')
+        method = data.get("method")
         success = None
 
         try:
-            if method == 'update_status':
+            if method == "update_status":
                 result = await self.update_main_status()
 
-            if method == 'set_properties':
-                params = data.get('params', [])
+            if method == "set_properties":
+                params = data.get("params", [])
                 result = await self.async_set_properties(params)
                 success = True if result else False
                 if err := MiotResults(result).has_error:
                     success = False
-                    self.log.warning('Device write error: %s', [payload, data, err])
+                    self.log.warning("Device write error: %s", [payload, data, err])
 
-            if method == 'action':
-                param = data.get('param', {})
-                siid = param['siid']
-                aiid = param['aiid']
-                ins = param.get('in') or []
+            if method == "action":
+                param = data.get("param", {})
+                siid = param["siid"]
+                aiid = param["aiid"]
+                ins = param.get("in") or []
                 result = await self.async_call_action(siid, aiid, ins)
                 success = result.is_success
 
         except (DeviceException, MiCloudException) as exc:
             success = False
-            self.log.exception('Device write failed: %s', [exc, payload, data])
+            self.log.exception("Device write failed: %s", [exc, payload, data])
 
-        self.log.info('Device write result: %s', [payload, result])
+        self.log.info("Device write result: %s", [payload, result])
         if success:
             self.dispatch(payload)
         return result
@@ -762,7 +870,7 @@ class Device(CustomConfigHelper):
             return True
         if self.miio2miot:
             return True
-        if self.custom_config_bool('miot_local'):
+        if self.custom_config_bool("miot_local"):
             return True
         if self.model in MIOT_LOCAL_MODELS:
             return True
@@ -780,7 +888,7 @@ class Device(CustomConfigHelper):
             return True
         if self.use_local:
             return False
-        if self.custom_config_bool('miot_cloud'):
+        if self.custom_config_bool("miot_cloud"):
             return True
         return True
 
@@ -788,7 +896,7 @@ class Device(CustomConfigHelper):
     def auto_cloud(self):
         if not self.cloud:
             return False
-        return self.custom_config_bool('auto_cloud')
+        return self.custom_config_bool("auto_cloud")
 
     async def get_parent_device(self):
         if not (pid := self.info.parent_id):
@@ -805,16 +913,19 @@ class Device(CustomConfigHelper):
         if not self.spec:
             return None
 
-        if dic := self.custom_config_json('miot_mapping'):
+        if dic := self.custom_config_json("miot_mapping"):
             self.spec.set_custom_mapping(dic)
             self._miot_mapping = dic
             return dic
 
-        mapping = self.spec.services_mapping(
-            excludes=self._exclude_miot_services,
-            exclude_properties=self._exclude_miot_properties,
-            unreadable_properties=self._unreadable_properties,
-        ) or {}
+        mapping = (
+            self.spec.services_mapping(
+                excludes=self._exclude_miot_services,
+                exclude_properties=self._exclude_miot_properties,
+                unreadable_properties=self._unreadable_properties,
+            )
+            or {}
+        )
         self._miot_mapping = mapping
         return mapping
 
@@ -838,7 +949,7 @@ class Device(CustomConfigHelper):
         if auto_cloud is None:
             auto_cloud = self.auto_cloud
         if check_lan is None:
-            check_lan = self.custom_config_bool('check_lan')
+            check_lan = self.custom_config_bool("check_lan")
 
         if mapping is None:
             mapping = self.miot_mapping()
@@ -846,31 +957,41 @@ class Device(CustomConfigHelper):
             use_local = False
             use_cloud = False
 
-        self.log.debug('Update miot status: %s', {
-            'use_local': [use_local, self.use_local, self.local],
-            'use_cloud': [use_cloud, self.use_cloud, self.auto_cloud],
-            'mapping': mapping,
-        })
+        self.log.debug(
+            "Update miot status: %s",
+            {
+                "use_local": [use_local, self.use_local, self.local],
+                "use_cloud": [use_cloud, self.use_cloud, self.auto_cloud],
+                "mapping": mapping,
+            },
+        )
 
         if use_local:
             try:
                 if self.miio2miot:
-                    results = await self.miio2miot.async_get_miot_props(self.local, mapping)
+                    results = await self.miio2miot.async_get_miot_props(
+                        self.local, mapping
+                    )
                     if attrs := self.miio2miot.entity_attrs():
                         self.props.update(attrs)
                         self.dispatch(self.decode_attrs(attrs))
                 else:
                     if not max_properties:
-                        max_properties = self.custom_config_integer('chunk_properties')
+                        max_properties = self.custom_config_integer("chunk_properties")
                     if not max_properties:
                         max_properties = self.local.get_max_properties(mapping)
                     maps = []
                     if chunk_services:
-                        for service in self.spec.get_services(excludes=self._exclude_miot_services):
-                            mapp = service.mapping(
-                                excludes=self._exclude_miot_properties,
-                                unreadable_properties=self._unreadable_properties,
-                            ) or {}
+                        for service in self.spec.get_services(
+                            excludes=self._exclude_miot_services
+                        ):
+                            mapp = (
+                                service.mapping(
+                                    excludes=self._exclude_miot_properties,
+                                    unreadable_properties=self._unreadable_properties,
+                                )
+                                or {}
+                            )
                             if mapp:
                                 maps.append(mapp)
                     else:
@@ -885,7 +1006,7 @@ class Device(CustomConfigHelper):
                 self.available = True
                 self._local_fails = 0
                 self._local_state = True
-                self.miot_results.updater = 'local'
+                self.miot_results.updater = "local"
                 self.miot_results.set_results(results, mapping)
             except (DeviceException, OSError) as exc:
                 self._local_fails += 1
@@ -902,16 +1023,24 @@ class Device(CustomConfigHelper):
                 self._local_state = local_state
                 props_count = len(mapping)
                 log(
-                    '%s: %s, mapping: %s, max_properties: %s/%s',
-                    self.name, exc, mapping, max_properties or props_count, props_count
+                    "%s: %s, mapping: %s, max_properties: %s/%s",
+                    self.name,
+                    exc,
+                    mapping,
+                    max_properties or props_count,
+                    props_count,
                 )
 
         if use_cloud:
             try:
-                self.miot_results.updater = 'cloud'
-                results = await self.cloud.async_get_properties_for_mapping(self.did, mapping)
+                self.miot_results.updater = "cloud"
+                results = await self.cloud.async_get_properties_for_mapping(
+                    self.did, mapping
+                )
                 if results is None:
-                    raise MiCloudException('Cloud API returned None response, possible timeout or empty data')
+                    raise MiCloudException(
+                        "Cloud API returned None response, possible timeout or empty data"
+                    )
                 if check_lan and self.local:
                     await self.local.async_info()
                 self.available = True
@@ -925,25 +1054,35 @@ class Device(CustomConfigHelper):
 
                 if not self._cloud_state:
                     self.available = False
-                    self.log.error('Cloud request failed %s times, marking unavailable. %s', self._cloud_fails, exc)
+                    self.log.error(
+                        "Cloud request failed %s times, marking unavailable. %s",
+                        self._cloud_fails,
+                        exc,
+                    )
                 else:
-                    self.log.info('Cloud request failed (%sth time), will retry. %s', self._cloud_fails, exc)
+                    self.log.info(
+                        "Cloud request failed (%sth time), will retry. %s",
+                        self._cloud_fails,
+                        exc,
+                    )
 
         if results and self.miot_results.is_empty:
             self.log.warning(
-                'Got invalid miot result while fetching the state: %s, mapping: %s',
-                results, mapping,
+                "Got invalid miot result while fetching the state: %s, mapping: %s",
+                results,
+                mapping,
             )
 
-        if self.miot_results.updater != self.data.get('updater'):
+        if self.miot_results.updater != self.data.get("updater"):
             dev_reg = dr.async_get(self.hass)
-            if dev := dev_reg.async_get_device(self.identifiers):
-                self.data['updater'] = self.miot_results.updater
+            # if dev := dev_reg.async_get_device(self.identifiers):
+            if dev := self.hass_device:
+                self.data["updater"] = self.miot_results.updater
                 dev_reg.async_update_device(dev.id, sw_version=self.sw_version)
-                self.log.info('State updater: %s', self.sw_version)
+                self.log.info("State updater: %s", self.sw_version)
         if results:
             self.miot_results.to_attributes(self.props)
-            self.data['updated'] = dt.now()
+            self.data["updated"] = dt.now()
             self.dispatch(self.decode(results))
         self.dispatch_info()
         await self.offline_notify()
@@ -951,68 +1090,86 @@ class Device(CustomConfigHelper):
 
     async def offline_notify(self):
         result = self.miot_results
-        is_offline = not result.is_valid and result.errors and is_offline_exception(result.errors)
-        offline_devices = self.hass.data[DOMAIN].setdefault('offline_devices', {})
-        notification_id = f'{DOMAIN}-devices-offline'
+        is_offline = (
+            not result.is_valid
+            and result.errors
+            and is_offline_exception(result.errors)
+        )
+        offline_devices = self.hass.data[DOMAIN].setdefault("offline_devices", {})
+        notification_id = f"{DOMAIN}-devices-offline"
         if not is_offline:
-            self.data.pop('offline_times', None)
+            self.data.pop("offline_times", None)
             if offline_devices.pop(self.info.unique_id, None) and not offline_devices:
                 persistent_notification.async_dismiss(self.hass, notification_id)
             return
-        offline_times = self.data.setdefault('offline_times', 0)
-        if not self.custom_config_bool('ignore_offline'):
+        offline_times = self.data.setdefault("offline_times", 0)
+        if not self.custom_config_bool("ignore_offline"):
             offline_times += 1
         odd = offline_devices.get(self.info.unique_id) or {}
         if odd:
-            odd.update({
-                'occurrences': offline_times,
-            })
+            odd.update(
+                {
+                    "occurrences": offline_times,
+                }
+            )
         elif offline_times >= 5:
             odd = {
-                'device': self,
-                'occurrences': offline_times,
+                "device": self,
+                "occurrences": offline_times,
             }
             offline_devices[self.info.unique_id] = odd
-            tip = f'Some devices cannot be connected in the LAN, please check their IP ' \
-                  f'and make sure they are in the same subnet as the HA.\n\n' \
-                  f'一些设备无法通过局域网连接，请检查它们的IP，并确保它们和HA在同一子网。\n'
+            tip = (
+                f"Some devices cannot be connected in the LAN, please check their IP "
+                f"and make sure they are in the same subnet as the HA.\n\n"
+                f"一些设备无法通过局域网连接，请检查它们的IP，并确保它们和HA在同一子网。\n"
+            )
             for d in offline_devices.values():
-                device = d.get('device')
+                device = d.get("device")
                 if not device:
                     continue
-                tip += f'\n - {device.name_model}: {device.info.host}'
-            tip += '\n\n'
-            url = 'https://github.com/al-one/hass-xiaomi-miot/search' \
-                  '?type=issues&q=%22Unable+to+discover+the+device%22'
-            tip += f'[Known issues]({url})'
-            url = 'https://github.com/al-one/hass-xiaomi-miot/issues/500#offline'
-            tip += f' | [了解更多]({url})'
+                tip += f"\n - {device.name_model}: {device.info.host}"
+            tip += "\n\n"
+            url = (
+                "https://github.com/al-one/hass-xiaomi-miot/search"
+                "?type=issues&q=%22Unable+to+discover+the+device%22"
+            )
+            tip += f"[Known issues]({url})"
+            url = "https://github.com/al-one/hass-xiaomi-miot/issues/500#offline"
+            tip += f" | [了解更多]({url})"
             persistent_notification.async_create(
                 self.hass,
                 tip,
-                'Devices offline',
+                "Devices offline",
                 notification_id,
             )
-        self.data['offline_times'] = offline_times
+        self.data["offline_times"] = offline_times
 
     async def async_purge_entities(self, _now):
         if not self.spec:
             return
-        glob = self.spec.generate_entity_id_by_mac(self.info.unique_id, 'info', 'button')
-        await self.hass.services.async_call('recorder', 'purge_entities', {
-            'keep_days': 1,
-            'entity_globs': [glob],
-        })
-        self.log.info('Purge entities: %s', glob)
+        glob = self.spec.generate_entity_id_by_mac(
+            self.info.unique_id, "info", "button"
+        )
+        await self.hass.services.async_call(
+            "recorder",
+            "purge_entities",
+            {
+                "keep_days": 1,
+                "entity_globs": [glob],
+            },
+        )
+        self.log.info("Purge entities: %s", glob)
 
-    async def async_get_properties(self, mapping, update_entity=True, throw=False, **kwargs):
+    async def async_get_properties(
+        self, mapping, update_entity=True, throw=False, **kwargs
+    ):
         if not self.spec:
-            return {'error': 'No spec'}
+            return {"error": "No spec"}
         if isinstance(mapping, list):
             new_mapping = {}
             for p in mapping:
-                siid = p['siid']
-                piid = p['piid']
+                siid = p["siid"]
+                piid = p["piid"]
                 pkey = self.spec.unique_prop(siid, piid=piid)
                 prop = self.spec.specs.get(pkey)
                 if not isinstance(prop, MiotProperty):
@@ -1020,22 +1177,28 @@ class Device(CustomConfigHelper):
                 new_mapping[prop.full_name] = p
             mapping = new_mapping
         if not mapping or not isinstance(mapping, dict):
-            return {'error': 'Mapping error'}
+            return {"error": "Mapping error"}
         try:
             results = []
             if self.use_local and self._local_state:
-                results = await self.local.async_get_properties_for_mapping(did=self.did, mapping=mapping)
+                results = await self.local.async_get_properties_for_mapping(
+                    did=self.did, mapping=mapping
+                )
             elif self.cloud:
-                results = await self.cloud.async_get_properties_for_mapping(self.did, mapping)
+                results = await self.cloud.async_get_properties_for_mapping(
+                    self.did, mapping
+                )
         except (DeviceException, MiCloudException) as exc:
             self.log.error(
-                'Got exception while get properties: %s, mapping: %s, miio: %s',
-                exc, mapping, self.info.miio_info,
+                "Got exception while get properties: %s, mapping: %s, miio: %s",
+                exc,
+                mapping,
+                self.info.miio_info,
             )
             if throw:
                 raise exc
-            return {'error': str(exc)}
-        self.log.info('Get miot properties: %s', results)
+            return {"error": str(exc)}
+        self.log.info("Get miot properties: %s", results)
         if results and update_entity:
             self.dispatch(self.decode(results))
         result = MiotResults(results, mapping)
@@ -1044,29 +1207,35 @@ class Device(CustomConfigHelper):
     async def async_set_properties(self, params):
         results = []
         cloud_params = []
-        cloud_write = self.cloud and self.custom_config_bool('miot_cloud_write')
+        cloud_write = self.cloud and self.custom_config_bool("miot_cloud_write")
         if not self._local_state or self.cloud_only or cloud_write:
             cloud_params = params
         elif self.miio2miot:
             for param in params:
-                siid = param['siid']
-                piid = param['piid']
+                siid = param["siid"]
+                piid = param["piid"]
                 if not self.miio2miot.has_setter(siid, piid=piid):
                     cloud_params.append(param)
                     continue
-                results.append(await self.miio2miot.async_set_property(self.local, siid, piid, param['value']))
+                results.append(
+                    await self.miio2miot.async_set_property(
+                        self.local, siid, piid, param["value"]
+                    )
+                )
         elif self.local:
-            results = await self.local.async_send('set_properties', params)
+            results = await self.local.async_send("set_properties", params)
         if self.cloud and cloud_params:
-            if self.custom_config_bool('cloud_set_single'):
-                results.extend([
-                    res[0]
-                    for param in cloud_params
-                    if (res := await self.cloud.async_set_props([param]))
-                ])
+            if self.custom_config_bool("cloud_set_single"):
+                results.extend(
+                    [
+                        res[0]
+                        for param in cloud_params
+                        if (res := await self.cloud.async_set_props([param]))
+                    ]
+                )
             else:
                 results.extend(await self.cloud.async_set_props(cloud_params) or [])
-        self.log.debug('Set properties: %s', [params, cloud_params, results])
+        self.log.debug("Set properties: %s", [params, cloud_params, results])
         return results
 
     async def async_set_property(self, field, value):
@@ -1077,39 +1246,41 @@ class Device(CustomConfigHelper):
         else:
             ext = (self.miot_mapping() or {}).get(field) or {}
             if not ext:
-                return MiotResult({}, code=-1, error='Field not found')
-            siid = ext['siid']
-            piid = ext['piid']
+                return MiotResult({}, code=-1, error="Field not found")
+            siid = ext["siid"]
+            piid = ext["piid"]
         try:
             result = await self.async_set_miot_property(siid, piid, value)
         except (DeviceException, MiCloudException) as exc:
-            self.log.error('Set miot property %s(%s) failed: %s', field, value, exc)
+            self.log.error("Set miot property %s(%s) failed: %s", field, value, exc)
             return MiotResult({}, code=-1, error=str(exc))
         ret = result.is_success if result else False
         if ret:
-            self.log.debug('Set miot property %s(%s), result: %s', field, value, result)
+            self.log.debug("Set miot property %s(%s), result: %s", field, value, result)
         else:
-            self.log.info('Set miot property %s(%s) failed, result: %s', field, value, result)
+            self.log.info(
+                "Set miot property %s(%s) failed, result: %s", field, value, result
+            )
         return ret
 
     async def async_set_miot_property(self, siid, piid, value, **kwargs):
         iid = MiotSpec.unique_prop(siid, piid)
         pms = {
-            'did':  str(self.did or iid),
-            'siid': siid,
-            'piid': piid,
-            'value': value,
+            "did": str(self.did or iid),
+            "siid": siid,
+            "piid": piid,
+            "value": value,
         }
         try:
             results = await self.async_set_properties([pms])
             result = MiotResults(results).first
         except (DeviceException, MiCloudException) as exc:
-            self.log.warning('Set miot property %s failed: %s', pms, exc)
+            self.log.warning("Set miot property %s failed: %s", pms, exc)
             return MiotResult({}, code=-1, error=str(exc))
         if not result or not result.is_success:
-            self.log.warning('Set miot property %s failed, result: %s', pms, results)
+            self.log.warning("Set miot property %s failed, result: %s", pms, results)
         else:
-            self.log.info('Set miot property %s, result: %s', pms, result)
+            self.log.info("Set miot property %s, result: %s", pms, result)
             result.value = value
             self.dispatch(self.decode(result.to_json()))
         return result
@@ -1117,15 +1288,15 @@ class Device(CustomConfigHelper):
     async def async_call_action(self, siid, aiid, params=None, **kwargs):
         did = self.did or MiotSpec.unique_prop(siid, aiid=aiid)
         pms = {
-            'did':  str(did),
-            'siid': siid,
-            'aiid': aiid,
-            'in':   params or [],
+            "did": str(did),
+            "siid": siid,
+            "aiid": aiid,
+            "in": params or [],
         }
         cloud = None
-        if kwargs.get('cloud'):
+        if kwargs.get("cloud"):
             cloud = self.cloud
-        elif self.custom_config_bool('miot_cloud_action'):
+        elif self.custom_config_bool("miot_cloud_action"):
             cloud = self.cloud
         elif self.auto_cloud and not self._local_state:
             cloud = self.cloud
@@ -1133,42 +1304,48 @@ class Device(CustomConfigHelper):
             cloud = self.cloud
         try:
             if self.miio2miot and self.miio2miot.has_setter(siid, aiid=aiid):
-                result = await self.miio2miot.async_call_action(self.local, siid, aiid, params)
+                result = await self.miio2miot.async_call_action(
+                    self.local, siid, aiid, params
+                )
             elif cloud:
                 result = await cloud.async_do_action(pms)
             else:
-                if not kwargs.get('force_params'):
-                    action = kwargs.get('action')
+                if not kwargs.get("force_params"):
+                    action = kwargs.get("action")
                     if not action and self.spec:
                         action = self.spec.services.get(siid, {}).actions.get(aiid)
-                    pms['in'] = action.in_params(params or [])
-                result = await self.local.async_send('action', pms)
+                    pms["in"] = action.in_params(params or [])
+                result = await self.local.async_send("action", pms)
             result = MiotResult(result or {})
         except (DeviceException, MiCloudException) as exc:
-            self.log.warning('Call miot action %s failed: %s', pms, exc)
+            self.log.warning("Call miot action %s failed: %s", pms, exc)
             return MiotResult({}, code=-1, error=str(exc))
         except (TypeError, ValueError) as exc:
-            self.log.warning('Call miot action %s failed: %s, result: %s', pms, exc)
+            self.log.warning("Call miot action %s failed: %s, result: %s", pms, exc)
             return MiotResult({}, code=-1, error=str(exc))
         if result.is_success:
-            self.log.debug('Call miot action %s, result: %s', pms, result)
+            self.log.debug("Call miot action %s, result: %s", pms, result)
         else:
-            self.log.info('Call miot action %s failed: %s', pms, result)
+            self.log.info("Call miot action %s failed: %s", pms, result)
         return result
 
     @cached_property
     def cloud_statistics_commands(self):
-        commands = self.custom_config_list('micloud_statistics') or []
-        if keys := self.custom_config_list('stat_power_cost_key'):
+        commands = self.custom_config_list("micloud_statistics") or []
+        if keys := self.custom_config_list("stat_power_cost_key"):
             for k in keys:
-                commands.append({
-                    'type': self.custom_config('stat_power_cost_type', 'stat_day_v3'),
-                    'key': k,
-                    'day': 32,
-                    'limit': 31,
-                    'attribute': None,
-                    'template': 'micloud_statistics_power_cost',
-                })
+                commands.append(
+                    {
+                        "type": self.custom_config(
+                            "stat_power_cost_type", "stat_day_v3"
+                        ),
+                        "key": k,
+                        "day": 32,
+                        "limit": 31,
+                        "attribute": None,
+                        "template": "micloud_statistics_power_cost",
+                    }
+                )
         return commands
 
     async def update_cloud_statistics(self, commands=None):
@@ -1180,41 +1357,37 @@ class Device(CustomConfigHelper):
         now = int(dt.now().timestamp())
         attrs = {}
         for c in commands:
-            if not c.get('key'):
+            if not c.get("key"):
                 continue
             pms = {
-                'did': self.did,
-                'key': c.get('key'),
-                'data_type': c.get('type', 'stat_day_v3'),
-                'time_start': now - 86400 * (c.get('day') or 7),
-                'time_end': now + 60,
-                'limit': int(c.get('limit') or 1),
+                "did": self.did,
+                "key": c.get("key"),
+                "data_type": c.get("type", "stat_day_v3"),
+                "time_start": now - 86400 * (c.get("day") or 7),
+                "time_end": now + 60,
+                "limit": int(c.get("limit") or 1),
             }
-            rdt = await self.cloud.async_request_api('v2/user/statistics', pms) or {}
-            self.log.info('Got micloud statistics: %s', rdt)
-            if tpl := c.get('template'):
+            rdt = await self.cloud.async_request_api("v2/user/statistics", pms) or {}
+            self.log.info("Got micloud statistics: %s", rdt)
+            if tpl := c.get("template"):
                 tpl = template(tpl, self.hass)
                 rls = tpl.async_render(rdt)
             else:
-                rls = [
-                    v.get('value')
-                    for v in rdt
-                    if 'value' in v
-                ]
-            if anm := c.get('attribute'):
+                rls = [v.get("value") for v in rdt if "value" in v]
+            if anm := c.get("attribute"):
                 attrs[anm] = rls
             elif isinstance(rls, dict):
                 update_attrs_with_suffix(attrs, rls)
         if attrs:
             self.available = True
             self.props.update(attrs)
-            self.data['updated'] = dt.now()
+            self.data["updated"] = dt.now()
             self.dispatch(self.decode_attrs(attrs))
         return attrs
 
     @cached_property
     def miio_cloud_records(self):
-        return self.custom_config_list('miio_cloud_records') or []
+        return self.custom_config_list("miio_cloud_records") or []
 
     async def update_miio_cloud_records(self, keys=None):
         if not self.did or not self.cloud:
@@ -1226,42 +1399,41 @@ class Device(CustomConfigHelper):
 
         attrs = {}
         for c in keys:
-            mat = re.match(r'^\s*(?:(\w+)\.?)([\w.]+)(?::(\d+))?(?::(\w+))?\s*$', c)
+            mat = re.match(r"^\s*(?:(\w+)\.?)([\w.]+)(?::(\d+))?(?::(\w+))?\s*$", c)
             if not mat:
                 continue
             typ, key, lmt, gby = mat.groups()
             kws = {
-                'time_start': int(dt.now().timestamp()) - 86400 * 32,
-                'limit': int(lmt or 1),
+                "time_start": int(dt.now().timestamp()) - 86400 * 32,
+                "limit": int(lmt or 1),
             }
             if gby:
-                kws['group'] = gby
-            rdt = await self.cloud.async_get_user_device_data(self.did, key, typ, **kws) or []
-            tpl = self.custom_config(f'miio_{typ}_{key}_template')
+                kws["group"] = gby
+            rdt = (
+                await self.cloud.async_get_user_device_data(self.did, key, typ, **kws)
+                or []
+            )
+            tpl = self.custom_config(f"miio_{typ}_{key}_template")
             if tpl:
                 tpl = template(tpl, self.hass)
-                rls = tpl.async_render({'result': rdt})
+                rls = tpl.async_render({"result": rdt})
             else:
-                rls = [
-                    v.get('value')
-                    for v in rdt
-                    if 'value' in v
-                ]
-            if isinstance(rls, dict) and rls.get('_entity_attrs'):
+                rls = [v.get("value") for v in rdt if "value" in v]
+            if isinstance(rls, dict) and rls.get("_entity_attrs"):
                 attrs.update(rls)
             else:
-                attrs[f'{typ}.{key}'] = rls
-            attrs.pop('_entity_attrs', None)
+                attrs[f"{typ}.{key}"] = rls
+            attrs.pop("_entity_attrs", None)
         if attrs:
             self.available = True
             self.props.update(attrs)
-            self.data['updated'] = dt.now()
+            self.data["updated"] = dt.now()
             self.dispatch(self.decode_attrs(attrs))
         return attrs
 
     @cached_property
     def miio_cloud_props(self):
-        return self.custom_config_list('miio_cloud_props') or []
+        return self.custom_config_list("miio_cloud_props") or []
 
     async def update_miio_cloud_props(self, keys=None):
         did = str(self.did)
@@ -1273,32 +1445,29 @@ class Device(CustomConfigHelper):
             return
 
         pms = {
-            'did': did,
-            'props': [
-                k if '.' in k else f'prop.{k}'
-                for k in keys
-            ],
+            "did": did,
+            "props": [k if "." in k else f"prop.{k}" for k in keys],
         }
-        rdt = await self.cloud.async_request_api('device/batchdevicedatas', [pms]) or {}
-        self.log.debug('Got miio cloud props: %s', rdt)
-        props = (rdt.get('result') or {}).get(did, {})
+        rdt = await self.cloud.async_request_api("device/batchdevicedatas", [pms]) or {}
+        self.log.debug("Got miio cloud props: %s", rdt)
+        props = (rdt.get("result") or {}).get(did, {})
 
-        tpl = self.custom_config('miio_cloud_props_template')
+        tpl = self.custom_config("miio_cloud_props_template")
         if tpl and props:
             tpl = template(tpl, self.hass)
-            attrs = tpl.async_render({'props': props})
+            attrs = tpl.async_render({"props": props})
         else:
             attrs = props
         if attrs:
             self.available = True
             self.props.update(attrs)
-            self.data['updated'] = dt.now()
+            self.data["updated"] = dt.now()
             self.dispatch(self.decode_attrs(attrs))
         return attrs
 
     @cached_property
     def custom_miio_properties(self):
-        return self.custom_config_list('miio_properties') or []
+        return self.custom_config_list("miio_properties") or []
 
     async def update_miio_props(self, props=None):
         if not self.local:
@@ -1309,23 +1478,27 @@ class Device(CustomConfigHelper):
             attrs = self.miio2miot.only_miio_props(props)
         else:
             try:
-                num = self.custom_config_integer('chunk_properties') or 15
+                num = self.custom_config_integer("chunk_properties") or 15
                 attrs = await self.local.async_get_properties(props, max_properties=num)
             except DeviceException as exc:
-                self.log.warning('%s: Got miio properties %s failed: %s', self.name_model, props, exc)
+                self.log.warning(
+                    "%s: Got miio properties %s failed: %s", self.name_model, props, exc
+                )
                 return
             if len(props) != len(attrs):
-                self.props.update({
-                    'miio.props': attrs,
-                })
+                self.props.update(
+                    {
+                        "miio.props": attrs,
+                    }
+                )
                 return
-        attrs = dict(zip(map(lambda x: f'miio.{x}', props), attrs))
+        attrs = dict(zip(map(lambda x: f"miio.{x}", props), attrs))
         self.props.update(attrs)
-        self.log.info('%s: Got miio properties: %s', self.name_model, attrs)
+        self.log.info("%s: Got miio properties: %s", self.name_model, attrs)
 
     @cached_property
     def custom_miio_commands(self):
-        return self.custom_config_json('miio_commands') or {}
+        return self.custom_config_json("miio_commands") or {}
 
     async def update_miio_commands(self, commands=None):
         if not self.local:
@@ -1334,31 +1507,37 @@ class Device(CustomConfigHelper):
             commands = self.custom_miio_commands
         if isinstance(commands, dict):
             commands = [
-                {'method': cmd, **(cfg if isinstance(cfg, dict) else {'values': cfg})}
+                {"method": cmd, **(cfg if isinstance(cfg, dict) else {"values": cfg})}
                 for cmd, cfg in commands.items()
             ]
         elif not isinstance(commands, list):
             commands = []
         for cfg in commands:
-            cmd = cfg.get('method')
-            pms = cfg.get('params') or []
+            cmd = cfg.get("method")
+            pms = cfg.get("params") or []
             try:
                 attrs = await self.local.async_send(cmd, pms)
             except DeviceException as exc:
-                self.log.warning('%s: Send miio command %s(%s) failed: %s', self.name_model, cmd, cfg, exc)
+                self.log.warning(
+                    "%s: Send miio command %s(%s) failed: %s",
+                    self.name_model,
+                    cmd,
+                    cfg,
+                    exc,
+                )
                 continue
-            props = cfg.get('values', pms) or []
+            props = cfg.get("values", pms) or []
             if len(props) != len(attrs):
                 attrs = {
-                    f'miio.{cmd}': attrs,
+                    f"miio.{cmd}": attrs,
                 }
             else:
                 attrs = dict(zip(props, attrs))
             self.props.update(attrs)
-            self.log.info('%s: Got miio properties: %s', self.name_model, attrs)
+            self.log.info("%s: Got miio properties: %s", self.name_model, attrs)
 
 
-class MiotDevice():
+class MiotDevice:
     hass: HomeAssistant = None
     miio: AsyncMiIO = None
 
@@ -1375,7 +1554,7 @@ class MiotDevice():
     def from_device(device: Device):
         host = device.info.host
         token = device.info.token
-        if not host or host in ['0.0.0.0']:
+        if not host or host in ["0.0.0.0"]:
             return None
         elif not token:
             return None
@@ -1385,18 +1564,18 @@ class MiotDevice():
         return MiotDevice(device.hass, miio, device.log)
 
     async def async_info(self):
-        resp = await self.miio.send('miIO.info', tries=2)
+        resp = await self.miio.send("miIO.info", tries=2)
         self.handle_response(resp, False)
-        info = resp.get('result', {}) if resp else resp
+        info = resp.get("result", {}) if resp else resp
         if not info:
-            self.log.warning('Got miio info failed: %s', resp)
+            self.log.warning("Got miio info failed: %s", resp)
         return MiioInfo(info)
 
     async def async_send(self, *args, **kwargs):
         resp = await self.miio.send(*args, **kwargs)
         self.handle_response(resp)
         try:
-            return resp['result']
+            return resp["result"]
         except KeyError:
             return resp
 
@@ -1409,31 +1588,43 @@ class MiotDevice():
             if not results:
                 self.handle_response(resp)
             try:
-                results += resp['result']
+                results += resp["result"]
             except (KeyError, TypeError):
-                self.log.warning('Got miio chunked properties failed: %s', resp, exc_info=True)
+                self.log.warning(
+                    "Got miio chunked properties failed: %s", resp, exc_info=True
+                )
         return results
 
     def handle_response(self, resp, with_empty=True):
         if resp is None:
-            raise DeviceException(f'Unable to discover the device {self.host}')
+            raise DeviceException(f"Unable to discover the device {self.host}")
         if with_empty and not resp:
-            raise DeviceException(f'No response from the device {self.host}')
+            raise DeviceException(f"No response from the device {self.host}")
 
-    async def async_get_prop(self, properties, *, max_properties=None, property_getter='get_prop'):
-        return await self.async_get_properties(properties, max_properties=max_properties, property_getter=property_getter)
+    async def async_get_prop(
+        self, properties, *, max_properties=None, property_getter="get_prop"
+    ):
+        return await self.async_get_properties(
+            properties, max_properties=max_properties, property_getter=property_getter
+        )
 
-    async def async_get_properties(self, properties, *, max_properties=None, property_getter='get_properties'):
+    async def async_get_properties(
+        self, properties, *, max_properties=None, property_getter="get_properties"
+    ):
         return await self.async_send_chunk(property_getter, properties, max_properties)
 
-    async def async_get_properties_for_mapping(self, *, max_properties=None, did=None, mapping=None):
+    async def async_get_properties_for_mapping(
+        self, *, max_properties=None, did=None, mapping=None
+    ):
         if mapping is None:
             return None
         properties = [
-            {'did': f'prop.{v["siid"]}.{v["piid"]}' if did is None else str(did), **v}
+            {"did": f'prop.{v["siid"]}.{v["piid"]}' if did is None else str(did), **v}
             for k, v in mapping.items()
         ]
-        return await self.async_get_properties(properties, max_properties=max_properties)
+        return await self.async_get_properties(
+            properties, max_properties=max_properties
+        )
 
     def get_max_properties(self, mapping):
         idx = len(mapping)
@@ -1442,13 +1633,49 @@ class MiotDevice():
         idx -= 10
         chunks = [
             # 10,11,12,13,14,15,16,17,18,19
-            10, 6, 6, 7, 7, 8, 8, 9, 9, 10,
+            10,
+            6,
+            6,
+            7,
+            7,
+            8,
+            8,
+            9,
+            9,
+            10,
             # 20,21,22,23,24,25,26,27,28,29
-            10, 7, 8, 8, 8, 9, 9, 9, 10, 10,
+            10,
+            7,
+            8,
+            8,
+            8,
+            9,
+            9,
+            9,
+            10,
+            10,
             # 30,31,32,33,34,35,36,37,38,39
-            10, 8, 8, 7, 7, 7, 9, 9, 10, 10,
+            10,
+            8,
+            8,
+            7,
+            7,
+            7,
+            9,
+            9,
+            10,
+            10,
             # 40,41,42,43,44,45,46,47,48,49
-            10, 9, 9, 9, 9, 9, 10, 10, 10, 10,
+            10,
+            9,
+            9,
+            9,
+            9,
+            9,
+            10,
+            10,
+            10,
+            10,
         ]
         return 10 if idx >= len(chunks) else chunks[idx]
 
@@ -1462,23 +1689,23 @@ class MiioInfo(dict):
 
     @property
     def network_interface(self):
-        return self.get('netif', {})
+        return self.get("netif", {})
 
     @property
     def ip_address(self):
-        return self.network_interface.get('localIp')
+        return self.network_interface.get("localIp")
 
     @property
     def mac_address(self):
-        return self.get('mac')
+        return self.get("mac")
 
     @property
     def firmware_version(self):
-        return self.get('fw_ver')
+        return self.get("fw_ver")
 
     @property
     def hardware_version(self):
-        return self.get('hw_ver')
+        return self.get("hw_ver")
 
     @property
     def raw(self):

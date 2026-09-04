@@ -25,6 +25,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import intent, template
 
 from .api import HermesApiClient, HermesApiError, HermesStreamSetupError
@@ -630,14 +631,18 @@ class HermesConversationAgent(ConversationEntity, AbstractConversationAgent):
 
         return _AUTO_FOLLOW_UP_PROMPT
 
-    def _get_exposed_entities(self) -> list[dict[str, str]]:
+    def _get_exposed_entities(self) -> list[dict[str, Any]]:
         """Get a list of entities exposed to the conversation agent."""
         max_chars = entry_value(
             self.entry,
             CONF_CONTEXT_MAX_CHARS,
             DEFAULT_CONTEXT_MAX_CHARS,
         )
-        entities: list[dict[str, str]] = []
+        entity_reg = er.async_get(self.hass)
+        device_reg = dr.async_get(self.hass)
+        area_reg = ar.async_get(self.hass)
+        get_entity_aliases = getattr(er, "async_get_entity_aliases", None)
+        entities: list[dict[str, Any]] = []
         total_chars = 0
 
         for state in self.hass.states.async_all():
@@ -649,13 +654,45 @@ class HermesConversationAgent(ConversationEntity, AbstractConversationAgent):
             except Exception:
                 continue
 
-            entity_info = {
+            registry_entry = entity_reg.async_get(state.entity_id)
+            raw_aliases = (
+                get_entity_aliases(self.hass, registry_entry)
+                if registry_entry is not None and get_entity_aliases is not None
+                else (getattr(registry_entry, "aliases", None) or ())
+            )
+            aliases = sorted(
+                alias.strip()
+                for alias in raw_aliases
+                if isinstance(alias, str) and alias.strip()
+            )
+            area_id = getattr(registry_entry, "area_id", None)
+            device_id = getattr(registry_entry, "device_id", None)
+            if not area_id and device_id:
+                device = device_reg.async_get(device_id)
+                area_id = getattr(device, "area_id", None)
+            area = area_reg.async_get_area(area_id) if area_id else None
+
+            entity_info: dict[str, Any] = {
                 "entity_id": state.entity_id,
                 "name": state.attributes.get("friendly_name", state.entity_id),
                 "state": str(state.state),
+                "domain": state.entity_id.partition(".")[0],
+                "aliases": aliases,
+                "area": getattr(area, "name", "") if area else "",
             }
 
-            line = f"- {entity_info['entity_id']} ({entity_info['name']}): {entity_info['state']}"
+            details = [
+                f"state={entity_info['state']}",
+                f"domain={entity_info['domain']}",
+            ]
+            if aliases:
+                details.append(f"aliases={' / '.join(aliases)}")
+            if entity_info["area"]:
+                details.append(f"area={entity_info['area']}")
+            line = (
+                f"- {entity_info['entity_id']} ({entity_info['name']}): "
+                + ", ".join(details)
+            )
             total_chars += len(line) + 1
             if total_chars > max_chars:
                 break

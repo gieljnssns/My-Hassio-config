@@ -2,41 +2,43 @@
     "config": {
         "step": {
             "user": {
-                "description": "New Battery Notes will be discovered if they are in the library.\nTo add new Battery Notes manually go into the integration page, select Add Battery Note and follow the instructions.\nIf you need help with the configuration have a look here: {documentation_url}",
-                "title": "Setup Battery Notes"
+                "description": "Nieuwe Battery Notes worden ontdekt als ze in de bibliotheek staan.\nOm nieuwe Battery Notes handmatig toe te voegen ga je naar de integratiepagina, selecteer je Batterijnotitie toevoegen en volg je de instructies.\nAls je hulp nodig hebt bij de configuratie, kijk dan hier: {documentation_url}",
+                "title": "Battery Notes instellen"
             },
             "battery": {
                 "description": "Naam: {name}\nFabrikant: {manufacturer}\nModel: {model}\nModel ID: {model_id}\nHardware versie: {hw_version}",
                 "data": {
                     "battery_type": "Batterij type",
                     "battery_quantity": "Aantal batterijen",
-                    "note": "Note",
-                    "battery_low_threshold": "Drempelwaarde batterij bijna leeg"
+                    "note": "Notitie",
+                    "battery_low_threshold": "Drempelwaarde batterij bijna leeg",
+                    "battery_increase_threshold": "Drempel batterijtoename"
                 },
                 "data_description": {
-                    "battery_low_threshold": "0 zal de globale standaard drempelwaarde gebruiken"
+                    "battery_low_threshold": "0 zal de globale standaard drempelwaarde gebruiken",
+                    "battery_increase_threshold": "De drempel is het verschil tussen de vorige en huidige batterijniveau toename\n0 zal de globale standaard drempel gebruiken"
                 },
                 "sections": {
                     "advanced_settings": {
-                        "name": "Advanced settings",
+                        "name": "Aanvullende instellingen",
                         "data": {
-                            "battery_percentage_template": "Battery percentage template",
+                            "battery_percentage_template": "Batterijpercentage sjabloon",
                             "battery_low_template": "Sjabloon batterij bijna leeg",
-                            "filter_outliers": "Filter outliers"
+                            "filter_outliers": "Uitschieters filteren"
                         },
                         "data_description": {
-                            "battery_percentage_template": "Template to create a battery percentage\nOnly needed for devices that do not have a standard battery percentage",
+                            "battery_percentage_template": "Sjabloon voor het maken van een batterijpercentage\nAlleen nodig voor apparaten die geen standaard batterijpercentage hebben",
                             "battery_low_template": "Sjabloon om te bepalen dat een batterij bijna leeg is, zal 'waar' teruggeven als bijna leeg\nAlleen nodig voor niet-standaard batterijniveaus",
-                            "filter_outliers": "Filter out large battery level drops, reducing falsely firing events on devices that erroneously report levels occasionally"
+                            "filter_outliers": "Grote dalingen in het batterijniveau filteren, om valse gebeurtenissen op apparaten die af en toe onjuiste niveaus melden te verminderen"
                         }
                     }
                 }
             }
         },
         "abort": {
-            "already_configured": "Integration is already configured",
-            "integration_not_added": "Integration not added, please add the integration first",
-            "created_sub_entry": "Battery Note created successfully"
+            "already_configured": "Integratie is al geconfigureerd",
+            "integration_not_added": "Integratie niet toegevoegd, voeg eerst de integratie toe",
+            "created_sub_entry": "Batterijnotitie succesvol aangemaakt"
         },
         "error": {
             "unknown": "Onbekende fout opgetreden."
@@ -45,9 +47,9 @@
     "config_subentries": {
         "battery_note": {
             "initiate_flow": {
-                "user": "Add battery note"
+                "user": "Batterijnotitie toevoegen"
             },
-            "entry_type": "Battery note",
+            "entry_type": "Batterijnotitie",
             "step": {
                 "user": {
                     "description": "Als u hulp nodig heeft bij de configuratie kunt u hier een kijkje nemen: {documentation_url}",
@@ -83,24 +85,26 @@
                     "data": {
                         "battery_type": "Batterij type",
                         "battery_quantity": "Aantal batterijen",
-                        "note": "Note",
-                        "battery_low_threshold": "Drempelwaarde batterij bijna leeg"
+                        "note": "Notitie",
+                        "battery_low_threshold": "Drempelwaarde batterij bijna leeg",
+                        "battery_increase_threshold": "Drempel batterijtoename"
                     },
                     "data_description": {
-                        "battery_low_threshold": "0 zal de globale standaard drempelwaarde gebruiken"
+                        "battery_low_threshold": "0 zal de globale standaard drempelwaarde gebruiken",
+                        "battery_increase_threshold": "De drempel is het verschil tussen de vorige en huidige batterijniveau toename\n0 zal de globale standaard drempel gebruiken"
                     },
                     "sections": {
                         "advanced_settings": {
-                            "name": "Advanced settings",
+                            "name": "Aanvullende instellingen",
                             "data": {
-                                "battery_percentage_template": "Battery percentage template",
+                                "battery_percentage_template": "Batterijpercentage sjabloon",
                                 "battery_low_template": "Sjabloon batterij bijna leeg",
-                                "filter_outliers": "Filter outliers"
+                                "filter_outliers": "Uitschieters filteren"
                             },
                             "data_description": {
-                                "battery_percentage_template": "Template to create a battery percentage\nOnly needed for devices that do not have a standard battery percentage",
+                                "battery_percentage_template": "Sjabloon voor het maken van een batterijpercentage\nAlleen nodig voor apparaten die geen standaard batterijpercentage hebben",
                                 "battery_low_template": "Sjabloon om te bepalen dat een batterij bijna leeg is, zal 'waar' teruggeven als bijna leeg\nAlleen nodig voor niet-standaard batterijniveaus",
-                                "filter_outliers": "Filter out large battery level drops, reducing falsely firing events on devices that erroneously report levels occasionally"
+                                "filter_outliers": "Grote dalingen in het batterijniveau filteren, om valse gebeurtenissen op apparaten die af en toe onjuiste niveaus melden te verminderen"
                             }
                         }
                     }
@@ -115,32 +119,34 @@
                         "name": "Naam",
                         "battery_type": "Batterij type",
                         "battery_quantity": "Aantal batterijen",
-                        "note": "Note",
-                        "battery_low_threshold": "Drempelwaarde batterij bijna leeg"
+                        "note": "Notitie",
+                        "battery_low_threshold": "Drempelwaarde batterij bijna leeg",
+                        "battery_increase_threshold": "Drempel batterijtoename"
                     },
                     "data_description": {
                         "name": "Indien dit leeg gelaten wordt dan wordt de naam van het bronapparaat overgenomen",
-                        "battery_low_threshold": "0 zal de globale standaard drempelwaarde gebruiken"
+                        "battery_low_threshold": "0 zal de globale standaard drempelwaarde gebruiken",
+                        "battery_increase_threshold": "De drempel is het verschil tussen de vorige en huidige batterijniveau toename\n0 zal de globale standaard drempel gebruiken"
                     },
                     "sections": {
                         "advanced_settings": {
-                            "name": "Advanced settings",
+                            "name": "Aanvullende instellingen",
                             "data": {
-                                "battery_percentage_template": "Battery percentage template",
+                                "battery_percentage_template": "Batterijpercentage sjabloon",
                                 "battery_low_template": "Sjabloon batterij bijna leeg",
-                                "filter_outliers": "Filter outliers"
+                                "filter_outliers": "Uitschieters filteren"
                             },
                             "data_description": {
-                                "battery_percentage_template": "Template to create a battery percentage\nOnly needed for devices that do not have a standard battery percentage",
+                                "battery_percentage_template": "Sjabloon voor het maken van een batterijpercentage\nAlleen nodig voor apparaten die geen standaard batterijpercentage hebben",
                                 "battery_low_template": "Sjabloon om te bepalen dat een batterij bijna leeg is, zal 'waar' teruggeven als bijna leeg\nAlleen nodig voor niet-standaard batterijniveaus",
-                                "filter_outliers": "Filter out large battery level drops, reducing falsely firing events on devices that erroneously report levels occasionally"
+                                "filter_outliers": "Grote dalingen in het batterijniveau filteren, om valse gebeurtenissen op apparaten die af en toe onjuiste niveaus melden te verminderen"
                             }
                         }
                     }
                 }
             },
             "abort": {
-                "reconfigure_successful": "Re-configuration was successful",
+                "reconfigure_successful": "Herconfiguratie was succesvol",
                 "already_configured": "Apparaat is al geconfigureerd"
             },
             "error": {
@@ -154,33 +160,33 @@
         "step": {
             "init": {
                 "data": {
-                    "show_all_devices": "Show all devices",
-                    "hide_battery": "Hide battery",
+                    "show_all_devices": "Alle apparaten weergeven",
+                    "hide_battery": "Batterij verbergen",
                     "round_battery": "Batterijniveau afronden",
                     "default_battery_low_threshold": "Standaard drempelwaarde laag batterijniveau",
-                    "battery_increase_threshold": "Battery increase threshold"
+                    "battery_increase_threshold": "Drempel batterijtoename"
                 },
                 "data_description": {
-                    "show_all_devices": "Show all devices in the device dropdown, otherwise only those with batteries will be shown.",
-                    "hide_battery": "Hide the standard battery when adding Battery+.",
-                    "round_battery": "Round Battery+ to whole percentages.",
-                    "default_battery_low_threshold": "The default threshold where a devices battery_low entity is set to true and the battery_notes_battery_threshold event is fired if the battery is below this threshold, can be overriden per device in device configuration.",
-                    "battery_increase_threshold": "The threshold where the battery_notes_battery_increased event is fired, use this event for battery replaced automations. The threshold is the difference in increase between previous and current battery level."
+                    "show_all_devices": "Alle apparaten in de apparaatkeuzelijst weergeven, anders alleen die met batterijen.",
+                    "hide_battery": "Standaard batterij verbergen bij toevoegen van Batterij+.",
+                    "round_battery": "Batterij+ afronden op hele percentages.",
+                    "default_battery_low_threshold": "De standaard drempel waarbij de battery_low entiteit van een apparaat op waar wordt ingesteld en het battery_notes_battery_threshold event wordt geactiveerd als de batterij onder deze drempel ligt. Kan per apparaat in de apparaatconfiguratie worden overschreven.",
+                    "battery_increase_threshold": "De standaard drempel waarop het battery_notes_battery_increased event wordt geactiveerd. Gebruik dit event voor automatiseringen bij batterijvervanging. De drempel is het verschil in stijging tussen vorig en huidig batterijniveau."
                 },
                 "sections": {
                     "advanced_settings": {
-                        "name": "Advanced settings",
+                        "name": "Aanvullende instellingen",
                         "data": {
-                            "enable_autodiscovery": "Auto discovery",
-                            "enable_replaced": "Enable battery replaced",
-                            "hide_battery_low": "Hide battery low",
-                            "user_library": "User library"
+                            "enable_autodiscovery": "Automatische detectie",
+                            "enable_replaced": "Batterij vervangen inschakelen",
+                            "hide_battery_low": "Lage batterij verbergen",
+                            "user_library": "Gebruikerbibliotheek"
                         },
                         "data_description": {
-                            "enable_autodiscovery": "Auto discovery of devices that are in the library.",
-                            "enable_replaced": "Enable the battery replaced button on each battery note.",
-                            "hide_battery_low": "Hide the battery low binary sensor when a battery percentage is available, avoiding duplication on generated dashboards.",
-                            "user_library": "If specified then a user library file will be searched prior to the main library, the user library must be in the same format as the library and placed in `config/.storage/battery_notes`."
+                            "enable_autodiscovery": "Automatische detectie van apparaten die in de bibliotheek staan.",
+                            "enable_replaced": "Schakel de knop 'batterij vervangen' in op elke batterijaantekening.",
+                            "hide_battery_low": "Verberg de binaire sensor voor lage batterij wanneer een batterijpercentage beschikbaar is, om dubbeling op gegenereerde dashboards te vermijden.",
+                            "user_library": "Indien opgegeven, zal een gebruikersbibliotheekbestand voor de hoofdbibliotheek worden doorzocht. De gebruikersbibliotheek moet in hetzelfde formaat als de bibliotheek zijn en zich in `config/.storage/battery_notes` bevinden."
                         }
                     }
                 }
@@ -195,6 +201,9 @@
             "battery_low": {
                 "name": "{device_name}Lage batterij",
                 "state_attributes": {
+                    "battery_increase_threshold": {
+                        "name": "Drempel batterijtoename"
+                    },
                     "battery_low_threshold": {
                         "name": "Drempelwaarde batterij bijna leeg"
                     }
@@ -220,10 +229,13 @@
                         "name": "Batterij type en aantal"
                     },
                     "note": {
-                        "name": "Note"
+                        "name": "Notitie"
                     },
                     "battery_last_replaced": {
                         "name": "Batterij laatst vervangen"
+                    },
+                    "battery_increase_threshold": {
+                        "name": "Drempel batterijtoename"
                     },
                     "battery_low": {
                         "name": "Batterij bijna leeg"
@@ -258,7 +270,7 @@
                         "name": "Aantal batterijen"
                     },
                     "note": {
-                        "name": "Note"
+                        "name": "Notitie"
                     }
                 }
             },
@@ -276,7 +288,7 @@
                     "name": "Apparaat"
                 },
                 "entity_id": {
-                    "description": "Entity that has had its battery replaced.",
+                    "description": "Entiteit waarvan de batterij is vervangen.",
                     "name": "Entiteit"
                 },
                 "datetime_replaced": {
@@ -287,39 +299,39 @@
             "name": "Stel in batterij vervangen"
         },
         "check_battery_last_replaced": {
-            "description": "Get a response or raise events for devices that haven't had their battery replaced.",
+            "description": "Ontvang een antwoord of activeer events voor apparaten waarvan de batterij niet is vervangen.",
             "fields": {
                 "days_last_reported": {
-                    "description": "Number of days since a device last had its battery replaced.",
+                    "description": "Aantal dagen sinds een apparaat voor het laatst de batterij is vervangen.",
                     "name": "Dagen"
                 },
                 "raise_events": {
-                    "description": "Raise events for use in automation triggers.",
-                    "name": "Raise events"
+                    "description": "Events activeren voor gebruik in automatiseringstriggers.",
+                    "name": "Events activeren"
                 }
             },
-            "name": "Check battery last replaced"
+            "name": "Controleer batterij laatst vervangen"
         },
         "check_battery_last_reported": {
-            "description": "Get a response or raise events for devices that haven't reported their battery level.",
+            "description": "Ontvang een antwoord of activeer events voor apparaten die hun batterijniveau niet hebben gemeld.",
             "fields": {
                 "days_last_reported": {
                     "description": "Aantal dagen sinds een apparaat voor het laatst het batterijniveau heeft gerapporteerd.",
                     "name": "Dagen"
                 },
                 "raise_events": {
-                    "description": "Raise events for use in automation triggers.",
-                    "name": "Raise events"
+                    "description": "Events activeren voor gebruik in automatiseringstriggers.",
+                    "name": "Events activeren"
                 }
             },
             "name": "Controleer batterij laatst gerapporteerd"
         },
         "check_battery_low": {
-            "description": "Get a response or raise events for devices that have a low battery.",
+            "description": "Ontvang een antwoord of activeer events voor apparaten met een lage batterij.",
             "fields": {
                 "raise_events": {
-                    "description": "Raise events for use in automation triggers.",
-                    "name": "Raise events"
+                    "description": "Events activeren voor gebruik in automatiseringstriggers.",
+                    "name": "Events activeren"
                 }
             },
             "name": "Controleer batterij bijna leeg"
@@ -340,29 +352,29 @@
         "composite_device_id": {
             "fix_flow": {
                 "abort": {
-                    "entry_removed": "The Battery Note configuration entry has been removed"
+                    "entry_removed": "De Battery Note configuratievermelding is verwijderd"
                 },
                 "error": {
-                    "invalid_device": "Select an existing device or leave the field empty"
+                    "invalid_device": "Selecteer een bestaand apparaat of laat het veld leeg"
                 },
                 "step": {
                     "select_device": {
                         "data": {
-                            "device_id": "Device"
+                            "device_id": "Apparaat"
                         },
                         "data_description": {
-                            "device_id": "The device this battery note should be linked to."
+                            "device_id": "Het apparaat waaraan deze batterijnotitie gekoppeld moet worden."
                         },
-                        "description": "The battery note {name} was linked to a device which has been split into multiple devices.\n\nSelect the device this battery note should be linked to, or leave empty to remove the battery note.",
-                        "title": "Select device for {name}"
+                        "description": "De batterijnotitie {name} was gekoppeld aan een apparaat dat is opgesplitst in meerdere apparaten.\n\nSelecteer het apparaat waaraan deze batterijnotitie gekoppeld moet worden, of laat het leeg om de batterijnotitie te verwijderen.",
+                        "title": "Selecteer apparaat voor {name}"
                     }
                 }
             },
-            "title": "Device for battery note {name} needs to be selected again"
+            "title": "Apparaat voor batterijnotitie {name} moet opnieuw worden geselecteerd"
         },
         "deprecated_yaml": {
-            "title": "The {integration_title} YAML configuration is being removed",
-            "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+            "title": "De YAML-configuratie van {integration_title} wordt verwijderd",
+            "description": "Configureren van {integration_title} via YAML wordt verwijderd.\n\nJe bestaande YAML-configuratie is automatisch naar de UI geimporteerd.\n\nVerwijder de `{domain}`-configuratie uit je configuration.yaml-bestand en herstart Home Assistant om dit probleem op te lossen."
         }
     },
     "exceptions": {

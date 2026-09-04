@@ -6,6 +6,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from homeassistant.components import persistent_notification
+
 from .API import get_wastedata_from_config
 from .const import *
 from .translation import async_prepare_translations, resolve_language, text, translate_date_text
@@ -23,6 +25,34 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         discovery_info: Discovery information passed by Home Assistant.
     """
     _LOGGER.debug("Setup of sensor platform Afvalbeheer")
+
+    if CONF_ENTRY_ID not in config:
+        _LOGGER.info(
+            "Legacy 'sensor: platform: afvalbeheer' YAML configuration detected for %s, "
+            "importing to Config Flow", config.get(CONF_WASTE_COLLECTOR)
+        )
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": "import"},
+                data=config,
+            )
+        )
+        persistent_notification.async_create(
+            hass,
+            (
+                f"Your YAML `sensor: platform: afvalbeheer` configuration for "
+                f"**{config.get(CONF_WASTE_COLLECTOR)}** has been automatically imported to the new "
+                f"Config Flow system.\n\n"
+                f"**Next steps:**\n"
+                f"1. Go to **Settings > Devices & Services > Afvalbeheer** to manage your configuration\n"
+                f"2. Verify the imported settings are correct\n"
+                f"3. **Remove the YAML configuration from your `configuration.yaml`** to avoid duplicate sensors\n"
+                f"4. Restart Home Assistant after removing the YAML configuration"
+            ),
+            title="Afvalbeheer: YAML Import Complete",
+            notification_id=f"{NOTIFICATION_ID}_yaml_import_{config.get(CONF_WASTE_COLLECTOR, '')}".lower(),
+        )
 
     schedule_update = not (discovery_info and "config" in discovery_info)
     _LOGGER.debug("Schedule update: %s", schedule_update)

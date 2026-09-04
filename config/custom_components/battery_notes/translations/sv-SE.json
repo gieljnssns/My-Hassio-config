@@ -11,10 +11,12 @@
                     "battery_type": "Batterityp",
                     "battery_quantity": "Antal batterier",
                     "note": "Note",
-                    "battery_low_threshold": "Tröskelvärde lågt batteri"
+                    "battery_low_threshold": "Tröskelvärde lågt batteri",
+                    "battery_increase_threshold": "Battery increase threshold"
                 },
                 "data_description": {
-                    "battery_low_threshold": "0 kommer att använda det globala standardtröskelvärdet"
+                    "battery_low_threshold": "0 kommer att använda det globala standardtröskelvärdet",
+                    "battery_increase_threshold": "The threshold is the difference in increase between previous and current battery level\n0 will use the global default threshold"
                 },
                 "sections": {
                     "advanced_settings": {
@@ -84,14 +86,16 @@
                         "battery_type": "Batterityp",
                         "battery_quantity": "Antal batterier",
                         "note": "Note",
-                        "battery_low_threshold": "Tröskelvärde lågt batteri"
+                        "battery_low_threshold": "Tröskelvärde lågt batteri",
+                        "battery_increase_threshold": "Battery increase threshold"
                     },
                     "data_description": {
-                        "battery_low_threshold": "0 kommer att använda det globala standardtröskelvärdet"
+                        "battery_low_threshold": "0 kommer att använda det globala standardtröskelvärdet",
+                        "battery_increase_threshold": "The threshold is the difference in increase between previous and current battery level\n0 will use the global default threshold"
                     },
                     "sections": {
                         "advanced_settings": {
-                            "name": "Avancerade inställningar",
+                            "name": "Ytterligare inställningar",
                             "data": {
                                 "battery_percentage_template": "Battery percentage template",
                                 "battery_low_template": "Batteri lågt template",
@@ -116,15 +120,17 @@
                         "battery_type": "Batterityp",
                         "battery_quantity": "Antal batterier",
                         "note": "Note",
-                        "battery_low_threshold": "Batteri lågt tröskelvärde"
+                        "battery_low_threshold": "Batteri lågt tröskelvärde",
+                        "battery_increase_threshold": "Battery increase threshold"
                     },
                     "data_description": {
                         "name": "Genom att lämna blankt tas namnet från källenheten. ",
-                        "battery_low_threshold": "0 kommer att använda den globala standardtröskelvärdet. "
+                        "battery_low_threshold": "0 kommer att använda den globala standardtröskelvärdet. ",
+                        "battery_increase_threshold": "The threshold is the difference in increase between previous and current battery level\n0 will use the global default threshold"
                     },
                     "sections": {
                         "advanced_settings": {
-                            "name": "Avancerade inställningar",
+                            "name": "Ytterligare inställningar",
                             "data": {
                                 "battery_percentage_template": "Battery percentage template",
                                 "battery_low_template": "Batteri lågt template",
@@ -158,14 +164,14 @@
                     "hide_battery": "Hide battery",
                     "round_battery": "Round battery",
                     "default_battery_low_threshold": "Default battery low threshold",
-                    "battery_increase_threshold": "Battery increase threshold"
+                    "battery_increase_threshold": "Default battery increase threshold"
                 },
                 "data_description": {
                     "show_all_devices": "Show all devices in the device dropdown, otherwise only those with batteries will be shown.",
                     "hide_battery": "Hide the standard battery when adding Battery+.",
                     "round_battery": "Round Battery+ to whole percentages.",
                     "default_battery_low_threshold": "The default threshold where a devices battery_low entity is set to true and the battery_notes_battery_threshold event is fired if the battery is below this threshold, can be overriden per device in device configuration.",
-                    "battery_increase_threshold": "The threshold where the battery_notes_battery_increased event is fired, use this event for battery replaced automations. The threshold is the difference in increase between previous and current battery level."
+                    "battery_increase_threshold": "The default threshold where the battery_notes_battery_increased event is fired, use this event for battery replaced automations. The threshold is the difference in increase between previous and current battery level, can be overriden per device in device configuration."
                 },
                 "sections": {
                     "advanced_settings": {
@@ -195,6 +201,9 @@
             "battery_low": {
                 "name": "{device_name}Lågt batteri. ",
                 "state_attributes": {
+                    "battery_increase_threshold": {
+                        "name": "Battery increase threshold"
+                    },
                     "battery_low_threshold": {
                         "name": "Tröskelvärde lågt batteri"
                     }
@@ -224,6 +233,9 @@
                     },
                     "battery_last_replaced": {
                         "name": "Senast bytt batteri"
+                    },
+                    "battery_increase_threshold": {
+                        "name": "Battery increase threshold"
                     },
                     "battery_low": {
                         "name": "Batteriet lågt"

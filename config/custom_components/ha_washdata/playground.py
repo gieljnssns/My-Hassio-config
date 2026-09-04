@@ -36,6 +36,7 @@ All top-level entry points are defensive: they never raise, returning an
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
@@ -49,6 +50,13 @@ from . import notification_rules as notif_rules
 from . import progress as progress_mod
 from .phase_segmenter import phase_matching_enabled
 from .const import (
+    CONF_ANTI_WRINKLE_ENABLED,
+    CONF_ANTI_WRINKLE_EXIT_POWER,
+    CONF_ANTI_WRINKLE_IDLE_TIMEOUT,
+    CONF_DISHWASHER_END_SPIKE_QUIET_RELEASE,
+    CONF_SMART_TERMINATION_DURATION_RATIO,
+    CONF_ANTI_WRINKLE_MAX_DURATION,
+    CONF_ANTI_WRINKLE_MAX_POWER,
     CONF_COMPLETION_MIN_SECONDS,
     CONF_END_REPEAT_COUNT,
     CONF_INTERRUPTED_MIN_SECONDS,
@@ -63,28 +71,40 @@ from .const import (
     CONF_OFF_DELAY,
     CONF_PROFILE_MATCH_MAX_DURATION_RATIO,
     CONF_PROFILE_MATCH_MIN_DURATION_RATIO,
-    CONF_RUNNING_DEAD_ZONE,
     CONF_START_DURATION_THRESHOLD,
     CONF_START_THRESHOLD_W,
     CONF_STOP_THRESHOLD_W,
     CYCLE_OVERRUN_ANOMALY_RATIO,
     CYCLE_UNDERRUN_ANOMALY_RATIO,
+    DEFAULT_DTW_BANDWIDTH,
     DEFAULT_MATCH_PERSISTENCE,
     DEFAULT_NOTIFY_BEFORE_END_MINUTES,
     DEFAULT_NOTIFY_MILESTONES,
+    DEFAULT_PROFILE_MATCH_MAX_DURATION_RATIO,
+    DEFAULT_PROFILE_MATCH_MIN_DURATION_RATIO,
     MATCH_CORR_WEIGHT,
     MATCH_DDTW_DIST_SCALE,
     MATCH_DTW_BLEND,
     MATCH_DTW_DIST_SCALE,
     MATCH_DTW_ENSEMBLE_W,
+    MATCH_DTW_REFINE_TOP_N,
     MATCH_DTW_RESAMPLE_N,
     MATCH_DURATION_SCALE,
     MATCH_DURATION_WEIGHT,
     MATCH_ENERGY_SCALE,
     MATCH_ENERGY_WEIGHT,
+    MATCH_KEEP_MIN_SCORE,
     MATCH_MAE_PEAK_FLOOR,
     MATCH_MAE_REF_PEAK,
     MATCH_MAE_SCALE,
+    PLAYGROUND_STRESS_DENSE_DURATION_S,
+    PLAYGROUND_STRESS_DENSE_STEP_S,
+    PLAYGROUND_STRESS_FLOOR_PERCENTILE,
+    PLAYGROUND_STRESS_FLUCT_FALLBACK_FRAC,
+    PLAYGROUND_STRESS_MAX_IDLE_W,
+    PLAYGROUND_STRESS_MAX_SPARSE_STEPS,
+    PLAYGROUND_STRESS_SPARSE_STEP_S,
+    PLAYGROUND_STRESS_TRAILING_WINDOW_S,
     STATE_ENDING,
     STATE_FINISHED,
     STATE_IDLE,
@@ -96,7 +116,11 @@ from .const import (
     TerminationReason,
 )
 from .cycle_detector import CycleDetector, CycleDetectorConfig
-from .profile_store import _ambiguity_from_candidates, decompress_power_data
+from .profile_store import (
+    _ambiguity_from_candidates,
+    _match_prefix_ambiguity,
+    decompress_power_data,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,18 +136,50 @@ MAX_EVENTS_PER_CYCLE = 300
 # so the shape is preserved rather than truncated.
 MAX_SERIES_PER_CYCLE = 600
 
+def _coerce_bool(value: Any) -> bool:
+    """Strict bool coercion for override values.
+
+    Plain ``bool()`` would read the string ``"false"`` as True, so a toggle sent
+    as a string could switch a mode *on* when the user asked for it off. Unknown
+    values raise, which ``build_sim_config`` turns into "ignore this override".
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        # Only the two values that actually mean a toggle. Anything else (2, -1,
+        # NaN, inf) is a malformed override, not an intent to switch a mode on.
+        if value == 0:
+            return False
+        if value == 1:
+            return True
+        raise ValueError(f"not a boolean: {value!r}")
+    if isinstance(value, str):
+        low = value.strip().lower()
+        if low in ("true", "1", "yes", "on"):
+            return True
+        if low in ("false", "0", "no", "off"):
+            return False
+    raise ValueError(f"not a boolean: {value!r}")
+
+
 # Override keys the Playground honours, mapped to CycleDetectorConfig fields.
 # Only detection-relevant knobs matter; everything else in settings_override is
 # ignored safely.
 _OVERRIDE_FIELD_MAP: dict[str, tuple[str, Callable[[Any], Any]]] = {
     CONF_MIN_POWER: ("min_power", float),
+    CONF_ANTI_WRINKLE_ENABLED: ("anti_wrinkle_enabled", _coerce_bool),
+    CONF_ANTI_WRINKLE_MAX_POWER: ("anti_wrinkle_max_power", float),
+    CONF_ANTI_WRINKLE_MAX_DURATION: ("anti_wrinkle_max_duration", float),
+    CONF_ANTI_WRINKLE_EXIT_POWER: ("anti_wrinkle_exit_power", float),
+    CONF_ANTI_WRINKLE_IDLE_TIMEOUT: ("anti_wrinkle_idle_timeout", float),
+    CONF_DISHWASHER_END_SPIKE_QUIET_RELEASE: ("dishwasher_end_spike_quiet_release", float),
+    CONF_SMART_TERMINATION_DURATION_RATIO: ("smart_termination_duration_ratio", float),
     CONF_OFF_DELAY: ("off_delay", int),
     CONF_MIN_OFF_GAP: ("min_off_gap", int),
     CONF_COMPLETION_MIN_SECONDS: ("completion_min_seconds", int),
     CONF_END_REPEAT_COUNT: ("end_repeat_count", int),
     CONF_START_THRESHOLD_W: ("start_threshold_w", float),
     CONF_STOP_THRESHOLD_W: ("stop_threshold_w", float),
-    CONF_RUNNING_DEAD_ZONE: ("running_dead_zone", int),
     CONF_START_DURATION_THRESHOLD: ("start_duration_threshold", float),
     CONF_INTERRUPTED_MIN_SECONDS: ("interrupted_min_seconds", int),
 }
@@ -157,6 +213,112 @@ _MATCH_OVERRIDE_KEYS: dict[str, tuple[str, Callable[[Any], Any]]] = {
 }
 
 
+# Canonical default for every matching override key, keyed by the OPTION key the
+# Playground uses. The Stage 2-4 entries are code constants (not stored options),
+# so this table is the only place the panel can read them from; ``ws_get_constants``
+# ships it as ``pg_match_defaults`` and ``effective_settings`` falls back to it for
+# any key the live matcher config does not carry.
+MATCH_DEFAULTS_BY_OPTION: dict[str, Any] = {
+    CONF_PROFILE_MATCH_MIN_DURATION_RATIO: DEFAULT_PROFILE_MATCH_MIN_DURATION_RATIO,
+    CONF_PROFILE_MATCH_MAX_DURATION_RATIO: DEFAULT_PROFILE_MATCH_MAX_DURATION_RATIO,
+    "corr_weight": MATCH_CORR_WEIGHT,
+    "keep_min_score": MATCH_KEEP_MIN_SCORE,
+    "dtw_bandwidth": DEFAULT_DTW_BANDWIDTH,
+    "dtw_blend": MATCH_DTW_BLEND,
+    "dtw_ensemble_w": MATCH_DTW_ENSEMBLE_W,
+    "dtw_ddtw_scale": MATCH_DDTW_DIST_SCALE,
+    "dtw_refine_top_n": MATCH_DTW_REFINE_TOP_N,
+    "duration_weight": MATCH_DURATION_WEIGHT,
+    "energy_weight": MATCH_ENERGY_WEIGHT,
+    "duration_scale": MATCH_DURATION_SCALE,
+    "energy_scale": MATCH_ENERGY_SCALE,
+}
+
+# Every option key the Playground control panel may carry (detection + matching).
+# This is the allow-list for a saved Playground preset: anything else submitted by
+# a client is dropped rather than stored.
+SETTING_KEYS: frozenset[str] = frozenset(_OVERRIDE_FIELD_MAP) | frozenset(_MATCH_OVERRIDE_KEYS)
+
+# The subset a user may publish from the Playground back into the live config:
+# exactly the override keys that are REAL config-entry options (``CONF_*``). The
+# Stage 2-4 scoring knobs above are sandbox-only code constants - there is no
+# option behind them, so writing them into ``entry.options`` would create dead
+# keys the integration never reads. The panel gates its publish buttons on this
+# list (shipped by ``get_playground_settings``).
+PUBLISHABLE_SETTING_KEYS: frozenset[str] = frozenset(_OVERRIDE_FIELD_MAP) | {
+    CONF_PROFILE_MATCH_MIN_DURATION_RATIO,
+    CONF_PROFILE_MATCH_MAX_DURATION_RATIO,
+}
+
+
+def effective_settings(
+    base_config: CycleDetectorConfig, match_config: dict[str, Any] | None
+) -> dict[str, Any]:
+    """Option-keyed view of the values a simulation runs with when NO override is
+    staged - i.e. the device's live, fully-resolved settings.
+
+    The exact inverse of ``build_sim_config`` / ``apply_match_overrides``: it reads
+    back the same fields those two write, so the Playground control panel shows the
+    values the integration actually uses (device-type defaults included) instead of
+    a static schema default that may have drifted. Never raises.
+    """
+    out: dict[str, Any] = {}
+    for opt_key, (field, coerce) in _OVERRIDE_FIELD_MAP.items():
+        value = getattr(base_config, field, None)
+        if value is None:
+            continue
+        try:
+            out[opt_key] = coerce(value)
+        except (TypeError, ValueError):  # pragma: no cover - defensive
+            continue
+    cfg = match_config or {}
+    for opt_key, (cfg_key, coerce) in _MATCH_OVERRIDE_KEYS.items():
+        value = cfg.get(cfg_key, MATCH_DEFAULTS_BY_OPTION.get(opt_key))
+        if value is None:
+            continue
+        try:
+            out[opt_key] = coerce(value)
+        except (TypeError, ValueError):  # pragma: no cover - defensive
+            continue
+    return out
+
+
+def sanitize_setting_values(values: Any) -> dict[str, Any]:
+    """Filter a client-supplied settings map down to storable Playground values.
+
+    Keeps only keys in :data:`SETTING_KEYS`, coerced with the same coercers the
+    simulation uses, so a preset can never carry an unknown key or a value that
+    would be silently ignored at replay time. Never raises.
+    """
+    if not isinstance(values, dict):
+        return {}
+    out: dict[str, Any] = {}
+    for key, value in values.items():
+        if value is None:
+            continue
+        mapping = _OVERRIDE_FIELD_MAP.get(key) or _MATCH_OVERRIDE_KEYS.get(key)
+        if mapping is None:
+            continue
+        _target, coerce = mapping
+        try:
+            coerced = coerce(value)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(coerced, float) and not math.isfinite(coerced):
+            continue
+        # Every Playground setting is a physical quantity - watts, seconds, a
+        # count, or a ratio - so a negative value is structurally meaningless and
+        # would make the replayed detector behave in ways the live one never can
+        # (e.g. an off_delay that expires before it starts). Rejected rather than
+        # clamped: silently rewriting a value the user typed would make the sim
+        # disagree with the control panel showing it back.
+        if isinstance(coerced, (int, float)) and not isinstance(coerced, bool):
+            if coerced < 0:
+                continue
+        out[key] = coerced
+    return out
+
+
 def apply_match_overrides(
     match_config: dict[str, Any], settings_override: dict[str, Any] | None
 ) -> dict[str, Any]:
@@ -164,7 +326,8 @@ def apply_match_overrides(
     ``settings_override`` overlaid onto the matcher-config keys they drive.
     Unknown/None/malformed values are ignored, so a detection-only override leaves
     matching byte-identical to the live config."""
-    if not settings_override:
+    settings_override = sanitize_setting_values(settings_override)
+    if not isinstance(settings_override, dict) or not settings_override:
         return match_config
     out = dict(match_config)
     for opt_key, (cfg_key, coerce) in _MATCH_OVERRIDE_KEYS.items():
@@ -186,6 +349,7 @@ def build_sim_config(
     Unknown keys and un-coercible values are ignored so a malformed override can
     never break a simulation. ``base`` is left untouched.
     """
+    settings_override = sanitize_setting_values(settings_override)
     if not isinstance(settings_override, dict) or not settings_override:
         return base
     changes: dict[str, Any] = {}
@@ -253,13 +417,34 @@ def _build_match_snapshots(
     snapshots: list[dict[str, Any]] = []
     try:
         data = getattr(store, "_data", {}) or {}
-        profiles = data.get("profiles", {}) or {}
-        # Include imported reference cycles: an import-only profile samples from
-        # reference_cycles, so without them it would be dropped as a candidate and
-        # the Playground auto-detect would never match a downloaded profile.
-        past = data.get("past_cycles", []) or []
-        refs = data.get("reference_cycles", []) or []
-        by_id = {c.get("id"): c for c in (list(past) + list(refs)) if isinstance(c, dict)}
+        # Snapshot the profiles dict before iterating: this runs in an executor thread
+        # (ws_api dispatches _build_match_snapshots via async_add_executor_job) while the
+        # event loop may add/remove a profile (cycle-end creation, GC, auto-label), and a
+        # live `.items()` walk would raise "dictionary changed size during iteration" -
+        # the same race get_export_inventory was moved on-loop to avoid. dict() is a cheap
+        # shallow copy of the top-level mapping (values are read-only here). iter_evidence_
+        # cycles() below returns a fresh list, so its .extend() is already snapshot-safe.
+        profiles = dict(data.get("profiles", {}) or {})
+        # Include every cycle the live matcher would consider, via the store's own
+        # evidence view: an import-only profile samples from reference_cycles or
+        # backfill_cycles, so a snapshot pool built from past_cycles alone would drop it
+        # as a candidate and the Playground's auto-detect would never match a downloaded
+        # or backfilled profile - silently reporting it as unmatched. Reading the same
+        # gated view the matcher reads also keeps the sandbox honest when the user has
+        # excluded a category from shaping profiles.
+        try:
+            pool = store.iter_evidence_cycles()
+        except Exception:  # pylint: disable=broad-exception-caught
+            # Older store without the evidence view: fall back to the raw lists. Include
+            # backfill_cycles too (the evidence view does), else a profile whose sample
+            # lives only in imported history has no snapshot and the sim reports it
+            # unmatched though live matching can use it.
+            pool = (
+                list(data.get("past_cycles", []) or [])
+                + list(data.get("reference_cycles", []) or [])
+                + list(data.get("backfill_cycles", []) or [])
+            )
+        by_id = {c.get("id"): c for c in pool if isinstance(c, dict)}
         for name, profile in profiles.items():
             if not isinstance(profile, dict):
                 continue
@@ -279,6 +464,11 @@ def _build_match_snapshots(
                     "name": name,
                     "avg_duration": float(avg_dur),
                     "sample_power": [p for _, p in sample_p],
+                    # The trace's own time span, which is NOT avg_duration (a trimmed
+                    # mean across cycles). `analysis._prefix_point_count` converts
+                    # elapsed time to an index with it, so omitting it made the sim
+                    # truncate the prefix at a different point than production.
+                    "sample_span_s": float(sample_p[-1][0] - sample_p[0][0]),
                 }
             )
     except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -305,6 +495,8 @@ def _matching_config(store: Any) -> dict[str, Any]:
         "min_duration_ratio": float(getattr(store, "_min_duration_ratio", 0.07)),
         "max_duration_ratio": float(getattr(store, "_max_duration_ratio", 1.5)),
         "dtw_bandwidth": float(getattr(store, "dtw_bandwidth", 0.2)),
+        # Mirror the live Stage-4 energy discriminator so the sim is byte-identical.
+        "energy_mode": str(getattr(store, "energy_mode", "mean")),
     }
     try:
         overrides = store._matching_overrides()  # pylint: disable=protected-access
@@ -373,6 +565,8 @@ def simulate_cycle_detail(
     price: float | None = None,
     compute_series: bool = True,
     prebuilt: tuple[Any, Any, Any, Any] | None = None,
+    stress_tail: bool = False,
+    stress_idle_w: float | None = None,
 ) -> dict[str, Any]:
     """Faithful single-cycle replay for the Playground "Simulate" view.
 
@@ -391,7 +585,7 @@ def simulate_cycle_detail(
     try:
         return _simulate_cycle_detail_inner(
             cycle, base_config, settings_override, store, options, price,
-            compute_series, prebuilt,
+            compute_series, prebuilt, stress_tail, stress_idle_w,
         )
     except Exception as exc:  # pylint: disable=broad-exception-caught
         _LOGGER.debug("Playground detail sim failed for %s: %s", cycle.get("id"), exc)
@@ -435,6 +629,8 @@ def build_cycle_detail_sim_by_id(
     settings_override: dict[str, Any] | None,
     options: dict[str, Any] | None,
     price: float | None = None,
+    stress_tail: bool = False,
+    stress_idle_w: float | None = None,
 ) -> "_DetailSim | dict[str, Any]":
     """Look up a stored cycle by id and build a resumable :class:`_DetailSim`.
 
@@ -456,6 +652,7 @@ def build_cycle_detail_sim_by_id(
     try:
         return _DetailSim(
             cycle, base_config, settings_override, store, options, price,
+            stress_tail=stress_tail, stress_idle_w=stress_idle_w,
         )
     except Exception as exc:  # pylint: disable=broad-exception-caught
         _LOGGER.debug("Playground detail sim build failed for %s: %s", cycle_id, exc)
@@ -471,6 +668,8 @@ def _simulate_cycle_detail_inner(
     price: float | None,
     compute_series: bool = True,
     prebuilt: tuple[Any, Any, Any, Any] | None = None,
+    stress_tail: bool = False,
+    stress_idle_w: float | None = None,
 ) -> dict[str, Any]:
     """One-shot faithful replay: build the resumable sim and run it to completion.
 
@@ -483,11 +682,15 @@ def _simulate_cycle_detail_inner(
     sim = _DetailSim(
         cycle, base_config, settings_override, store, options, price,
         compute_series, prebuilt,
+        stress_tail=stress_tail, stress_idle_w=stress_idle_w,
     )
     if not sim.ready:
         return sim.empty_payload()
     sim.step(0, sim.n_readings)
-    sim.run_tail()
+    if sim.stress_tail:
+        sim.run_stress_tail()
+    else:
+        sim.run_tail()
     return sim.finalize()
 
 
@@ -518,6 +721,8 @@ class _DetailSim:
         price: float | None,
         compute_series: bool = True,
         prebuilt: tuple[Any, Any, Any, Any] | None = None,
+        stress_tail: bool = False,
+        stress_idle_w: float | None = None,
     ) -> None:
         self.cycle = cycle
         self.store = store
@@ -543,7 +748,11 @@ class _DetailSim:
             "overrun_ratio": None,
             "projected_energy_wh": None,
             "projected_cost": None,
+            "stress": None,
         }
+        self.stress_tail = stress_tail
+        self.stress_idle_override = stress_idle_w
+        self._stress_outcome: dict[str, Any] | None = None
         if prebuilt is not None:
             snapshots, match_config, group_members, member_snaps = prebuilt
         else:
@@ -695,10 +904,17 @@ class _DetailSim:
             members = self.group_members.get(gkey, [])
             if members and self.store is not None:
                 try:
-                    member_name, _, _ = self.store._stage5_pick_member(  # noqa: SLF001
+                    member_name, _, member_dur = self.store._stage5_pick_member(  # noqa: SLF001
                         list(powers), duration, members, self.member_snaps or {}
                     )
-                    candidates[0] = dict(candidates[0], name=member_name)
+                    # Carry the member's duration as well, exactly as
+                    # `async_match_profile` relabels the winner: leaving the group's
+                    # aggregate duration here fed the wrong expected value to the
+                    # detector AND to the #364 prefix guard below.
+                    resolved = dict(candidates[0], name=member_name)
+                    if member_dur:
+                        resolved["profile_duration"] = float(member_dur)
+                    candidates[0] = resolved
                 except Exception:  # pylint: disable=broad-exception-caught
                     pass
         best = candidates[0]
@@ -738,7 +954,31 @@ class _DetailSim:
 
         # The DETECTOR still receives the RAW top-1, so detection / smart-termination
         # behaviour is byte-identical to before this reporting change.
-        return (raw_name, raw_conf, raw_expected, None, False, bool(is_ambiguous))
+        # Elements 7-9 (#364): without them the prefix-landscape and power-plausibility
+        # guards were never exercised in a simulation, so the exact failure the
+        # Playground exists to reproduce was invisible here.
+        full_shape_hit, prefix_fit_hit = _match_prefix_ambiguity(candidates, raw_expected)
+        # Guard the store call like iter_evidence_cycles above: on an older store or a
+        # partial test double without profile_tail_power the AttributeError would
+        # bubble through _try_profile_match, which drops the match at debug - so EVERY
+        # match in the sim would be silently reported as unmatched.
+        tail_power = None
+        if self.store is not None and raw_name:
+            try:
+                tail_power = self.store.profile_tail_power(raw_name)
+            except Exception:  # pylint: disable=broad-exception-caught
+                tail_power = None
+        return (
+            raw_name,
+            raw_conf,
+            raw_expected,
+            None,
+            False,
+            bool(is_ambiguous),
+            bool(full_shape_hit or prefix_fit_hit),
+            bool(full_shape_hit),
+            tail_power,
+        )
 
     def _sample(self, ts: datetime) -> None:
         if not self.compute_series:
@@ -770,7 +1010,10 @@ class _DetailSim:
             phase_result = None
             if len(trace) >= 10 and program != "detecting...":
                 phase_result = progress_mod.estimate_phase_progress(
-                    self.store, trace, offset, program
+                    self.store, trace, offset, program,
+                    quiet_threshold_w=float(
+                        getattr(self.detector.config, "stop_threshold_w", 0.0) or 0.0
+                    ),
                 )
             ml_pct = progress_mod.ml_progress_percent(
                 self.store, self.options, matched_dur, trace, program, self._end_exp_fn
@@ -833,6 +1076,34 @@ class _DetailSim:
                 "Playground detail replay failed for %s: %s", self.cycle.get("id"), exc
             )
 
+    def _derive_idle_level(self) -> tuple[float, float]:
+        """Derive (idle_w, fluct_w) from the standby floor of the real cycle tail.
+
+        idle_w  = p7 of readings in the last PLAYGROUND_STRESS_TRAILING_WINDOW_S;
+                  this is the between-burst standby floor, not a contaminated mean.
+        fluct_w = std-dev of the low band (readings ≤ idle_w × 1.5); falls back
+                  to ±PLAYGROUND_STRESS_FLUCT_FALLBACK_FRAC when the tail is flat.
+        """
+        if not self.readings:
+            return 3.0, 0.36
+        cutoff = self.readings[-1][0] - timedelta(seconds=PLAYGROUND_STRESS_TRAILING_WINDOW_S)
+        window = [p for ts, p in self.readings if ts >= cutoff]
+        if not window:
+            window = [self.readings[-1][1]]
+        sorted_w = sorted(window)
+        p7_idx = max(0, int(len(sorted_w) * PLAYGROUND_STRESS_FLOOR_PERCENTILE))
+        idle_w = float(sorted_w[p7_idx])
+        low_band = [p for p in window if p <= idle_w * 1.5]
+        if len(low_band) >= 2:
+            mean_lb = sum(low_band) / len(low_band)
+            variance = sum((p - mean_lb) ** 2 for p in low_band) / len(low_band)
+            fluct_w = variance ** 0.5
+            if fluct_w < 0.01:
+                fluct_w = idle_w * PLAYGROUND_STRESS_FLUCT_FALLBACK_FRAC
+        else:
+            fluct_w = idle_w * PLAYGROUND_STRESS_FLUCT_FALLBACK_FRAC
+        return max(0.0, idle_w), max(0.01, fluct_w)
+
     def run_tail(self) -> None:
         """Synthetic quiet tail so a natural end can fire."""
         if self._aborted or not self.ready:
@@ -858,6 +1129,117 @@ class _DetailSim:
         except Exception as exc:  # pylint: disable=broad-exception-caught
             _LOGGER.debug(
                 "Playground detail replay failed for %s: %s", self.cycle.get("id"), exc
+            )
+
+    def run_stress_tail(self) -> None:
+        """Synthetic idle continuation for the idle termination test.
+
+        Replaces the quiet tail when ``stress_tail=True``.  Never raises.
+
+        Two phases keep CPU near zero while preserving detector fidelity:
+
+        * **Dense pre-fill** (DENSE_DURATION_S at DENSE_STEP_S): populates
+          ``_power_readings`` so ``_is_standby_band_stuck`` (10-min plateau check)
+          and ``_window_has_outage_gap`` can fire correctly.
+        * **Sparse main** (SPARSE_STEP_S steps): ``_time_below_threshold += dt``
+          accumulates correctly for large dt; the 8h hard cap fires normally.
+
+        ``_sample()`` is called on every step so the series carries progress /
+        remaining_s / phase through the overrun, identical to the live estimator.
+        """
+        if self._aborted or not self.ready:
+            return
+        try:
+            idle_w, fluct_w = self._derive_idle_level()
+            override_applied = False
+            if self.stress_idle_override is not None:
+                # The schema accepts any float. Reject non-finite (nan/inf) by keeping the
+                # auto-derived floor, and clamp to [0, MAX] so a negative can't surface as a
+                # nonsensical "-Xw" draw and a huge/inf value can't corrupt the synthetic
+                # power samples (NaN/inf detector math). fluct_w stays from the call above.
+                ov = float(self.stress_idle_override)
+                if math.isfinite(ov):
+                    idle_w = max(0.0, min(ov, PLAYGROUND_STRESS_MAX_IDLE_W))
+                    override_applied = True
+
+            synthetic_from_s = self.cursor["t"]
+            stop_thresh = float(getattr(self.config, "stop_threshold_w", 2.0))
+            idle_above = idle_w >= stop_thresh
+
+            seed = sum(ord(c) for c in (self.cycle.get("id") or "pg")) & 0xFFFF
+
+            self._emit(
+                "stress_tail_start",
+                f"idle ~{idle_w:.1f}W fluct={fluct_w:.2f}W above_stop_thresh={idle_above}",
+            )
+
+            last_ts = self.readings[-1][0]
+            captured_before = len(self.captured)
+
+            n_dense = int(PLAYGROUND_STRESS_DENSE_DURATION_S / PLAYGROUND_STRESS_DENSE_STEP_S)
+            dense_end_ts = last_ts
+            for i in range(1, n_dense + 1):
+                ts = last_ts + timedelta(seconds=PLAYGROUND_STRESS_DENSE_STEP_S * i)
+                power = max(0.0, idle_w + fluct_w * math.sin(seed + i * 1.1))
+                self.cursor["t"] = (ts - self.base).total_seconds()
+                self.detector.process_reading(power, ts)
+                self._sample(ts)
+                dense_end_ts = ts
+                if len(self.captured) > captured_before:
+                    break
+
+            if len(self.captured) == captured_before:
+                for i in range(1, PLAYGROUND_STRESS_MAX_SPARSE_STEPS + 1):
+                    ts = dense_end_ts + timedelta(seconds=PLAYGROUND_STRESS_SPARSE_STEP_S * i)
+                    power = max(0.0, idle_w + fluct_w * math.sin(seed + n_dense + i * 1.1))
+                    self.cursor["t"] = (ts - self.base).total_seconds()
+                    self.detector.process_reading(power, ts)
+                    self._sample(ts)
+                    if len(self.captured) > captured_before:
+                        break
+
+            if len(self.captured) == captured_before:
+                flush_ts = dense_end_ts + timedelta(
+                    seconds=PLAYGROUND_STRESS_SPARSE_STEP_S * (PLAYGROUND_STRESS_MAX_SPARSE_STEPS + 2)
+                )
+                self.cursor["t"] = (flush_ts - self.base).total_seconds()
+                self.detector.force_end(flush_ts)
+                # Record a series sample at the forced-stop timestamp so the plotted tail
+                # reaches the reported elapsed time (otherwise the last point sits up to two
+                # sparse steps short of terminated_after_s).
+                self._sample(flush_ts)
+
+            terminated = len(self.captured) > captured_before
+            terminated_after_s: float | None = None
+            term_reason: Any = None
+            hit_cap = False
+            if terminated:
+                primary = max(
+                    self.captured[captured_before:],
+                    key=lambda c: float(c.get("duration") or 0.0),
+                )
+                term_reason = primary.get("termination_reason")
+                hit_cap = str(term_reason) == str(TerminationReason.FORCE_STOPPED)
+                terminated_after_s = self.cursor["t"] - synthetic_from_s
+
+            self._stress_outcome = {
+                "enabled": True,
+                "idle_w": round(idle_w, 2),
+                "fluct_w": round(fluct_w, 3),
+                "manual_override": override_applied,
+                "synthetic_from_s": round(synthetic_from_s, 1),
+                "stop_threshold_w": round(stop_thresh, 2),
+                "idle_above_threshold": idle_above,
+                "terminated": terminated,
+                "terminated_after_s": (
+                    round(terminated_after_s, 1) if terminated_after_s is not None else None
+                ),
+                "termination_reason": str(term_reason) if term_reason is not None else None,
+                "hit_cap": hit_cap,
+            }
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            _LOGGER.debug(
+                "Playground stress tail failed for %s: %s", self.cycle.get("id"), exc
             )
 
     def finalize(self) -> dict[str, Any]:
@@ -958,6 +1340,53 @@ class _DetailSim:
                 alerts.append({"code": "underrun", "severity": "warn",
                                "detail": f"Finished at {ratio:.0%} of typical duration."})
 
+        # --- stress-tail verdict ---
+        st = self._stress_outcome
+        if st and st.get("enabled"):
+            outcome["stress"] = st
+            idle_w = st["idle_w"]
+            stop_thresh = st["stop_threshold_w"]
+            if st.get("terminated") and not st.get("hit_cap"):
+                after_s = float(st.get("terminated_after_s") or 0.0)
+                h, rem = divmod(int(after_s), 3600)
+                m = rem // 60
+                reason = st.get("termination_reason") or "?"
+                alerts.append({
+                    "code": "stress_terminated", "severity": "info",
+                    "detail_key": "msg.pg_stress_terminated_detail",
+                    "detail_params": {"idle": f"{idle_w:.1f}", "h": h, "m": m, "reason": reason},
+                    "detail": (
+                        f"Settled to ~{idle_w:.1f}W idle -- cycle ended "
+                        f"{h}h {m}m later via {reason}."
+                    ),
+                })
+            elif st.get("hit_cap"):
+                if st.get("idle_above_threshold"):
+                    alerts.append({
+                        "code": "stress_above_threshold", "severity": "warn",
+                        "detail_key": "msg.pg_stress_above_threshold_detail",
+                        "detail_params": {"idle": f"{idle_w:.1f}", "stop": f"{stop_thresh:.1f}"},
+                        "detail": (
+                            f"Idle draw ~{idle_w:.1f}W is at or above the effective stop "
+                            f"threshold ({stop_thresh:.1f}W) -- the cycle never registered "
+                            f"as quiet. Raise stop_threshold_w to fix."
+                        ),
+                    })
+                # Report the actual elapsed synthetic time (the cap is ~7h50m of synthetic
+                # tail plus the pre-tail cycle length, not a flat 8 h).
+                after_s = float(st.get("terminated_after_s") or 0.0)
+                h, rem = divmod(int(after_s), 3600)
+                m = rem // 60
+                alerts.append({
+                    "code": "stress_hit_cap", "severity": "error",
+                    "detail_key": "msg.pg_stress_hit_cap_detail",
+                    "detail_params": {"h": h, "m": m, "idle": f"{idle_w:.1f}", "stop": f"{stop_thresh:.1f}"},
+                    "detail": (
+                        f"Cycle ran {h}h {m}m without stopping -- force-stopped by the safety cap. "
+                        f"Idle draw {idle_w:.1f}W vs stop threshold {stop_thresh:.1f}W."
+                    ),
+                })
+
         series = self.series
         if len(series) > MAX_SERIES_PER_CYCLE:
             # Thin evenly so the shape is preserved (first + last always kept).
@@ -987,6 +1416,13 @@ def _sim_config_summary(config: CycleDetectorConfig) -> dict[str, Any]:
         "min_off_gap": getattr(config, "min_off_gap", None),
         "start_threshold_w": getattr(config, "start_threshold_w", None),
         "stop_threshold_w": getattr(config, "stop_threshold_w", None),
+        "anti_wrinkle_enabled": getattr(config, "anti_wrinkle_enabled", None),
+        "anti_wrinkle_max_power": getattr(config, "anti_wrinkle_max_power", None),
+        "anti_wrinkle_max_duration": getattr(config, "anti_wrinkle_max_duration", None),
+        "anti_wrinkle_exit_power": getattr(config, "anti_wrinkle_exit_power", None),
+        "anti_wrinkle_idle_timeout": getattr(config, "anti_wrinkle_idle_timeout", None),
+        "dishwasher_end_spike_quiet_release": getattr(config, "dishwasher_end_spike_quiet_release", None),
+        "smart_termination_duration_ratio": getattr(config, "smart_termination_duration_ratio", None),
     }
 
 

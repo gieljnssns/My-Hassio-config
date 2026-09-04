@@ -1,7 +1,5 @@
 """Support for Open-Meteo weather."""
 
-from __future__ import annotations
-
 from homeassistant.components.weather import (
     Forecast,
     SingleCoordinatorWeatherEntity,
@@ -73,7 +71,7 @@ class OpenMeteoWeatherEntity(
     @property
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
-        return self.coordinator.data.temperature
+        return self.coordinator.data.native_temperature
 
     @property
     def humidity(self) -> float | None:
@@ -83,12 +81,12 @@ class OpenMeteoWeatherEntity(
     @property
     def native_dew_point(self) -> float | None:
         """Return the dew point."""
-        return self.coordinator.data.dew_point
+        return self.coordinator.data.native_dew_point
 
     @property
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature."""
-        return self.coordinator.data.apparent_temperature
+        return self.coordinator.data.native_apparent_temperature
 
     @property
     def cloud_coverage(self) -> int | None:
@@ -98,19 +96,17 @@ class OpenMeteoWeatherEntity(
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure."""
-        return self.coordinator.data.pressure
+        return self.coordinator.data.native_pressure
 
     @property
     def native_visibility(self) -> float | None:
         """Return the visibility."""
-        if self.coordinator.data.visibility is None:
-            return None
-        return self.coordinator.data.visibility / 1000
+        return self.coordinator.data.native_visibility
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        return self.coordinator.data.wind_speed
+        return self.coordinator.data.native_wind_speed
 
     @property
     def wind_bearing(self) -> float | str | None:
@@ -120,7 +116,7 @@ class OpenMeteoWeatherEntity(
     @property
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed."""
-        return self.coordinator.data.wind_gust_speed
+        return self.coordinator.data.native_wind_gust_speed
 
     @property
     def uv_index(self) -> float | None:

@@ -1,0 +1,128 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Helios Forecast — ligne de panneaux",
+        "description": "Un forecast pour une installation photovoltaïque. Ajoutez une ligne de panneaux par orientation — plusieurs lignes partagent l'unique capteur de production et l'onduleur de cette installation. Laissez la position vide pour utiliser le domicile Home Assistant.",
+        "data": {
+          "name": "Nom (ex. Toiture sud)",
+          "tilt": "Inclinaison (degrés, 0 = à plat, 90 = vertical)",
+          "azimuth": "Azimut (degrés depuis le nord, 90 = est, 180 = sud, 270 = ouest)",
+          "kwp": "Puissance crête (kWc)",
+          "line_inverter_max_kw": "Puissance max de l'onduleur pour cette ligne (kW, optionnel)",
+          "tracker": "Suiveur solaire",
+          "latitude": "Latitude (optionnel)",
+          "longitude": "Longitude (optionnel)",
+          "inverter_max_kw": "Puissance max de l'onduleur (kW, optionnel)",
+          "production_entity": "Capteur d'énergie de production PV (kWh, pour la correction apprise)",
+          "trend_anchor_hour": "Heure de référence de la tendance du jour (0-23, défaut 6)",
+          "add_another": "Ajouter une autre ligne de panneaux",
+          "battery_capacity_kwh": "Capacité utile de la batterie (kWh)",
+          "battery_soc_entity": "Capteur d'état de charge de la batterie (%)",
+          "battery_max_charge_kw": "Puissance de charge max de la batterie (kW, optionnel)",
+          "battery_max_discharge_kw": "Puissance de décharge max de la batterie (kW, optionnel)",
+          "battery_min_soc": "Réserve batterie — état de charge minimum (%, défaut 10)",
+          "battery_efficiency": "Rendement aller-retour de la batterie (%, défaut 90)"
+        },
+        "data_description": {
+          "production_entity": "Un capteur d'énergie cumulative (kWh), p. ex. l'énergie totale produite de votre onduleur ou compteur. Un capteur de puissance (W) ne fonctionnera pas : il n'a pas de statistiques de somme à long terme, donc l'apprentissage et l'indice de fiabilité resteraient inactifs.",
+          "battery_soc_entity": "Renseignez la capacité et ce capteur pour activer la projection d'état de charge. La consommation de la maison vient de votre tableau de bord Énergie, aucun capteur n'est requis ici."
+        }
+      },
+      "line": {
+        "title": "Helios Forecast — ligne de panneaux supplémentaire",
+        "description": "Ligne de panneaux {index} : un autre groupe de panneaux de même orientation sur la même installation (capteur de production et onduleur partagés).",
+        "data": {
+          "tilt": "Inclinaison (degrés, 0 = à plat, 90 = vertical)",
+          "azimuth": "Azimut (degrés depuis le nord, 90 = est, 180 = sud, 270 = ouest)",
+          "kwp": "Puissance crête (kWc)",
+          "line_inverter_max_kw": "Puissance max de l'onduleur pour cette ligne (kW, optionnel)",
+          "tracker": "Suiveur solaire",
+          "latitude": "Latitude pour cette ligne (optionnel)",
+          "longitude": "Longitude pour cette ligne (optionnel)",
+          "add_another": "Ajouter une autre ligne de panneaux"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Helios Forecast",
+        "description": "Choisissez ce que vous voulez modifier.",
+        "menu_options": {
+          "settings": "Modifier les réglages (position, onduleur, capteur de production)",
+          "lines": "Modifier les lignes de panneaux"
+        }
+      },
+      "settings": {
+        "title": "Helios Forecast — réglages",
+        "description": "Position, puissance max de l'onduleur, capteur de production et heure de référence partagés par toutes les lignes de panneaux de cette entrée.",
+        "data": {
+          "latitude": "Latitude (optionnel)",
+          "longitude": "Longitude (optionnel)",
+          "inverter_max_kw": "Puissance max de l'onduleur (kW, optionnel)",
+          "production_entity": "Capteur d'énergie de production PV (kWh, pour la correction apprise)",
+          "trend_anchor_hour": "Heure de référence de la tendance du jour (0-23, défaut 6)",
+          "battery_capacity_kwh": "Capacité utile de la batterie (kWh)",
+          "battery_soc_entity": "Capteur d'état de charge de la batterie (%)",
+          "battery_max_charge_kw": "Puissance de charge max de la batterie (kW, optionnel)",
+          "battery_max_discharge_kw": "Puissance de décharge max de la batterie (kW, optionnel)",
+          "battery_min_soc": "Réserve batterie — état de charge minimum (%, défaut 10)",
+          "battery_efficiency": "Rendement aller-retour de la batterie (%, défaut 90)"
+        },
+        "data_description": {
+          "production_entity": "Un capteur d'énergie cumulative (kWh), p. ex. l'énergie totale produite de votre onduleur ou compteur. Un capteur de puissance (W) ne fonctionnera pas : il n'a pas de statistiques de somme à long terme, donc l'apprentissage et l'indice de fiabilité resteraient inactifs.",
+          "battery_soc_entity": "Renseignez la capacité et ce capteur pour activer la projection d'état de charge. La consommation de la maison vient de votre tableau de bord Énergie, aucun capteur n'est requis ici."
+        }
+      },
+      "lines": {
+        "title": "Helios Forecast — ligne de panneaux {index}/{total}",
+        "description": "Modifiez la ligne de panneaux {index} sur {total}, ou cochez pour en ajouter une.",
+        "data": {
+          "tilt": "Inclinaison (degrés, 0 = à plat, 90 = vertical)",
+          "azimuth": "Azimut (degrés depuis le nord, 90 = est, 180 = sud, 270 = ouest)",
+          "kwp": "Puissance crête (kWc)",
+          "line_inverter_max_kw": "Puissance max de l'onduleur pour cette ligne (kW, optionnel)",
+          "tracker": "Suiveur solaire",
+          "latitude": "Latitude pour cette ligne (optionnel)",
+          "longitude": "Longitude pour cette ligne (optionnel)",
+          "remove_this_line": "Supprimer cette ligne de panneaux",
+          "add_another": "Ajouter une autre ligne de panneaux"
+        }
+      }
+    }
+  },
+  "selector": {
+    "tracker": {
+      "options": {
+        "none": "Aucun (fixe)",
+        "dual-axis": "Deux axes (suit le soleil)",
+        "single-axis-h": "Un axe horizontal (l'inclinaison suit)",
+        "single-axis-v": "Un axe vertical (l'azimut suit)"
+      }
+    }
+  },
+  "services": {
+    "get_forecast": {
+      "name": "Obtenir la prévision",
+      "description": "Renvoie la prévision de production complète (à partir d'aujourd'hui, un point toutes les 15 minutes, chacun avec les watts prédits et la bande de confiance P10/P90) sous forme de données de réponse, pour les automatisations.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Installation",
+          "description": "Quelle installation Helios Forecast lire. Facultatif s'il n'y en a qu'une de configurée."
+        }
+      }
+    },
+    "get_battery_soc_forecast": {
+      "name": "Obtenir la prévision d'état de charge",
+      "description": "Renvoie l'état de charge projeté de la batterie pour les 48 prochaines heures (un point toutes les 15 minutes) sous forme de données de réponse, pour les automatisations.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Installation",
+          "description": "Quelle installation Helios Forecast lire. Facultatif s'il n'y en a qu'une de configurée."
+        }
+      }
+    }
+  }
+}

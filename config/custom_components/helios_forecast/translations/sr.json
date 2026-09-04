@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Helios Forecast — линија панела",
+        "description": "Једна прогноза за једну линију панела (групу панела исте оријентације). Додајте интеграцију поново за сваку додатну линију. Оставите локацију празном да бисте користили локацију вашег Home Assistant-а.",
+        "data": {
+          "name": "Назив (нпр. Јужни кров)",
+          "tilt": "Нагиб (степени, 0 = равно, 90 = усправно)",
+          "azimuth": "Азимут (степени од севера, 90 = исток, 180 = југ, 270 = запад)",
+          "kwp": "Вршна снага (kWp)",
+          "line_inverter_max_kw": "Макс. снага инвертора за ову линију (kW, опционо)",
+          "tracker": "Пратилац сунца",
+          "latitude": "Географска ширина (опционо)",
+          "longitude": "Географска дужина (опционо)",
+          "inverter_max_kw": "Максимална снага инвертора (kW, опционо)",
+          "production_entity": "Сензор PV производње (за научену корекцију)",
+          "trend_anchor_hour": "Референтни сат за данашњи тренд (0-23, подразумевано 6)",
+          "add_another": "Add another panel line",
+          "battery_capacity_kwh": "Искористиви капацитет батерије (kWh)",
+          "battery_soc_entity": "Сензор стања напуњености батерије (%)",
+          "battery_max_charge_kw": "Макс. снага пуњења батерије (kW, опционо)",
+          "battery_max_discharge_kw": "Макс. снага пражњења батерије (kW, опционо)",
+          "battery_min_soc": "Резерва батерије — минимално стање напуњености (%, подразумевано 10)",
+          "battery_efficiency": "Ефикасност пуног циклуса батерије (%, подразумевано 90)"
+        },
+        "data_description": {
+          "battery_soc_entity": "Попуните капацитет и овај сензор да бисте укључили пројекцију стања напуњености. Потрошња куће се узима са ваше Енергетске контролне табле, сензор овде није потребан."
+        }
+      },
+      "line": {
+        "title": "Helios Forecast — additional panel line",
+        "description": "Panel line {index}: another group of co-oriented panels on the same installation (shared production sensor and inverter).",
+        "data": {
+          "tilt": "Нагиб (степени, 0 = равно, 90 = усправно)",
+          "azimuth": "Азимут (степени од севера, 90 = исток, 180 = југ, 270 = запад)",
+          "kwp": "Вршна снага (kWp)",
+          "line_inverter_max_kw": "Макс. снага инвертора за ову линију (kW, опционо)",
+          "tracker": "Пратилац сунца",
+          "latitude": "Географска ширина за ову линију (опционо)",
+          "longitude": "Географска дужина за ову линију (опционо)",
+          "add_another": "Add another panel line"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Helios Forecast",
+        "description": "Choose what to edit.",
+        "menu_options": {
+          "settings": "Edit settings (location, inverter, production sensor)",
+          "lines": "Edit panel lines"
+        }
+      },
+      "settings": {
+        "title": "Helios Forecast — settings",
+        "description": "Shared location, inverter cap, production sensor and trend anchor for every panel line in this entry.",
+        "data": {
+          "latitude": "Географска ширина (опционо)",
+          "longitude": "Географска дужина (опционо)",
+          "inverter_max_kw": "Максимална снага инвертора (kW, опционо)",
+          "production_entity": "Сензор PV производње (за научену корекцију)",
+          "trend_anchor_hour": "Референтни сат за данашњи тренд (0-23, подразумевано 6)",
+          "battery_capacity_kwh": "Искористиви капацитет батерије (kWh)",
+          "battery_soc_entity": "Сензор стања напуњености батерије (%)",
+          "battery_max_charge_kw": "Макс. снага пуњења батерије (kW, опционо)",
+          "battery_max_discharge_kw": "Макс. снага пражњења батерије (kW, опционо)",
+          "battery_min_soc": "Резерва батерије — минимално стање напуњености (%, подразумевано 10)",
+          "battery_efficiency": "Ефикасност пуног циклуса батерије (%, подразумевано 90)"
+        },
+        "data_description": {
+          "battery_soc_entity": "Попуните капацитет и овај сензор да бисте укључили пројекцију стања напуњености. Потрошња куће се узима са ваше Енергетске контролне табле, сензор овде није потребан."
+        }
+      },
+      "lines": {
+        "title": "Helios Forecast — panel line {index}/{total}",
+        "description": "Edit panel line {index} of {total}, or tick to add another.",
+        "data": {
+          "tilt": "Нагиб (степени, 0 = равно, 90 = усправно)",
+          "azimuth": "Азимут (степени од севера, 90 = исток, 180 = југ, 270 = запад)",
+          "kwp": "Вршна снага (kWp)",
+          "line_inverter_max_kw": "Макс. снага инвертора за ову линију (kW, опционо)",
+          "tracker": "Пратилац сунца",
+          "latitude": "Географска ширина за ову линију (опционо)",
+          "longitude": "Географска дужина за ову линију (опционо)",
+          "remove_this_line": "Remove this panel line",
+          "add_another": "Add another panel line"
+        }
+      }
+    }
+  },
+  "selector": {
+    "tracker": {
+      "options": {
+        "none": "Нема (фиксно)",
+        "dual-axis": "Двоосни (прати сунце)",
+        "single-axis-h": "Једноосни хоризонтални (нагиб прати)",
+        "single-axis-v": "Једноосни вертикални (азимут прати)"
+      }
+    }
+  },
+  "services": {
+    "get_forecast": {
+      "name": "Преузми прогнозу",
+      "description": "Враћа комплетну прогнозу производње (од данас надаље, једна тачка сваких 15 минута, свака са предвиђеним ватима и интервалом поузданости P10/P90) као податке одговора за коришћење у аутоматизацијама.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Инсталација",
+          "description": "Коју Helios Forecast инсталацију прочитати. Опционо када је конфигурисана само једна."
+        }
+      }
+    },
+    "get_battery_soc_forecast": {
+      "name": "Преузми прогнозу стања напуњености",
+      "description": "Враћа предвиђено стање напуњености батерије за следећа 48 сата (једна тачка сваких 15 минута) као податке одговора за коришћење у аутоматизацијама.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Инсталација",
+          "description": "Коју Helios Forecast инсталацију прочитати. Опционо када је конфигурисана само једна."
+        }
+      }
+    }
+  }
+}

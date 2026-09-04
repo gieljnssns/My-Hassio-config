@@ -295,6 +295,52 @@ INVERTER_SENSOR_DESCRIPTIONS: tuple[HuaweiSolarSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     HuaweiSolarSensorEntityDescription(
+        key=rn.MAX_PV_VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    HuaweiSolarSensorEntityDescription(
+        key=rn.MIN_PV_VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    HuaweiSolarSensorEntityDescription(
+        key=rn.CUMULATIVE_DC_ENERGY_YIELD_MPPT1,
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    HuaweiSolarSensorEntityDescription(
+        key=rn.CUMULATIVE_DC_ENERGY_YIELD_MPPT2,
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    HuaweiSolarSensorEntityDescription(
+        key=rn.CUMULATIVE_DC_ENERGY_YIELD_MPPT3,
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    HuaweiSolarSensorEntityDescription(
+        key=rn.CUMULATIVE_DC_ENERGY_YIELD_MPPT4,
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    HuaweiSolarSensorEntityDescription(
         key=rn.STATE_1,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_conversion_function=", ".join,
@@ -1111,7 +1157,9 @@ BATTERY_TEMPLATE_SENSOR_DESCRIPTIONS: tuple[BatteryTemplateEntityDescription, ..
 )
 
 
-async def create_sun2000_entities(ucs: HuaweiSolarInverterData) -> list[SensorEntity]:
+async def create_sun2000_entities(
+    ucs: HuaweiSolarInverterData, *, has_emma: bool = False
+) -> list[SensorEntity]:
     """Create SUN2000 sensor entities."""
     entities_to_add: list[SensorEntity] = []
 
@@ -1168,8 +1216,8 @@ async def create_sun2000_entities(ucs: HuaweiSolarInverterData) -> list[SensorEn
 
     if (
         not isinstance(ucs.device.primary_device, (EMMADevice, SmartLoggerDevice))
-        and await ucs.device.has_write_permission()
         and ucs.configuration_update_coordinator
+        and await ucs.device.has_write_permission()
     ):
         entities_to_add.append(
             HuaweiSolarActivePowerControlModeEntity(
@@ -1193,7 +1241,10 @@ async def create_sun2000_entities(ucs: HuaweiSolarInverterData) -> list[SensorEn
         )
 
         if ucs.configuration_update_coordinator:
-            if ucs.device.battery_type == rv.StorageProductModel.HUAWEI_LUNA2000:
+            if (
+                not has_emma
+                and ucs.device.battery_type == rv.StorageProductModel.HUAWEI_LUNA2000
+            ):
                 entities_to_add.append(
                     HuaweiSolarTOUSensorEntity(
                         ucs.configuration_update_coordinator,
@@ -1201,12 +1252,16 @@ async def create_sun2000_entities(ucs: HuaweiSolarInverterData) -> list[SensorEn
                         ucs.connected_energy_storage,
                     ),
                 )
-            elif ucs.device.battery_type == rv.StorageProductModel.LG_RESU:
+            elif (
+                not has_emma
+                and ucs.device.battery_type == rv.StorageProductModel.LG_RESU
+            ):
                 entities_to_add.append(
                     HuaweiSolarPricePeriodsSensorEntity(
                         ucs.configuration_update_coordinator,
                         ucs.device,
                         ucs.connected_energy_storage,
+                        translation_key="storage_lg_resu_time_of_use_price_periods",
                     ),
                 )
             entities_to_add.append(
@@ -1741,6 +1796,7 @@ def create_emma_entities(
                 ucs.device_info,
                 register_name=rn.EMMA_TOU_PERIODS,
                 entity_registry_enabled_default=False,
+                translation_key="emma_tou_periods",
             )
         )
 
@@ -2210,11 +2266,16 @@ async def async_setup_entry(
 ) -> None:
     """Add Huawei Solar entry."""
     device_datas: list[HuaweiSolarDeviceData] = entry.runtime_data[DATA_DEVICE_DATAS]
+    has_emma = any(
+        isinstance(device_data.device, EMMADevice) for device_data in device_datas
+    )
 
     entities_to_add = []
     for ucs in device_datas:
         if isinstance(ucs, HuaweiSolarInverterData):
-            entities_to_add.extend(await create_sun2000_entities(ucs))
+            entities_to_add.extend(
+                await create_sun2000_entities(ucs, has_emma=has_emma)
+            )
         elif isinstance(ucs.device, EMMADevice):
             entities_to_add.extend(create_emma_entities(ucs))
         elif isinstance(ucs.device, SChargerDevice):
@@ -2420,6 +2481,7 @@ class HuaweiSolarTOUSensorEntity(
         device_info: DeviceInfo,
         register_name: str = rn.STORAGE_HUAWEI_LUNA2000_TIME_OF_USE_CHARGING_AND_DISCHARGING_PERIODS,
         entity_registry_enabled_default: bool = True,
+        translation_key: str | None = None,
     ) -> None:
         """Huawei Solar TOU Sensor Entity constructor."""
         super().__init__(
@@ -2430,6 +2492,7 @@ class HuaweiSolarTOUSensorEntity(
 
         self.entity_description = HuaweiSolarSensorEntityDescription(
             key=register_name,
+            translation_key=translation_key,
             icon="mdi:calendar-text",
             entity_registry_enabled_default=entity_registry_enabled_default,
         )
@@ -2497,6 +2560,7 @@ class HuaweiSolarPricePeriodsSensorEntity(
         device_info: DeviceInfo,
         register_name: str = rn.STORAGE_LG_RESU_TIME_OF_USE_PRICE_PERIODS,
         entity_registry_enabled_default: bool = True,
+        translation_key: str | None = None,
     ) -> None:
         """Huawei Solar TOU Sensor Entity constructor."""
         super().__init__(
@@ -2507,6 +2571,7 @@ class HuaweiSolarPricePeriodsSensorEntity(
 
         self.entity_description = HuaweiSolarSensorEntityDescription(
             key=register_name,
+            translation_key=translation_key,
             icon="mdi:calendar-text",
             entity_registry_enabled_default=entity_registry_enabled_default,
         )
@@ -2565,6 +2630,7 @@ class HuaweiSolarCapacityControlPeriodsSensorEntity(
 
         self.entity_description = HuaweiSolarSensorEntityDescription(
             key=rn.STORAGE_CAPACITY_CONTROL_PERIODS,
+            translation_key="storage_capacity_control_periods",
             icon="mdi:calendar-text",
         )
 
@@ -2802,6 +2868,7 @@ class HuaweiSolarOptimizerSensorEntity(
 
         self._attr_device_info = device_info
         self._attr_unique_id = f"{device_info['name']}_{description.key}"
+        self._attr_available = False
 
     @property
     def available(self) -> bool:
@@ -2817,7 +2884,8 @@ class HuaweiSolarOptimizerSensorEntity(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_available = (
-            self.optimizer_id in self.coordinator.data
+            self.coordinator.data is not None
+            and self.optimizer_id in self.coordinator.data
             # Optimizer data fields only return sensible data when the
             # optimizer is not offline
             and (
@@ -2827,7 +2895,10 @@ class HuaweiSolarOptimizerSensorEntity(
             )
         )
 
-        if self.optimizer_id in self.coordinator.data:
+        if (
+            self.coordinator.data is not None
+            and self.optimizer_id in self.coordinator.data
+        ):
             value = getattr(
                 self.coordinator.data[self.optimizer_id], self.entity_description.key
             )
