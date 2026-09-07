@@ -4,7 +4,7 @@ One config entry describes a photovoltaic installation feeding a single producti
 sensor. It holds one or more panel lines (each a group of co-oriented panels); the
 model sums the lines by kWp share and the entry-level inverter cap applies to their
 combined output. This is what lets two strings on one inverter (only a combined
-production sensor available) share a single entry — add a line per orientation.
+production sensor available) share a single entry: add a line per orientation.
 
 Adding the integration walks the first line + the entry-level settings, then loops
 "add another line?" for as many lines as needed. The options flow (Configure button)
@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
+from .benchmark import DEFAULT_ENDPOINT
 from .config import (
     CONF_AZIMUTH,
     CONF_BATTERY_CAPACITY_KWH,
@@ -28,6 +29,10 @@ from .config import (
     CONF_BATTERY_MAX_DISCHARGE_KW,
     CONF_BATTERY_MIN_SOC,
     CONF_BATTERY_SOC_ENTITY,
+    CONF_BENCHMARK_ENABLED,
+    CONF_BENCHMARK_KEY,
+    CONF_BENCHMARK_URL,
+    CONF_CURTAILMENT_ENTITY,
     CONF_INVERTER_MAX_KW,
     CONF_KWP,
     CONF_LATITUDE,
@@ -57,11 +62,15 @@ _ADD_ANOTHER = "add_another"
 _REMOVE = "remove_this_line"
 
 _BOX = selector.NumberSelectorMode.BOX
-# Energy sensors only: the learning reads hourly "sum" statistics (change in kWh),
-# which a power (W) sensor does not have — picking one silently disabled the
-# learning and capped the reliability index (it only records a mean).
+# Energy sensors only: the learning reads hourly "sum" statistics (change in kWh), which a
+# power (W) sensor lacks; picking one would silently disable the learning and cap the
+# reliability index (a power sensor only records a mean).
 _SENSOR = selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor", device_class="energy"))
 _BOOL = selector.BooleanSelector()
+# The curtailment signal: anything that reads on/off.
+_CURTAIL_ENTITY = selector.EntitySelector(
+    selector.EntitySelectorConfig(domain=["binary_sensor", "input_boolean", "switch"])
+)
 _HOUR = selector.NumberSelector(selector.NumberSelectorConfig(min=0, max=23, step=1, mode=_BOX))
 # Numeric geometry / power fields as explicit NumberSelectors: a proper numeric input
 # with a defined decimal step, so decimals (e.g. 2.61 kWp) are entered and stored as
@@ -92,6 +101,12 @@ _SOC_ENTITY = selector.EntitySelector(selector.EntitySelectorConfig(domain="sens
 _PERCENT = selector.NumberSelector(
     selector.NumberSelectorConfig(min=0, max=100, step=1, mode=_BOX, unit_of_measurement="%")
 )
+# Benchmark upload: the write key is the only secret this integration holds, so it is typed and
+# redisplayed as a password rather than sitting in clear in the form.
+# Shown, never typed: the address is there so a contributor can see exactly where the measurements
+# go, and a field that can be edited by hand is a broken upload waiting to happen.
+_ENDPOINT = selector.TextSelector(selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT, read_only=True))
+_SECRET = selector.TextSelector(selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD))
 
 
 def _optional(fields: dict[Any, Any], key: str, sel: Any, suggested_value: Any) -> None:
@@ -123,7 +138,7 @@ def _line_fields(
     kwp_key = vol.Required(CONF_KWP, default=arr[CONF_KWP]) if CONF_KWP in arr else vol.Required(CONF_KWP)
     fields[kwp_key] = _KWP
     # Optional per-line inverter cap: a micro-inverter string that saturates on its own, distinct from the
-    # entry-level cap that bounds the combined total. Left empty, the line is uncapped and behaves exactly as before.
+    # entry-level cap that bounds the combined total. Left empty, the line is uncapped.
     _optional(fields, CONF_LINE_INVERTER_MAX_KW, _INVERTER, arr.get(CONF_LINE_INVERTER_MAX_KW))
     fields[vol.Required(CONF_TRACKER, default=arr.get(CONF_TRACKER, TRACKER_NONE))] = _TRACKER
     # Optional per-line location override, for a line far enough from the entry's home coordinates
@@ -169,6 +184,23 @@ def _settings_fields(
     fields[
         vol.Optional(CONF_BATTERY_EFFICIENCY, default=s.get(CONF_BATTERY_EFFICIENCY, DEFAULT_BATTERY_EFFICIENCY))
     ] = _PERCENT
+    # Curtailment signal: on while the inverter is held back for a reason the sky cannot explain, so those
+    # hours are not learned as low production (zero export, grid limits; a full battery is detected without it).
+    _optional(fields, CONF_CURTAILMENT_ENTITY, _CURTAIL_ENTITY, s.get(CONF_CURTAILMENT_ENTITY))
+    return fields
+
+
+def _benchmark_fields(settings: dict[str, Any]) -> dict[Any, Any]:
+    """Taking part in the public benchmark: the switch, the key, and where to send it.
+
+    Off unless deliberately switched on and given a key. What it sends, and why it has to be sent at
+    the moment it is predicted rather than reconstructed later, is in benchmark.py.
+    """
+    fields: dict[Any, Any] = {
+        vol.Optional(CONF_BENCHMARK_ENABLED, default=bool(settings.get(CONF_BENCHMARK_ENABLED, False))): _BOOL
+    }
+    _optional(fields, CONF_BENCHMARK_KEY, _SECRET, settings.get(CONF_BENCHMARK_KEY))
+    fields[vol.Optional(CONF_BENCHMARK_URL, default=settings.get(CONF_BENCHMARK_URL) or DEFAULT_ENDPOINT)] = _ENDPOINT
     return fields
 
 
@@ -235,7 +267,7 @@ class HeliosForecastOptionsFlow(OptionsFlow):
         return {**self.config_entry.data, **self.config_entry.options}
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        return self.async_show_menu(step_id="init", menu_options=["settings", "lines"])
+        return self.async_show_menu(step_id="init", menu_options=["settings", "lines", "benchmark"])
 
     async def async_step_settings(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Edit the entry-level settings, keeping the existing panel lines untouched."""
@@ -245,6 +277,23 @@ class HeliosForecastOptionsFlow(OptionsFlow):
             return self.async_create_entry(title="", data=data)
         schema = vol.Schema(_settings_fields(self.hass.config.latitude, self.hass.config.longitude, settings=current))
         return self.async_show_form(step_id="settings", data_schema=schema)
+
+    async def async_step_benchmark(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Join the community benchmark, or leave it.
+
+        A menu of its own rather than a few fields at the bottom of the settings: taking part is a
+        decision, not a setting, and someone who has never heard of it should be able to find out
+        what it is without reading a form.
+        """
+        current = self._current()
+        if user_input is not None:
+            settings = {**split_settings(current), **split_settings(user_input)}
+            # The address is only written down when it is not the standard one. Storing the default
+            # would freeze it in every entry, and the day the collector moves nobody could follow.
+            if settings.get(CONF_BENCHMARK_URL) == DEFAULT_ENDPOINT:
+                settings.pop(CONF_BENCHMARK_URL, None)
+            return self.async_create_entry(title="", data=merge_entry_data(settings, lines_from_config(current)))
+        return self.async_show_form(step_id="benchmark", data_schema=vol.Schema(_benchmark_fields(current)))
 
     async def async_step_lines(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Walk the existing lines (edit / remove each), then optionally append new ones."""
