@@ -19,41 +19,10 @@ def float_to_hex(f: float) -> str:
         raise ValueError(f"Error converting {f} to hex: {e}")
 
 
-def int_list_to_string(int_list: list[int]) -> str:
-    """Convert a list of 16-bit unsigned integers into a string. Each int is 2 bytes.
-
-    This method exists because pymodbus ModbusClientMixin.convert_from_registers with
-    data_type=DATATYPE.STRING needs errors="ignore" added to handle SolarEdge strings.
-
-    Ref: https://github.com/pymodbus-dev/pymodbus/blob/
-    7fc8d3e02d9d9011c25c80149eb88318e7f50d0e/pymodbus/client/mixin.py#L719
-    """
-    byte_data = b"".join(i.to_bytes(2, "big") for i in int_list)
-    return byte_data.decode("utf-8", errors="ignore").replace("\x00", "").rstrip()
-
-
-def update_accum(self, accum_value: int) -> None:
-    if self.last is None:
-        self.last = 0
-
-    if not accum_value > 0:
-        raise ValueError("update_accum must be non-zero value.")
-
-    if accum_value >= self.last:
-        # doesn't check accumulator rollover, but it would probably take
-        # several decades to roll over to 0 so we'll worry about it later
-        self.last = accum_value
-        return accum_value
-    else:
-        raise ValueError("update_accum must be an increasing value.")
-
-
 def host_valid(host):
     """Return True if hostname or IP address is valid."""
     try:
-        if ipaddress.ip_address(host).version == (4 or 6):
-            return True
-
+        return ipaddress.ip_address(host).version in (4, 6)
     except ValueError:
         return DOMAIN_REGEX.match(host)
 
@@ -98,6 +67,14 @@ def device_list_from_string(value: str) -> list[int]:
             ids.extend(range(start, end + 1))
 
     return sorted(set(ids))
+
+
+def safe_version_tuple(version_str: str) -> tuple[int, ...]:
+    """Parse a dotted version string like '4.10.0' into a comparable tuple."""
+    try:
+        return tuple(int(part) for part in version_str.split("."))
+    except ValueError:
+        raise ValueError(f"Invalid version string: {version_str}")
 
 
 def check_device_id(value: str | int) -> int:

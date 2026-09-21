@@ -1,4 +1,5 @@
 """Support for Xiaomi lights."""
+
 import logging
 
 from homeassistant.components.light import (
@@ -35,31 +36,33 @@ from .core.miot_spec import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-DATA_KEY = f'{ENTITY_DOMAIN}.{DOMAIN}'
+DATA_KEY = f"{ENTITY_DOMAIN}.{DOMAIN}"
 
 SERVICE_TO_METHOD = {}
-ATTR_COLOR_TEMP = 'color_temp'
+ATTR_COLOR_TEMP = "color_temp"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     HassEntry.init(hass, config_entry).new_adder(ENTITY_DOMAIN, async_add_entities)
-    await async_setup_config_entry(hass, config_entry, async_setup_platform, async_add_entities, ENTITY_DOMAIN)
+    await async_setup_config_entry(
+        hass, config_entry, async_setup_platform, async_add_entities, ENTITY_DOMAIN
+    )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     hass.data.setdefault(DATA_KEY, {})
-    hass.data[DOMAIN]['add_entities'][ENTITY_DOMAIN] = async_add_entities
-    config['hass'] = hass
-    model = str(config.get(CONF_MODEL) or '')
-    spec = hass.data[DOMAIN]['miot_specs'].get(model)
+    hass.data[DOMAIN]["add_entities"][ENTITY_DOMAIN] = async_add_entities
+    config["hass"] = hass
+    model = str(config.get(CONF_MODEL) or "")
+    spec = hass.data[DOMAIN]["miot_specs"].get(model)
     entities = []
     if isinstance(spec, MiotSpec):
-        for srv in spec.get_services('ir_light_control'):
-            if srv.name in ['ir_light_control']:
+        for srv in spec.get_services("ir_light_control"):
+            if srv.name in ["ir_light_control"]:
                 entities.append(MiirLightEntity(config, srv))
                 continue
     for entity in entities:
-        hass.data[DOMAIN]['entities'][entity.unique_id] = entity
+        hass.data[DOMAIN]["entities"][entity.unique_id] = entity
     async_add_entities(entities, update_before_add=True)
     bind_services_to_entries(hass, SERVICE_TO_METHOD)
 
@@ -71,34 +74,42 @@ class LightEntity(XEntity, BaseEntity, RestoreEntity):
 
     def on_init(self):
         self._attr_names = {}
-        self._brightness_for_on = self.custom_config_number('brightness_for_on')
-        self._brightness_for_off = self.custom_config_number('brightness_for_off')
-        mode_property = self.custom_config('mode_property', 'mode')
-        color_property = self.custom_config('color_property', 'color')
-        color_temp_property = self.custom_config('color_temp_property', 'color_temp')
-        brightness_property = self.custom_config('brightness_property', 'brightness')
+        self._brightness_for_on = self.custom_config_number("brightness_for_on")
+        self._brightness_for_off = self.custom_config_number("brightness_for_off")
+        mode_property = self.custom_config("mode_property", "mode")
+        color_property = self.custom_config("color_property", "color")
+        color_temp_property = self.custom_config("color_temp_property", "color_temp")
+        brightness_property = self.custom_config("brightness_property", "brightness")
         self._attr_color_mode = ColorMode.ONOFF
 
         modes = set()
         for attr in self.conv.attrs:
             conv = self.device.find_converter(attr)
-            prop = getattr(conv, 'prop', None) if conv else None
+            prop = getattr(conv, "prop", None) if conv else None
             if not isinstance(prop, MiotProperty):
                 continue
-            if prop.in_list(['brightness', brightness_property]) or isinstance(conv, MiotBrightnessConv):
+            if prop.in_list(["brightness", brightness_property]) or isinstance(
+                conv, MiotBrightnessConv
+            ):
                 self._attr_names[ATTR_BRIGHTNESS] = attr
                 self._attr_color_mode = ColorMode.BRIGHTNESS
-            elif prop.in_list(['color_temperature', color_temp_property]) or isinstance(conv, MiotColorTempConv):
+            elif prop.in_list(["color_temperature", color_temp_property]) or isinstance(
+                conv, MiotColorTempConv
+            ):
                 self._attr_color_mode = ColorMode.COLOR_TEMP
                 modes.add(ColorMode.COLOR_TEMP)
 
                 # percentage may be incorrectly declared as kelvin
                 # e.g. https://home.miot-spec.com/spec/mrbond.airer.m33a
-                if prop.unit == 'percentage' or prop.range_max() == 100:
-                    self._attr_min_color_temp_kelvin = MiotColorTempConv.percentage_to_kelvin(prop.range_max())
-                    self._attr_max_color_temp_kelvin = MiotColorTempConv.percentage_to_kelvin(prop.range_min())
+                if prop.unit == "percentage" or prop.range_max() == 100:
+                    self._attr_min_color_temp_kelvin = (
+                        MiotColorTempConv.percentage_to_kelvin(prop.range_max())
+                    )
+                    self._attr_max_color_temp_kelvin = (
+                        MiotColorTempConv.percentage_to_kelvin(prop.range_min())
+                    )
                     self._attr_names[ATTR_COLOR_TEMP_KELVIN] = attr
-                elif prop.unit in ['kelvin']:
+                elif prop.unit in ["kelvin"]:
                     self._attr_min_color_temp_kelvin = prop.range_min()
                     self._attr_max_color_temp_kelvin = prop.range_max()
                     self._attr_names[ATTR_COLOR_TEMP_KELVIN] = attr
@@ -106,13 +117,19 @@ class LightEntity(XEntity, BaseEntity, RestoreEntity):
                     # Convert mireds range to kelvin (mireds min -> kelvin max)
                     mireds_min = prop.range_min()
                     mireds_max = prop.range_max()
-                    self._attr_min_color_temp_kelvin = int(1_000_000 / mireds_max) if mireds_max else 2000
-                    self._attr_max_color_temp_kelvin = int(1_000_000 / mireds_min) if mireds_min else 6500
+                    self._attr_min_color_temp_kelvin = (
+                        int(1_000_000 / mireds_max) if mireds_max else 2000
+                    )
+                    self._attr_max_color_temp_kelvin = (
+                        int(1_000_000 / mireds_min) if mireds_min else 6500
+                    )
                     self._attr_names[ATTR_COLOR_TEMP] = attr
-            elif prop.in_list(['color', color_property]) or isinstance(conv, MiotRgbColorConv):
+            elif prop.in_list(["color", color_property]) or isinstance(
+                conv, MiotRgbColorConv
+            ):
                 self._attr_names[ATTR_RGB_COLOR] = attr
                 modes.add(ColorMode.RGB)
-            elif prop.in_list(['mode', 'color_mode', mode_property]):
+            elif prop.in_list(["mode", "color_mode", mode_property]):
                 self._attr_names[ATTR_EFFECT] = attr
                 self._attr_effect_list = prop.list_descriptions()
                 self._attr_supported_features |= LightEntityFeature.EFFECT
@@ -172,10 +189,13 @@ XEntity.CLS[ENTITY_DOMAIN] = LightEntity
 
 class MiirLightEntity(MiirToggleEntity, BaseEntity):
     def __init__(self, config: dict, miot_service: MiotService):
-        super().__init__(miot_service, config=config, logger=_LOGGER)
+        # super().__init__(miot_service, config=config, logger=_LOGGER)
+        super().__init__(
+            miot_service, config=config, logger=_LOGGER, domain=ENTITY_DOMAIN
+        )
 
-        self._act_bright_up = miot_service.get_action('brightness_up')
-        self._act_bright_dn = miot_service.get_action('brightness_down')
+        self._act_bright_up = miot_service.get_action("brightness_up")
+        self._act_bright_dn = miot_service.get_action("brightness_down")
         if self._act_bright_up or self._act_bright_dn:
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             self._attr_brightness = 127

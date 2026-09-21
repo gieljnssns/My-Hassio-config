@@ -401,7 +401,16 @@ class FeatureCentralBoilerManager(BaseFeatureManager):
         total_power = self.total_power_active_for_boiler
         power_threshold = self.total_power_active_for_boiler_threshold
 
-        return total_power >= power_threshold
+        total_power_watts = power_to_watts(
+            total_power,
+            self._total_power_active_entity.native_unit_of_measurement,
+        )
+        power_threshold_watts = power_to_watts(
+            power_threshold,
+            self._total_power_active_threshold_number_entity.native_unit_of_measurement,
+        )
+
+        return total_power_watts >= power_threshold_watts
 
     def _get_all_boiler_entity_ids(self, force=False) -> list[str]:
         """Returns the list of all VTherm entity ids which have an influence
@@ -446,6 +455,14 @@ class FeatureCentralBoilerManager(BaseFeatureManager):
         """Refresh the custom attributes of the central boiler entity"""
         if self._central_boiler_entity:
             self._central_boiler_entity.refresh_custom_attributes()
+
+    async def refresh_active_devices(self):
+        """Recalculate boiler activity sensors and the resulting boiler state."""
+        if self._nb_active_device_number_entity is not None:
+            await self._nb_active_device_number_entity.calculate_nb_active_devices(None)
+        if self._total_power_active_entity is not None:
+            await self._total_power_active_entity.calculate_total_power(None)
+        await self.calculate_central_boiler_state(None)
 
     @property
     def nb_device_active_for_boiler_entity(self):

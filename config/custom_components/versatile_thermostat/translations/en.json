@@ -31,6 +31,7 @@
                     "auto_start_stop": "Auto start and stop",
                     "valve_regulation": "Valve regulation configuration",
                     "sync_device_internal_temp": "Synchronize device temperature",
+                    "humidity": "Humidity",
                     "lock": "Lock",
                     "heating_failure_detection": "Heating failure detection",
                     "auto_tpi_configuration": "Auto TPI - Configuration",
@@ -69,6 +70,7 @@
                     "temp_max": "Maximum temperature allowed",
                     "step_temperature": "Temperature step",
                     "device_power": "Device power",
+                    "power_unit": "Power unit (for device power)",
                     "use_central_mode": "Enable the control by central entity (requires central config). Check to enable the control of the VTherm with the select central_mode entities.",
                     "use_main_central_config": "Use additional central main configuration. Check to use the central main configuration (outdoor temperature, min, max, step, ...).",
                     "used_by_controls_central_boiler": "Used by central boiler. Check if this VTherm should have control on the central boiler"
@@ -80,7 +82,8 @@
                     "step_temperature": "Temperature step for setting the target temperature",
                     "temperature_sensor_entity_id": "Room temperature sensor entity id",
                     "last_seen_temperature_sensor_entity_id": "Last seen room temperature sensor entity id. Should be datetime sensor",
-                    "external_temperature_sensor_entity_id": "Outdoor temperature sensor entity id. Not used if central configuration is selected"
+                    "external_temperature_sensor_entity_id": "Outdoor temperature sensor entity id. Not used if central configuration is selected",
+                    "power_unit": "Device power consumption unit"
                 }
             },
             "features": {
@@ -108,6 +111,10 @@
                     "auto_regulation_mode": "Self-regulation",
                     "auto_regulation_dtemp": "Regulation threshold",
                     "auto_regulation_periode_min": "Regulation minimum period",
+                    "opening_threshold_degree": "Opening threshold degree",
+                    "min_opening_degrees": "Min opening degrees",
+                    "max_opening_degrees": "Max opening degrees",
+                    "max_closing_degree": "Max closing degree",
                     "auto_regulation_use_device_temp": "Use internal temperature of the underlying",
                     "inverse_switch_command": "Inverse switch command",
                     "auto_fan_mode": "Auto fan mode",
@@ -125,6 +132,10 @@
                     "auto_regulation_mode": "Auto adjustment of the target temperature",
                     "auto_regulation_dtemp": "The threshold in ° (or % for valve) under which the temperature change will not be sent",
                     "auto_regulation_periode_min": "Duration in minutes between two regulation update",
+                    "opening_threshold_degree": "Valve opening value under which the valve should be considered as closed (and then 'max_closing_degree' will apply)",
+                    "min_opening_degrees": "Opening degree minimum value for each underlying device when previous threshold is exceeded, comma separated. Default to 0. Example: 20, 25, 30",
+                    "max_opening_degrees": "Opening degree maximum value. The valve will never open more than this value",
+                    "max_closing_degree": "Closing degree maximum value. The valve will never be closed above this value. Set it to 100 to fully close the valve",
                     "auto_regulation_use_device_temp": "Use the eventual internal temperature sensor of the underlying to speedup the self-regulation (not needed in most cases)",
                     "inverse_switch_command": "For switch with pilot wire and diode you may need to inverse the command",
                     "auto_fan_mode": "Automatically activate fan when huge heating/cooling is necessary",
@@ -208,16 +219,18 @@
             },
             "power": {
                 "title": "Power management",
-                "description": "Power management attributes.\nGives the power and max power sensor of your home.\nSpecify the power consumption of the heater when on.\nAll sensors and device power should use the same unit (kW or W)",
+                "description": "Power management attributes.\nSelect W or kW for each VTherm device power, and W, kW, or Auto for the central configuration.\nValues are normalized internally, so W and kW can be mixed safely.",
                 "data": {
                     "power_sensor_entity_id": "Power",
                     "max_power_sensor_entity_id": "Max power",
+                    "power_unit": "Central power unit",
                     "power_temp": "Shedding temperature",
                     "use_power_central_config": "Use central power configuration"
                 },
                 "data_description": {
                     "power_sensor_entity_id": "Power sensor entity id",
                     "max_power_sensor_entity_id": "Max power sensor entity id",
+                    "power_unit": "Select the power unit or Auto to auto-detect from the sensor",
                     "power_temp": "Temperature for Power shedding",
                     "use_power_central_config": "Check to use the central power configuration. Uncheck to use a specific power configuration for this VTherm"
                 }
@@ -349,6 +362,18 @@
                     "sync_entity_ids": "The list of the entities used to synchronize the internal temperature of the underlying devices. There should be one per underlying device. Should be a calibration entity if checkbox is selected or a temperature entity otherwise. Both are `number` entities."
                 }
             },
+            "humidity": {
+                "title": "Humidity",
+                "description": "Use an external humidity sensor. Detected sensor: {humidity_detected}",
+                "data": {
+                    "use_humidity_feature": "Use humidity sensor",
+                    "humidity_sensor_entity_id": "Humidity sensor"
+                },
+                "data_description": {
+                    "use_humidity_feature": "Disable this option to use the underlying climate humidity only.",
+                    "humidity_sensor_entity_id": "Leave empty to automatically use the detected sensor."
+                }
+            },
             "heating_failure_detection": {
                 "title": "Heating failure detection",
                 "description": "Configure the heating failure detection feature. This detects anomalies when heating is expected but temperature doesn't increase, or when heating is off but temperature keeps rising.",
@@ -383,6 +408,7 @@
             "min_opening_degrees_format": "A comma separated list of positive integer is expected. Example: 20, 25, 30",
             "max_opening_degrees_format": "A comma separated list of positive integer between 0 and the max valve opening is expected. Example: 80, 85, 90",
             "min_max_opening_degrees_inconsistent": "For each underlying device, max_opening_degrees must be strictly greater than min_opening_degrees. Please check your configuration.",
+            "valve_control_parameters_cardinality_incorrect": "The minimum and maximum opening degree lists cannot contain more values than the configured valves",
             "vswitch_configuration_incorrect": "The command customization configuration is incorrect. It is required for underlying entities that are not switches, and the format must be service_name[/attribute:value]. More information is available in the README"
         },
         "abort": {
@@ -420,6 +446,7 @@
                     "auto_start_stop": "Auto start and stop",
                     "valve_regulation": "Valve regulation configuration",
                     "sync_device_internal_temp": "Synchronize device temperature",
+                    "humidity": "Humidity",
                     "lock": "Lock",
                     "heating_failure_detection": "Heating failure detection",
                     "finalize": "All done",
@@ -494,6 +521,10 @@
                     "auto_regulation_mode": "Self-regulation",
                     "auto_regulation_dtemp": "Regulation threshold",
                     "auto_regulation_periode_min": "Regulation minimum period",
+                    "opening_threshold_degree": "Opening threshold degree",
+                    "min_opening_degrees": "Min opening degrees",
+                    "max_opening_degrees": "Max opening degrees",
+                    "max_closing_degree": "Max closing degree",
                     "auto_regulation_use_device_temp": "Use internal temperature of the underlying",
                     "inverse_switch_command": "Inverse switch command",
                     "auto_fan_mode": "Auto fan mode",
@@ -511,6 +542,10 @@
                     "auto_regulation_mode": "Auto adjustment of the target temperature",
                     "auto_regulation_dtemp": "The threshold in ° (or % for valve) under which the temperature change will not be sent",
                     "auto_regulation_periode_min": "Duration in minutes between two regulation update",
+                    "opening_threshold_degree": "Valve opening value under which the valve should be considered as closed (and then 'max_closing_degree' will apply)",
+                    "min_opening_degrees": "Opening degree minimum value for each underlying device when previous threshold is exceeded, comma separated. Default to 0. Example: 20, 25, 30",
+                    "max_opening_degrees": "Opening degree maximum value. The valve will never open more than this value",
+                    "max_closing_degree": "Closing degree maximum value. The valve will never be closed above this value. Set it to 100 to fully close the valve",
                     "auto_regulation_use_device_temp": "Use the eventual internal temperature sensor of the underlying to speedup the self-regulation (not needed in most cases)",
                     "inverse_switch_command": "For switch with pilot wire and diode you may need to inverse the command",
                     "auto_fan_mode": "Automatically activate fan when huge heating/cooling is necessary",
@@ -693,6 +728,18 @@
                     "sync_entity_ids": "The list of the entities used to synchronize the internal temperature of the underlying devices. There should be one per underlying device. Should be a calibration entity if checkbox is selected or a temperature entity otherwise. Both are `number` entities."
                 }
             },
+            "humidity": {
+                "title": "Humidity - {name}",
+                "description": "Use an external humidity sensor. Detected sensor: {humidity_detected}",
+                "data": {
+                    "use_humidity_feature": "Use humidity sensor",
+                    "humidity_sensor_entity_id": "Humidity sensor"
+                },
+                "data_description": {
+                    "use_humidity_feature": "Disable this option to use the underlying climate humidity only.",
+                    "humidity_sensor_entity_id": "Leave empty to automatically use the detected sensor."
+                }
+            },
             "auto_tpi_configuration": {
                 "title": "Auto TPI - Configuration - {name}",
                 "description": "General settings for Auto TPI learning.",
@@ -773,6 +820,7 @@
             "min_opening_degrees_format": "A comma separated list of positive integer is expected. Example: 20, 25, 30",
             "max_opening_degrees_format": "A comma separated list of positive integer between 0 and the max value of the valve is expected. Example: 80, 85, 90",
             "min_max_opening_degrees_inconsistent": "For each underlying device, max_opening_degrees must be strictly greater than min_opening_degrees. Please check your configuration.",
+            "valve_control_parameters_cardinality_incorrect": "The minimum and maximum opening degree lists cannot contain more values than the configured valves",
             "vswitch_configuration_incorrect": "The command customization configuration is incorrect. It is required for underlying entities that are not switches, and the format must be service_name[/attribute:value]. More information is available in the README"
         },
         "abort": {
@@ -843,6 +891,19 @@
             "options": {
                 "discovery": "Discovery",
                 "fine_tuning": "Fine Tuning"
+            }
+        },
+        "power_unit": {
+            "options": {
+                "w": "Watts (W)",
+                "kw": "Kilowatts (kW)"
+            }
+        },
+        "central_power_unit": {
+            "options": {
+                "w": "Watts (W)",
+                "kw": "Kilowatts (kW)",
+                "auto": "Auto (auto-detect from sensor)"
             }
         }
     },
@@ -946,6 +1007,10 @@
         }
     },
     "services": {
+        "set_hvac_mode_sleep": {
+            "name": "Set HVAC Mode to Sleep",
+            "description": "Sets a VTherm to seasonal sleep. It is shown as off and, for over_climate with direct valve regulation and over_valve, sends a raw 100% valve-opening request. The physical opening remains subject to configured valve control and number entity limits."
+        },
         "set_auto_tpi_mode": {
             "name": "Set Auto TPI mode",
             "description": "Enable or disable the Auto TPI learning mode",

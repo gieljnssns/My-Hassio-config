@@ -69,6 +69,7 @@ from .feature_lock_manager import FeatureLockManager
 from .feature_timed_preset_manager import FeatureTimedPresetManager
 from .feature_heating_failure_detection_manager import FeatureHeatingFailureDetectionManager
 from .feature_repair_incorrect_state_manager import FeatureRepairIncorrectStateManager
+from .feature_humidity_manager import FeatureHumidityManager
 from .state_manager import StateManager
 from .vtherm_state import VThermState
 from .vtherm_preset import VThermPreset, HIDDEN_PRESETS, PRESET_AC_SUFFIX
@@ -95,6 +96,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         .union(FeatureTimedPresetManager.unrecorded_attributes)
         .union(FeatureHeatingFailureDetectionManager.unrecorded_attributes)
         .union(FeatureRepairIncorrectStateManager.unrecorded_attributes)
+        .union(FeatureHumidityManager.unrecorded_attributes)
     )
 
     ##
@@ -139,7 +141,6 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         self._ac_mode = None
 
         self._cur_temp = None
-
         self._temp_sensor_entity_id = None
         self._last_seen_temp_sensor_entity_id = None
         self._ext_temp_sensor_entity_id = None
@@ -152,6 +153,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         self._attr_translation_key = "versatile_thermostat"
 
         self._total_energy = None
+        self._energy_unit_needs_persistence = False
         _LOGGER.debug("%s - _init_ resetting energy to None", self)
 
         # Because energy of climate is calculated in the thermostat we have to keep
@@ -229,6 +231,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         self._timed_preset_manager: FeatureTimedPresetManager = FeatureTimedPresetManager(self, hass)
         self._heating_failure_detection_manager: FeatureHeatingFailureDetectionManager = FeatureHeatingFailureDetectionManager(self, hass)
         self._repair_incorrect_state_manager: FeatureRepairIncorrectStateManager = FeatureRepairIncorrectStateManager(self, hass)
+        self._humidity_manager: FeatureHumidityManager = FeatureHumidityManager(self, hass)
 
         self.register_manager(self._presence_manager)
         self.register_manager(self._power_manager)
@@ -239,6 +242,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         self.register_manager(self._timed_preset_manager)
         self.register_manager(self._heating_failure_detection_manager)
         self.register_manager(self._repair_incorrect_state_manager)
+        self.register_manager(self._humidity_manager)
 
         self._cancel_recalculate_later: Callable[[], None] | None = None
 
@@ -289,12 +293,13 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
     ) -> dict[str, Any]:
         """Removes all values from config with are concerned by central_config"""
 
-        def clean_one(cfg, schema: vol.Schema):
+        def clean_one(cfg, schema: vol.Schema, excluded_keys: set[str] | None = None):
             """Clean one schema"""
+            excluded_keys = excluded_keys or set()
             for marker in schema.schema:
                 # Extract the actual key from Voluptuous Marker objects
                 key = marker.schema if hasattr(marker, 'schema') else marker
-                if key in cfg:
+                if key in cfg and key not in excluded_keys:
                     del cfg[key]
 
         cfg = config_entry.copy()
@@ -313,7 +318,14 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
                 clean_one(cfg, STEP_CENTRAL_MOTION_DATA_SCHEMA)
 
             if cfg.get(CONF_USE_POWER_CENTRAL_CONFIG) is True:
-                clean_one(cfg, STEP_CENTRAL_POWER_DATA_SCHEMA)
+                # The central unit may be ``auto``. It only controls how the
+                # central input sensors are read; each VTherm keeps its own
+                # display unit (W or kW) for its power and energy sensors.
+                clean_one(
+                    cfg,
+                    STEP_CENTRAL_POWER_DATA_SCHEMA,
+                    {CONF_POWER_UNIT},
+                )
 
             if cfg.get(CONF_USE_PRESENCE_CENTRAL_CONFIG) is True:
                 clean_one(cfg, STEP_CENTRAL_PRESENCE_DATA_SCHEMA)
@@ -411,6 +423,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         self._last_ext_temperature_measure = self.now
 
         self._total_energy = None
+        self._energy_unit_needs_persistence = False
         _LOGGER.debug("%s - post_init_ resetting energy to None", self)
 
         # Read the parameter from configuration.yaml if it exists
@@ -604,6 +617,11 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         if self.is_ready:
             await self.init_underlyings_completed()
 
+    @property
+    def current_humidity(self) -> float | None:
+        """Return humidity supplied by the external humidity manager."""
+        return self._humidity_manager.current_humidity
+
     async def init_underlyings_completed(self, under_entity_id: Optional[str] = None):
         """All underlyings have been initialized. Then we can finish our initialization"""
         _LOGGER.debug("%s - Calling init_underlyings_completed", self)
@@ -633,6 +651,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
             #    need_write_state = True
 
         await self.update_states(force=True)
+        self._persist_energy_unit_if_needed()
         self.recalculate()
 
         # check initial state should be done after the current state has been calculated and so after the manager has been updated
@@ -646,8 +665,24 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
         restored
         """
 
+    def _persist_energy_unit_if_needed(self) -> None:
+        """Persist restored energy in the current power unit when it changed."""
+        if not self._energy_unit_needs_persistence:
+            return
+
+        _LOGGER.info(
+            "%s - Rewriting restored energy from its previous unit to %s",
+            self,
+            self.power_manager.power_unit,
+        )
+        self.update_custom_attributes()
+        self.async_write_ha_state()
+        self._energy_unit_needs_persistence = False
+
     async def get_my_previous_state(self):
         """Try to get my previous state"""
+        self._energy_unit_needs_persistence = False
+
         # Check If we have an old state
         old_state = await self.async_get_last_state()
         _LOGGER.debug(
@@ -703,7 +738,38 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
             if old_total_energy is None:
                 # Fallback to root level for backward compatibility
                 old_total_energy = old_state.attributes.get(ATTR_TOTAL_ENERGY)
-            self._total_energy = old_total_energy if old_total_energy is not None else 0
+            # Energy is stored in the unit associated with the configured power unit.
+            # Legacy states did not record that unit, so use their persisted
+            # configuration before falling back to the migrated current one.
+            if old_total_energy is not None:
+                stored_unit = specific_states.get(ATTR_TOTAL_ENERGY_UNIT)
+                if stored_unit is None:
+                    stored_unit = old_state.attributes.get("configuration", {}).get(
+                        CONF_POWER_UNIT,
+                        self.power_manager.power_unit,
+                    )
+                current_unit = to_internal_power_unit(self.power_manager.power_unit) or POWER_UNIT_WATT
+                stored_unit = to_internal_power_unit(stored_unit)
+                has_invalid_stored_unit = stored_unit not in (POWER_UNIT_WATT, POWER_UNIT_KILO_WATT)
+                if has_invalid_stored_unit:
+                    _LOGGER.warning(
+                        "%s - Restored energy has an unsupported unit %s. Using %s",
+                        self,
+                        stored_unit,
+                        self.power_manager.power_unit,
+                    )
+                    stored_unit = current_unit
+                self._energy_unit_needs_persistence = has_invalid_stored_unit or stored_unit != current_unit
+                if self._energy_unit_needs_persistence:
+                    _LOGGER.info(
+                        "%s - Restored energy unit %s differs from configured unit %s",
+                        self,
+                        to_legal_power_unit(stored_unit),
+                        self.power_manager.power_unit,
+                    )
+                self._total_energy = power_to_watts(old_total_energy, stored_unit) if old_total_energy else 0
+            else:
+                self._total_energy = 0
             _LOGGER.debug(
                 "%s - get_my_previous_state restored energy is %s",
                 self,
@@ -1937,6 +2003,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
                 "last_central_mode": self.last_central_mode,
                 "last_update_datetime": self.now.isoformat(),
                 "ext_current_temperature": self._cur_ext_temp,
+                "humidity_sensor_entity_id": self._humidity_manager.humidity_sensor_entity_id,
                 "last_temperature_datetime": self._last_temperature_measure.astimezone(self._current_tz).isoformat(),
                 "last_ext_temperature_datetime": self._last_ext_temperature_measure.astimezone(self._current_tz).isoformat(),
                 "should_device_be_active": self.should_device_be_active,
@@ -1947,7 +2014,11 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
                 "temperature_slope": round(self.last_temperature_slope or 0, 3),
                 "hvac_off_reason": self.hvac_off_reason,
                 "hvac_mode_reason": self.hvac_mode_reason,
-                ATTR_TOTAL_ENERGY: self.total_energy,
+                ATTR_TOTAL_ENERGY: self.power_manager.from_watts(
+                    self.total_energy,
+                    self.power_manager.power_unit,
+                ),
+                ATTR_TOTAL_ENERGY_UNIT: self.power_manager.power_unit,
                 "last_change_time_from_vtherm": (
                     self._last_change_time_from_vtherm.astimezone(self._current_tz).isoformat() if self._last_change_time_from_vtherm is not None else None
                 ),
@@ -1969,6 +2040,7 @@ class BaseThermostat(ClimateEntity, RestoreEntity, Generic[T]):
                 "max_on_percent": self._max_on_percent,
                 "have_valve_regulation": self.have_valve_regulation,
                 "cycle_min": self._cycle_min,
+                CONF_POWER_UNIT: self.power_manager.power_unit,
             },
             "preset_temperatures": {
                 "frost_temp": self._presets.get(VThermPreset.FROST, 0),

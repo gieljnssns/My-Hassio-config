@@ -20,8 +20,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
-from .benchmark import DEFAULT_ENDPOINT
 from .config import (
+    BENCHMARK_KEYS,
     CONF_AZIMUTH,
     CONF_BATTERY_CAPACITY_KWH,
     CONF_BATTERY_EFFICIENCY,
@@ -30,8 +30,6 @@ from .config import (
     CONF_BATTERY_MIN_SOC,
     CONF_BATTERY_SOC_ENTITY,
     CONF_BENCHMARK_ENABLED,
-    CONF_BENCHMARK_KEY,
-    CONF_BENCHMARK_URL,
     CONF_CURTAILMENT_ENTITY,
     CONF_INVERTER_MAX_KW,
     CONF_KWP,
@@ -101,12 +99,6 @@ _SOC_ENTITY = selector.EntitySelector(selector.EntitySelectorConfig(domain="sens
 _PERCENT = selector.NumberSelector(
     selector.NumberSelectorConfig(min=0, max=100, step=1, mode=_BOX, unit_of_measurement="%")
 )
-# Benchmark upload: the write key is the only secret this integration holds, so it is typed and
-# redisplayed as a password rather than sitting in clear in the form.
-# Shown, never typed: the address is there so a contributor can see exactly where the measurements
-# go, and a field that can be edited by hand is a broken upload waiting to happen.
-_ENDPOINT = selector.TextSelector(selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT, read_only=True))
-_SECRET = selector.TextSelector(selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD))
 
 
 def _optional(fields: dict[Any, Any], key: str, sel: Any, suggested_value: Any) -> None:
@@ -142,8 +134,9 @@ def _line_fields(
     _optional(fields, CONF_LINE_INVERTER_MAX_KW, _INVERTER, arr.get(CONF_LINE_INVERTER_MAX_KW))
     fields[vol.Required(CONF_TRACKER, default=arr.get(CONF_TRACKER, TRACKER_NONE))] = _TRACKER
     # Optional per-line location override, for a line far enough from the entry's home coordinates
-    # (e.g. a detached outbuilding) that it needs its own sun geometry. Suggested with the entry's
-    # home coordinates so the field never comes up blank, but it is only stored once actually set.
+    # (e.g. a detached outbuilding) that it needs its own sun geometry. Pre-filled with the entry's
+    # home coordinates so the field never comes up blank, which does mean an untouched form hands
+    # them straight back and the line then carries its own copy of the home position.
     _optional(fields, CONF_LATITUDE, _LATITUDE, arr.get(CONF_LATITUDE, home_lat))
     _optional(fields, CONF_LONGITUDE, _LONGITUDE, arr.get(CONF_LONGITUDE, home_lon))
     if allow_remove:
@@ -191,17 +184,13 @@ def _settings_fields(
 
 
 def _benchmark_fields(settings: dict[str, Any]) -> dict[Any, Any]:
-    """Taking part in the public benchmark: the switch, the key, and where to send it.
+    """Taking part in the public benchmark: one switch, and nothing else.
 
-    Off unless deliberately switched on and given a key. What it sends, and why it has to be sent at
-    the moment it is predicted rather than reconstructed later, is in benchmark.py.
+    There is no key to ask for and no address to type, so this form is a single checkbox. What
+    travels, and why it has to be written down at the moment it is predicted rather than
+    reconstructed later, is in benchmark.py.
     """
-    fields: dict[Any, Any] = {
-        vol.Optional(CONF_BENCHMARK_ENABLED, default=bool(settings.get(CONF_BENCHMARK_ENABLED, False))): _BOOL
-    }
-    _optional(fields, CONF_BENCHMARK_KEY, _SECRET, settings.get(CONF_BENCHMARK_KEY))
-    fields[vol.Optional(CONF_BENCHMARK_URL, default=settings.get(CONF_BENCHMARK_URL) or DEFAULT_ENDPOINT)] = _ENDPOINT
-    return fields
+    return {vol.Optional(CONF_BENCHMARK_ENABLED, default=bool(settings.get(CONF_BENCHMARK_ENABLED, False))): _BOOL}
 
 
 class HeliosForecastConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]  # HA passes `domain` to __init_subclass__
@@ -266,6 +255,17 @@ class HeliosForecastOptionsFlow(OptionsFlow):
     def _current(self) -> dict[str, Any]:
         return {**self.config_entry.data, **self.config_entry.options}
 
+    def _save(self, data: dict[str, Any]) -> ConfigFlowResult:
+        """Write the whole configuration back as the entry's data, and leave its options empty.
+
+        Everything that reads the configuration merges data over options, so a setting typed at
+        install time lives in data and an options save could only ever shadow it: clearing a field
+        here left the old value in place, unreachable through the interface. Keeping one source of
+        truth is what makes an empty field mean empty.
+        """
+        self.hass.config_entries.async_update_entry(self.config_entry, data=data, options={})
+        return self.async_create_entry(title="", data={})
+
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         return self.async_show_menu(step_id="init", menu_options=["settings", "lines", "benchmark"])
 
@@ -273,26 +273,28 @@ class HeliosForecastOptionsFlow(OptionsFlow):
         """Edit the entry-level settings, keeping the existing panel lines untouched."""
         current = self._current()
         if user_input is not None:
-            data = merge_entry_data(split_settings(user_input), lines_from_config(current))
-            return self.async_create_entry(title="", data=data)
+            # This form shows the installation settings only: a field left empty here is cleared, while the
+            # benchmark switch, decided on its own step, is carried over untouched.
+            kept = {k: v for k, v in split_settings(current).items() if k in BENCHMARK_KEYS}
+            data = merge_entry_data({**kept, **split_settings(user_input)}, lines_from_config(current))
+            return self._save(data)
         schema = vol.Schema(_settings_fields(self.hass.config.latitude, self.hass.config.longitude, settings=current))
         return self.async_show_form(step_id="settings", data_schema=schema)
 
     async def async_step_benchmark(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Join the community benchmark, or leave it.
 
-        A menu of its own rather than a few fields at the bottom of the settings: taking part is a
+        A menu of its own rather than a checkbox at the bottom of the settings: taking part is a
         decision, not a setting, and someone who has never heard of it should be able to find out
-        what it is without reading a form.
+        what it is without reading a form of thirty other fields.
         """
         current = self._current()
         if user_input is not None:
-            settings = {**split_settings(current), **split_settings(user_input)}
-            # The address is only written down when it is not the standard one. Storing the default
-            # would freeze it in every entry, and the day the collector moves nobody could follow.
-            if settings.get(CONF_BENCHMARK_URL) == DEFAULT_ENDPOINT:
-                settings.pop(CONF_BENCHMARK_URL, None)
-            return self.async_create_entry(title="", data=merge_entry_data(settings, lines_from_config(current)))
+            # The mirror of the settings step: the installation settings are carried over, the benchmark
+            # switch is exactly what this form says, so leaving really leaves.
+            kept = {k: v for k, v in split_settings(current).items() if k not in BENCHMARK_KEYS}
+            settings = {**kept, **split_settings(user_input)}
+            return self._save(merge_entry_data(settings, lines_from_config(current)))
         return self.async_show_form(step_id="benchmark", data_schema=vol.Schema(_benchmark_fields(current)))
 
     async def async_step_lines(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -308,8 +310,7 @@ class HeliosForecastOptionsFlow(OptionsFlow):
                 return await self.async_step_lines()
             # Never let the entry end up with zero lines (e.g. every line removed).
             lines = self._lines or existing
-            data = merge_entry_data(split_settings(current), lines)
-            return self.async_create_entry(title="", data=data)
+            return self._save(merge_entry_data(split_settings(current), lines))
 
         editing_existing = self._index < len(existing)
         arr = existing[self._index] if editing_existing else None

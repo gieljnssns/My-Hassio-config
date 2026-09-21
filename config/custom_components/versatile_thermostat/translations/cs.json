@@ -31,6 +31,7 @@
                     "auto_start_stop": "Automatické spuštění a zastavení",
                     "valve_regulation": "Konfigurace regulace ventilu",
                     "sync_device_internal_temp": "Synchronizace teploty zařízení",
+                    "humidity": "Vlhkost",
                     "heating_failure_detection": "Detekce poruchy vytápění",
                     "lock": "Správa zámku",
                     "finalize": "Vše hotovo",
@@ -69,6 +70,7 @@
                     "temp_max": "Maximální povolená teplota",
                     "step_temperature": "Krok teploty",
                     "device_power": "Výkon zařízení",
+                    "power_unit": "Jednotka výkonu (pro výkon zařízení)",
                     "use_central_mode": "Povolit řízení centrální entitou (vyžaduje centrální konfiguraci). Zaškrtněte pro povolení řízení VTherm pomocí entit select central_mode.",
                     "use_main_central_config": "Použít dodatečnou centrální hlavní konfiguraci. Zaškrtněte pro použití centrální hlavní konfigurace (venkovní teplota, min, max, krok, ...).",
                     "used_by_controls_central_boiler": "Používán centrálním kotlem. Zaškrtněte, pokud má tento VTherm řídit centrální kotel"
@@ -80,7 +82,8 @@
                     "step_temperature": "Krok teploty pro nastavení cílové teploty",
                     "temperature_sensor_entity_id": "ID entity senzoru teploty místnosti",
                     "last_seen_temperature_sensor_entity_id": "ID entity posledního času měření teploty místnosti. Měl by být datetime senzor",
-                    "external_temperature_sensor_entity_id": "ID entity senzoru venkovní teploty. Nepoužívá se, pokud je zvolena centrální konfigurace"
+                    "external_temperature_sensor_entity_id": "ID entity senzoru venkovní teploty. Nepoužívá se, pokud je zvolena centrální konfigurace",
+                    "power_unit": "Jednotka spotřeby výkonu zařízení"
                 }
             },
             "features": {
@@ -108,6 +111,10 @@
                     "auto_regulation_mode": "Samoregulace",
                     "auto_regulation_dtemp": "Práh regulace",
                     "auto_regulation_periode_min": "Minimální perioda regulace",
+                    "opening_threshold_degree": "Prahová hodnota otevření",
+                    "min_opening_degrees": "Minimální stupně otevření",
+                    "max_opening_degrees": "Maximální stupeň otevření",
+                    "max_closing_degree": "Maximální stupeň zavření",
                     "auto_regulation_use_device_temp": "Použít vnitřní teplotu podřízeného zařízení",
                     "inverse_switch_command": "Invertovat příkaz spínače",
                     "auto_fan_mode": "Automatický režim ventilátoru",
@@ -125,6 +132,10 @@
                     "auto_regulation_mode": "Automatické přizpůsobení cílové teploty",
                     "auto_regulation_dtemp": "Práh v ° (nebo % pro ventil), pod kterým nebude změna teploty odeslána",
                     "auto_regulation_periode_min": "Doba v minutách mezi dvěma aktualizacemi regulace",
+                    "opening_threshold_degree": "Hodnota otevření ventilu, pod kterou by měl být ventil považován za zavřený (a pak bude aplikován 'max_closing_degree')",
+                    "min_opening_degrees": "Minimální hodnota stupně otevření pro každé podřízené zařízení, oddělené čárkami. Výchozí je 0. Příklad: 20, 25, 30",
+                    "max_opening_degrees": "Maximální hodnota stupně otevření pro každé základní zařízení, oddělené čárkami. Výchozí hodnota je 100. Ventil se nikdy neotevře více než tato hodnota. Příklad: 80, 85, 90",
+                    "max_closing_degree": "Maximální hodnota stupně zavření. Ventil nebude nikdy uzavřen více než tato hodnota. Nastavte na 100 pro úplné zavření ventilu",
                     "auto_regulation_use_device_temp": "Použít případný vnitřní teplotní senzor podřízeného zařízení pro zrychlení samoregulace",
                     "inverse_switch_command": "Pro spínače s pilotem a diodou možná budete muset invertovat příkaz",
                     "auto_fan_mode": "Automaticky aktivovat ventilátor při nutnosti velkého vytápění/chlazení",
@@ -208,16 +219,18 @@
             },
             "power": {
                 "title": "Správa výkonu",
-                "description": "Atributy správy výkonu.\nUdává výkon a maximální výkonový senzor vašeho domova.\nUveďte spotřebu energie ohřívače při zapnutí.\nVšechny senzory a výkon zařízení by měly používat stejnou jednotku (kW nebo W)&nbsp;[![?](https://img.icons8.com/color/18/help.png)](https://github.com/jmcollin78/versatile_thermostat/blob/main/documentation/cs/feature-power.md)",
+                "description": "Atributy správy výkonu.\nPro výkon zařízení každého VTherm vyberte W nebo kW a pro centralizovanou konfiguraci W, kW nebo Automaticky.\nHodnoty jsou interně normalizovány, takže lze bezpečně kombinovat W a kW.&nbsp;[![?](https://img.icons8.com/color/18/help.png)](https://github.com/jmcollin78/versatile_thermostat/blob/main/documentation/cs/feature-power.md)",
                 "data": {
                     "power_sensor_entity_id": "Výkon",
                     "max_power_sensor_entity_id": "Maximální výkon",
+                    "power_unit": "Jednotka centrálního výkonu",
                     "power_temp": "Teplota odlehčení",
                     "use_power_central_config": "Použít centrální konfiguraci výkonu"
                 },
                 "data_description": {
                     "power_sensor_entity_id": "ID entity senzoru výkonu",
                     "max_power_sensor_entity_id": "ID entity senzoru maximálního výkonu",
+                    "power_unit": "Vyberte jednotku výkonu nebo Automaticky k automatické detekci ze senzoru",
                     "power_temp": "Teplota pro odlehčení výkonu",
                     "use_power_central_config": "Zaškrtněte pro použití centrální konfigurace výkonu. Odškrtněte pro použití specifické konfigurace výkonu pro tento VTherm"
                 }
@@ -303,6 +316,18 @@
                     "sync_entity_ids": "Seznam entit používaných k synchronizaci vnitřní teploty základních zařízení. Na každé základní zařízení by měl být jeden. Pokud je zaškrtnuto políčko, měla by to být kalibrační entita nebo jinak entita teploty. Oba jsou entity typu „číslo“."
                 }
             },
+            "humidity": {
+                "title": "Vlhkost",
+                "description": "Použít externí senzor vlhkosti. Zjištěný senzor: {humidity_detected}",
+                "data": {
+                    "use_humidity_feature": "Použít senzor vlhkosti",
+                    "humidity_sensor_entity_id": "Senzor vlhkosti"
+                },
+                "data_description": {
+                    "use_humidity_feature": "Vypnutím této možnosti použijete pouze vlhkost podřízené klimatizace.",
+                    "humidity_sensor_entity_id": "Ponechte prázdné pro automatické použití zjištěného senzoru."
+                }
+            },
             "heating_failure_detection": {
                 "title": "Detekce poruchy vytápění",
                 "description": "Nakonfigurujte funkci detekce poruchy vytápění. To detekuje anomálie, když se očekává ohřev, ale teplota se nezvyšuje, nebo když je topení vypnuté, ale teplota stále stoupá.",
@@ -379,6 +404,7 @@
             "no_central_config": "Nemůžete vybrat 'použít centrální konfiguraci', protože nebyla nalezena žádná centrální konfigurace. Pro její použití musíte vytvořit Versatile Thermostat typu 'Centrální konfigurace'.",
             "max_opening_degrees_format": "Seznam celých kladných čísel mezi 0 a 100 oddělených čárkou je očekáván. Příklad: 80, 85, 90",
             "min_max_opening_degrees_inconsistent": "Pro každé základní zařízení musí být max_opening_degrees striktně větší než min_opening_degrees. Zkontrolujte prosím svou konfiguraci.",
+            "valve_control_parameters_cardinality_incorrect": "Seznamy minimálních a maximálních stupňů otevření nesmí obsahovat více hodnot než je nakonfigurovaných ventilů",
             "vswitch_configuration_incorrect": "Konfigurace virtuálního spínače je nesprávná. Jedna nebo více podřízených entit není správně nakonfigurována.",
             "service_configuration_format": "Formát konfigurace služby je nesprávný",
             "valve_regulation_nb_entities_incorrect": "Počet entit ventilů pro regulaci ventilů by měl být roven počtu podřízených zařízení",
@@ -420,6 +446,7 @@
                     "auto_start_stop": "Automatické spuštění a zastavení",
                     "valve_regulation": "Konfigurace regulace ventilu",
                     "sync_device_internal_temp": "Synchronizace teploty zařízení",
+                    "humidity": "Vlhkost",
                     "heating_failure_detection": "Detekce poruchy vytápění",
                     "lock": "Zámek",
                     "finalize": "Vše hotovo",
@@ -494,6 +521,10 @@
                     "auto_regulation_mode": "Samoregulace",
                     "auto_regulation_dtemp": "Práh regulace",
                     "auto_regulation_periode_min": "Minimální perioda regulace",
+                    "opening_threshold_degree": "Prahová hodnota otevření",
+                    "min_opening_degrees": "Minimální stupně otevření",
+                    "max_opening_degrees": "Maximální stupeň otevření",
+                    "max_closing_degree": "Maximální stupeň zavření",
                     "auto_regulation_use_device_temp": "Použít vnitřní teplotu podřízeného zařízení",
                     "inverse_switch_command": "Invertovat příkaz spínače",
                     "auto_fan_mode": "Automatický režim ventilátoru",
@@ -511,6 +542,10 @@
                     "auto_regulation_mode": "Automatické přizpůsobení cílové teploty",
                     "auto_regulation_dtemp": "Práh v ° (nebo % pro ventil), pod kterým nebude změna teploty odeslána",
                     "auto_regulation_periode_min": "Doba v minutách mezi dvěma aktualizacemi regulace",
+                    "opening_threshold_degree": "Hodnota otevření ventilu, pod kterou by měl být ventil považován za zavřený (a pak bude aplikován 'max_closing_degree')",
+                    "min_opening_degrees": "Minimální hodnota stupně otevření pro každé podřízené zařízení, oddělené čárkami. Výchozí je 0. Příklad: 20, 25, 30",
+                    "max_opening_degrees": "Maximální hodnota stupně otevření pro každé základní zařízení, oddělené čárkami. Výchozí hodnota je 100. Ventil se nikdy neotevře více než tato hodnota. Příklad: 80, 85, 90",
+                    "max_closing_degree": "Maximální hodnota stupně zavření. Ventil nebude nikdy uzavřen více než tato hodnota. Nastavte na 100 pro úplné zavření ventilu",
                     "auto_regulation_use_device_temp": "Použít případný vnitřní teplotní senzor podřízeného zařízení pro zrychlení samoregulace",
                     "inverse_switch_command": "Pro spínače s pilotem a diodou možná budete muset invertovat příkaz",
                     "auto_fan_mode": "Automaticky aktivovat ventilátor při nutnosti velkého vytápění/chlazení",
@@ -693,6 +728,18 @@
                     "sync_entity_ids": "Seznam entit používaných k synchronizaci vnitřní teploty základních zařízení. Na každé základní zařízení by měl být jeden. Pokud je zaškrtnuto políčko, měla by to být kalibrační entita nebo jinak entita teploty. Oba jsou entity typu „číslo“."
                 }
             },
+            "humidity": {
+                "title": "Vlhkost - {name}",
+                "description": "Použít externí senzor vlhkosti. Zjištěný senzor: {humidity_detected}",
+                "data": {
+                    "use_humidity_feature": "Použít senzor vlhkosti",
+                    "humidity_sensor_entity_id": "Senzor vlhkosti"
+                },
+                "data_description": {
+                    "use_humidity_feature": "Vypnutím této možnosti použijete pouze vlhkost podřízené klimatizace.",
+                    "humidity_sensor_entity_id": "Ponechte prázdné pro automatické použití zjištěného senzoru."
+                }
+            },
             "heating_failure_detection": {
                 "title": "Detekce poruchy vytápění - {name}",
                 "description": "Nakonfigurujte funkci detekce poruchy vytápění. To detekuje anomálie, když se očekává ohřev, ale teplota se nezvyšuje, nebo když je topení vypnuté, ale teplota stále stoupá.",
@@ -769,6 +816,7 @@
             "no_central_config": "Nemůžete zaškrtnout 'použít centrální konfiguraci', protože nebyla nalezena žádná centrální konfigurace. Pro její použití musíte vytvořit Versatile Thermostat typu 'Centrální konfigurace'.",
             "max_opening_degrees_format": "Seznam celých kladných čísel mezi 0 a 100 oddělených čárkou je očekáván. Příklad: 80, 85, 90",
             "min_max_opening_degrees_inconsistent": "Pro každé základní zařízení musí být max_opening_degrees striktně větší než min_opening_degrees. Zkontrolujte prosím svou konfiguraci.",
+            "valve_control_parameters_cardinality_incorrect": "Seznamy minimálních a maximálních stupňů otevření nesmí obsahovat více hodnot než je nakonfigurovaných ventilů",
             "vswitch_configuration_incorrect": "Konfigurace virtuálního spínače je nesprávná. Jedna nebo více podřízených entit není správně nakonfigurována.",
             "service_configuration_format": "Formát konfigurace služby je nesprávný",
             "valve_regulation_nb_entities_incorrect": "Počet entit ventilů pro regulaci ventilů by měl být roven počtu podřízených zařízení",
@@ -843,6 +891,19 @@
             "options": {
                 "discovery": "Objev",
                 "fine_tuning": "Jemné ladění"
+            }
+        },
+        "power_unit": {
+            "options": {
+                "w": "Watty (W)",
+                "kw": "Kilowatty (kW)"
+            }
+        },
+        "central_power_unit": {
+            "options": {
+                "w": "Watty (W)",
+                "kw": "Kilowatty (kW)",
+                "auto": "Automaticky (automatická detekce ze senzoru)"
             }
         }
     },
@@ -936,6 +997,10 @@
         }
     },
     "services": {
+        "set_hvac_mode_sleep": {
+            "name": "Nastavit režim HVAC na spánek",
+            "description": "Přepne VTherm do sezónního režimu spánku. Je zobrazen jako vypnutý a pro over_climate s přímým řízením ventilu a over_valve odešle hrubý požadavek na otevření ventilu 100 %. Fyzické otevření stále podléhá nastavenému řízení ventilu a limitům entity number."
+        },
         "set_auto_tpi_mode": {
             "name": "Nastavte režim Auto TPI",
             "description": "Povolte nebo zakažte režim automatického učení TPI",

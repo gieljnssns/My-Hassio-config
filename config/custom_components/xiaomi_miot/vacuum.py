@@ -7,9 +7,11 @@ from datetime import timedelta
 from homeassistant.components.vacuum import (  # noqa: F401
     DOMAIN as ENTITY_DOMAIN,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,  # v2022.5
 )
-from .core.const import VacuumActivity
+
+# from .core.const import VacuumActivity
 
 from . import (
     DOMAIN,
@@ -70,7 +72,10 @@ class MiotVacuumEntity(MiotEntity, StateVacuumEntity):
     _attr_activity = None
 
     def __init__(self, config: dict, miot_service: MiotService):
-        super().__init__(miot_service, config=config, logger=_LOGGER)
+        # super().__init__(miot_service, config=config, logger=_LOGGER)
+        super().__init__(
+            miot_service, config=config, logger=_LOGGER, domain=ENTITY_DOMAIN
+        )
 
         self._prop_power = miot_service.get_property("on", "power")
         self._prop_status = miot_service.get_property("status")

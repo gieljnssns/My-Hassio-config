@@ -622,7 +622,13 @@ class UnderlyingClimate(UnderlyingEntity):
         if hvac_mode in (VThermHvacMode_HEAT, VThermHvacMode_COOL):
 
             async def callback_resend_temp(_):
-                await self.set_temperature(self._thermostat.target_temperature, None, None)
+                temperature = self.last_sent_temperature
+                if temperature is None:
+                    temperature = getattr(self._thermostat, "regulated_target_temperature", None)
+                if temperature is None:
+                    temperature = self._thermostat.target_temperature
+                if temperature is not None:
+                    await self.set_temperature(temperature, None, None)
 
             if self._cancel_set_temperature_later:
                 self._cancel_set_temperature_later()
@@ -1130,6 +1136,13 @@ class UnderlyingClimate(UnderlyingEntity):
         if str(hvac_mode) == str(under_hvac_mode):
             return False
 
+        if self._thermostat.now < self._last_command_sent_datetime + timedelta(seconds=resend_delay_sec):
+            _LOGGER.debug(
+                "%s - Skipping climate state repair while waiting for the last command to be applied",
+                self,
+            )
+            return False
+
         await self.set_hvac_mode(hvac_mode)
         return True
 
@@ -1160,6 +1173,10 @@ class UnderlyingValve(UnderlyingEntity):
         thermostat: Any,
         valve_entity_id: str,
         entity_type: UnderlyingEntityType = UnderlyingEntityType.VALVE,
+        min_opening_degree: int | None = None,
+        max_opening_degree: int | None = None,
+        max_closing_degree: int = 100,
+        opening_threshold: int = 0,
     ) -> None:
         """Initialize the underlying valve"""
 
@@ -1175,6 +1192,10 @@ class UnderlyingValve(UnderlyingEntity):
         self._max_open: float | None = None
         self._last_sent_temperature = None
         self._last_sent_opening_value: int | None = None
+        self._min_opening_degree = min_opening_degree
+        self._max_opening_degree = max_opening_degree
+        self._max_closing_degree = max_closing_degree
+        self._opening_threshold = opening_threshold
 
     def init_valve_state_min_max_open(self):
         """Initialize the min and max open percent"""
@@ -1237,7 +1258,7 @@ class UnderlyingValve(UnderlyingEntity):
         _LOGGER.debug("%s - Stopping underlying valve entity %s", self, self._entity_id)
         # Issue 341
         is_active = self.is_device_active
-        self._percent_open = self.clamp_sent_value(0)
+        self._percent_open = self._get_controlled_percent(0)
         if is_active:
             await self.send_percent_open()
 
@@ -1301,7 +1322,7 @@ class UnderlyingValve(UnderlyingEntity):
 
     async def set_valve_open_percent(self):
         """Update the valve open percent"""
-        caped_val = self.clamp_sent_value(self._thermostat.valve_open_percent)
+        caped_val = self._get_controlled_percent(self._thermostat.valve_open_percent)
         if self._percent_open == caped_val:
             # No changes
             return
@@ -1316,6 +1337,23 @@ class UnderlyingValve(UnderlyingEntity):
         # self._hass.create_task(self.send_percent_open())
         await self.send_percent_open()
 
+    def _get_controlled_percent(self, raw_percent: int) -> int:
+        """Convert the raw TPI command to the effective valve command."""
+        if self._min_opening_degree is None or self._max_opening_degree is None:
+            return self.clamp_sent_value(raw_percent)
+
+        opening_degree, _ = OpeningClosingDegreeCalculation.calculate_opening_closing_degree(
+            brut_valve_open_percent=raw_percent,
+            min_opening_degree=self._min_opening_degree,
+            max_closing_degree=self._max_closing_degree,
+            max_opening_degree=self._max_opening_degree,
+            opening_threshold=self._opening_threshold,
+        )
+        if not self.is_initialized:
+            raise RuntimeError(f"{self} - cannot clamp sent value because underlying is not initialized")
+
+        return round(max(self._min_open, min(opening_degree, self._max_open)))
+
     def remove_entity(self):
         """Remove the entity"""
         super().remove_entity()
@@ -1329,6 +1367,11 @@ class UnderlyingValve(UnderlyingEntity):
     def last_sent_opening_value(self) -> int | None:
         """Return the last sent value to the valve"""
         return self._last_sent_opening_value
+
+    @property
+    def command_percent(self) -> int | None:
+        """Return the effective command sent to the valve."""
+        return self._percent_open
 
     @overrides
     async def check_and_repair(self) -> bool:
@@ -1470,6 +1513,17 @@ class UnderlyingValveRegulation(UnderlyingValve):
         if self._has_max_closing_degree:
             entities.append(self._closing_degree_entity_id)
         self._state_manager.add_underlying_entities(entities)
+
+    @overrides
+    def _get_controlled_percent(self, raw_percent: int) -> int:
+        """Keep the raw TPI percentage until ``send_percent_open``.
+
+        ``send_percent_open`` below already applies the opening/closing-degree
+        calculation. The base implementation performs the same calculation for
+        direct ``over_valve`` control, which would otherwise transform the
+        value twice for valve-regulation underlyings.
+        """
+        return raw_percent
 
     async def send_percent_open(self, fixed_value: int = None):
         """Send the percent open to the underlying valve"""

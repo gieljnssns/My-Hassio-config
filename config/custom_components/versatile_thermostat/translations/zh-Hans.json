@@ -69,6 +69,7 @@
                     "temp_max": "允许的最高温度",
                     "step_temperature": "温度步进",
                     "device_power": "设备功率",
+                    "power_unit": "功率单位（用于设备功率）",
                     "use_central_mode": "启用中央实体控制（需要中央配置）。勾选后可使用 central_mode 选择实体控制此 VTherm。",
                     "use_main_central_config": "使用额外的中央主配置。勾选后使用中央主配置（室外温度、最小值、最大值、步进等）。",
                     "used_by_controls_central_boiler": "用于中央锅炉。勾选后，此 VTherm 可以控制中央锅炉"
@@ -80,7 +81,8 @@
                     "step_temperature": "设置目标温度的温度步长",
                     "temperature_sensor_entity_id": "室温传感器实体 ID",
                     "last_seen_temperature_sensor_entity_id": "室温传感器最后更新时间实体 ID。应为 datetime 传感器",
-                    "external_temperature_sensor_entity_id": "室外温度传感器实体 ID。如果选择中央配置则不使用"
+                    "external_temperature_sensor_entity_id": "室外温度传感器实体 ID。如果选择中央配置则不使用",
+                    "power_unit": "设备功率消耗单位"
                 }
             },
             "features": {
@@ -108,6 +110,10 @@
                     "auto_regulation_mode": "自调节",
                     "auto_regulation_dtemp": "调节阈值",
                     "auto_regulation_periode_min": "调节最短周期",
+                    "opening_threshold_degree": "开启阈值度数",
+                    "min_opening_degrees": "最小开度",
+                    "max_opening_degrees": "最大开度",
+                    "max_closing_degree": "最大关闭度",
                     "auto_regulation_use_device_temp": "使用底层内部温度",
                     "inverse_switch_command": "反向开关指令",
                     "auto_fan_mode": "自动风扇模式",
@@ -125,6 +131,10 @@
                     "auto_regulation_mode": "自动调节目标温度",
                     "auto_regulation_dtemp": "以 °（或阀门的 %）为单位的阈值，低于该阈值将不会发送温度变化",
                     "auto_regulation_periode_min": "两次调节更新之间的时间间隔（分钟）",
+                    "opening_threshold_degree": "阀门开度低于此值时应视为关闭（并应用 max_closing_degree）",
+                    "min_opening_degrees": "当超过先前阈值时每个底层设备的开度最小值，以逗号分隔。默认为 0。示例：20,25,30",
+                    "max_opening_degrees": "开度最大值。阀门的开度永远不会超过该值",
+                    "max_closing_degree": "关闭度最大值。阀门永远不会在高于该值时关闭。将其设置为 100 以完全关闭阀门",
                     "auto_regulation_use_device_temp": "使用底层设备可能提供的内部温度传感器来加速自调节（大多数情况下不需要）",
                     "inverse_switch_command": "对于带导引线和二极管的开关，可能需要反转命令",
                     "auto_fan_mode": "当需要大量加热/冷却时自动启动风扇",
@@ -208,16 +218,18 @@
             },
             "power": {
                 "title": "功率管理",
-                "description": "电源管理属性。\n提供您家的功率和最大功率传感器。\n指定加热器开启时的功耗。\n所有传感器和设备功率应使用相同的单位（kW 或 W）",
+                "description": "功率管理属性。\n为每个 VTherm 的设备功率选择 W 或 kW，并为中央配置选择 W、kW 或自动。\n数值会在内部标准化，因此可以安全地混用 W 和 kW。",
                 "data": {
                     "power_sensor_entity_id": "功率",
                     "max_power_sensor_entity_id": "最大功率",
+                    "power_unit": "中央功率单位",
                     "power_temp": "削峰温度",
                     "use_power_central_config": "采用集中电源配置"
                 },
                 "data_description": {
                     "power_sensor_entity_id": "功率传感器实体 ID",
                     "max_power_sensor_entity_id": "最大功率传感器实体 ID",
+                    "power_unit": "选择功率单位，或选择自动以从传感器自动检测",
                     "power_temp": "削峰温度",
                     "use_power_central_config": "勾选使用中央电源配置。取消选中为此 VTherm 使用特定电源配置"
                 }
@@ -383,6 +395,7 @@
             "min_opening_degrees_format": "需要逗号分隔的正整数列表。示例：20,25,30",
             "max_opening_degrees_format": "需要一个介于 0 和最大阀门开度之间的逗号分隔的正整数列表。示例：80,85,90",
             "min_max_opening_degrees_inconsistent": "对于每个底层设备，max_opening_degrees 必须严格大于 min_opening_degrees。请检查你的配置。",
+            "valve_control_parameters_cardinality_incorrect": "最小和最大开度列表中的值不能多于已配置的阀门数量",
             "vswitch_configuration_incorrect": "命令自定义配置不正确。对于不是 switch 的底层实体，这是必需的，格式必须为 service_name[/attribute:value]。更多信息请参阅 README。"
         },
         "abort": {
@@ -455,6 +468,7 @@
                     "temp_max": "允许的最高温度",
                     "step_temperature": "温度步进",
                     "device_power": "设备功率",
+                    "power_unit": "功率单位（用于设备功率）",
                     "use_central_mode": "启用中央实体控制（需要中央配置）。勾选后可使用 central_mode 选择实体控制此 VTherm。",
                     "use_main_central_config": "使用额外的中央主配置。勾选后使用中央主配置（室外温度、最小值、最大值、步进等）。",
                     "used_by_controls_central_boiler": "用于中央锅炉。勾选后，此 VTherm 可以控制中央锅炉"
@@ -466,7 +480,8 @@
                     "step_temperature": "设置目标温度的温度步长",
                     "temperature_sensor_entity_id": "室温传感器实体 ID",
                     "last_seen_temperature_sensor_entity_id": "室温传感器最后更新时间实体 ID。应为 datetime 传感器",
-                    "external_temperature_sensor_entity_id": "室外温度传感器实体 ID。如果选择中央配置则不使用"
+                    "external_temperature_sensor_entity_id": "室外温度传感器实体 ID。如果选择中央配置则不使用",
+                    "power_unit": "设备功率消耗单位"
                 }
             },
             "features": {
@@ -500,7 +515,11 @@
                     "on_command_text": "开启命令自定义",
                     "vswitch_on_command": "可选开启命令",
                     "off_command_text": "关闭命令自定义",
-                    "vswitch_off_command": "可选关闭命令"
+                    "vswitch_off_command": "可选关闭命令",
+                    "opening_threshold_degree": "开启阈值度数",
+                    "min_opening_degrees": "最小开度",
+                    "max_opening_degrees": "最大开度",
+                    "max_closing_degree": "最大关闭度"
                 },
                 "data_description": {
                     "underlying_entity_ids": "要控制的设备 - 1 为必填项",
@@ -514,7 +533,11 @@
                     "auto_regulation_use_device_temp": "使用底层设备可能提供的内部温度传感器来加速自调节（大多数情况下不需要）",
                     "inverse_switch_command": "对于带导引线和二极管的开关，可能需要反转命令",
                     "auto_fan_mode": "当需要大量加热/冷却时自动启动风扇",
-                    "on_command_text": "对于 `select` 或 `climate` 类型的底层，您必须自定义命令。"
+                    "on_command_text": "对于 `select` 或 `climate` 类型的底层，您必须自定义命令。",
+                    "opening_threshold_degree": "阀门开度低于此值时应视为关闭（并应用 max_closing_degree）",
+                    "min_opening_degrees": "当超过先前阈值时每个底层设备的开度最小值，以逗号分隔。默认为 0。示例：20,25,30",
+                    "max_opening_degrees": "开度最大值。阀门的开度永远不会超过该值",
+                    "max_closing_degree": "关闭度最大值。阀门永远不会在高于该值时关闭。将其设置为 100 以完全关闭阀门"
                 }
             },
             "tpi": {
@@ -773,6 +796,7 @@
             "min_opening_degrees_format": "需要逗号分隔的正整数列表。示例：20,25,30",
             "max_opening_degrees_format": "需要一个介于 0 和阀门最大值之间的逗号分隔的正整数列表。示例：80,85,90",
             "min_max_opening_degrees_inconsistent": "对于每个底层设备，max_opening_degrees 必须严格大于 min_opening_degrees。请检查你的配置。",
+            "valve_control_parameters_cardinality_incorrect": "最小和最大开度列表中的值不能多于已配置的阀门数量",
             "vswitch_configuration_incorrect": "命令自定义配置不正确。对于不是 switch 的底层实体，这是必需的，格式必须为 service_name[/attribute:value]。更多信息请参阅 README。"
         },
         "abort": {
@@ -843,6 +867,19 @@
             "options": {
                 "discovery": "发现",
                 "fine_tuning": "微调"
+            }
+        },
+        "power_unit": {
+            "options": {
+                "w": "瓦特 (W)",
+                "kw": "千瓦 (kW)"
+            }
+        },
+        "central_power_unit": {
+            "options": {
+                "w": "瓦特 (W)",
+                "kw": "千瓦 (kW)",
+                "auto": "自动 (从传感器自动检测)"
             }
         }
     },
@@ -936,6 +973,10 @@
         }
     },
     "services": {
+        "set_hvac_mode_sleep": {
+            "name": "将 HVAC 模式设为休眠",
+            "description": "将 VTherm 设为季节性休眠。它会显示为关闭；对于采用直接阀门调节的 over_climate 和 over_valve，会发送原始的 100% 阀门开度请求。实际开度仍受已配置的阀门控制和 number 实体限制。"
+        },
         "set_auto_tpi_mode": {
             "name": "设置自动 TPI 模式",
             "description": "启用或禁用自动 TPI 学习模式",

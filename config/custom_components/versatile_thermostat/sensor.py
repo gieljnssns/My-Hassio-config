@@ -9,8 +9,6 @@ from homeassistant.core import HomeAssistant, callback, Event, State
 
 from homeassistant.const import (
     UnitOfTime,
-    UnitOfPower,
-    UnitOfEnergy,
     PERCENTAGE,
 )
 
@@ -58,8 +56,6 @@ from .const import (
     CONF_AUTO_TPI_MODE,
     overrides,
 )
-
-THRESHOLD_WATT_KILO = 100
 
 _LOGGER = get_vtherm_logger(__name__)
 
@@ -166,15 +162,18 @@ class EnergySensor(VersatileThermostatBaseEntity, SensorEntity):
         """Called when my climate have change"""
         # _LOGGER.debug("%s - climate state change", self._attr_unique_id)
 
-        energy = self.my_climate.total_energy
-        if energy is None:
+        energy_wh = self.my_climate.total_energy
+        if energy_wh is None:
             return
 
-        if math.isnan(energy) or math.isinf(energy):
+        if math.isnan(energy_wh) or math.isinf(energy_wh):
             raise ValueError(f"Sensor has illegal state {self.my_climate.total_energy}")
 
+        # Convert from internal Wh to display unit (Wh or kWh)
+        displayed_energy = self.my_climate.power_manager.from_watts(energy_wh, self.my_climate.power_manager.power_unit)
+
         old_state = self._attr_native_value
-        self._attr_native_value = round(energy, self.suggested_display_precision)
+        self._attr_native_value = round(displayed_energy, self.suggested_display_precision)
         if old_state != self._attr_native_value:
             self.async_write_ha_state()
         return
@@ -200,10 +199,7 @@ class EnergySensor(VersatileThermostatBaseEntity, SensorEntity):
         if not self.my_climate:
             return None
 
-        if self.my_climate.power_manager.device_power > THRESHOLD_WATT_KILO:
-            return UnitOfEnergy.WATT_HOUR
-        else:
-            return UnitOfEnergy.KILO_WATT_HOUR
+        return self.my_climate.power_manager.energy_unit
 
     @property
     def suggested_display_precision(self) -> int | None:
@@ -233,12 +229,17 @@ class MeanPowerSensor(VersatileThermostatBaseEntity, SensorEntity):
             raise ValueError(f"Sensor has illegal state {mean_cycle_power}")
 
         mean_cycle_power = float(mean_cycle_power)
+        # Convert from internal Watts to display unit
+        displayed_power = self.my_climate.power_manager.from_watts(mean_cycle_power, self.my_climate.power_manager.power_unit)
 
         old_state = self._attr_native_value
-        self._attr_native_value = round(
-            mean_cycle_power,
-            self.suggested_display_precision,
-        )
+        if displayed_power is None:
+            self._attr_native_value = None
+        else:
+            self._attr_native_value = round(
+                displayed_power,
+                self.suggested_display_precision,
+            )
         if old_state != self._attr_native_value:
             self.async_write_ha_state()
         return
@@ -260,13 +261,10 @@ class MeanPowerSensor(VersatileThermostatBaseEntity, SensorEntity):
         if not self.my_climate:
             return None
 
-        if self.my_climate.power_manager.device_power > THRESHOLD_WATT_KILO:
-            return UnitOfPower.WATT
-        else:
-            return UnitOfPower.KILO_WATT
+        return self.my_climate.power_manager.power_unit
 
     @property
-    def suggested_display_precision(self) -> int | None:
+    def suggested_display_precision(self) -> int:
         """Return the suggested number of decimal digits for display."""
         return 3
 
@@ -970,6 +968,10 @@ class TotalPowerActiveDeviceForBoilerSensor(NbActiveDeviceForBoilerSensor):
         return SensorDeviceClass.POWER
 
     @property
+    def native_unit_of_measurement(self) -> str | None:
+        return VersatileThermostatAPI.get_vtherm_api(self._hass).central_power_manager.power_unit
+
+    @property
     def suggested_display_precision(self) -> int | None:
         """Return the suggested number of decimal digits for display."""
         return 2
@@ -1060,6 +1062,9 @@ class TotalPowerActiveDeviceForBoilerSensor(NbActiveDeviceForBoilerSensor):
         active_device_ids = []
 
         for entity in self._entities:
+            if getattr(entity, "is_sleeping", False) is True:
+                continue
+
             mean_cycle_power = entity.power_manager.mean_cycle_power
             if mean_cycle_power is None or mean_cycle_power <= 0:
                 continue
@@ -1074,7 +1079,11 @@ class TotalPowerActiveDeviceForBoilerSensor(NbActiveDeviceForBoilerSensor):
 
             total_active_power += mean_cycle_power
 
-        self._attr_native_value = total_active_power
+        central_power_manager = VersatileThermostatAPI.get_vtherm_api(self._hass).central_power_manager
+        self._attr_native_value = central_power_manager.from_watts(
+            total_active_power,
+            central_power_manager.power_unit,
+        )
         self._attr_active_device_ids = active_device_ids
 
         self.async_write_ha_state()

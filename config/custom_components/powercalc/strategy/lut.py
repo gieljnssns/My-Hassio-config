@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from functools import partial
-import gzip
 import logging
 import os
 from typing import Any, TextIO, cast
@@ -30,6 +29,7 @@ from custom_components.powercalc.errors import (
 )
 from custom_components.powercalc.power_profile.power_profile import PowerProfile
 
+from .profile_data import open_profile_csv
 from .strategy_interface import PowerCalculationStrategyInterface
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ class LutRegistry:
         self._hass = hass
         self._lut_entries: dict[_CacheKey, _LutEntry] = {}
         self._effect_entries: dict[_CacheKey, _EffectEntry] = {}
-        self._supported_modes: dict[tuple[str, str, str], set[LookupMode]] = {}
+        self._supported_modes: dict[tuple[str, str, str | None, str], set[LookupMode]] = {}
 
     async def get_lookup_entry(
         self,
@@ -107,7 +107,7 @@ class LutRegistry:
 
     async def get_supported_modes(self, power_profile: PowerProfile) -> set[LookupMode]:
         """Return the LUT modes supported by the profile."""
-        cache_key = (power_profile.manufacturer, power_profile.model, "supported_modes")
+        cache_key = (power_profile.manufacturer, power_profile.model, power_profile.sub_profile, "supported_modes")
         supported_modes = self._supported_modes.get(cache_key)
         if supported_modes is None:
             supported_modes = set()
@@ -184,11 +184,11 @@ class LutRegistry:
         gzip_path = f"{path}.gz"
         if os.path.exists(gzip_path):
             _LOGGER.debug("Loading LUT data file: %s", gzip_path)
-            return gzip.open(gzip_path, "rt")
+            return open_profile_csv(gzip_path)
 
         if os.path.exists(path):
             _LOGGER.debug("Loading LUT data file: %s", path)
-            return open(path)
+            return open_profile_csv(path)
 
         raise LutFileNotFoundError(f"Data file not found: {path}")
 
@@ -232,7 +232,7 @@ class LutStrategy(PowerCalculationStrategyInterface):
             return None
 
         effect = attrs.get(ATTR_EFFECT)
-        if effect and str(effect).lower() not in ("off", "none", "white"):
+        if effect and str(effect).lower() not in ("off", "none", "white", "default", "mode color"):
             return await self._calculate_effect_power(entity_state, str(effect), brightness)
 
         lut_mode = LookupMode.from_color_mode(color_mode)

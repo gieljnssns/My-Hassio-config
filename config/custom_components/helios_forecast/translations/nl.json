@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Helios Forecast: paneellijn",
-        "description": "Eén prognose voor één paneellijn (een groep panelen met dezelfde oriëntatie). Voeg de integratie opnieuw toe voor elke extra lijn. Laat de locatie leeg om je Home Assistant-thuislocatie te gebruiken.",
+        "description": "Eén prognose voor een fotovoltaïsche installatie. Voeg per orientatie een paneellijn toe; meerdere lijnen delen de ene productiesensor en de omvormerlimiet van deze installatie. Laat de locatie leeg om uw Home Assistant-thuislocatie te gebruiken.",
         "data": {
           "name": "Naam (bijv. Zuiddak)",
           "tilt": "Hellingshoek (graden, 0 = plat, 90 = verticaal)",
@@ -14,16 +14,16 @@
           "latitude": "Breedtegraad (optioneel)",
           "longitude": "Lengtegraad (optioneel)",
           "inverter_max_kw": "Max. uitgangsvermogen omvormer (kW, optioneel)",
-          "production_entity": "PV-productiesensor (voor de aangeleerde correctie)",
+          "production_entity": "Sensor van de opgewekte PV-energie (kWh, voor de aangeleerde correctie)",
           "trend_anchor_hour": "Referentie-uur voor dagtrend (0-23, standaard 6)",
-          "add_another": "Add another panel line",
+          "add_another": "Nog een paneellijn toevoegen",
           "battery_capacity_kwh": "Bruikbare batterijcapaciteit (kWh)",
           "battery_soc_entity": "Batterijladingssensor (%)",
           "battery_max_charge_kw": "Max. laadvermogen batterij (kW, optioneel)",
           "battery_max_discharge_kw": "Max. ontlaadvermogen batterij (kW, optioneel)",
           "battery_min_soc": "Batterijreserve, minimale laadtoestand (%, standaard 10)",
           "battery_efficiency": "Retourrendement batterij (%, standaard 90)",
-          "curtailment_entity": "Beperkingssignaal (binaire sensor, optioneel)"
+          "curtailment_entity": "Beperkingssignaal (binaire sensor, input boolean of schakelaar, optioneel)"
         },
         "data_description": {
           "production_entity": "Een cumulatieve energiesensor (kWh), bijv. de totale productie van uw omvormer of energiemeter. Een vermogenssensor (W) werkt niet: die heeft geen langetermijn-somstatistieken, dus het leren en de betrouwbaarheidsindex blijven uit.",
@@ -32,8 +32,8 @@
         }
       },
       "line": {
-        "title": "Helios Forecast: additional panel line",
-        "description": "Panel line {index}: another group of co-oriented panels on the same installation (shared production sensor and inverter).",
+        "title": "Helios Forecast: extra paneellijn",
+        "description": "Paneellijn {index}: nog een groep panelen met dezelfde orientatie op dezelfde installatie (gedeelde productiesensor en omvormer).",
         "data": {
           "tilt": "Hellingshoek (graden, 0 = plat, 90 = verticaal)",
           "azimuth": "Azimut (graden vanaf noord, 90 = oost, 180 = zuid, 270 = west)",
@@ -42,7 +42,7 @@
           "tracker": "Zonnevolger",
           "latitude": "Breedtegraad voor deze lijn (optioneel)",
           "longitude": "Lengtegraad voor deze lijn (optioneel)",
-          "add_another": "Add another panel line"
+          "add_another": "Nog een paneellijn toevoegen"
         }
       }
     }
@@ -51,21 +51,21 @@
     "step": {
       "init": {
         "title": "Helios Forecast",
-        "description": "Choose what to edit.",
+        "description": "Kies wat u wilt bewerken.",
         "menu_options": {
           "settings": "Instellingen bewerken (locatie, omvormer, productiesensor, accu, beperkingssignaal)",
-          "lines": "Edit panel lines",
+          "lines": "Paneellijnen bewerken",
           "benchmark": "Deelnemen aan de gemeenschapsbenchmark"
         }
       },
       "settings": {
-        "title": "Helios Forecast: settings",
+        "title": "Helios Forecast: instellingen",
         "description": "Gedeelde locatie, omvormerlimiet, productiesensor, referentie-uur, accu en beperkingssignaal voor elke paneelrij in deze invoer.",
         "data": {
           "latitude": "Breedtegraad (optioneel)",
           "longitude": "Lengtegraad (optioneel)",
           "inverter_max_kw": "Max. uitgangsvermogen omvormer (kW, optioneel)",
-          "production_entity": "PV-productiesensor (voor de aangeleerde correctie)",
+          "production_entity": "Sensor van de opgewekte PV-energie (kWh, voor de aangeleerde correctie)",
           "trend_anchor_hour": "Referentie-uur voor dagtrend (0-23, standaard 6)",
           "battery_capacity_kwh": "Bruikbare batterijcapaciteit (kWh)",
           "battery_soc_entity": "Batterijladingssensor (%)",
@@ -73,7 +73,7 @@
           "battery_max_discharge_kw": "Max. ontlaadvermogen batterij (kW, optioneel)",
           "battery_min_soc": "Batterijreserve, minimale laadtoestand (%, standaard 10)",
           "battery_efficiency": "Retourrendement batterij (%, standaard 90)",
-          "curtailment_entity": "Beperkingssignaal (binaire sensor, optioneel)"
+          "curtailment_entity": "Beperkingssignaal (binaire sensor, input boolean of schakelaar, optioneel)"
         },
         "data_description": {
           "production_entity": "Een cumulatieve energiesensor (kWh), bijv. de totale productie van uw omvormer of energiemeter. Een vermogenssensor (W) werkt niet: die heeft geen langetermijn-somstatistieken, dus het leren en de betrouwbaarheidsindex blijven uit.",
@@ -82,8 +82,8 @@
         }
       },
       "lines": {
-        "title": "Helios Forecast: panel line {index}/{total}",
-        "description": "Edit panel line {index} of {total}, or tick to add another.",
+        "title": "Helios Forecast: paneellijn {index}/{total}",
+        "description": "Bewerk paneellijn {index} van {total}, of vink aan om er nog een toe te voegen.",
         "data": {
           "tilt": "Hellingshoek (graden, 0 = plat, 90 = verticaal)",
           "azimuth": "Azimut (graden vanaf noord, 90 = oost, 180 = zuid, 270 = west)",
@@ -92,22 +92,18 @@
           "tracker": "Zonnevolger",
           "latitude": "Breedtegraad voor deze lijn (optioneel)",
           "longitude": "Lengtegraad voor deze lijn (optioneel)",
-          "remove_this_line": "Remove this panel line",
-          "add_another": "Add another panel line"
+          "remove_this_line": "Deze paneellijn verwijderen",
+          "add_another": "Nog een paneellijn toevoegen"
         }
       },
       "benchmark": {
         "title": "Helios Forecast: gemeenschapsbenchmark",
-        "description": "Een open meting van hoe nauwkeurig Helios Forecast werkelijk is, op echte installaties, gaandeweg gepubliceerd. Wilt u meedoen? Dat gaat hier: [helios-ha.org/benchmark](https://helios-ha.org/benchmark)\n\nHaal met een klik een sleutel op, zonder account en zonder naam, en plak hem hieronder. Om alles te stoppen, wist u hem.",
+        "description": "Een open meting van hoe nauwkeurig Helios Forecast werkelijk is, op echte installaties, gaandeweg gepubliceerd. Wilt u meedoen? Dat gaat hier: [helios-ha.org/benchmark](https://helios-ha.org/benchmark)\n\nEr is geen sleutel om aan te vragen en geen account om aan te maken: vink het vakje hieronder aan, en dat is alles. Vink het uit om te stoppen.",
         "data": {
-          "benchmark_enabled": "Bijdragen aan de openbare nauwkeurigheidsbenchmark (optioneel)",
-          "benchmark_key": "Benchmarksleutel",
-          "benchmark_url": "Adres van de benchmarkverzamelaar"
+          "benchmark_enabled": "Bijdragen aan de openbare nauwkeurigheidsmeting (optioneel)"
         },
         "data_description": {
-          "benchmark_enabled": "Stuurt eenmaal per uur wat deze installatie voorspelt, zodat het vergeleken kan worden met wat ze werkelijk heeft geproduceerd. De resultaten worden openbaar gepubliceerd. Alleen de geometrie van uw panelen, de voorspelde curve, de gemeten productie en de betrouwbaarheidsindex worden verstuurd: geen entiteitsnamen, geen verbruik, geen andere sensoren, en uw coördinaten afgerond op ongeveer een kilometer. Uit tenzij u het inschakelt.",
-          "benchmark_key": "De schrijfsleutel die u kreeg bij deelname aan de benchmark. Zonder sleutel wordt er niets verstuurd.",
-          "benchmark_url": "Het adres waar de metingen naartoe gaan, getoond zodat u precies weet waarheen."
+          "benchmark_enabled": "Verstuurt eens per uur wat deze installatie voorspelt, zodat het vergeleken kan worden met wat ze werkelijk heeft opgewekt. De resultaten worden openbaar gepubliceerd op helios-ha.org/benchmark. Alleen de geometrie van uw panelen, de voorspelde curve, de gemeten opwekking en de betrouwbaarheidsindex gaan mee: geen entiteitsnamen, geen verbruik, geen andere sensor, en uw coördinaten afgerond op ongeveer een kilometer. Vereist 2026.9.5 of nieuwer, de versie die gemeten wordt. Uit tenzij u het aanzet."
         }
       }
     }
@@ -142,6 +138,147 @@
           "description": "Welke Helios Forecast-installatie moet worden gelezen. Optioneel wanneer er slechts één is geconfigureerd."
         }
       }
+    }
+  },
+  "issues": {
+    "location_invalid": {
+      "title": "Locatie buiten bereik",
+      "description": "De locatie van {entry} ({latitude}, {longitude}) is geen geldige breedte- en lengtegraad. De breedtegraad loopt van -90 tot 90 en de lengtegraad van -180 tot 180; laat beide velden leeg om de locatie van Home Assistant te gebruiken."
+    },
+    "location_far": {
+      "title": "Locatie ver van uw Home Assistant-thuis",
+      "description": "De locatie van {entry} ligt {km} km van het Home Assistant-thuis. Staat de installatie daar echt, negeer dit dan; controleer anders een decimaal van de breedte- of lengtegraad."
+    },
+    "no_lines": {
+      "title": "Geen paneelrij",
+      "description": "{entry} heeft geen paneelrij, dus er valt niets te voorspellen. Voeg minstens één rij toe met hellingshoek, azimut en piekvermogen."
+    },
+    "line_kwp_missing": {
+      "title": "Paneelrij {line}: piekvermogen ontbreekt",
+      "description": "Rij {line} van {entry} heeft geen piekvermogen, of nul. Zonder blijft elk cijfer vlak. Voer het piekvermogen van de rij in kWp in (bijvoorbeeld 3,6 voor 3600 Wp)."
+    },
+    "line_kwp_unit": {
+      "title": "Paneelrij {line}: piekvermogen lijkt in watt",
+      "description": "Rij {line} van {entry} geeft {kwp} kWp op, ver boven een thuisinstallatie. De waarde is hoogstwaarschijnlijk in watt ingevoerd. Voer hem in kilowattpiek in (bijvoorbeeld 4,05 in plaats van 4050)."
+    },
+    "line_tilt": {
+      "title": "Paneelrij {line}: hellingshoek buiten bereik",
+      "description": "Rij {line} van {entry} heeft een hellingshoek van {tilt} graden. De hellingshoek loopt van 0 (plat) tot 90 (verticaal)."
+    },
+    "line_azimuth": {
+      "title": "Paneelrij {line}: azimut buiten bereik",
+      "description": "Rij {line} van {entry} heeft een azimut van {azimuth} graden. Het azimut loopt van 0 tot 360 met de klok mee vanaf het noorden: 90 is oost, 180 zuid, 270 west."
+    },
+    "line_tracker": {
+      "title": "Paneelrij {line}: onbekend trackertype",
+      "description": "Rij {line} van {entry} geeft een tracker van het type {tracker} op, dat deze integratie niet kent. Kies een van de aangeboden types, of geen voor vaste panelen."
+    },
+    "line_location_invalid": {
+      "title": "Paneelrij {line}: coördinaten buiten bereik",
+      "description": "Rij {line} van {entry} heeft coördinaten die geen geldige breedte- en lengtegraad zijn. Corrigeer ze of laat beide velden leeg om de rij op de locatie van de installatie te plaatsen."
+    },
+    "line_location_far": {
+      "title": "Paneelrij {line}: coördinaten ver van de installatie",
+      "description": "Rij {line} van {entry} staat {km} km van de installatie. Panelen in een ver veld kunnen, een verkeerde decimaal is waarschijnlijker; controleer de breedte- en lengtegraad van de rij."
+    },
+    "line_cap_unit": {
+      "title": "Paneelrij {line}: omvormerlimiet lijkt in watt",
+      "description": "Rij {line} van {entry} heeft een omvormerlimiet van {cap} kW voor {kwp} kWp aan panelen. De limiet is hoogstwaarschijnlijk in watt ingevoerd. Voer hem in kilowatt in."
+    },
+    "inverter_cap_unit": {
+      "title": "Omvormerlimiet lijkt in watt",
+      "description": "{entry} heeft een omvormerlimiet van {cap} kW voor {kwp} kWp aan panelen. De limiet is hoogstwaarschijnlijk in watt ingevoerd. Voer hem in kilowatt in (bijvoorbeeld 5 in plaats van 5000)."
+    },
+    "inverter_cap_low": {
+      "title": "Omvormerlimiet ver onder de panelen",
+      "description": "{entry} heeft een omvormerlimiet van {cap} kW voor {kwp} kWp aan panelen, dus de voorspelling wordt bijna de hele dag afgetopt. Klopt de limiet, negeer dit dan; controleer anders de waarde of de eenheid."
+    },
+    "production_entity_unset": {
+      "title": "Geen productiesensor: de voorspelling kan niet leren",
+      "description": "{entry} heeft geen productiesensor. De voorspelling draait op natuurkunde en weer, maar niets corrigeert haar aan wat uw panelen echt leveren. Kies in de instellingen de cumulatieve energiesensor (kWh) van uw omvormer of meter."
+    },
+    "trend_anchor_hour": {
+      "title": "Referentie-uur van de trend buiten bereik",
+      "description": "{entry} heeft een referentie-uur voor de trend van {hour}. Voer een lokaal uur van 0 tot 23 in."
+    },
+    "battery_soc_entity_unset": {
+      "title": "Accu: capaciteit ingesteld maar geen laadtoestandsensor",
+      "description": "{entry} geeft een accu van {capacity} kWh op maar geen laadtoestandsensor, dus de projectie blijft uit. Kies de laadtoestandsensor van de accu (in %) of wis de capaciteit."
+    },
+    "battery_capacity_unset": {
+      "title": "Accu: laadtoestandsensor ingesteld maar geen capaciteit",
+      "description": "{entry} noemt een laadtoestandsensor maar geen bruikbare capaciteit, dus de projectie blijft uit. Voer de bruikbare capaciteit van de accu in kWh in of wis de sensor."
+    },
+    "battery_capacity": {
+      "title": "Accucapaciteit buiten bereik",
+      "description": "{entry} geeft een accu van {capacity} kWh op, dat is geen thuisaccu. Voer de bruikbare capaciteit in kilowattuur in (bijvoorbeeld 10 in plaats van 10000)."
+    },
+    "battery_power": {
+      "title": "Laad- of ontlaadvermogen van de accu onwaarschijnlijk",
+      "description": "{entry} geeft een accuvermogen van {power} kW op voor een capaciteit van {capacity} kWh, meer dan drie keer de capaciteit per uur. Controleer de waarde en de eenheid (kW, geen W)."
+    },
+    "battery_min_soc": {
+      "title": "Accureserve buiten bereik",
+      "description": "{entry} heeft een minimale laadtoestand van {value}. Voer een percentage van 0 tot 100 in."
+    },
+    "battery_efficiency": {
+      "title": "Accurendement buiten bereik",
+      "description": "{entry} heeft een rondgangsrendement van {value}. Voer een percentage van 50 tot 100 in (de meeste thuisaccu's zitten rond 90)."
+    },
+    "production_entity_missing": {
+      "title": "Productiesensor niet gevonden",
+      "description": "De productiesensor van {entry}, {entity}, bestaat niet. De voorspelling draait ongecorrigeerd tot hij er is. Controleer de entiteits-id, of kies de sensor opnieuw in de instellingen."
+    },
+    "production_entity_kind": {
+      "title": "De productiesensor is geen cumulatieve energiesensor",
+      "description": "De productiesensor van {entry}, {entity}, rapporteert {unit} met toestandsklasse {state_class}. Het leren heeft een cumulatieve energiesensor in kWh nodig (toestandsklasse total of total_increasing), geen vermogenssensor. Kies het energietotaal van uw omvormer of meter; de helper Integraal maakt van een vermogenssensor zo'n sensor."
+    },
+    "battery_soc_entity_missing": {
+      "title": "Laadtoestandsensor van de accu niet gevonden",
+      "description": "De accusensor van {entry}, {entity}, bestaat niet, dus de projectie blijft uit. Controleer de entiteits-id of kies de sensor opnieuw."
+    },
+    "battery_soc_entity_unit": {
+      "title": "De accusensor is geen percentage",
+      "description": "De accusensor van {entry}, {entity}, rapporteert {unit}. De projectie heeft de laadtoestand in procent nodig."
+    },
+    "curtailment_entity_missing": {
+      "title": "Begrenzingssignaal niet gevonden",
+      "description": "Het begrenzingssignaal van {entry}, {entity}, bestaat niet. Uren waarin de omvormer wordt begrensd, worden dan als slechte lucht geleerd. Controleer de entiteits-id of maak het veld leeg."
+    },
+    "production_history_empty": {
+      "title": "De productiesensor heeft nog geen geschiedenis",
+      "description": "{entity}, de productiesensor van {entry}, heeft nog geen langetermijnstatistieken. Het leren begint zodra de recorder een paar uur heeft; houdt dit na een dag aan, dan is de sensor geen cumulatieve energiesensor."
+    },
+    "production_at_night": {
+      "title": "De productiesensor telt 's nachts",
+      "description": "{entity}, de productiesensor van {entry}, registreerde {kwh} kWh terwijl de zon ruim onder de horizon stond. Panelen maken 's nachts niets, dus deze sensor meet meer dan de panelen (een net- of huismeter). Kies de sensor die alleen de uitgang van de omvormer telt."
+    },
+    "production_above_panels": {
+      "title": "Productie boven wat de opgegeven panelen kunnen leveren",
+      "description": "{entity}, de productiesensor van {entry}, haalde meerdere keren {kw} kW bij {kwp} kWp aan opgegeven panelen. Of het piekvermogen is te klein, of de sensor telt meer dan de panelen. Controleer beide."
+    },
+    "production_stale": {
+      "title": "Geen productie geregistreerd sinds {days} dagen",
+      "description": "{entity}, de productiesensor van {entry}, is al {days} dagen niet gestegen. Sneeuw of een storing kan het verklaren; produceren de panelen wel, dan is de sensor gestopt met rapporteren en droogt het leren op."
+    },
+    "consumption_source_sparse": {
+      "title": "Verbruiksbron {source} rapporteert met tussenpozen",
+      "description": "In het energiedashboard heeft {source} gegevens voor {pct}% van de uren die de beste bron dekt ({best}%). Het verbruiksprofiel wordt alleen gebouwd uit de uren die hij dekt, dus het blijft juist maar steunt op minder geschiedenis. Een betrouwbaardere sensor voor die stroom maakt de accuprojectie scherper."
+    },
+    "benchmark_excluded": {
+      "title": "Buiten de meetcijfers gehouden ({reason})",
+      "description": "De openbare meting ontvangt de emissies van {entry} maar houdt ze buiten de gepubliceerde cijfers. Reden {reason}: kwp betekent dat het opgegeven piekvermogen ontbreekt, nul is of in watt is ingevuld; night betekent dat de productiesensor 's nachts energie registreert en dus meer meet dan de panelen. Corrigeer de configuratie en de installatie telt binnen een dag weer mee."
+    }
+  },
+  "exceptions": {
+    "service_unknown_entry": {
+      "message": "Geen Helios Forecast-installatie met invoer-id {entry_id}."
+    },
+    "service_no_installation": {
+      "message": "Er is geen Helios Forecast-installatie ingesteld."
+    },
+    "service_several_installations": {
+      "message": "Er zijn meerdere Helios Forecast-installaties ingesteld; geef 'config_entry_id' op om er een te kiezen."
     }
   }
 }

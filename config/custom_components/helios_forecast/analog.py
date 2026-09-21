@@ -1,30 +1,43 @@
 """Analog-ensemble forecast refinement.
 
 Instead of trusting a generic physical model, look up past hours whose conditions
-(sun geometry + cloud cover) resemble the hour being forecast, and read the
-distribution of what the installation ACTUALLY produced then. The median is a
-site-calibrated point forecast (it already contains the real shading, soiling,
-orientation error and inverter behaviour), and the 10th/90th percentiles are a
-free, data-driven uncertainty band.
+(sun geometry + cloud cover) resemble the hour being forecast, and read what the
+installation ACTUALLY produced then, as a ratio to what the physical model said for
+those same hours. The median ratio applied to today's physics is a site-calibrated
+point forecast (it carries the real shading, soiling, orientation error and inverter
+behaviour), and the 10th/90th percentile ratios give a data-driven uncertainty band.
+
+Ratios rather than watts because an analog is never at exactly today's sun position:
+the nearest past hours at a September morning's altitude sit at a more northerly
+azimuth in July, where a south roof made less. Read as watts, those analogs pulled
+the forecast down by half on clear mornings across the fleet; read as ratios, the
+geometry difference is the physics' business and the analog only says how the site
+departs from it. Watts remain the fallback when no physics is available for the
+history (no layout, or a model too small to divide by).
 
 This refines the physical model rather than replacing it: when few close analogs
 exist (cold start, unusual conditions) the prediction blends back toward the
 physical value by confidence, so the forecast degrades gracefully.
 
-Pure functions, no Home Assistant. Production buckets are duck-typed
-(``.start_ms`` + ``.end_ms`` + ``.kwh``); the only dependency is the sun geometry.
+Pure functions, no Home Assistant. Production buckets are the ProductionBucket
+of solar/residual.py, and the ratio side needs the whole PV power model, not the
+sun geometry alone: it compares the meter against what the model said for that
+same hour, inverter cap included.
 """
 
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass, replace
-from datetime import datetime
-from typing import List, Optional, Sequence
+from datetime import datetime, timezone
+from typing import List, Optional, Sequence, TypeGuard
 
 from .forecast import ForecastPoint
 from .openmeteo import WeatherSeries
 from .solar.geometry import sun_position
+from .solar.irradiance import snow_cover_factor
+from .solar.power import PvLayout, WeatherSample, compute_pv_power_per_array
+from .solar.residual import ProductionBucket, capped_model_kwh, implausible_hour
 
 # Feature weights in the (normalised) distance. Cloud is the variable that drives
 # production at a fixed geometry, so it dominates; altitude sets the available
@@ -40,27 +53,47 @@ _W_AZ = 0.3
 # overriding cloud/geometry.
 _TEMP_SCALE = 15.0
 # Distance contributed when either side has no temperature reading. A missing reading is not a
-# match: it is worse than a real 8 degC mismatch (about half a typical seasonal swing) but still
-# small enough that an otherwise excellent geometry+cloud analog is not thrown out for it.
-_TEMP_MISSING_PENALTY = _W_TEMP * (8.0 / _TEMP_SCALE) ** 2
+# match, so it ranks behind any real reading, but it has to stay under _CLOSE_D2 below: above it,
+# one absent reading puts EVERY analog beyond the close threshold at once, the confidence collapses
+# to zero and the whole correction switches itself off on a site whose weather carries no
+# temperature. Worth about a 4 degC mismatch.
+_TEMP_MISSING_PENALTY = _W_TEMP * (4.0 / _TEMP_SCALE) ** 2
 
 # Kernel bandwidth on the squared normalised distance for the analog weights.
 _BANDWIDTH2 = 0.02
 # Analogs closer than this squared distance count toward the confidence tally.
 _CLOSE_D2 = 0.04
-# Close-analog count at which confidence saturates to 1.
+# Close-analog count at which confidence saturates to 1. Measured on the fleet, that saturation is
+# reached by almost every query once a site has a month of history, and at weight 1 the blend is not
+# a blend: it publishes the analog median and discards the residual-corrected physics. Holding the
+# weight to about 0.4 was measured to help, but it moves the published point without moving the
+# p10/p90 band with it, and the band's own calibration was measured against the point as it stands.
+# The two are one change and need measuring together, on the thirty clean days rather than on four.
 _CONFIDENCE_FULL = 25
 # Below this confidence we keep the blended point but do not surface a band.
 BAND_MIN_CONFIDENCE = 0.35
 # How many nearest analogs feed the weighted percentiles.
 _K = 60
-# Learned production ceiling. Once at least this many close analogs exist, the blended forecast is
-# capped at the 90th percentile of what the site ACTUALLY produced under similar sun+cloud, times a
-# margin. The physical model cannot see near-field shadows (a tree in the morning, a roof in the
-# evening), but the real production already reflects them, so this stops the model over-predicting on
-# shaded sites while the margin still allows an unusually clear day.
+# Learned production ceiling. Once at least this many close analogs exist, the blend is capped. On the
+# ratio path, which is the normal one, the cap is the 90th percentile of the measured-over-modelled
+# RATIO under similar sun and cloud, times a margin, and only becomes watts once scaled by today's
+# model; on the watt path it is those percentiles in watts directly. The physical model cannot see
+# near-field shadows, a tree in the morning or a roof in the evening, while the real production
+# already carries them, so this stops the model over-predicting on a shaded site while the margin
+# still allows an unusually clear day.
 _CEILING_MIN_ANALOGS = 5
 _CEILING_MARGIN = 1.25
+
+
+# A ratio is only meaningful against a model output that is not itself noise: below this share of the
+# nameplate (a dawn sliver) the hour is kept as watts only.
+_RATIO_MODEL_FLOOR_FRAC = 0.02
+_RATIO_MODEL_FLOOR_W = 30.0
+# Fewer ratio samples than this and the library falls back to watts: a ratio ensemble needs a spread.
+_RATIO_MIN_SAMPLES = 24
+# Sub-hourly model samples per production bucket, as the residual map does, so an hour that straddles
+# sunrise is not judged on its midpoint alone.
+_MODEL_SUBSAMPLES = 4
 
 
 @dataclass(frozen=True)
@@ -70,6 +103,7 @@ class AnalogSample:
     cloud: float  # cloud cover, %
     watt: float  # actual production at that hour, W
     temp: Optional[float] = None  # outdoor temperature at that hour, degC (None when unavailable)
+    ratio: Optional[float] = None  # actual / physical model at that hour, None when the model was too small
 
 
 @dataclass(frozen=True)
@@ -81,7 +115,7 @@ class AnalogBand:
     ceiling: Optional[float] = None  # learned production cap (W), or None when analog support is thin
 
 
-def _finite(v: object) -> bool:
+def _finite(v: object) -> TypeGuard[float]:
     return isinstance(v, (int, float)) and math.isfinite(v)
 
 
@@ -127,13 +161,72 @@ def _sample_series(
     return a + (b - a) * f
 
 
-def build_library(production: list, weather: WeatherSeries, lat: float, lon: float) -> List[AnalogSample]:
-    """Turn the production history into analog samples: actual watts tagged with
-    the sun geometry and cloud cover at that hour. Night hours are dropped."""
+def _model_watts(
+    b: ProductionBucket,
+    weather: WeatherSeries,
+    w_epochs: Optional[List[float]],
+    lat: float,
+    lon: float,
+    layout: PvLayout,
+    cap_w: float,
+) -> Optional[float]:
+    """The physical model's mean watts over one production bucket, per-array caps and the inverter cap
+    applied, sampled sub-hourly like the residual map. None when the model made nothing of the hour."""
+    k = layout.total_kwp * 10.0
+    if k <= 0:
+        return None
+    ms_mid = (b.start_ms + b.end_ms) / 2.0
+    cloud = _sample_series(weather.times, weather.cloud, ms_mid, w_epochs)
+    sample = WeatherSample(
+        cloud=cloud if cloud is not None else 0.0,
+        ghi=_sample_series(weather.times, weather.shortwave, ms_mid, w_epochs),
+        direct=_sample_series(weather.times, weather.direct, ms_mid, w_epochs),
+        diffuse=_sample_series(weather.times, weather.diffuse, ms_mid, w_epochs),
+        temp=_sample_series(weather.times, weather.temp, ms_mid, w_epochs),
+        wind=_sample_series(weather.times, weather.wind, ms_mid, w_epochs),
+    )
+    snow = snow_cover_factor(_sample_series(weather.times, weather.snow, ms_mid, w_epochs), sample.temp)
+    total = 0.0
+    n = 0
+    for i in range(_MODEL_SUBSAMPLES):
+        sub_ms = b.start_ms + (i + 0.5) * (b.end_ms - b.start_ms) / _MODEL_SUBSAMPLES
+        moment = datetime.fromtimestamp(sub_ms / 1000.0, tz=timezone.utc)
+        if sun_position(moment, lat, lon).altitude <= 0:
+            continue
+        pcts = compute_pv_power_per_array(moment, lat, lon, sample, layout)
+        total += min(cap_w, capped_model_kwh(pcts, layout, k, snow) * 1000.0)
+        n += 1
+    # Averaged over the whole bucket, night subsamples included, because that is what the meter
+    # measured: dividing by the sun-up count instead compares the mean power of the lit part of the
+    # hour against the mean power of all of it, and every bucket straddling sunrise or sunset then
+    # reads as a site producing a fraction of what it should.
+    return total / _MODEL_SUBSAMPLES if n else None
+
+
+def build_library(
+    production: list,
+    weather: WeatherSeries,
+    lat: float,
+    lon: float,
+    layout: Optional[PvLayout] = None,
+    inverter_max_w: float = math.inf,
+) -> List[AnalogSample]:
+    """Turn the production history into analog samples: actual watts tagged with the sun geometry and
+    cloud cover at that hour, and, when the layout is known, the ratio of those watts to the physical
+    model's for the same hour. Night hours are dropped."""
     out: List[AnalogSample] = []
     w_epochs = series_epochs(weather.times) if weather.times else None
+    floor_w = max(_RATIO_MODEL_FLOOR_W, _RATIO_MODEL_FLOOR_FRAC * layout.total_kwp * 1000.0) if layout else None
     for b in production:
-        if not _finite(getattr(b, "kwh", None)):
+        kwh = getattr(b, "kwh", None)
+        # Negative as well as non-finite: a meter that is reset, replaced or restored from an older
+        # backup writes one enormous negative hour into the recorder, and clamping it to zero would
+        # file a bright hour in the library as one where the sky gave nothing. The residual map
+        # already refuses those (solar/residual.py); the library refuses them on the same grounds.
+        if not _finite(kwh) or kwh < 0:
+            continue
+        # And the other side of the same meter accident: an hour above anything the panels can deliver.
+        if layout is not None and implausible_hour(kwh, b.start_ms, b.end_ms, layout.total_kwp):
             continue
         # A curtailed hour is what the inverter allowed, not what the sky gave: it has no place in a
         # library of actual production under similar conditions.
@@ -150,10 +243,20 @@ def build_library(production: list, weather: WeatherSeries, lat: float, lon: flo
         if cloud is None:
             continue
         temp = _sample_series(weather.times, weather.temp, mid_ms, w_epochs)
-        out.append(
-            AnalogSample(alt=sun.altitude, az=sun.azimuth, cloud=cloud, watt=max(0.0, b.kwh * 1000.0), temp=temp)
-        )
+        watt = kwh * 1000.0
+        ratio = None
+        if layout is not None:
+            model = _model_watts(b, weather, w_epochs, lat, lon, layout, inverter_max_w)
+            if model is not None and floor_w is not None and model >= floor_w:
+                ratio = watt / model
+        out.append(AnalogSample(alt=sun.altitude, az=sun.azimuth, cloud=cloud, watt=watt, temp=temp, ratio=ratio))
     return out
+
+
+def ratio_samples(library: List[AnalogSample]) -> List[AnalogSample]:
+    """The samples usable as ratios, or an empty list when too few carry one (the caller then reads watts)."""
+    with_ratio = [s for s in library if s.ratio is not None]
+    return with_ratio if len(with_ratio) >= _RATIO_MIN_SAMPLES else []
 
 
 def _az_diff(a: float, b: float) -> float:
@@ -184,12 +287,17 @@ def _weighted_percentiles(pairs: List[tuple], qs: tuple) -> List[float]:
 
 
 def predict(
-    library: List[AnalogSample], alt: float, az: float, cloud: float, temp: Optional[float] = None
+    library: List[AnalogSample],
+    alt: float,
+    az: float,
+    cloud: float,
+    temp: Optional[float] = None,
+    on_ratio: bool = False,
 ) -> Optional[AnalogBand]:
-    """Weighted P10/P50/P90 of actual production among the analogs nearest to
-    (alt, az, cloud, temperature), or None when the library is empty. A pair where
-    either side has no temperature reading takes the fixed missing-data penalty
-    instead of a real temperature distance."""
+    """Weighted P10/P50/P90 among the analogs nearest to (alt, az, cloud, temperature), of the
+    actual production in watts, or of its ratio to the model when `on_ratio` (every sample must then
+    carry one, see ratio_samples). None when the library is empty. A pair where either side has no
+    temperature reading takes the fixed missing-data penalty instead of a real temperature distance."""
     if not library or alt <= 0:
         return None
     scored: List[tuple] = []
@@ -203,7 +311,7 @@ def predict(
             d2 += _W_TEMP * dtemp * dtemp
         else:
             d2 += _TEMP_MISSING_PENALTY
-        scored.append((d2, s.watt))
+        scored.append((d2, s.ratio if on_ratio else s.watt))
     scored.sort(key=lambda x: x[0])
     top = scored[:_K]
     if not top:
@@ -223,9 +331,11 @@ def _enrich_one(
     w_epochs: Optional[List[float]],
     lat: float,
     lon: float,
+    on_ratio: bool = False,
 ) -> ForecastPoint:
     """Blend the analog median into one point and attach its P10/P90 band, regardless of where
-    it sits relative to "now" - the caller decides which points this applies to."""
+    it sits relative to "now" - the caller decides which points this applies to. On a ratio
+    library the analog's word is a ratio, applied to this point's own physics."""
     sun = sun_position(p.t, lat, lon)
     if sun.altitude <= 0:
         # Below the horizon the output is not uncertain, it is known: 0 W, and so are its
@@ -236,18 +346,21 @@ def _enrich_one(
     ms = p.t.timestamp() * 1000.0
     cloud = _sample_series(weather.times, weather.cloud, ms, w_epochs)
     temp = _sample_series(weather.times, weather.temp, ms, w_epochs)
-    band = predict(library, sun.altitude, sun.azimuth, cloud if cloud is not None else 50.0, temp)
+    band = predict(library, sun.altitude, sun.azimuth, cloud if cloud is not None else 50.0, temp, on_ratio=on_ratio)
     if band is None:
         return p
+    scale = p.pv_raw_w if on_ratio else 1.0
+    p50, p10, p90 = band.p50 * scale, band.p10 * scale, band.p90 * scale
+    ceiling = band.ceiling * scale if band.ceiling is not None else None
     c = band.confidence
-    blended = c * band.p50 + (1.0 - c) * p.pv_w
+    blended = c * p50 + (1.0 - c) * p.pv_w
     # Never predict above what the site has actually produced under similar sun+cloud (with a
     # margin). At low confidence the blend leans on the physical model, which is blind to
     # near-field shadows; the learned ceiling reins that back in.
-    if band.ceiling is not None:
-        blended = min(blended, band.ceiling)
+    if ceiling is not None:
+        blended = min(blended, ceiling)
     if c >= BAND_MIN_CONFIDENCE:
-        return replace(p, pv_w=blended, pv_p10=band.p10, pv_p90=band.p90)
+        return replace(p, pv_w=blended, pv_p10=p10, pv_p90=p90)
     return replace(p, pv_w=blended)
 
 
@@ -268,12 +381,14 @@ def enrich_points(
     if not library:
         return points
     w_epochs = series_epochs(weather.times) if weather.times else None
+    ratios = ratio_samples(library)
+    lib, on_ratio = (ratios, True) if ratios else (library, False)
     out: List[ForecastPoint] = []
     for p in points:
         if p.t < now:
             out.append(p)
             continue
-        out.append(_enrich_one(p, library, weather, w_epochs, lat, lon))
+        out.append(_enrich_one(p, lib, weather, w_epochs, lat, lon, on_ratio))
     return out
 
 
@@ -290,4 +405,6 @@ def enrich_archive_points(
     if not library:
         return points
     w_epochs = series_epochs(weather.times) if weather.times else None
-    return [_enrich_one(p, library, weather, w_epochs, lat, lon) for p in points]
+    ratios = ratio_samples(library)
+    lib, on_ratio = (ratios, True) if ratios else (library, False)
+    return [_enrich_one(p, lib, weather, w_epochs, lat, lon, on_ratio) for p in points]

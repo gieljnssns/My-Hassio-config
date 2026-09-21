@@ -3,21 +3,85 @@
 from __future__ import annotations
 
 import asyncio
+import importlib.metadata
 import logging
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    TimestampDataUpdateCoordinator,
+    UpdateFailed,
+)
 
-from .const import DOMAIN, ConfDefaultInt, ConfName, RetrySettings
-from .hub import DataUpdateFailed, HubInitFailed, SolarEdgeModbusMultiHub
+from .const import (
+    DOMAIN,
+    MESSAGE_SPACING,
+    MODBUS_CONNECTION_REQUIRED_VERSION,
+    TMODBUS_REQUIRED_VERSION,
+    ConfDefaultInt,
+    ConfName,
+    RetrySettings,
+)
+from .helpers import safe_version_tuple
+
+if TYPE_CHECKING:
+    from .hub import SolarEdgeModbusMultiHub
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _check_dependency_versions() -> dict[str, str]:
+    """Fail early if tmodbus/modbus-connection are missing or older than required.
+    Must be called from async_setup_entry via hass.async_add_executor_job
+    """
+
+    installed_versions = {}
+
+    for display_name, distribution_name, required in (
+        ("tmodbus", "tmodbus", TMODBUS_REQUIRED_VERSION),
+        ("modbus-connection", "modbus_connection", MODBUS_CONNECTION_REQUIRED_VERSION),
+    ):
+        try:
+            installed = importlib.metadata.version(distribution_name)
+        except importlib.metadata.PackageNotFoundError:
+            raise ConfigEntryError(
+                f"{display_name} is not installed. Restart Home Assistant to let "
+                "it install dependencies automatically. If it still doesn't "
+                "install, check the Home Assistant log for a failed pip install, "
+                "confirm HACS isn't set to skip requirement installation for "
+                "this integration, and check whether another custom integration "
+                f"or manual environment change removed {display_name}."
+            )
+
+        if safe_version_tuple(installed) < safe_version_tuple(required):
+            raise ConfigEntryError(
+                f"{display_name} version must be at least {required}, but {installed} "
+                "is installed. Please remove or upgrade other custom integrations "
+                f"that depend on an older version of {display_name} and restart."
+            )
+
+        installed_versions[display_name] = installed
+
+    _LOGGER.debug(
+        "Installed versions: "
+        + ", ".join(f"{name} {version}" for name, version in installed_versions.items())
+    )
+
+    return installed_versions
+
 
 PLATFORMS: list[str] = [
     Platform.BINARY_SENSOR,
@@ -41,15 +105,8 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional("limit"): vol.Coerce(int),
                     }
                 ),
-                "modbus": vol.Schema(
-                    {
-                        vol.Optional("timeout"): vol.Coerce(int),
-                        vol.Optional("retries"): vol.Coerce(int),
-                        vol.Optional("reconnect_delay"): vol.Coerce(float),
-                        vol.Optional("reconnect_delay_max"): vol.Coerce(float),
-                    }
-                ),
-            }
+            },
+            extra=vol.ALLOW_EXTRA,
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -61,14 +118,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN]["yaml"] = config.get(DOMAIN, {})
 
+    if "modbus" in hass.data[DOMAIN]["yaml"]:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_modbus",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_modbus",
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, "deprecated_yaml_modbus")
+
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SolarEdge Modbus Muti from a config entry."""
 
+    # importlib.metadata does blocking file I/O, and modbus_connection/.hub
+    # aren't safe to import until we know the versions are good -- see
+    # _check_dependency_versions()'s docstring.
+    installed_versions = await hass.async_add_executor_job(_check_dependency_versions)
+
+    from modbus_connection import ModbusTcpParams
+    from modbus_connection.tmodbus import ModbusConnection
+
+    from .hub import SolarEdgeModbusMultiHub
+
+    request_timeout = entry.options.get(
+        ConfName.REQUEST_TIMEOUT, ConfDefaultInt.REQUEST_TIMEOUT
+    )
+    connection = ModbusConnection(
+        ModbusTcpParams(host=entry.data[CONF_HOST], port=entry.data[CONF_PORT]),
+        timeout=request_timeout,
+        message_spacing=MESSAGE_SPACING,
+    )
+    entry.async_on_unload(connection.close)
+
     solaredge_hub = SolarEdgeModbusMultiHub(
-        hass, entry.entry_id, entry.data, entry.options
+        hass, entry.entry_id, entry.data, entry.options, connection
     )
 
     coordinator = SolarEdgeCoordinator(
@@ -80,6 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "hub": solaredge_hub,
         "coordinator": coordinator,
+        "dependency_versions": installed_versions,
     }
 
     await coordinator.async_config_entry_first_refresh()
@@ -93,9 +183,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    solaredge_hub = hass.data[DOMAIN][entry.entry_id]["hub"]
-    await solaredge_hub.shutdown()
-
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -222,6 +309,37 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry, unique_id=new_unique_id, version=2, minor_version=1
         )
 
+    if config_entry.version == 2 and config_entry.minor_version < 2:
+        _LOGGER.debug("Migrating from version 2.1")
+
+        update_options = {**config_entry.options}
+        had_keep_modbus_open = update_options.pop("keep_modbus_open", False)
+
+        if had_keep_modbus_open:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_keep_modbus_open",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_keep_modbus_open",
+            )
+
+        hass.config_entries.async_update_entry(
+            config_entry, options=update_options, version=2, minor_version=2
+        )
+
+    if config_entry.version == 2 and config_entry.minor_version < 3:
+        _LOGGER.debug("Migrating from version 2.2")
+
+        # config 2.3 adds close_after_polling option
+        # keep_modbus_open was removed, but the new close_after_polling
+        # option is similar now that modbus-connection supports
+        # disconnect() without it being a permanent shutdown. The
+        # deprecated_keep_modbus_open repair issue from 2.2 now points
+        # affected users at the replacement option.
+        hass.config_entries.async_update_entry(config_entry, version=2, minor_version=3)
+
     _LOGGER.warning(
         "Migrated to config version "
         f"{config_entry.version}.{config_entry.minor_version}"
@@ -230,9 +348,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
-class SolarEdgeCoordinator(DataUpdateCoordinator):
+class SolarEdgeCoordinator(TimestampDataUpdateCoordinator):
     def __init__(
-        self, hass: HomeAssistant, hub: SolarEdgeModbusMultiHub, scan_interval: int
+        self,
+        hass: HomeAssistant,
+        hub: SolarEdgeModbusMultiHub,
+        scan_interval: int,
     ):
         super().__init__(
             hass,
@@ -244,11 +365,9 @@ class SolarEdgeCoordinator(DataUpdateCoordinator):
         self._yaml_config = hass.data[DOMAIN]["yaml"]
 
     async def _async_update_data(self) -> bool:
-        try:
-            while self._hub.has_write:
-                _LOGGER.debug(f"Waiting for write {self._hub.has_write}")
-                await asyncio.sleep(1)
+        from .hub import DataUpdateFailed, HubInitFailed
 
+        try:
             return await self._refresh_modbus_data_with_retry(
                 ex_type=DataUpdateFailed,
                 limit=self._yaml_config.get("retry", {}).get(
