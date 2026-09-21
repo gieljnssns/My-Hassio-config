@@ -1,0 +1,183 @@
+type: custom:auto-entities
+card:
+  type: entities
+filter:
+  include:
+    - options: {}
+      attributes:
+        unit_of_measurement: W
+  exclude:
+    - options: {}
+      state: < 1
+    - options: {}
+      entity_id: sensor.huidige_opbrengst
+    - options: {}
+      entity_id: sensor.verluchting_luchtdroger_vermogen
+    - options: {}
+      entity_id: sensor.gemiddelde_opbrengst_5m
+    - options: {}
+      entity_id: sensor.wp_benodigd_vermogen
+    - options: {}
+      entity_id: sensor.huidig_verbruik
+    - options: {}
+      entity_id: sensor.verwarming_vermogen
+    - options: {}
+      entity_id: sensor.battery_p_charge_max
+    - options: {}
+      entity_id: sensor.battery_p_discharge_max
+    - options: {}
+      entity_id: sensor.*_mean_power_cycle
+    - options: {}
+      entity_id: sensor.day_active_power_peak
+    - options: {}
+      entity_id: sensor.*solcast*
+    - options: {}
+      entity_id: sensor.*lowpas*
+    - options: {}
+      entity_id: sensor.*emhass*
+    - options: {}
+      entity_id: sensor.*deferrable*
+    - options: {}
+      entity_id: sensor.*solaredge*
+    - options: {}
+      entity_id: sensor.huawei_active_power
+    - options: {}
+      state: unavailable
+    - options: {}
+      state: unknown
+    - options: {}
+      entity_id: sensor.huidige_opbrengst_gefilterd
+    - options: {}
+      entity_id: sensor.toestellen_vermogen
+    - options: {}
+      entity_id: sensor.huidig_verbruik_zonder_wp_gefilterd
+    - options: {}
+      entity_id: sensor.unifi_devices_vermogen
+    - options: {}
+      entity_id: sensor.unifi_droommachien_vermogen
+    - options: {}
+      entity_id: sensor.unifi_garage_vermogen
+    - options: {}
+      entity_id: sensor.unifi_waskot_vermogen
+    - options: {}
+      entity_id: sensor.unifi_media_vermogen
+    - options: {}
+      entity_id: sensor.living_media_vermogen
+    - options: {}
+      entity_id: sensor.huidig_verbruik_zonder_wp
+    - options: {}
+      entity_id: sensor.zonne_opbrengst
+    - options: {}
+      entity_id: sensor.*_poe_*
+    - options: {}
+      entity_id: sensor.mass_*
+    - options: {}
+      entity_id: sensor.surround_*
+    - options: {}
+      entity_id: sensor.move_vermogen
+    - options: {}
+      entity_id: sensor.keuken_vermogen
+    - options: {}
+      entity_id: sensor.brewpi_vermogen
+    - options: {}
+      entity_id: sensor.keukenpi_vermogen
+    - options: {}
+      entity_id: sensor.livingpi_vermogen
+    - options: {}
+      entity_id: sensor.koffiezet_vermogen_2
+    - options: {}
+      entity_id: sensor.danszaal_luster_vermogen
+    - options: {}
+      entity_id: sensor.huidig_fluvius
+    - options: {}
+      entity_id: sensor.huidig_fluvius_oud
+    - options: {}
+      entity_id: sensor.huidig_verbruik_oud
+    - options: {}
+      entity_id: sensor.zithoek_*
+    - options: {}
+      entity_id: sensor.wled_*
+    - options: {}
+      entity_id: sensor.luchtdroger_vermogen
+    - options: {}
+      entity_id: sensor.55oled806_12_vermogen
+    - options: {}
+      entity_id: sensor.philips_tv_vermogen
+    - options: {}
+      entity_id: sensor.tv_der_kinders_vermogen
+    - options: {}
+      entity_id: sensor.welcome_*
+    - options: {}
+      entity_id: sensor.den_hof_spot_vermogen
+    - options: {}
+      entity_id: sensor.paddeke_*
+    - options: {}
+      entity_id: sensor.danszaal_*
+    - options: {}
+      entity_id: sensor.gang_*
+    - options: {}
+      entity_id: sensor.*_forecast
+    - options: {}
+      entity_id: sensor.garage_buiten_*
+    - options: {}
+      entity_id: sensor.ventilatie_vermogen
+    - options: {}
+      entity_id: sensor.zolder_verluchting_vermogen
+    - options: {}
+      entity_id: sensor.circulatie_verwarming_vermogen
+    - options: {}
+      entity_id: sensor.keuken_inkom_vermogen
+    - options: {}
+      entity_id: sensor.keuken_luster_vermogen
+    - options: {}
+      entity_id: sensor.garage_vermogen
+    - options: {}
+      entity_id: sensor.wc_vermogen
+    - options: {}
+      entity_id: sensor.kelder_vermogen
+    - options: {}
+      entity_id: sensor.waskot_vermogen
+    - options: {}
+      entity_id: sensor.keuken_spots_vermogen
+    - options: {}
+      entity_id: sensor.trap_vermogen
+    - options: {}
+      entity_id: sensor.verluchting_masser_vermogen
+    - options: {}
+      entity_id: sensor.power_production*
+    - options: {}
+      entity_id: sensor.battery_power
+    - options: {}
+      entity_id: sensor.meter_active_power_total
+    - options: {}
+      entity_id: sensor.pv_prediction_now
+sort:
+  method: state
+  reverse: true
+  numeric: true
+rename:
+  type:
+    - device
+    - entity
+
+
+
+  - card:
+      type: entities
+    filter:
+      include:
+        - entity_id: '*cpu*'
+      exclude:
+        - entity_id: automation.enable_cpu_sensors
+        - entity_id: sensor.nuc_cpu_temperatuur
+        - entity_id: '*unifi*'
+        - entity_id: '*utili*'
+        - entity_id: '*pi*'
+        - entity_id: '*keuken*'
+        - state: < 1
+        - state: unavailable
+    type: custom:auto-entities
+    sort:
+      method: state
+      numeric: true
+      reverse: true
