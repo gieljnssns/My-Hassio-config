@@ -104,14 +104,14 @@ binary_sensor:
     on_press:
       # Only turn on the chime when it is active.
       then:
-        - homeassistant.service:
-            service: script.doorbell_notification
+        - homeassistant.action:
+            action: script.doorbell_notification
         - if:
             condition:
               - switch.is_on: deurbel_actief
             then:
               - switch.turn_on: deurbel
-              # - homeassistant.service:
+              # - homeassistant.action:
               #     service: script.doorbell_notification
     on_release:
       # On release, turn of the chime.
@@ -129,8 +129,8 @@ binary_sensor:
       - delayed_on: 50ms
       - delayed_off: 50ms
     on_press:
-      - homeassistant.service:
-          service: light.toggle
+      - homeassistant.action:
+          action: light.toggle
           data:
             entity_id: light.spots_tv
 
@@ -146,11 +146,11 @@ binary_sensor:
       - delayed_on: 25ms
       - delayed_off: 25ms
     on_press:
-      # - homeassistant.service:
+      # - homeassistant.action:
       #     service: light.toggle
       #     data:
       #       entity_id: light.slaapkamer_hoog
-      - homeassistant.service:
-          service: light.toggle
+      - homeassistant.action:
+          action: light.toggle
           data:
             entity_id: light.slaapkamer_spot

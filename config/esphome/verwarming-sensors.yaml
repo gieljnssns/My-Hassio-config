@@ -124,8 +124,8 @@ sensor:
             switch.is_on: warm_water
           then:
             - switch.turn_off: warm_water
-            - homeassistant.service:
-                service: persistent_notification.create
+            - homeassistant.action:
+                action: persistent_notification.create
                 data:
                   title: Bericht uit de kelder
                   message: Warmtepompboiler uitgezet door ESP

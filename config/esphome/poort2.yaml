@@ -14,7 +14,8 @@ packages:
   
 wifi:
   # ...
-  power_save_mode: light
+  power_save_mode: NONE
+  output_power: 20.5dB
 
 esp32_ble_tracker:
   scan_parameters:
@@ -49,20 +50,20 @@ binary_sensor:
       - delayed_off: 3s
     
 sensor:
-  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
-    name: "WiFi Signal dB"
-    id: wifi_signal_db
-    update_interval: 60s
-    entity_category: "diagnostic"
+  # - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
+  #   name: "WiFi Signal dB"
+  #   id: wifi_signal_db
+  #   update_interval: 60s
+  #   entity_category: "diagnostic"
 
-  - platform: copy # Reports the WiFi signal strength in %
-    source_id: wifi_signal_db
-    name: "WiFi Signal Percent"
-    filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "Signal %"
-    entity_category: "diagnostic"
-    device_class: ""
+  # - platform: copy # Reports the WiFi signal strength in %
+  #   source_id: wifi_signal_db
+  #   name: "WiFi Signal Percent"
+  #   filters:
+  #     - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+  #   unit_of_measurement: "Signal %"
+  #   entity_category: "diagnostic"
+  #   device_class: ""
     
   - platform: sht3xd
     temperature:

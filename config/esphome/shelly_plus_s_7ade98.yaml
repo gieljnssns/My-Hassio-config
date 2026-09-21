@@ -68,8 +68,8 @@ sensor:
         - above: ${max_temp}
           then:
             - switch.turn_off: relay
-            - homeassistant.service:
-                service: persistent_notification.create
+            - homeassistant.action:
+                action: persistent_notification.create
                 data:
                   title: Message from ${upper_devicename}
                 data_template:
@@ -116,8 +116,8 @@ sensor:
         - above: ${max_power}
           then:
             - switch.turn_off: relay
-            - homeassistant.service:
-                service: persistent_notification.create
+            - homeassistant.action:
+                action: persistent_notification.create
                 data:
                   title: Message from ${upper_devicename}
                 data_template:

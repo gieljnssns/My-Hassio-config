@@ -40,8 +40,8 @@ sensor:
         - above: ${max_power}
           then:
             - output.turn_off: shelly_25_relay_2
-            - homeassistant.service:
-                service: persistent_notification.create
+            - homeassistant.action:
+                action: persistent_notification.create
                 data:
                   title: Message from ${upper_devicename}
                 data_template:
@@ -55,8 +55,8 @@ sensor:
         - above: ${max_power}
           then:
             - output.turn_off: shelly_25_relay_1
-            - homeassistant.service:
-                service: persistent_notification.create
+            - homeassistant.action:
+                action: persistent_notification.create
                 data:
                   title: Message from ${upper_devicename}
                 data_template:
@@ -79,8 +79,8 @@ sensor:
         then:
           - output.turn_off: shelly_25_relay_1
           - output.turn_off: shelly_25_relay_2
-          - homeassistant.service:
-              service: persistent_notification.create
+          - homeassistant.action:
+              action: persistent_notification.create
               data:
                 title: Message from ${upper_devicename}
               data_template:
