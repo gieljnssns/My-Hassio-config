@@ -89,7 +89,7 @@
         {% else -%}
           {% set dp = state_attr("weather.home_2", "dew_point") | float(0) -%}
         {% endif -%}
-        {% set wind = states('sensor.openweathermap_windsnelheid') | float -%}
+        {% set wind = state_attr("weather.home_2", "wind_speed") | float -%}
         {% set clouds = state_attr("weather.home_2", "cloud_coverage") | float -%}
 
         {{ tmin < 1 and rh > 85 and (tmin - dp) < 2 and wind < 3 and clouds < 30 }}
@@ -109,8 +109,7 @@
             states('sensor.poort_temperatuur'),
             states('sensor.zijgevel_temperatuur'),
             state_attr('weather.home', 'temperature'),
-            state_attr('weather.home_2', 'temperature'),
-            states('sensor.openweathermap_temperatuur')] -%}
+            state_attr('weather.home_2', 'temperature')] -%}
 
         {% set values = temps
             | reject('in', ['unknown', 'unavailable', None])
@@ -128,8 +127,7 @@
         {% set hum = [
             states('sensor.poort_luchtvochtigheid'),
             states('sensor.zijgevel_luchtvochtigheid'),
-            state_attr('weather.home_2', 'humidity'),
-            states('sensor.openweathermap_luchtvochtigheid')] -%}
+            state_attr('weather.home_2', 'humidity')] -%}
 
         {% set values = hum
             | reject('in', ['unknown', 'unavailable', None])

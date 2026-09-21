@@ -267,28 +267,29 @@
         {% elif eco_power_percent == 0 -%}
           {{ true }}
         {% elif operation_mode == 'eco_charge' -%}
-          {{ ((power / 80) | round(0)|int) * -1 == eco_power_percent }}
+          {{ (((power / 80) | round(0) | int) * -1) - eco_power_percent | abs <= 1 }}
         {% else -%}
-          {{ (power / 80) | round(0)|int == eco_power_percent }}
+          {{ ((power / 80) | round(0) | int) - eco_power_percent | abs <= 1 }}
         {% endif -%}
       delay_off:
-        seconds: 30
+        seconds: 40
 
     - name: "Battery dead zone"
       unique_id: 6fa867df-6a6f-4f6b-a772-9e7637b46ab2
       device_class: problem
       state: >
-        {% set to_100 = as_timestamp(states("input_datetime.soc_to_100")) -%}
-        {% set from_100 = as_timestamp(states("input_datetime.soc_from_100")) -%}
-        {% set now = as_timestamp(now()) -%}
-        {% if states("sensor.battery_state_of_charge") | float(0) == 100 -%}
-          {% if (now - to_100) > 301 -%}
+        {% if states("sensor.battery_state_of_charge") | int(states("sensor.emhass_soc")|int) == 100 -%}
+          {% set to_100 = as_timestamp(states("input_datetime.soc_to_100")) -%}
+          {% set nu = as_timestamp(now()) -%}
+          {% if (nu - to_100) > 301 -%}
             True
           {% else -%}
             False
           {% endif -%}
-        {% elif states("sensor.battery_state_of_charge") | float(0) == 99 -%}
-          {% if (now - from_100) < 300 -%}
+        {% elif states("sensor.battery_state_of_charge") | int(states("sensor.emhass_soc")|int) == 99 -%}
+          {% set from_100 = as_timestamp(states("input_datetime.soc_from_100")) -%}
+          {% set nu = as_timestamp(now()) -%}
+          {% if (nu - from_100) < 300 -%}
             True
           {% else -%}
             False

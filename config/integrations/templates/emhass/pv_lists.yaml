@@ -277,6 +277,61 @@
           {% endif -%}
           {{ data|int }}
 
+    - name: Solcast interpolated forecast vermogen
+      unique_id: cbc5c799-157a-45f3-b23b-3abc6170df7f
+      icon: mdi:sun-clock
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% set slot = ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int -%}
+        {% set list = state_attr("sensor.solcast_interpolated_forecast", "five_minute_series") -%}
+        {{list[slot]}}
+    - name: Solcast10 interpolated forecast vermogen
+      unique_id: 1031e7cc-11f6-452d-a8dd-93a6640ccadc
+      icon: mdi:sun-clock
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% set slot = ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int -%}
+        {% set list = state_attr("sensor.solcast_interpolated_forecast", "five_minute_series_p10") -%}
+        {{list[slot]}}
+    - name: Solcast90 interpolated forecast vermogen
+      unique_id: 2f10eb27-929b-4f02-9fed-11220248eb33
+      icon: mdi:sun-clock
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% set slot = ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int -%}
+        {% set list = state_attr("sensor.solcast_interpolated_forecast", "five_minute_series_p90") -%}
+        {{list[slot]}}
+    - name: Open Meteo interpolated forecast vermogen
+      unique_id: 03c626a7-8c94-4e7b-a05d-8091d8f895e5
+      icon: mdi:weather-sunny-alert
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% set slot = ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int -%}
+        {% set list = state_attr("sensor.open_meteo_interpolated_forecast", "five_minute_series") -%}
+        {{list[slot]}}
+    - name: Ml interpolated forecast vermogen
+      unique_id: 9aa16462-4231-4a6e-a096-ce64757681cf
+      icon: mdi:sun-clock
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% set slot = ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int -%}
+        {% set list = state_attr("sensor.ml_interpolated_forecast", "five_minute_series") -%}
+        {{list[slot]}}
+    - name: Helios interpolated forecast vermogen
+      unique_id: c5196b37-7a33-453a-a0ff-44c224cc02c4
+      icon: mdi:sun-clock
+      unit_of_measurement: "W"
+      device_class: power
+      state: >
+        {% set slot = ((as_timestamp(now()) - as_timestamp(today_at("00:00"))) / 300) | int -%}
+        {% set list = state_attr("sensor.helios_interpolated_forecast", "five_minute_series") -%}
+        {{list[slot]}}
+
 - trigger:
     - trigger: time_pattern
       # Matches every hour at 5 minutes past whole
@@ -357,22 +412,22 @@
             {% endfor -%}
             {{ ns.output }}
           {% endif -%}
-        wh_period: >-
-          {% if (
-            state_attr('sensor.energy_production_today', 'wh_period') != none and
-            state_attr('sensor.energy_production_today_2', 'wh_period') != none and
-            state_attr('sensor.energy_production_today_3', 'wh_period') != none
-          ) -%}
-            {% set garage = state_attr('sensor.energy_production_today', 'wh_period') -%}
-            {% set huis = state_attr('sensor.energy_production_today_2', 'wh_period') -%}
-            {% set badkamer = state_attr('sensor.energy_production_today_3', 'wh_period') -%}
-            {% set ns = namespace(output={}) -%}
-            {% for time, value in garage.items() -%}
-              {% set sum_value = value + huis.get(time, 0) + badkamer.get(time, 0) -%}
-              {% set ns.output = dict({time: sum_value}, **ns.output) -%}
-            {% endfor -%}
-            {{ ns.output }}
-          {% endif -%}
+        # wh_period: >-
+        #   {% if (
+        #     state_attr('sensor.energy_production_today', 'wh_period') != none and
+        #     state_attr('sensor.energy_production_today_2', 'wh_period') != none and
+        #     state_attr('sensor.energy_production_today_3', 'wh_period') != none
+        #   ) -%}
+        #     {% set garage = state_attr('sensor.energy_production_today', 'wh_period') -%}
+        #     {% set huis = state_attr('sensor.energy_production_today_2', 'wh_period') -%}
+        #     {% set badkamer = state_attr('sensor.energy_production_today_3', 'wh_period') -%}
+        #     {% set ns = namespace(output={}) -%}
+        #     {% for time, value in garage.items() -%}
+        #       {% set sum_value = value + huis.get(time, 0) + badkamer.get(time, 0) -%}
+        #       {% set ns.output = dict({time: sum_value}, **ns.output) -%}
+        #     {% endfor -%}
+        #     {{ ns.output }}
+        #   {% endif -%}
 
     - name: Open meteo voorspelling morgen
       unique_id: 026dd8288-540a-46cf-9d70-553bfb28dc61
@@ -400,22 +455,22 @@
             {% endfor -%}
             {{ ns.output }}
           {% endif -%}
-        wh_period: >-
-          {% if (
-            state_attr('sensor.energy_production_tomorrow', 'wh_period') != none and
-            state_attr('sensor.energy_production_tomorrow_2', 'wh_period') != none and
-            state_attr('sensor.energy_production_tomorrow_3', 'wh_period') != none
-          ) -%}
-            {% set garage = state_attr('sensor.energy_production_tomorrow', 'wh_period') -%}
-            {% set huis = state_attr('sensor.energy_production_tomorrow_2', 'wh_period') -%}
-            {% set badkamer = state_attr('sensor.energy_production_tomorrow_3', 'wh_period') -%}
-            {% set ns = namespace(output={}) -%}
-            {% for time, value in garage.items() -%}
-              {% set sum_value = value + huis.get(time, 0) + badkamer.get(time, 0) -%}
-              {% set ns.output = dict({time: sum_value}, **ns.output) -%}
-            {% endfor -%}
-            {{ ns.output }}
-          {% endif -%}
+        # wh_period: >-
+        #   {% if (
+        #     state_attr('sensor.energy_production_tomorrow', 'wh_period') != none and
+        #     state_attr('sensor.energy_production_tomorrow_2', 'wh_period') != none and
+        #     state_attr('sensor.energy_production_tomorrow_3', 'wh_period') != none
+        #   ) -%}
+        #     {% set garage = state_attr('sensor.energy_production_tomorrow', 'wh_period') -%}
+        #     {% set huis = state_attr('sensor.energy_production_tomorrow_2', 'wh_period') -%}
+        #     {% set badkamer = state_attr('sensor.energy_production_tomorrow_3', 'wh_period') -%}
+        #     {% set ns = namespace(output={}) -%}
+        #     {% for time, value in garage.items() -%}
+        #       {% set sum_value = value + huis.get(time, 0) + badkamer.get(time, 0) -%}
+        #       {% set ns.output = dict({time: sum_value}, **ns.output) -%}
+        #     {% endfor -%}
+        #     {{ ns.output }}
+        #   {% endif -%}
 
     - name: Open meteo voorspelling overmorgen
       unique_id: 3e51f4a0-33d6-4e0c-9eb6-ab59871ad0a1
@@ -443,22 +498,22 @@
             {% endfor -%}
             {{ ns.output }}
           {% endif -%}
-        wh_period: >-
-          {% if (
-            state_attr('sensor.energy_production_d2', 'wh_period') != none and
-            state_attr('sensor.energy_production_d2_2', 'wh_period') != none and
-            state_attr('sensor.energy_production_d2_3', 'wh_period') != none
-          ) -%}
-            {% set garage = state_attr('sensor.energy_production_d2', 'wh_period') -%}
-            {% set huis = state_attr('sensor.energy_production_d2_2', 'wh_period') -%}
-            {% set badkamer = state_attr('sensor.energy_production_d2_3', 'wh_period') -%}
-            {% set ns = namespace(output={}) -%}
-            {% for time, value in garage.items() -%}
-              {% set sum_value = value + huis.get(time, 0) + badkamer.get(time, 0) -%}
-              {% set ns.output = dict({time: sum_value}, **ns.output) -%}
-            {% endfor -%}
-            {{ ns.output }}
-          {% endif -%}
+        # wh_period: >-
+        #   {% if (
+        #     state_attr('sensor.energy_production_d2', 'wh_period') != none and
+        #     state_attr('sensor.energy_production_d2_2', 'wh_period') != none and
+        #     state_attr('sensor.energy_production_d2_3', 'wh_period') != none
+        #   ) -%}
+        #     {% set garage = state_attr('sensor.energy_production_d2', 'wh_period') -%}
+        #     {% set huis = state_attr('sensor.energy_production_d2_2', 'wh_period') -%}
+        #     {% set badkamer = state_attr('sensor.energy_production_d2_3', 'wh_period') -%}
+        #     {% set ns = namespace(output={}) -%}
+        #     {% for time, value in garage.items() -%}
+        #       {% set sum_value = value + huis.get(time, 0) + badkamer.get(time, 0) -%}
+        #       {% set ns.output = dict({time: sum_value}, **ns.output) -%}
+        #     {% endfor -%}
+        #     {{ ns.output }}
+        #   {% endif -%}
 
     - name: Open meteo voorspelling resterend vandaag
       unique_id: 2d19babc-2ce9-4f67-9b76-cbe630a8cf64

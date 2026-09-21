@@ -56,13 +56,13 @@ emhass_mpc_models:
               {{  "true" if is_state('binary_sensor.afwasmachien_staat_op', "on") else "false" }},
               {{  "true" if is_state('binary_sensor.warmtepompboiler_aan', "on") else "false" }},
               {{  "true" if is_state('binary_sensor.warmtepomp_aan', "on") else "false" }}],
-            "soc_init": {{ states("sensor.battery_state_of_charge") | float(0) / 100 }},
+            "soc_init": {{ states("sensor.battery_state_of_charge") | int(states("sensor.emhass_soc")|int) / 100 }},
             "battery_minimum_state_of_charge": {{
-                0.15 if ((states("sensor.battery_state_of_charge") | float(0) / 100) > 0.15)
-                else (states("sensor.battery_state_of_charge") | float(0) / 100) }},
+                0.15 if ((states("sensor.battery_state_of_charge") | int(states("sensor.emhass_soc")|int) / 100) > 0.15)
+                else (states("sensor.battery_state_of_charge") | int(states("sensor.emhass_soc")|int) / 100) }},
             "battery_maximum_state_of_charge": {{
-              1 if ((states("sensor.battery_state_of_charge") | float(0) / 100) < 1)
-              else (states("sensor.battery_state_of_charge") | float(0) / 100) }},
+              1 if ((states("sensor.battery_state_of_charge") | int(states("sensor.emhass_soc")|int) / 100) < 1)
+              else (states("sensor.battery_state_of_charge") | int(states("sensor.emhass_soc")|int) / 100) }},
             "soc_final": 0.7,
             "Pc_max": {{ states("sensor.battery_p_charge_max")|int }},
             "Pd_max": {{ states("sensor.battery_p_discharge_max")|int }},

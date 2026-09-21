@@ -1,82 +1,86 @@
 """
 Solar evaluation script for interpolated 5-minute forecasts.
-Calculates MSE, MAE, RMSE, and MAPE for Solcast/OpenMeteo interpolated series.
+Selecteert de beste voorspeller op basis van een gewogen combinatie van
+genormaliseerde MAE (vermogensprofiel) en energie-APE (dagbudget).
 """
 
 
-def calculate_mse(actual, predicted):
-    if not actual or not predicted:
-        return float("inf")
-
-    min_length = min(len(actual), len(predicted))
-    if min_length == 0:
-        return float("inf")
-
-    actual_slice = actual[:min_length]
-    predicted_slice = predicted[:min_length]
-
-    mse = sum((a - p) ** 2 for a, p in zip(actual_slice, predicted_slice)) / min_length
-    return mse
+def get_slot_index(timestamp_value):
+    try:
+        if isinstance(timestamp_value, str):
+            ts = timestamp_value.replace("Z", "+00:00")
+            dt = datetime.datetime.fromisoformat(ts)
+        else:
+            dt = timestamp_value
+        if dt.tzinfo is not None:
+            dt = dt.astimezone()
+        return (dt.hour * 60 + dt.minute) // 5
+    except (ValueError, TypeError, AttributeError):
+        return None
 
 
 def calculate_mae(actual, predicted):
     if not actual or not predicted:
         return float("inf")
+    n = min(len(actual), len(predicted))
+    return sum(abs(a - p) for a, p in zip(actual[:n], predicted[:n])) / n
 
-    min_length = min(len(actual), len(predicted))
-    if min_length == 0:
+
+def calculate_energy_kwh(power_values, interval_minutes=5):
+    if not power_values:
+        return 0.0
+    return sum(power_values) * (interval_minutes / 60) / 1000
+
+
+def calculate_combined_score(
+    mae, actual_aligned, energy_error_kwh, energy_actual_kwh, w_mae=0.6, w_energy=0.4
+):
+    """
+    Gecombineerde score (lager = beter) als gewogen gemiddelde van:
+      - MAE als % van het gemiddeld actueel vermogen  (shape-nauwkeurigheid)
+      - |energie-fout| als % van werkelijke energie   (dagbudget-nauwkeurigheid)
+    Beide in % zodat ze op dezelfde schaal staan.
+    Gewichten: w_mae + w_energy = 1.0 — verhoog w_energy als dagbudget
+    zwaarder moet wegen dan het momentane vermogensprofiel.
+    """
+    if mae == float("inf"):
         return float("inf")
 
-    actual_slice = actual[:min_length]
-    predicted_slice = predicted[:min_length]
-
-    mae = sum(abs(a - p) for a, p in zip(actual_slice, predicted_slice)) / min_length
-    return mae
-
-
-def calculate_rmse(mse_value):
-    return mse_value ** 0.5 if mse_value != float("inf") else float("inf")
-
-
-def calculate_mape(actual, predicted):
-    if not actual or not predicted:
-        return float("inf")
-
-    min_length = min(len(actual), len(predicted))
-    if min_length == 0:
-        return float("inf")
-
-    actual_slice = actual[:min_length]
-    predicted_slice = predicted[:min_length]
-
-    valid_pairs = [(a, p) for a, p in zip(actual_slice, predicted_slice) if a != 0]
-
-    if not valid_pairs:
-        return float("inf")
-
-    mape = (
-        sum(abs((a - p) / a) for a, p in valid_pairs) / len(valid_pairs) * 100
+    mean_actual = sum(actual_aligned) / len(actual_aligned) if actual_aligned else 0
+    mae_pct = (mae / mean_actual * 100) if mean_actual > 0 else float("inf")
+    energy_ape = (
+        (abs(energy_error_kwh) / energy_actual_kwh * 100)
+        if energy_actual_kwh > 0
+        else float("inf")
     )
-    return mape
+
+    if float("inf") in (mae_pct, energy_ape):
+        return float("inf")
+
+    return w_mae * mae_pct + w_energy * energy_ape
 
 
-def extract_statistics_values(statistics_data):
+def extract_statistics_by_slot(statistics_data):
     try:
         stats_root = statistics_data.get("statistics", statistics_data)
         sensor_stats = stats_root.get("sensor.huidige_opbrengst_gefilterd", [])
-        return [
-            entry.get("mean", 0) for entry in sensor_stats if entry.get("mean") is not None
-        ]
     except (AttributeError, TypeError, KeyError):
         logger.warning("Kon statistics data niet parsen")
-        return []
+        return {}
+
+    by_slot = {}
+    for entry in sensor_stats:
+        mean_value = entry.get("mean")
+        if mean_value is None:
+            continue
+        slot = get_slot_index(entry.get("start"))
+        if slot is None:
+            continue
+        by_slot[slot] = mean_value
+    return by_slot
 
 
-def get_interpolated_series(entity_id, attribute_name, current_slot):
-    """
-    Haal interpolated series op en beperk tot history (tot huidige slot).
-    current_slot: 5-minuten slot index sinds middernacht (0-575)
-    """
+def get_interpolated_series(entity_id, attribute_name):
     try:
         entity_state = hass.states.get(entity_id)
         if not entity_state or not entity_state.attributes:
@@ -84,38 +88,43 @@ def get_interpolated_series(entity_id, attribute_name, current_slot):
         raw = entity_state.attributes.get(attribute_name, [])
         if not raw:
             return []
-        cleaned = [float(x) for x in raw if x is not None]
-        # Beperk tot history: alleen data tot en met huidige slot
-        # (slot + 1 omdat slot 0 = eerste 5 minuten, slot 1 = tweede 5 minuten, etc.)
-        return cleaned[:current_slot + 1]
+        return [float(x) for x in raw if x is not None]
     except (ValueError, TypeError):
-        logger.warning(f"Kon {attribute_name} data niet ophalen van {entity_id}")
+        logger.warning(f"Kon {attribute_name} niet ophalen van {entity_id}")
         return []
 
 
-def log_evaluation_results(results, best_predictor):
-    current_time = hass.states.get("sensor.time").state
-    log_message = (
-        f"{current_time}: {best_predictor} (5m MSE: {results[best_predictor]['mse']:.2f})"
-    )
+def build_aligned_pairs(real_by_slot, predicted_series, max_slot):
+    actual, predicted = [], []
+    for slot in sorted(real_by_slot.keys()):
+        if slot > max_slot:
+            continue
+        if slot < len(predicted_series):
+            actual.append(real_by_slot[slot])
+            predicted.append(predicted_series[slot])
+    return actual, predicted
 
-    hass.services.call(
-        "input_text",
-        "set_value",
-        {
-            "entity_id": "input_text.evaluation_log_interpolated",
-            "value": log_message,
-        },
-    )
 
-    hass.services.call(
-        "input_datetime",
-        "set_datetime",
-        {
-            "entity_id": "input_datetime.last_evaluation_time_interpolated",
-            "datetime": hass.states.get("sensor.date_time_iso").state,
-        },
-    )
+# def log_evaluation_results(results, best_key, energy_actual_kwh):
+#     best = results[best_key]
+#     current_time = hass.states.get("sensor.time").state
+#     log_message = (
+#         f"{current_time}: {best['display_name']} "
+#         f"(score={best['combined_score']:.1f}%, "
+#         f"MAE={best['mae']:.0f}W, "
+#         f"ΔE={best['energy_error_kwh']:+.3f} kWh van {energy_actual_kwh:.2f} kWh)"
+#     )
+#     hass.services.call(
+#         "input_text", "set_value",
+#         {"entity_id": "input_text.evaluation_log_interpolated", "value": log_message},
+#     )
+#     hass.services.call(
+#         "input_datetime", "set_datetime",
+#         {
+#             "entity_id": "input_datetime.last_evaluation_time_interpolated",
+#             "datetime": hass.states.get("sensor.date_time_iso").state,
+#         },
+#     )
 
 
 try:
@@ -125,10 +134,10 @@ try:
     )
 
     logger.info(f"Starting interpolated solar evaluation at {current_time_str}")
-    real_data = extract_statistics_values(statistics_data)
+    real_by_slot = extract_statistics_by_slot(statistics_data)
 
-    if not real_data:
-        logger.error("Geen werkelijke statistics data beschikbaar voor 5m evaluatie")
+    if not real_by_slot:
+        logger.error("Geen werkelijke statistics data beschikbaar")
         hass.services.call(
             "input_text",
             "set_value",
@@ -138,25 +147,20 @@ try:
             },
         )
     else:
-        data_length = len(real_data)
-        logger.info(f"Werkelijke data punten (5m): {data_length}")
+        logger.info(f"Werkelijke data punten: {len(real_by_slot)}")
 
-        # Bereken huidige 5-minuten slot sinds middernacht
-        # Dit komt overeen met hoeveel 5-minuten blokken er zijn verstreken vandaag
-        # De interpolated sensoren hebben state = huidige slot index
-        solcast_state = hass.states.get("sensor.solcast_interpolated_forecast")
-        if solcast_state and solcast_state.state not in ["unavailable", "unknown"]:
-            try:
-                current_slot = int(solcast_state.state)
-            except (ValueError, TypeError):
-                # Fallback: gebruik lengte van real_data als proxy voor slot
-                # (real_data bevat alle 5-min blokken vanaf middernacht tot nu)
-                current_slot = data_length - 1 if data_length > 0 else 0
-        else:
-            # Fallback: gebruik lengte van real_data als proxy voor slot
-            current_slot = data_length - 1 if data_length > 0 else 0
+        current_slot = get_slot_index(current_time_str)
+        if current_slot is None:
+            current_slot = max(real_by_slot.keys())
+            logger.warning(
+                f"Slot uit current_time niet bepaalbaar, fallback naar {current_slot}"
+            )
 
-        logger.info(f"Huidige 5-minuten slot: {current_slot}")
+        all_actual = [
+            real_by_slot[s] for s in sorted(real_by_slot.keys()) if s <= current_slot
+        ]
+        energy_actual_kwh = calculate_energy_kwh(all_actual)
+        logger.info(f"Werkelijke energie tot nu: {energy_actual_kwh:.3f} kWh")
 
         predictors = {
             "solcast": {
@@ -179,101 +183,83 @@ try:
                 "attribute": "five_minute_series",
                 "display_name": "OpenMeteo 5m",
             },
+            "ml": {
+                "entity": "sensor.ml_interpolated_forecast",
+                "attribute": "five_minute_series",
+                "display_name": "Ml 5m",
+            },
         }
 
         results = {}
 
         for predictor_key, predictor_info in predictors.items():
-            history_data = get_interpolated_series(
-                predictor_info["entity"], predictor_info["attribute"], current_slot
+            predicted_series = get_interpolated_series(
+                predictor_info["entity"], predictor_info["attribute"]
+            )
+            actual_aligned, predicted_aligned = build_aligned_pairs(
+                real_by_slot, predicted_series, current_slot
             )
 
-            if history_data:
-                mse = calculate_mse(real_data, history_data)
-                mae = calculate_mae(real_data, history_data)
-                rmse = calculate_rmse(mse)
-                mape = calculate_mape(real_data, history_data)
+            if actual_aligned:
+                mae = calculate_mae(actual_aligned, predicted_aligned)
+                energy_predicted = calculate_energy_kwh(predicted_aligned)
+                energy_error = calculate_energy_kwh(actual_aligned) - energy_predicted
+                score = calculate_combined_score(
+                    mae, actual_aligned, energy_error, energy_actual_kwh
+                )
 
                 results[predictor_key] = {
-                    "mse": mse,
                     "mae": mae,
-                    "rmse": rmse,
-                    "mape": mape,
+                    "energy_error_kwh": energy_error,
+                    "combined_score": score,
                     "display_name": predictor_info["display_name"],
-                    "data_points": min(len(real_data), len(history_data)),
+                    "data_points": len(actual_aligned),
                 }
 
                 logger.info(
                     f"{predictor_info['display_name']}: "
-                    f"MSE={mse:.2f}, MAE={mae:.2f}, RMSE={rmse:.2f}, MAPE={mape:.2f}%"
+                    f"score={score:.1f}%, MAE={mae:.0f}W, ΔE={energy_error:+.3f} kWh"
                 )
             else:
-                logger.warning(
-                    f"Geen 5m lijst data voor {predictor_info['display_name']}"
-                )
+                logger.warning(f"Geen data voor {predictor_info['display_name']}")
                 results[predictor_key] = {
-                    "mse": float("inf"),
                     "mae": float("inf"),
-                    "rmse": float("inf"),
-                    "mape": float("inf"),
+                    "energy_error_kwh": 0.0,
+                    "combined_score": float("inf"),
                     "display_name": predictor_info["display_name"],
                     "data_points": 0,
                 }
 
-        entity_suffix = {
-            "solcast": "solcast_interp",
-            "solcast10": "solcast10_interp",
-            "solcast90": "solcast90_interp",
-            "openmeteo": "openmeteo_interp",
+        valid_results = {
+            k: v for k, v in results.items() if v["combined_score"] != float("inf")
         }
 
-        for predictor_key, metrics in results.items():
-            suffix = entity_suffix[predictor_key]
-            hass.services.call(
-                "input_number",
-                "set_value",
-                {
-                    "entity_id": f"input_number.{suffix}_mse",
-                    "value": metrics["mse"] if metrics["mse"] != float("inf") else 999999,
-                },
-            )
-            hass.services.call(
-                "input_number",
-                "set_value",
-                {
-                    "entity_id": f"input_number.{suffix}_mae",
-                    "value": metrics["mae"] if metrics["mae"] != float("inf") else 999999,
-                },
-            )
-
-        valid_results = {k: v for k, v in results.items() if v["mse"] != float("inf")}
-
         if valid_results:
-            best_predictor_key = min(
-                valid_results.keys(), key=lambda k: valid_results[k]["mse"]
+            best_key = min(
+                valid_results, key=lambda k: valid_results[k]["combined_score"]
             )
-            best_predictor_name = valid_results[best_predictor_key]["display_name"]
+            best_name = valid_results[best_key]["display_name"]
 
             current_best = hass.states.get(
                 "input_text.best_solar_predictor_interpolated"
             ).state
 
-            if current_best != best_predictor_key:
+            if current_best != best_key:
                 hass.services.call(
                     "input_text",
                     "set_value",
                     {
                         "entity_id": "input_text.best_solar_predictor_interpolated",
-                        "value": best_predictor_key,
+                        "value": best_key,
                     },
                 )
-                logger.info(f"Beste 5m voorspeller gewijzigd naar: {best_predictor_name}")
+                logger.info(f"Beste voorspeller gewijzigd naar: {best_name}")
             else:
-                logger.info(f"Beste 5m voorspeller blijft: {best_predictor_name}")
+                logger.info(f"Beste voorspeller blijft: {best_name}")
 
-            log_evaluation_results(results, best_predictor_key)
+            # log_evaluation_results(results, best_key, energy_actual_kwh)
         else:
-            logger.error("Geen geldige 5m voorspelling data beschikbaar")
+            logger.error("Geen geldige voorspelling data beschikbaar")
             hass.services.call(
                 "input_text",
                 "set_value",
@@ -302,7 +288,3 @@ except Exception as e:
             "notification_id": "solar_evaluation_error_5m",
         },
     )
-
-
-
-####kak gvd

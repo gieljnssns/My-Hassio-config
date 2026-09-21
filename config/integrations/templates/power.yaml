@@ -72,8 +72,8 @@
         -#}
         {% set consumption = solar_power - net_power + battery_power -%}
 
-        {# Minimum 325W verbruik -#}
-        {{ [325, consumption] | max | round(0) }}
+        {# Minimum 275W verbruik -#}
+        {{ [275, consumption] | max | round(0) }}
       availability: >
         {% set meter_available = states('sensor.meter_active_power_total') not in ['unavailable', 'unknown', 'none'] -%}
         {% set primary_available = states('sensor.electricity_meter_energieverbruik') not in ['unavailable', 'unknown', 'none'] -%}
@@ -90,7 +90,7 @@
                       states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
                       states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
                       states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) -%}
-        {{ [325, use] | max | round(0) }}
+        {{ [275, use] | max | round(0) }}
 
     - name: "Huidig fluvius"
       unit_of_measurement: "W"

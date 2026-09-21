@@ -1,8 +1,15 @@
 emhass_discharge_to_98:
   alias: EMHASS discharge to 98
   sequence:
-    - wait_template: >
-        {{ states("sensor.battery_power")|int("kak") is number }}
+    - if:
+        - condition: state
+          entity_id: sensor.battery_power
+          state: "unavailable"
+      then:
+        - wait_template: >
+            {{ states("sensor.battery_power")|int("kak") is number }}
+    # - wait_template: >
+    #     {{ states("sensor.battery_power")|int("kak") is number }}
     - action: select.select_option
       target:
         entity_id: select.goodwe_inverter_operation_mode

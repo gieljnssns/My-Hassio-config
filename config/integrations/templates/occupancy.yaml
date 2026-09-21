@@ -7,6 +7,40 @@
                     | map(attribute="entity_id")
                     | list
                     | count }}
+    
+    - name: People arrive count
+      unique_id: 62fa5b78-7977-4606-a95d-2e89a5fb55c7
+      state: >-
+        {% set count = 0 -%}
+        {% if is_state("sensor.martine_location", "just_arrived") -%}
+          {% set count = count + 1 -%}
+        {% endif -%}
+        {% if is_state("sensor.giel_location", "just_arrived") -%}
+          {% set count = count + 1 -%}
+        {% endif -%}
+        {% if is_state("sensor.noor_location", "just_arrived") -%}
+          {% set count = count + 1 -%}
+        {% endif -%}
+        {% if is_state("sensor.fien_location", "just_arrived") -%}
+          {% set count = count + 1 -%}
+        {% endif -%}
+        {{count}}
+      attributes:
+        people: >
+          {% set people = [] -%}
+          {% if is_state("sensor.martine_location", "just_arrived") -%}
+            {% set people = people + ['Martine'] -%}
+          {% endif -%}
+          {% if is_state("sensor.giel_location", "just_arrived") -%}
+            {% set people = people + ['Giel'] -%}
+          {% endif -%}
+          {% if is_state("sensor.noor_location", "just_arrived") -%}
+            {% set people = people + ['Noor'] -%}
+          {% endif -%}
+          {% if is_state("sensor.fien_location", "just_arrived") -%}
+            {% set people = people + ['Fien'] -%}
+          {% endif -%}
+          {{ people }}
 
 - binary_sensor:
     - name: Keuken bezetting
