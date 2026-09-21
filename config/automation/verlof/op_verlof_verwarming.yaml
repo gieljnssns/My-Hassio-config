@@ -8,11 +8,11 @@ actions:
     entity_id: climate.living
     data_template:
       preset_mode: >
-        {% if trigger.to_state.state == 'on' %}
+        {% if trigger.to_state.state == 'on' -%}
           away
-        {% else %}
+        {% else -%}
           schedule
-        {% endif %}
+        {% endif -%}
 
   - action: climate.set_hvac_mode
     entity_id:
@@ -22,8 +22,8 @@ actions:
       - climate.slaapkamer
     data_template:
       hvac_mode: >
-        {% if trigger.to_state.state == 'on' %}
+        {% if trigger.to_state.state == 'on' -%}
           off
-        {% else %}
+        {% else -%}
           heat
-        {% endif %}
+        {% endif -%}

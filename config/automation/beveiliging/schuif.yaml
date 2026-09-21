@@ -18,11 +18,11 @@ actions:
             data:
               title: Wie zit er aan het schuifke?
               message: >
-                {% set verdachten = ["sensor.mphone_area", "sensor.fphone_area", "sensor.nphone_area"] %}
-                {% set schuldige = namespace(all=[]) %}
-                {% for verdachte in verdachten %}
-                  {% if states(verdachte) == "Garage" %}
-                    {% set schuldige.all = schuldige.all + [state_attr(verdachte, 'friendly_name').split(" ")[0]] %}
-                  {% endif %}
-                {% endfor %}
+                {% set verdachten = ["sensor.mphone_area", "sensor.fphone_area", "sensor.nphone_area"] -%}
+                {% set schuldige = namespace(all=[]) -%}
+                {% for verdachte in verdachten -%}
+                  {% if states(verdachte) == "Garage" -%}
+                    {% set schuldige.all = schuldige.all + [state_attr(verdachte, 'friendly_name').split(" ")[0]] -%}
+                  {% endif -%}
+                {% endfor -%}
                 De verdachten zijn: {{ schuldige.all| join(" of ") }}.

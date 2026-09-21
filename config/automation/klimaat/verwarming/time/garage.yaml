@@ -7,11 +7,11 @@ triggers:
     value_template: "{{ now().weekday() == 6 and now().hour == 23 }}"
 actions:
   - action: >
-      {% if now().weekday() == 4 %}
+      {% if now().weekday() == 4 -%}
         automation.turn_on
-      {% else %}
+      {% else -%}
         automation.turn_off
-      {% endif %}
+      {% endif -%}
     entity_id: automation.verwarming_bij_aanwezigheid_garage
   - action: climate.set_hvac_mode
     entity_id: climate.garage

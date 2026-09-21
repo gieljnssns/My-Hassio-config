@@ -9,14 +9,6 @@ triggers:
           (is_state('binary_sensor.keuken_aqara_pir', 'on')
           or is_state('binary_sensor.keuken_presence', 'on')
           or is_state('binary_sensor.keuken_pir', 'on')) }}
-  # - trigger: template
-  #   value_template: >
-  #     {{  is_state('binary_sensor.keuken_achterdeur_last_5_min', 'on') and
-  #         is_state('binary_sensor.keuken_aqara_pir', 'on') }}
-  # - trigger: template
-  #   value_template: >
-  #     {{  is_state('binary_sensor.gang_voordeur_last_5_min', 'on') and
-  #         is_state('binary_sensor.keuken_aqara_pir', 'on') }}
 conditions:
   condition: and
   conditions:
@@ -49,7 +41,7 @@ actions:
       cache: false
       entity_id: media_player.mass_keuken
       message: |
-        {% set message =  states('sensor.welkom_1') %}
+        {% set message =  states('sensor.welkom_1') -%}
           {{message}}
   - delay:
       seconds: 5
@@ -91,6 +83,3 @@ actions:
   - action: script.random_music
     data:
       sonos_entity: media_player.mass_keuken
-  # - action: media_player.media_play
-  #   data_template:
-  #     entity_id: media_player.mass_keuken

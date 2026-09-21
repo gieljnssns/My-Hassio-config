@@ -70,7 +70,7 @@ actions:
           - action: input_datetime.set_datetime
             data:
               datetime: >
-                {% set wait = no_motion_wait|int(300) %}
+                {% set wait = no_motion_wait|int(300) -%}
                 {{ now() + timedelta(seconds=wait) }}
             target:
               entity_id: !input input_datetime_target

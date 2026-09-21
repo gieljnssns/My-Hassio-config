@@ -21,9 +21,9 @@ conditions:
       value_template: "{{ now().month == 12 or now().month == 1  }}"
 actions:
   - action: >
-      {% if now().hour == 23 %}
+      {% if now().hour == 23 -%}
         switch.turn_off
-      {% else %}
+      {% else -%}
         switch.turn_on
-      {% endif %}
+      {% endif -%}
     entity_id: switch.ventilator_kerstverlichting

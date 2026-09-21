@@ -5,11 +5,11 @@ triggers:
     entity_id: sensor.dark_inside
 actions:
   - action: >
-      {% if is_state('sensor.dark_inside', 'true') %}
+      {% if is_state('sensor.dark_inside', 'true') -%}
         light.turn_on
-      {% else %}
+      {% else -%}
         light.turn_off
-      {% endif %}
+      {% endif -%}
     entity_id:
       - light.trap
       - light.led_knop_noor

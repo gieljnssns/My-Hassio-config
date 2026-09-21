@@ -2,7 +2,7 @@ alias: RAFC_lichten_uit
 id: 143a2976-c385-4039-bcfb-e9779b484e9f
 triggers:
   - entity_id: calendar.rafc
-    platform: state
+    trigger: state
     to: "off"
     for:
       minutes: 20
@@ -12,11 +12,11 @@ actions:
   #     - script.rafc2_1
   #     - script.rafc2_2
   - action: >-
-      {% if is_state('sensor.dark_inside', 'true') %}
+      {% if is_state('sensor.dark_inside', 'true') -%}
         light.turn_on
-      {% elif is_state('sensor.dark_inside', 'false') %}
+      {% elif is_state('sensor.dark_inside', 'false') -%}
         light.turn_off
-      {% endif %}
+      {% endif -%}
     target:
       entity_id:
         - light.spots_tv

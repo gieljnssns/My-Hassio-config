@@ -1,50 +1,10 @@
 alias: "Purge database"
 id: ca43a372-7850-436b-94e5-5024377653be
 triggers:
-  # - trigger: time
-  #   at: "03:12:00"
   - trigger: time
     at: "03:12:00"
-
-# variables:
-#   batch_size: 50
-#   all_entities: >
-#     {{ states | map(attribute='entity_id') | list }}
-#   power_entities: >
-#     {{ state_attr('group.power_entities', 'entity_id') | list }}
-#   not_recorded: >
-#     {{ state_attr("group.not_recorded_entities", "entity_id") | list +
-#         state_attr("sensor.not_recorded_entites", "list") | list }}
-#   purge_entities: >
-#     {{ all_entities | reject('in', power_entities) | list | reject('in', not_recorded) | list }}
-#   purge_batches: >
-#     {% set batches = namespace(data=[]) %}
-#     {% for i in range(0, (purge_entities | length // batch_size) + 1) %}
-#       {% set start = i * batch_size %}
-#       {% set end = start + batch_size %}
-#       {% set slice = purge_entities[start:end] %}
-#       {% if slice %}
-#         {% set batches.data = batches.data + [slice] %}
-#       {% endif %}
-#     {% endfor %}
-#     {{ batches.data }}
-
 actions:
   - choose:
-      # - conditions:
-      #     - condition: template
-      #       value_template: "{{ now().hour == 3 }}"
-      #   sequence:
-      #     - repeat:
-      #         count: "{{ purge_batches | length }}"
-      #         sequence:
-      #           - action: recorder.purge_entities
-      #             data:
-      #               keep_days: 7
-      #             target:
-      #               entity_id: "{{ purge_batches[repeat.index - 1] }}"
-      #           - delay:
-      #               seconds: 30
       - conditions:
           - condition: template
             value_template: "{{ now().hour == 3 }}"

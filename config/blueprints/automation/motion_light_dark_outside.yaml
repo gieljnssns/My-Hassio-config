@@ -88,7 +88,7 @@ actions:
           - action: input_datetime.set_datetime
             data:
               datetime: >
-                {% set wait = no_motion_wait|int(210) %}
+                {% set wait = no_motion_wait|int(210) -%}
                 {{ now() + timedelta(seconds=wait) }}
             target:
               entity_id: !input input_datetime_target
@@ -105,55 +105,3 @@ actions:
             {{ now() + timedelta(seconds=120) }}
         target:
           entity_id: !input input_datetime_target
-#   input:
-#     entity:
-#       name: Entity
-#       selector:
-#         entity:
-
-#     light_target:
-#       name: Light
-#       selector:
-#         target:
-#           entity:
-#             domain: light
-#     no_motion_wait:
-#       name: Wait time
-#       description: Time to wait until the light should be turned off.
-#       default: 120
-#       selector:
-#         number:
-#           min: 0
-#           max: 3600
-#           unit_of_measurement: seconds
-
-# # If motion is detected within the delay,
-# # we restart the script.
-# mode: restart
-# max_exceeded: silent
-
-# trigger:
-#   - trigger: state
-#     entity_id: !input entity
-#     from: "off"
-#     to: "on"
-#   - trigger: state
-#     entity_id: !input entity
-#     to: "Juist Aangekomen"
-
-# conditions:
-#   - condition: state
-#     entity_id: sensor.dark_inside
-#     state: "true"
-
-# actions:
-#   - action: light.turn_on
-#     target: !input light_target
-#   - wait_for_trigger:
-#       platform: state
-#       entity_id: !input entity
-#       from: "on"
-#       to: "off"
-#   - delay: !input no_motion_wait
-#   - action: light.turn_off
-#     target: !input light_target

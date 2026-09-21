@@ -98,17 +98,10 @@ actions:
           - action: input_datetime.set_datetime
             data:
               datetime: >
-                {% set wait = no_motion_wait|int(210) %}
+                {% set wait = no_motion_wait|int(210) -%}
                 {{ now() + timedelta(seconds=wait) }}
             target:
               entity_id: !input input_datetime_target
-          # - action: input_datetime.set_datetime
-          #   data:
-          #     datetime: >
-          #       {% set wait = no_motion_wait|int(210) %}
-          #       {{ now() + timedelta(seconds=wait) }}
-          #   target:
-          #     entity_id: !input input_datetime_target
       - conditions:
           - condition: trigger
             id: uit
@@ -122,20 +115,3 @@ actions:
             {{ now() + timedelta(seconds=120) }}
         target:
           entity_id: !input input_datetime_target
-
-  # - action: light.turn_on
-  #   target: !input light_target
-  # - action: input_datetime.set_datetime
-  #   data:
-  #     datetime: >
-  #       {{ now() + timedelta(seconds=!input no_motion_wait) }}
-  #   target:
-  #     entity_id: !input input_datetime_target
-  # - wait_for_trigger:
-  #     platform: state
-  #     entity_id: !input entity
-  #     from: "on"
-  #     to: "off"
-  # - delay: !input no_motion_wait
-  # - action: light.turn_off
-  #   target: !input light_target

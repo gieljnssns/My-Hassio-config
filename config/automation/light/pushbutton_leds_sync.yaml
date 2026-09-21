@@ -18,19 +18,19 @@ conditions:
         {{ as_timestamp(now()) - as_timestamp(states("sensor.uptime")) > 30 }}
 actions:
   - action: >
-      {% if trigger.to_state.state == 'on' %}
+      {% if trigger.to_state.state == 'on' -%}
         switch.turn_on
-      {% else %}
+      {% else -%}
         switch.turn_off
-      {% endif %}
+      {% endif -%}
     data_template:
       entity_id: >
-        {% if trigger.entity_id == 'light.wc' %}
+        {% if trigger.entity_id == 'light.wc' -%}
           switch.led_wc
-        {% elif trigger.entity_id == 'light.waskot' %}
+        {% elif trigger.entity_id == 'light.waskot' -%}
           switch.led_waskot
-        {% elif trigger.entity_id == 'light.kelder' %}
+        {% elif trigger.entity_id == 'light.kelder' -%}
           switch.led_kelder
-        {% else %}
+        {% else -%}
           switch.led_badkamer
-        {% endif %}
+        {% endif -%}

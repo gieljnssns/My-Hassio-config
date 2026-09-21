@@ -2,16 +2,6 @@ alias: "Uit na aanwezigheid"
 id: 862d6268-71cb-472b-b6fd-dcebe484af14
 mode: parallel
 triggers:
-  # - trigger: state
-  #   entity_id: binary_sensor.aanwezigheid_waskot
-  #   to: "off"
-  #   for:
-  #     minutes: 3
-  # - trigger: state
-  #   entity_id: binary_sensor.aanwezigheid_wc
-  #   to: "off"
-  #   for:
-  #     minutes: 3
   - trigger: state
     entity_id: binary_sensor.zithoek_bezetting
     to: "off"
@@ -27,16 +17,6 @@ triggers:
     to: "off"
     for:
       minutes: 2
-  # - trigger: state
-  #   entity_id: binary_sensor.slaapkamer_noor_bezetting
-  #   to: "off"
-  #   for:
-  #     minutes: 2
-  # - trigger: state
-  #   entity_id: binary_sensor.slaapkamer_fien_bezetting
-  #   to: "off"
-  #   for:
-  #     minutes: 2
   - trigger: state
     entity_id: binary_sensor.fien_bezetting
     to: "off"
@@ -52,19 +32,14 @@ actions:
   - action: light.turn_off
     data_template:
       entity_id: >
-        {% if trigger.entity_id == 'binary_sensor.zithoek_bezetting' %}
+        {% if trigger.entity_id == 'binary_sensor.zithoek_bezetting' -%}
           light.zithoek_luster
-        {% elif trigger.entity_id == 'binary_sensor.danszaal_bezetting' %}
+        {% elif trigger.entity_id == 'binary_sensor.danszaal_bezetting' -%}
           light.danszaal_luster, light.danszaal_spots
-        {% elif trigger.entity_id == 'binary_sensor.fien_bezetting' %}
+        {% elif trigger.entity_id == 'binary_sensor.fien_bezetting' -%}
           light.fien
-        {% elif trigger.entity_id == 'binary_sensor.garage_bezetting' %}
+        {% elif trigger.entity_id == 'binary_sensor.garage_bezetting' -%}
           light.garage, light.garage_werkbank, light.vogelpik, light.garage_sjotterbak, light.garage_sfeerverlichting
-        {% else %}
+        {% else -%}
           light.slaapkamer_hoog, light.slaapkamer_spot
-        {% endif %}
-
-# {% elif trigger.entity_id == 'binary_sensor.slaapkamer_noor_bezetting' %}
-#   light.noor
-# {% elif trigger.entity_id == 'binary_sensor.slaapkamer_fien_bezetting' %}
-#   light.fien
+        {% endif -%}
