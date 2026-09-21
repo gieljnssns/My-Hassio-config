@@ -7,8 +7,12 @@ verluchting_1_uur:
       entity_id: switch.verluchting
     - action: switch.turn_on
       entity_id: switch.badkamer_verluchting
-    - action: switch.turn_on
-      entity_id: switch.zolder_verluchting
+    - if:
+        - condition: template
+          value_template: "{{ states('binary_sensor.douchen') != 'on' }}"
+      then:
+        - action: switch.turn_on
+          entity_id: switch.zolder_verluchting
     - action: input_datetime.set_datetime
       data:
         datetime: >

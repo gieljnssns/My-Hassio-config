@@ -10,24 +10,27 @@ triggers:
   - trigger: template
     id: openen
     value_template: >
-      {{ states("sensor.openweathermap_windsnelheid") | int(0) > 40 }}
+      {{ state_attr("weather.home_2", "wind_speed") | int(0) > 40 }}
   - trigger: template
     id: openen
     value_template: >
-      {{ states("sensor.openweathermap_windvlaag_snelheid") | int(0) > 60 }}
+      {{ state_attr("weather.home_2", "wind_gust_speed") | int(0) > 60 }}
   - trigger: template
     value_template: >
-      {% if states("sensor.regen_komende_10_minuten") != "unknown" and states("sensor.regen_komende_10_minuten") != "unavailable" %}
+      {{ state_attr("weather.home_2", "wind_gust_speed") | float(state_attr("weather.home_2", "wind_speed")) > 60 }}
+  - trigger: template
+    value_template: >
+      {% if states("sensor.regen_komende_10_minuten") != "unknown" and states("sensor.regen_komende_10_minuten") != "unavailable" -%}
         {{ states("sensor.regen_komende_10_minuten") | float > 0 }}
-      {% endif %}
+      {% endif -%}
     id: openen
   - trigger: template
     value_template: >
-      {% if states("sensor.neerslag_zandhoven") != "unknown" and states("sensor.neerslag_zandhoven") != "unavailable" %}
+      {% if states("sensor.neerslag_zandhoven") != "unknown" and states("sensor.neerslag_zandhoven") != "unavailable" -%}
         {{ states("sensor.neerslag_zandhoven") | float > 0 }}
-      {% else %}
-        {{ states("sensor.openweathermap_rain_intensity")  | float > 0 }}
-      {% endif %}
+      {% else -%}
+        {{ states("sensor.home_current_rainfall") | float > 0 }}
+      {% endif -%}
     id: openen
   - trigger: state
     entity_id: sensor.dark_inside
@@ -58,32 +61,24 @@ actions:
               {{ states("binary_sensor.kans_op_aanvriezen") == "off" }}
           - condition: template
             value_template: >
-              {{ states("sensor.openweathermap_windsnelheid") | int(0) < 40 }}
+              {{ state_attr("weather.home_2", "wind_speed") | int(0) < 40 }}
           - condition: template
             value_template: >
-              {{ states("sensor.openweathermap_windvlaag_snelheid") | int(0) < 60 }}
+              {{ state_attr("weather.home_2", "wind_gust_speed") | int(0) < 60 }}
+          - condition: template
+            value_template: >
+              {{ state_attr("weather.home_2", "wind_gust_speed") | float(state_attr("weather.home_2", "wind_speed")) < 60 }}
         sequence:
           - action: script.achtergevel_sluiten
           - delay:
               seconds: 10
           - action: script.zijgevel_sluiten
-          # - action: cover.close_cover
-          #   target:
-          #     entity_id:
-          #       - cover.keuken_1
-          #       - cover.keuken_2
-          #       - cover.living
-          #       - cover.slaapkamer
-          #       - cover.slaapkamer_noor
           - action: input_boolean.turn_on
             target:
               entity_id: input_boolean.nacht_closed
       - conditions:
           - condition: trigger
             id: openen
-          # - condition: numeric_state
-          #   entity_id: sensor.min_temperatuur_buiten_voorspelling_12u
-          #   below: 12
           - condition: template
             value_template: >
               {{ states("cover.keuken_1") != "open" or
@@ -102,14 +97,6 @@ actions:
           - delay:
               seconds: 10
           - action: script.zijgevel_openen
-          # - action: cover.open_cover
-          #   target:
-          #     entity_id:
-          #       - cover.keuken_1
-          #       - cover.keuken_2
-          #       - cover.living
-          #       - cover.slaapkamer
-          #       - cover.slaapkamer_noor
           - action: input_boolean.turn_off
             target:
               entity_id: input_boolean.nacht_closed

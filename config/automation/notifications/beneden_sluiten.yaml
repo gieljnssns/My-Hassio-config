@@ -1,0 +1,30 @@
+alias: Beneden sluiten
+id: c9014446-e146-4b4b-9cad-80e471cbeca6
+trigger:
+  - trigger: state
+    entity_id: binary_sensor.keukendeur_mag_open
+    from: "on"
+    to: "off"
+  - trigger: numeric_state
+    entity_id: sensor.people_arrive_count
+    above: 0
+    for: "00:01:00"
+
+condition:
+  - condition: state
+    entity_id: binary_sensor.keuken_achterdeur
+    state: "on"
+  - condition: state
+    entity_id: binary_sensor.keukendeur_mag_open
+    state: "off"
+
+actions:
+  - action: script.notify_everyone_at_home
+    data:
+      title: ☀️ Achterdeur dicht houden
+      message: >
+        Sluit beneden:
+        {% if is_state('binary_sensor.keuken_achterdeur','on') -%}
+        Achterdeur
+        {% endif -%}
+        Reden: {{ state_attr("binary_sensor.keukendeur_mag_open", "reden") }}

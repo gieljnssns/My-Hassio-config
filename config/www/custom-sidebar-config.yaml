@@ -9,30 +9,31 @@
 # partials:
 #   instellingen: |
 #     const anal = is_state(analytics,'on');
-  
+
 # subtitle
-  # marquee: sensor.marquee_alerts
-title: 'Amelbergastraat 79'
+# marquee: sensor.marquee_alerts
+title: "Amelbergastraat 79"
 # sidebar_mode: "narrow"
 # title: >
-#     {% if is_state('input_boolean.sidebar_analytics','on') %}
+#     {% if is_state('input_boolean.sidebar_analytics','on') -%}
 #       True
-#     {% else %}
+#     {% else -%}
 #       False
-#     {% endif %}
-analytics: false
+#     {% endif -%}
+analytics:
+  false
   # sidebar_item_clicked: >
-  #   {% if is_state('input_boolean.sidebar_analytics','on') %}
+  #   {% if is_state('input_boolean.sidebar_analytics','on') -%}
   #     True
-  #   {% else %}
+  #   {% else -%}
   #     False
-  #   {% endif %}
+  #   {% endif -%}
 #   panel_visited: >
-#     {% if is_state('input_boolean.sidebar_analytics','on') %}
+#     {% if is_state('input_boolean.sidebar_analytics','on') -%}
 #       True
-#     {% else %}
+#     {% else -%}
 #       False
-#     {% endif %}
+#     {% endif -%}
 order:
   - item: logbook
     match: href
@@ -77,7 +78,7 @@ order:
 
 exceptions:
   - user: Martine
-    extend_from: 'base'
+    extend_from: "base"
     order:
       - item: to-do
         order: 3
@@ -98,7 +99,7 @@ exceptions:
         hide: false
 
   - user: Giel
-    extend_from: 'base'
+    extend_from: "base"
     order:
       - item: Music assistant
         new_item: true
@@ -130,13 +131,13 @@ exceptions:
       - item: hacs
         order: 8
         hide: false
-  #       # notification: |
-  #       #   [[[
-  #       #     const outdatedHacsEntities = Object.values(entities.update).filter(
-  #       #       (entity) => entity.platform === 'hacs' && is_state(entity.entity_id, 'on')
-  #       #     );
-  #       #     return outdatedHacsEntities.length || '';
-  #       #   ]]]
+      #       # notification: |
+      #       #   [[[
+      #       #     const outdatedHacsEntities = Object.values(entities.update).filter(
+      #       #       (entity) => entity.platform === 'hacs' && is_state(entity.entity_id, 'on')
+      #       #     );
+      #       #     return outdatedHacsEntities.length || '';
+      #       #   ]]]
       - item: Esphome
         new_item: true
         order: 9
@@ -154,7 +155,7 @@ exceptions:
       - item: developer tools
         name: Dev tools
         new_item: true
-        icon: 'mdi:hammer'
+        icon: "mdi:hammer"
         bottom: true
         href: "/config/developer-tools/template"
         hide: false
@@ -164,3 +165,8 @@ exceptions:
         bottom: true
         hide: false
         order: 12
+      - item: history
+        match: href
+        bottom: true
+        hide: false
+        order: 13

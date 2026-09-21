@@ -1,0 +1,46 @@
+alias: Boven verluchten
+id: a14e69ce-d584-4a2b-8fcf-3247a7939f6e
+trigger:
+  - trigger: state
+    entity_id: binary_sensor.ramen_mogen_open
+    from: "off"
+    to: "on"
+  - trigger: numeric_state
+    entity_id: sensor.people_arrive_count
+    above: 0
+    for: "00:01:00"
+
+condition:
+  - condition: template
+    value_template: >
+      {{ states("sensor.gemiddelde_temp_boven")|float(20) > 25 }}
+  - condition: state
+    entity_id: binary_sensor.ramen_mogen_open
+    state: "on"
+  - condition: template
+    value_template: >
+      {{  is_state('binary_sensor.badkamer_raam_openen','off') or
+          is_state('binary_sensor.slaapkamer_raam_openen','off') or
+          is_state('binary_sensor.slaapkamer_fien_raam_openen','off') or
+          is_state('binary_sensor.slaapkamer_noor_raam_openen','off') or
+          is_state('binary_sensor.velux_openen','off')or
+          is_state('binary_sensor.raam_openen','off')or
+          is_state('binary_sensor.raam_openen_2','off')or
+          is_state('binary_sensor.dubbel_raam_openen','off')  }}
+
+actions:
+  - action: script.notify_everyone_at_home
+    data:
+      title: 🌬️ Boven verluchten
+      message: >
+        {% set list = [] %}
+        {% if is_state('binary_sensor.badkamer_raam_openen','off') -%}{% set list = list + ["Badkamer"] %} {% endif -%}
+        {% if is_state('binary_sensor.slaapkamer_raam_openen','off') -%}{% set list = list + ['Slaapkamer'] %} {% endif -%}
+        {% if is_state('binary_sensor.slaapkamer_fien_raam_openen','off') -%}{% set list = list + ["Slaapkamer Fien"] %} {% endif -%}
+        {% if is_state('binary_sensor.slaapkamer_noor_raam_openen','off') -%}{% set list = list + ["Slaapkamer Noor"] %} {% endif -%}
+        {% if is_state('binary_sensor.velux_openen','off') -%}{% set list = list + ["Slaapkamer velux"] %} {% endif -%}
+        {% if is_state('binary_sensor.raam_openen','off') -%}{% set list = list + ["Drumkot"] %} {% endif -%}
+        {% if is_state('binary_sensor.raam_openen_2','off') -%}{% set list = list + ["Gang raam"] %} {% endif -%}
+        {% if is_state('binary_sensor.dubbel_raam_openen','off') -%}{% set list = list + ["Gang dubbel raam"] %} {% endif -%}
+        Ramen die open kunnen:
+          {{ list | join(", ") }}

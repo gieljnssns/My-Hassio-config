@@ -5,11 +5,17 @@ triggers:
     at: "07:00:00"
 
 conditions:
-  condition: and
-  conditions:
-    - condition: state
-      entity_id: sensor.bad_weather
-      state: "snow"
+  - condition: template
+    value_template: >
+      {% set weather = states('weather.home_2') %}
+      {% set frost =
+        states('sensor.buiten_temperatuur') | float(0) < 4
+        and states('sensor.buiten_dauwpunt') | float(0) < 6
+        and state_attr('weather.home_2', 'wind_speed') | float(0) < 12
+        and state_attr('weather.home_2', 'cloud_coverage') | float(0) < 20
+        and states('sensor.buiten_luchtvochtigheid') | float(0) > 50
+      %}
+      {{ weather in ['snowy', 'snowy-rainy'] and not frost }}
 
 actions:
   - variables:
@@ -18,13 +24,13 @@ actions:
         {% set idx = (state_attr("weather.home", "wind_bearing") | int(0) / 22.5) | round(0) | int -%}
         {{ directions[idx] }}
       fiets: >
-        {% if direction in ["N", "NNO", "NO", "ONO", "O"] %}
+        {% if direction in ["N", "NNO", "NO", "ONO", "O"] -%}
           , dus wind op kop.
-        {% elif direction in ["Z", "ZZW", "ZW", "WZW", "W"] %}
+        {% elif direction in ["Z", "ZZW", "ZW", "WZW", "W"] -%}
           , dus wind in de rug.
-        {% else %}
+        {% else -%}
           , dus de wind staat niet goed of slecht.
-        {% endif %}
+        {% endif -%}
   - choose:
       - conditions:
           - condition: state
@@ -37,11 +43,11 @@ actions:
           - action: notify.mobile_app_mphone
             data:
               message: >
-                " Er wordt sneeuw voorspeld, op tijd vertrekken!  Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.openweathermap_windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
+                " Er wordt sneeuw voorspeld, op tijd vertrekken!  Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ state_attr("weather.home_2", "wind_speed") }} {{ state_attr("weather.home_2", "wind_speed_unit") }} uit het {{ direction }} {{ fiets }} "
           - action: notify.noor_en_fien
             data:
               message: >
-                " Er wordt sneeuw voorspeld, op tijd vertrekken!  Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.openweathermap_windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
+                " Er wordt sneeuw voorspeld, op tijd vertrekken!  Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ state_attr("weather.home_2", "wind_speed") }} {{ state_attr("weather.home_2", "wind_speed_unit") }} uit het {{ direction }} {{ fiets }} "
       - conditions:
           - condition: state
             entity_id: binary_sensor.v_monnikenheide
@@ -53,7 +59,7 @@ actions:
           - action: notify.mobile_app_mphone
             data:
               message: >
-                " Er wordt sneeuw voorspeld, op tijd vertrekken!  Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.openweathermap_windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
+                " Er wordt sneeuw voorspeld, op tijd vertrekken!  Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ state_attr("weather.home_2", "wind_speed") }} {{ state_attr("weather.home_2", "wind_speed_unit") }} uit het {{ direction }} {{ fiets }} "
       - conditions:
           - condition: state
             entity_id: binary_sensor.v_monnikenheide
@@ -65,13 +71,4 @@ actions:
           - action: notify.noor_en_fien
             data:
               message: >
-                " Er wordt sneeuw voorspeld, op tijd vertrekken!  Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.openweathermap_windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }} "
-  # - action: notify.mobile_app_mphone
-  #   data:
-  #     message: 'Er wordt sneeuw voorspeld, op tijd vertrekken!  Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.openweathermap_windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }}'
-  # - condition: state
-  #   entity_id: binary_sensor.schooldag
-  #   state: "on"
-  # - action: notify.noor_en_fien
-  #   data:
-  #     message: 'Er wordt sneeuw voorspeld, op tijd vertrekken!  Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ states("sensor.openweathermap_windsnelheid", with_unit=True) }} uit het {{ direction }} {{ fiets }}'
+                " Er wordt sneeuw voorspeld, op tijd vertrekken!  Het is nu {{ states.sensor.buitentemperatuur_gefilterd.state_with_unit }}, {{ states("weather.home") }} en de wind waait {{ state_attr("weather.home_2", "wind_speed") }} {{ state_attr("weather.home_2", "wind_speed_unit") }} uit het {{ direction }} {{ fiets }} "

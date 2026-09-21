@@ -1,0 +1,28 @@
+alias: Beneden verluchten
+id: 544acd81-4e1e-4d0b-94d1-9c109bde579a
+trigger:
+  - trigger: state
+    entity_id: binary_sensor.keukendeur_mag_open
+    from: "off"
+    to: "on"
+  - trigger: numeric_state
+    entity_id: sensor.people_arrive_count
+    above: 0
+    for: "00:01:00"
+
+condition:
+  - condition: template
+    value_template: >
+      {{ states("sensor.gemiddelde_temp_beneden")|float(20) > 25 }}
+  - condition: state
+    entity_id: binary_sensor.keuken_achterdeur
+    state: "off"
+  - condition: state
+    entity_id: binary_sensor.keukendeur_mag_open
+    state: "on"
+
+actions:
+  - action: script.notify_everyone_at_home
+    data:
+      title: Beneden verluchten
+      message: De achterdeur mag open.

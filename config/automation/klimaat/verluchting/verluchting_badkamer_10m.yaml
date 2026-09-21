@@ -1,0 +1,13 @@
+alias: "Verluchting badkamer 10m"
+id: 069a0d92-2bbc-467a-bd1e-4b2a28ed4a63
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.badkamer_bezetting
+    to: "on"
+conditions:
+  - condition: time
+    after: "06:30:00"
+    before: "23:59:00"
+actions:
+  - action: script.turn_on
+    entity_id: script.verluchting_badkamer_10m

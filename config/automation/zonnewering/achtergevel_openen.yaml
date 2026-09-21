@@ -15,42 +15,33 @@ triggers:
     below: 400
     for:
       minutes: 5
-
     # Weather based triggers
   - trigger: template
     value_template: >
-      {{ states("sensor.openweathermap_windsnelheid") | int(0) > 40 }}
+      {{ state_attr("weather.home_2", "wind_speed") | int(0) > 40 }}
   - trigger: template
     value_template: >
-      {{ states("sensor.openweathermap_windvlaag_snelheid") | int(0) > 60 }}
+      {{ state_attr("weather.home_2", "wind_gust_speed") | int(0) > 60 }}
+  - trigger: template
+    value_template: >
+      {{ state_attr("weather.home_2", "wind_gust_speed") | float(state_attr("weather.home_2", "wind_speed")) > 60 }}
   - trigger: numeric_state
     entity_id: sensor.buiten_lichtsterkte
     below: 10000
     for:
       minutes: 5
-
   - trigger: template
     value_template: >
-
-  # - trigger: template
-  #   value_template: >
-  #     {{ states("sensor.buiten_lichtsterkte") | float(0) < 4000 and
-  #       (states("sensor.solcast_forecast_next_hour") | float(0) < 1000 or
-  #       states("sensor.solcast_forecast_this_hour") | float(0) < 1000) }}
-
-  - trigger: template
-    value_template: >
-      {% if states("sensor.regen_komende_10_minuten") != "unknown" and states("sensor.regen_komende_10_minuten") != "unavailable" %}
+      {% if states("sensor.regen_komende_10_minuten") != "unknown" and states("sensor.regen_komende_10_minuten") != "unavailable" -%}
         {{ states("sensor.regen_komende_10_minuten") | float > 0.80 }}
-      {% endif %}
+      {% endif -%}
   - trigger: template
     value_template: >
-      {% if states("sensor.neerslag_zandhoven") != "unknown" and states("sensor.neerslag_zandhoven") != "unavailable" %}
+      {% if states("sensor.neerslag_zandhoven") != "unknown" and states("sensor.neerslag_zandhoven") != "unavailable" -%}
         {{ states("sensor.neerslag_zandhoven") | float > 0.40 }}
-      {% else %}
-        {{ states("sensor.openweathermap_rain_intensity")  | float > 0.40 }}
-      {% endif %}
-
+      {% else -%}
+        {{ states("sensor.home_current_rainfall") | float > 0.07 }}
+      {% endif -%}
 conditions:
   - condition: or
     conditions:
@@ -69,12 +60,8 @@ conditions:
   - condition: state
     entity_id: input_boolean.nacht_closed
     state: "off"
-
 actions:
   - action: script.achtergevel_openen
-  # - action: notify.mobile_app_gphone
-  #   data_template:
-  #     message: "Het zonnescherm achtergevel geopend, reden {{trigger.entity_id}} "
   - delay:
       minutes: 5
   - action: script.achtergevel_openen
