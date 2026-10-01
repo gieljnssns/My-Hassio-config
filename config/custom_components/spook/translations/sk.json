@@ -447,7 +447,7 @@
                 "step": {
                     "init": {
                         "title": "Neznámi členovia použití v pomocníkovi min/max: {helper}",
-                        "description": "Spook našiel ducha v tvojich pomocníkoch 👻\n\nPomocník min/max {helper} spája nasledujúcich členov, ktorých Home Assistant nepozná:\n\n{sources}\n\nOdstráň ich, nech pomocník beží ďalej s tými, čo zostali, alebo si ich nechaj a Spook na nich prestane upozorňovať.\n\nSpook 👻 Tvoj kamoš.",
+                        "description": "Spook našiel ducha v tvojich pomocníkoch 👻\n\nPomocník min/max {helper} (`{entity_id}`) spája nasledujúcich členov, ktorých Home Assistant nepozná:\n\n{sources}\n\nOdstráň ich, nech pomocník beží ďalej s tými, čo zostali, alebo si ich nechaj a Spook na nich prestane upozorňovať.\n\nSpook 👻 Tvoj kamoš.",
                         "menu_options": {
                             "remove": "Odstrániť týchto členov",
                             "manage": "Opravím si to sám",
@@ -467,7 +467,6 @@
             "title": "Neznámi členovia v skupine oznámení: {group}"
         },
         "orphaned_statistics": {
-            "description": "Spook našiel ducha v tvojom zapisovači 👻\n\nHome Assistant uchováva dlhodobé štatistiky k nasledujúcemu, no entita, ktorá by k nim patrila, už neexistuje:\n\n{statistics}\n\n\n\nBýva to tak, keď bol senzor zmazaný a jeho štatistiky zostali. Ak chceš túto chybu opraviť, otvor Nastavenia > Nástroje > Štatistiky a vyrieš ich tam.\n\nSpook 👻 Tvoj kamoš.",
             "title": "Našli sa osirené dlhodobé štatistiky"
         },
         "person_unknown_device_trackers": {
@@ -500,11 +499,11 @@
             "title": "Neznáme spúšťače použité v: {script}"
         },
         "template_unknown_entity_references": {
-            "description": "Spook našiel ducha v tvojich pomocníkoch so šablónou 👻\n\nAko sa tak vznášal okolo, Spook narazil na tohto pomocníka so šablónou:\n\n[{helper}]({edit})\n\nJeho konfigurácia odkazuje na nasledujúce entity, ktoré Home Assistant nepozná:\n\n{entities}\n\n\n\nBýva to tak, keď bola entita premenovaná alebo odstránená. Ak chceš túto chybu opraviť, nastav pomocníka so šablónou nanovo tak, aby odkazoval na existujúce entity.\n\nSpook 👻 Tvoj kamoš.",
+            "description": "Spook našiel ducha v tvojich pomocníkoch so šablónou 👻\n\nAko sa tak vznášal okolo, Spook narazil na tohto pomocníka so šablónou:\n\n[{helper}]({edit}) (`{entity_id}`)\n\nJeho konfigurácia odkazuje na nasledujúce entity, ktoré Home Assistant nepozná:\n\n{entities}\n\n\n\nBýva to tak, keď bola entita premenovaná alebo odstránená. Ak chceš túto chybu opraviť, nastav pomocníka so šablónou nanovo tak, aby odkazoval na existujúce entity.\n\nSpook 👻 Tvoj kamoš.",
             "title": "Neznáme entity použité v pomocníkovi so šablónou: {helper}"
         },
         "template_unknown_service_references": {
-            "description": "Spook našiel ducha v tvojich pomocníkoch so šablónou 👻\n\nAko sa tak vznášal okolo, Spook narazil na tohto pomocníka so šablónou:\n\n[{helper}]({edit})\n\nOdkazuje na nasledujúce akcie, ktoré Home Assistant nepozná:\n\n{services}\n\n\n\nBýva to tak, keď bol odstránený poskytovateľ akcie alebo bol skript premenovaný či zmazaný. Ak chceš túto chybu opraviť, nastav pomocníka so šablónou nanovo tak, aby používal existujúce akcie.\n\nSpook 👻 Tvoj kamoš.",
+            "description": "Spook našiel ducha v tvojich pomocníkoch so šablónou 👻\n\nAko sa tak vznášal okolo, Spook narazil na tohto pomocníka so šablónou:\n\n[{helper}]({edit}) (`{entity_id}`)\n\nOdkazuje na nasledujúce akcie, ktoré Home Assistant nepozná:\n\n{services}\n\n\n\nBýva to tak, keď bol odstránený poskytovateľ akcie alebo bol skript premenovaný či zmazaný. Ak chceš túto chybu opraviť, nastav pomocníka so šablónou nanovo tak, aby používal existujúce akcie.\n\nSpook 👻 Tvoj kamoš.",
             "title": "Neznáme akcie použité v pomocníkovi so šablónou: {helper}"
         },
         "unknown_customized_entities": {
@@ -517,7 +516,7 @@
                 "step": {
                     "init": {
                         "title": "Neznáme zdrojové entity použité v pomocníkovi: {helper}",
-                        "description": "Spook našiel ducha v tvojich pomocníkoch 👻\n\nPomocník {helper} (`{domain}`) odkazuje na nasledujúce zdrojové entity, ktoré Home Assistant nepozná:\n\n{sources}\n\nBez svojich zdrojov tento pomocník nemôže fungovať. {usage}\n\nOdstráň ho, alebo si ho nechaj a Spook naň prestane upozorňovať.\n\nSpook 👻 Tvoj kamoš.",
+                        "description": "Spook našiel ducha v tvojich pomocníkoch 👻\n\nPomocník {helper} (`{domain}`, `{entity_id}`) odkazuje na nasledujúce zdrojové entity, ktoré Home Assistant nepozná:\n\n{sources}\n\nBez svojich zdrojov tento pomocník nemôže fungovať. {usage}\n\nOdstráň ho, alebo si ho nechaj a Spook naň prestane upozorňovať.\n\nSpook 👻 Tvoj kamoš.",
                         "menu_options": {
                             "remove": "Odstrániť tohto pomocníka",
                             "manage": "Opravím si to sám",
@@ -570,6 +569,10 @@
                     "manage": "Tento štítok si môžeš spravovať sám na [stránke Štítky](/config/labels)."
                 }
             }
+        },
+        "lovelace_missing_resources_yaml": {
+            "title": "Zdroje dashboardu poukazujú na chýbajúce súbory",
+            "description": "Spook našiel ducha vo vašich paneloch 👻\n\nNasledujúce zdroje panelov odkazujú na súbory, ktoré neexistujú:\n\n{resources}\n\n\n\nZvyčajne k tomu dochádza, keď bola odstránená vlastná karta alebo jej súbory, no samotný záznam zdroja v konfigurácii zostal.\n\nTieto zdroje sú uvedené vo vašej konfigurácii YAML, takže ich nemožno upraviť priamo na stránke Zdroje. Upravte sekciu `resources:` v konfigurácii Lovelace a tieto záznamy odstráňte alebo opravte.\n\nSpook 👻 Váš parťák."
         }
     },
     "services": {
@@ -1608,6 +1611,48 @@
                     "description": "Počet desatinných miest, ktoré sa majú pri senzore zobraziť."
                 }
             }
+        },
+        "group_add_members": {
+            "name": "Pridať členov do skupiny",
+            "description": "Pridáva entity do skupiny vytvorenej prostredníctvom rozhrania počas chodu systému Home Assistant. Entity, ktoré sa už v skupine nachádzajú, zostávajú na svojom mieste.",
+            "fields": {
+                "group": {
+                    "name": "Skupina",
+                    "description": "Skupina, do ktorej treba pridať."
+                },
+                "members": {
+                    "name": "Členovia",
+                    "description": "Entity, ktoré sa majú pridať do skupiny."
+                }
+            }
+        },
+        "group_remove_members": {
+            "name": "Odstrániť členov zo skupiny",
+            "description": "Odstraňuje entity zo skupiny vytvorenej prostredníctvom rozhrania počas chodu systému Home Assistant. Uvedenie názvu entity, ktorá v skupine nie je, nemá žiadny účinok; týmto spôsobom teda môžete odstrániť aj člena, ktorý už neexistuje.",
+            "fields": {
+                "group": {
+                    "name": "Skupina",
+                    "description": "Skupina, z ktorej ich treba vybrať."
+                },
+                "members": {
+                    "name": "Členovia",
+                    "description": "Entity, ktoré sa majú zo skupiny odstrániť."
+                }
+            }
+        },
+        "group_set_members": {
+            "name": "Nastavte členov skupiny",
+            "description": "Počas chodu Home Assistant nahradí členov skupiny vytvorenej prostredníctvom rozhrania zadanými členmi.",
+            "fields": {
+                "group": {
+                    "name": "Skupina",
+                    "description": "Skupina, ktorú treba zmeniť."
+                },
+                "members": {
+                    "name": "Členovia",
+                    "description": "Entity, ktoré by skupina mala odteraz držať."
+                }
+            }
         }
     },
     "triggers": {
@@ -1740,6 +1785,44 @@
                 "for": {
                     "name": "Počas",
                     "description": "Ako dlho musí byť entita ticho, kým sa toto spustí. Entita, ktorá stále hlási tú istú hodnotu, ticho nie je."
+                }
+            }
+        },
+        "debounce": {
+            "name": "Akonáhle sa to ustáli",
+            "description": "Aktivuje sa až po tom, čo spúšťací signál na chvíľu ustane, takže séria týchto signálov dorazí naraz. Snímač pohybu neohlási pohyb len raz – ohlási ho dvadsaťkrát.",
+            "fields": {
+                "triggers": {
+                    "name": "Spúšťače",
+                    "description": "Spúšte, ktoré majú čakať. Ktorýkoľvek z nich vystrelí, spustí dávku a ktorýkoľvek z nich vystrelí znova, ju udrží v chode, takže niekoľko spúští sa zhlukuje naraz, a nie jeden po druhom."
+                },
+                "for": {
+                    "name": "Pre",
+                    "description": "Ako dlho musí byť ticho, kým sa toto spustí. Každé spustenie resetuje toto čakanie, takže niečo, čo sa spúšťa nepretržite, sa nikdy nenahlási."
+                }
+            }
+        },
+        "all_of": {
+            "name": "Všetky tieto veci sa stali.",
+            "description": "Aktivuje sa vtedy, keď sa v rámci toho istého časového úseku aktivujú všetky z viacerých spúšťačov, a to v ľubovoľnom poradí. Štandardné spúšťače v systéme Home Assistant fungujú na princípe zoznamu, kde stačí aktivácia ktoréhokoľvek z nich; toto je alternatívny spôsob.",
+            "fields": {
+                "triggers": {
+                    "name": "Spúšťače",
+                    "description": "Spúšťače, ktoré sa všetky musia aktivovať. Na poradí nezáleží a opätovná aktivácia spúšťača nahrádza jeho predchádzajúce uplatnenie, namiesto toho, aby sa počítala dvakrát."
+                },
+                "within": {
+                    "name": "V rámci",
+                    "description": "Ako blízko pri sebe sa musia nachádzať. Toto okno sa posúva, takže spúšťacia udalosť, ktorá nastala skôr než v tomto časovom rámci, sa považuje za neplatnú, zatiaľ čo ostatné pokračujú v počítaní."
+                }
+            }
+        },
+        "recovered": {
+            "name": "Entita sa vrátila.",
+            "description": "Aktivuje sa, keď sa entita vráti do stavu dostupnosti po predchádzajúcom výpadku; vďaka tomu sa reštart smerovača neinterpretuje ako obnova všetkých zariadení v domácnosti.",
+            "fields": {
+                "for": {
+                    "name": "Pre",
+                    "description": "Počíta sa, ako dlho musela byť entita preč, kým sa vrátila. Čokoľvek kratšie je len blikanie: opätovné načítanie integrácie prevedie všetky jej entity cez stav nedostupnosti a späť v priebehu sekundy."
                 }
             }
         }

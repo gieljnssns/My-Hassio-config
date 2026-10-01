@@ -1,0 +1,566 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Połącz z TypeSafe",
+        "description": "Wklej klucz API ze swojego konta TypeSafe. Home Assistant zadaje jedno krótkie pytanie, żeby sprawdzić, czy klucz działa.",
+        "data": {
+          "api_key": "Klucz API"
+        },
+        "data_description": {
+          "api_key": "Klucz, z którym wysyłane są żądania. Zostaw puste tylko dla własnego punktu końcowego, który nie wymaga klucza."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Zaawansowane",
+            "data": {
+              "url": "Adres API",
+              "model": "Model"
+            },
+            "data_description": {
+              "url": "Zostaw to bez zmian, chyba że uruchamiasz coś własnego, co mówi tym samym API, na przykład proxy przechowujące klucz albo buforujące odpowiedzi. Klucz jest wysyłany w nagłówku bearer, więc przy adresie http trafia do sieci otwartym tekstem.",
+              "model": "Identyfikator modelu wysyłany z każdym żądaniem. Puste pole oznacza domyślny."
+            }
+          }
+        }
+      },
+      "reauth_confirm": {
+        "title": "Wprowadź ponownie klucz API",
+        "description": "TypeSafe odrzucił zapisany klucz. Wklej działający. Adres API zostaje bez zmian; użyj opcji Skonfiguruj ponownie, żeby go zmienić.",
+        "data": {
+          "api_key": "Klucz API"
+        },
+        "data_description": {
+          "api_key": "Żądania trafiają na zapisany już adres API."
+        }
+      },
+      "reconfigure": {
+        "title": "Zmień klucz API lub adres",
+        "description": "Wklej inny klucz API TypeSafe i zmień adres, jeśli API jest osiągalne gdzie indziej niż w TypeSafe. Twoje pytania i encje zostają zachowane.",
+        "data": {
+          "api_key": "Klucz API"
+        },
+        "data_description": {
+          "api_key": "Zostaw puste, aby zachować obecny klucz, dopóki adres się nie zmienia. Nowy adres nie dostaje żadnego klucza, jeśli go nie wpiszesz."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Zaawansowane",
+            "data": {
+              "url": "Adres API",
+              "model": "Model"
+            },
+            "data_description": {
+              "url": "Wyczyść to pole, żeby wrócić do API TypeSafe. Klucz jest wysyłany w nagłówku bearer, więc przy adresie http trafia do sieci otwartym tekstem.",
+              "model": "Identyfikator modelu wysyłany z każdym żądaniem. Puste pole oznacza domyślny."
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "TypeSafe odrzucił ten klucz.",
+      "cannot_connect": "Home Assistant nie może połączyć się z API pod tym adresem.",
+      "not_found": "Serwer odpowiedział HTTP 404. Jev dodaje /v1/systemone do adresu, więc podaj tylko część przed nim. Dla OpenRouter jest to {openrouter_url}.",
+      "invalid_url": "To nie jest poprawny adres API. Potrzebuje schematu i hosta, i nie może zawierać spacji, zapytania, fragmentu, nazwy użytkownika ani hasła.",
+      "invalid_model": "Ten identyfikator modelu nie został przyjęty. Sprawdź go albo wyczyść pole, aby użyć domyślnego.",
+      "key_required": "API TypeSafe wymaga klucza. Pusty klucz działa tylko z własnym adresem, który go nie wymaga."
+    },
+    "abort": {
+      "already_configured": "Ten klucz API jest już skonfigurowany. Wpis jest rozpoznawany po kluczu, więc drugi adres potrzebuje własnego klucza.",
+      "reauth_successful": "Nowy klucz działa.",
+      "reconfigure_successful": "Ponowna konfiguracja zakończona pomyślnie."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Limity wydatków",
+        "description": "Płacisz za tokeny wejściowe, a tekst pytań liczy się jako wejście. Ustaw limit powyżej wszystkiego, co zużyłaby działająca konfiguracja, tak żeby sięgnęła po niego tylko taka, która wymknęła się spod kontroli. Zero oznacza brak limitu.\n\nAgent konwersacji przekazuje wszystko, czego nie jest pewien, do agenta zapasowego, w całości i bez wcześniejszego działania. Zostaw to pole puste, a powie, że nie zrozumiał. Polecenia dla całego domu są odrzucane, chyba że na nie zezwolisz, poza wyłączeniem wszystkiego, które jest dozwolone zawsze.",
+        "data": {
+          "daily_token_budget": "Dzienny limit tokenów wejściowych (0 = brak limitu)",
+          "price_per_million": "Cena za milion tokenów wejściowych, w USD",
+          "fallback_agent": "Agent zapasowy",
+          "min_confidence": "Działaj tylko powyżej tej pewności (0 do 1)",
+          "allow_whole_home": "Zezwalaj na polecenia, które nie wskazują pokoju ani urządzenia"
+        },
+        "data_description": {
+          "daily_token_budget": "Liczone od północy w strefie czasowej Home Assistanta. 0 oznacza brak limitu.",
+          "price_per_million": "Ustala czujnik szacowanego kosztu i koszt w podglądzie pytania. Nic z tego, co jest wysyłane, od tego nie zależy.",
+          "fallback_agent": "Dostaje całe zdanie, gdy Jev nie jest pewny, co zrobić.",
+          "min_confidence": "Poniżej tej wartości Jev nic nie robi i przekazuje polecenie agentowi zapasowemu.",
+          "allow_whole_home": "Wyłączenie wszystkiego jest zawsze dozwolone, z tą opcją lub bez niej."
+        }
+      }
+    }
+  },
+  "issues": {
+    "daily_budget_exceeded": {
+      "title": "Jev przestał oceniać: osiągnięto dzienny limit",
+      "description": "Dzienny limit to {budget} tokenów wejściowych, a dziś zużyto {used}. Kolejna ocena, kontekstu {context}, potrzebuje około {estimate} więcej i się nie mieści, więc kolejne pytania nie są zadawane. Czujniki odpowiedzi stają się niedostępne, dopóki kolejne zapytanie znów się nie zmieści. Zwiększ limit w opcjach integracji, oceniaj konteksty rzadziej albo skróć pytania."
+    },
+    "daily_budget_spent": {
+      "title": "Jev przestał oceniać: osiągnięto dzienny limit",
+      "description": "Dzienny limit to {budget} tokenów wejściowych, a dziś zużyto {used}, więc kolejne pytania nie są zadawane. Czujniki odpowiedzi stają się niedostępne do następnego dnia albo do zwiększenia limitu. Zwiększ limit w opcjach integracji, oceniaj konteksty rzadziej albo skróć pytania."
+    }
+  },
+  "services": {
+    "noul": {
+      "name": "Zadaj pytanie tak/nie",
+      "description": "Zapytaj, czy coś jest prawdą, i otrzymaj prawdopodobieństwo odpowiedzi tak, od 0 do 1. Użyj po jednym na etykietę, gdy kilka etykiet może być prawdziwych naraz.",
+      "fields": {
+        "state": {
+          "name": "Stan",
+          "description": "Tekst do oceny. Napisz szablon, a zostanie wyrenderowany przed wysłaniem."
+        },
+        "instructions": {
+          "name": "Pytanie",
+          "description": "Sformułuj je tak, żeby wysoka liczba oznaczała tak. Stwierdzenie działa równie dobrze jak pytanie."
+        },
+        "true_means": {
+          "name": "Tak oznacza",
+          "description": "Opcjonalne. Co liczy się jako tak. Warto wypełnić, gdy granica jest subtelna."
+        },
+        "false_means": {
+          "name": "Nie oznacza",
+          "description": "Opcjonalne. Co liczy się jako nie."
+        },
+        "threshold": {
+          "name": "Próg",
+          "description": "Gdzie postawić granicę dla pola is_true w odpowiedzi. Samo prawdopodobieństwo zawsze wraca razem z nią. Wartość bliska 0.5 oznacza, że model nie potrafi rozstrzygnąć, a nie że odpowiedź jest w połowie prawdziwa."
+        },
+        "config_entry": {
+          "name": "Klucz API",
+          "description": "Którym skonfigurowanym kluczem zapytać. Potrzebne tylko wtedy, gdy skonfigurowano więcej niż jeden."
+        },
+        "include_attributes": {
+          "name": "Dołącz wszystkie atrybuty",
+          "description": "Domyślnie wyłączone. Wysyła każdy atrybut wybranych encji, nie tylko wartość, jednostkę, klasę urządzenia i obszar. Prognoza pogody albo lista okładek odtwarzacza multimediów to tysiące tokenów, za które płacisz przy każdej ocenie."
+        },
+        "background": {
+          "name": "Kontekst",
+          "description": "Opcjonalne. Stałe fakty o tym, jak to czytać, na przykład co dany odczyt oznacza dla Twojego urządzenia. Jest wysyłany z pytaniem, a nie z odczytami, co wymiernie działa lepiej niż umieszczenie go w stanie. Obiekt zamiast zdania zachowuje Twoje własne nazwy kluczy, a model te klucze czyta."
+        }
+      }
+    },
+    "choice": {
+      "name": "Wybierz jedną opcję",
+      "description": "Wybierz jedną opcję ze swojej listy i otrzymaj prawdopodobieństwo każdej opcji oraz wartość pewności.",
+      "fields": {
+        "state": {
+          "name": "Stan",
+          "description": "Tekst do oceny. Napisz szablon, a zostanie wyrenderowany przed wysłaniem."
+        },
+        "instructions": {
+          "name": "Pytanie",
+          "description": "Między czym model wybiera, w jednym zdaniu."
+        },
+        "options": {
+          "name": "Opcje",
+          "description": "Od dwóch do 255 opcji. Dodaj kategorię zbiorczą, taką jak inne, gdy Twoja lista może nie objąć każdego wejścia."
+        },
+        "option_descriptions": {
+          "name": "Opisy opcji",
+          "description": "Opcjonalne. Opis każdej opcji, co wyostrza granicę między podobnymi. Najbardziej pomaga napisanie, co dana opcja wyklucza."
+        },
+        "config_entry": {
+          "name": "Klucz API",
+          "description": "Którym skonfigurowanym kluczem zapytać. Potrzebne tylko wtedy, gdy skonfigurowano więcej niż jeden."
+        },
+        "include_attributes": {
+          "name": "Dołącz wszystkie atrybuty",
+          "description": "Domyślnie wyłączone. Wysyła każdy atrybut wybranych encji, nie tylko wartość, jednostkę, klasę urządzenia i obszar. Prognoza pogody albo lista okładek odtwarzacza multimediów to tysiące tokenów, za które płacisz przy każdej ocenie."
+        },
+        "background": {
+          "name": "Kontekst",
+          "description": "Opcjonalne. Stałe fakty o tym, jak to czytać, na przykład co dany odczyt oznacza dla Twojego urządzenia. Jest wysyłany z pytaniem, a nie z odczytami, co wymiernie działa lepiej niż umieszczenie go w stanie. Obiekt zamiast zdania zachowuje Twoje własne nazwy kluczy, a model te klucze czyta."
+        }
+      }
+    },
+    "score": {
+      "name": "Oceń w skali",
+      "description": "Oceń tekst względem opisanych przez Ciebie poziomów i otrzymaj liczbę, która może wypaść między dwoma poziomami.",
+      "fields": {
+        "state": {
+          "name": "Stan",
+          "description": "Tekst do oceny. Napisz szablon, a zostanie wyrenderowany przed wysłaniem."
+        },
+        "instructions": {
+          "name": "Pytanie",
+          "description": "Jeden wymiar na pytanie. Pytanie mierzące trzy rzeczy naraz daje niską pewność i nic nieznaczący środek."
+        },
+        "levels": {
+          "name": "Poziomy",
+          "description": "Od dwóch do 10 poziomów, od najniższego. Opisz dla każdego konkretną sytuację, a nie stopień: Zepsute, ale jest obejście działa lepiej niż Umiarkowanie poważne. Każdy poziom jest oceniany osobno, więc słowa porównawcze i liczby w tekście nic nie dają."
+        },
+        "config_entry": {
+          "name": "Klucz API",
+          "description": "Którym skonfigurowanym kluczem zapytać. Potrzebne tylko wtedy, gdy skonfigurowano więcej niż jeden."
+        },
+        "include_attributes": {
+          "name": "Dołącz wszystkie atrybuty",
+          "description": "Domyślnie wyłączone. Wysyła każdy atrybut wybranych encji, nie tylko wartość, jednostkę, klasę urządzenia i obszar. Prognoza pogody albo lista okładek odtwarzacza multimediów to tysiące tokenów, za które płacisz przy każdej ocenie."
+        },
+        "background": {
+          "name": "Kontekst",
+          "description": "Opcjonalne. Stałe fakty o tym, jak to czytać, na przykład co dany odczyt oznacza dla Twojego urządzenia. Jest wysyłany z pytaniem, a nie z odczytami, co wymiernie działa lepiej niż umieszczenie go w stanie. Obiekt zamiast zdania zachowuje Twoje własne nazwy kluczy, a model te klucze czyta."
+        }
+      }
+    },
+    "ask": {
+      "name": "Zadaj kilka pytań naraz",
+      "description": "Zadaj dowolną mieszankę typów pytań o jeden fragment tekstu, w jednym żądaniu. Każde pytanie jest oceniane niezależnie względem tego samego tekstu, a pytania biegną równolegle, więc dwadzieścia pytań trwa mniej więcej tyle co jedno.",
+      "fields": {
+        "state": {
+          "name": "Stan",
+          "description": "Tekst do oceny. Napisz szablon, a zostanie wyrenderowany przed wysłaniem."
+        },
+        "questions": {
+          "name": "Pytania",
+          "description": "Twój własny klucz dla każdego pytania, potem jego typ noul, choice lub score, jego instrukcje oraz kryteria dla choice i score. Klucze należą do Ciebie: wracają jako klucze odpowiedzi, a model nigdy ich nie widzi."
+        },
+        "config_entry": {
+          "name": "Klucz API",
+          "description": "Którym skonfigurowanym kluczem zapytać. Potrzebne tylko wtedy, gdy skonfigurowano więcej niż jeden."
+        },
+        "include_attributes": {
+          "name": "Dołącz wszystkie atrybuty",
+          "description": "Domyślnie wyłączone. Wysyła każdy atrybut wybranych encji, nie tylko wartość, jednostkę, klasę urządzenia i obszar. Prognoza pogody albo lista okładek odtwarzacza multimediów to tysiące tokenów, za które płacisz przy każdej ocenie."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "calls_today": {
+        "name": "Wywołania dzisiaj"
+      },
+      "input_tokens_today": {
+        "name": "Tokeny wejściowe dzisiaj"
+      },
+      "estimated_cost_today": {
+        "name": "Szacowany koszt dzisiaj"
+      },
+      "context_latency": {
+        "name": "Opóźnienie {context}"
+      },
+      "context_payload": {
+        "name": "Rozmiar zapytania {context}"
+      }
+    },
+    "binary_sensor": {
+      "daily_budget_exceeded": {
+        "name": "Przekroczono dzienny limit"
+      }
+    }
+  },
+  "exceptions": {
+    "nothing_to_judge": {
+      "message": "Nie ma czego oceniać: podaj tej akcji jakiś tekst albo wybierz encje, urządzenia lub obszary, na które ma patrzeć."
+    },
+    "no_entry": {
+      "message": "Brak wczytanego wpisu konfiguracji Jev, którym można zapytać. Najpierw dodaj integrację albo wybierz jeden w polu Klucz API, gdy skonfigurowano więcej niż jeden."
+    },
+    "entry_ambiguous": {
+      "message": "Wczytano więcej niż jeden wpis Jev: {entries}. Wybierz jeden w polu Klucz API, bo każdy wpis ma własny klucz i własny budżet."
+    },
+    "missing_targets": {
+      "message": "Te cele nie istnieją: {targets}. Pytanie o resztę odpowiedziałoby na inne pytanie niż Twoje."
+    },
+    "empty_target": {
+      "message": "Ten cel nie zawiera encji, więc nie byłoby czego oceniać."
+    },
+    "too_many_entities": {
+      "message": "Ten cel zawiera {count} encji, a limit to {limit}. Każda encja jest rozliczana jako wejście przy każdej ocenie, więc wybierz te, od których zależy pytanie, albo podziel je."
+    },
+    "question_shape": {
+      "message": "Pytanie {key} potrzebuje zarówno 'type', jak i 'instructions'. Typy to noul, choice i score."
+    },
+    "question_invalid": {
+      "message": "Pytanie {key} jest nieprawidłowe: {reason}"
+    },
+    "template_failed": {
+      "message": "Szablon stanu zawiódł: {reason}"
+    },
+    "auth_rejected": {
+      "message": "TypeSafe odrzucił klucz API: {reason}"
+    },
+    "ask_failed": {
+      "message": "Zapytanie Jev nie powiodło się: {reason}"
+    },
+    "wrong_answer_type": {
+      "message": "Zadano pytanie typu {question_type}, a wróciło {got}, czego API nie powinno robić."
+    },
+    "choice_options_out_of_range": {
+      "message": "Choice przyjmuje od {min} do {max} opcji, a to ma ich {count}."
+    },
+    "score_levels_out_of_range": {
+      "message": "Score przyjmuje od {min} do {max} poziomów, od najniższego, a to ma ich {count}."
+    },
+    "unreadable_answer": {
+      "message": "TypeSafe zwrócił odpowiedź typu {kind}, której ta wersja nie potrafi odczytać. Zaktualizuj integrację."
+    },
+    "task_needs_structure": {
+      "message": "Zadanie {task} prosi o dowolny tekst, a Jev odpowiada tylko na pytania z typem. Daj akcji strukturę, której pola to boolean, select lub number."
+    },
+    "task_over_budget": {
+      "message": "Zadanie {task} kosztuje około {estimate} tokenów wejściowych, a z dziennego budżetu {budget} zostało {remaining}. Zwiększ lub wyczyść budżet w opcjach integracji, aby kontynuować."
+    },
+    "reserved_field": {
+      "message": "Pola {field} nie można użyć, ponieważ wynik przenosi pod tą nazwą pewność każdej odpowiedzi. Zmień nazwę pola."
+    },
+    "no_fields": {
+      "message": "Struktura nie deklaruje żadnych pól."
+    },
+    "answer_missing": {
+      "message": "Odpowiedź nie zawiera niczego dla {field}."
+    },
+    "unsupported_field": {
+      "message": "Pole {field} używa {selector}, a Jev odpowiada na pytanie tak/nie, wybór z listy lub ocenę na skali. Daj polu boolean, select z opcjami albo number z min i max."
+    },
+    "field_options_out_of_range": {
+      "message": "Pole {field} oferuje {count} opcji, a wybór potrzebuje od {min} do {max}."
+    },
+    "field_needs_scale": {
+      "message": "Pole {field} to liczba bez {bound}. Ocena potrzebuje obu końców skali."
+    },
+    "field_scale_not_ordered": {
+      "message": "Pole {field} ma min {min} i max {max}, a to nie jest skala."
+    },
+    "answer_does_not_fit": {
+      "message": "Odpowiedź dla {field} wróciła jako {answer}, co nie pasuje do {selector}."
+    },
+    "context_template_failed": {
+      "message": "Szablon stanu dla kontekstu {context} nie powiódł się: {reason}"
+    },
+    "context_targets_failed": {
+      "message": "Kontekst {context}: {reason}"
+    },
+    "context_over_budget": {
+      "message": "Ocena kontekstu {context} kosztuje około {estimate} tokenów wejściowych, a z dziennego budżetu {budget} zostało {remaining}. Zwiększ lub wyczyść budżet w opcjach integracji, aby kontynuować."
+    },
+    "rate_limited": {
+      "message": "TypeSafe ograniczył żądanie: {reason}"
+    }
+  },
+  "common": {
+    "not_understood": "Przepraszam, nie rozumiem.",
+    "whole_house": "To dotyczyłoby całego domu. Powiedz, który pokój albo które urządzenie masz na myśli.",
+    "which_kind": "Jakiego rodzaju rzeczy masz na myśli? Powiedz: światła albo przełączniki, albo podaj nazwę pokoju.",
+    "intent_failed": "Przepraszam, to się nie udało.",
+    "already_on": "{name} jest już włączone.",
+    "already_off": "{name} jest już wyłączone.",
+    "preview_alone": "Wysyłane jako osobne żądanie.",
+    "preview_grouped": "Wysyłane w jednym żądaniu razem z: {others}.",
+    "preview_cost": "Zapytano raz na potrzeby tego podglądu: {tokens} tokenów wejściowych, około ${cost}, {ms} ms.",
+    "preview_threshold_over": "To jest powyżej Twojego progu {threshold}, więc sensor binarny byłby teraz **włączony**.",
+    "preview_threshold_under": "To jest poniżej Twojego progu {threshold}, więc sensor binarny byłby teraz **wyłączony**.",
+    "preview_winner": "Zwycięzca **{choice}**, pewność {confidence}.",
+    "preview_score": "Wynik **{score}**, najbliższy poziom **{level}**, pewność {confidence}.",
+    "preview_undrawable": "Odpowiedź wróciła w formie, której ta wersja nie potrafi narysować.",
+    "preview_unbuildable": "Tego pytania nie da się jeszcze zbudować: {reason}",
+    "preview_rejected": "TypeSafe odrzucił klucz API, więc nie ma próbnej odpowiedzi.",
+    "preview_failed": "Brak próbnej odpowiedzi: {reason}",
+    "preview_mismatched": "API odpowiedziało, ale nie na zadane pytanie.",
+    "preview_template_error": "Szablon się nie renderuje: {reason}",
+    "query_not_found": "Nie udało mi się tego znaleźć.",
+    "budget_spent": "Dzienny budżet tokenów się wyczerpał, więc dziś nie mogę tego zrobić.",
+    "auth_failed": "TypeSafe odrzucił klucz API. Sprawdź go w ustawieniach Jev.",
+    "unavailable": "TypeSafe nie odpowiedział. Spróbuj ponownie za chwilę.",
+    "preview_over_budget": "Dzienny limit tokenów jest wyczerpany, więc nie ma próbnej odpowiedzi. Pytanie i tak zostanie zapisane.",
+    "preview_nothing_yet": "Brak próbnej odpowiedzi: nie ma jeszcze o co pytać."
+  },
+  "config_subentries": {
+    "question": {
+      "entry_type": "Pytanie",
+      "initiate_flow": {
+        "user": "Dodaj pytanie",
+        "reconfigure": "Edytuj pytanie"
+      },
+      "step": {
+        "user": {
+          "title": "Jakiej odpowiedzi oczekujesz?",
+          "menu_options": {
+            "noul": "Noul, prawdopodobieństwo. Jedna liczba od 0 do 1",
+            "choice": "Choice, jedna z Twoich opcji. Wraz z całym rozkładem",
+            "score": "Score, ocena. Względem poziomów, które opiszesz"
+          }
+        },
+        "noul": {
+          "title": "Noul: pytanie tak lub nie",
+          "data": {
+            "name": "Nazwa",
+            "instructions": "Pytanie",
+            "target": "Na co patrzeć",
+            "state": "Dodatkowa notatka lub szablon",
+            "background": "Stałe fakty o odczytach",
+            "true_means": "Co oznacza wysoka liczba",
+            "false_means": "Co oznacza niska liczba",
+            "threshold": "Utwórz też sensor binarny powyżej",
+            "advanced": "Zaawansowane"
+          },
+          "data_description": {
+            "name": "Nadaje nazwę sensorowi, który tworzy to pytanie.",
+            "instructions": "Wysyłane do API jako `instructions`.",
+            "target": "Wybierz encje, urządzenia, obszary lub etykiety, a ich odczyty zostaną wysłane za Ciebie. Zostaw puste, jeśli notatka poniżej jest całym stanem.",
+            "state": "Tekst lub szablon, sam albo obok odczytów.",
+            "background": "Wplatane w `instructions`, więc jest wysyłane z pytaniem, a nie ze stanem.",
+            "true_means": "Opcjonalne. Wyostrza, w którą stronę wskazuje odpowiedź.",
+            "false_means": "Opcjonalne.",
+            "threshold": "Zostaw puste, jeśli chcesz tylko sensor prawdopodobieństwa.",
+            "advanced": "Harmonogram i to, co jeszcze wysłać. Domyślne ustawienia wystarczą na pierwsze pytanie."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Zaawansowane",
+              "description": "Harmonogram i to, co jeszcze wysłać. Domyślne ustawienia wystarczą na pierwsze pytanie.",
+              "data": {
+                "trigger_entities": "Reaguj na te encje zamiast tego",
+                "scan_interval": "Jak często pytać",
+                "include_attributes": "Wyślij też każdy atrybut"
+              },
+              "data_description": {
+                "trigger_entities": "Oceniaj, gdy te się zmienią, oprócz harmonogramu poniżej. Tłumione przez 5 sekund.",
+                "scan_interval": "Pytania, które patrzą na to samo w tym samym harmonogramie, są wysyłane jako jedno żądanie, co kosztuje tokeny, ale prawie nie zabiera dodatkowego czasu.",
+                "include_attributes": "Domyślnie wyłączone. Prognoza pogody to tysiące tokenów przy każdej ocenie."
+              }
+            }
+          }
+        },
+        "choice": {
+          "title": "Choice: wybierz jedną ze swoich opcji",
+          "data": {
+            "name": "Nazwa",
+            "instructions": "Pytanie",
+            "target": "Na co patrzeć",
+            "state": "Dodatkowa notatka lub szablon",
+            "background": "Stałe fakty o odczytach",
+            "options": "Twoje opcje, jedna w wierszu",
+            "advanced": "Zaawansowane"
+          },
+          "data_description": {
+            "name": "Nadaje nazwę sensorowi, który tworzy to pytanie.",
+            "instructions": "Wysyłane do API jako `instructions`.",
+            "target": "Wybierz encje, urządzenia, obszary lub etykiety, a ich odczyty zostaną wysłane za Ciebie. Zostaw puste, jeśli notatka poniżej jest całym stanem.",
+            "state": "Tekst lub szablon, sam albo obok odczytów.",
+            "background": "Wplatane w `instructions`, więc jest wysyłane z pytaniem, a nie ze stanem.",
+            "options": "Wysyłane do API jako `criteria`. Jedna w wierszu, w formie `nazwa: co oznacza`. Opis jest opcjonalny.",
+            "advanced": "Harmonogram i to, co jeszcze wysłać. Domyślne ustawienia wystarczą na pierwsze pytanie."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Zaawansowane",
+              "description": "Harmonogram i to, co jeszcze wysłać. Domyślne ustawienia wystarczą na pierwsze pytanie.",
+              "data": {
+                "trigger_entities": "Reaguj na te encje zamiast tego",
+                "scan_interval": "Jak często pytać",
+                "include_attributes": "Wyślij też każdy atrybut"
+              },
+              "data_description": {
+                "trigger_entities": "Oceniaj, gdy te się zmienią, oprócz harmonogramu poniżej. Tłumione przez 5 sekund.",
+                "scan_interval": "Pytania, które patrzą na to samo w tym samym harmonogramie, są wysyłane jako jedno żądanie, co kosztuje tokeny, ale prawie nie zabiera dodatkowego czasu.",
+                "include_attributes": "Domyślnie wyłączone. Prognoza pogody to tysiące tokenów przy każdej ocenie."
+              }
+            }
+          }
+        },
+        "score": {
+          "title": "Score: ocena względem Twoich poziomów",
+          "data": {
+            "name": "Nazwa",
+            "instructions": "Pytanie",
+            "target": "Na co patrzeć",
+            "state": "Dodatkowa notatka lub szablon",
+            "background": "Stałe fakty o odczytach",
+            "levels": "Twoje poziomy, od najniższego, jeden w wierszu",
+            "advanced": "Zaawansowane"
+          },
+          "data_description": {
+            "name": "Nadaje nazwę sensorowi, który tworzy to pytanie.",
+            "instructions": "Wysyłane do API jako `instructions`.",
+            "target": "Wybierz encje, urządzenia, obszary lub etykiety, a ich odczyty zostaną wysłane za Ciebie. Zostaw puste, jeśli notatka poniżej jest całym stanem.",
+            "state": "Tekst lub szablon, sam albo obok odczytów.",
+            "background": "Wplatane w `instructions`, więc jest wysyłane z pytaniem, a nie ze stanem.",
+            "levels": "Wysyłane do API jako `criteria`. Jeden w wierszu, od najniższego. Od 2 do 10 sztuk.",
+            "advanced": "Harmonogram i to, co jeszcze wysłać. Domyślne ustawienia wystarczą na pierwsze pytanie."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Zaawansowane",
+              "description": "Harmonogram i to, co jeszcze wysłać. Domyślne ustawienia wystarczą na pierwsze pytanie.",
+              "data": {
+                "trigger_entities": "Reaguj na te encje zamiast tego",
+                "scan_interval": "Jak często pytać",
+                "include_attributes": "Wyślij też każdy atrybut"
+              },
+              "data_description": {
+                "trigger_entities": "Oceniaj, gdy te się zmienią, oprócz harmonogramu poniżej. Tłumione przez 5 sekund.",
+                "scan_interval": "Pytania, które patrzą na to samo w tym samym harmonogramie, są wysyłane jako jedno żądanie, co kosztuje tokeny, ale prawie nie zabiera dodatkowego czasu.",
+                "include_attributes": "Domyślnie wyłączone. Prognoza pogody to tysiące tokenów przy każdej ocenie."
+              }
+            }
+          }
+        },
+        "reconfigure": {
+          "title": "Edytuj to pytanie",
+          "data": {
+            "name": "Nazwa",
+            "instructions": "Pytanie",
+            "target": "Na co patrzeć",
+            "state": "Dodatkowa notatka lub szablon",
+            "background": "Stałe fakty o odczytach",
+            "true_means": "Co oznacza wysoka liczba",
+            "false_means": "Co oznacza niska liczba",
+            "threshold": "Utwórz też sensor binarny powyżej",
+            "options": "Twoje opcje, jedna w wierszu",
+            "levels": "Twoje poziomy, od najniższego, jeden w wierszu",
+            "advanced": "Zaawansowane"
+          },
+          "data_description": {
+            "name": "Nadaje nazwę sensorowi, który tworzy to pytanie.",
+            "instructions": "Wysyłane do API jako `instructions`.",
+            "target": "Wybierz encje, urządzenia, obszary lub etykiety, a ich odczyty zostaną wysłane za Ciebie. Zostaw puste, jeśli notatka poniżej jest całym stanem.",
+            "state": "Tekst lub szablon, sam albo obok odczytów.",
+            "background": "Wplatane w `instructions`, więc jest wysyłane z pytaniem, a nie ze stanem.",
+            "true_means": "Opcjonalne. Wyostrza, w którą stronę wskazuje odpowiedź.",
+            "false_means": "Opcjonalne.",
+            "threshold": "Zostaw puste, jeśli chcesz tylko sensor prawdopodobieństwa.",
+            "options": "Wysyłane do API jako `criteria`. Jedna w wierszu, w formie `nazwa: co oznacza`. Opis jest opcjonalny.",
+            "levels": "Wysyłane do API jako `criteria`. Jeden w wierszu, od najniższego. Od 2 do 10 sztuk.",
+            "advanced": "Harmonogram i to, co jeszcze wysłać. Domyślne ustawienia wystarczą na pierwsze pytanie."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Zaawansowane",
+              "description": "Harmonogram i to, co jeszcze wysłać. Domyślne ustawienia wystarczą na pierwsze pytanie.",
+              "data": {
+                "trigger_entities": "Reaguj na te encje zamiast tego",
+                "scan_interval": "Jak często pytać",
+                "include_attributes": "Wyślij też każdy atrybut"
+              },
+              "data_description": {
+                "trigger_entities": "Oceniaj, gdy te się zmienią, oprócz harmonogramu poniżej. Tłumione przez 5 sekund.",
+                "scan_interval": "Pytania, które patrzą na to samo w tym samym harmonogramie, są wysyłane jako jedno żądanie, co kosztuje tokeny, ale prawie nie zabiera dodatkowego czasu.",
+                "include_attributes": "Domyślnie wyłączone. Prognoza pogody to tysiące tokenów przy każdej ocenie."
+              }
+            }
+          }
+        },
+        "preview": {
+          "title": "Sprawdź, co zostanie wysłane",
+          "description": "To jest materiał, którego będzie dotyczyć Twoje pytanie, zbudowany teraz z tego, na co ono wskazuje.\n\n{grouping}\n\n### Jaka jest teraz odpowiedź\n\n{answer}\n\n### Odczytywany stan\n\n```\n{state}\n```"
+        }
+      },
+      "error": {
+        "nothing_to_judge": "Wybierz coś, na co patrzeć, albo napisz notatkę lub szablon. Pytanie potrzebuje stanu.",
+        "choice_options_out_of_range": "Choice przyjmuje od 2 do 255 opcji.",
+        "score_levels_out_of_range": "Score przyjmuje od 2 do 10 poziomów.",
+        "option_name_empty": "Każda opcja potrzebuje nazwy przed dwukropkiem.",
+        "option_name_duplicate": "Dwie opcje mają tę samą nazwę, więc jedna z nich zostałaby po cichu pominięta."
+      },
+      "abort": {
+        "reconfigure_successful": "Pytanie zaktualizowane"
+      }
+    }
+  }
+}

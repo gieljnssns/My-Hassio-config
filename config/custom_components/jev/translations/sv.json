@@ -1,0 +1,566 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Anslut till TypeSafe",
+        "description": "Klistra in en API-nyckel från ditt TypeSafe-konto. Home Assistant ställer en kort fråga för att kontrollera att nyckeln fungerar.",
+        "data": {
+          "api_key": "API-nyckel"
+        },
+        "data_description": {
+          "api_key": "Nyckeln som förfrågningarna skickas med. Lämna det tomt endast för en egen slutpunkt som inte behöver någon nyckel."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Avancerat",
+            "data": {
+              "url": "API-adress",
+              "model": "Modell"
+            },
+            "data_description": {
+              "url": "Låt det här stå, om du inte kör något eget som talar samma API, till exempel en proxy som håller nyckeln eller cachar svar. Nyckeln skickas som en bearer-header, så med en http-adress går den i klartext över nätet.",
+              "model": "Modell-id:t som skickas med varje förfrågan. Tomt fält betyder standardmodellen."
+            }
+          }
+        }
+      },
+      "reauth_confirm": {
+        "title": "Ange din API-nyckel igen",
+        "description": "TypeSafe avvisade nyckeln som är sparad. Klistra in en som fungerar. API-adressen lämnas som den är; använd Konfigurera om för att ändra den.",
+        "data": {
+          "api_key": "API-nyckel"
+        },
+        "data_description": {
+          "api_key": "Förfrågningar går till den API-adress som redan är sparad."
+        }
+      },
+      "reconfigure": {
+        "title": "Byt din API-nyckel eller adress",
+        "description": "Klistra in en annan TypeSafe API-nyckel, och ändra adressen om API:et nås någon annanstans än hos TypeSafe. Dina frågor och entiteter behålls.",
+        "data": {
+          "api_key": "API-nyckel"
+        },
+        "data_description": {
+          "api_key": "Lämna tomt för att behålla den nuvarande nyckeln så länge adressen är densamma. En ny adress får ingen nyckel om du inte skriver in en."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Avancerat",
+            "data": {
+              "url": "API-adress",
+              "model": "Modell"
+            },
+            "data_description": {
+              "url": "Töm fältet för att gå tillbaka till TypeSafe-API:et. Nyckeln skickas som en bearer-header, så med en http-adress går den i klartext över nätet.",
+              "model": "Modell-id:t som skickas med varje förfrågan. Tomt fält betyder standardmodellen."
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "TypeSafe avvisade den här nyckeln.",
+      "cannot_connect": "Home Assistant kunde inte nå API:et på den adressen.",
+      "not_found": "Servern svarade HTTP 404. Jev lägger till /v1/systemone efter adressen, så ange bara delen före. För OpenRouter är det {openrouter_url}.",
+      "invalid_url": "Det är inte en användbar API-adress. Den behöver ett schema och en värd, och den kan inte innehålla mellanslag, frågesträng, fragment, användarnamn eller lösenord.",
+      "invalid_model": "Det modell-id:t godtogs inte. Kontrollera det, eller lämna fältet tomt för standardmodellen.",
+      "key_required": "TypeSafe-API:t kräver en nyckel. En tom nyckel fungerar bara med en egen adress som inte behöver någon."
+    },
+    "abort": {
+      "already_configured": "Den här API-nyckeln är redan konfigurerad. En post identifieras av sin nyckel, så en andra adress behöver en egen nyckel.",
+      "reauth_successful": "Den nya nyckeln fungerar.",
+      "reconfigure_successful": "Omkonfigureringen lyckades."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Utgiftsgränser",
+        "description": "Du betalar för indatatoken, och frågans text räknas som indata. Sätt budgeten långt över vad en fungerande uppsättning använder, så att bara något som skenar når den. Noll betyder ingen gräns.\n\nKonversationsagenten skickar allt den är osäker på vidare till reservagenten, helt och utan att göra något först. Lämnar du den tom säger den att den inte förstod. Kommandon för hela huset avvisas om du inte tillåter dem, utom att stänga av allt, vilket alltid är tillåtet.",
+        "data": {
+          "daily_token_budget": "Daglig budget för indatatoken (0 = ingen gräns)",
+          "price_per_million": "Pris per miljon indatatoken, i USD",
+          "fallback_agent": "Fall tillbaka på den här agenten",
+          "min_confidence": "Agera bara över den här säkerheten (0 till 1)",
+          "allow_whole_home": "Tillåt kommandon som inte nämner rum eller enhet"
+        },
+        "data_description": {
+          "daily_token_budget": "Räknas från midnatt i Home Assistants tidszon. 0 betyder ingen gräns.",
+          "price_per_million": "Styr sensorn för uppskattad kostnad och kostnaden i förhandsvisningen av frågan. Inget av det som skickas beror på den.",
+          "fallback_agent": "Får hela meningen när Jev inte är säker på vad som ska göras.",
+          "min_confidence": "Under detta värde gör Jev ingenting och skickar kommandot vidare till reservagenten.",
+          "allow_whole_home": "Att stänga av allt är alltid tillåtet, med eller utan detta val."
+        }
+      }
+    }
+  },
+  "issues": {
+    "daily_budget_exceeded": {
+      "title": "Jev har slutat utvärdera: daglig budget nådd",
+      "description": "Den dagliga budgeten är {budget} indatatoken och {used} har använts i dag. Nästa utvärdering, av kontexten {context}, behöver ungefär {estimate} till och får inte plats, så inga fler frågor ställs. Svarssensorerna blir otillgängliga tills ett anrop får plats igen. Höj budgeten i integrationens alternativ, utvärdera kontexter mer sällan, eller korta ner dina frågor."
+    },
+    "daily_budget_spent": {
+      "title": "Jev har slutat utvärdera: daglig budget nådd",
+      "description": "Den dagliga budgeten är {budget} indatatoken och {used} har använts i dag, så inga fler frågor ställs. Svarssensorerna blir otillgängliga tills en ny dag börjar eller budgeten höjs. Höj budgeten i integrationens alternativ, utvärdera kontexter mer sällan, eller korta ner dina frågor."
+    }
+  },
+  "services": {
+    "noul": {
+      "name": "Ställ en ja/nej-fråga",
+      "description": "Fråga om något är sant och få sannolikheten för ja, från 0 till 1. Använd en per etikett när flera etiketter kan vara sanna samtidigt.",
+      "fields": {
+        "state": {
+          "name": "Tillstånd",
+          "description": "Texten som ska bedömas. Skriv en mall så renderas den innan den skickas."
+        },
+        "instructions": {
+          "name": "Fråga",
+          "description": "Formulera den så att ett högt tal betyder ja. Ett påstående fungerar lika bra som en fråga."
+        },
+        "true_means": {
+          "name": "Ja betyder",
+          "description": "Valfritt. Vad som räknas som ja. Värt att fylla i när gränsen är hårfin."
+        },
+        "false_means": {
+          "name": "Nej betyder",
+          "description": "Valfritt. Vad som räknas som nej."
+        },
+        "threshold": {
+          "name": "Tröskelvärde",
+          "description": "Var gränsen går för fältet is_true i svaret. Sannolikheten själv returneras alltid också. Ett värde nära 0.5 betyder att modellen inte kan avgöra, inte att svaret är halvt sant."
+        },
+        "config_entry": {
+          "name": "API-nyckel",
+          "description": "Vilken konfigurerad nyckel som frågan ska ställas med. Behövs bara när fler än en är konfigurerad."
+        },
+        "include_attributes": {
+          "name": "Ta med alla attribut",
+          "description": "Av som standard. Skickar alla attribut för de valda entiteterna, inte bara värde, måttenhet, enhetsklass och område. En väderprognos eller en mediaspelares lista med omslagsbilder blir tusentals token, och du betalar för dem vid varje utvärdering."
+        },
+        "background": {
+          "name": "Bakgrund",
+          "description": "Valfritt. Fasta fakta om hur det här ska läsas, till exempel vad ett mätvärde betyder för just din enhet. Det följer med frågan i stället för med mätvärdena, vilket mätbart fungerar bättre än att lägga det i tillståndet. Ett objekt i stället för en mening behåller dina egna nyckelnamn, och modellen läser de nycklarna."
+        }
+      }
+    },
+    "choice": {
+      "name": "Välj ett alternativ",
+      "description": "Välj ett alternativ ur din lista, och få sannolikheten för varje alternativ plus ett säkerhetsvärde.",
+      "fields": {
+        "state": {
+          "name": "Tillstånd",
+          "description": "Texten som ska bedömas. Skriv en mall så renderas den innan den skickas."
+        },
+        "instructions": {
+          "name": "Fråga",
+          "description": "Vad modellen väljer mellan, i en mening."
+        },
+        "options": {
+          "name": "Alternativ",
+          "description": "Två till 255 alternativ. Ta med ett uppsamlande alternativ som annat när din lista kanske inte täcker varje indata."
+        },
+        "option_descriptions": {
+          "name": "Beskrivningar av alternativ",
+          "description": "Valfritt. En beskrivning per alternativ, vilket skärper gränsen mellan alternativ som liknar varandra. Att säga vad ett alternativ utesluter hjälper mest."
+        },
+        "config_entry": {
+          "name": "API-nyckel",
+          "description": "Vilken konfigurerad nyckel som frågan ska ställas med. Behövs bara när fler än en är konfigurerad."
+        },
+        "include_attributes": {
+          "name": "Ta med alla attribut",
+          "description": "Av som standard. Skickar alla attribut för de valda entiteterna, inte bara värde, måttenhet, enhetsklass och område. En väderprognos eller en mediaspelares lista med omslagsbilder blir tusentals token, och du betalar för dem vid varje utvärdering."
+        },
+        "background": {
+          "name": "Bakgrund",
+          "description": "Valfritt. Fasta fakta om hur det här ska läsas, till exempel vad ett mätvärde betyder för just din enhet. Det följer med frågan i stället för med mätvärdena, vilket mätbart fungerar bättre än att lägga det i tillståndet. Ett objekt i stället för en mening behåller dina egna nyckelnamn, och modellen läser de nycklarna."
+        }
+      }
+    },
+    "score": {
+      "name": "Betygsätt på en skala",
+      "description": "Betygsätt texten mot nivåer som du beskriver, och få ett tal som kan hamna mellan två nivåer.",
+      "fields": {
+        "state": {
+          "name": "Tillstånd",
+          "description": "Texten som ska bedömas. Skriv en mall så renderas den innan den skickas."
+        },
+        "instructions": {
+          "name": "Fråga",
+          "description": "En dimension per fråga. En fråga som mäter tre saker samtidigt ger låg säkerhet och en meningslös mitt."
+        },
+        "levels": {
+          "name": "Nivåer",
+          "description": "Två till 10 nivåer, lägsta först. Beskriv en konkret situation för varje, inte en grad: Trasig men det finns en lösning slår Måttligt allvarlig. Varje nivå bedöms för sig, så jämförande ord och tal i texten gör ingenting."
+        },
+        "config_entry": {
+          "name": "API-nyckel",
+          "description": "Vilken konfigurerad nyckel som frågan ska ställas med. Behövs bara när fler än en är konfigurerad."
+        },
+        "include_attributes": {
+          "name": "Ta med alla attribut",
+          "description": "Av som standard. Skickar alla attribut för de valda entiteterna, inte bara värde, måttenhet, enhetsklass och område. En väderprognos eller en mediaspelares lista med omslagsbilder blir tusentals token, och du betalar för dem vid varje utvärdering."
+        },
+        "background": {
+          "name": "Bakgrund",
+          "description": "Valfritt. Fasta fakta om hur det här ska läsas, till exempel vad ett mätvärde betyder för just din enhet. Det följer med frågan i stället för med mätvärdena, vilket mätbart fungerar bättre än att lägga det i tillståndet. Ett objekt i stället för en mening behåller dina egna nyckelnamn, och modellen läser de nycklarna."
+        }
+      }
+    },
+    "ask": {
+      "name": "Ställ flera frågor samtidigt",
+      "description": "Ställ vilken blandning av frågetyper som helst om en och samma text, i en enda förfrågan. Varje fråga bedöms oberoende mot samma text och de körs parallellt, så tjugo frågor tar ungefär lika lång tid som en.",
+      "fields": {
+        "state": {
+          "name": "Tillstånd",
+          "description": "Texten som ska bedömas. Skriv en mall så renderas den innan den skickas."
+        },
+        "questions": {
+          "name": "Frågor",
+          "description": "Din egen nyckel för varje fråga, sedan dess typ noul, choice eller score, dess instruktioner, och kriterier för choice och score. Nycklarna är dina: de kommer tillbaka som nycklarna i svaren och modellen ser dem aldrig."
+        },
+        "config_entry": {
+          "name": "API-nyckel",
+          "description": "Vilken konfigurerad nyckel som frågan ska ställas med. Behövs bara när fler än en är konfigurerad."
+        },
+        "include_attributes": {
+          "name": "Ta med alla attribut",
+          "description": "Av som standard. Skickar alla attribut för de valda entiteterna, inte bara värde, måttenhet, enhetsklass och område. En väderprognos eller en mediaspelares lista med omslagsbilder blir tusentals token, och du betalar för dem vid varje utvärdering."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "calls_today": {
+        "name": "Anrop i dag"
+      },
+      "input_tokens_today": {
+        "name": "Indatatoken i dag"
+      },
+      "estimated_cost_today": {
+        "name": "Beräknad kostnad i dag"
+      },
+      "context_latency": {
+        "name": "Latens {context}"
+      },
+      "context_payload": {
+        "name": "Förfrågningsstorlek {context}"
+      }
+    },
+    "binary_sensor": {
+      "daily_budget_exceeded": {
+        "name": "Daglig budget överskriden"
+      }
+    }
+  },
+  "exceptions": {
+    "nothing_to_judge": {
+      "message": "Inget att bedöma: ge den här åtgärden en text, eller välj entiteterna, enheterna eller områdena den ska titta på."
+    },
+    "no_entry": {
+      "message": "Ingen laddad Jev-konfigurationspost att fråga med. Lägg till integrationen först, eller välj en under API-nyckel när fler än en är konfigurerad."
+    },
+    "entry_ambiguous": {
+      "message": "Mer än en Jev-post är inläst: {entries}. Välj en under API-nyckel, eftersom varje post har en egen nyckel och en egen budget."
+    },
+    "missing_targets": {
+      "message": "De här målen finns inte: {targets}. Att fråga om resten skulle svara på en annan fråga än den du skrev."
+    },
+    "empty_target": {
+      "message": "Det målet innehåller inga entiteter, så det skulle inte finnas något att bedöma."
+    },
+    "too_many_entities": {
+      "message": "Det målet innehåller {count} entiteter och gränsen är {limit}. Varje entitet debiteras som indata vid varje utvärdering, så välj de som frågan hänger på, eller dela upp den."
+    },
+    "question_shape": {
+      "message": "Fråga {key} behöver både 'type' och 'instructions'. Typerna är noul, choice och score."
+    },
+    "question_invalid": {
+      "message": "Fråga {key} är inte giltig: {reason}"
+    },
+    "template_failed": {
+      "message": "Mallen för tillståndet misslyckades: {reason}"
+    },
+    "auth_rejected": {
+      "message": "TypeSafe avvisade API-nyckeln: {reason}"
+    },
+    "ask_failed": {
+      "message": "Det gick inte att fråga Jev: {reason}"
+    },
+    "wrong_answer_type": {
+      "message": "Ställde en {question_type}-fråga och fick tillbaka en {got}, vilket API:et inte borde göra."
+    },
+    "choice_options_out_of_range": {
+      "message": "En choice tar {min} till {max} alternativ och den här har {count}."
+    },
+    "score_levels_out_of_range": {
+      "message": "En score tar {min} till {max} nivåer, lägsta först, och den här har {count}."
+    },
+    "unreadable_answer": {
+      "message": "TypeSafe returnerade ett svar av typen {kind}, som den här versionen inte kan läsa. Uppdatera integrationen."
+    },
+    "task_needs_structure": {
+      "message": "Uppgiften {task} ber om fri text, och Jev svarar bara på typade frågor. Ge åtgärden en struktur vars fält är boolean, select eller number."
+    },
+    "task_over_budget": {
+      "message": "Uppgiften {task} kostar ungefär {estimate} indatatokens och {remaining} av dagsbudgeten på {budget} återstår. Höj eller rensa budgeten i integrationens alternativ för att fortsätta."
+    },
+    "reserved_field": {
+      "message": "Fältet {field} kan inte användas, eftersom resultatet bär säkerheten bakom varje svar under det namnet. Byt namn på fältet."
+    },
+    "no_fields": {
+      "message": "Strukturen deklarerar inga fält."
+    },
+    "answer_missing": {
+      "message": "Svaret innehåller inget för {field}."
+    },
+    "unsupported_field": {
+      "message": "Fältet {field} använder en {selector}, och Jev svarar på en ja/nej-fråga, ett val ur en lista eller ett betyg på en skala. Ge fältet en boolean, en select med alternativ eller en number med min och max."
+    },
+    "field_options_out_of_range": {
+      "message": "Fältet {field} erbjuder {count} alternativ, och ett val kräver {min} till {max}."
+    },
+    "field_needs_scale": {
+      "message": "Fältet {field} är ett tal utan {bound}. Ett betyg kräver skalans båda ändar."
+    },
+    "field_scale_not_ordered": {
+      "message": "Fältet {field} har min {min} och max {max}, och det är ingen skala."
+    },
+    "answer_does_not_fit": {
+      "message": "Svaret för {field} kom tillbaka som {answer}, och det passar inte en {selector}."
+    },
+    "context_template_failed": {
+      "message": "State-mallen för kontexten {context} misslyckades: {reason}"
+    },
+    "context_targets_failed": {
+      "message": "Kontext {context}: {reason}"
+    },
+    "context_over_budget": {
+      "message": "Att utvärdera kontexten {context} kostar ungefär {estimate} indatatokens och {remaining} av dagsbudgeten på {budget} återstår. Höj eller rensa budgeten i integrationens alternativ för att fortsätta."
+    },
+    "rate_limited": {
+      "message": "TypeSafe begränsade begäran: {reason}"
+    }
+  },
+  "common": {
+    "not_understood": "Tyvärr, jag förstod inte det.",
+    "whole_house": "Det skulle påverka hela huset. Säg vilket rum eller vilken enhet du menar.",
+    "which_kind": "Vilken sorts sak menar du? Säg lamporna, eller strömbrytarna, eller nämn ett rum.",
+    "intent_failed": "Tyvärr, det gick inte.",
+    "already_on": "{name} är redan på.",
+    "already_off": "{name} är redan av.",
+    "preview_alone": "Skickas som en egen förfrågan.",
+    "preview_grouped": "Skickas i en förfrågan tillsammans med: {others}.",
+    "preview_cost": "Frågade en gång för den här förhandsgranskningen: {tokens} indatatoken, ungefär ${cost}, {ms} ms.",
+    "preview_threshold_over": "Det ligger över ditt tröskelvärde på {threshold}, så den binära sensorn skulle vara **på** just nu.",
+    "preview_threshold_under": "Det ligger under ditt tröskelvärde på {threshold}, så den binära sensorn skulle vara **av** just nu.",
+    "preview_winner": "Vinnare **{choice}**, säkerhet {confidence}.",
+    "preview_score": "Poäng **{score}**, närmaste nivå **{level}**, säkerhet {confidence}.",
+    "preview_undrawable": "Svaret kom tillbaka i en form som den här versionen inte kan rita upp.",
+    "preview_unbuildable": "Den frågan kan inte byggas än: {reason}",
+    "preview_rejected": "TypeSafe avvisade API-nyckeln, så det finns inget provsvar.",
+    "preview_failed": "Inget provsvar: {reason}",
+    "preview_mismatched": "API:et svarade, men inte på frågan som ställdes.",
+    "preview_template_error": "Mallen renderas inte: {reason}",
+    "query_not_found": "Det kunde jag inte hitta.",
+    "budget_spent": "Den dagliga tokenbudgeten är slut, så det kan jag inte göra i dag.",
+    "auth_failed": "TypeSafe avvisade API-nyckeln. Kontrollera den i inställningarna för Jev.",
+    "unavailable": "TypeSafe svarade inte. Försök igen om en stund.",
+    "preview_over_budget": "Den dagliga budgeten för token är slut, så det finns inget provsvar. Frågan sparas ändå.",
+    "preview_nothing_yet": "Inget provsvar: det finns inget att fråga om än."
+  },
+  "config_subentries": {
+    "question": {
+      "entry_type": "Fråga",
+      "initiate_flow": {
+        "user": "Lägg till fråga",
+        "reconfigure": "Redigera fråga"
+      },
+      "step": {
+        "user": {
+          "title": "Vilken sorts svar vill du få tillbaka?",
+          "menu_options": {
+            "noul": "Noul, en sannolikhet. Ett tal från 0 till 1",
+            "choice": "Choice, ett av dina alternativ. Med hela fördelningen",
+            "score": "Score, ett betyg. Mot nivåer som du beskriver"
+          }
+        },
+        "noul": {
+          "title": "Noul: en ja- eller nej-fråga",
+          "data": {
+            "name": "Namn",
+            "instructions": "Frågan",
+            "target": "Vad den ska titta på",
+            "state": "Extra anteckning eller mall",
+            "background": "Fasta fakta om mätvärdena",
+            "true_means": "Vad ett högt tal betyder",
+            "false_means": "Vad ett lågt tal betyder",
+            "threshold": "Gör även en binär sensor över",
+            "advanced": "Avancerat"
+          },
+          "data_description": {
+            "name": "Namnger sensorn som den här frågan skapar.",
+            "instructions": "Skickas till API:et som `instructions`.",
+            "target": "Välj entiteter, enheter, områden eller etiketter så skickas deras mätvärden åt dig. Lämna tomt om anteckningen nedan är hela tillståndet.",
+            "state": "Text eller en mall, ensam eller vid sidan av mätvärdena.",
+            "background": "Vävs in i `instructions` så att det följer med frågan i stället för med tillståndet.",
+            "true_means": "Valfritt. Skärper åt vilket håll svaret pekar.",
+            "false_means": "Valfritt.",
+            "threshold": "Lämna tomt för bara sannolikhetssensorn.",
+            "advanced": "Ett schema, och vad som mer ska skickas. Standardvärdena duger för en första fråga."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Avancerat",
+              "description": "Ett schema, och vad som mer ska skickas. Standardvärdena duger för en första fråga.",
+              "data": {
+                "trigger_entities": "Vakna på de här i stället",
+                "scan_interval": "Fråga så här ofta",
+                "include_attributes": "Skicka med alla attribut också"
+              },
+              "data_description": {
+                "trigger_entities": "Utvärdera när de här ändras, utöver schemat nedan. Dämpad med 5 sekunder.",
+                "scan_interval": "Frågor som tittar på samma sak enligt samma schema skickas som en förfrågan, vilket kostar token men nästan ingen extra tid.",
+                "include_attributes": "Av som standard. En väderprognos blir tusentals token vid varje utvärdering."
+              }
+            }
+          }
+        },
+        "choice": {
+          "title": "Choice: välj ett av dina alternativ",
+          "data": {
+            "name": "Namn",
+            "instructions": "Frågan",
+            "target": "Vad den ska titta på",
+            "state": "Extra anteckning eller mall",
+            "background": "Fasta fakta om mätvärdena",
+            "options": "Dina alternativ, ett per rad",
+            "advanced": "Avancerat"
+          },
+          "data_description": {
+            "name": "Namnger sensorn som den här frågan skapar.",
+            "instructions": "Skickas till API:et som `instructions`.",
+            "target": "Välj entiteter, enheter, områden eller etiketter så skickas deras mätvärden åt dig. Lämna tomt om anteckningen nedan är hela tillståndet.",
+            "state": "Text eller en mall, ensam eller vid sidan av mätvärdena.",
+            "background": "Vävs in i `instructions` så att det följer med frågan i stället för med tillståndet.",
+            "options": "Skickas till API:et som `criteria`. Ett per rad, som `namn: vad det betyder`. Beskrivningen är valfri.",
+            "advanced": "Ett schema, och vad som mer ska skickas. Standardvärdena duger för en första fråga."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Avancerat",
+              "description": "Ett schema, och vad som mer ska skickas. Standardvärdena duger för en första fråga.",
+              "data": {
+                "trigger_entities": "Vakna på de här i stället",
+                "scan_interval": "Fråga så här ofta",
+                "include_attributes": "Skicka med alla attribut också"
+              },
+              "data_description": {
+                "trigger_entities": "Utvärdera när de här ändras, utöver schemat nedan. Dämpad med 5 sekunder.",
+                "scan_interval": "Frågor som tittar på samma sak enligt samma schema skickas som en förfrågan, vilket kostar token men nästan ingen extra tid.",
+                "include_attributes": "Av som standard. En väderprognos blir tusentals token vid varje utvärdering."
+              }
+            }
+          }
+        },
+        "score": {
+          "title": "Score: ett betyg mot dina nivåer",
+          "data": {
+            "name": "Namn",
+            "instructions": "Frågan",
+            "target": "Vad den ska titta på",
+            "state": "Extra anteckning eller mall",
+            "background": "Fasta fakta om mätvärdena",
+            "levels": "Dina nivåer, lägsta först, en per rad",
+            "advanced": "Avancerat"
+          },
+          "data_description": {
+            "name": "Namnger sensorn som den här frågan skapar.",
+            "instructions": "Skickas till API:et som `instructions`.",
+            "target": "Välj entiteter, enheter, områden eller etiketter så skickas deras mätvärden åt dig. Lämna tomt om anteckningen nedan är hela tillståndet.",
+            "state": "Text eller en mall, ensam eller vid sidan av mätvärdena.",
+            "background": "Vävs in i `instructions` så att det följer med frågan i stället för med tillståndet.",
+            "levels": "Skickas till API:et som `criteria`. En per rad, lägsta först. Mellan 2 och 10 stycken.",
+            "advanced": "Ett schema, och vad som mer ska skickas. Standardvärdena duger för en första fråga."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Avancerat",
+              "description": "Ett schema, och vad som mer ska skickas. Standardvärdena duger för en första fråga.",
+              "data": {
+                "trigger_entities": "Vakna på de här i stället",
+                "scan_interval": "Fråga så här ofta",
+                "include_attributes": "Skicka med alla attribut också"
+              },
+              "data_description": {
+                "trigger_entities": "Utvärdera när de här ändras, utöver schemat nedan. Dämpad med 5 sekunder.",
+                "scan_interval": "Frågor som tittar på samma sak enligt samma schema skickas som en förfrågan, vilket kostar token men nästan ingen extra tid.",
+                "include_attributes": "Av som standard. En väderprognos blir tusentals token vid varje utvärdering."
+              }
+            }
+          }
+        },
+        "reconfigure": {
+          "title": "Redigera den här frågan",
+          "data": {
+            "name": "Namn",
+            "instructions": "Frågan",
+            "target": "Vad den ska titta på",
+            "state": "Extra anteckning eller mall",
+            "background": "Fasta fakta om mätvärdena",
+            "true_means": "Vad ett högt tal betyder",
+            "false_means": "Vad ett lågt tal betyder",
+            "threshold": "Gör även en binär sensor över",
+            "options": "Dina alternativ, ett per rad",
+            "levels": "Dina nivåer, lägsta först, en per rad",
+            "advanced": "Avancerat"
+          },
+          "data_description": {
+            "name": "Namnger sensorn som den här frågan skapar.",
+            "instructions": "Skickas till API:et som `instructions`.",
+            "target": "Välj entiteter, enheter, områden eller etiketter så skickas deras mätvärden åt dig. Lämna tomt om anteckningen nedan är hela tillståndet.",
+            "state": "Text eller en mall, ensam eller vid sidan av mätvärdena.",
+            "background": "Vävs in i `instructions` så att det följer med frågan i stället för med tillståndet.",
+            "true_means": "Valfritt. Skärper åt vilket håll svaret pekar.",
+            "false_means": "Valfritt.",
+            "threshold": "Lämna tomt för bara sannolikhetssensorn.",
+            "options": "Skickas till API:et som `criteria`. Ett per rad, som `namn: vad det betyder`. Beskrivningen är valfri.",
+            "levels": "Skickas till API:et som `criteria`. En per rad, lägsta först. Mellan 2 och 10 stycken.",
+            "advanced": "Ett schema, och vad som mer ska skickas. Standardvärdena duger för en första fråga."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Avancerat",
+              "description": "Ett schema, och vad som mer ska skickas. Standardvärdena duger för en första fråga.",
+              "data": {
+                "trigger_entities": "Vakna på de här i stället",
+                "scan_interval": "Fråga så här ofta",
+                "include_attributes": "Skicka med alla attribut också"
+              },
+              "data_description": {
+                "trigger_entities": "Utvärdera när de här ändras, utöver schemat nedan. Dämpad med 5 sekunder.",
+                "scan_interval": "Frågor som tittar på samma sak enligt samma schema skickas som en förfrågan, vilket kostar token men nästan ingen extra tid.",
+                "include_attributes": "Av som standard. En väderprognos blir tusentals token vid varje utvärdering."
+              }
+            }
+          }
+        },
+        "preview": {
+          "title": "Kontrollera vad som skickas",
+          "description": "Det här är vad din fråga kommer att ställas om, byggt nu utifrån vad den pekar på.\n\n{grouping}\n\n### Vad den svarar just nu\n\n{answer}\n\n### Tillståndet den läser\n\n```\n{state}\n```"
+        }
+      },
+      "error": {
+        "nothing_to_judge": "Välj något att titta på, eller skriv en anteckning eller mall. En fråga behöver ett tillstånd.",
+        "choice_options_out_of_range": "En choice tar mellan 2 och 255 alternativ.",
+        "score_levels_out_of_range": "En score tar mellan 2 och 10 nivåer.",
+        "option_name_empty": "Varje alternativ behöver ett namn före kolon.",
+        "option_name_duplicate": "Två alternativ delar namn, så ett av dem skulle tappas bort tyst."
+      },
+      "abort": {
+        "reconfigure_successful": "Frågan uppdaterad"
+      }
+    }
+  }
+}

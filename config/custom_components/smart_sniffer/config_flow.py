@@ -24,9 +24,28 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
+from .attention import (
+    current_readings,
+    form_order,
+    get_thresholds,
+    labels_for_drive,
+    overrides_from_form,
+    prefill_thresholds,
+    reading_placeholders,
+)
 from .const import (
+    CONF_FORCE_UPDATE,
     CONF_TOKEN,
+    DEFAULT_FORCE_UPDATE,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -309,14 +328,36 @@ class SmartSnifferConfigFlow(ConfigFlow, domain=DOMAIN):
 class SmartSnifferOptionsFlow(OptionsFlowWithConfigEntry):
     """Handle options for an existing SMART Sniffer config entry.
 
-    Allows changing the bearer token, polling interval, and port without
-    having to delete and re-add the integration.
+    Two branches from the menu: connection settings (port, token, interval),
+    and per-drive alert thresholds (#36).
+
+    Everything here persists into ``entry.data``, never ``entry.options``. This
+    flow calls async_create_entry(data={}), so options is permanently empty;
+    anything written there would be silently discarded.
+
+    The base class is deprecated upstream. It is deliberately not migrated as
+    part of this change: hacs.json declares a floor of 2024.1.0, and
+    self.config_entry only became available on plain OptionsFlow in 2024.11, so
+    migrating would raise the supported floor by ten months. That is a
+    user-facing decision, not a cleanup to fold into a feature.
     """
+
+    # Drive chosen in the picker, carried into the editor step.
+    _threshold_drive_id: str | None = None
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Show the options form pre-filled with current values."""
+        """Choose between connection settings and per-drive thresholds."""
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=["settings", "thresholds"],
+        )
+
+    async def async_step_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show the connection form pre-filled with current values."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -363,11 +404,127 @@ class SmartSnifferOptionsFlow(OptionsFlowWithConfigEntry):
                     CONF_SCAN_INTERVAL,
                     default=current.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
                 ): vol.Coerce(int),
+                vol.Optional(
+                    CONF_FORCE_UPDATE,
+                    default=current.get(CONF_FORCE_UPDATE, DEFAULT_FORCE_UPDATE),
+                ): bool,
             }
         )
 
         return self.async_show_form(
-            step_id="init",
+            step_id="settings",
             data_schema=schema,
             errors=errors,
+        )
+
+    # ------------------------------------------------------------------
+    # Per-drive alert thresholds (#36)
+    # ------------------------------------------------------------------
+
+    def _coordinator(self) -> Any:
+        return self.hass.data[DOMAIN][self.config_entry.entry_id]["coordinator"]
+
+    def _drive_choices(self) -> list[dict[str, str]]:
+        """Selectable drives, newest agent data first."""
+        coordinator = self._coordinator()
+        choices: list[dict[str, str]] = []
+        for drive_id, drive_data in (coordinator.data or {}).items():
+            if drive_id.startswith("_"):
+                continue  # internal keys like _filesystems
+            if drive_data.get("readable") is False:
+                continue  # the agent could not read it; identity is not trusted
+            model = drive_data.get("model") or "Unknown drive"
+            serial = drive_data.get("serial") or drive_id
+            choices.append({"value": drive_id, "label": f"{model} ({serial})"})
+        return choices
+
+    async def async_step_thresholds(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick the drive whose thresholds are being edited."""
+        choices = self._drive_choices()
+
+        if not choices:
+            # Agent unreachable or nothing readable. An empty picker would look
+            # like a bug, so say what happened instead.
+            return self.async_abort(reason="no_drives")
+
+        if len(choices) == 1:
+            self._threshold_drive_id = choices[0]["value"]
+            return await self.async_step_threshold_form()
+
+        if user_input is not None:
+            self._threshold_drive_id = user_input["drive_id"]
+            return await self.async_step_threshold_form()
+
+        schema = vol.Schema(
+            {
+                vol.Required("drive_id"): SelectSelector(
+                    SelectSelectorConfig(
+                        options=choices,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                )
+            }
+        )
+        return self.async_show_form(step_id="thresholds", data_schema=schema)
+
+    def _drive_label(self) -> str:
+        drive_id = self._threshold_drive_id or ""
+        return next(
+            (c["label"] for c in self._drive_choices() if c["value"] == drive_id),
+            drive_id,
+        )
+
+    async def async_step_threshold_form(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """The threshold form for one drive.
+
+        Every field is prefilled with the value in force, and shows the drive's
+        current reading and the built-in default under it. Typing the default
+        clears an override, because only values that differ from it are stored.
+        """
+        drive_id = self._threshold_drive_id or ""
+        coordinator = self._coordinator()
+        drive_data = (coordinator.data or {}).get(drive_id) or {}
+
+        # Only labels this drive's protocol can report. An NVMe drive has no
+        # Spin Retry Count, and offering it would invite a setting that could
+        # never do anything.
+        labels = labels_for_drive(drive_data)
+        readings = current_readings(drive_data)
+
+        if user_input is not None:
+            chosen = overrides_from_form(labels, user_input)
+
+            data = {**self.config_entry.data}
+            thresholds = {**(data.get("thresholds") or {})}
+            if chosen:
+                thresholds[drive_id] = chosen
+            else:
+                thresholds.pop(drive_id, None)
+            data["thresholds"] = thresholds
+
+            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
+            return self.async_create_entry(title="", data={})
+
+        prefill = prefill_thresholds(
+            drive_data, get_thresholds(self.config_entry, drive_id)
+        )
+        schema = vol.Schema(
+            {
+                vol.Optional(label, default=prefill[label]): NumberSelector(
+                    NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
+                )
+                for label in form_order(labels, readings)
+            }
+        )
+
+        return self.async_show_form(
+            step_id="threshold_form",
+            data_schema=schema,
+            description_placeholders=reading_placeholders(
+                readings, self._drive_label()
+            ),
         )

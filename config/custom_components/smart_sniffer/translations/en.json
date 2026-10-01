@@ -40,23 +40,74 @@
   "options": {
     "step": {
       "init": {
+        "title": "SMART Sniffer",
+        "menu_options": {
+          "settings": "Connection and polling settings",
+          "thresholds": "Alert thresholds"
+        }
+      },
+      "settings": {
         "title": "SMART Sniffer Settings",
-        "description": "Adjust connection and polling settings. The host cannot be changed — remove and re-add the integration to change it.",
+        "description": "Adjust connection and polling settings. The host cannot be changed. To change it, remove and re-add the integration.",
         "data": {
           "port": "Port",
           "token": "Bearer Token",
-          "scan_interval": "Polling Interval (seconds)"
+          "scan_interval": "Polling Interval (seconds)",
+          "force_update": "Write a value on every poll"
         },
         "data_description": {
           "port": "HTTP port the agent is listening on.",
           "token": "Leave blank if the agent has no auth configured.",
-          "scan_interval": "How often to poll for updated SMART data (in seconds)."
+          "scan_interval": "How often to poll for updated SMART data (in seconds).",
+          "force_update": "Enable for InfluxDB, Prometheus, or Grafana. Records a data point on every poll even when the value has not changed. Leave off otherwise to keep the recorder database smaller."
+        }
+      },
+      "thresholds": {
+        "title": "Choose a drive",
+        "description": "Alert thresholds are set per drive.",
+        "data": {
+          "drive_id": "Drive"
+        }
+      },
+      "threshold_form": {
+        "title": "Thresholds for {drive}",
+        "description": "A threshold is the value this drive is allowed to reach before it alerts.\nSet a damage count to its current reading to accept damage you already know about and be told only if it gets worse. Wear and spare are meant to move, so leave those near their defaults.\nType the default to clear a threshold.",
+        "data": {
+          "Command Timeout": "Command Timeout",
+          "Current Pending Sector Count": "Current Pending Sector Count",
+          "NVMe Media Errors": "NVMe Media Errors",
+          "NVMe Spare Warn Below": "NVMe Spare Warn Below",
+          "Offline Uncorrectable Errors": "Offline Uncorrectable Errors",
+          "Reallocated Event Count": "Reallocated Event Count",
+          "Reallocated Sector Count": "Reallocated Sector Count",
+          "Reported Uncorrectable Errors": "Reported Uncorrectable Errors",
+          "SSD Wear Percent Used": "SSD Wear Percent Used",
+          "Spin Retry Count": "Spin Retry Count",
+          "Total Offline Uncorrectable": "Total Offline Uncorrectable",
+          "Uncorrectable Error Count": "Uncorrectable Error Count"
+        },
+        "data_description": {
+          "Command Timeout": "Currently: {command_timeout}. Default: {command_timeout_default}.",
+          "Current Pending Sector Count": "Currently: {current_pending_sector_count}. Default: {current_pending_sector_count_default}.",
+          "NVMe Media Errors": "Currently: {nvme_media_errors}. Default: {nvme_media_errors_default}.",
+          "NVMe Spare Warn Below": "Currently: {nvme_spare_warn_below}. Default: {nvme_spare_warn_below_default}.",
+          "Offline Uncorrectable Errors": "Currently: {offline_uncorrectable_errors}. Default: {offline_uncorrectable_errors_default}.",
+          "Reallocated Event Count": "Currently: {reallocated_event_count}. Default: {reallocated_event_count_default}.",
+          "Reallocated Sector Count": "Currently: {reallocated_sector_count}. Default: {reallocated_sector_count_default}.",
+          "Reported Uncorrectable Errors": "Currently: {reported_uncorrectable_errors}. Default: {reported_uncorrectable_errors_default}.",
+          "SSD Wear Percent Used": "Currently: {ssd_wear_percent_used}. Default: {ssd_wear_percent_used_default}.",
+          "Spin Retry Count": "Currently: {spin_retry_count}. Default: {spin_retry_count_default}.",
+          "Total Offline Uncorrectable": "Currently: {total_offline_uncorrectable}. Default: {total_offline_uncorrectable_default}.",
+          "Uncorrectable Error Count": "Currently: {uncorrectable_error_count}. Default: {uncorrectable_error_count_default}."
         }
       }
     },
     "error": {
       "cannot_connect": "Unable to connect with the new settings. Check the port and token.",
       "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "no_drives": "The agent reported no readable drives, so there is nothing to set thresholds on. Check that the agent is reachable and try again."
     }
   },
   "services": {
@@ -74,7 +125,21 @@
   "issues": {
     "agent_outdated": {
       "title": "SMART Sniffer: Update agent on {hostname} (v{current_version} → v{min_version})",
-      "description": "The agent on **{hostname}** is running version **{current_version}**, but this integration requires at least **{min_version}**.\n\nTo update, SSH into the host and run:\n```\ncurl -sSL https://raw.githubusercontent.com/DAB-LABS/smart-sniffer/main/install.sh | sudo bash\n```\nThe installer will detect the existing installation and upgrade in place. This repair will clear automatically once the agent reports a compatible version."
+      "description": "The agent on **{hostname}** is running version **{current_version}**, but this integration requires at least **{min_version}**.\n\nTo update, SSH into the host and run:\n```\ncurl -sSL {install_url} | sudo bash\n```\nThe installer will detect the existing installation and upgrade in place. This repair will clear automatically once the agent reports a compatible version."
+    }
+  },
+  "exceptions": {
+    "remove_live_drive": {
+      "message": "This drive is still being reported by the agent on {host}, so it can't be removed. If the drive has been taken out, it can be removed once the agent stops seeing it. To stop monitoring a drive that's still installed, add it to \"exclude_devices\" in the agent's config."
+    },
+    "remove_agent_device": {
+      "message": "This is the SMART Sniffer agent for {host}. To remove it and all of its drives, delete the {host} entry under Settings, Devices & Services, SMART Sniffer."
+    },
+    "remove_agent_offline": {
+      "message": "The agent on {host} isn't responding, so SMART Sniffer can't tell whether this drive is really gone. Try again once the agent is back online."
+    },
+    "remove_disk_usage": {
+      "message": "Disk usage for {host} is still being reported. To remove it, remove the \"filesystems\" section from the agent's config."
     }
   }
 }

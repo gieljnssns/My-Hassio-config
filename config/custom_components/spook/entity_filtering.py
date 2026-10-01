@@ -48,7 +48,7 @@ from .listeners import async_listen_once_tracked
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Mapping, Sequence
 
-    from homeassistant.core import HomeAssistant
+    from homeassistant.core import Event, HomeAssistant
 
 
 # Entity domains to ignore when filtering unknown entities. These can be
@@ -98,6 +98,7 @@ class EntityIDsCache:
     entity_ids_by_domain: dict[str, list[str]] | None = None
     created_scene_ids: set[str] | None = None
     rename_suggestions: dict[str, str | None] | None = None
+    deleted_entities: dict[str, er.DeletedRegistryEntry] | None = None
     unsubscribe: Callable[[], None] | None = None
 
 
@@ -138,7 +139,20 @@ def async_setup_all_entity_ids_cache_invalidation(
         cache.entity_ids = None
         cache.entity_ids_by_domain = None
         cache.created_scene_ids = None
+
+    @callback
+    def _clear_cache_and_suggestions(*_args: Any) -> None:
+        """Clear the entity IDs and the rename suggestions worked out from them.
+
+        Kept apart from `_clear_cache` because the two cost wildly different
+        amounts to rebuild. The entity IDs are a couple of set unions. A
+        suggestion is a fuzzy comparison against every entity in its domain,
+        and there is one per broken reference in the house, so throwing them
+        away is tens of seconds of solid work on a large installation. #1667.
+        """
+        _clear_cache()
         cache.rename_suggestions = None
+        cache.deleted_entities = None
 
     @callback
     def _state_entity_changed(event_data: Mapping[str, Any]) -> bool:
@@ -147,17 +161,41 @@ def async_setup_all_entity_ids_cache_invalidation(
             event_data.get("old_state") is None or event_data.get("new_state") is None
         )
 
+    @callback
+    def _registry_updated(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Handle a registry entry being created, removed or changed.
+
+        The suggestions only go when the pool they were drawn from moves:
+        an entity registered, unregistered, or renamed. Registry entries are
+        written for plenty of other reasons (an icon, a category, a device
+        being reassigned), and none of those change what an entity is called.
+        """
+        data = event.data
+        pool_moved = data["action"] != "update" or "entity_id" in data["changes"]
+
+        if pool_moved:
+            _clear_cache_and_suggestions()
+            return
+
+        _clear_cache()
+
     # Listen for entity registry updates
     unsub_registry_update = hass.bus.async_listen(
-        er.EVENT_ENTITY_REGISTRY_UPDATED, _clear_cache
+        er.EVENT_ENTITY_REGISTRY_UPDATED, _registry_updated
     )
     # Listen for Home Assistant start to ensure cache is clear then
     unsub_hass_start = async_listen_once_tracked(
-        hass, EVENT_HOMEASSISTANT_START, _clear_cache
+        hass, EVENT_HOMEASSISTANT_START, _clear_cache_and_suggestions
     )
     # Listen for components loading
-    unsub_component_loaded = hass.bus.async_listen(EVENT_COMPONENT_LOADED, _clear_cache)
-    # Listen for state-only entities being added or removed.
+    unsub_component_loaded = hass.bus.async_listen(
+        EVENT_COMPONENT_LOADED, _clear_cache_and_suggestions
+    )
+    # Listen for state-only entities being added or removed. The suggestions
+    # are left standing here: an entity arriving or leaving the state machine
+    # without touching the registry is the noisiest event in the house, and a
+    # suggestion that is a few minutes out of date is a sentence in an issue
+    # description, not a wrong answer about what is missing.
     unsub_state_changed = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
         _clear_cache,
@@ -165,7 +203,7 @@ def async_setup_all_entity_ids_cache_invalidation(
     )
 
     # Perform an initial clear, just in case.
-    _clear_cache()
+    _clear_cache_and_suggestions()
 
     def _unsubscribe_listeners() -> None:
         LOGGER.debug(
@@ -175,10 +213,7 @@ def async_setup_all_entity_ids_cache_invalidation(
         unsub_hass_start()
         unsub_component_loaded()
         unsub_state_changed()
-        cache.entity_ids = None
-        cache.entity_ids_by_domain = None
-        cache.created_scene_ids = None
-        cache.rename_suggestions = None
+        _clear_cache_and_suggestions()
         cache.unsubscribe = None  # Mark as unsubscribed
 
     cache.unsubscribe = _unsubscribe_listeners
@@ -342,6 +377,52 @@ def async_get_rename_suggestion_cache(hass: HomeAssistant) -> dict[str, str | No
 
 
 @callback
+def async_name_helper_in_the_registry(hass: HomeAssistant, entry_id: str) -> str:
+    """Return how to find the helper behind a config entry, by ID.
+
+    A helper is reported by its title, which is the only name anybody gave
+    it, and a title is not something Home Assistant can be searched by. When
+    the helper has gone strange the title is all somebody has, and it takes
+    them to a Helpers page that does not show it. #1633.
+
+    So: the entity IDs it registered, which is what they were looking for.
+    Failing that the config entry ID, because a helper with nothing in the
+    entity registry is exactly the one that cannot be found by looking, and
+    that ID is the handle it is stored under.
+    """
+    registry = er.async_get(hass)
+    entity_ids = sorted(
+        entity.entity_id
+        for entity in er.async_entries_for_config_entry(registry, entry_id)
+    )
+
+    return ", ".join(entity_ids) if entity_ids else entry_id
+
+
+@callback
+def async_get_deleted_entities(
+    hass: HomeAssistant,
+) -> dict[str, er.DeletedRegistryEntry]:
+    """Return the deleted entity registry entries, keyed by entity ID.
+
+    Cached, because the description of one broken reference is built per
+    reference and every one of them wants this same map. Home Assistant keeps
+    deleted entries around for a long while, so on an old installation there
+    are thousands of them to walk.
+    """
+    cache = _async_get_cache(hass)
+
+    if cache.deleted_entities is None:
+        entity_registry = er.async_get(hass)
+        cache.deleted_entities = {
+            deleted.entity_id: deleted
+            for deleted in entity_registry.deleted_entities.values()
+        }
+
+    return cache.deleted_entities
+
+
+@callback
 def async_get_all_area_ids(hass: HomeAssistant) -> set[str]:
     """Return all area IDs, known to Home Assistant."""
     area_registry = ar.async_get(hass)
@@ -481,7 +562,12 @@ def async_drop_existing_action_names(
 # neither `trigger` nor `this` is a domain Home Assistant knows, off a list that
 # grows every release and was never chosen with these in mind. Named here so
 # that it is a decision.
-NEVER_AN_ENTITY = frozenset({"trigger.entity_id", "this.entity_id"})
+#
+# Prefixes rather than the two exact strings, because a card can number them:
+# easy-layout-card hands mini-graph-card `this.entity_id1`, `this.entity_id2`
+# and so on, one per entity. Anything starting with these is the same variable
+# with a number on it, and no domain ever will be. #1606.
+NEVER_AN_ENTITY_PREFIXES = ("trigger.entity_id", "this.entity_id")
 
 
 @callback
@@ -506,7 +592,7 @@ def async_filter_known_entity_ids(
         # Process any comma-separated entity lists
         for entity_id in split_comma_separated_entity_ids(entity_id_raw):
             if (
-                entity_id not in NEVER_AN_ENTITY
+                not entity_id.startswith(NEVER_AN_ENTITY_PREFIXES)
                 and not entity_id.startswith(IGNORED_ENTITY_DOMAINS)
                 and entity_id not in known_entity_ids
                 and valid_entity_id(entity_id)

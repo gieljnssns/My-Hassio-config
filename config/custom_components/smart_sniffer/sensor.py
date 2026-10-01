@@ -13,6 +13,7 @@ Creates two kinds of sensors per drive:
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -34,9 +35,13 @@ from .attention import (
     STATE_NO,
     STATE_UNSUPPORTED,
     STATE_YES,
+    coerce_smart_data,
+    compose_reasons_text,
     evaluate_attention,
+    get_thresholds,
 )
-from .const import DOMAIN, FILESYSTEMS_KEY
+from .const import CONF_FORCE_UPDATE, DEFAULT_FORCE_UPDATE, DOMAIN, FILESYSTEMS_KEY
+from .device_link import agent_link
 from .coordinator import AgentHealthCoordinator, SmartSnifferCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -219,6 +224,8 @@ ATA_NAME_MAP: dict[str, list[str]] = {
         ],
         "reallocated_sector_count": [
             "Reallocated_Sector_Ct",
+            # SK Hynix SATA SSD name for attribute 5 (#27).
+            "Retired_Block_Count",
         ],
         "current_pending_sector_count": [
             "Current_Pending_Sector",
@@ -258,6 +265,118 @@ ATA_NAME_MAP: dict[str, list[str]] = {
 # SMART attribute extraction
 # ---------------------------------------------------------------------------
 
+# Diagnostic attributes we understand well enough to assign a state class.
+# Monotonic counters get TOTAL_INCREASING; gauges that move both ways get
+# MEASUREMENT.  Anything not listed gets no state class at all, which is the
+# deliberate default: no statistics is better than wrong statistics for a
+# vendor-specific attribute whose semantics we do not know.  See issue #47.
+_DIAG_COUNTER_ATTRS = frozenset(
+    {
+        "Start_Stop_Count",
+        "Load_Cycle_Count",
+        "Offline_Uncorrectable",
+        "UDMA_CRC_Error_Count",
+        # Samsung (and several other vendors) name attribute 199
+        # CRC_Error_Count rather than UDMA_CRC_Error_Count.  Without this
+        # variant the fix misses the exact attribute class reported in #47
+        # on Samsung SSDs.  Confirmed against a Samsung 870 EVO.
+        "CRC_Error_Count",
+        # Samsung vendor counters, all monotonic.
+        "POR_Recovery_Count",
+        "Runtime_Bad_Block",
+        "Used_Rsvd_Blk_Cnt_Tot",
+        # SK Hynix spells the same counter with an extra r (#27).
+        "Used_Rsrvd_Blk_Cnt_Tot",
+        "Power_Cycle_Count",
+        "Power-Off_Retract_Count",
+        "Reallocated_Sector_Ct",
+        "Reallocated_Event_Count",
+        "Current_Pending_Sector",
+        "Reported_Uncorrect",
+        "Command_Timeout",
+        "Spin_Retry_Count",
+        "G-Sense_Error_Rate",
+        "Erase_Fail_Count",
+        "Erase_Fail_Count_Total",
+        "Program_Fail_Count",
+        "Program_Fail_Cnt_Total",
+        "Total_LBAs_Written",
+        "Total_LBAs_Read",
+        "Host_Writes_32MiB",
+        "Host_Reads_32MiB",
+        "Head_Flying_Hours",
+        "Power_On_Hours",
+    }
+)
+
+_DIAG_GAUGE_ATTRS = frozenset(
+    {
+        "Temperature_Celsius",
+        "Airflow_Temperature_Cel",
+        "Available_Reservd_Space",
+        "Media_Wearout_Indicator",
+        "Percent_Lifetime_Remain",
+        "Remaining_Lifetime_Perc",
+        "SSD_Life_Left",
+        "Wear_Leveling_Count",
+        # Remaining spare blocks: counts DOWN as blocks are consumed, so it
+        # is a gauge, unlike its Used_ counterpart above.
+        "Unused_Rsvd_Blk_Cnt_Tot",
+    }
+)
+
+
+def _diagnostic_state_class(attr_name: str) -> SensorStateClass | None:
+    """Return a state class for a dynamic diagnostic attribute, or None.
+
+    Without a state class Home Assistant treats the value as a string, so
+    these entities get no statistics and cannot be graphed (issue #47).  We
+    only classify attributes whose semantics are well understood.
+    """
+    if attr_name in _DIAG_COUNTER_ATTRS:
+        return SensorStateClass.TOTAL_INCREASING
+    if attr_name in _DIAG_GAUGE_ATTRS:
+        return SensorStateClass.MEASUREMENT
+    return None
+
+
+def _decode_raw_value(raw: Any) -> Any | None:
+    """Decode a SMART attribute raw value, unpacking vendor-compound values.
+
+    Several drive families pack multiple sub-counters into the single 48-bit
+    raw value, so `raw.value` comes back as a huge integer while `raw.string`
+    holds the decoded figure:
+
+        Temperature_Celsius     value 244813987870   string "30 (Min/Max 13/57)"
+        Media_Wearout_Indicator value 1284200464683  string "299 80 299"
+
+    smartctl's `raw.string` is the vendor-decoded human form and its leading
+    integer is the real value.  We prefer it only when the numeric value looks
+    packed (above 0xFFFF) and the string actually disagrees, so legitimately
+    large counters such as Total_LBAs_Written are left untouched.
+
+    See issue #44, and the per-attribute fixes this generalises: #10
+    (Power_On_Hours), Command_Timeout in v0.4.26, Wear_Leveling in v0.4.30.
+    """
+    if not isinstance(raw, dict):
+        return raw
+
+    raw_value = raw.get("value")
+    if not isinstance(raw_value, int):
+        return raw_value
+
+    if raw_value > 0xFFFF:
+        raw_string = raw.get("string")
+        if raw_string:
+            m = re.match(r"\s*(\d+)", str(raw_string))
+            if m:
+                decoded = int(m.group(1))
+                if decoded != raw_value:
+                    return decoded
+
+    return raw_value
+
+
 def _extract_attribute(drive_data: dict[str, Any], key: str) -> Any | None:
     """Extract a SMART attribute value from the drive's full JSON payload.
 
@@ -265,18 +384,14 @@ def _extract_attribute(drive_data: dict[str, Any], key: str) -> Any | None:
     provides a universal top-level fallback for SCSI/SAS drives.
     Returns None if the attribute is not present.
     """
-    smart_data = drive_data.get("smart_data", {})
-
-    if isinstance(smart_data, str):
-        import json
-        try:
-            smart_data = json.loads(smart_data)
-        except (json.JSONDecodeError, TypeError):
-            return None
+    smart_data = coerce_smart_data(drive_data)
 
     # --- SMART overall status ---
     if key == "smart_status":
-        status = smart_data.get("smart_status", {})
+        # No default here. An unusable payload coerces to {}, and reporting
+        # "FAILED" for a drive that reported nothing at all would be a false
+        # alarm; the inline coercion this replaced returned None in that case.
+        status = smart_data.get("smart_status")
         if isinstance(status, dict):
             return "PASSED" if status.get("passed", False) else "FAILED"
         return None
@@ -300,7 +415,7 @@ def _extract_attribute(drive_data: dict[str, Any], key: str) -> Any | None:
             return extractor()
 
     # --- ATA path ---
-    ata_attrs = smart_data.get("ata_smart_attributes", {}).get("table", [])
+    ata_attrs = (smart_data.get("ata_smart_attributes") or {}).get("table", [])
 
     names = ATA_NAME_MAP.get(key, [])
     for attr in ata_attrs:
@@ -369,7 +484,10 @@ def _extract_attribute(drive_data: dict[str, Any], key: str) -> Any | None:
                         return None
                     return max(0, 100 - normalized)
 
-                return raw_value
+                # Everything else: unpack vendor-compound raw values rather
+                # than handing Home Assistant a packed 48-bit integer.  See
+                # issue #44.
+                return _decode_raw_value(raw)
             return raw
 
     # --- Universal fallback (top-level fields, all protocols) -----------
@@ -409,8 +527,15 @@ async def async_setup_entry(
     for drive_id, drive_data in coordinator.data.items():
         if drive_id.startswith("_"):
             continue  # skip internal keys like _filesystems
+        if drive_data.get("readable") is False:
+            # The agent could not read this drive, so its identity may not be
+            # trustworthy. Do not build a device for it. Agents before v0.6.1
+            # omit the field entirely, which reads as None here rather than
+            # False, so they are unaffected. See smart-sniffer-app#7.
+            _LOGGER.debug("Skipping unreadable drive %s at setup", drive_id)
+            continue
         protocol = drive_data.get("protocol", "").upper()
-        smart_data = drive_data.get("smart_data", {})
+        smart_data = coerce_smart_data(drive_data)
         has_ata_attrs = bool(smart_data.get("ata_smart_attributes"))
         is_nvme = protocol == "NVME" and not has_ata_attrs
         is_ata = protocol in ("ATA", "SATA", "") or has_ata_attrs
@@ -460,7 +585,7 @@ async def async_setup_entry(
         # For ATA drives in the smartctl database, expose all named
         # attributes that aren't already covered by a dedicated sensor.
         # Created disabled by default -- power users enable what they need.
-        ata_table = smart_data.get("ata_smart_attributes", {}).get("table", [])
+        ata_table = (smart_data.get("ata_smart_attributes") or {}).get("table", [])
         if is_ata and ata_table:
             # Build a per-drive "covered names" set: for each curated
             # sensor, only suppress the single name variant that actually
@@ -475,12 +600,23 @@ async def async_setup_entry(
             # Without per-drive detection, the global union of all
             # variant names would suppress 169 even though only 177
             # won the consolidated sensor.
-            _attr_position = {
-                attr.get("name", ""): i
-                for i, attr in enumerate(ata_table)
-                if attr.get("name")
-            }
-            _covered_names: set[str] = set()
+            # First position only: _extract_attribute returns on the first
+            # row whose name matches, so a name appearing twice must resolve
+            # to the earlier row.  A plain dict comprehension would record
+            # the last one.
+            _attr_position: dict[str, int] = {}
+            for _i, _attr in enumerate(ata_table):
+                _name = _attr.get("name")
+                if _name and _name not in _attr_position:
+                    _attr_position[_name] = _i
+
+            # Suppress by table row, not by name.  A drive can report the
+            # same attribute name at two different IDs (SK hynix reports
+            # Program_Fail_Count at both 175 and 181, #27).  Suppressing by
+            # name would hide every row sharing that name while the curated
+            # sensor only ever consumed one of them, so the others would
+            # vanish from both paths with nothing to indicate they existed.
+            _covered_rows: set[int] = set()
             for _desc in SENSOR_DESCRIPTIONS:
                 candidates = ATA_NAME_MAP.get(_desc.key, [])
                 present = [n for n in candidates if n in _attr_position]
@@ -488,17 +624,17 @@ async def async_setup_entry(
                     # Match _extract_attribute's "first in drive-table
                     # order" rule so the same variant wins in both paths.
                     winner = min(present, key=lambda n: _attr_position[n])
-                    _covered_names.add(winner)
+                    _covered_rows.add(_attr_position[winner])
 
             _seen_ids: set[int] = set()
-            for attr in ata_table:
+            for _row, attr in enumerate(ata_table):
                 attr_name = attr.get("name", "")
                 attr_id = attr.get("id", 0)
                 # Skip unnamed, unknown, already-covered, or duplicate IDs
                 if (
                     not attr_name
                     or attr_name.startswith("Unknown")
-                    or attr_name in _covered_names
+                    or _row in _covered_rows
                     or attr_id in _seen_ids
                 ):
                     continue
@@ -514,6 +650,10 @@ async def async_setup_entry(
                     icon="mdi:database-search-outline",
                     entity_category=EntityCategory.DIAGNOSTIC,
                     entity_registry_enabled_default=False,
+                    # Known counters/gauges get a state class so HA treats them
+                    # as numeric and records statistics.  Unknown attributes
+                    # stay unclassified on purpose.  See issue #47.
+                    state_class=_diagnostic_state_class(attr_name),
                 )
 
                 entities.append(
@@ -536,6 +676,25 @@ async def async_setup_entry(
     entities.append(AgentPortSensor(health_coordinator, entry))
     entities.append(AgentOSSensor(health_coordinator, entry))
     entities.append(AgentPollIntervalSensor(health_coordinator, entry))
+
+    # --- Optional force_update (issue #40) ---
+    # When enabled in options, write a state on every poll even when the value
+    # is unchanged, so external time-series stores (InfluxDB, Prometheus) get a
+    # datapoint each cycle and Grafana charts have no gaps. Off by default to
+    # keep the default recorder lean. Applies to the SMART data, attention, and
+    # filesystem sensors; the agent metadata sensors are excluded since forced
+    # writes add nothing there. Read from entry.data because this integration's
+    # options flow persists into entry.data, not entry.options.
+    if entry.data.get(CONF_FORCE_UPDATE, DEFAULT_FORCE_UPDATE):
+        forced_classes = (
+            SmartSnifferSensor,
+            SmartSnifferAttentionSensor,
+            SmartSnifferAttentionReasonsSensor,
+            SmartSnifferFilesystemSensor,
+        )
+        for entity in entities:
+            if isinstance(entity, forced_classes):
+                entity._attr_force_update = True
 
     async_add_entities(entities, update_before_add=False)
 
@@ -599,6 +758,9 @@ class SmartSnifferSensor(CoordinatorEntity[SmartSnifferCoordinator], SensorEntit
             "manufacturer": _guess_manufacturer(model),
             "model": model,
             "serial_number": serial,
+            # Nest this drive under its agent so HA can cascade an area
+            # assignment from the agent to every drive it reports (#24).
+            **agent_link(coordinator),
         }
 
     @property
@@ -683,21 +845,15 @@ class SmartSnifferDiagnosticAttrSensor(SmartSnifferSensor):
         drive_data = self.coordinator.data.get(self._drive_id)
         if drive_data is None:
             return None
-        smart_data = drive_data.get("smart_data", {})
-        if isinstance(smart_data, str):
-            import json
-            try:
-                smart_data = json.loads(smart_data)
-            except (json.JSONDecodeError, TypeError):
-                return None
+        smart_data = coerce_smart_data(drive_data)
 
-        ata_attrs = smart_data.get("ata_smart_attributes", {}).get("table", [])
+        ata_attrs = (smart_data.get("ata_smart_attributes") or {}).get("table", [])
         for attr in ata_attrs:
             if attr.get("id") == self._attr_id:
-                raw = attr.get("raw", {})
-                if isinstance(raw, dict):
-                    return raw.get("value")
-                return raw
+                # Unpack vendor-compound raw values here too -- diagnostic
+                # entities previously returned raw.value untouched, which
+                # showed packed integers on drives that pack.  See issue #44.
+                return _decode_raw_value(attr.get("raw", {}))
         return None
 
 
@@ -756,7 +912,14 @@ class SmartSnifferAttentionSensor(
             "manufacturer": _guess_manufacturer(model),
             "model": model,
             "serial_number": serial,
+            # Nest this drive under its agent so HA can cascade an area
+            # assignment from the agent to every drive it reports (#24).
+            **agent_link(coordinator),
         }
+
+    def _thresholds(self) -> dict[str, int]:
+        """Threshold overrides for this drive, from entry.data."""
+        return get_thresholds(self.coordinator.config_entry, self._drive_id)
 
     @property
     def icon(self) -> str:
@@ -770,7 +933,7 @@ class SmartSnifferAttentionSensor(
         drive_data = self.coordinator.data.get(self._drive_id)
         if drive_data is None:
             return STATE_UNSUPPORTED
-        state, _, _ = evaluate_attention(drive_data)
+        state, _, _, _ = evaluate_attention(drive_data, self._thresholds())
         return state
 
     @property
@@ -781,12 +944,18 @@ class SmartSnifferAttentionSensor(
                 "severity": SEVERITY_NONE,
                 "reasons": ["Drive data unavailable"],
                 "issue_count": 0,
+                "accepted": [],
             }
-        _, severity, reasons = evaluate_attention(drive_data)
+        _, severity, reasons, accepted = evaluate_attention(
+            drive_data, self._thresholds()
+        )
         return {
             "severity": severity,
             "reasons": reasons if reasons else ["No issues detected"],
+            # issue_count counts actionable reasons only. Accepted readings are
+            # explicitly not issues, which is the whole point of accepting them.
             "issue_count": len(reasons),
+            "accepted": accepted,
         }
 
 
@@ -833,19 +1002,26 @@ class SmartSnifferAttentionReasonsSensor(
             "manufacturer": _guess_manufacturer(model),
             "model": model,
             "serial_number": serial,
+            # Nest this drive under its agent so HA can cascade an area
+            # assignment from the agent to every drive it reports (#24).
+            **agent_link(coordinator),
         }
+
+    def _thresholds(self) -> dict[str, int]:
+        """Threshold overrides for this drive, from entry.data."""
+        return get_thresholds(self.coordinator.config_entry, self._drive_id)
 
     @property
     def native_value(self) -> str:
         drive_data = self.coordinator.data.get(self._drive_id)
         if drive_data is None:
             return "Drive data unavailable"
-        state, _, reasons = evaluate_attention(drive_data)
-        if state == STATE_NO:
-            return "No issues detected"
-        if state == STATE_UNSUPPORTED:
-            return "No usable SMART data"
-        return "; ".join(reasons)
+        state, _, reasons, accepted = evaluate_attention(
+            drive_data, self._thresholds()
+        )
+        # Composed in attention.py so the 255-character cap is covered by the
+        # tier-1 suite; this module cannot be imported without Home Assistant.
+        return compose_reasons_text(state, reasons, accepted)
 
     @property
     def icon(self) -> str:
@@ -853,7 +1029,7 @@ class SmartSnifferAttentionReasonsSensor(
         drive_data = self.coordinator.data.get(self._drive_id)
         if drive_data is None:
             return "mdi:text-box-search-outline"
-        state, _, _ = evaluate_attention(drive_data)
+        state, _, _, _ = evaluate_attention(drive_data, self._thresholds())
         if state == STATE_YES:
             return "mdi:alert-octagon"
         if state == STATE_MAYBE:
@@ -914,6 +1090,8 @@ class SmartSnifferFilesystemSensor(
             "name": f"Disk Usage ({hostname})",
             "manufacturer": "SMART Sniffer",
             "model": "Filesystem Monitor",
+            # Nest under the agent alongside the drive devices (#24).
+            **agent_link(coordinator),
         }
 
     def _get_fs_data(self) -> dict[str, Any] | None:

@@ -1,0 +1,566 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to TypeSafe",
+        "description": "Paste an API key from your TypeSafe account. Home Assistant asks one short question to check that the key works.",
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "The key the requests are sent with. Leave it empty only for an endpoint of your own that needs no key."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Advanced",
+            "data": {
+              "url": "API address",
+              "model": "Model"
+            },
+            "data_description": {
+              "url": "Leave this alone unless you run something of your own that speaks the same API, such as a proxy that holds the key or caches answers. The key is sent as a bearer header, so an http address puts it on the wire in clear.",
+              "model": "The model id sent with every request. Clear it to use the default."
+            }
+          }
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-enter your API key",
+        "description": "TypeSafe rejected the key currently stored. Paste a working one. The API address is left as it is; use Reconfigure to change that.",
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "Requests go to the API address already stored."
+        }
+      },
+      "reconfigure": {
+        "title": "Replace your API key or address",
+        "description": "Paste a different TypeSafe API key, and change the address if the API is reached somewhere other than TypeSafe. Your questions and entities are kept.",
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "Leave it empty to keep the current key while the address stays the same. A new address gets no key unless you type one."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Advanced",
+            "data": {
+              "url": "API address",
+              "model": "Model"
+            },
+            "data_description": {
+              "url": "Clear this field to go back to the TypeSafe API. The key is sent as a bearer header, so an http address puts it on the wire in clear.",
+              "model": "The model id sent with every request. Clear it to use the default."
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "TypeSafe rejected this key.",
+      "cannot_connect": "Home Assistant could not reach the API at that address.",
+      "not_found": "The server answered HTTP 404. Jev adds /v1/systemone to the address, so give only the part before that. For OpenRouter that is {openrouter_url}.",
+      "invalid_url": "That is not a usable API address. It needs a scheme and a host, and it cannot carry a space, a query, a fragment, a username or a password.",
+      "invalid_model": "That model id was not accepted. Check it, or clear the field to use the default.",
+      "key_required": "The TypeSafe API needs a key. An empty key only works with an address of your own that needs none."
+    },
+    "abort": {
+      "already_configured": "This API key is already set up. An entry is identified by its key, so a second address needs its own key.",
+      "reauth_successful": "The new key works.",
+      "reconfigure_successful": "Reconfigured successfully."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Spending limits",
+        "description": "Input tokens are what you pay for, and question text counts as input. Set the budget past anything a working setup would use, so only a runaway reaches it. Zero means no limit.\n\nThe conversation agent sends anything it is unsure about to the fallback agent, whole and with nothing done first. Leave it empty and it will say it did not understand. Whole-house commands are refused unless you allow them, except for turning everything off, which is always allowed.",
+        "data": {
+          "daily_token_budget": "Daily input token budget (0 = no limit)",
+          "price_per_million": "Price per million input tokens, in USD",
+          "fallback_agent": "Fall back to this agent",
+          "min_confidence": "Act only above this confidence (0 to 1)",
+          "allow_whole_home": "Allow commands that name no room or device"
+        },
+        "data_description": {
+          "daily_token_budget": "Counted from midnight in the Home Assistant time zone. 0 means no limit.",
+          "price_per_million": "Sets the estimated cost sensor and the cost in the question preview. Nothing that is sent depends on it.",
+          "fallback_agent": "Receives the whole sentence when Jev is not sure what to do.",
+          "min_confidence": "Below this, Jev does nothing and passes the command to the fallback agent.",
+          "allow_whole_home": "Turning everything off is always allowed, with or without this."
+        }
+      }
+    }
+  },
+  "issues": {
+    "daily_budget_exceeded": {
+      "title": "Jev stopped evaluating: daily budget reached",
+      "description": "The daily budget is {budget} input tokens and {used} have been used today. The next evaluation, of context {context}, needs about {estimate} more and does not fit, so no further questions are being asked. The answer sensors go unavailable until a call fits again. Raise the budget in the integration options, evaluate contexts less often, or shorten your questions."
+    },
+    "daily_budget_spent": {
+      "title": "Jev stopped evaluating: daily budget reached",
+      "description": "The daily budget is {budget} input tokens and {used} have been used today, so no further questions are being asked. The answer sensors go unavailable until the day rolls over or the budget is raised. Raise the budget in the integration options, evaluate contexts less often, or shorten your questions."
+    }
+  },
+  "services": {
+    "noul": {
+      "name": "Ask a yes/no question",
+      "description": "Ask whether something is true and get the probability of yes, from 0 to 1. Use one of these per label when several labels can be true at once.",
+      "fields": {
+        "state": {
+          "name": "State",
+          "description": "The text to judge. Write a template and it is rendered before it is sent."
+        },
+        "instructions": {
+          "name": "Question",
+          "description": "Phrase it so that a high number means yes. A statement works as well as a question."
+        },
+        "true_means": {
+          "name": "Yes means",
+          "description": "Optional. What counts as a yes. Worth filling in when the boundary is subtle."
+        },
+        "false_means": {
+          "name": "No means",
+          "description": "Optional. What counts as a no."
+        },
+        "threshold": {
+          "name": "Threshold",
+          "description": "Where to draw the line for the is_true field in the response. The probability itself is always returned as well. A value near 0.5 means the model cannot tell, not that the answer is half true."
+        },
+        "config_entry": {
+          "name": "API key",
+          "description": "Which configured key to ask with. Only needed when more than one is set up."
+        },
+        "include_attributes": {
+          "name": "Include all attributes",
+          "description": "Off by default. Sends every attribute of the picked entities, not just the value, unit, device class and area. A weather forecast or a media player artwork list runs to thousands of tokens, and you pay for them on every evaluation."
+        },
+        "background": {
+          "name": "Background",
+          "description": "Optional. Standing facts about how to read this, such as what a reading means for your particular device. It travels with the question rather than the readings, which measurably works better than putting it in the state. An object rather than a sentence keeps your own key names, and the model reads those keys."
+        }
+      }
+    },
+    "choice": {
+      "name": "Pick one option",
+      "description": "Pick one option from your list, and get the probability of every option plus a confidence value.",
+      "fields": {
+        "state": {
+          "name": "State",
+          "description": "The text to judge. Write a template and it is rendered before it is sent."
+        },
+        "instructions": {
+          "name": "Question",
+          "description": "What the model is choosing between, in one sentence."
+        },
+        "options": {
+          "name": "Options",
+          "description": "Two to 255 options. Include a catch-all such as other when your list might not cover every input."
+        },
+        "option_descriptions": {
+          "name": "Option descriptions",
+          "description": "Optional. A description per option, which sharpens the boundary between similar ones. Saying what an option excludes helps most."
+        },
+        "config_entry": {
+          "name": "API key",
+          "description": "Which configured key to ask with. Only needed when more than one is set up."
+        },
+        "include_attributes": {
+          "name": "Include all attributes",
+          "description": "Off by default. Sends every attribute of the picked entities, not just the value, unit, device class and area. A weather forecast or a media player artwork list runs to thousands of tokens, and you pay for them on every evaluation."
+        },
+        "background": {
+          "name": "Background",
+          "description": "Optional. Standing facts about how to read this, such as what a reading means for your particular device. It travels with the question rather than the readings, which measurably works better than putting it in the state. An object rather than a sentence keeps your own key names, and the model reads those keys."
+        }
+      }
+    },
+    "score": {
+      "name": "Rate on a scale",
+      "description": "Rate the text against levels you describe, and get a number that can land between two levels.",
+      "fields": {
+        "state": {
+          "name": "State",
+          "description": "The text to judge. Write a template and it is rendered before it is sent."
+        },
+        "instructions": {
+          "name": "Question",
+          "description": "One dimension per question. A question measuring three things at once produces a low confidence and a meaningless middle."
+        },
+        "levels": {
+          "name": "Levels",
+          "description": "Two to 10 levels, lowest first. Describe a concrete situation for each, not a degree: Broken but there is a workaround beats Moderately severe. Each level is judged on its own, so comparative wording and numbers in the text do nothing."
+        },
+        "config_entry": {
+          "name": "API key",
+          "description": "Which configured key to ask with. Only needed when more than one is set up."
+        },
+        "include_attributes": {
+          "name": "Include all attributes",
+          "description": "Off by default. Sends every attribute of the picked entities, not just the value, unit, device class and area. A weather forecast or a media player artwork list runs to thousands of tokens, and you pay for them on every evaluation."
+        },
+        "background": {
+          "name": "Background",
+          "description": "Optional. Standing facts about how to read this, such as what a reading means for your particular device. It travels with the question rather than the readings, which measurably works better than putting it in the state. An object rather than a sentence keeps your own key names, and the model reads those keys."
+        }
+      }
+    },
+    "ask": {
+      "name": "Ask several questions at once",
+      "description": "Ask any mix of question types about one piece of text, in a single request. Every question is judged independently against the same text and they run in parallel, so twenty questions take about as long as one.",
+      "fields": {
+        "state": {
+          "name": "State",
+          "description": "The text to judge. Write a template and it is rendered before it is sent."
+        },
+        "questions": {
+          "name": "Questions",
+          "description": "Your own key for each question, then its type of noul, choice or score, its instructions, and criteria for choice and score. The keys are yours: they come back as the keys of the answers and the model never sees them."
+        },
+        "config_entry": {
+          "name": "API key",
+          "description": "Which configured key to ask with. Only needed when more than one is set up."
+        },
+        "include_attributes": {
+          "name": "Include all attributes",
+          "description": "Off by default. Sends every attribute of the picked entities, not just the value, unit, device class and area. A weather forecast or a media player artwork list runs to thousands of tokens, and you pay for them on every evaluation."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "calls_today": {
+        "name": "Calls today"
+      },
+      "input_tokens_today": {
+        "name": "Input tokens today"
+      },
+      "estimated_cost_today": {
+        "name": "Estimated cost today"
+      },
+      "context_latency": {
+        "name": "{context} latency"
+      },
+      "context_payload": {
+        "name": "{context} payload"
+      }
+    },
+    "binary_sensor": {
+      "daily_budget_exceeded": {
+        "name": "Daily budget exceeded"
+      }
+    }
+  },
+  "exceptions": {
+    "nothing_to_judge": {
+      "message": "Nothing to judge: give this action some text, or pick the entities, devices or areas it should look at."
+    },
+    "no_entry": {
+      "message": "No loaded Jev config entry to ask with. Add the integration first, or pick one under API key when more than one is set up."
+    },
+    "entry_ambiguous": {
+      "message": "More than one Jev entry is loaded: {entries}. Pick one under API key, because each entry has its own key and budget."
+    },
+    "missing_targets": {
+      "message": "These targets do not exist: {targets}. Asking about the rest would answer a different question from the one you wrote."
+    },
+    "empty_target": {
+      "message": "That target holds no entities, so there would be nothing to judge."
+    },
+    "too_many_entities": {
+      "message": "That target holds {count} entities and the limit is {limit}. Every entity is billed as input on every evaluation, so pick the ones the question turns on, or split it."
+    },
+    "question_shape": {
+      "message": "Question {key} needs both 'type' and 'instructions'. Types are noul, choice and score."
+    },
+    "question_invalid": {
+      "message": "Question {key} is not valid: {reason}"
+    },
+    "template_failed": {
+      "message": "The state template failed: {reason}"
+    },
+    "auth_rejected": {
+      "message": "TypeSafe rejected the API key: {reason}"
+    },
+    "ask_failed": {
+      "message": "Asking Jev failed: {reason}"
+    },
+    "wrong_answer_type": {
+      "message": "Asked a {question_type} question and got a {got} back, which the API should not do."
+    },
+    "choice_options_out_of_range": {
+      "message": "A choice takes {min} to {max} options and this one has {count}."
+    },
+    "score_levels_out_of_range": {
+      "message": "A score takes {min} to {max} levels, lowest first, and this one has {count}."
+    },
+    "unreadable_answer": {
+      "message": "TypeSafe returned an answer of type {kind}, which this version cannot read. Update the integration."
+    },
+    "task_needs_structure": {
+      "message": "Task {task} asks for free text, and Jev answers typed questions only. Give the action a structure whose fields are booleans, selects or numbers."
+    },
+    "task_over_budget": {
+      "message": "Task {task} costs about {estimate} input tokens and {remaining} of the {budget} daily budget are left. Raise or clear the budget in the integration options to continue."
+    },
+    "reserved_field": {
+      "message": "The field {field} cannot be used, because the result carries the confidence behind every answer under that name. Rename the field."
+    },
+    "no_fields": {
+      "message": "The structure declares no fields."
+    },
+    "answer_missing": {
+      "message": "The reply carries no answer for {field}."
+    },
+    "unsupported_field": {
+      "message": "Field {field} uses a {selector}, and Jev answers a yes/no question, a pick from a list, or a rating on a scale. Give the field a boolean, a select with its options, or a number with a min and a max."
+    },
+    "field_options_out_of_range": {
+      "message": "Field {field} offers {count} options, and a pick needs {min} to {max}."
+    },
+    "field_needs_scale": {
+      "message": "Field {field} is a number with no {bound}. A rating needs both ends of the scale."
+    },
+    "field_scale_not_ordered": {
+      "message": "Field {field} has min {min} and max {max}, which is not a scale."
+    },
+    "answer_does_not_fit": {
+      "message": "The answer to {field} came back as a {answer}, which does not fit a {selector}."
+    },
+    "context_template_failed": {
+      "message": "The state template for context {context} failed: {reason}"
+    },
+    "context_targets_failed": {
+      "message": "Context {context}: {reason}"
+    },
+    "context_over_budget": {
+      "message": "Evaluating context {context} costs about {estimate} input tokens and {remaining} of the {budget} daily budget are left. Raise or clear the budget in the integration options to continue."
+    },
+    "rate_limited": {
+      "message": "TypeSafe rate limited the request: {reason}"
+    }
+  },
+  "common": {
+    "not_understood": "Sorry, I did not understand that.",
+    "whole_house": "That would affect the whole house. Say which room or which device you mean.",
+    "which_kind": "Which kind of thing do you mean? Say the lights, or the switches, or name a room.",
+    "intent_failed": "Sorry, that did not work.",
+    "already_on": "{name} is already on.",
+    "already_off": "{name} is already off.",
+    "preview_alone": "Sent as its own request.",
+    "preview_grouped": "Sent in one request together with: {others}.",
+    "preview_cost": "Asked once for this preview: {tokens} input tokens, about ${cost}, {ms} ms.",
+    "preview_threshold_over": "That is above your threshold of {threshold}, so the binary sensor would be **on** right now.",
+    "preview_threshold_under": "That is below your threshold of {threshold}, so the binary sensor would be **off** right now.",
+    "preview_winner": "Winner **{choice}**, confidence {confidence}.",
+    "preview_score": "Score **{score}**, nearest level **{level}**, confidence {confidence}.",
+    "preview_undrawable": "The answer came back in a shape this version cannot draw.",
+    "preview_unbuildable": "That question cannot be built yet: {reason}",
+    "preview_rejected": "TypeSafe rejected the API key, so there is no trial answer.",
+    "preview_failed": "No trial answer: {reason}",
+    "preview_mismatched": "The API answered, but not to the question that was asked.",
+    "preview_template_error": "The template does not render: {reason}",
+    "query_not_found": "I could not find that.",
+    "budget_spent": "The daily token budget is spent, so I cannot do that today.",
+    "auth_failed": "TypeSafe rejected the API key. Check it in the Jev settings.",
+    "unavailable": "TypeSafe did not answer. Try again in a moment.",
+    "preview_over_budget": "The daily token budget is spent, so there is no trial answer. The question still saves.",
+    "preview_nothing_yet": "No trial answer: there is nothing to ask about yet."
+  },
+  "config_subentries": {
+    "question": {
+      "entry_type": "Question",
+      "initiate_flow": {
+        "user": "Add question",
+        "reconfigure": "Edit question"
+      },
+      "step": {
+        "user": {
+          "title": "What kind of answer do you want back?",
+          "menu_options": {
+            "noul": "Noul, a probability. One number from 0 to 1",
+            "choice": "Choice, one of your options. With the whole distribution",
+            "score": "Score, a rating. Against levels you describe"
+          }
+        },
+        "noul": {
+          "title": "Noul: a yes or no question",
+          "data": {
+            "name": "Name",
+            "instructions": "The question",
+            "target": "What to look at",
+            "state": "Extra note or template",
+            "background": "Standing facts about the readings",
+            "true_means": "What a high number means",
+            "false_means": "What a low number means",
+            "threshold": "Also make a binary sensor above",
+            "advanced": "Advanced"
+          },
+          "data_description": {
+            "name": "Names the sensor this question creates.",
+            "instructions": "Sent to the API as `instructions`.",
+            "target": "Pick entities, devices, areas or labels and their readings are sent for you. Leave empty if the note below is the whole state.",
+            "state": "Text or a template, alone or alongside the readings.",
+            "background": "Folded into `instructions` so it travels with the question rather than with the state.",
+            "true_means": "Optional. Sharpens which way the answer points.",
+            "false_means": "Optional.",
+            "threshold": "Leave empty for the probability sensor only.",
+            "advanced": "A schedule, and what else to send. The defaults are fine for a first question."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Advanced",
+              "description": "A schedule, and what else to send. The defaults are fine for a first question.",
+              "data": {
+                "trigger_entities": "Wake on these instead",
+                "scan_interval": "Ask this often",
+                "include_attributes": "Send every attribute as well"
+              },
+              "data_description": {
+                "trigger_entities": "Evaluate when these change, on top of the schedule below. Debounced by 5 seconds.",
+                "scan_interval": "Questions that look at the same thing on the same schedule are sent as one request, which costs tokens but almost no extra time.",
+                "include_attributes": "Off by default. A weather forecast runs to thousands of tokens on every evaluation."
+              }
+            }
+          }
+        },
+        "choice": {
+          "title": "Choice: pick one of your options",
+          "data": {
+            "name": "Name",
+            "instructions": "The question",
+            "target": "What to look at",
+            "state": "Extra note or template",
+            "background": "Standing facts about the readings",
+            "options": "Your options, one per line",
+            "advanced": "Advanced"
+          },
+          "data_description": {
+            "name": "Names the sensor this question creates.",
+            "instructions": "Sent to the API as `instructions`.",
+            "target": "Pick entities, devices, areas or labels and their readings are sent for you. Leave empty if the note below is the whole state.",
+            "state": "Text or a template, alone or alongside the readings.",
+            "background": "Folded into `instructions` so it travels with the question rather than with the state.",
+            "options": "Sent to the API as `criteria`. One per line, as `name: what it means`. The description is optional.",
+            "advanced": "A schedule, and what else to send. The defaults are fine for a first question."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Advanced",
+              "description": "A schedule, and what else to send. The defaults are fine for a first question.",
+              "data": {
+                "trigger_entities": "Wake on these instead",
+                "scan_interval": "Ask this often",
+                "include_attributes": "Send every attribute as well"
+              },
+              "data_description": {
+                "trigger_entities": "Evaluate when these change, on top of the schedule below. Debounced by 5 seconds.",
+                "scan_interval": "Questions that look at the same thing on the same schedule are sent as one request, which costs tokens but almost no extra time.",
+                "include_attributes": "Off by default. A weather forecast runs to thousands of tokens on every evaluation."
+              }
+            }
+          }
+        },
+        "score": {
+          "title": "Score: a rating against your levels",
+          "data": {
+            "name": "Name",
+            "instructions": "The question",
+            "target": "What to look at",
+            "state": "Extra note or template",
+            "background": "Standing facts about the readings",
+            "levels": "Your levels, lowest first, one per line",
+            "advanced": "Advanced"
+          },
+          "data_description": {
+            "name": "Names the sensor this question creates.",
+            "instructions": "Sent to the API as `instructions`.",
+            "target": "Pick entities, devices, areas or labels and their readings are sent for you. Leave empty if the note below is the whole state.",
+            "state": "Text or a template, alone or alongside the readings.",
+            "background": "Folded into `instructions` so it travels with the question rather than with the state.",
+            "levels": "Sent to the API as `criteria`. One per line, lowest first. Between 2 and 10 of them.",
+            "advanced": "A schedule, and what else to send. The defaults are fine for a first question."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Advanced",
+              "description": "A schedule, and what else to send. The defaults are fine for a first question.",
+              "data": {
+                "trigger_entities": "Wake on these instead",
+                "scan_interval": "Ask this often",
+                "include_attributes": "Send every attribute as well"
+              },
+              "data_description": {
+                "trigger_entities": "Evaluate when these change, on top of the schedule below. Debounced by 5 seconds.",
+                "scan_interval": "Questions that look at the same thing on the same schedule are sent as one request, which costs tokens but almost no extra time.",
+                "include_attributes": "Off by default. A weather forecast runs to thousands of tokens on every evaluation."
+              }
+            }
+          }
+        },
+        "reconfigure": {
+          "title": "Edit this question",
+          "data": {
+            "name": "Name",
+            "instructions": "The question",
+            "target": "What to look at",
+            "state": "Extra note or template",
+            "background": "Standing facts about the readings",
+            "true_means": "What a high number means",
+            "false_means": "What a low number means",
+            "threshold": "Also make a binary sensor above",
+            "options": "Your options, one per line",
+            "levels": "Your levels, lowest first, one per line",
+            "advanced": "Advanced"
+          },
+          "data_description": {
+            "name": "Names the sensor this question creates.",
+            "instructions": "Sent to the API as `instructions`.",
+            "target": "Pick entities, devices, areas or labels and their readings are sent for you. Leave empty if the note below is the whole state.",
+            "state": "Text or a template, alone or alongside the readings.",
+            "background": "Folded into `instructions` so it travels with the question rather than with the state.",
+            "true_means": "Optional. Sharpens which way the answer points.",
+            "false_means": "Optional.",
+            "threshold": "Leave empty for the probability sensor only.",
+            "options": "Sent to the API as `criteria`. One per line, as `name: what it means`. The description is optional.",
+            "levels": "Sent to the API as `criteria`. One per line, lowest first. Between 2 and 10 of them.",
+            "advanced": "A schedule, and what else to send. The defaults are fine for a first question."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Advanced",
+              "description": "A schedule, and what else to send. The defaults are fine for a first question.",
+              "data": {
+                "trigger_entities": "Wake on these instead",
+                "scan_interval": "Ask this often",
+                "include_attributes": "Send every attribute as well"
+              },
+              "data_description": {
+                "trigger_entities": "Evaluate when these change, on top of the schedule below. Debounced by 5 seconds.",
+                "scan_interval": "Questions that look at the same thing on the same schedule are sent as one request, which costs tokens but almost no extra time.",
+                "include_attributes": "Off by default. A weather forecast runs to thousands of tokens on every evaluation."
+              }
+            }
+          }
+        },
+        "preview": {
+          "title": "Check what it will send",
+          "description": "This is what your question will be asked about, built now from what it points at.\n\n{grouping}\n\n### What it answers right now\n\n{answer}\n\n### The state it reads\n\n```\n{state}\n```"
+        }
+      },
+      "error": {
+        "nothing_to_judge": "Pick something to look at, or write a note or template. A question needs a state.",
+        "choice_options_out_of_range": "A choice takes between 2 and 255 options.",
+        "score_levels_out_of_range": "A score takes between 2 and 10 levels.",
+        "option_name_empty": "Every option needs a name before the colon.",
+        "option_name_duplicate": "Two options share a name, so one of them would be silently dropped."
+      },
+      "abort": {
+        "reconfigure_successful": "Question updated"
+      }
+    }
+  }
+}

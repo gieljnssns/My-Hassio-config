@@ -10,7 +10,7 @@ from homeassistant.helpers import config_validation as cv
 
 LOGGER: Logger = getLogger(__package__)
 
-MIN_HA_VERSION = "2026.4.0"
+MIN_HA_VERSION = "2026.6.0"
 
 DOMAIN = "battery_notes"
 NAME = "Battery Notes"
@@ -51,6 +51,7 @@ CONF_ROUND_BATTERY = "round_battery"
 CONF_BATTERY_LOW_TEMPLATE = "battery_low_template"
 CONF_BATTERY_PERCENTAGE_TEMPLATE = "battery_percentage_template"
 CONF_FILTER_OUTLIERS = "filter_outliers"
+CONF_RETAIN_STATE = "retain_state"
 CONF_ADVANCED_SETTINGS = "advanced_settings"
 CONF_HIDE_BATTERY_LOW = "hide_battery_low"
 

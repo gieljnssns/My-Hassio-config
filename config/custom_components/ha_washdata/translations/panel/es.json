@@ -35,7 +35,8 @@
     "not_importable": "n/d aquí",
     "exists": "ya existe",
     "backfilled_tip": "Detectado en un historial de potencia importado. Solo influye en la coincidencia de programas, no cuenta en las estadísticas.",
-    "armed": "(se aplica al siguiente ciclo)"
+    "armed": "(se aplica al siguiente ciclo)",
+    "duration_outlier": "{n} ciclo(s) de duración anómala"
   },
   "btn": {
     "reset_zoom": "Restablecer zoom",
@@ -56,7 +57,7 @@
     "auto_label_cycles_tip": "Asignar automáticamente nombres de perfil a ciclos sin etiquetar cuya confianza de coincidencia supera el umbral",
     "cancel": "Cancelar",
     "clear_debug": "Borrar datos de depuración",
-    "clear_splits": "Claro",
+    "clear_splits": "Borrar",
     "close": "Cerrar",
     "compare": "Comparar",
     "confirm": "Confirmar",
@@ -208,7 +209,10 @@
     "hist_scan": "Buscar ciclos",
     "hist_import_n": "Importar {n} ciclos",
     "hist_goto_cycles": "Ver los ciclos",
-    "save_total_cycles": "Guardar total"
+    "save_total_cycles": "Guardar total",
+    "clear": "Borrar",
+    "add_brand": "Añadir marca",
+    "add_appliance": "Añadir electrodoméstico"
   },
   "conflict": {
     "anti_wrinkle_exit": {
@@ -330,7 +334,8 @@
     "community_store": "Tienda de la comunidad",
     "online_account": "Tienda de la comunidad y funciones en línea",
     "import_power_history": "Importar historial de potencia",
-    "service_status": "Estado del mantenimiento"
+    "service_status": "Estado del mantenimiento",
+    "online_account_tab": "En línea y comunidad"
   },
   "health": {
     "fair": "Calidad de perfil aceptable",
@@ -470,7 +475,8 @@
     "pg_tile_matched_tip": "Ciclos correctamente atribuidos a un programa conocido",
     "pg_time_left": "Tiempo restante",
     "pg_weak_match": "Coincidencia débil",
-    "phase_name": "Nombre",
+    "phase_name": "Nombre de la fase",
+    "name": "Nombre",
     "phase_timeline": "Cronología de fases",
     "power": "Potencia",
     "profile": "Perfil",
@@ -1039,7 +1045,12 @@
     "odometer_intro": "Este total solo aumenta. Eliminar el registro de un ciclo no lo modifica y sigue contando más allá del límite del historial almacenado, de modo que los recordatorios de servicio siguen siendo correctos.",
     "odometer_correct_hint": "Ajuste este valor si WashData registró un ciclo que nunca ocurrió, o si el electrodoméstico ya había realizado ciclos antes de instalar WashData.",
     "no_reminders_set": "Aún no hay recordatorios de servicio configurados.",
-    "toast_program_armed": "Programa preparado para el siguiente ciclo: {program}"
+    "toast_program_armed": "Programa preparado para el siguiente ciclo: {program}",
+    "standby_above_stop_title": "Sigue consumiendo {idle} W cuando el ciclo ha terminado",
+    "standby_above_stop_sub": "{n} de los últimos {total} ciclos. El Retardo de apagado solo empieza cuando la potencia baja del Umbral de parada ({stop} W), así que los ciclos terminan tarde o hay que detenerlos a mano.",
+    "advisory_duration_outlier": "{n} ciclo(s) etiquetados como '{name}' se alejan demasiado de su duración habitual para poder coincidir alguna vez con él (el peor: {ratio}x). Probablemente estén mal etiquetados, o una grabación captó dos ejecuciones. Vuelve a etiquetarlos o divídelos para que dejen de distorsionar la estimación de tiempo de este programa.",
+    "toast_range_required": "Establezca un rango Desde/Hasta válido",
+    "no_profiles_option": "(aún no hay perfiles, añade uno)"
   },
   "pg_desc": {
     "dishwasher_end_spike_quiet_release": "Lavavajillas: segundos de silencio tras la duración esperada antes de liberar la espera del vaciado de fin de ciclo",
@@ -1063,7 +1074,7 @@
     "duration_weight": "Etapa 4: cuánto influye la concordancia de duración en la puntuación final (predeterminado 0,22)",
     "energy_weight": "Etapa 4: cuánto influye la concordancia de energía en la puntuación final (predeterminado 0,22)",
     "profile_match_min_duration_ratio": "Etapa 1: duración mínima del ciclo como fracción de la duración del perfil; predeterminado 0,1 (10%)",
-    "profile_match_max_duration_ratio": "Etapa 1: duración máxima del ciclo como fracción de la duración del perfil; predeterminado 1,5 (150%)",
+    "profile_match_max_duration_ratio": "Etapa 1: duración máxima del ciclo como fracción de la duración del perfil; predeterminado 1,8 (180%)",
     "keep_min_score": "Etapa 2: puntuación mínima para seguir en la carrera; el valor predeterminado 0,1 admite coincidencias débiles, las etapas posteriores seleccionan la mejor",
     "dtw_blend": "Etapa 3: 0 = solo puntuación central, 1 = solo puntuación DTW, 0,5 = mezcla igual (predeterminado)",
     "dtw_ensemble_w": "Etapa 3 (modo ensemble): peso en L1 escalado frente a DTW derivado; el predeterminado 0,7 favorece la sensibilidad al nivel",
@@ -1398,8 +1409,8 @@
       "label": "Retardo del recordatorio de descarga"
     },
     "notify_unload_repeat": {
-      "doc": "Sigue reenviando el recordatorio de descarga cada \"Retardo del recordatorio de descarga\" minutos hasta que abras la puerta o toques \"Dejar de recordar\" en la notificación. Requiere una Entidad de sensor de puerta (el propio recordatorio la necesita). El botón de descarte funciona en las notificaciones de la aplicación complementaria (móvil) de Home Assistant.",
-      "label": "Repetir hasta que se abra la puerta"
+      "doc": "Sigue reenviando el recordatorio de descarga cada \"Retardo del recordatorio de descarga\" minutos hasta que se confirme la descarga o toques \"Dejar de recordar\" en la notificación. Necesita alguna forma de confirmar la descarga: una Entidad de sensor de puerta, una Entidad de confirmación de descarga o la opción \"Confirmar la descarga manualmente\" de abajo. El botón de descarte funciona en las notificaciones de la aplicación complementaria (móvil) de Home Assistant.",
+      "label": "Repetir hasta confirmar la descarga"
     },
     "off_delay": {
       "doc": "Es tiempo de esperar después de que se corte la energía antes de declarar finalizado el ciclo. Si la energía se reanuda dentro de esta ventana, el ciclo continúa sin problemas; esto salva las pausas entre las etapas de lavado. Los lavavajillas tienen fases de secado largas (apagado durante 20 a 60 minutos), por lo que el retraso de apagado debe exceder eso para mantener todo el lavado y secado como un solo ciclo.",
@@ -1607,6 +1618,18 @@
     "energy_price_dynamic": {
       "label": "Costo ponderado en el tiempo",
       "doc": "Cobra cada ciclo al precio vigente en cada momento de su ejecución, en vez de aplicarle el único precio del instante en que terminó. Solo se aplica a una entidad de precio (un precio estático no puede variar). No necesita configuración adicional: el precio se sigue en vivo mientras el ciclo avanza, y Procesar historial, en Diagnóstico, vuelve a calcular el costo de los ciclos antiguos a partir del recorder. Desactivado = el comportamiento clásico, un solo precio congelado al final."
+    },
+    "unload_confirm_entity": {
+      "label": "Entidad de confirmación de descarga",
+      "doc": "Entidad opcional cuya activación significa que se ha sacado la carga, para máquinas que no pueden tener un sensor de puerta. Sirve cualquier tipo: un botón Zigbee o NFC, un ayudante input_button, un sensor de movimiento delante de la máquina, una escena. Cualquier cambio de estado cuenta como confirmación, excepto apagarse o pasar a no disponible. Definir esto también activa el recordatorio de descarga en un dispositivo sin Entidad de sensor de puerta."
+    },
+    "unload_track_without_door": {
+      "label": "Confirmar la descarga manualmente",
+      "doc": "Ejecuta el recordatorio de descarga en un dispositivo sin Entidad de sensor de puerta ni Entidad de confirmación de descarga, y confirmas tú la descarga desde tu propia automatización: pulsa la entidad de botón \"Marcar como descargado\" o llama al servicio ha_washdata.mark_unloaded. Se ignora cuando hay una Entidad de sensor de puerta configurada, que ya proporciona la señal."
+    },
+    "notify_icon_color": {
+      "label": "Color de notificación",
+      "doc": "Color de acento para las notificaciones de este electrodoméstico, para distinguir de un vistazo una lavadora, una secadora y un lavavajillas. iOS tiñe el icono y la barra de progreso de la Actividad en vivo en la pantalla bloqueada y en la Dynamic Island. A Android se le envía el mismo color, pero lo que haga con él depende del teléfono: algunos tiñen el icono y muchos (Samsung One UI en especial) lo ignoran por completo. Ambos entienden el formato hexadecimal (por ejemplo, #03A9F4). Déjelo en blanco para el valor predeterminado de la plataforma."
     }
   },
   "setting_group": {
@@ -1700,7 +1723,7 @@
     "all_statuses": "Todos los estados",
     "ambiguous": "Ambiguo",
     "auto_detect": "Detección automática",
-    "clear": "Claro",
+    "clear": "Inequívoco",
     "completed": "Terminado",
     "fine_tuning": "afinando ahora...",
     "force_stopped": "Fuerza detenida",
@@ -1839,6 +1862,7 @@
     "store_share_failed": "Error al compartir: {error}",
     "store_shared": "Compartido en la tienda de la comunidad, pendiente de revisión.",
     "appliance_added": "Electrodoméstico añadido, a la espera de aprobación",
+    "contrib_device_changed": "Añadido a la tienda de la comunidad, pero el dispositivo seleccionado cambió mientras el formulario estaba abierto. Selecciónelo en Ajustes.",
     "thanks_confirming": "Gracias por confirmar",
     "device_approved": "Aprobado por la comunidad",
     "rating_saved": "Valoración de calidad guardada",
@@ -1862,7 +1886,9 @@
     "unlabel_done": "Etiqueta quitada de {count} ciclo(s)",
     "unlabel_failed": "Error al quitar la etiqueta: {error}",
     "odometer_saved": "Total de ciclos guardado",
-    "odometer_save_failed": "No se pudo guardar el total: {error}"
+    "odometer_save_failed": "No se pudo guardar el total: {error}",
+    "store_pick_profile_share": "Elija un perfil en el que compartir",
+    "remove_failed": "Error al quitar: {error}"
   },
   "suggestion": {
     "both_agree": "WashData recomienda",
@@ -1962,6 +1988,7 @@
       "summary": "Excluido(s) {total} ciclo(s) mal detectado(s): {parts}.",
       "reason": {
         "force_stopped": "detenidos a la fuerza",
+        "user_stopped": "detenidos manualmente",
         "interrupted": "interrumpidos",
         "incomplete": "incompletos",
         "noise": "ruido",
@@ -2186,6 +2213,11 @@
       "tap_action": "Acción al tocar",
       "hold_action": "Acción al mantener pulsado",
       "double_tap_action": "Acción al tocar dos veces"
+    }
+  },
+  "note": {
+    "off_delay": {
+      "effective": "Un ciclo terminado espera en realidad {eff} s, no {delay} s: la Brecha mínima de apagado ({gap} s) es mayor y tiene prioridad."
     }
   }
 }

@@ -14,12 +14,14 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry
 
-from .attention import evaluate_attention
-from .const import DOMAIN, FILESYSTEMS_KEY, SERVICE_GET_DRIVE_DATA
+from .attention import evaluate_attention, get_thresholds
+from .const import AGENT_DEVICE_ID, DOMAIN, FILESYSTEMS_KEY, SERVICE_GET_DRIVE_DATA
+from .device_removal import removable, reported_drive_ids, reported_filesystem_count
 from .coordinator import AgentHealthCoordinator, SmartSnifferCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,6 +42,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "health_coordinator": health_coordinator,
     }
 
+    # Register the agent device up front, before any platform loads (#24).
+    # Drive and filesystem devices point at it with via_device, and HA only
+    # resolves that link if the parent already exists in the device registry.
+    # Platforms are set up concurrently, so creating it here is the only way
+    # to guarantee the parent is present whichever platform registers first.
+    agent_device = device_registry.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{entry.entry_id}_agent")},
+        name=entry.title or f"SMART Sniffer ({entry.data.get(CONF_HOST, 'unknown')})",
+        manufacturer="SMART Sniffer",
+        model="Agent",
+    )
+    # Its registry id, which is what via_device_id takes. Stored rather than
+    # looked up again per entity, and refreshed on every setup so a reload
+    # cannot leave a stale id behind.
+    hass.data[DOMAIN][entry.entry_id][AGENT_DEVICE_ID] = agent_device.id
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register the get_drive_data service once per domain.
@@ -58,7 +77,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for drive_id, drive_data in coord.data.items():
                 if drive_id.startswith("_"):
                     continue
-                state, severity, reasons = evaluate_attention(drive_data)
+                state, severity, reasons, accepted = evaluate_attention(
+                    drive_data, get_thresholds(coord.config_entry, drive_id)
+                )
                 drives[drive_id] = {
                     "model": drive_data.get("model"),
                     "serial": drive_data.get("serial"),
@@ -68,6 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         "state": state,
                         "severity": severity,
                         "reasons": reasons,
+                        "accepted": accepted,
                     },
                     "smart_data": drive_data.get("smart_data"),
                 }
@@ -107,6 +129,69 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_entry: device_registry.DeviceEntry,
+) -> bool:
+    """Whether the user may delete this device from the integration.
+
+    Defining this function is what puts a Delete button on the integration's
+    devices at all, which is why the v0.6.2 note about deleting ghost devices
+    could not be followed: without it Home Assistant offers no such button.
+
+    Core shows the button on every device of the entry and asks here only once
+    the user confirms. Returning False gets core's fixed "rejected by
+    integration" message, so a refusal is raised instead, as a translated
+    HomeAssistantError that core passes to the frontend unchanged. The reason is
+    also logged, because not every page shows it: in frontend 20260826.7 the
+    integration page's device row renders it, while the device page renders a
+    plain error object as "[object Object]" whatever is raised.
+
+    A drive deleted while it is still attached re-registers on the next poll.
+    """
+    coordinator = (hass.data.get(DOMAIN, {}).get(config_entry.entry_id) or {}).get(
+        "coordinator"
+    )
+    data = getattr(coordinator, "data", None)
+    agent_reporting = bool(coordinator is not None and coordinator.last_update_success)
+
+    decision = removable(
+        device_entry.identifiers,
+        config_entry.entry_id,
+        reported_drive_ids(data),
+        reported_filesystem_count(data),
+        agent_reporting,
+    )
+    name = device_entry.name or device_entry.id
+
+    if decision.allowed:
+        _LOGGER.info("Removing device %s: %s", name, decision.reason)
+        return True
+
+    _LOGGER.warning("Refusing to remove device %s: %s", name, decision.reason)
+    if decision.translation_key is None:
+        return False
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key=decision.translation_key,
+        translation_placeholders={"host": _display_host(config_entry, coordinator)},
+    )
+
+
+def _display_host(config_entry: ConfigEntry, coordinator: Any) -> str:
+    """The host as the integration already shows it to users.
+
+    The coordinator derives it from the entry title, falling back to the
+    address, and uses it in the agent-update repair notice and the Disk Usage
+    device name. Without a coordinator the address is the next best thing.
+    """
+    hostname = getattr(coordinator, "_hostname", None)
+    if hostname:
+        return str(hostname)
+    return str(config_entry.data.get(CONF_HOST) or config_entry.title)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

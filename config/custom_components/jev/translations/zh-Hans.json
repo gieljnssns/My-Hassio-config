@@ -1,0 +1,566 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "连接到 TypeSafe",
+        "description": "粘贴你的 TypeSafe 账户中的 API 密钥。Home Assistant 会提一个简短的问题，确认该密钥可用。",
+        "data": {
+          "api_key": "API 密钥"
+        },
+        "data_description": {
+          "api_key": "发送请求时所用的密钥。仅当使用自己的、无需密钥的端点时才留空。"
+        },
+        "sections": {
+          "advanced": {
+            "name": "高级",
+            "data": {
+              "url": "API 地址",
+              "model": "模型"
+            },
+            "data_description": {
+              "url": "保持原样，除非你自己运行了使用同一套 API 的服务，例如保管密钥或缓存回答的代理。密钥以 bearer header 发送，因此 http 地址会让它明文出现在链路上。",
+              "model": "每次请求都会带上的模型 id。留空表示使用默认模型。"
+            }
+          }
+        }
+      },
+      "reauth_confirm": {
+        "title": "重新输入你的 API 密钥",
+        "description": "TypeSafe 拒绝了当前保存的密钥。请粘贴一个可用的密钥。API 地址保持不变；如需更改，请使用重新配置。",
+        "data": {
+          "api_key": "API 密钥"
+        },
+        "data_description": {
+          "api_key": "请求会发送到已保存的 API 地址。"
+        }
+      },
+      "reconfigure": {
+        "title": "更换你的 API 密钥或地址",
+        "description": "粘贴另一个 TypeSafe API 密钥；如果访问的 API 不在 TypeSafe 而在别处，请同时更改地址。你的问题和实体会保留。",
+        "data": {
+          "api_key": "API 密钥"
+        },
+        "data_description": {
+          "api_key": "留空即可在地址不变时保留当前密钥。新地址不会获得任何密钥，除非你输入一个。"
+        },
+        "sections": {
+          "advanced": {
+            "name": "高级",
+            "data": {
+              "url": "API 地址",
+              "model": "模型"
+            },
+            "data_description": {
+              "url": "清空此字段即可回到 TypeSafe API。密钥以 bearer header 发送，因此 http 地址会让它明文出现在链路上。",
+              "model": "每次请求都会带上的模型 id。留空表示使用默认模型。"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "TypeSafe 拒绝了此密钥。",
+      "cannot_connect": "Home Assistant 无法通过该地址访问 API。",
+      "not_found": "服务器返回 HTTP 404。Jev 会在地址后面加上 /v1/systemone，因此只填写它前面的部分。OpenRouter 的地址是 {openrouter_url}。",
+      "invalid_url": "这不是可用的 API 地址。它需要有协议和主机，并且不能包含空格、查询串、片段、用户名或密码。",
+      "invalid_model": "该模型 id 未被接受。请检查，或清空该字段以使用默认模型。",
+      "key_required": "TypeSafe API 需要密钥。仅当地址指向自己的、无需密钥的端点时，才能留空。"
+    },
+    "abort": {
+      "already_configured": "此 API 密钥已配置。配置条目以密钥来标识，因此第二个地址需要自己的密钥。",
+      "reauth_successful": "新密钥可用。",
+      "reconfigure_successful": "重新配置成功。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "支出限额",
+        "description": "你支付的是输入令牌，问题文本也算作输入。把预算设得高于任何正常配置的用量，这样只有失控的情况才会触及它。零表示不限制。\n\n对话代理会把它拿不准的内容原样转给回退代理，不做任何预处理。若留空，它会回答自己没听懂。除非你允许，否则针对整个住宅的命令会被拒绝；关闭全部设备除外，该命令始终允许。",
+        "data": {
+          "daily_token_budget": "每日输入令牌预算（0 = 不限制）",
+          "price_per_million": "每百万输入令牌的价格，单位 USD",
+          "fallback_agent": "回退到此代理",
+          "min_confidence": "仅在置信度高于此值时执行（0 到 1）",
+          "allow_whole_home": "允许未指明房间或设备的命令"
+        },
+        "data_description": {
+          "daily_token_budget": "从 Home Assistant 时区的午夜开始计算。0 表示不限制。",
+          "price_per_million": "决定预估费用传感器和问题预览中的费用。发送的内容都不受它影响。",
+          "fallback_agent": "当 Jev 不确定该做什么时，接收完整的句子。",
+          "min_confidence": "低于此值时，Jev 不执行任何操作，并把命令交给备用代理。",
+          "allow_whole_home": "无论是否开启此项，关闭所有设备始终允许。"
+        }
+      }
+    }
+  },
+  "issues": {
+    "daily_budget_exceeded": {
+      "title": "Jev 已停止评估：已达每日预算",
+      "description": "每日预算为 {budget} 个输入令牌，今天已用掉 {used} 个。上下文 {context} 的下一次评估还需要约 {estimate} 个，放不进剩余额度，因此不再发出问题。回答实体会变为不可用，直到下一次评估能放进预算。请在集成选项中提高预算、降低上下文的评估频率，或缩短你的问题。"
+    },
+    "daily_budget_spent": {
+      "title": "Jev 已停止评估：已达每日预算",
+      "description": "每日预算为 {budget} 个输入令牌，今天已用掉 {used} 个，因此不再发出问题。回答实体会变为不可用，直到新的一天开始或预算提高。请在集成选项中提高预算、降低上下文的评估频率，或缩短你的问题。"
+    }
+  },
+  "services": {
+    "noul": {
+      "name": "提一个是/否问题",
+      "description": "询问某件事是否成立，得到答案为“是”的概率，取值 0 到 1。当多个标签可能同时成立时，每个标签用一个这样的问题。",
+      "fields": {
+        "state": {
+          "name": "状态",
+          "description": "要判断的文本。写成模板时，会先渲染再发送。"
+        },
+        "instructions": {
+          "name": "问题",
+          "description": "措辞上要让高数值代表“是”。陈述句和疑问句同样适用。"
+        },
+        "true_means": {
+          "name": "“是”表示",
+          "description": "可选。什么情况算作“是”。当界线微妙时值得填写。"
+        },
+        "false_means": {
+          "name": "“否”表示",
+          "description": "可选。什么情况算作“否”。"
+        },
+        "threshold": {
+          "name": "阈值",
+          "description": "响应中 is_true 字段的分界线。概率本身始终也会返回。接近 0.5 的值表示模型无法判断，而不是答案有一半为真。"
+        },
+        "config_entry": {
+          "name": "API 密钥",
+          "description": "使用已配置的哪个密钥提问。仅在配置了多个密钥时才需要。"
+        },
+        "include_attributes": {
+          "name": "包含全部属性",
+          "description": "默认关闭。会发送所选实体的每一个属性，而不只是值、单位、设备类别和区域。一份天气预报或一个媒体播放器的封面列表可达数千个令牌，而且每次评估都要为此付费。"
+        },
+        "background": {
+          "name": "背景信息",
+          "description": "可选。关于如何解读该内容的长期事实，例如某个读数对你这台设备意味着什么。它随问题一起发送，而不是随读数发送，实测效果优于把它写进状态。用对象而不是句子可以保留你自己的键名，模型会读取这些键。"
+        }
+      }
+    },
+    "choice": {
+      "name": "选出一个选项",
+      "description": "从你的列表中选出一个选项，并得到每个选项的概率以及一个置信度值。",
+      "fields": {
+        "state": {
+          "name": "状态",
+          "description": "要判断的文本。写成模板时，会先渲染再发送。"
+        },
+        "instructions": {
+          "name": "问题",
+          "description": "用一句话说明模型在哪些内容之间做选择。"
+        },
+        "options": {
+          "name": "选项",
+          "description": "2 到 255 个选项。如果你的列表可能覆盖不到全部输入，请加上一个兜底选项，例如“其他”。"
+        },
+        "option_descriptions": {
+          "name": "选项说明",
+          "description": "可选。为每个选项写一段说明，可让相似选项之间的界线更清晰。说明一个选项不包含什么，帮助最大。"
+        },
+        "config_entry": {
+          "name": "API 密钥",
+          "description": "使用已配置的哪个密钥提问。仅在配置了多个密钥时才需要。"
+        },
+        "include_attributes": {
+          "name": "包含全部属性",
+          "description": "默认关闭。会发送所选实体的每一个属性，而不只是值、单位、设备类别和区域。一份天气预报或一个媒体播放器的封面列表可达数千个令牌，而且每次评估都要为此付费。"
+        },
+        "background": {
+          "name": "背景信息",
+          "description": "可选。关于如何解读该内容的长期事实，例如某个读数对你这台设备意味着什么。它随问题一起发送，而不是随读数发送，实测效果优于把它写进状态。用对象而不是句子可以保留你自己的键名，模型会读取这些键。"
+        }
+      }
+    },
+    "score": {
+      "name": "按量表评分",
+      "description": "按你描述的等级对文本评分，得到的数值可以落在两个等级之间。",
+      "fields": {
+        "state": {
+          "name": "状态",
+          "description": "要判断的文本。写成模板时，会先渲染再发送。"
+        },
+        "instructions": {
+          "name": "问题",
+          "description": "每个问题只衡量一个维度。同时衡量三件事的问题会得到很低的置信度和一个无意义的中间值。"
+        },
+        "levels": {
+          "name": "等级",
+          "description": "2 到 10 个等级，从最低开始。为每个等级描述一个具体情形，而不是一个程度：“已损坏但有变通办法”胜过“中等严重”。每个等级都单独判断，因此文本中的比较性措辞和数字不起作用。"
+        },
+        "config_entry": {
+          "name": "API 密钥",
+          "description": "使用已配置的哪个密钥提问。仅在配置了多个密钥时才需要。"
+        },
+        "include_attributes": {
+          "name": "包含全部属性",
+          "description": "默认关闭。会发送所选实体的每一个属性，而不只是值、单位、设备类别和区域。一份天气预报或一个媒体播放器的封面列表可达数千个令牌，而且每次评估都要为此付费。"
+        },
+        "background": {
+          "name": "背景信息",
+          "description": "可选。关于如何解读该内容的长期事实，例如某个读数对你这台设备意味着什么。它随问题一起发送，而不是随读数发送，实测效果优于把它写进状态。用对象而不是句子可以保留你自己的键名，模型会读取这些键。"
+        }
+      }
+    },
+    "ask": {
+      "name": "一次提出多个问题",
+      "description": "在一次请求中，就同一段文本提出任意类型组合的问题。每个问题都针对同一段文本独立判断，并且并行执行，因此二十个问题花的时间和一个问题差不多。",
+      "fields": {
+        "state": {
+          "name": "状态",
+          "description": "要判断的文本。写成模板时，会先渲染再发送。"
+        },
+        "questions": {
+          "name": "问题",
+          "description": "每个问题先写你自己的键，然后是它的类型 noul、choice 或 score，它的 instructions，以及 choice 和 score 所需的 criteria。这些键属于你：它们会作为回答的键返回，模型永远看不到它们。"
+        },
+        "config_entry": {
+          "name": "API 密钥",
+          "description": "使用已配置的哪个密钥提问。仅在配置了多个密钥时才需要。"
+        },
+        "include_attributes": {
+          "name": "包含全部属性",
+          "description": "默认关闭。会发送所选实体的每一个属性，而不只是值、单位、设备类别和区域。一份天气预报或一个媒体播放器的封面列表可达数千个令牌，而且每次评估都要为此付费。"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "calls_today": {
+        "name": "今日调用次数"
+      },
+      "input_tokens_today": {
+        "name": "今日输入令牌"
+      },
+      "estimated_cost_today": {
+        "name": "今日预计费用"
+      },
+      "context_latency": {
+        "name": "{context} 延迟"
+      },
+      "context_payload": {
+        "name": "{context} 请求大小"
+      }
+    },
+    "binary_sensor": {
+      "daily_budget_exceeded": {
+        "name": "已超出每日预算"
+      }
+    }
+  },
+  "exceptions": {
+    "nothing_to_judge": {
+      "message": "没有可判断的内容：请给此动作一些文本，或选择它要查看的实体、设备或区域。"
+    },
+    "no_entry": {
+      "message": "没有可用于提问的、已加载的 Jev 配置条目。请先添加此集成；配置了多个时，请在“API 密钥”下选择一个。"
+    },
+    "entry_ambiguous": {
+      "message": "已加载多个 Jev 条目：{entries}。请在 API 密钥下选择一个，因为每个条目都有自己的密钥和预算。"
+    },
+    "missing_targets": {
+      "message": "以下目标不存在：{targets}。只就其余目标提问，回答的将是另一个问题，而不是你写的那个。"
+    },
+    "empty_target": {
+      "message": "该目标不含任何实体，因此没有可判断的内容。"
+    },
+    "too_many_entities": {
+      "message": "该目标含有 {count} 个实体，上限是 {limit} 个。每次评估时每个实体都按输入计费，因此请只选择问题真正取决于的实体，或把问题拆开。"
+    },
+    "question_shape": {
+      "message": "问题 {key} 需要同时提供 'type' 和 'instructions'。类型有 noul、choice 和 score。"
+    },
+    "question_invalid": {
+      "message": "问题 {key} 无效：{reason}"
+    },
+    "template_failed": {
+      "message": "状态模板执行失败：{reason}"
+    },
+    "auth_rejected": {
+      "message": "TypeSafe 拒绝了此 API 密钥：{reason}"
+    },
+    "ask_failed": {
+      "message": "向 Jev 提问失败：{reason}"
+    },
+    "wrong_answer_type": {
+      "message": "提出的是 {question_type} 问题，返回的却是 {got}，API 不应这样做。"
+    },
+    "choice_options_out_of_range": {
+      "message": "一个 choice 需要 {min} 到 {max} 个选项，而这个有 {count} 个。"
+    },
+    "score_levels_out_of_range": {
+      "message": "一个 score 需要 {min} 到 {max} 个等级，从最低开始，而这个有 {count} 个。"
+    },
+    "unreadable_answer": {
+      "message": "TypeSafe 返回了类型为 {kind} 的回答，此版本无法读取。请更新此集成。"
+    },
+    "task_needs_structure": {
+      "message": "任务 {task} 要求自由文本，而 Jev 只回答有类型的问题。请为该动作提供一个结构，其字段为 boolean、select 或 number。"
+    },
+    "task_over_budget": {
+      "message": "任务 {task} 大约需要 {estimate} 个输入令牌，而每日预算 {budget} 只剩 {remaining}。请在集成选项中提高或清除预算后再继续。"
+    },
+    "reserved_field": {
+      "message": "字段 {field} 不能使用，因为结果在这个名称下携带每个答案背后的置信度。请重命名该字段。"
+    },
+    "no_fields": {
+      "message": "该结构没有声明任何字段。"
+    },
+    "answer_missing": {
+      "message": "回复中没有 {field} 的答案。"
+    },
+    "unsupported_field": {
+      "message": "字段 {field} 使用了 {selector}，而 Jev 回答的是是/否问题、列表中的选择或量表上的评分。请为该字段使用 boolean、带选项的 select，或带 min 和 max 的 number。"
+    },
+    "field_options_out_of_range": {
+      "message": "字段 {field} 提供了 {count} 个选项，而选择需要 {min} 到 {max} 个。"
+    },
+    "field_needs_scale": {
+      "message": "字段 {field} 是一个没有 {bound} 的数字。评分需要量表的两端。"
+    },
+    "field_scale_not_ordered": {
+      "message": "字段 {field} 的 min 为 {min}、max 为 {max}，这不是一个量表。"
+    },
+    "answer_does_not_fit": {
+      "message": "{field} 的答案以 {answer} 返回，与 {selector} 不匹配。"
+    },
+    "context_template_failed": {
+      "message": "上下文 {context} 的状态模板失败：{reason}"
+    },
+    "context_targets_failed": {
+      "message": "上下文 {context}：{reason}"
+    },
+    "context_over_budget": {
+      "message": "评估上下文 {context} 大约需要 {estimate} 个输入令牌，而每日预算 {budget} 只剩 {remaining}。请在集成选项中提高或清除预算后再继续。"
+    },
+    "rate_limited": {
+      "message": "TypeSafe 限制了该请求的速率：{reason}"
+    }
+  },
+  "common": {
+    "not_understood": "抱歉，我没听懂。",
+    "whole_house": "那会影响整个住宅。请说明你指的是哪个房间或哪个设备。",
+    "which_kind": "你指的是哪一类设备？可以说灯，或者开关，或者说出一个房间。",
+    "intent_failed": "抱歉，没有成功。",
+    "already_on": "{name} 已经开着了。",
+    "already_off": "{name} 已经关着了。",
+    "preview_alone": "作为单独的请求发送。",
+    "preview_grouped": "与以下问题合并在一个请求中发送：{others}。",
+    "preview_cost": "为本次预览提问一次：{tokens} 个输入令牌，约 ${cost}，{ms} 毫秒。",
+    "preview_threshold_over": "该值高于你设定的阈值 {threshold}，因此二元传感器此刻会是**开启**。",
+    "preview_threshold_under": "该值低于你设定的阈值 {threshold}，因此二元传感器此刻会是**关闭**。",
+    "preview_winner": "胜出项 **{choice}**，置信度 {confidence}。",
+    "preview_score": "得分 **{score}**，最接近的等级 **{level}**，置信度 {confidence}。",
+    "preview_undrawable": "返回的回答格式是此版本无法绘制的。",
+    "preview_unbuildable": "该问题还无法构建：{reason}",
+    "preview_rejected": "TypeSafe 拒绝了此 API 密钥，因此没有试答结果。",
+    "preview_failed": "没有试答结果：{reason}",
+    "preview_mismatched": "API 作出了回答，但回答的不是所提的那个问题。",
+    "preview_template_error": "模板无法渲染：{reason}",
+    "query_not_found": "我找不到那个。",
+    "budget_spent": "今天的令牌预算已用完，所以今天无法执行。",
+    "auth_failed": "TypeSafe 拒绝了 API 密钥。请在 Jev 设置中检查。",
+    "unavailable": "TypeSafe 没有响应。请稍后再试。",
+    "preview_over_budget": "每日令牌预算已用完，因此没有试答结果。问题仍会保存。",
+    "preview_nothing_yet": "没有试答结果：目前还没有可提问的内容。"
+  },
+  "config_subentries": {
+    "question": {
+      "entry_type": "问题",
+      "initiate_flow": {
+        "user": "添加问题",
+        "reconfigure": "编辑问题"
+      },
+      "step": {
+        "user": {
+          "title": "你希望得到哪种回答？",
+          "menu_options": {
+            "noul": "Noul，一个概率。0 到 1 之间的一个数值",
+            "choice": "Choice，你的选项之一。附带完整的概率分布",
+            "score": "Score，一个评分。依据你描述的等级"
+          }
+        },
+        "noul": {
+          "title": "Noul：一个是或否的问题",
+          "data": {
+            "name": "名称",
+            "instructions": "问题内容",
+            "target": "查看哪些内容",
+            "state": "附加说明或模板",
+            "background": "关于这些读数的长期事实",
+            "true_means": "高数值表示什么",
+            "false_means": "低数值表示什么",
+            "threshold": "同时创建高于此值的二元传感器",
+            "advanced": "高级"
+          },
+          "data_description": {
+            "name": "为此问题创建的传感器命名。",
+            "instructions": "作为 `instructions` 发送给 API。",
+            "target": "选择实体、设备、区域或标签，它们的读数会自动发送。如果下面的说明就是全部状态，请留空。",
+            "state": "文本或模板，可以单独使用，也可以与读数一起发送。",
+            "background": "会并入 `instructions`，因此它随问题一起发送，而不是随状态发送。",
+            "true_means": "可选。让回答的方向更明确。",
+            "false_means": "可选。",
+            "threshold": "留空则只创建概率传感器。",
+            "advanced": "一份计划，以及还要发送什么。第一个问题用默认值即可。"
+          },
+          "sections": {
+            "advanced": {
+              "name": "高级",
+              "description": "一份计划，以及还要发送什么。第一个问题用默认值即可。",
+              "data": {
+                "trigger_entities": "改由这些实体唤醒",
+                "scan_interval": "提问频率",
+                "include_attributes": "同时发送全部属性"
+              },
+              "data_description": {
+                "trigger_entities": "除下面的计划之外，这些实体变化时也进行评估。带 5 秒防抖。",
+                "scan_interval": "查看相同内容且使用相同计划的问题会合并成一个请求发送，这会消耗令牌，但几乎不增加时间。",
+                "include_attributes": "默认关闭。一份天气预报在每次评估时可达数千个令牌。"
+              }
+            }
+          }
+        },
+        "choice": {
+          "title": "Choice：从你的选项中选一个",
+          "data": {
+            "name": "名称",
+            "instructions": "问题内容",
+            "target": "查看哪些内容",
+            "state": "附加说明或模板",
+            "background": "关于这些读数的长期事实",
+            "options": "你的选项，每行一个",
+            "advanced": "高级"
+          },
+          "data_description": {
+            "name": "为此问题创建的传感器命名。",
+            "instructions": "作为 `instructions` 发送给 API。",
+            "target": "选择实体、设备、区域或标签，它们的读数会自动发送。如果下面的说明就是全部状态，请留空。",
+            "state": "文本或模板，可以单独使用，也可以与读数一起发送。",
+            "background": "会并入 `instructions`，因此它随问题一起发送，而不是随状态发送。",
+            "options": "作为 `criteria` 发送给 API。每行一个，格式为 `名称: 它的含义`。说明部分可选。",
+            "advanced": "一份计划，以及还要发送什么。第一个问题用默认值即可。"
+          },
+          "sections": {
+            "advanced": {
+              "name": "高级",
+              "description": "一份计划，以及还要发送什么。第一个问题用默认值即可。",
+              "data": {
+                "trigger_entities": "改由这些实体唤醒",
+                "scan_interval": "提问频率",
+                "include_attributes": "同时发送全部属性"
+              },
+              "data_description": {
+                "trigger_entities": "除下面的计划之外，这些实体变化时也进行评估。带 5 秒防抖。",
+                "scan_interval": "查看相同内容且使用相同计划的问题会合并成一个请求发送，这会消耗令牌，但几乎不增加时间。",
+                "include_attributes": "默认关闭。一份天气预报在每次评估时可达数千个令牌。"
+              }
+            }
+          }
+        },
+        "score": {
+          "title": "Score：依据你的等级给出评分",
+          "data": {
+            "name": "名称",
+            "instructions": "问题内容",
+            "target": "查看哪些内容",
+            "state": "附加说明或模板",
+            "background": "关于这些读数的长期事实",
+            "levels": "你的等级，从最低开始，每行一个",
+            "advanced": "高级"
+          },
+          "data_description": {
+            "name": "为此问题创建的传感器命名。",
+            "instructions": "作为 `instructions` 发送给 API。",
+            "target": "选择实体、设备、区域或标签，它们的读数会自动发送。如果下面的说明就是全部状态，请留空。",
+            "state": "文本或模板，可以单独使用，也可以与读数一起发送。",
+            "background": "会并入 `instructions`，因此它随问题一起发送，而不是随状态发送。",
+            "levels": "作为 `criteria` 发送给 API。每行一个，从最低开始。数量在 2 到 10 个之间。",
+            "advanced": "一份计划，以及还要发送什么。第一个问题用默认值即可。"
+          },
+          "sections": {
+            "advanced": {
+              "name": "高级",
+              "description": "一份计划，以及还要发送什么。第一个问题用默认值即可。",
+              "data": {
+                "trigger_entities": "改由这些实体唤醒",
+                "scan_interval": "提问频率",
+                "include_attributes": "同时发送全部属性"
+              },
+              "data_description": {
+                "trigger_entities": "除下面的计划之外，这些实体变化时也进行评估。带 5 秒防抖。",
+                "scan_interval": "查看相同内容且使用相同计划的问题会合并成一个请求发送，这会消耗令牌，但几乎不增加时间。",
+                "include_attributes": "默认关闭。一份天气预报在每次评估时可达数千个令牌。"
+              }
+            }
+          }
+        },
+        "reconfigure": {
+          "title": "编辑此问题",
+          "data": {
+            "name": "名称",
+            "instructions": "问题内容",
+            "target": "查看哪些内容",
+            "state": "附加说明或模板",
+            "background": "关于这些读数的长期事实",
+            "true_means": "高数值表示什么",
+            "false_means": "低数值表示什么",
+            "threshold": "同时创建高于此值的二元传感器",
+            "options": "你的选项，每行一个",
+            "levels": "你的等级，从最低开始，每行一个",
+            "advanced": "高级"
+          },
+          "data_description": {
+            "name": "为此问题创建的传感器命名。",
+            "instructions": "作为 `instructions` 发送给 API。",
+            "target": "选择实体、设备、区域或标签，它们的读数会自动发送。如果下面的说明就是全部状态，请留空。",
+            "state": "文本或模板，可以单独使用，也可以与读数一起发送。",
+            "background": "会并入 `instructions`，因此它随问题一起发送，而不是随状态发送。",
+            "true_means": "可选。让回答的方向更明确。",
+            "false_means": "可选。",
+            "threshold": "留空则只创建概率传感器。",
+            "options": "作为 `criteria` 发送给 API。每行一个，格式为 `名称: 它的含义`。说明部分可选。",
+            "levels": "作为 `criteria` 发送给 API。每行一个，从最低开始。数量在 2 到 10 个之间。",
+            "advanced": "一份计划，以及还要发送什么。第一个问题用默认值即可。"
+          },
+          "sections": {
+            "advanced": {
+              "name": "高级",
+              "description": "一份计划，以及还要发送什么。第一个问题用默认值即可。",
+              "data": {
+                "trigger_entities": "改由这些实体唤醒",
+                "scan_interval": "提问频率",
+                "include_attributes": "同时发送全部属性"
+              },
+              "data_description": {
+                "trigger_entities": "除下面的计划之外，这些实体变化时也进行评估。带 5 秒防抖。",
+                "scan_interval": "查看相同内容且使用相同计划的问题会合并成一个请求发送，这会消耗令牌，但几乎不增加时间。",
+                "include_attributes": "默认关闭。一份天气预报在每次评估时可达数千个令牌。"
+              }
+            }
+          }
+        },
+        "preview": {
+          "title": "查看将要发送的内容",
+          "description": "这就是你的问题将要针对的内容，根据它当前指向的对象即时构建。\n\n{grouping}\n\n### 它此刻的回答\n\n{answer}\n\n### 它读取的状态\n\n```\n{state}\n```"
+        }
+      },
+      "error": {
+        "nothing_to_judge": "请选择要查看的内容，或写一段说明或模板。问题需要有状态。",
+        "choice_options_out_of_range": "一个 choice 需要 2 到 255 个选项。",
+        "score_levels_out_of_range": "一个 score 需要 2 到 10 个等级。",
+        "option_name_empty": "每个选项在冒号前都需要一个名称。",
+        "option_name_duplicate": "有两个选项同名，其中一个会被悄悄丢弃。"
+      },
+      "abort": {
+        "reconfigure_successful": "问题已更新"
+      }
+    }
+  }
+}

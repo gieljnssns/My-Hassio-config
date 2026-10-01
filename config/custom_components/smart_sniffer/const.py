@@ -7,16 +7,26 @@ CONF_HOST = "host"
 CONF_PORT = "port"
 CONF_TOKEN = "token"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_FORCE_UPDATE = "force_update"
 
 # Defaults
 DEFAULT_PORT = 9099
 DEFAULT_SCAN_INTERVAL = 60  # seconds
+DEFAULT_FORCE_UPDATE = False
 
 # Agent version enforcement — bump MIN_AGENT_VERSION when a release requires
 # agent-side changes.  The coordinator checks this every poll cycle and raises
 # a HA repair notification when the running agent is older.
 MIN_AGENT_VERSION = "0.4.28"
 AGENT_RELEASES_URL = "https://github.com/DAB-LABS/smart-sniffer/releases"
+# Supplied to the agent_outdated repair notice as a translation placeholder.
+# Home Assistant's validator rejects a URL written into a translation string,
+# so the text carries {install_url} and this is what fills it.
+AGENT_INSTALL_URL = "https://raw.githubusercontent.com/DAB-LABS/smart-sniffer/main/install.sh"
+
+# Key under hass.data[DOMAIN][entry_id] holding the agent device's registry
+# id, which drive and filesystem devices point at with via_device_id.
+AGENT_DEVICE_ID = "agent_device_id"
 
 # Key used in coordinator data dict to store filesystem info.
 # Underscore prefix avoids collision with drive ID keys.

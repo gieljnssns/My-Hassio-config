@@ -60,6 +60,7 @@
     "fair_fit_tip": "Moderat matchkonsistens - nogle cyklusser, der er tildelt denne profil, har lavere konfidensscore. Mærk flere cyklusser, eller optag profilen igen for at forbedre nøjagtigheden.",
     "feedback_requested": "Feedback anmodet",
     "golden_cycle": "Registreret referencecyklus",
+    "duration_outlier": "{n} cyklus(ser) med afvigende længde",
     "improving": "↗ forbedres",
     "manual": "(manuelt valgt)",
     "needs_review": "Trænger til gennemgang",
@@ -256,7 +257,15 @@
     "hist_scan": "Scan efter cyklusser",
     "hist_import_n": "Importér {n} cyklusser",
     "hist_goto_cycles": "Vis mig cyklusserne",
-    "save_total_cycles": "Gem total"
+    "save_total_cycles": "Gem total",
+    "clear": "Ryd",
+    "add_brand": "Tilføj mærke",
+    "add_appliance": "Tilføj apparat"
+  },
+  "note": {
+    "off_delay": {
+      "effective": "En afsluttet cyklus venter reelt {eff} s, ikke {delay} s: Minimum slukket mellemrum ({gap} s) er længere og har forrang."
+    }
   },
   "conflict": {
     "anti_wrinkle_exit": {
@@ -378,7 +387,8 @@
     "community_store": "Fællesskabsbutik",
     "online_account": "Fællesskabsbutik og onlinefunktioner",
     "import_power_history": "Importér effekthistorik",
-    "service_status": "Servicestatus"
+    "service_status": "Servicestatus",
+    "online_account_tab": "Online & fællesskab"
   },
   "health": {
     "fair": "Acceptabel matchkvalitet",
@@ -523,7 +533,8 @@
     "pg_tile_matched_tip": "Cyklusser der er korrekt tilskrevet et kendt program",
     "pg_time_left": "Tid tilbage",
     "pg_weak_match": "Svagt match",
-    "phase_name": "Navn",
+    "phase_name": "Fasenavn",
+    "name": "Navn",
     "phase_timeline": "Fasetidslinje",
     "power": "Effekt",
     "profile": "Profil",
@@ -1027,6 +1038,9 @@
     "imported_readonly": "Importeret fra fællesskabsbutikken. Vises til reference og matchning. Tælles ikke med i din statistik og kan ikke redigeres.",
     "merge_no_imports": "Importerede optagelser kan ikke flettes ind i en rigtig cyklus. Fravælg dem for at flette.",
     "store_enable_hint": "Aktivér onlinefunktioner i Indstillinger for at gennemse og importere fællesskabets referencecyklusser.",
+    "advisory_duration_outlier": "{n} cyklus(ser) mærket '{name}' ligger for langt fra programmets sædvanlige længde til nogensinde at kunne matche det (værst: {ratio}x). De er sandsynligvis mærket forkert, eller én optagelse har fanget to kørsler. Mærk dem om, eller del dem op, så de ikke længere skævvrider tidsestimatet for dette program.",
+    "standby_above_stop_title": "Trak stadig {idle} W, da cyklussen sluttede",
+    "standby_above_stop_sub": "{n} af de sidste {total} cyklusser. Slukkeforsinkelsen starter først, når effekten er under Stoptærskel ({stop} W), så cyklusser slutter for sent eller skal stoppes manuelt.",
     "online_intro": "Del referencecyklusser med andre WashData-brugere, og download dem. Alle onlinefunktioner er valgfrie og slået fra som standard.",
     "store_share_intro": "Upload denne referencecyklus, så andre med samme apparat kan bruge den. Den gennemgås, før den vises offentligt.",
     "online_intro_global": "Gennemse og del referenceoptagelser med andre WashData-brugere, og bekræft apparatposter. Én forbindelse gælder for hele din WashData-integration; apparatets mærke og model angives pr. enhed under Grundlæggende. Alle onlinefunktioner er valgfrie og slået fra som standard.",
@@ -1087,7 +1101,9 @@
     "odometer_intro": "Denne total kan kun stige. Sletning af en cyklusregistrering ændrer den ikke, og den tæller videre ud over grænsen for den gemte historik, så servicepåmindelser bliver ved med at være korrekte.",
     "odometer_correct_hint": "Angiv dette, hvis WashData har registreret en kørsel, der aldrig har fundet sted, eller hvis apparatet allerede havde kørt cyklusser, før WashData blev installeret.",
     "no_reminders_set": "Der er endnu ikke angivet nogen servicepåmindelser.",
-    "toast_program_armed": "Program valgt til næste cyklus: {program}"
+    "toast_program_armed": "Program valgt til næste cyklus: {program}",
+    "toast_range_required": "Angiv et gyldigt Fra/Til-interval.",
+    "no_profiles_option": "(ingen profiler endnu, tilføj en)"
   },
   "pg_desc": {
     "dishwasher_end_spike_quiet_release": "Opvaskemaskine: stille sekunder efter den forventede varighed, før ventetiden på udpumpning ved cyklusslut frigives",
@@ -1105,7 +1121,7 @@
     "duration_weight": "Trin 4: hvor stærkt varighedsoverensstemmelse påvirker slutscoren (standard 0,22)",
     "energy_weight": "Trin 4: hvor stærkt energioverensstemmelse påvirker slutscoren (standard 0,22)",
     "profile_match_min_duration_ratio": "Trin 1: korteste cykellængde som brøkdel af profilvarighed; standard 0,1 (10%)",
-    "profile_match_max_duration_ratio": "Trin 1: længste cykellængde som brøkdel af profilvarighed; standard 1,5 (150%)",
+    "profile_match_max_duration_ratio": "Trin 1: længste cykellængde som brøkdel af profilvarighed; standard 1,8 (180%)",
     "keep_min_score": "Trin 2: minimumsscore for at komme videre; standard 0,1 tillader svage match, senere trin vælger det bedste",
     "dtw_blend": "Trin 3: 0 = kun kernescore, 1 = kun DTW-score, 0,5 = ligelig blanding (standard)",
     "dtw_ensemble_w": "Trin 3 (ensemble-tilstand): vægt på skaleret L1 kontra derivativ DTW; standard 0,7 foretrækker niveaubevidst",
@@ -1446,8 +1462,8 @@
       "label": "Forsinkelse for aflæsningspåmindelse"
     },
     "notify_unload_repeat": {
-      "doc": "Bliv ved med at gensende aflæsningspåmindelsen hvert \"Forsinkelse for aflæsningspåmindelse\" minutter, indtil du åbner døren eller trykker på \"Stop påmindelser\" i notifikationen. Kræver en Dørsensorenhed (det gør selve påmindelsen). Knappen til at afvise virker på notifikationer fra Home Assistant companion-appen (mobil).",
-      "label": "Gentag indtil døren åbnes"
+      "doc": "Bliv ved med at gensende aflæsningspåmindelsen hvert \"Forsinkelse for aflæsningspåmindelse\" minutter, indtil aflæsningen er bekræftet, eller du trykker på \"Stop påmindelser\" i notifikationen. Kræver en måde at bekræfte aflæsningen på: en Dørsensorenhed, en Aflæsningsbekræftelsesenhed eller indstillingen \"Bekræft aflæsning manuelt\" nedenfor. Knappen til at afvise virker på notifikationer fra Home Assistant companion-appen (mobil).",
+      "label": "Gentag indtil aflæsset"
     },
     "off_delay": {
       "doc": "Tid til at vente efter strømfald, før cyklussen erklæres afsluttet. Hvis strømmen genoptages inden for dette vindue, fortsætter cyklussen problemfrit - dette slår bro mellem pauser mellem vasketrinene. Opvaskemaskiner har lange tørrefaser (strøm fra i 20-60 min), så slukningsforsinkelsen skal overstige det for at holde hele vask+tør som én cyklus.",
@@ -1655,6 +1671,18 @@
     "energy_price_dynamic": {
       "label": "Tidsvægtede omkostninger",
       "doc": "Beregn hver cyklus til den pris, der gjaldt i hvert øjeblik, den kørte, i stedet for den ene pris, der gjaldt, da den sluttede. Gælder kun for en prisenhed (en statisk pris kan ikke ændre sig). Kræver ingen ekstra opsætning: prisen følges live, mens cyklussen kører, og \"Behandl historik\" under Diagnostik genberegner omkostningerne for ældre cyklusser ud fra recorderen. Fra = den klassiske adfærd, én pris frosset ved slutningen."
+    },
+    "unload_confirm_entity": {
+      "label": "Aflæsningsbekræftelsesenhed",
+      "doc": "Valgfri enhed, hvis aktivering betyder, at vasken er taget ud, til maskiner der ikke kan have en dørsensor. Alle typer virker: en Zigbee- eller NFC-knap, en input_button-hjælper, en bevægelsessensor foran maskinen, en scene. Enhver tilstandsændring tæller som en bekræftelse, bortset fra at blive slukket og at blive utilgængelig. Når denne indstilles, aktiveres aflæsningspåmindelsen også på en enhed uden Dørsensorenhed."
+    },
+    "unload_track_without_door": {
+      "label": "Bekræft aflæsning manuelt",
+      "doc": "Kør aflæsningspåmindelsen på en enhed uden Dørsensorenhed og uden Aflæsningsbekræftelsesenhed, og bekræft i stedet aflæsningen fra din egen automatisering: tryk på knapenheden \"Markér som aflæsset\", eller kald handlingen ha_washdata.mark_unloaded. Ignoreres, når en Dørsensorenhed er angivet, da den allerede leverer signalet."
+    },
+    "notify_icon_color": {
+      "label": "Notifikationsfarve",
+      "doc": "Accentfarve til denne enheds notifikationer, så en vaskemaskine, en tørretumbler og en opvaskemaskine kan skelnes fra hinanden på et øjeblik. iOS farver ikonet og Liveaktivitetens fremdriftslinje på den låste skærm og i Dynamic Island. Android får den samme farve sendt, men hvad telefonen bruger den til, er op til den: nogle farver ikonet, og mange (især Samsung One UI) ignorerer den helt. Begge forstår hex-værdier (f.eks. #03A9F4). Lad stå tomt for platformens standard."
     }
   },
   "setting_group": {
@@ -1748,7 +1776,7 @@
     "all_statuses": "Alle statusser",
     "ambiguous": "Tvetydigt",
     "auto_detect": "Automatisk registrering",
-    "clear": "Klar",
+    "clear": "Entydigt",
     "completed": "Afsluttet",
     "fine_tuning": "finjusterer nu...",
     "force_stopped": "Tvunget stoppet",
@@ -1867,6 +1895,7 @@
       "summary": "{total} fejldetekterede cyklus(ser) udelukket: {parts}.",
       "reason": {
         "force_stopped": "tvangsstoppet",
+        "user_stopped": "stoppet manuelt",
         "interrupted": "afbrudt",
         "incomplete": "ufuldstændig",
         "noise": "støj",
@@ -2021,7 +2050,10 @@
     "unlabel_done": "Fjernede mærkning fra {count} cyklus(ser)",
     "unlabel_failed": "Fjernelse af mærkning mislykkedes: {error}",
     "odometer_saved": "Samlet antal cyklusser gemt",
-    "odometer_save_failed": "Kunne ikke gemme totalen: {error}"
+    "odometer_save_failed": "Kunne ikke gemme totalen: {error}",
+    "contrib_device_changed": "Tilføjet til fællesskabsbutikken, men apparatet blev skiftet, mens formularen var åben. Vælg det i Indstillinger.",
+    "store_pick_profile_share": "Vælg en profil at dele til",
+    "remove_failed": "Fjernelse mislykkedes: {error}"
   },
   "trend": {
     "down": "Trend nedad",

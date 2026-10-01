@@ -1,0 +1,566 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbinden met TypeSafe",
+        "description": "Plak een API-sleutel uit je TypeSafe-account. Home Assistant stelt één korte vraag om te controleren of de sleutel werkt.",
+        "data": {
+          "api_key": "API-sleutel"
+        },
+        "data_description": {
+          "api_key": "De sleutel waarmee de verzoeken worden verstuurd. Laat dit alleen leeg bij een eigen endpoint dat geen sleutel nodig heeft."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Geavanceerd",
+            "data": {
+              "url": "API-adres",
+              "model": "Model"
+            },
+            "data_description": {
+              "url": "Laat dit staan, tenzij je zelf iets draait dat dezelfde API spreekt, zoals een proxy die de sleutel bewaart of antwoorden cachet. De sleutel gaat mee als bearer-header, dus bij een http-adres staat hij onversleuteld op de lijn.",
+              "model": "Het model-id dat met elk verzoek meegaat. Leeg laten gebruikt de standaard."
+            }
+          }
+        }
+      },
+      "reauth_confirm": {
+        "title": "Voer je API-sleutel opnieuw in",
+        "description": "TypeSafe weigert de opgeslagen sleutel. Plak een werkende sleutel. Het API-adres blijft zoals het is; gebruik Herconfigureren om dat te wijzigen.",
+        "data": {
+          "api_key": "API-sleutel"
+        },
+        "data_description": {
+          "api_key": "Verzoeken gaan naar het API-adres dat al is opgeslagen."
+        }
+      },
+      "reconfigure": {
+        "title": "Vervang je API-sleutel of adres",
+        "description": "Plak een andere TypeSafe API-sleutel, en wijzig het adres als de API elders dan bij TypeSafe wordt bereikt. Je vragen en entiteiten blijven staan.",
+        "data": {
+          "api_key": "API-sleutel"
+        },
+        "data_description": {
+          "api_key": "Laat leeg om de huidige sleutel te houden zolang het adres gelijk blijft. Een nieuw adres krijgt geen sleutel, tenzij je er een invult."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Geavanceerd",
+            "data": {
+              "url": "API-adres",
+              "model": "Model"
+            },
+            "data_description": {
+              "url": "Maak dit veld leeg om terug te gaan naar de TypeSafe-API. De sleutel gaat mee als bearer-header, dus bij een http-adres staat hij onversleuteld op de lijn.",
+              "model": "Het model-id dat met elk verzoek meegaat. Leeg laten gebruikt de standaard."
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "TypeSafe weigert deze sleutel.",
+      "cannot_connect": "Home Assistant kan de API op dat adres niet bereiken.",
+      "not_found": "De server antwoordde met HTTP 404. Jev plakt /v1/systemone achter het adres, dus vul alleen het deel daarvoor in. Voor OpenRouter is dat {openrouter_url}.",
+      "invalid_url": "Dat is geen bruikbaar API-adres. Het heeft een schema en een host nodig, en het kan geen spatie, query, fragment, gebruikersnaam of wachtwoord bevatten.",
+      "invalid_model": "Dat model-id is niet geaccepteerd. Controleer het, of laat het veld leeg voor de standaard.",
+      "key_required": "De TypeSafe-API heeft een sleutel nodig. Een lege sleutel werkt alleen bij een eigen adres dat er geen nodig heeft."
+    },
+    "abort": {
+      "already_configured": "Deze API-sleutel is al ingesteld. Een invoer wordt herkend aan zijn sleutel, dus een tweede adres heeft een eigen sleutel nodig.",
+      "reauth_successful": "De nieuwe sleutel werkt.",
+      "reconfigure_successful": "Opnieuw ingesteld."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Uitgavelimieten",
+        "description": "Je betaalt voor invoertokens, en de tekst van je vragen telt mee als invoer. Zet de limiet ruim boven wat een werkende opstelling gebruikt, zodat alleen een op hol geslagen configuratie hem raakt. Nul betekent geen limiet.\n\nDe gespreksagent stuurt alles waar hij niet zeker van is in zijn geheel door naar de terugvalagent, zonder eerst iets te doen. Laat je dat leeg, dan zegt hij dat hij het niet begreep. Opdrachten voor het hele huis worden geweigerd tenzij je ze toestaat, behalve alles uitschakelen: dat mag altijd.",
+        "data": {
+          "daily_token_budget": "Daglimiet invoertokens (0 = geen limiet)",
+          "price_per_million": "Prijs per miljoen invoertokens, in USD",
+          "fallback_agent": "Val terug op deze agent",
+          "min_confidence": "Alleen handelen boven dit vertrouwen (0 tot 1)",
+          "allow_whole_home": "Sta opdrachten toe die geen kamer of apparaat noemen"
+        },
+        "data_description": {
+          "daily_token_budget": "Geteld vanaf middernacht in de tijdzone van Home Assistant. 0 betekent geen limiet.",
+          "price_per_million": "Bepaalt de sensor voor de geschatte kosten en de kosten in het voorbeeld van een vraag. Niets van wat wordt verstuurd hangt ervan af.",
+          "fallback_agent": "Krijgt de hele zin wanneer Jev niet zeker weet wat te doen.",
+          "min_confidence": "Daaronder doet Jev niets en geeft het de opdracht door aan de terugvalagent.",
+          "allow_whole_home": "Alles uitzetten mag altijd, met of zonder deze optie."
+        }
+      }
+    }
+  },
+  "issues": {
+    "daily_budget_exceeded": {
+      "title": "Jev is gestopt: daglimiet bereikt",
+      "description": "De daglimiet is {budget} invoertokens en er zijn er vandaag {used} gebruikt. De volgende evaluatie, van context {context}, heeft ongeveer {estimate} extra nodig en past niet meer, dus er worden geen vragen meer gesteld. De antwoordsensoren worden onbeschikbaar tot er weer een aanvraag past. Verhoog de limiet in de opties, evalueer minder vaak, of maak je vragen korter."
+    },
+    "daily_budget_spent": {
+      "title": "Jev is gestopt: daglimiet bereikt",
+      "description": "De daglimiet is {budget} invoertokens en er zijn er vandaag {used} gebruikt, dus er worden geen vragen meer gesteld. De antwoordsensoren worden onbeschikbaar tot de volgende dag of tot de limiet omhoog gaat. Verhoog de limiet in de opties, evalueer minder vaak, of maak je vragen korter."
+    }
+  },
+  "services": {
+    "noul": {
+      "name": "Stel een ja/nee-vraag",
+      "description": "Vraag of iets waar is en krijg de kans op ja, van 0 tot 1. Gebruik er een per label als er meerdere labels tegelijk waar kunnen zijn.",
+      "fields": {
+        "state": {
+          "name": "Toestand",
+          "description": "De tekst die beoordeeld wordt. Schrijf een template en die wordt gerenderd voordat hij verstuurd wordt."
+        },
+        "instructions": {
+          "name": "Vraag",
+          "description": "Formuleer zo dat een hoog getal ja betekent. Een stelling werkt net zo goed als een vraag."
+        },
+        "true_means": {
+          "name": "Ja betekent",
+          "description": "Optioneel. Wat als ja telt. Vul dit in als de grens subtiel is."
+        },
+        "false_means": {
+          "name": "Nee betekent",
+          "description": "Optioneel. Wat als nee telt."
+        },
+        "threshold": {
+          "name": "Drempel",
+          "description": "Waar de grens ligt voor het veld is_true in het antwoord. De kans zelf krijg je altijd terug. Een waarde rond 0.5 betekent dat het model het niet kan zeggen, niet dat het antwoord half waar is."
+        },
+        "config_entry": {
+          "name": "API-sleutel",
+          "description": "Met welke ingestelde sleutel gevraagd wordt. Alleen nodig als er meer dan een is."
+        },
+        "include_attributes": {
+          "name": "Alle attributen meesturen",
+          "description": "Staat uit. Stuurt alle attributen van de gekozen entiteiten mee, niet alleen de waarde, eenheid, device class en ruimte. Een weersverwachting of een lijst met albumhoezen loopt in de duizenden tokens, en die betaal je bij elke evaluatie."
+        },
+        "background": {
+          "name": "Achtergrond",
+          "description": "Optioneel. Vaste feiten over hoe je dit moet lezen, bijvoorbeeld wat een meetwaarde betekent voor jouw apparaat. Dit reist mee met de vraag in plaats van met de meetwaarden, en dat werkt aantoonbaar beter. Geef je een object in plaats van een zin, dan blijven je eigen sleutelnamen staan, en het model leest die sleutels."
+        }
+      }
+    },
+    "choice": {
+      "name": "Kies een optie",
+      "description": "Kies een optie uit je lijst, met de kans per optie en een betrouwbaarheidswaarde.",
+      "fields": {
+        "state": {
+          "name": "Toestand",
+          "description": "De tekst die beoordeeld wordt. Schrijf een template en die wordt gerenderd voordat hij verstuurd wordt."
+        },
+        "instructions": {
+          "name": "Vraag",
+          "description": "Waartussen het model kiest, in een zin."
+        },
+        "options": {
+          "name": "Opties",
+          "description": "Twee tot 255 opties. Voeg een restcategorie zoals anders toe als je lijst niet alles dekt."
+        },
+        "option_descriptions": {
+          "name": "Omschrijving per optie",
+          "description": "Optioneel. Een omschrijving per optie, wat de grens tussen lijkende opties scherper maakt. Vertellen wat een optie uitsluit helpt het meest."
+        },
+        "config_entry": {
+          "name": "API-sleutel",
+          "description": "Met welke ingestelde sleutel gevraagd wordt. Alleen nodig als er meer dan een is."
+        },
+        "include_attributes": {
+          "name": "Alle attributen meesturen",
+          "description": "Staat uit. Stuurt alle attributen van de gekozen entiteiten mee, niet alleen de waarde, eenheid, device class en ruimte. Een weersverwachting of een lijst met albumhoezen loopt in de duizenden tokens, en die betaal je bij elke evaluatie."
+        },
+        "background": {
+          "name": "Achtergrond",
+          "description": "Optioneel. Vaste feiten over hoe je dit moet lezen, bijvoorbeeld wat een meetwaarde betekent voor jouw apparaat. Dit reist mee met de vraag in plaats van met de meetwaarden, en dat werkt aantoonbaar beter. Geef je een object in plaats van een zin, dan blijven je eigen sleutelnamen staan, en het model leest die sleutels."
+        }
+      }
+    },
+    "score": {
+      "name": "Geef een cijfer",
+      "description": "Beoordeel de tekst tegen niveaus die je zelf beschrijft, met een getal dat tussen twee niveaus in kan liggen.",
+      "fields": {
+        "state": {
+          "name": "Toestand",
+          "description": "De tekst die beoordeeld wordt. Schrijf een template en die wordt gerenderd voordat hij verstuurd wordt."
+        },
+        "instructions": {
+          "name": "Vraag",
+          "description": "Een dimensie per vraag. Een vraag die drie dingen tegelijk meet geeft lage betrouwbaarheid en een nietszeggend midden."
+        },
+        "levels": {
+          "name": "Niveaus",
+          "description": "Twee tot 10 niveaus, laagste eerst. Beschrijf per niveau een concrete situatie, geen gradatie: Kapot maar er is een omweg werkt beter dan Redelijk ernstig. Elk niveau wordt op zichzelf beoordeeld, dus vergelijkende woorden en getallen in de tekst doen niets."
+        },
+        "config_entry": {
+          "name": "API-sleutel",
+          "description": "Met welke ingestelde sleutel gevraagd wordt. Alleen nodig als er meer dan een is."
+        },
+        "include_attributes": {
+          "name": "Alle attributen meesturen",
+          "description": "Staat uit. Stuurt alle attributen van de gekozen entiteiten mee, niet alleen de waarde, eenheid, device class en ruimte. Een weersverwachting of een lijst met albumhoezen loopt in de duizenden tokens, en die betaal je bij elke evaluatie."
+        },
+        "background": {
+          "name": "Achtergrond",
+          "description": "Optioneel. Vaste feiten over hoe je dit moet lezen, bijvoorbeeld wat een meetwaarde betekent voor jouw apparaat. Dit reist mee met de vraag in plaats van met de meetwaarden, en dat werkt aantoonbaar beter. Geef je een object in plaats van een zin, dan blijven je eigen sleutelnamen staan, en het model leest die sleutels."
+        }
+      }
+    },
+    "ask": {
+      "name": "Stel meerdere vragen tegelijk",
+      "description": "Stel elke mix van vraagtypen over een stuk tekst, in een verzoek. Elke vraag wordt los beoordeeld tegen dezelfde tekst en ze lopen parallel, dus twintig vragen duren ongeveer even lang als een.",
+      "fields": {
+        "state": {
+          "name": "Toestand",
+          "description": "De tekst die beoordeeld wordt. Schrijf een template en die wordt gerenderd voordat hij verstuurd wordt."
+        },
+        "questions": {
+          "name": "Vragen",
+          "description": "Je eigen sleutel per vraag, dan het type noul, choice of score, de instructies, en criteria bij choice en score. De sleutels zijn van jou: je krijgt ze terug als sleutels van de antwoorden en het model ziet ze nooit."
+        },
+        "config_entry": {
+          "name": "API-sleutel",
+          "description": "Met welke ingestelde sleutel gevraagd wordt. Alleen nodig als er meer dan een is."
+        },
+        "include_attributes": {
+          "name": "Alle attributen meesturen",
+          "description": "Staat uit. Stuurt alle attributen van de gekozen entiteiten mee, niet alleen de waarde, eenheid, device class en ruimte. Een weersverwachting of een lijst met albumhoezen loopt in de duizenden tokens, en die betaal je bij elke evaluatie."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "calls_today": {
+        "name": "Aanroepen vandaag"
+      },
+      "input_tokens_today": {
+        "name": "Invoertokens vandaag"
+      },
+      "estimated_cost_today": {
+        "name": "Geschatte kosten vandaag"
+      },
+      "context_latency": {
+        "name": "Reactietijd {context}"
+      },
+      "context_payload": {
+        "name": "Aanvraaggrootte {context}"
+      }
+    },
+    "binary_sensor": {
+      "daily_budget_exceeded": {
+        "name": "Daglimiet overschreden"
+      }
+    }
+  },
+  "exceptions": {
+    "nothing_to_judge": {
+      "message": "Niets om te beoordelen: geef deze actie tekst, of kies de entiteiten, apparaten of ruimtes waar hij naar moet kijken."
+    },
+    "no_entry": {
+      "message": "Geen geladen Jev-configuratie om mee te vragen. Voeg de integratie eerst toe, of kies er een onder API-sleutel als er meer dan een is."
+    },
+    "entry_ambiguous": {
+      "message": "Er is meer dan één Jev-configuratie geladen: {entries}. Kies er een onder API-sleutel, want elke configuratie heeft een eigen sleutel en een eigen budget."
+    },
+    "missing_targets": {
+      "message": "Deze doelen bestaan niet: {targets}. De rest beoordelen zou een andere vraag beantwoorden dan je stelde."
+    },
+    "empty_target": {
+      "message": "Dat doel bevat geen entiteiten, dus er valt niets te beoordelen."
+    },
+    "too_many_entities": {
+      "message": "Dat doel bevat {count} entiteiten en de limiet is {limit}. Elke entiteit wordt bij elke evaluatie als invoer afgerekend, dus kies de entiteiten waar de vraag om draait, of splits hem."
+    },
+    "question_shape": {
+      "message": "Vraag {key} heeft zowel 'type' als 'instructions' nodig. De types zijn noul, choice en score."
+    },
+    "question_invalid": {
+      "message": "Vraag {key} is ongeldig: {reason}"
+    },
+    "template_failed": {
+      "message": "Het state-template is mislukt: {reason}"
+    },
+    "auth_rejected": {
+      "message": "TypeSafe weigert de API-sleutel: {reason}"
+    },
+    "ask_failed": {
+      "message": "Jev bevragen is mislukt: {reason}"
+    },
+    "wrong_answer_type": {
+      "message": "Een {question_type}-vraag gesteld en een {got} teruggekregen, wat de API niet hoort te doen."
+    },
+    "choice_options_out_of_range": {
+      "message": "Een choice neemt {min} tot {max} opties en deze heeft er {count}."
+    },
+    "score_levels_out_of_range": {
+      "message": "Een score neemt {min} tot {max} niveaus, laagste eerst, en deze heeft er {count}."
+    },
+    "unreadable_answer": {
+      "message": "TypeSafe gaf een antwoord van type {kind} terug dat deze versie niet kan lezen. Werk de integratie bij."
+    },
+    "task_needs_structure": {
+      "message": "Taak {task} vraagt om vrije tekst, en Jev beantwoordt alleen getypeerde vragen. Geef de actie een structuur met velden van het type boolean, select of number."
+    },
+    "task_over_budget": {
+      "message": "Taak {task} kost ongeveer {estimate} invoertokens en van het dagbudget van {budget} zijn er nog {remaining} over. Verhoog of wis het budget in de opties van de integratie om door te gaan."
+    },
+    "reserved_field": {
+      "message": "Het veld {field} kan niet worden gebruikt, omdat het resultaat onder die naam de zekerheid achter elk antwoord meegeeft. Geef het veld een andere naam."
+    },
+    "no_fields": {
+      "message": "De structuur declareert geen velden."
+    },
+    "answer_missing": {
+      "message": "Het antwoord bevat niets voor {field}."
+    },
+    "unsupported_field": {
+      "message": "Veld {field} gebruikt een {selector}, en Jev beantwoordt een ja/nee-vraag, een keuze uit een lijst of een score op een schaal. Geef het veld een boolean, een select met opties, of een number met een min en een max."
+    },
+    "field_options_out_of_range": {
+      "message": "Veld {field} biedt {count} opties, en een keuze heeft er {min} tot {max} nodig."
+    },
+    "field_needs_scale": {
+      "message": "Veld {field} is een getal zonder {bound}. Een score heeft beide uiteinden van de schaal nodig."
+    },
+    "field_scale_not_ordered": {
+      "message": "Veld {field} heeft min {min} en max {max}, en dat is geen schaal."
+    },
+    "answer_does_not_fit": {
+      "message": "Het antwoord voor {field} kwam terug als {answer}, en dat past niet bij een {selector}."
+    },
+    "context_template_failed": {
+      "message": "Het state-template van context {context} is mislukt: {reason}"
+    },
+    "context_targets_failed": {
+      "message": "Context {context}: {reason}"
+    },
+    "context_over_budget": {
+      "message": "Context {context} evalueren kost ongeveer {estimate} invoertokens en van het dagbudget van {budget} zijn er nog {remaining} over. Verhoog of wis het budget in de opties van de integratie om door te gaan."
+    },
+    "rate_limited": {
+      "message": "TypeSafe heeft het verzoek begrensd: {reason}"
+    }
+  },
+  "common": {
+    "not_understood": "Sorry, dat begreep ik niet.",
+    "whole_house": "Dat zou het hele huis raken. Zeg welke kamer of welk apparaat je bedoelt.",
+    "which_kind": "Wat voor soort apparaat bedoel je? Zeg de lampen, of de schakelaars, of noem een kamer.",
+    "intent_failed": "Sorry, dat is niet gelukt.",
+    "already_on": "{name} staat al aan.",
+    "already_off": "{name} staat al uit.",
+    "preview_alone": "Gaat als eigen verzoek.",
+    "preview_grouped": "Gaat in een verzoek samen met: {others}.",
+    "preview_cost": "Een keer gevraagd voor deze controle: {tokens} invoertokens, ongeveer ${cost}, {ms} ms.",
+    "preview_threshold_over": "Dat ligt boven je drempel van {threshold}, dus de binaire sensor zou nu **aan** staan.",
+    "preview_threshold_under": "Dat ligt onder je drempel van {threshold}, dus de binaire sensor zou nu **uit** staan.",
+    "preview_winner": "Winnaar **{choice}**, vertrouwen {confidence}.",
+    "preview_score": "Score **{score}**, dichtstbijzijnde niveau **{level}**, vertrouwen {confidence}.",
+    "preview_undrawable": "Het antwoord kwam terug in een vorm die deze versie niet kan tekenen.",
+    "preview_unbuildable": "Die vraag kan nog niet gebouwd worden: {reason}",
+    "preview_rejected": "TypeSafe weigerde de API-sleutel, dus er is geen proefantwoord.",
+    "preview_failed": "Geen proefantwoord: {reason}",
+    "preview_mismatched": "De API antwoordde, maar niet op de vraag die gesteld is.",
+    "preview_template_error": "De template rendert niet: {reason}",
+    "query_not_found": "Dat kon ik niet vinden.",
+    "budget_spent": "Het dagelijkse tokenbudget is op, dus dat kan ik vandaag niet doen.",
+    "auth_failed": "TypeSafe heeft de API-sleutel geweigerd. Controleer hem in de instellingen van Jev.",
+    "unavailable": "TypeSafe gaf geen antwoord. Probeer het zo nog eens.",
+    "preview_over_budget": "Het daglimiet voor tokens is op, dus er is geen proefantwoord. De vraag wordt wel opgeslagen.",
+    "preview_nothing_yet": "Geen proefantwoord: er is nog niets om over te vragen."
+  },
+  "config_subentries": {
+    "question": {
+      "entry_type": "Vraag",
+      "initiate_flow": {
+        "user": "Vraag toevoegen",
+        "reconfigure": "Vraag bewerken"
+      },
+      "step": {
+        "user": {
+          "title": "Wat voor antwoord wil je terug?",
+          "menu_options": {
+            "noul": "Noul, een kans. Een getal van 0 tot 1",
+            "choice": "Choice, een van je opties. Met de hele verdeling",
+            "score": "Score, een cijfer. Tegen niveaus die jij beschrijft"
+          }
+        },
+        "noul": {
+          "title": "Noul: een ja of nee vraag",
+          "data": {
+            "name": "Naam",
+            "instructions": "De vraag",
+            "target": "Waar het naar kijkt",
+            "state": "Extra notitie of template",
+            "background": "Vaste feiten over de metingen",
+            "true_means": "Wat een hoog getal betekent",
+            "false_means": "Wat een laag getal betekent",
+            "threshold": "Maak ook een binaire sensor boven",
+            "advanced": "Geavanceerd"
+          },
+          "data_description": {
+            "name": "Geeft de sensor die deze vraag maakt zijn naam.",
+            "instructions": "Gaat als `instructions` naar de API.",
+            "target": "Kies entiteiten, apparaten, ruimtes of labels; hun metingen worden voor je meegestuurd. Laat leeg als de notitie hieronder de hele staat is.",
+            "state": "Tekst of een template, los of naast de metingen.",
+            "background": "Wordt in `instructions` gevouwen, zodat het met de vraag meereist en niet met de staat.",
+            "true_means": "Optioneel. Maakt scherper welke kant het antwoord op wijst.",
+            "false_means": "Optioneel.",
+            "threshold": "Laat leeg voor alleen de kans-sensor.",
+            "advanced": "Een schema, en wat er verder meegaat. De standaardwaarden voldoen voor een eerste vraag."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Geavanceerd",
+              "description": "Een schema, en wat er verder meegaat. De standaardwaarden voldoen voor een eerste vraag.",
+              "data": {
+                "trigger_entities": "Wek hierop in plaats van het schema",
+                "scan_interval": "Hoe vaak vragen",
+                "include_attributes": "Stuur ook elk attribuut mee"
+              },
+              "data_description": {
+                "trigger_entities": "Evalueer ook als deze veranderen, bovenop het schema hieronder. Vijf seconden gedempt.",
+                "scan_interval": "Vragen die naar hetzelfde kijken op hetzelfde schema gaan als een verzoek, wat tokens kost maar vrijwel geen extra tijd.",
+                "include_attributes": "Standaard uit. Een weersverwachting kost duizenden tokens per evaluatie."
+              }
+            }
+          }
+        },
+        "choice": {
+          "title": "Choice: kies een van je opties",
+          "data": {
+            "name": "Naam",
+            "instructions": "De vraag",
+            "target": "Waar het naar kijkt",
+            "state": "Extra notitie of template",
+            "background": "Vaste feiten over de metingen",
+            "options": "Je opties, een per regel",
+            "advanced": "Geavanceerd"
+          },
+          "data_description": {
+            "name": "Geeft de sensor die deze vraag maakt zijn naam.",
+            "instructions": "Gaat als `instructions` naar de API.",
+            "target": "Kies entiteiten, apparaten, ruimtes of labels; hun metingen worden voor je meegestuurd. Laat leeg als de notitie hieronder de hele staat is.",
+            "state": "Tekst of een template, los of naast de metingen.",
+            "background": "Wordt in `instructions` gevouwen, zodat het met de vraag meereist en niet met de staat.",
+            "options": "Gaat als `criteria` naar de API. Een per regel, als `naam: wat het betekent`. De beschrijving is optioneel.",
+            "advanced": "Een schema, en wat er verder meegaat. De standaardwaarden voldoen voor een eerste vraag."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Geavanceerd",
+              "description": "Een schema, en wat er verder meegaat. De standaardwaarden voldoen voor een eerste vraag.",
+              "data": {
+                "trigger_entities": "Wek hierop in plaats van het schema",
+                "scan_interval": "Hoe vaak vragen",
+                "include_attributes": "Stuur ook elk attribuut mee"
+              },
+              "data_description": {
+                "trigger_entities": "Evalueer ook als deze veranderen, bovenop het schema hieronder. Vijf seconden gedempt.",
+                "scan_interval": "Vragen die naar hetzelfde kijken op hetzelfde schema gaan als een verzoek, wat tokens kost maar vrijwel geen extra tijd.",
+                "include_attributes": "Standaard uit. Een weersverwachting kost duizenden tokens per evaluatie."
+              }
+            }
+          }
+        },
+        "score": {
+          "title": "Score: een cijfer tegen jouw niveaus",
+          "data": {
+            "name": "Naam",
+            "instructions": "De vraag",
+            "target": "Waar het naar kijkt",
+            "state": "Extra notitie of template",
+            "background": "Vaste feiten over de metingen",
+            "levels": "Je niveaus, laagste eerst, een per regel",
+            "advanced": "Geavanceerd"
+          },
+          "data_description": {
+            "name": "Geeft de sensor die deze vraag maakt zijn naam.",
+            "instructions": "Gaat als `instructions` naar de API.",
+            "target": "Kies entiteiten, apparaten, ruimtes of labels; hun metingen worden voor je meegestuurd. Laat leeg als de notitie hieronder de hele staat is.",
+            "state": "Tekst of een template, los of naast de metingen.",
+            "background": "Wordt in `instructions` gevouwen, zodat het met de vraag meereist en niet met de staat.",
+            "levels": "Gaat als `criteria` naar de API. Een per regel, laagste eerst. Tussen de 2 en 10 stuks.",
+            "advanced": "Een schema, en wat er verder meegaat. De standaardwaarden voldoen voor een eerste vraag."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Geavanceerd",
+              "description": "Een schema, en wat er verder meegaat. De standaardwaarden voldoen voor een eerste vraag.",
+              "data": {
+                "trigger_entities": "Wek hierop in plaats van het schema",
+                "scan_interval": "Hoe vaak vragen",
+                "include_attributes": "Stuur ook elk attribuut mee"
+              },
+              "data_description": {
+                "trigger_entities": "Evalueer ook als deze veranderen, bovenop het schema hieronder. Vijf seconden gedempt.",
+                "scan_interval": "Vragen die naar hetzelfde kijken op hetzelfde schema gaan als een verzoek, wat tokens kost maar vrijwel geen extra tijd.",
+                "include_attributes": "Standaard uit. Een weersverwachting kost duizenden tokens per evaluatie."
+              }
+            }
+          }
+        },
+        "reconfigure": {
+          "title": "Deze vraag bewerken",
+          "data": {
+            "name": "Naam",
+            "instructions": "De vraag",
+            "target": "Waar het naar kijkt",
+            "state": "Extra notitie of template",
+            "background": "Vaste feiten over de metingen",
+            "true_means": "Wat een hoog getal betekent",
+            "false_means": "Wat een laag getal betekent",
+            "threshold": "Maak ook een binaire sensor boven",
+            "options": "Je opties, een per regel",
+            "levels": "Je niveaus, laagste eerst, een per regel",
+            "advanced": "Geavanceerd"
+          },
+          "data_description": {
+            "name": "Geeft de sensor die deze vraag maakt zijn naam.",
+            "instructions": "Gaat als `instructions` naar de API.",
+            "target": "Kies entiteiten, apparaten, ruimtes of labels; hun metingen worden voor je meegestuurd. Laat leeg als de notitie hieronder de hele staat is.",
+            "state": "Tekst of een template, los of naast de metingen.",
+            "background": "Wordt in `instructions` gevouwen, zodat het met de vraag meereist en niet met de staat.",
+            "true_means": "Optioneel. Maakt scherper welke kant het antwoord op wijst.",
+            "false_means": "Optioneel.",
+            "threshold": "Laat leeg voor alleen de kans-sensor.",
+            "options": "Gaat als `criteria` naar de API. Een per regel, als `naam: wat het betekent`. De beschrijving is optioneel.",
+            "levels": "Gaat als `criteria` naar de API. Een per regel, laagste eerst. Tussen de 2 en 10 stuks.",
+            "advanced": "Een schema, en wat er verder meegaat. De standaardwaarden voldoen voor een eerste vraag."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Geavanceerd",
+              "description": "Een schema, en wat er verder meegaat. De standaardwaarden voldoen voor een eerste vraag.",
+              "data": {
+                "trigger_entities": "Wek hierop in plaats van het schema",
+                "scan_interval": "Hoe vaak vragen",
+                "include_attributes": "Stuur ook elk attribuut mee"
+              },
+              "data_description": {
+                "trigger_entities": "Evalueer ook als deze veranderen, bovenop het schema hieronder. Vijf seconden gedempt.",
+                "scan_interval": "Vragen die naar hetzelfde kijken op hetzelfde schema gaan als een verzoek, wat tokens kost maar vrijwel geen extra tijd.",
+                "include_attributes": "Standaard uit. Een weersverwachting kost duizenden tokens per evaluatie."
+              }
+            }
+          }
+        },
+        "preview": {
+          "title": "Controleer wat er verstuurd wordt",
+          "description": "Dit is waarover je vraag gesteld wordt, nu opgebouwd uit waar hij naar wijst.\n\n{grouping}\n\n### Wat het nu antwoordt\n\n{answer}\n\n### De staat die het leest\n\n```\n{state}\n```"
+        }
+      },
+      "error": {
+        "nothing_to_judge": "Kies iets om naar te kijken, of schrijf een notitie of template. Een vraag heeft een staat nodig.",
+        "choice_options_out_of_range": "Een keuze neemt tussen de 2 en 255 opties.",
+        "score_levels_out_of_range": "Een score neemt tussen de 2 en 10 niveaus.",
+        "option_name_empty": "Elke optie heeft een naam nodig voor de dubbele punt.",
+        "option_name_duplicate": "Twee opties delen een naam, dus een ervan zou stilletjes verdwijnen."
+      },
+      "abort": {
+        "reconfigure_successful": "Vraag bijgewerkt"
+      }
+    }
+  }
+}

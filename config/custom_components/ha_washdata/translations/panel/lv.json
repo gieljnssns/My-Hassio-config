@@ -60,6 +60,7 @@
     "fair_fit_tip": "Mērena atbilstības konsekvence – dažiem šim profilam piešķirtajiem cikliem ir zemāki ticamības rādītāji. Iezīmējiet vairāk ciklu vai atkārtoti ierakstiet profilu, lai uzlabotu precizitāti.",
     "feedback_requested": "Pieprasītas atsauksmes",
     "golden_cycle": "Reģistrēts atskaites cikls",
+    "duration_outlier": "{n} neparasta garuma cikli",
     "improving": "↗ uzlabošanās",
     "manual": "(manuāli atlasīts)",
     "needs_review": "Nepieciešama pārskatīšana",
@@ -256,7 +257,15 @@
     "hist_scan": "Meklēt ciklus",
     "hist_import_n": "Importēt ciklus ({n})",
     "hist_goto_cycles": "Parādīt ciklus",
-    "save_total_cycles": "Saglabāt kopējo skaitu"
+    "save_total_cycles": "Saglabāt kopējo skaitu",
+    "clear": "Notīrīt",
+    "add_brand": "Pievienot zīmolu",
+    "add_appliance": "Pievienot ierīci"
+  },
+  "note": {
+    "off_delay": {
+      "effective": "Pabeigts cikls patiesībā gaida {eff} s, nevis {delay} s: Min. izslēgšanas atstarpe ({gap} s) ir garāka, un priekšroka ir tai."
+    }
   },
   "conflict": {
     "anti_wrinkle_exit": {
@@ -378,7 +387,8 @@
     "community_store": "Kopienas veikals",
     "online_account": "Kopienas veikals un tiešsaistes funkcijas",
     "import_power_history": "Jaudas vēstures importēšana",
-    "service_status": "Apkopes statuss"
+    "service_status": "Apkopes statuss",
+    "online_account_tab": "Tiešsaiste un kopiena"
   },
   "health": {
     "fair": "Pieņemama profila kvalitāte",
@@ -518,7 +528,8 @@
     "pg_tile_matched_tip": "Cikli, kas pareizi piešķirti zināmai programmai",
     "pg_time_left": "Atlikušais laiks",
     "pg_weak_match": "Vāja atbilstība",
-    "phase_name": "Vārds",
+    "phase_name": "Fāzes nosaukums",
+    "name": "Vārds",
     "phase_timeline": "Fāžu laika josla",
     "power": "Jauda",
     "profile": "Profils",
@@ -1027,6 +1038,9 @@
     "imported_readonly": "Importēts no kopienas veikala. Tiek rādīts atsaucei un saskaņošanai. Tas netiek ieskaitīts jūsu statistikā, un to nevar rediģēt.",
     "merge_no_imports": "Importētos ierakstus nevar sapludināt ar īstu ciklu. Noņemiet to atzīmi, lai sapludinātu.",
     "store_enable_hint": "Iestatījumos iespējojiet tiešsaistes funkcijas, lai pārlūkotu un importētu kopienas atsauces ciklus.",
+    "advisory_duration_outlier": "{n} cikliem, kas marķēti kā '{name}', ilgums ir pārāk tālu no tā parastā garuma, lai tam jebkad atbilstu (sliktākais: {ratio}x). Tie, visticamāk, ir nepareizi marķēti vai arī viens ieraksts aptver divas darbības reizes. Pārmarķējiet vai sadaliet tos, lai tie vairs nekropļotu šīs programmas laika aplēsi.",
+    "standby_above_stop_title": "Ciklam beidzoties, joprojām patērē {idle} W",
+    "standby_above_stop_sub": "{n} no pēdējiem {total} cikliem. Izslēgšanas aizkave sākas tikai tad, kad jauda ir zem Apstāšanās sliekšņa ({stop} W), tāpēc cikli beidzas ar nokavēšanos vai tie jāaptur manuāli.",
     "online_intro": "Kopīgojiet un lejupielādējiet atsauces ciklus ar citiem WashData lietotājiem. Visas tiešsaistes funkcijas ir brīvprātīgas un pēc noklusējuma izslēgtas.",
     "store_share_intro": "Augšupielādējiet šo atsauces ciklu, lai to varētu izmantot citi ar to pašu ierīci. Pirms publiskošanas tas tiek pārskatīts.",
     "online_intro_global": "Pārlūkojiet un kopīgojiet atsauces ierakstus ar citiem WashData lietotājiem un apstipriniet ierīču ierakstus. Viens savienojums attiecas uz visu jūsu WashData integrāciju; ierīces zīmols un modelis tiek iestatīts katrai ierīcei atsevišķi sadaļā Pamatkonfigurācija. Visas tiešsaistes funkcijas ir brīvprātīgas un pēc noklusējuma izslēgtas.",
@@ -1087,7 +1101,9 @@
     "odometer_intro": "Šis kopējais skaits tikai palielinās. Cikla ieraksta dzēšana to nemaina, un skaitīšana turpinās arī pēc saglabātās vēstures ierobežojuma, tāpēc apkopes atgādinājumi paliek precīzi.",
     "odometer_correct_hint": "Iestatiet to, ja WashData ir reģistrējis ciklu, kas nekad nav noticis, vai ja ierīce jau bija veikusi ciklus pirms WashData uzstādīšanas.",
     "no_reminders_set": "Vēl nav iestatīts neviens apkopes atgādinājums.",
-    "toast_program_armed": "Programma iestatīta nākamajam ciklam: {program}"
+    "toast_program_armed": "Programma iestatīta nākamajam ciklam: {program}",
+    "toast_range_required": "Iestatiet derīgu No/Līdz diapazonu.",
+    "no_profiles_option": "(vēl nav profilu, pievienojiet vienu)"
   },
   "phase_desc": {
     "anti_crease": "Laiku pa laikam pēc pabeigšanas veiciet īsus gājienus, lai samazinātu grumbiņas.",
@@ -1414,8 +1430,8 @@
       "label": "Izkraušanas atgādinājuma aizkave"
     },
     "notify_unload_repeat": {
-      "doc": "Atkārtoti nosūta izkraušanas atgādinājumu ik pēc \"Izkraušanas atgādinājuma aizkave\" minūtēm, līdz atverat durvis vai paziņojumā pieskaraties \"Pārtraukt atgādināšanu\". Nepieciešama Durvju sensora entītija (tāpat kā pašam atgādinājumam). Atmešanas poga darbojas Home Assistant mobilās (companion) lietotnes paziņojumos.",
-      "label": "Atkārtot, līdz atveras durvis"
+      "doc": "Atkārtoti nosūta izkraušanas atgādinājumu ik pēc „Izkraušanas atgādinājuma aizkave“ minūtēm, līdz izkraušana tiek apstiprināta vai paziņojumā pieskaraties „Pārtraukt atgādināšanu“. Nepieciešams veids, kā apstiprināt izkraušanu: Durvju sensora entītija, Izkraušanas apstiprinājuma entītija vai zemāk esošā opcija „Apstiprināt izkraušanu manuāli“. Atmešanas poga darbojas Home Assistant mobilās (companion) lietotnes paziņojumos.",
+      "label": "Atkārtot, līdz izkrauts"
     },
     "off_delay": {
       "doc": "Laiks gaidīt, kad jauda samazinās, pirms tiek paziņots, ka cikls ir pabeigts. Ja šajā logā tiek atsākta barošana, cikls turpinās nemanāmi – tas pārslēdz pauzes starp mazgāšanas posmiem. Trauku mazgājamām mašīnām ir garas žāvēšanas fāzes (izslēdziet strāvu uz 20–60 minūtēm), tāpēc izslēgšanas aizkavei ir jābūt lielākai par to, lai visa mazgāšana un žāvēšana būtu viens cikls.",
@@ -1623,6 +1639,18 @@
     "energy_price_dynamic": {
       "label": "Laikā svērtās izmaksas",
       "doc": "Katra cikla izmaksas tiek rēķinātas pēc cenas, kas bija spēkā katrā tā darbības brīdī, nevis pēc vienas cenas, kas bija spēkā tā beigās. Darbojas tikai ar cenas entītiju (statiska cena nemainās). Papildu iestatīšana nav vajadzīga: cikla laikā cena tiek izsekota reāllaikā, bet sadaļā Diagnostika pieejamā funkcija Apstrādāt vēsturi pārrēķina vecāku ciklu izmaksas no recorder datiem. Izslēgts = klasiskā darbība, viena cena, kas fiksēta beigās."
+    },
+    "unload_confirm_entity": {
+      "label": "Izkraušanas apstiprinājuma entītija",
+      "doc": "Neobligāta entītija, kuras aktivizēšana nozīmē, ka saturs ir izņemts; paredzēta iekārtām, kurām nevar uzstādīt durvju sensoru. Der jebkura: Zigbee vai NFC poga, input_button palīgrīks, kustību sensors iekārtas priekšā, aina. Par apstiprinājumu tiek uzskatītas visas stāvokļa izmaiņas, izņemot izslēgšanu un kļūšanu nepieejamai. Šīs entītijas iestatīšana ieslēdz izkraušanas atgādinājumu arī ierīcei bez Durvju sensora entītijas."
+    },
+    "unload_track_without_door": {
+      "label": "Apstiprināt izkraušanu manuāli",
+      "doc": "Izmantot izkraušanas atgādinājumu ierīcei, kurai nav ne Durvju sensora entītijas, ne Izkraušanas apstiprinājuma entītijas, un apstiprināt izkraušanu ar savu automatizāciju: nospiediet pogas entītiju „Atzīmēt kā izkrautu“ vai izsauciet pakalpojumu ha_washdata.mark_unloaded. Tiek ignorēts, ja ir iestatīta Durvju sensora entītija, kas šo signālu jau nodrošina."
+    },
+    "notify_icon_color": {
+      "label": "Paziņojuma krāsa",
+      "doc": "Akcenta krāsa šīs ierīces paziņojumiem, lai veļas mašīnu, žāvētāju un trauku mazgājamo mašīnu varētu atšķirt ar vienu acu uzmetienu. iOS iekrāso ikonu un Live Activity progresa joslu bloķēšanas ekrānā un Dynamic Island. Android tiek nosūtīta tā pati krāsa, taču tas, ko ar to izdara, ir atkarīgs no tālruņa: daži iekrāso ikonu, bet daudzi (jo īpaši Samsung One UI) to pilnībā ignorē. Abas platformas saprot hex kodu (piem., #03A9F4). Atstājiet tukšu, lai izmantotu platformas noklusējuma krāsu."
     }
   },
   "setting_group": {
@@ -1716,7 +1744,7 @@
     "all_statuses": "Visi statusi",
     "ambiguous": "Neviennozīmīgi",
     "auto_detect": "Automātiska noteikšana",
-    "clear": "Skaidrs",
+    "clear": "Viennozīmīgi",
     "completed": "Pabeigts",
     "fine_tuning": "precizēt tagad...",
     "force_stopped": "Spēks apstājās",
@@ -1766,6 +1794,7 @@
   },
   "toast": {
     "catalog_refreshed": "Kopienas katalogs atsvaidzināts",
+    "contrib_device_changed": "Pievienots kopienas veikalā, bet, kamēr veidlapa bija atvērta, mainījās atlasītā ierīce. Atlasiet to sadaļā Iestatījumi.",
     "access_saved": "Piekļuves kontrole saglabāta",
     "all_wiped": "Visi dati ir izdzēsti",
     "analysis_complete_none": "Analīze pabeigta: nav jaunu ieteikumu",
@@ -1878,7 +1907,9 @@
     "unlabel_done": "Marķējums noņemts cikliem: {count}",
     "unlabel_failed": "Marķējuma noņemšana neizdevās: {error}",
     "odometer_saved": "Kopējais ciklu skaits saglabāts",
-    "odometer_save_failed": "Neizdevās saglabāt kopējo skaitu: {error}"
+    "odometer_save_failed": "Neizdevās saglabāt kopējo skaitu: {error}",
+    "store_pick_profile_share": "Izvēlieties profilu, kurā kopīgot",
+    "remove_failed": "Noņemšana neizdevās: {error}"
   },
   "suggestion": {
     "both_agree": "WashData iesaka",
@@ -1978,6 +2009,7 @@
       "summary": "Izslēgti {total} kļūdaini atpazīti cikli: {parts}.",
       "reason": {
         "force_stopped": "piespiedu kārtā apturēti",
+        "user_stopped": "manuāli apturēti",
         "interrupted": "pārtraukti",
         "incomplete": "nepabeigti",
         "noise": "troksnis",
@@ -2024,7 +2056,7 @@
     "duration_weight": "4. posms: cik stipri ilguma atbilstība ietekmē galīgo rezultātu (noklusējums 0,22)",
     "energy_weight": "4. posms: cik stipri enerģijas atbilstība ietekmē galīgo rezultātu (noklusējums 0,22)",
     "profile_match_min_duration_ratio": "1. posms: īsākais cikls kā profila ilguma daļa; noklusējums 0,1 (10%)",
-    "profile_match_max_duration_ratio": "1. posms: garākais cikls kā profila ilguma daļa; noklusējums 1,5 (150%)",
+    "profile_match_max_duration_ratio": "1. posms: garākais cikls kā profila ilguma daļa; noklusējums 1,8 (180%)",
     "keep_min_score": "2. posms: zemākais rezultāts, lai paliktu sacensībā; noklusējums 0,1 pieļauj vājus kandidātus, vēlākie posmi izvēlas labāko",
     "dtw_blend": "3. posms: 0 = tikai pamatrezultāts, 1 = tikai DTW rezultāts, 0,5 = vienāds sajaukums (noklusējums)",
     "dtw_ensemble_w": "3. posms (ensemble režīms): skalētā L1 svars pret atvasinātās DTW; noklusējums 0,7 dod priekšroku līmeņapziņai",

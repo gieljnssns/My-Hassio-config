@@ -1,0 +1,566 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conectar con TypeSafe",
+        "description": "Pega una clave API de tu cuenta de TypeSafe. Home Assistant hace una pregunta corta para comprobar que la clave funciona.",
+        "data": {
+          "api_key": "Clave API"
+        },
+        "data_description": {
+          "api_key": "La clave con la que se envían las solicitudes. Déjala vacía solo para un endpoint propio que no necesite ninguna."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Avanzado",
+            "data": {
+              "url": "Dirección de la API",
+              "model": "Modelo"
+            },
+            "data_description": {
+              "url": "No cambies esto salvo que ejecutes algo propio que hable la misma API, como un proxy que guarde la clave o que cachee las respuestas. La clave se envía como cabecera bearer, así que una dirección http la pone en claro en la red.",
+              "model": "El id del modelo que se envía en cada petición. Déjalo vacío para usar el predeterminado."
+            }
+          }
+        }
+      },
+      "reauth_confirm": {
+        "title": "Vuelve a introducir tu clave API",
+        "description": "TypeSafe ha rechazado la clave guardada. Pega una que funcione. La dirección de la API se queda como está; usa Reconfigurar para cambiarla.",
+        "data": {
+          "api_key": "Clave API"
+        },
+        "data_description": {
+          "api_key": "Las peticiones van a la dirección de la API que ya está guardada."
+        }
+      },
+      "reconfigure": {
+        "title": "Sustituye tu clave API o la dirección",
+        "description": "Pega otra clave API de TypeSafe, y cambia la dirección si la API se alcanza en otro sitio distinto de TypeSafe. Tus preguntas y entidades se conservan.",
+        "data": {
+          "api_key": "Clave API"
+        },
+        "data_description": {
+          "api_key": "Déjalo vacío para conservar la clave actual mientras la dirección no cambie. Una dirección nueva no recibe ninguna clave si no escribes una."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Avanzado",
+            "data": {
+              "url": "Dirección de la API",
+              "model": "Modelo"
+            },
+            "data_description": {
+              "url": "Vacía este campo para volver a la API de TypeSafe. La clave se envía como cabecera bearer, así que una dirección http la pone en claro en la red.",
+              "model": "El id del modelo que se envía en cada petición. Déjalo vacío para usar el predeterminado."
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "TypeSafe ha rechazado esta clave.",
+      "cannot_connect": "Home Assistant no ha podido acceder a la API en esa dirección.",
+      "not_found": "El servidor respondió HTTP 404. Jev añade /v1/systemone a la dirección, así que introduce solo la parte anterior. Para OpenRouter es {openrouter_url}.",
+      "invalid_url": "Esa no es una dirección de API utilizable. Necesita un esquema y un host, y no puede llevar un espacio, una consulta, un fragmento, un usuario ni una contraseña.",
+      "invalid_model": "Ese id de modelo no se aceptó. Revísalo, o deja el campo vacío para usar el predeterminado.",
+      "key_required": "La API de TypeSafe necesita una clave. Una clave vacía solo funciona con una dirección propia que no necesite ninguna."
+    },
+    "abort": {
+      "already_configured": "Esta clave API ya está configurada. Cada entrada se identifica por su clave, así que una segunda dirección necesita su propia clave.",
+      "reauth_successful": "La nueva clave funciona.",
+      "reconfigure_successful": "Reconfigurado correctamente."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Límites de gasto",
+        "description": "Pagas por los tokens de entrada, y el texto de las preguntas cuenta como entrada. Pon el presupuesto muy por encima de lo que gastaría una instalación que funciona, para que solo lo alcance algo descontrolado. Cero significa sin límite.\n\nEl agente de conversación envía al agente de reserva todo aquello de lo que no está seguro, entero y sin hacer nada antes. Si lo dejas vacío, dirá que no lo ha entendido. Las órdenes para toda la casa se rechazan salvo que las permitas, excepto apagarlo todo, que siempre se permite.",
+        "data": {
+          "daily_token_budget": "Presupuesto diario de tokens de entrada (0 = sin límite)",
+          "price_per_million": "Precio por millón de tokens de entrada, en USD",
+          "fallback_agent": "Recurrir a este agente",
+          "min_confidence": "Actuar solo por encima de esta confianza (de 0 a 1)",
+          "allow_whole_home": "Permitir órdenes que no nombren ninguna habitación ni dispositivo"
+        },
+        "data_description": {
+          "daily_token_budget": "Se cuenta desde la medianoche en la zona horaria de Home Assistant. 0 significa sin límite.",
+          "price_per_million": "Fija el sensor de coste estimado y el coste en la vista previa de la pregunta. Nada de lo que se envía depende de ello.",
+          "fallback_agent": "Recibe la frase entera cuando Jev no está seguro de qué hacer.",
+          "min_confidence": "Por debajo de este valor, Jev no hace nada y pasa el comando al agente de respaldo.",
+          "allow_whole_home": "Apagarlo todo siempre está permitido, con o sin esta opción."
+        }
+      }
+    }
+  },
+  "issues": {
+    "daily_budget_exceeded": {
+      "title": "Jev ha dejado de evaluar: presupuesto diario alcanzado",
+      "description": "El presupuesto diario es de {budget} tokens de entrada y hoy se han usado {used}. La siguiente evaluación, del contexto {context}, necesita unos {estimate} más y no cabe, así que no se envían más preguntas. Los sensores de respuesta quedan no disponibles hasta que una llamada vuelva a caber. Sube el presupuesto en las opciones de la integración, evalúa los contextos con menos frecuencia o acorta tus preguntas."
+    },
+    "daily_budget_spent": {
+      "title": "Jev ha dejado de evaluar: presupuesto diario alcanzado",
+      "description": "El presupuesto diario es de {budget} tokens de entrada y hoy se han usado {used}, así que no se envían más preguntas. Los sensores de respuesta quedan no disponibles hasta que empiece un nuevo día o se suba el presupuesto. Sube el presupuesto en las opciones de la integración, evalúa los contextos con menos frecuencia o acorta tus preguntas."
+    }
+  },
+  "services": {
+    "noul": {
+      "name": "Hacer una pregunta de sí/no",
+      "description": "Pregunta si algo es cierto y obtén la probabilidad de que sí, de 0 a 1. Usa una por etiqueta cuando varias etiquetas pueden ser ciertas a la vez.",
+      "fields": {
+        "state": {
+          "name": "Estado",
+          "description": "El texto que se evalúa. Escribe una plantilla y se procesa antes de enviarse."
+        },
+        "instructions": {
+          "name": "Pregunta",
+          "description": "Formúlala de modo que un número alto signifique sí. Una afirmación funciona igual de bien que una pregunta."
+        },
+        "true_means": {
+          "name": "Sí significa",
+          "description": "Opcional. Qué cuenta como un sí. Merece la pena rellenarlo cuando el límite es sutil."
+        },
+        "false_means": {
+          "name": "No significa",
+          "description": "Opcional. Qué cuenta como un no."
+        },
+        "threshold": {
+          "name": "Umbral",
+          "description": "Dónde poner el límite para el campo is_true de la respuesta. La probabilidad en sí se devuelve siempre. Un valor cercano a 0.5 significa que el modelo no lo puede decir, no que la respuesta sea medio cierta."
+        },
+        "config_entry": {
+          "name": "Clave API",
+          "description": "Con qué clave configurada se pregunta. Solo hace falta cuando hay más de una."
+        },
+        "include_attributes": {
+          "name": "Incluir todos los atributos",
+          "description": "Desactivado por defecto. Envía todos los atributos de las entidades elegidas, no solo el valor, la unidad, la clase de dispositivo y el área. Una previsión meteorológica o la lista de carátulas de un reproductor multimedia llega a miles de tokens, y los pagas en cada evaluación."
+        },
+        "background": {
+          "name": "Contexto",
+          "description": "Opcional. Datos fijos sobre cómo leer esto, por ejemplo qué significa una lectura en tu dispositivo concreto. Viaja con la pregunta y no con las lecturas, lo que de forma medible funciona mejor que ponerlo en el estado. Un objeto en vez de una frase conserva tus propios nombres de clave, y el modelo lee esas claves."
+        }
+      }
+    },
+    "choice": {
+      "name": "Elegir una opción",
+      "description": "Elige una opción de tu lista y obtén la probabilidad de cada opción más un valor de confianza.",
+      "fields": {
+        "state": {
+          "name": "Estado",
+          "description": "El texto que se evalúa. Escribe una plantilla y se procesa antes de enviarse."
+        },
+        "instructions": {
+          "name": "Pregunta",
+          "description": "Entre qué elige el modelo, en una frase."
+        },
+        "options": {
+          "name": "Opciones",
+          "description": "De dos a 255 opciones. Incluye una opción general, como otro, cuando tu lista pueda no cubrir todas las entradas."
+        },
+        "option_descriptions": {
+          "name": "Descripciones de las opciones",
+          "description": "Opcional. Una descripción por opción, que afina el límite entre las que se parecen. Lo que más ayuda es decir qué excluye una opción."
+        },
+        "config_entry": {
+          "name": "Clave API",
+          "description": "Con qué clave configurada se pregunta. Solo hace falta cuando hay más de una."
+        },
+        "include_attributes": {
+          "name": "Incluir todos los atributos",
+          "description": "Desactivado por defecto. Envía todos los atributos de las entidades elegidas, no solo el valor, la unidad, la clase de dispositivo y el área. Una previsión meteorológica o la lista de carátulas de un reproductor multimedia llega a miles de tokens, y los pagas en cada evaluación."
+        },
+        "background": {
+          "name": "Contexto",
+          "description": "Opcional. Datos fijos sobre cómo leer esto, por ejemplo qué significa una lectura en tu dispositivo concreto. Viaja con la pregunta y no con las lecturas, lo que de forma medible funciona mejor que ponerlo en el estado. Un objeto en vez de una frase conserva tus propios nombres de clave, y el modelo lee esas claves."
+        }
+      }
+    },
+    "score": {
+      "name": "Puntuar en una escala",
+      "description": "Puntúa el texto frente a los niveles que describas, y obtén un número que puede caer entre dos niveles.",
+      "fields": {
+        "state": {
+          "name": "Estado",
+          "description": "El texto que se evalúa. Escribe una plantilla y se procesa antes de enviarse."
+        },
+        "instructions": {
+          "name": "Pregunta",
+          "description": "Una dimensión por pregunta. Una pregunta que mide tres cosas a la vez da poca confianza y un punto medio sin sentido."
+        },
+        "levels": {
+          "name": "Niveles",
+          "description": "De dos a 10 niveles, el más bajo primero. Describe una situación concreta para cada uno, no un grado: Roto pero hay una solución temporal es mejor que Moderadamente grave. Cada nivel se juzga por su cuenta, así que las palabras comparativas y los números del texto no hacen nada."
+        },
+        "config_entry": {
+          "name": "Clave API",
+          "description": "Con qué clave configurada se pregunta. Solo hace falta cuando hay más de una."
+        },
+        "include_attributes": {
+          "name": "Incluir todos los atributos",
+          "description": "Desactivado por defecto. Envía todos los atributos de las entidades elegidas, no solo el valor, la unidad, la clase de dispositivo y el área. Una previsión meteorológica o la lista de carátulas de un reproductor multimedia llega a miles de tokens, y los pagas en cada evaluación."
+        },
+        "background": {
+          "name": "Contexto",
+          "description": "Opcional. Datos fijos sobre cómo leer esto, por ejemplo qué significa una lectura en tu dispositivo concreto. Viaja con la pregunta y no con las lecturas, lo que de forma medible funciona mejor que ponerlo en el estado. Un objeto en vez de una frase conserva tus propios nombres de clave, y el modelo lee esas claves."
+        }
+      }
+    },
+    "ask": {
+      "name": "Hacer varias preguntas a la vez",
+      "description": "Haz cualquier mezcla de tipos de pregunta sobre un mismo texto, en una sola solicitud. Cada pregunta se evalúa por separado frente al mismo texto y todas corren en paralelo, así que veinte preguntas tardan más o menos lo mismo que una.",
+      "fields": {
+        "state": {
+          "name": "Estado",
+          "description": "El texto que se evalúa. Escribe una plantilla y se procesa antes de enviarse."
+        },
+        "questions": {
+          "name": "Preguntas",
+          "description": "Tu propia clave para cada pregunta, luego su tipo entre noul, choice y score, sus instrucciones, y los criterios para choice y score. Las claves son tuyas: vuelven como las claves de las respuestas y el modelo no las ve nunca."
+        },
+        "config_entry": {
+          "name": "Clave API",
+          "description": "Con qué clave configurada se pregunta. Solo hace falta cuando hay más de una."
+        },
+        "include_attributes": {
+          "name": "Incluir todos los atributos",
+          "description": "Desactivado por defecto. Envía todos los atributos de las entidades elegidas, no solo el valor, la unidad, la clase de dispositivo y el área. Una previsión meteorológica o la lista de carátulas de un reproductor multimedia llega a miles de tokens, y los pagas en cada evaluación."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "calls_today": {
+        "name": "Llamadas de hoy"
+      },
+      "input_tokens_today": {
+        "name": "Tokens de entrada de hoy"
+      },
+      "estimated_cost_today": {
+        "name": "Coste estimado de hoy"
+      },
+      "context_latency": {
+        "name": "Latencia de {context}"
+      },
+      "context_payload": {
+        "name": "Tamaño de la petición de {context}"
+      }
+    },
+    "binary_sensor": {
+      "daily_budget_exceeded": {
+        "name": "Presupuesto diario superado"
+      }
+    }
+  },
+  "exceptions": {
+    "nothing_to_judge": {
+      "message": "No hay nada que evaluar: dale texto a esta acción, o elige las entidades, dispositivos o áreas que debe mirar."
+    },
+    "no_entry": {
+      "message": "No hay ninguna entrada de configuración de Jev cargada con la que preguntar. Añade primero la integración, o elige una en Clave API cuando haya más de una configurada."
+    },
+    "entry_ambiguous": {
+      "message": "Hay más de una entrada de Jev cargada: {entries}. Elige una en Clave API, porque cada entrada tiene su propia clave y su propio presupuesto."
+    },
+    "missing_targets": {
+      "message": "Estos objetivos no existen: {targets}. Preguntar por el resto respondería a una pregunta distinta de la que escribiste."
+    },
+    "empty_target": {
+      "message": "Ese objetivo no contiene ninguna entidad, así que no habría nada que evaluar."
+    },
+    "too_many_entities": {
+      "message": "Ese objetivo contiene {count} entidades y el límite es {limit}. Cada entidad se factura como entrada en cada evaluación, así que elige aquellas de las que depende la pregunta, o divídela."
+    },
+    "question_shape": {
+      "message": "La pregunta {key} necesita tanto 'type' como 'instructions'. Los tipos son noul, choice y score."
+    },
+    "question_invalid": {
+      "message": "La pregunta {key} no es válida: {reason}"
+    },
+    "template_failed": {
+      "message": "La plantilla de estado ha fallado: {reason}"
+    },
+    "auth_rejected": {
+      "message": "TypeSafe ha rechazado la clave API: {reason}"
+    },
+    "ask_failed": {
+      "message": "La consulta a Jev ha fallado: {reason}"
+    },
+    "wrong_answer_type": {
+      "message": "Se ha hecho una pregunta de tipo {question_type} y ha vuelto un {got}, cosa que la API no debería hacer."
+    },
+    "choice_options_out_of_range": {
+      "message": "Un choice admite de {min} a {max} opciones y este tiene {count}."
+    },
+    "score_levels_out_of_range": {
+      "message": "Un score admite de {min} a {max} niveles, el más bajo primero, y este tiene {count}."
+    },
+    "unreadable_answer": {
+      "message": "TypeSafe ha devuelto una respuesta de tipo {kind} que esta versión no sabe leer. Actualiza la integración."
+    },
+    "task_needs_structure": {
+      "message": "La tarea {task} pide texto libre, y Jev solo responde preguntas tipadas. Da a la acción una estructura cuyos campos sean boolean, select o number."
+    },
+    "task_over_budget": {
+      "message": "La tarea {task} cuesta unos {estimate} tokens de entrada y quedan {remaining} del presupuesto diario de {budget}. Aumenta o borra el presupuesto en las opciones de la integración para continuar."
+    },
+    "reserved_field": {
+      "message": "El campo {field} no se puede usar, porque el resultado lleva bajo ese nombre la confianza detrás de cada respuesta. Cambia el nombre del campo."
+    },
+    "no_fields": {
+      "message": "La estructura no declara ningún campo."
+    },
+    "answer_missing": {
+      "message": "La respuesta no trae nada para {field}."
+    },
+    "unsupported_field": {
+      "message": "El campo {field} usa un {selector}, y Jev responde una pregunta de sí/no, una elección de una lista o una puntuación en una escala. Da al campo un boolean, un select con sus opciones o un number con min y max."
+    },
+    "field_options_out_of_range": {
+      "message": "El campo {field} ofrece {count} opciones, y una elección necesita de {min} a {max}."
+    },
+    "field_needs_scale": {
+      "message": "El campo {field} es un número sin {bound}. Una puntuación necesita los dos extremos de la escala."
+    },
+    "field_scale_not_ordered": {
+      "message": "El campo {field} tiene min {min} y max {max}, y eso no es una escala."
+    },
+    "answer_does_not_fit": {
+      "message": "La respuesta para {field} volvió como {answer}, que no encaja en un {selector}."
+    },
+    "context_template_failed": {
+      "message": "La plantilla de estado del contexto {context} falló: {reason}"
+    },
+    "context_targets_failed": {
+      "message": "Contexto {context}: {reason}"
+    },
+    "context_over_budget": {
+      "message": "Evaluar el contexto {context} cuesta unos {estimate} tokens de entrada y quedan {remaining} del presupuesto diario de {budget}. Aumenta o borra el presupuesto en las opciones de la integración para continuar."
+    },
+    "rate_limited": {
+      "message": "TypeSafe limitó la solicitud: {reason}"
+    }
+  },
+  "common": {
+    "not_understood": "Lo siento, no he entendido eso.",
+    "whole_house": "Eso afectaría a toda la casa. Di a qué habitación o a qué dispositivo te refieres.",
+    "which_kind": "¿A qué tipo de cosa te refieres? Di las luces, o los interruptores, o nombra una habitación.",
+    "intent_failed": "Lo siento, eso no ha funcionado.",
+    "already_on": "{name} ya está encendido.",
+    "already_off": "{name} ya está apagado.",
+    "preview_alone": "Se envía en una solicitud propia.",
+    "preview_grouped": "Se envía en una sola solicitud junto con: {others}.",
+    "preview_cost": "Preguntado una vez para esta vista previa: {tokens} tokens de entrada, unos ${cost}, {ms} ms.",
+    "preview_threshold_over": "Está por encima de tu umbral de {threshold}, así que el sensor binario estaría **encendido** ahora mismo.",
+    "preview_threshold_under": "Está por debajo de tu umbral de {threshold}, así que el sensor binario estaría **apagado** ahora mismo.",
+    "preview_winner": "Ganador **{choice}**, confianza {confidence}.",
+    "preview_score": "Puntuación **{score}**, nivel más cercano **{level}**, confianza {confidence}.",
+    "preview_undrawable": "La respuesta ha vuelto con una forma que esta versión no sabe dibujar.",
+    "preview_unbuildable": "Esa pregunta todavía no se puede construir: {reason}",
+    "preview_rejected": "TypeSafe ha rechazado la clave API, así que no hay respuesta de prueba.",
+    "preview_failed": "Sin respuesta de prueba: {reason}",
+    "preview_mismatched": "La API ha respondido, pero no a la pregunta que se le hizo.",
+    "preview_template_error": "La plantilla no se procesa: {reason}",
+    "query_not_found": "No he podido encontrarlo.",
+    "budget_spent": "El presupuesto diario de tokens se ha agotado, así que hoy no puedo hacerlo.",
+    "auth_failed": "TypeSafe rechazó la clave de API. Revísala en los ajustes de Jev.",
+    "unavailable": "TypeSafe no respondió. Inténtalo de nuevo en un momento.",
+    "preview_over_budget": "El presupuesto diario de tokens está agotado, así que no hay respuesta de prueba. La pregunta sí se guarda.",
+    "preview_nothing_yet": "Sin respuesta de prueba: todavía no hay nada sobre lo que preguntar."
+  },
+  "config_subentries": {
+    "question": {
+      "entry_type": "Pregunta",
+      "initiate_flow": {
+        "user": "Añadir pregunta",
+        "reconfigure": "Editar pregunta"
+      },
+      "step": {
+        "user": {
+          "title": "¿Qué tipo de respuesta quieres recibir?",
+          "menu_options": {
+            "noul": "Noul, una probabilidad. Un número de 0 a 1",
+            "choice": "Choice, una de tus opciones. Con toda la distribución",
+            "score": "Score, una puntuación. Frente a los niveles que describas"
+          }
+        },
+        "noul": {
+          "title": "Noul: una pregunta de sí o no",
+          "data": {
+            "name": "Nombre",
+            "instructions": "La pregunta",
+            "target": "Qué mirar",
+            "state": "Nota extra o plantilla",
+            "background": "Datos fijos sobre las lecturas",
+            "true_means": "Qué significa un número alto",
+            "false_means": "Qué significa un número bajo",
+            "threshold": "Crear también un sensor binario por encima de",
+            "advanced": "Avanzado"
+          },
+          "data_description": {
+            "name": "Da nombre al sensor que crea esta pregunta.",
+            "instructions": "Se envía a la API como `instructions`.",
+            "target": "Elige entidades, dispositivos, áreas o etiquetas y sus lecturas se envían por ti. Déjalo vacío si la nota de abajo es todo el estado.",
+            "state": "Texto o una plantilla, sola o junto a las lecturas.",
+            "background": "Se integra en `instructions`, de modo que viaja con la pregunta y no con el estado.",
+            "true_means": "Opcional. Afina hacia qué lado apunta la respuesta.",
+            "false_means": "Opcional.",
+            "threshold": "Déjalo vacío para tener solo el sensor de probabilidad.",
+            "advanced": "Una programación, y qué más se envía. Los valores por defecto sirven para una primera pregunta."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Avanzado",
+              "description": "Una programación, y qué más se envía. Los valores por defecto sirven para una primera pregunta.",
+              "data": {
+                "trigger_entities": "Despertar con estas en su lugar",
+                "scan_interval": "Con qué frecuencia preguntar",
+                "include_attributes": "Enviar también todos los atributos"
+              },
+              "data_description": {
+                "trigger_entities": "Evalúa cuando estas cambien, además de la programación de abajo. Con un antirrebote de 5 segundos.",
+                "scan_interval": "Las preguntas que miran lo mismo con la misma frecuencia se envían en una sola solicitud, lo que cuesta tokens pero casi nada de tiempo extra.",
+                "include_attributes": "Desactivado por defecto. Una previsión meteorológica llega a miles de tokens en cada evaluación."
+              }
+            }
+          }
+        },
+        "choice": {
+          "title": "Choice: elige una de tus opciones",
+          "data": {
+            "name": "Nombre",
+            "instructions": "La pregunta",
+            "target": "Qué mirar",
+            "state": "Nota extra o plantilla",
+            "background": "Datos fijos sobre las lecturas",
+            "options": "Tus opciones, una por línea",
+            "advanced": "Avanzado"
+          },
+          "data_description": {
+            "name": "Da nombre al sensor que crea esta pregunta.",
+            "instructions": "Se envía a la API como `instructions`.",
+            "target": "Elige entidades, dispositivos, áreas o etiquetas y sus lecturas se envían por ti. Déjalo vacío si la nota de abajo es todo el estado.",
+            "state": "Texto o una plantilla, sola o junto a las lecturas.",
+            "background": "Se integra en `instructions`, de modo que viaja con la pregunta y no con el estado.",
+            "options": "Se envía a la API como `criteria`. Una por línea, como `nombre: qué significa`. La descripción es opcional.",
+            "advanced": "Una programación, y qué más se envía. Los valores por defecto sirven para una primera pregunta."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Avanzado",
+              "description": "Una programación, y qué más se envía. Los valores por defecto sirven para una primera pregunta.",
+              "data": {
+                "trigger_entities": "Despertar con estas en su lugar",
+                "scan_interval": "Con qué frecuencia preguntar",
+                "include_attributes": "Enviar también todos los atributos"
+              },
+              "data_description": {
+                "trigger_entities": "Evalúa cuando estas cambien, además de la programación de abajo. Con un antirrebote de 5 segundos.",
+                "scan_interval": "Las preguntas que miran lo mismo con la misma frecuencia se envían en una sola solicitud, lo que cuesta tokens pero casi nada de tiempo extra.",
+                "include_attributes": "Desactivado por defecto. Una previsión meteorológica llega a miles de tokens en cada evaluación."
+              }
+            }
+          }
+        },
+        "score": {
+          "title": "Score: una puntuación frente a tus niveles",
+          "data": {
+            "name": "Nombre",
+            "instructions": "La pregunta",
+            "target": "Qué mirar",
+            "state": "Nota extra o plantilla",
+            "background": "Datos fijos sobre las lecturas",
+            "levels": "Tus niveles, el más bajo primero, uno por línea",
+            "advanced": "Avanzado"
+          },
+          "data_description": {
+            "name": "Da nombre al sensor que crea esta pregunta.",
+            "instructions": "Se envía a la API como `instructions`.",
+            "target": "Elige entidades, dispositivos, áreas o etiquetas y sus lecturas se envían por ti. Déjalo vacío si la nota de abajo es todo el estado.",
+            "state": "Texto o una plantilla, sola o junto a las lecturas.",
+            "background": "Se integra en `instructions`, de modo que viaja con la pregunta y no con el estado.",
+            "levels": "Se envía a la API como `criteria`. Uno por línea, el más bajo primero. Entre 2 y 10 de ellos.",
+            "advanced": "Una programación, y qué más se envía. Los valores por defecto sirven para una primera pregunta."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Avanzado",
+              "description": "Una programación, y qué más se envía. Los valores por defecto sirven para una primera pregunta.",
+              "data": {
+                "trigger_entities": "Despertar con estas en su lugar",
+                "scan_interval": "Con qué frecuencia preguntar",
+                "include_attributes": "Enviar también todos los atributos"
+              },
+              "data_description": {
+                "trigger_entities": "Evalúa cuando estas cambien, además de la programación de abajo. Con un antirrebote de 5 segundos.",
+                "scan_interval": "Las preguntas que miran lo mismo con la misma frecuencia se envían en una sola solicitud, lo que cuesta tokens pero casi nada de tiempo extra.",
+                "include_attributes": "Desactivado por defecto. Una previsión meteorológica llega a miles de tokens en cada evaluación."
+              }
+            }
+          }
+        },
+        "reconfigure": {
+          "title": "Editar esta pregunta",
+          "data": {
+            "name": "Nombre",
+            "instructions": "La pregunta",
+            "target": "Qué mirar",
+            "state": "Nota extra o plantilla",
+            "background": "Datos fijos sobre las lecturas",
+            "true_means": "Qué significa un número alto",
+            "false_means": "Qué significa un número bajo",
+            "threshold": "Crear también un sensor binario por encima de",
+            "options": "Tus opciones, una por línea",
+            "levels": "Tus niveles, el más bajo primero, uno por línea",
+            "advanced": "Avanzado"
+          },
+          "data_description": {
+            "name": "Da nombre al sensor que crea esta pregunta.",
+            "instructions": "Se envía a la API como `instructions`.",
+            "target": "Elige entidades, dispositivos, áreas o etiquetas y sus lecturas se envían por ti. Déjalo vacío si la nota de abajo es todo el estado.",
+            "state": "Texto o una plantilla, sola o junto a las lecturas.",
+            "background": "Se integra en `instructions`, de modo que viaja con la pregunta y no con el estado.",
+            "true_means": "Opcional. Afina hacia qué lado apunta la respuesta.",
+            "false_means": "Opcional.",
+            "threshold": "Déjalo vacío para tener solo el sensor de probabilidad.",
+            "options": "Se envía a la API como `criteria`. Una por línea, como `nombre: qué significa`. La descripción es opcional.",
+            "levels": "Se envía a la API como `criteria`. Uno por línea, el más bajo primero. Entre 2 y 10 de ellos.",
+            "advanced": "Una programación, y qué más se envía. Los valores por defecto sirven para una primera pregunta."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Avanzado",
+              "description": "Una programación, y qué más se envía. Los valores por defecto sirven para una primera pregunta.",
+              "data": {
+                "trigger_entities": "Despertar con estas en su lugar",
+                "scan_interval": "Con qué frecuencia preguntar",
+                "include_attributes": "Enviar también todos los atributos"
+              },
+              "data_description": {
+                "trigger_entities": "Evalúa cuando estas cambien, además de la programación de abajo. Con un antirrebote de 5 segundos.",
+                "scan_interval": "Las preguntas que miran lo mismo con la misma frecuencia se envían en una sola solicitud, lo que cuesta tokens pero casi nada de tiempo extra.",
+                "include_attributes": "Desactivado por defecto. Una previsión meteorológica llega a miles de tokens en cada evaluación."
+              }
+            }
+          }
+        },
+        "preview": {
+          "title": "Comprueba qué va a enviar",
+          "description": "Esto es aquello sobre lo que se preguntará, construido ahora a partir de lo que tu pregunta apunta.\n\n{grouping}\n\n### Qué responde ahora mismo\n\n{answer}\n\n### El estado que lee\n\n```\n{state}\n```"
+        }
+      },
+      "error": {
+        "nothing_to_judge": "Elige algo que mirar, o escribe una nota o una plantilla. Una pregunta necesita un estado.",
+        "choice_options_out_of_range": "Un choice admite entre 2 y 255 opciones.",
+        "score_levels_out_of_range": "Un score admite entre 2 y 10 niveles.",
+        "option_name_empty": "Cada opción necesita un nombre antes de los dos puntos.",
+        "option_name_duplicate": "Dos opciones comparten nombre, así que una de ellas se descartaría en silencio."
+      },
+      "abort": {
+        "reconfigure_successful": "Pregunta actualizada"
+      }
+    }
+  }
+}

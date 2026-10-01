@@ -418,7 +418,7 @@
                 "step": {
                     "init": {
                         "title": "最大值/最小值辅助程序 {helper} 中使用了未知成员",
-                        "description": "Spook 在你的辅助程序中发现了一个幽灵 👻\n\n最大值/最小值辅助程序 {helper} 组合了以下 Home Assistant 无法识别的成员：\n\n{sources}\n\n移除它们以便辅助程序继续使用剩余成员，或者保留它们（Spook 将不再提示）。\n\nSpook 👻 你的好哥们。",
+                        "description": "Spook 在你的辅助程序中发现了一个幽灵 👻\n\n最大值/最小值辅助程序 {helper} (`{entity_id}`) 组合了以下 Home Assistant 无法识别的成员：\n\n{sources}\n\n移除它们以便辅助程序继续使用剩余成员，或者保留它们（Spook 将不再提示）。\n\nSpook 👻 你的好哥们。",
                         "menu_options": {
                             "remove": "移除这些成员",
                             "manage": "让我自己处理",
@@ -434,8 +434,7 @@
             }
         },
         "orphaned_statistics": {
-            "title": "发现孤立的长期统计数据",
-            "description": "Spook 在你的记录器中发现了一个幽灵 👻\n\nHome Assistant 仍在为以下内容保留长期统计数据，但已经没有对应的实体了：\n\n{statistics}\n\n\n\n这通常发生在传感器被移除但其统计数据被保留时。要修复此错误，请打开 设置 > 工具 > 统计数据 并在其中修复。\n\nSpook 👻 你的好哥们。"
+            "title": "发现孤立的长期统计数据"
         },
         "person_unknown_device_trackers": {
             "title": "{person} 追踪了未知的设备追踪器",
@@ -467,7 +466,7 @@
             "title": "在以下脚本中使用了未知触发器：{script}"
         },
         "template_unknown_entity_references": {
-            "description": "Spook 在你的模板辅助程序中发现了一个幽灵 👻\n\n在四处漂浮时，Spook 遇到了以下模板辅助程序：\n\n[{helper}]({edit})\n\n其模板引用了以下 Home Assistant 无法识别的实体：\n\n{entities}\n\n\n\n这通常发生在实体被重命名或移除时。要修复此错误，请重新配置该模板辅助程序以引用现有实体。\n\nSpook 👻 你的好哥们。",
+            "description": "Spook 在你的模板辅助程序中发现了一个幽灵 👻\n\n在四处漂浮时，Spook 遇到了以下模板辅助程序：\n\n[{helper}]({edit}) (`{entity_id}`)\n\n其模板引用了以下 Home Assistant 无法识别的实体：\n\n{entities}\n\n\n\n这通常发生在实体被重命名或移除时。要修复此错误，请重新配置该模板辅助程序以引用现有实体。\n\nSpook 👻 你的好哥们。",
             "title": "模板辅助程序 {helper} 中使用了未知实体"
         },
         "unknown_customized_entities": {
@@ -480,7 +479,7 @@
                 "step": {
                     "init": {
                         "title": "辅助程序 {helper} 中使用了未知源实体",
-                        "description": "Spook 在你的辅助程序中发现了一个幽灵 👻\n\n辅助程序 {helper} (`{domain}`) 引用了以下 Home Assistant 无法识别的源实体：\n\n{sources}\n\n如果没有源实体，此辅助程序将无法工作。{usage}\n\n移除该辅助程序，或者保留它（Spook 将不再提示）。\n\nSpook 👻 你的好哥们。",
+                        "description": "Spook 在你的辅助程序中发现了一个幽灵 👻\n\n辅助程序 {helper} (`{domain}`, `{entity_id}`) 引用了以下 Home Assistant 无法识别的源实体：\n\n{sources}\n\n如果没有源实体，此辅助程序将无法工作。{usage}\n\n移除该辅助程序，或者保留它（Spook 将不再提示）。\n\nSpook 👻 你的好哥们。",
                         "menu_options": {
                             "remove": "移除此辅助程序",
                             "manage": "让我自己处理",
@@ -543,7 +542,7 @@
             "title": "警报使用了未知的通知器：{alert}"
         },
         "template_unknown_service_references": {
-            "description": "Spook 在你的模板助手中发现了一个幽灵 👻\n\n在四处漂浮时，Spook 遇到了以下模板助手：\n\n[{helper}]({edit})\n\n它引用了以下 Home Assistant 无法识别的动作：\n\n{services}\n\n这通常是因为提供某个动作的集成已被移除，或某个脚本被重命名或删除了。要修复此错误，请重新配置该模板助手，使其使用存在的动作。\n\nSpook 👻 你的好哥们。",
+            "description": "Spook 在你的模板助手中发现了一个幽灵 👻\n\n在四处漂浮时，Spook 遇到了以下模板助手：\n\n[{helper}]({edit}) (`{entity_id}`)\n\n它引用了以下 Home Assistant 无法识别的动作：\n\n{services}\n\n这通常是因为提供某个动作的集成已被移除，或某个脚本被重命名或删除了。要修复此错误，请重新配置该模板助手，使其使用存在的动作。\n\nSpook 👻 你的好哥们。",
             "title": "模板助手中使用了未知动作：{helper}"
         },
         "notify_unknown_group_members": {
@@ -570,6 +569,10 @@
                     "yaml": "这些资源在 YAML 配置中列出，因此 Spook 无法为你修改。请编辑 Lovelace 配置中的 `resources:` 部分，移除不再需要的 `{resource}` 副本。"
                 }
             }
+        },
+        "lovelace_missing_resources_yaml": {
+            "description": "Spook 在你的仪表盘中发现了一个幽灵 👻\n\n以下仪表盘资源指向了不存在的文件：\n\n{resources}\n\n\n\n这通常发生在自定义卡片或其文件被移除，但资源条目仍保留在系统中的情况。\n\n这些资源列在你的 YAML 配置中，因此资源页面无法修改它们。请编辑 Lovelace 配置中的 `resources:` 部分，移除或修正这些条目。\n\nSpook 👻 你的好哥们。",
+            "title": "仪表盘资源指向缺失的文件"
         }
     },
     "services": {
@@ -1608,6 +1611,48 @@
                     "description": "标签使用的颜色。可以是列表中的颜色名称，也可以是十六进制颜色代码（如 #FF0000）。"
                 }
             }
+        },
+        "group_add_members": {
+            "name": "向群组添加成员 👻",
+            "description": "在 Home Assistant 运行期间，将通过界面创建的群组中添加实体。已在群组中的实体保持不变。",
+            "fields": {
+                "group": {
+                    "name": "群组",
+                    "description": "要添加到的群组。"
+                },
+                "members": {
+                    "name": "成员",
+                    "description": "要添加到群组的实体。"
+                }
+            }
+        },
+        "group_remove_members": {
+            "name": "从群组移除成员 👻",
+            "description": "在 Home Assistant 运行期间，从通过界面创建的群组中移除实体。指定不在群组中的东西什么也不会发生，因此这也是清除已不存在成员的方法。",
+            "fields": {
+                "group": {
+                    "name": "群组",
+                    "description": "要从中移除的群组。"
+                },
+                "members": {
+                    "name": "成员",
+                    "description": "要从群组中移除的实体。"
+                }
+            }
+        },
+        "group_set_members": {
+            "name": "设置群组的成员 👻",
+            "description": "在 Home Assistant 运行期间，将通过界面创建的群组的成员替换为指定的成员。",
+            "fields": {
+                "group": {
+                    "name": "群组",
+                    "description": "要更改的群组。"
+                },
+                "members": {
+                    "name": "成员",
+                    "description": "群组从现在起应包含的实体。"
+                }
+            }
         }
     },
     "conditions": {
@@ -1814,6 +1859,44 @@
                 "for": {
                     "name": "持续时间",
                     "description": "实体必须保持静默多长时间后才触发。持续报告相同值的实体不算静默。"
+                }
+            }
+        },
+        "debounce": {
+            "name": "稳定后触发",
+            "description": "当触发条件停止触发一段时间后再触发，这样一连串触发会合并为一次。运动传感器不会只报告一次运动，它会报告二十次。",
+            "fields": {
+                "triggers": {
+                    "name": "触发条件",
+                    "description": "需要等待其稳定的触发条件。其中任何一个触发都会开始一轮等待，再次触发则继续等待，因此多个触发会被合并在一起，而不是逐个报告。"
+                },
+                "for": {
+                    "name": "持续时间",
+                    "description": "必须保持安静多长时间后才触发。每次触发都会重新开始这段等待，因此持续不断触发的东西永远不会被报告。"
+                }
+            }
+        },
+        "all_of": {
+            "name": "全部发生",
+            "description": "当多个触发条件都在同一个时间窗口内触发过时触发，顺序不限。Home Assistant 自身的触发条件是一个列表，其中任何一个都足够；这个是另一种。",
+            "fields": {
+                "triggers": {
+                    "name": "触发条件",
+                    "description": "必须全部触发过的触发条件。顺序无关紧要，同一个触发条件再次触发会替换它之前的那次，而不是重复计数。"
+                },
+                "within": {
+                    "name": "时间窗口",
+                    "description": "它们之间必须靠得多近。这个窗口会滑动，因此比这更早触发的触发条件会被遗忘，而其他触发条件继续计数。"
+                }
+            }
+        },
+        "recovered": {
+            "name": "实体已恢复",
+            "description": "当实体在不可用一段时间后重新恢复时触发，这样路由器重启不会被解读为全屋设备都在恢复。",
+            "fields": {
+                "for": {
+                    "name": "持续时间",
+                    "description": "实体必须离开多长时间后回来才算数。比这更短的只是闪一下：重新加载集成会在一秒内让它的所有实体经历不可用再恢复。"
                 }
             }
         }

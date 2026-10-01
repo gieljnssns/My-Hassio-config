@@ -1,0 +1,566 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Forbind til TypeSafe",
+        "description": "Indsæt en API-nøgle fra din TypeSafe-konto. Home Assistant stiller ét kort spørgsmål for at kontrollere, at nøglen virker.",
+        "data": {
+          "api_key": "API-nøgle"
+        },
+        "data_description": {
+          "api_key": "Nøglen, som anmodningerne sendes med. Lad kun feltet stå tomt for et endpoint af dit eget, der ikke kræver en nøgle."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Avanceret",
+            "data": {
+              "url": "API-adresse",
+              "model": "Model"
+            },
+            "data_description": {
+              "url": "Lad dette stå, medmindre du selv kører noget, der taler den samme API, for eksempel en proxy, der opbevarer nøglen eller cacher svar. Nøglen sendes som bearer-header, så med en http-adresse går den i klartekst over nettet.",
+              "model": "Model-id'et der sendes med hver forespørgsel. Tomt felt betyder standardmodellen."
+            }
+          }
+        }
+      },
+      "reauth_confirm": {
+        "title": "Indtast din API-nøgle igen",
+        "description": "TypeSafe afviste den gemte nøgle. Indsæt en, der virker. API-adressen bliver stående som den er; brug Omkonfigurer for at ændre den.",
+        "data": {
+          "api_key": "API-nøgle"
+        },
+        "data_description": {
+          "api_key": "Forespørgsler går til den API-adresse, der allerede er gemt."
+        }
+      },
+      "reconfigure": {
+        "title": "Udskift din API-nøgle eller adresse",
+        "description": "Indsæt en anden TypeSafe API-nøgle, og ret adressen, hvis API'en nås et andet sted end hos TypeSafe. Dine spørgsmål og entiteter bevares.",
+        "data": {
+          "api_key": "API-nøgle"
+        },
+        "data_description": {
+          "api_key": "Lad feltet være tomt for at beholde den nuværende nøgle, så længe adressen er den samme. En ny adresse får ingen nøgle, medmindre du skriver en."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Avanceret",
+            "data": {
+              "url": "API-adresse",
+              "model": "Model"
+            },
+            "data_description": {
+              "url": "Ryd dette felt for at gå tilbage til TypeSafe-API'en. Nøglen sendes som bearer-header, så med en http-adresse går den i klartekst over nettet.",
+              "model": "Model-id'et der sendes med hver forespørgsel. Tomt felt betyder standardmodellen."
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "TypeSafe afviste denne nøgle.",
+      "cannot_connect": "Home Assistant kunne ikke nå API'en på den adresse.",
+      "not_found": "Serveren svarede HTTP 404. Jev tilføjer /v1/systemone til adressen, så angiv kun delen før det. For OpenRouter er det {openrouter_url}.",
+      "invalid_url": "Det er ikke en brugbar API-adresse. Den skal have et skema og en vært, og den må ikke indeholde mellemrum, forespørgsel, fragment, brugernavn eller adgangskode.",
+      "invalid_model": "Det model-id blev ikke accepteret. Tjek det, eller lad feltet stå tomt for standardmodellen.",
+      "key_required": "TypeSafe-API'et kræver en nøgle. En tom nøgle virker kun med en adresse af dit eget, der ikke kræver en."
+    },
+    "abort": {
+      "already_configured": "Denne API-nøgle er allerede sat op. En konfiguration kendes på sin nøgle, så en ekstra adresse skal have sin egen nøgle.",
+      "reauth_successful": "Den nye nøgle virker.",
+      "reconfigure_successful": "Omkonfigureret."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Forbrugsgrænser",
+        "description": "Du betaler for input-tokens, og teksten i spørgsmålene tæller med som input. Sæt budgettet højere end noget, en fungerende opsætning bruger, så kun en løbsk opsætning når det. Nul betyder ingen grænse.\n\nSamtaleagenten sender alt, den er i tvivl om, videre til reserveagenten, helt og uden at gøre noget først. Lader du feltet stå tomt, siger den, at den ikke forstod det. Kommandoer for hele huset afvises, medmindre du tillader dem, bortset fra at slukke alt, som altid er tilladt.",
+        "data": {
+          "daily_token_budget": "Dagligt budget for input-tokens (0 = ingen grænse)",
+          "price_per_million": "Pris pr. million input-tokens, i USD",
+          "fallback_agent": "Fald tilbage til denne agent",
+          "min_confidence": "Handl kun over denne konfidens (0 til 1)",
+          "allow_whole_home": "Tillad kommandoer, der ikke nævner et rum eller en enhed"
+        },
+        "data_description": {
+          "daily_token_budget": "Tælles fra midnat i Home Assistants tidszone. 0 betyder ingen grænse.",
+          "price_per_million": "Bestemmer sensoren for anslået pris og prisen i forhåndsvisningen af spørgsmålet. Intet af det, der sendes, afhænger af den.",
+          "fallback_agent": "Modtager hele sætningen, når Jev ikke er sikker på, hvad der skal gøres.",
+          "min_confidence": "Under denne værdi gør Jev intet og sender kommandoen videre til reserveagenten.",
+          "allow_whole_home": "At slukke alt er altid tilladt, med eller uden denne indstilling."
+        }
+      }
+    }
+  },
+  "issues": {
+    "daily_budget_exceeded": {
+      "title": "Jev er holdt op med at evaluere: dagligt budget nået",
+      "description": "Det daglige budget er {budget} input-tokens, og der er brugt {used} i dag. Den næste evaluering, af konteksten {context}, kræver cirka {estimate} mere og får ikke plads, så der stilles ikke flere spørgsmål. Svar-sensorerne bliver utilgængelige, indtil et kald får plads igen. Hæv budgettet i integrationens indstillinger, evaluér konteksterne sjældnere, eller gør dine spørgsmål kortere."
+    },
+    "daily_budget_spent": {
+      "title": "Jev er holdt op med at evaluere: dagligt budget nået",
+      "description": "Det daglige budget er {budget} input-tokens, og der er brugt {used} i dag, så der stilles ikke flere spørgsmål. Svar-sensorerne bliver utilgængelige, indtil en ny dag begynder, eller budgettet bliver hævet. Hæv budgettet i integrationens indstillinger, evaluér konteksterne sjældnere, eller gør dine spørgsmål kortere."
+    }
+  },
+  "services": {
+    "noul": {
+      "name": "Stil et ja/nej-spørgsmål",
+      "description": "Spørg, om noget er sandt, og få sandsynligheden for ja, fra 0 til 1. Brug ét af dem pr. label, når flere labels kan være sande samtidig.",
+      "fields": {
+        "state": {
+          "name": "Tilstand",
+          "description": "Teksten, der bedømmes. Skriver du en skabelon, gengives den, før den sendes."
+        },
+        "instructions": {
+          "name": "Spørgsmål",
+          "description": "Formulér det, så et højt tal betyder ja. En påstand virker lige så godt som et spørgsmål."
+        },
+        "true_means": {
+          "name": "Ja betyder",
+          "description": "Valgfrit. Hvad der tæller som et ja. Værd at udfylde, når grænsen er hårfin."
+        },
+        "false_means": {
+          "name": "Nej betyder",
+          "description": "Valgfrit. Hvad der tæller som et nej."
+        },
+        "threshold": {
+          "name": "Tærskel",
+          "description": "Hvor grænsen går for feltet is_true i svaret. Sandsynligheden selv kommer altid med. En værdi tæt på 0.5 betyder, at modellen ikke kan afgøre det, ikke at svaret er halvt sandt."
+        },
+        "config_entry": {
+          "name": "API-nøgle",
+          "description": "Hvilken opsat nøgle der spørges med. Kun nødvendigt, når der er mere end én."
+        },
+        "include_attributes": {
+          "name": "Medsend alle attributter",
+          "description": "Slået fra som standard. Sender alle attributter for de valgte entiteter, ikke kun værdien, måleenheden, enhedsklassen og området. En vejrudsigt eller en medieafspillers liste med albumbilleder løber op i tusindvis af tokens, og dem betaler du for ved hver evaluering."
+        },
+        "background": {
+          "name": "Baggrund",
+          "description": "Valgfrit. Faste oplysninger om, hvordan det skal læses, for eksempel hvad en måling betyder for netop din enhed. Det følger med spørgsmålet i stedet for med målingerne, hvilket målbart virker bedre end at lægge det i tilstanden. Giver du et objekt i stedet for en sætning, beholder du dine egne nøglenavne, og modellen læser de nøgler."
+        }
+      }
+    },
+    "choice": {
+      "name": "Vælg én mulighed",
+      "description": "Vælg én mulighed fra din liste, og få sandsynligheden for hver mulighed plus en konfidensværdi.",
+      "fields": {
+        "state": {
+          "name": "Tilstand",
+          "description": "Teksten, der bedømmes. Skriver du en skabelon, gengives den, før den sendes."
+        },
+        "instructions": {
+          "name": "Spørgsmål",
+          "description": "Hvad modellen vælger imellem, i én sætning."
+        },
+        "options": {
+          "name": "Muligheder",
+          "description": "To til 255 muligheder. Tag en opsamlingsmulighed som andet med, når din liste måske ikke dækker alt."
+        },
+        "option_descriptions": {
+          "name": "Beskrivelse pr. mulighed",
+          "description": "Valgfrit. En beskrivelse pr. mulighed, som skærper grænsen mellem dem, der ligner hinanden. Det hjælper mest at skrive, hvad en mulighed udelukker."
+        },
+        "config_entry": {
+          "name": "API-nøgle",
+          "description": "Hvilken opsat nøgle der spørges med. Kun nødvendigt, når der er mere end én."
+        },
+        "include_attributes": {
+          "name": "Medsend alle attributter",
+          "description": "Slået fra som standard. Sender alle attributter for de valgte entiteter, ikke kun værdien, måleenheden, enhedsklassen og området. En vejrudsigt eller en medieafspillers liste med albumbilleder løber op i tusindvis af tokens, og dem betaler du for ved hver evaluering."
+        },
+        "background": {
+          "name": "Baggrund",
+          "description": "Valgfrit. Faste oplysninger om, hvordan det skal læses, for eksempel hvad en måling betyder for netop din enhed. Det følger med spørgsmålet i stedet for med målingerne, hvilket målbart virker bedre end at lægge det i tilstanden. Giver du et objekt i stedet for en sætning, beholder du dine egne nøglenavne, og modellen læser de nøgler."
+        }
+      }
+    },
+    "score": {
+      "name": "Bedøm på en skala",
+      "description": "Bedøm teksten mod niveauer, du selv beskriver, og få et tal, der kan ligge mellem to niveauer.",
+      "fields": {
+        "state": {
+          "name": "Tilstand",
+          "description": "Teksten, der bedømmes. Skriver du en skabelon, gengives den, før den sendes."
+        },
+        "instructions": {
+          "name": "Spørgsmål",
+          "description": "Én dimension pr. spørgsmål. Et spørgsmål, der måler tre ting på én gang, giver lav konfidens og en intetsigende midte."
+        },
+        "levels": {
+          "name": "Niveauer",
+          "description": "To til 10 niveauer, laveste først. Beskriv en konkret situation for hvert af dem, ikke en grad: I stykker, men der er en omvej er bedre end Middelsvær. Hvert niveau bedømmes for sig, så sammenlignende ord og tal i teksten gør ingenting."
+        },
+        "config_entry": {
+          "name": "API-nøgle",
+          "description": "Hvilken opsat nøgle der spørges med. Kun nødvendigt, når der er mere end én."
+        },
+        "include_attributes": {
+          "name": "Medsend alle attributter",
+          "description": "Slået fra som standard. Sender alle attributter for de valgte entiteter, ikke kun værdien, måleenheden, enhedsklassen og området. En vejrudsigt eller en medieafspillers liste med albumbilleder løber op i tusindvis af tokens, og dem betaler du for ved hver evaluering."
+        },
+        "background": {
+          "name": "Baggrund",
+          "description": "Valgfrit. Faste oplysninger om, hvordan det skal læses, for eksempel hvad en måling betyder for netop din enhed. Det følger med spørgsmålet i stedet for med målingerne, hvilket målbart virker bedre end at lægge det i tilstanden. Giver du et objekt i stedet for en sætning, beholder du dine egne nøglenavne, og modellen læser de nøgler."
+        }
+      }
+    },
+    "ask": {
+      "name": "Stil flere spørgsmål på én gang",
+      "description": "Stil enhver blanding af spørgsmålstyper om det samme stykke tekst, i én anmodning. Hvert spørgsmål bedømmes uafhængigt mod den samme tekst, og de kører parallelt, så tyve spørgsmål tager omtrent lige så lang tid som ét.",
+      "fields": {
+        "state": {
+          "name": "Tilstand",
+          "description": "Teksten, der bedømmes. Skriver du en skabelon, gengives den, før den sendes."
+        },
+        "questions": {
+          "name": "Spørgsmål",
+          "description": "Din egen nøgle til hvert spørgsmål, så dets type noul, choice eller score, dets instruktioner og kriterier for choice og score. Nøglerne er dine: de kommer tilbage som nøglerne i svarene, og modellen ser dem aldrig."
+        },
+        "config_entry": {
+          "name": "API-nøgle",
+          "description": "Hvilken opsat nøgle der spørges med. Kun nødvendigt, når der er mere end én."
+        },
+        "include_attributes": {
+          "name": "Medsend alle attributter",
+          "description": "Slået fra som standard. Sender alle attributter for de valgte entiteter, ikke kun værdien, måleenheden, enhedsklassen og området. En vejrudsigt eller en medieafspillers liste med albumbilleder løber op i tusindvis af tokens, og dem betaler du for ved hver evaluering."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "calls_today": {
+        "name": "Kald i dag"
+      },
+      "input_tokens_today": {
+        "name": "Input-tokens i dag"
+      },
+      "estimated_cost_today": {
+        "name": "Anslåede omkostninger i dag"
+      },
+      "context_latency": {
+        "name": "{context} svartid"
+      },
+      "context_payload": {
+        "name": "{context} forespørgselsstørrelse"
+      }
+    },
+    "binary_sensor": {
+      "daily_budget_exceeded": {
+        "name": "Dagligt budget overskredet"
+      }
+    }
+  },
+  "exceptions": {
+    "nothing_to_judge": {
+      "message": "Intet at bedømme: giv denne handling noget tekst, eller vælg de entiteter, enheder eller områder, den skal se på."
+    },
+    "no_entry": {
+      "message": "Ingen indlæst Jev-konfiguration at spørge med. Tilføj integrationen først, eller vælg en under API-nøgle, når der er mere end én."
+    },
+    "entry_ambiguous": {
+      "message": "Mere end én Jev-post er indlæst: {entries}. Vælg én under API-nøgle, fordi hver post har sin egen nøgle og sit eget budget."
+    },
+    "missing_targets": {
+      "message": "Disse mål findes ikke: {targets}. At spørge om resten ville svare på et andet spørgsmål end det, du skrev."
+    },
+    "empty_target": {
+      "message": "Det mål indeholder ingen entiteter, så der ville ikke være noget at bedømme."
+    },
+    "too_many_entities": {
+      "message": "Det mål indeholder {count} entiteter, og grænsen er {limit}. Hver entitet afregnes som input ved hver evaluering, så vælg dem, spørgsmålet drejer sig om, eller del det op."
+    },
+    "question_shape": {
+      "message": "Spørgsmål {key} skal have både 'type' og 'instructions'. Typerne er noul, choice og score."
+    },
+    "question_invalid": {
+      "message": "Spørgsmål {key} er ugyldigt: {reason}"
+    },
+    "template_failed": {
+      "message": "Tilstandsskabelonen fejlede: {reason}"
+    },
+    "auth_rejected": {
+      "message": "TypeSafe afviste API-nøglen: {reason}"
+    },
+    "ask_failed": {
+      "message": "Det mislykkedes at spørge Jev: {reason}"
+    },
+    "wrong_answer_type": {
+      "message": "Der blev stillet et {question_type}-spørgsmål, og der kom et {got} tilbage, hvilket API'en ikke burde gøre."
+    },
+    "choice_options_out_of_range": {
+      "message": "En choice tager {min} til {max} muligheder, og denne har {count}."
+    },
+    "score_levels_out_of_range": {
+      "message": "En score tager {min} til {max} niveauer, laveste først, og denne har {count}."
+    },
+    "unreadable_answer": {
+      "message": "TypeSafe returnerede et svar af typen {kind}, som denne version ikke kan læse. Opdater integrationen."
+    },
+    "task_needs_structure": {
+      "message": "Opgaven {task} beder om fri tekst, og Jev besvarer kun typede spørgsmål. Giv handlingen en struktur, hvis felter er boolean, select eller number."
+    },
+    "task_over_budget": {
+      "message": "Opgaven {task} koster omkring {estimate} inputtokens, og der er {remaining} tilbage af dagsbudgettet på {budget}. Hæv eller ryd budgettet i integrationens indstillinger for at fortsætte."
+    },
+    "reserved_field": {
+      "message": "Feltet {field} kan ikke bruges, fordi resultatet bærer sikkerheden bag hvert svar under det navn. Omdøb feltet."
+    },
+    "no_fields": {
+      "message": "Strukturen erklærer ingen felter."
+    },
+    "answer_missing": {
+      "message": "Svaret indeholder intet for {field}."
+    },
+    "unsupported_field": {
+      "message": "Feltet {field} bruger en {selector}, og Jev besvarer et ja/nej-spørgsmål, et valg fra en liste eller en vurdering på en skala. Giv feltet en boolean, en select med muligheder eller en number med min og max."
+    },
+    "field_options_out_of_range": {
+      "message": "Feltet {field} tilbyder {count} muligheder, og et valg kræver {min} til {max}."
+    },
+    "field_needs_scale": {
+      "message": "Feltet {field} er et tal uden {bound}. En vurdering kræver begge ender af skalaen."
+    },
+    "field_scale_not_ordered": {
+      "message": "Feltet {field} har min {min} og max {max}, og det er ikke en skala."
+    },
+    "answer_does_not_fit": {
+      "message": "Svaret for {field} kom tilbage som {answer}, og det passer ikke til en {selector}."
+    },
+    "context_template_failed": {
+      "message": "State-skabelonen for konteksten {context} fejlede: {reason}"
+    },
+    "context_targets_failed": {
+      "message": "Kontekst {context}: {reason}"
+    },
+    "context_over_budget": {
+      "message": "At evaluere konteksten {context} koster omkring {estimate} inputtokens, og der er {remaining} tilbage af dagsbudgettet på {budget}. Hæv eller ryd budgettet i integrationens indstillinger for at fortsætte."
+    },
+    "rate_limited": {
+      "message": "TypeSafe begrænsede forespørgslen: {reason}"
+    }
+  },
+  "common": {
+    "not_understood": "Beklager, det forstod jeg ikke.",
+    "whole_house": "Det ville påvirke hele huset. Sig, hvilket rum eller hvilken enhed du mener.",
+    "which_kind": "Hvilken slags ting mener du? Sig lysene, eller kontakterne, eller nævn et rum.",
+    "intent_failed": "Beklager, det virkede ikke.",
+    "already_on": "{name} er allerede tændt.",
+    "already_off": "{name} er allerede slukket.",
+    "preview_alone": "Sendes som sin egen anmodning.",
+    "preview_grouped": "Sendes i én anmodning sammen med: {others}.",
+    "preview_cost": "Spurgt én gang til denne forhåndsvisning: {tokens} input-tokens, cirka ${cost}, {ms} ms.",
+    "preview_threshold_over": "Det er over din tærskel på {threshold}, så den binære sensor ville være **til** lige nu.",
+    "preview_threshold_under": "Det er under din tærskel på {threshold}, så den binære sensor ville være **fra** lige nu.",
+    "preview_winner": "Vinder **{choice}**, konfidens {confidence}.",
+    "preview_score": "Score **{score}**, nærmeste niveau **{level}**, konfidens {confidence}.",
+    "preview_undrawable": "Svaret kom tilbage i en form, denne version ikke kan tegne.",
+    "preview_unbuildable": "Det spørgsmål kan ikke bygges endnu: {reason}",
+    "preview_rejected": "TypeSafe afviste API-nøglen, så der er intet prøvesvar.",
+    "preview_failed": "Intet prøvesvar: {reason}",
+    "preview_mismatched": "API'en svarede, men ikke på det spørgsmål, der blev stillet.",
+    "preview_template_error": "Skabelonen kan ikke gengives: {reason}",
+    "query_not_found": "Det kunne jeg ikke finde.",
+    "budget_spent": "Det daglige tokenbudget er brugt, så det kan jeg ikke gøre i dag.",
+    "auth_failed": "TypeSafe afviste API-nøglen. Tjek den i indstillingerne for Jev.",
+    "unavailable": "TypeSafe svarede ikke. Prøv igen om et øjeblik.",
+    "preview_over_budget": "Det daglige token-budget er brugt op, så der er intet prøvesvar. Spørgsmålet bliver gemt alligevel.",
+    "preview_nothing_yet": "Intet prøvesvar: der er endnu intet at spørge om."
+  },
+  "config_subentries": {
+    "question": {
+      "entry_type": "Spørgsmål",
+      "initiate_flow": {
+        "user": "Tilføj spørgsmål",
+        "reconfigure": "Rediger spørgsmål"
+      },
+      "step": {
+        "user": {
+          "title": "Hvilken slags svar vil du have tilbage?",
+          "menu_options": {
+            "noul": "Noul, en sandsynlighed. Ét tal fra 0 til 1",
+            "choice": "Choice, én af dine muligheder. Med hele fordelingen",
+            "score": "Score, en bedømmelse. Mod niveauer, du selv beskriver"
+          }
+        },
+        "noul": {
+          "title": "Noul: et ja- eller nej-spørgsmål",
+          "data": {
+            "name": "Navn",
+            "instructions": "Spørgsmålet",
+            "target": "Hvad der ses på",
+            "state": "Ekstra note eller skabelon",
+            "background": "Faste oplysninger om målingerne",
+            "true_means": "Hvad et højt tal betyder",
+            "false_means": "Hvad et lavt tal betyder",
+            "threshold": "Lav også en binær sensor over",
+            "advanced": "Avanceret"
+          },
+          "data_description": {
+            "name": "Navngiver den sensor, dette spørgsmål opretter.",
+            "instructions": "Sendes til API'en som `instructions`.",
+            "target": "Vælg entiteter, enheder, områder eller etiketter, så sendes deres målinger for dig. Lad feltet stå tomt, hvis noten nedenfor er hele tilstanden.",
+            "state": "Tekst eller en skabelon, alene eller sammen med målingerne.",
+            "background": "Foldes ind i `instructions`, så det følger med spørgsmålet i stedet for med tilstanden.",
+            "true_means": "Valgfrit. Skærper, hvilken vej svaret peger.",
+            "false_means": "Valgfrit.",
+            "threshold": "Lad feltet stå tomt, hvis du kun vil have sandsynlighedssensoren.",
+            "advanced": "En plan, og hvad der ellers sendes med. Standardværdierne er fine til et første spørgsmål."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Avanceret",
+              "description": "En plan, og hvad der ellers sendes med. Standardværdierne er fine til et første spørgsmål.",
+              "data": {
+                "trigger_entities": "Væk på disse i stedet",
+                "scan_interval": "Spørg så ofte",
+                "include_attributes": "Send også alle attributter med"
+              },
+              "data_description": {
+                "trigger_entities": "Evaluér, når disse ændrer sig, oven i planen nedenfor. Med 5 sekunders debounce.",
+                "scan_interval": "Spørgsmål, der ser på det samme efter den samme plan, sendes som én anmodning, hvilket koster tokens, men næsten ingen ekstra tid.",
+                "include_attributes": "Slået fra som standard. En vejrudsigt løber op i tusindvis af tokens ved hver evaluering."
+              }
+            }
+          }
+        },
+        "choice": {
+          "title": "Choice: vælg én af dine muligheder",
+          "data": {
+            "name": "Navn",
+            "instructions": "Spørgsmålet",
+            "target": "Hvad der ses på",
+            "state": "Ekstra note eller skabelon",
+            "background": "Faste oplysninger om målingerne",
+            "options": "Dine muligheder, én pr. linje",
+            "advanced": "Avanceret"
+          },
+          "data_description": {
+            "name": "Navngiver den sensor, dette spørgsmål opretter.",
+            "instructions": "Sendes til API'en som `instructions`.",
+            "target": "Vælg entiteter, enheder, områder eller etiketter, så sendes deres målinger for dig. Lad feltet stå tomt, hvis noten nedenfor er hele tilstanden.",
+            "state": "Tekst eller en skabelon, alene eller sammen med målingerne.",
+            "background": "Foldes ind i `instructions`, så det følger med spørgsmålet i stedet for med tilstanden.",
+            "options": "Sendes til API'en som `criteria`. Én pr. linje, som `navn: hvad det betyder`. Beskrivelsen er valgfri.",
+            "advanced": "En plan, og hvad der ellers sendes med. Standardværdierne er fine til et første spørgsmål."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Avanceret",
+              "description": "En plan, og hvad der ellers sendes med. Standardværdierne er fine til et første spørgsmål.",
+              "data": {
+                "trigger_entities": "Væk på disse i stedet",
+                "scan_interval": "Spørg så ofte",
+                "include_attributes": "Send også alle attributter med"
+              },
+              "data_description": {
+                "trigger_entities": "Evaluér, når disse ændrer sig, oven i planen nedenfor. Med 5 sekunders debounce.",
+                "scan_interval": "Spørgsmål, der ser på det samme efter den samme plan, sendes som én anmodning, hvilket koster tokens, men næsten ingen ekstra tid.",
+                "include_attributes": "Slået fra som standard. En vejrudsigt løber op i tusindvis af tokens ved hver evaluering."
+              }
+            }
+          }
+        },
+        "score": {
+          "title": "Score: en bedømmelse mod dine niveauer",
+          "data": {
+            "name": "Navn",
+            "instructions": "Spørgsmålet",
+            "target": "Hvad der ses på",
+            "state": "Ekstra note eller skabelon",
+            "background": "Faste oplysninger om målingerne",
+            "levels": "Dine niveauer, laveste først, én pr. linje",
+            "advanced": "Avanceret"
+          },
+          "data_description": {
+            "name": "Navngiver den sensor, dette spørgsmål opretter.",
+            "instructions": "Sendes til API'en som `instructions`.",
+            "target": "Vælg entiteter, enheder, områder eller etiketter, så sendes deres målinger for dig. Lad feltet stå tomt, hvis noten nedenfor er hele tilstanden.",
+            "state": "Tekst eller en skabelon, alene eller sammen med målingerne.",
+            "background": "Foldes ind i `instructions`, så det følger med spørgsmålet i stedet for med tilstanden.",
+            "levels": "Sendes til API'en som `criteria`. Én pr. linje, laveste først. Mellem 2 og 10 af dem.",
+            "advanced": "En plan, og hvad der ellers sendes med. Standardværdierne er fine til et første spørgsmål."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Avanceret",
+              "description": "En plan, og hvad der ellers sendes med. Standardværdierne er fine til et første spørgsmål.",
+              "data": {
+                "trigger_entities": "Væk på disse i stedet",
+                "scan_interval": "Spørg så ofte",
+                "include_attributes": "Send også alle attributter med"
+              },
+              "data_description": {
+                "trigger_entities": "Evaluér, når disse ændrer sig, oven i planen nedenfor. Med 5 sekunders debounce.",
+                "scan_interval": "Spørgsmål, der ser på det samme efter den samme plan, sendes som én anmodning, hvilket koster tokens, men næsten ingen ekstra tid.",
+                "include_attributes": "Slået fra som standard. En vejrudsigt løber op i tusindvis af tokens ved hver evaluering."
+              }
+            }
+          }
+        },
+        "reconfigure": {
+          "title": "Rediger dette spørgsmål",
+          "data": {
+            "name": "Navn",
+            "instructions": "Spørgsmålet",
+            "target": "Hvad der ses på",
+            "state": "Ekstra note eller skabelon",
+            "background": "Faste oplysninger om målingerne",
+            "true_means": "Hvad et højt tal betyder",
+            "false_means": "Hvad et lavt tal betyder",
+            "threshold": "Lav også en binær sensor over",
+            "options": "Dine muligheder, én pr. linje",
+            "levels": "Dine niveauer, laveste først, én pr. linje",
+            "advanced": "Avanceret"
+          },
+          "data_description": {
+            "name": "Navngiver den sensor, dette spørgsmål opretter.",
+            "instructions": "Sendes til API'en som `instructions`.",
+            "target": "Vælg entiteter, enheder, områder eller etiketter, så sendes deres målinger for dig. Lad feltet stå tomt, hvis noten nedenfor er hele tilstanden.",
+            "state": "Tekst eller en skabelon, alene eller sammen med målingerne.",
+            "background": "Foldes ind i `instructions`, så det følger med spørgsmålet i stedet for med tilstanden.",
+            "true_means": "Valgfrit. Skærper, hvilken vej svaret peger.",
+            "false_means": "Valgfrit.",
+            "threshold": "Lad feltet stå tomt, hvis du kun vil have sandsynlighedssensoren.",
+            "options": "Sendes til API'en som `criteria`. Én pr. linje, som `navn: hvad det betyder`. Beskrivelsen er valgfri.",
+            "levels": "Sendes til API'en som `criteria`. Én pr. linje, laveste først. Mellem 2 og 10 af dem.",
+            "advanced": "En plan, og hvad der ellers sendes med. Standardværdierne er fine til et første spørgsmål."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Avanceret",
+              "description": "En plan, og hvad der ellers sendes med. Standardværdierne er fine til et første spørgsmål.",
+              "data": {
+                "trigger_entities": "Væk på disse i stedet",
+                "scan_interval": "Spørg så ofte",
+                "include_attributes": "Send også alle attributter med"
+              },
+              "data_description": {
+                "trigger_entities": "Evaluér, når disse ændrer sig, oven i planen nedenfor. Med 5 sekunders debounce.",
+                "scan_interval": "Spørgsmål, der ser på det samme efter den samme plan, sendes som én anmodning, hvilket koster tokens, men næsten ingen ekstra tid.",
+                "include_attributes": "Slået fra som standard. En vejrudsigt løber op i tusindvis af tokens ved hver evaluering."
+              }
+            }
+          }
+        },
+        "preview": {
+          "title": "Se, hvad der bliver sendt",
+          "description": "Det her er det, dit spørgsmål bliver stillet om, bygget nu ud fra det, det peger på.\n\n{grouping}\n\n### Hvad det svarer lige nu\n\n{answer}\n\n### Tilstanden, det læser\n\n```\n{state}\n```"
+        }
+      },
+      "error": {
+        "nothing_to_judge": "Vælg noget at se på, eller skriv en note eller en skabelon. Et spørgsmål skal have en tilstand.",
+        "choice_options_out_of_range": "En choice tager mellem 2 og 255 muligheder.",
+        "score_levels_out_of_range": "En score tager mellem 2 og 10 niveauer.",
+        "option_name_empty": "Hver mulighed skal have et navn før kolonet.",
+        "option_name_duplicate": "To muligheder deler navn, så den ene ville blive droppet uden varsel."
+      },
+      "abort": {
+        "reconfigure_successful": "Spørgsmål opdateret"
+      }
+    }
+  }
+}

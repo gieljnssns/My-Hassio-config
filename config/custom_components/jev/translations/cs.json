@@ -1,0 +1,566 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Připojení k TypeSafe",
+        "description": "Vložte klíč API ze svého účtu TypeSafe. Home Assistant položí jednu krátkou otázku, aby ověřil, že klíč funguje.",
+        "data": {
+          "api_key": "Klíč API"
+        },
+        "data_description": {
+          "api_key": "Klíč, se kterým se odesílají požadavky. Nechte prázdné jen u vlastního endpointu, který klíč nepotřebuje."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Pokročilé",
+            "data": {
+              "url": "Adresa API",
+              "model": "Model"
+            },
+            "data_description": {
+              "url": "Nechte beze změny, pokud neprovozujete něco vlastního, co mluví stejným API, například proxy, která drží klíč nebo ukládá odpovědi do mezipaměti. Klíč se posílá jako hlavička bearer, takže u adresy http putuje po síti nešifrovaně.",
+              "model": "Identifikátor modelu posílaný s každým požadavkem. Prázdné pole znamená výchozí."
+            }
+          }
+        }
+      },
+      "reauth_confirm": {
+        "title": "Zadejte klíč API znovu",
+        "description": "TypeSafe odmítl uložený klíč. Vložte funkční klíč. Adresa API zůstává beze změny; pro její změnu použijte Překonfigurovat.",
+        "data": {
+          "api_key": "Klíč API"
+        },
+        "data_description": {
+          "api_key": "Požadavky jdou na adresu API, která je už uložená."
+        }
+      },
+      "reconfigure": {
+        "title": "Nahraďte klíč API nebo adresu",
+        "description": "Vložte jiný klíč API pro TypeSafe a změňte adresu, pokud se API nachází jinde než u TypeSafe. Vaše otázky a entity zůstanou zachovány.",
+        "data": {
+          "api_key": "Klíč API"
+        },
+        "data_description": {
+          "api_key": "Nechte prázdné, aby zůstal současný klíč, dokud se adresa nemění. Nová adresa nedostane žádný klíč, pokud ho nezadáte."
+        },
+        "sections": {
+          "advanced": {
+            "name": "Pokročilé",
+            "data": {
+              "url": "Adresa API",
+              "model": "Model"
+            },
+            "data_description": {
+              "url": "Vyprázdněte toto pole pro návrat k API TypeSafe. Klíč se posílá jako hlavička bearer, takže u adresy http putuje po síti nešifrovaně.",
+              "model": "Identifikátor modelu posílaný s každým požadavkem. Prázdné pole znamená výchozí."
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "TypeSafe tento klíč odmítl.",
+      "cannot_connect": "Home Assistant nedokázal na této adrese kontaktovat API.",
+      "not_found": "Server odpověděl HTTP 404. Jev k adrese připojuje /v1/systemone, zadejte tedy jen část před tím. Pro OpenRouter je to {openrouter_url}.",
+      "invalid_url": "Toto není použitelná adresa API. Potřebuje schéma a hostitele a nesmí obsahovat mezeru, dotaz, fragment, uživatelské jméno ani heslo.",
+      "invalid_model": "Tento identifikátor modelu nebyl přijat. Zkontrolujte jej, nebo pole vyprázdněte pro výchozí.",
+      "key_required": "API TypeSafe vyžaduje klíč. Prázdný klíč funguje jen u vlastní adresy, která žádný nevyžaduje."
+    },
+    "abort": {
+      "already_configured": "Tento klíč API je už nastavený. Záznam se rozpoznává podle svého klíče, takže druhá adresa potřebuje vlastní klíč.",
+      "reauth_successful": "Nový klíč funguje.",
+      "reconfigure_successful": "Úspěšně překonfigurováno."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Limity výdajů",
+        "description": "Platíte za vstupní tokeny a text otázek se počítá jako vstup. Nastavte rozpočet nad vše, co by funkční sestava spotřebovala, aby na něj dosáhla jen konfigurace, která se utrhla. Nula znamená bez limitu.\n\nKonverzační agent posílá vše, čím si není jistý, záložnímu agentovi celé a bez předchozí úpravy. Nechte ho prázdný a agent řekne, že nerozuměl. Příkazy pro celý dům se odmítají, dokud je nepovolíte, kromě vypnutí všeho, které je povolené vždy.",
+        "data": {
+          "daily_token_budget": "Denní rozpočet vstupních tokenů (0 = bez limitu)",
+          "price_per_million": "Cena za milion vstupních tokenů v USD",
+          "fallback_agent": "Záložní agent",
+          "min_confidence": "Jednat jen nad touto jistotou (0 až 1)",
+          "allow_whole_home": "Povolit příkazy, které neuvádějí místnost ani zařízení"
+        },
+        "data_description": {
+          "daily_token_budget": "Počítá se od půlnoci v časovém pásmu Home Assistantu. 0 znamená bez limitu.",
+          "price_per_million": "Určuje senzor odhadované ceny a cenu v náhledu otázky. Nic z toho, co se odesílá, na tom nezávisí.",
+          "fallback_agent": "Dostane celou větu, když si Jev není jistý, co udělat.",
+          "min_confidence": "Pod touto hodnotou Jev nic neudělá a předá příkaz záložnímu agentovi.",
+          "allow_whole_home": "Vypnout všechno je dovoleno vždy, s touto volbou i bez ní."
+        }
+      }
+    }
+  },
+  "issues": {
+    "daily_budget_exceeded": {
+      "title": "Jev přestal vyhodnocovat: dosažen denní rozpočet",
+      "description": "Denní rozpočet je {budget} vstupních tokenů a dnes jich bylo spotřebováno {used}. Další vyhodnocení, kontextu {context}, potřebuje asi {estimate} dalších a do zbytku se nevejde, takže se další otázky nekladou. Senzory s odpověďmi budou nedostupné, dokud se nějaký dotaz znovu nevejde. Zvyšte rozpočet v možnostech integrace, vyhodnocujte kontexty méně často, nebo zkraťte své otázky."
+    },
+    "daily_budget_spent": {
+      "title": "Jev přestal vyhodnocovat: dosažen denní rozpočet",
+      "description": "Denní rozpočet je {budget} vstupních tokenů a dnes jich bylo spotřebováno {used}, takže se další otázky nekladou. Senzory s odpověďmi budou nedostupné, dokud nezačne nový den nebo se rozpočet nezvýší. Zvyšte rozpočet v možnostech integrace, vyhodnocujte kontexty méně často, nebo zkraťte své otázky."
+    }
+  },
+  "services": {
+    "noul": {
+      "name": "Položit otázku ano/ne",
+      "description": "Zeptejte se, zda něco platí, a získejte pravděpodobnost odpovědi ano, od 0 do 1. Když může platit několik štítků zároveň, použijte jednu otázku na štítek.",
+      "fields": {
+        "state": {
+          "name": "Stav",
+          "description": "Text k posouzení. Napište šablonu a vykreslí se před odesláním."
+        },
+        "instructions": {
+          "name": "Otázka",
+          "description": "Formulujte ji tak, aby vysoké číslo znamenalo ano. Tvrzení funguje stejně dobře jako otázka."
+        },
+        "true_means": {
+          "name": "Ano znamená",
+          "description": "Volitelné. Co se počítá jako ano. Vyplatí se vyplnit, když je hranice jemná."
+        },
+        "false_means": {
+          "name": "Ne znamená",
+          "description": "Volitelné. Co se počítá jako ne."
+        },
+        "threshold": {
+          "name": "Práh",
+          "description": "Kde vést hranici pro pole is_true v odpovědi. Samotná pravděpodobnost se vrací vždy. Hodnota blízká 0.5 znamená, že to model nedokáže rozhodnout, ne že je odpověď zpola pravdivá."
+        },
+        "config_entry": {
+          "name": "Klíč API",
+          "description": "Kterým nastaveným klíčem se má ptát. Potřeba jen tehdy, když je nastavený více než jeden."
+        },
+        "include_attributes": {
+          "name": "Zahrnout všechny atributy",
+          "description": "Ve výchozím stavu vypnuto. Posílá každý atribut vybraných entit, nejen hodnotu, jednotku, třídu zařízení a oblast. Předpověď počasí nebo seznam obalů alb v přehrávači médií vydá na tisíce tokenů a ty zaplatíte při každém vyhodnocení."
+        },
+        "background": {
+          "name": "Pozadí",
+          "description": "Volitelné. Trvale platná fakta o tom, jak to číst, například co znamená naměřená hodnota u vašeho konkrétního zařízení. Putuje s otázkou, a ne s naměřenými hodnotami, což měřitelně funguje lépe než vložení do stavu. Objekt místo věty zachová vaše vlastní názvy klíčů a model tyto klíče čte."
+        }
+      }
+    },
+    "choice": {
+      "name": "Vybrat jednu možnost",
+      "description": "Vyberte jednu možnost ze svého seznamu a získejte pravděpodobnost každé možnosti plus hodnotu jistoty.",
+      "fields": {
+        "state": {
+          "name": "Stav",
+          "description": "Text k posouzení. Napište šablonu a vykreslí se před odesláním."
+        },
+        "instructions": {
+          "name": "Otázka",
+          "description": "Mezi čím model vybírá, v jedné větě."
+        },
+        "options": {
+          "name": "Možnosti",
+          "description": "Dvě až 255 možností. Když váš seznam nemusí pokrýt každý vstup, přidejte záchytnou možnost, například jiné."
+        },
+        "option_descriptions": {
+          "name": "Popisy možností",
+          "description": "Volitelné. Popis u každé možnosti, který zostří hranici mezi podobnými. Nejvíc pomůže, když uvedete, co možnost vylučuje."
+        },
+        "config_entry": {
+          "name": "Klíč API",
+          "description": "Kterým nastaveným klíčem se má ptát. Potřeba jen tehdy, když je nastavený více než jeden."
+        },
+        "include_attributes": {
+          "name": "Zahrnout všechny atributy",
+          "description": "Ve výchozím stavu vypnuto. Posílá každý atribut vybraných entit, nejen hodnotu, jednotku, třídu zařízení a oblast. Předpověď počasí nebo seznam obalů alb v přehrávači médií vydá na tisíce tokenů a ty zaplatíte při každém vyhodnocení."
+        },
+        "background": {
+          "name": "Pozadí",
+          "description": "Volitelné. Trvale platná fakta o tom, jak to číst, například co znamená naměřená hodnota u vašeho konkrétního zařízení. Putuje s otázkou, a ne s naměřenými hodnotami, což měřitelně funguje lépe než vložení do stavu. Objekt místo věty zachová vaše vlastní názvy klíčů a model tyto klíče čte."
+        }
+      }
+    },
+    "score": {
+      "name": "Ohodnotit na škále",
+      "description": "Ohodnoťte text proti úrovním, které popíšete, a získejte číslo, které může padnout mezi dvě úrovně.",
+      "fields": {
+        "state": {
+          "name": "Stav",
+          "description": "Text k posouzení. Napište šablonu a vykreslí se před odesláním."
+        },
+        "instructions": {
+          "name": "Otázka",
+          "description": "Jeden rozměr na otázku. Otázka, která měří tři věci naráz, dává nízkou jistotu a bezvýznamný střed."
+        },
+        "levels": {
+          "name": "Úrovně",
+          "description": "Dvě až 10 úrovní, od nejnižší. U každé popište konkrétní situaci, ne míru: Rozbité, ale existuje náhradní postup je lepší než Středně vážné. Každá úroveň se posuzuje sama o sobě, takže srovnávací formulace a čísla v textu nic nedělají."
+        },
+        "config_entry": {
+          "name": "Klíč API",
+          "description": "Kterým nastaveným klíčem se má ptát. Potřeba jen tehdy, když je nastavený více než jeden."
+        },
+        "include_attributes": {
+          "name": "Zahrnout všechny atributy",
+          "description": "Ve výchozím stavu vypnuto. Posílá každý atribut vybraných entit, nejen hodnotu, jednotku, třídu zařízení a oblast. Předpověď počasí nebo seznam obalů alb v přehrávači médií vydá na tisíce tokenů a ty zaplatíte při každém vyhodnocení."
+        },
+        "background": {
+          "name": "Pozadí",
+          "description": "Volitelné. Trvale platná fakta o tom, jak to číst, například co znamená naměřená hodnota u vašeho konkrétního zařízení. Putuje s otázkou, a ne s naměřenými hodnotami, což měřitelně funguje lépe než vložení do stavu. Objekt místo věty zachová vaše vlastní názvy klíčů a model tyto klíče čte."
+        }
+      }
+    },
+    "ask": {
+      "name": "Položit několik otázek najednou",
+      "description": "Položte libovolnou směs typů otázek k jednomu kusu textu v jediném požadavku. Každá otázka se posuzuje nezávisle proti témuž textu a běží souběžně, takže dvacet otázek trvá přibližně stejně dlouho jako jedna.",
+      "fields": {
+        "state": {
+          "name": "Stav",
+          "description": "Text k posouzení. Napište šablonu a vykreslí se před odesláním."
+        },
+        "questions": {
+          "name": "Otázky",
+          "description": "Váš vlastní klíč pro každou otázku, pak její typ noul, choice nebo score, její instructions a kritéria u choice a score. Klíče jsou vaše: vrátí se jako klíče odpovědí a model je nikdy nevidí."
+        },
+        "config_entry": {
+          "name": "Klíč API",
+          "description": "Kterým nastaveným klíčem se má ptát. Potřeba jen tehdy, když je nastavený více než jeden."
+        },
+        "include_attributes": {
+          "name": "Zahrnout všechny atributy",
+          "description": "Ve výchozím stavu vypnuto. Posílá každý atribut vybraných entit, nejen hodnotu, jednotku, třídu zařízení a oblast. Předpověď počasí nebo seznam obalů alb v přehrávači médií vydá na tisíce tokenů a ty zaplatíte při každém vyhodnocení."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "calls_today": {
+        "name": "Volání dnes"
+      },
+      "input_tokens_today": {
+        "name": "Vstupní tokeny dnes"
+      },
+      "estimated_cost_today": {
+        "name": "Odhadované náklady dnes"
+      },
+      "context_latency": {
+        "name": "Latence {context}"
+      },
+      "context_payload": {
+        "name": "Velikost dotazu {context}"
+      }
+    },
+    "binary_sensor": {
+      "daily_budget_exceeded": {
+        "name": "Denní rozpočet překročen"
+      }
+    }
+  },
+  "exceptions": {
+    "nothing_to_judge": {
+      "message": "Není co posuzovat: dejte této akci nějaký text, nebo vyberte entity, zařízení či oblasti, na které se má podívat."
+    },
+    "no_entry": {
+      "message": "Není načtený žádný konfigurační záznam Jev, se kterým by se dalo ptát. Nejdřív přidejte integraci, nebo když je nastavený více než jeden, vyberte jeden pod Klíč API."
+    },
+    "entry_ambiguous": {
+      "message": "Je načteno více položek Jev: {entries}. Vyberte jednu v poli Klíč API, protože každá položka má vlastní klíč a rozpočet."
+    },
+    "missing_targets": {
+      "message": "Tyto cíle neexistují: {targets}. Zeptat se na zbytek by odpovědělo na jinou otázku, než jste napsali."
+    },
+    "empty_target": {
+      "message": "Tento cíl neobsahuje žádné entity, takže by nebylo co posuzovat."
+    },
+    "too_many_entities": {
+      "message": "Tento cíl obsahuje {count} entit a limit je {limit}. Každá entita se při každém vyhodnocení účtuje jako vstup, takže vyberte ty, na kterých otázka stojí, nebo ji rozdělte."
+    },
+    "question_shape": {
+      "message": "Otázka {key} potřebuje obojí, 'type' i 'instructions'. Typy jsou noul, choice a score."
+    },
+    "question_invalid": {
+      "message": "Otázka {key} není platná: {reason}"
+    },
+    "template_failed": {
+      "message": "Šablona stavu selhala: {reason}"
+    },
+    "auth_rejected": {
+      "message": "TypeSafe odmítl klíč API: {reason}"
+    },
+    "ask_failed": {
+      "message": "Dotaz na Jev selhal: {reason}"
+    },
+    "wrong_answer_type": {
+      "message": "Byla položena otázka typu {question_type} a vrátilo se {got}, což by API dělat nemělo."
+    },
+    "choice_options_out_of_range": {
+      "message": "Choice bere {min} až {max} možností a tato má {count}."
+    },
+    "score_levels_out_of_range": {
+      "message": "Score bere {min} až {max} úrovní, od nejnižší, a tato má {count}."
+    },
+    "unreadable_answer": {
+      "message": "TypeSafe vrátil odpověď typu {kind}, kterou tato verze neumí přečíst. Aktualizujte integraci."
+    },
+    "task_needs_structure": {
+      "message": "Úloha {task} žádá volný text a Jev odpovídá jen na typované otázky. Dejte akci strukturu, jejíž pole jsou boolean, select nebo number."
+    },
+    "task_over_budget": {
+      "message": "Úloha {task} stojí asi {estimate} vstupních tokenů a z denního rozpočtu {budget} zbývá {remaining}. Pro pokračování zvyšte nebo zrušte rozpočet v možnostech integrace."
+    },
+    "reserved_field": {
+      "message": "Pole {field} nelze použít, protože výsledek pod tímto názvem nese jistotu každé odpovědi. Pole přejmenujte."
+    },
+    "no_fields": {
+      "message": "Struktura nedeklaruje žádná pole."
+    },
+    "answer_missing": {
+      "message": "Odpověď neobsahuje nic pro {field}."
+    },
+    "unsupported_field": {
+      "message": "Pole {field} používá {selector} a Jev odpovídá na otázku ano/ne, výběr ze seznamu nebo hodnocení na stupnici. Dejte poli boolean, select s možnostmi nebo number s min a max."
+    },
+    "field_options_out_of_range": {
+      "message": "Pole {field} nabízí {count} možností a výběr potřebuje {min} až {max}."
+    },
+    "field_needs_scale": {
+      "message": "Pole {field} je číslo bez {bound}. Hodnocení potřebuje oba konce stupnice."
+    },
+    "field_scale_not_ordered": {
+      "message": "Pole {field} má min {min} a max {max}, a to není stupnice."
+    },
+    "answer_does_not_fit": {
+      "message": "Odpověď pro {field} se vrátila jako {answer}, což neodpovídá {selector}."
+    },
+    "context_template_failed": {
+      "message": "Šablona stavu pro kontext {context} selhala: {reason}"
+    },
+    "context_targets_failed": {
+      "message": "Kontext {context}: {reason}"
+    },
+    "context_over_budget": {
+      "message": "Vyhodnocení kontextu {context} stojí asi {estimate} vstupních tokenů a z denního rozpočtu {budget} zbývá {remaining}. Pro pokračování zvyšte nebo zrušte rozpočet v možnostech integrace."
+    },
+    "rate_limited": {
+      "message": "TypeSafe omezil požadavek: {reason}"
+    }
+  },
+  "common": {
+    "not_understood": "Promiňte, tomu jsem nerozuměl.",
+    "whole_house": "To by ovlivnilo celý dům. Řekněte, kterou místnost nebo které zařízení máte na mysli.",
+    "which_kind": "Jaký druh věcí máte na mysli? Řekněte světla, nebo vypínače, nebo jmenujte místnost.",
+    "intent_failed": "Promiňte, to se nepovedlo.",
+    "already_on": "{name} už je zapnuto.",
+    "already_off": "{name} už je vypnuto.",
+    "preview_alone": "Odesláno jako vlastní požadavek.",
+    "preview_grouped": "Odesláno v jednom požadavku spolu s: {others}.",
+    "preview_cost": "Jednou dotázáno pro tento náhled: {tokens} vstupních tokenů, asi ${cost}, {ms} ms.",
+    "preview_threshold_over": "To je nad vaším prahem {threshold}, takže binární senzor by byl právě teď **zapnutý**.",
+    "preview_threshold_under": "To je pod vaším prahem {threshold}, takže binární senzor by byl právě teď **vypnutý**.",
+    "preview_winner": "Vítěz **{choice}**, jistota {confidence}.",
+    "preview_score": "Skóre **{score}**, nejbližší úroveň **{level}**, jistota {confidence}.",
+    "preview_undrawable": "Odpověď přišla ve tvaru, který tato verze neumí vykreslit.",
+    "preview_unbuildable": "Tuto otázku zatím nelze sestavit: {reason}",
+    "preview_rejected": "TypeSafe odmítl klíč API, takže zkušební odpověď není.",
+    "preview_failed": "Žádná zkušební odpověď: {reason}",
+    "preview_mismatched": "API odpovědělo, ale ne na otázku, která byla položena.",
+    "preview_template_error": "Šablona se nevykreslí: {reason}",
+    "query_not_found": "To jsem nenašel.",
+    "budget_spent": "Denní rozpočet tokenů je vyčerpán, takže to dnes udělat nemohu.",
+    "auth_failed": "TypeSafe odmítl klíč API. Zkontrolujte ho v nastavení Jev.",
+    "unavailable": "TypeSafe neodpověděl. Zkuste to za chvíli znovu.",
+    "preview_over_budget": "Denní rozpočet tokenů je vyčerpán, takže zkušební odpověď není. Otázka se přesto uloží.",
+    "preview_nothing_yet": "Žádná zkušební odpověď: zatím není na co se ptát."
+  },
+  "config_subentries": {
+    "question": {
+      "entry_type": "Otázka",
+      "initiate_flow": {
+        "user": "Přidat otázku",
+        "reconfigure": "Upravit otázku"
+      },
+      "step": {
+        "user": {
+          "title": "Jaký druh odpovědi chcete dostat?",
+          "menu_options": {
+            "noul": "Noul, pravděpodobnost. Jedno číslo od 0 do 1",
+            "choice": "Choice, jedna z vašich možností. S celým rozdělením",
+            "score": "Score, hodnocení. Proti úrovním, které popíšete"
+          }
+        },
+        "noul": {
+          "title": "Noul: otázka ano nebo ne",
+          "data": {
+            "name": "Název",
+            "instructions": "Otázka",
+            "target": "Na co se dívat",
+            "state": "Další poznámka nebo šablona",
+            "background": "Trvale platná fakta o naměřených hodnotách",
+            "true_means": "Co znamená vysoké číslo",
+            "false_means": "Co znamená nízké číslo",
+            "threshold": "Vytvořit i binární senzor nad",
+            "advanced": "Pokročilé"
+          },
+          "data_description": {
+            "name": "Pojmenuje senzor, který tato otázka vytvoří.",
+            "instructions": "Posílá se do API jako `instructions`.",
+            "target": "Vyberte entity, zařízení, oblasti nebo štítky a jejich naměřené hodnoty se odešlou za vás. Nechte prázdné, pokud je celým stavem poznámka níže.",
+            "state": "Text nebo šablona, samostatně nebo vedle naměřených hodnot.",
+            "background": "Vkládá se do `instructions`, takže putuje s otázkou, a ne se stavem.",
+            "true_means": "Volitelné. Zostří, kterým směrem odpověď ukazuje.",
+            "false_means": "Volitelné.",
+            "threshold": "Nechte prázdné, chcete-li jen senzor pravděpodobnosti.",
+            "advanced": "Rozvrh a co dalšího se posílá. Pro první otázku stačí výchozí hodnoty."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Pokročilé",
+              "description": "Rozvrh a co dalšího se posílá. Pro první otázku stačí výchozí hodnoty.",
+              "data": {
+                "trigger_entities": "Budit se místo toho na těchto",
+                "scan_interval": "Jak často se ptát",
+                "include_attributes": "Poslat také každý atribut"
+              },
+              "data_description": {
+                "trigger_entities": "Vyhodnotit, když se tyto změní, navíc k rozvrhu níže. S pětisekundovým tlumením zákmitů.",
+                "scan_interval": "Otázky, které se dívají na totéž ve stejném rozvrhu, se posílají jako jeden požadavek, což stojí tokeny, ale téměř žádný čas navíc.",
+                "include_attributes": "Ve výchozím stavu vypnuto. Předpověď počasí vydá na tisíce tokenů při každém vyhodnocení."
+              }
+            }
+          }
+        },
+        "choice": {
+          "title": "Choice: vyberte jednu ze svých možností",
+          "data": {
+            "name": "Název",
+            "instructions": "Otázka",
+            "target": "Na co se dívat",
+            "state": "Další poznámka nebo šablona",
+            "background": "Trvale platná fakta o naměřených hodnotách",
+            "options": "Vaše možnosti, jedna na řádek",
+            "advanced": "Pokročilé"
+          },
+          "data_description": {
+            "name": "Pojmenuje senzor, který tato otázka vytvoří.",
+            "instructions": "Posílá se do API jako `instructions`.",
+            "target": "Vyberte entity, zařízení, oblasti nebo štítky a jejich naměřené hodnoty se odešlou za vás. Nechte prázdné, pokud je celým stavem poznámka níže.",
+            "state": "Text nebo šablona, samostatně nebo vedle naměřených hodnot.",
+            "background": "Vkládá se do `instructions`, takže putuje s otázkou, a ne se stavem.",
+            "options": "Posílá se do API jako `criteria`. Jedna na řádek, ve tvaru `název: co znamená`. Popis je volitelný.",
+            "advanced": "Rozvrh a co dalšího se posílá. Pro první otázku stačí výchozí hodnoty."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Pokročilé",
+              "description": "Rozvrh a co dalšího se posílá. Pro první otázku stačí výchozí hodnoty.",
+              "data": {
+                "trigger_entities": "Budit se místo toho na těchto",
+                "scan_interval": "Jak často se ptát",
+                "include_attributes": "Poslat také každý atribut"
+              },
+              "data_description": {
+                "trigger_entities": "Vyhodnotit, když se tyto změní, navíc k rozvrhu níže. S pětisekundovým tlumením zákmitů.",
+                "scan_interval": "Otázky, které se dívají na totéž ve stejném rozvrhu, se posílají jako jeden požadavek, což stojí tokeny, ale téměř žádný čas navíc.",
+                "include_attributes": "Ve výchozím stavu vypnuto. Předpověď počasí vydá na tisíce tokenů při každém vyhodnocení."
+              }
+            }
+          }
+        },
+        "score": {
+          "title": "Score: hodnocení proti vašim úrovním",
+          "data": {
+            "name": "Název",
+            "instructions": "Otázka",
+            "target": "Na co se dívat",
+            "state": "Další poznámka nebo šablona",
+            "background": "Trvale platná fakta o naměřených hodnotách",
+            "levels": "Vaše úrovně, od nejnižší, jedna na řádek",
+            "advanced": "Pokročilé"
+          },
+          "data_description": {
+            "name": "Pojmenuje senzor, který tato otázka vytvoří.",
+            "instructions": "Posílá se do API jako `instructions`.",
+            "target": "Vyberte entity, zařízení, oblasti nebo štítky a jejich naměřené hodnoty se odešlou za vás. Nechte prázdné, pokud je celým stavem poznámka níže.",
+            "state": "Text nebo šablona, samostatně nebo vedle naměřených hodnot.",
+            "background": "Vkládá se do `instructions`, takže putuje s otázkou, a ne se stavem.",
+            "levels": "Posílá se do API jako `criteria`. Jedna na řádek, od nejnižší. Mezi 2 a 10 z nich.",
+            "advanced": "Rozvrh a co dalšího se posílá. Pro první otázku stačí výchozí hodnoty."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Pokročilé",
+              "description": "Rozvrh a co dalšího se posílá. Pro první otázku stačí výchozí hodnoty.",
+              "data": {
+                "trigger_entities": "Budit se místo toho na těchto",
+                "scan_interval": "Jak často se ptát",
+                "include_attributes": "Poslat také každý atribut"
+              },
+              "data_description": {
+                "trigger_entities": "Vyhodnotit, když se tyto změní, navíc k rozvrhu níže. S pětisekundovým tlumením zákmitů.",
+                "scan_interval": "Otázky, které se dívají na totéž ve stejném rozvrhu, se posílají jako jeden požadavek, což stojí tokeny, ale téměř žádný čas navíc.",
+                "include_attributes": "Ve výchozím stavu vypnuto. Předpověď počasí vydá na tisíce tokenů při každém vyhodnocení."
+              }
+            }
+          }
+        },
+        "reconfigure": {
+          "title": "Upravit tuto otázku",
+          "data": {
+            "name": "Název",
+            "instructions": "Otázka",
+            "target": "Na co se dívat",
+            "state": "Další poznámka nebo šablona",
+            "background": "Trvale platná fakta o naměřených hodnotách",
+            "true_means": "Co znamená vysoké číslo",
+            "false_means": "Co znamená nízké číslo",
+            "threshold": "Vytvořit i binární senzor nad",
+            "options": "Vaše možnosti, jedna na řádek",
+            "levels": "Vaše úrovně, od nejnižší, jedna na řádek",
+            "advanced": "Pokročilé"
+          },
+          "data_description": {
+            "name": "Pojmenuje senzor, který tato otázka vytvoří.",
+            "instructions": "Posílá se do API jako `instructions`.",
+            "target": "Vyberte entity, zařízení, oblasti nebo štítky a jejich naměřené hodnoty se odešlou za vás. Nechte prázdné, pokud je celým stavem poznámka níže.",
+            "state": "Text nebo šablona, samostatně nebo vedle naměřených hodnot.",
+            "background": "Vkládá se do `instructions`, takže putuje s otázkou, a ne se stavem.",
+            "true_means": "Volitelné. Zostří, kterým směrem odpověď ukazuje.",
+            "false_means": "Volitelné.",
+            "threshold": "Nechte prázdné, chcete-li jen senzor pravděpodobnosti.",
+            "options": "Posílá se do API jako `criteria`. Jedna na řádek, ve tvaru `název: co znamená`. Popis je volitelný.",
+            "levels": "Posílá se do API jako `criteria`. Jedna na řádek, od nejnižší. Mezi 2 a 10 z nich.",
+            "advanced": "Rozvrh a co dalšího se posílá. Pro první otázku stačí výchozí hodnoty."
+          },
+          "sections": {
+            "advanced": {
+              "name": "Pokročilé",
+              "description": "Rozvrh a co dalšího se posílá. Pro první otázku stačí výchozí hodnoty.",
+              "data": {
+                "trigger_entities": "Budit se místo toho na těchto",
+                "scan_interval": "Jak často se ptát",
+                "include_attributes": "Poslat také každý atribut"
+              },
+              "data_description": {
+                "trigger_entities": "Vyhodnotit, když se tyto změní, navíc k rozvrhu níže. S pětisekundovým tlumením zákmitů.",
+                "scan_interval": "Otázky, které se dívají na totéž ve stejném rozvrhu, se posílají jako jeden požadavek, což stojí tokeny, ale téměř žádný čas navíc.",
+                "include_attributes": "Ve výchozím stavu vypnuto. Předpověď počasí vydá na tisíce tokenů při každém vyhodnocení."
+              }
+            }
+          }
+        },
+        "preview": {
+          "title": "Zkontrolujte, co se odešle",
+          "description": "Toto je to, na co se vaše otázka zeptá, sestavené teď z toho, na co ukazuje.\n\n{grouping}\n\n### Na co odpovídá právě teď\n\n{answer}\n\n### Stav, který čte\n\n```\n{state}\n```"
+        }
+      },
+      "error": {
+        "nothing_to_judge": "Vyberte, na co se dívat, nebo napište poznámku či šablonu. Otázka potřebuje stav.",
+        "choice_options_out_of_range": "Choice bere mezi 2 a 255 možnostmi.",
+        "score_levels_out_of_range": "Score bere mezi 2 a 10 úrovněmi.",
+        "option_name_empty": "Každá možnost potřebuje název před dvojtečkou.",
+        "option_name_duplicate": "Dvě možnosti sdílejí název, takže jedna z nich by se tiše zahodila."
+      },
+      "abort": {
+        "reconfigure_successful": "Otázka aktualizována"
+      }
+    }
+  }
+}
