@@ -29,33 +29,37 @@ emhass_mpc_models:
             "prediction_horizon": {{ states('sensor.prediction_horizon') | int(0) }},
             "alpha": 1,
             "beta": 0,
-            "num_def_loads": 5,
-            "p_deferrable_nom": [1600, 2250, 1200, 900, 2000],
+            "num_def_loads": 6,
+            "p_deferrable_nom": [1600, 2250, 1200, 900, 2000, 2500],
             "def_total_hours": [
               {{  [(states('sensor.wasmachien_uren')|float * 4) | round(0) / 4, 0] | max }},
               {{  [(states('sensor.droogkast_uren')|float * 4) | round(0) / 4, 0] | max }},
               {{  [(states('sensor.afwasmachien_uren')|float * 4) | round(0) / 4, 0] | max }},
               {{  [(states('sensor.warmtepompboiler_uren')|float * 4) | round(0) / 4, 0] | max }},
-              {{  [(states('sensor.warmtepomp_uren') |float * 4) | round(0) / 4, 0] | max }}],
-            "set_def_constant":[true, true, true, true, true],
+              {{  [(states('sensor.warmtepomp_uren') |float * 4) | round(0) / 4, 0] | max }},
+              {{  [(states('sensor.brouwen_uren') |float * 4) | round(0) / 4, 0] | max }}],
+            "set_def_constant":[true, true, true, true, true, true],
             "def_start_timestep": [
               0,
               0,
               0,
               {{ states("sensor.warmtepompboiler_start_timesteps")|int }},
-              {{ states("sensor.warmtepomp_start_timesteps")|int }}],
+              {{ states("sensor.warmtepomp_start_timesteps")|int }},
+              {{ states("sensor.brouwen_start_timesteps")|int }}],
             "def_end_timestep": [
               {{ [ states('sensor.wasmachien_end_timesteps') | int(0), ((states('sensor.wasmachien_uren') | float * 4) | round(0) * 3) ] | max }},
               {{ [ states('sensor.droogkast_end_timesteps') | int(0), ((states('sensor.droogkast_uren') | float * 4) | round(0) * 3) ] | max }},
               {{ [ states('sensor.afwasmachien_end_timesteps') | int(0), ((states('sensor.afwasmachien_uren') | float * 4) | round(0) * 3) ] | max }},
               {{ [ states('sensor.warmtepompboiler_end_timesteps') | int(0), (((states('sensor.warmtepompboiler_uren') | float * 4) | round(0) * 3) + states("sensor.warmtepompboiler_start_timesteps")|int(0)) ] | max }},
-              {{ [ states('sensor.warmtepomp_end_timesteps') | int(0), (((states('sensor.warmtepompboiler_uren') | float * 4) | round(0) * 3) + states("sensor.warmtepomp_start_timesteps")|int(0)) ] | max }}],
+              {{ [ states('sensor.warmtepomp_end_timesteps') | int(0), (((states('sensor.warmtepompboiler_uren') | float * 4) | round(0) * 3) + states("sensor.warmtepomp_start_timesteps")|int(0)) ] | max }},
+              {{ [ states('sensor.brouwen_end_timesteps') | int(0), ((states('sensor.brouwen_uren') | float * 4) | round(0) * 3) ] | max }}],
             "def_current_state": [
               {{  "true" if is_state('binary_sensor.wasmachien_staat_op', "on") else "false" }},
               {{  "true" if is_state('binary_sensor.droogkast_staat_op', "on") else "false" }},
               {{  "true" if is_state('binary_sensor.afwasmachien_staat_op', "on") else "false" }},
               {{  "true" if is_state('binary_sensor.warmtepompboiler_aan', "on") else "false" }},
-              {{  "true" if is_state('binary_sensor.warmtepomp_aan', "on") else "false" }}],
+              {{  "true" if is_state('binary_sensor.warmtepomp_aan', "on") else "false" }},
+              {{  "true" if is_state('binary_sensor.brouwketel_aan', "on") else "false" }}],
             "soc_init": {{ states("sensor.battery_state_of_charge") | int(states("sensor.emhass_soc")|int) / 100 }},
             "battery_minimum_state_of_charge": {{
                 0.15 if ((states("sensor.battery_state_of_charge") | int(states("sensor.emhass_soc")|int) / 100) > 0.15)
@@ -68,14 +72,16 @@ emhass_mpc_models:
             "Pd_max": {{ states("sensor.battery_p_discharge_max")|int }},
             "maximum_power_from_grid": {% set month = now().month -%}
               {% if month < 2 or month > 11 -%}
-                7000
+                {% set maximum = 7000 -%}
               {% elif month == 2 or month == 11 -%}
-                5000
+                {% set maximum = 5000 -%}
               {% elif month == 10 -%}
-                3500
+                {% set maximum = 3500 -%}
               {% else -%}
-                2500
+                {% set maximum = 2500 -%}
               {% endif -%}
+              {% set max_peak = (states("sensor.electricity_meter_maximale_vraag_huidige_maand") | float(0) * 1000) | int - 300 -%}
+              {{ max(maximum, max_peak) }}
           }
 
     - delay: "00:00:03"

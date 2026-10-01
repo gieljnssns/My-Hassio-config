@@ -1,0 +1,116 @@
+- sensor:
+    - name: "Brouwen uren"
+      unique_id: 126e58a7-3667-415a-8853-950a61ab6d18
+      unit_of_measurement: "uur"
+      state: >
+        {% if states("sensor.brouwen_end_timesteps") | int > 0 -%}
+          {% if states('sensor.branduren_brouwketel')|float(0) == 0 -%}
+            4
+          {% else -%}
+            {{ 4 - states('sensor.branduren_brouwketel')|float(0) }}
+          {% endif -%}
+        {% else -%}
+          0
+        {% endif -%}
+
+    - name: Brouwen startuur
+      unique_id: 8f90f740-7c96-42a3-983b-86af3b4237dc
+      state: >
+        {% from 'easy_time.jinja' import easy_relative_time -%}
+        {% set load = (state_attr('sensor.ridge_p_deferrable5', 'deferrables_schedule')
+                |map(attribute='ridge_p_deferrable5')
+                |list) -%}
+        {% set time = (state_attr('sensor.ridge_p_deferrable5', 'deferrables_schedule')
+                |map(attribute='date')
+                |list) -%}
+        {% if is_state("binary_sensor.brouwketel_aan", "on") -%}
+          Staat op
+        {% else -%}
+          {% set new_list = namespace(all=[]) -%}
+            {% for i in range (load | length) -%}
+              {% if load[i] | float(0) > 1 -%}
+                {{ (easy_relative_time(time [i], max_period='minute', language='nl')) }}
+                {% break -%}
+              {% endif -%}
+            {% endfor -%}
+          {% endif -%}
+      availability: >-
+        {{ states('sensor.ridge_p_deferrable5') not in ('unknown', 'unavailable', 'None') }}
+
+    - name: Brouwen start timesteps
+      unique_id: b9077b85-a9e2-4605-8548-c23573b7f565
+      unit_of_measurement: 5m
+      state: >
+        {% set start_time = states('input_datetime.starttijd_brouwen') -%}
+        {% if start_time not in ['unknown', 'unavailable'] -%}
+          {% set start_ts = as_timestamp(start_time) -%}
+          {% set now_ts = as_timestamp(now()) -%}
+          {% set time_diff = (start_ts - now_ts) -%}
+          {% set timesteps = (time_diff / 300) | round(0, 'ceil') | int -%}
+          {% set end_timesteps = states("sensor.brouwen_end_timesteps") | int -%}
+          {% if 0 < end_timesteps < 360 -%}
+            {% if states("sensor.branduren_brouwketel") | float(0) > 0 -%}
+              0
+            {% else -%}
+              {{ max(timesteps, 1) }}
+            {% endif -%}
+          {% else -%}
+            0
+          {% endif -%}
+        {% else -%}
+          0
+        {% endif -%}
+
+    - name: Brouwen end timesteps
+      unique_id: c60911b4-7531-477f-9695-c26e151bd017
+      unit_of_measurement: 5m
+      state: >
+        {% set end_time = states('input_datetime.eindtijd_brouwen') -%}
+        {% if end_time not in ['unknown', 'unavailable'] -%}
+          {% set end_ts = as_timestamp(end_time) -%}
+          {% set now_ts = as_timestamp(now()) -%}
+          {% set time_diff = (end_ts - now_ts) -%}
+          {% set timesteps = (time_diff / 300) | round(0, 'ceil') | int -%}
+          {% if 0 < timesteps < 360 -%}
+            {{ timesteps }}
+          {% else -%}
+            0
+          {% endif -%}
+        {% else -%}
+          0
+        {% endif -%}
+
+- binary_sensor:
+    - name: Brouwketel aan
+      device_class: power
+      unique_id: bef95c87-e5f3-4387-ab50-3dc96560abde
+      state: >
+        {{ states('sensor.brouwerij_vermogen') | float(default=0) > 1000 }}
+    - name: Brouwketel aan delay off
+      device_class: power
+      unique_id: 281855f7-37f8-4e37-9838-25b6384ac4b8
+      state: >
+        {{ states('sensor.brouwerij_vermogen') | float(default=0) > 1000 }}
+      delay_off:
+        minutes: 10
+# - trigger:
+#     - trigger: state
+#       entity_id: binary_sensor.warmtepomp_aan
+#       from: "off"
+#       to: "on"
+#   sensor:
+#     - name: "Warmtepomp is gestart op…"
+#       unique_id: 1c499c3b-1232-48aa-b291-8f05a968611e
+#       state: >
+#         {{ as_timestamp(states.binary_sensor.warmtepomp_aan.last_changed) }}
+
+# - trigger:
+#     - trigger: state
+#       entity_id: binary_sensor.warmtepomp_aan
+#       from: "on"
+#       to: "off"
+#   sensor:
+#     - name: "Warmtepomp is gestopt op…"
+#       unique_id: 76cdeed9-861a-4f38-8ea9-67273a31811a
+#       state: >
+#         {{ as_timestamp(states.binary_sensor.warmtepomp_aan.last_changed) }}

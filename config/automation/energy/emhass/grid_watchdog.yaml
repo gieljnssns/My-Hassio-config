@@ -95,11 +95,11 @@ actions:
                   title: "⚠️🪫 Battery Watchdog"
                   message: >
                     Grid follower gestopt wegens battery power not valid.
-                    {% if states('select.goodwe_inverter_operation_mode') == 'general' %}
+                    {% if states('select.goodwe_inverter_operation_mode') == 'general' -%}
                       ✅ Omvormer succesvol naar general gezet.
-                    {% else %}
+                    {% else -%}
                       ❌ Omvormer staat nog op {{ states('select.goodwe_inverter_operation_mode') }}, general mode mislukt.
-                    {% endif %}
+                    {% endif -%}
                   data:
                     actions:
                       - action: "URI" # Must be set to URI if you plan to use a URI
@@ -139,11 +139,11 @@ actions:
                   title: "⚠️ Grid Follower Watchdog"
                   message: >
                     Grid follower gestopt wegens te grote afwijking.
-                    {% if states('select.goodwe_inverter_operation_mode') == 'general' %}
+                    {% if states('select.goodwe_inverter_operation_mode') == 'general' -%}
                       ✅ Omvormer succesvol naar general gezet.
-                    {% else %}
+                    {% else -%}
                       ❌ Omvormer staat nog op {{ states('select.goodwe_inverter_operation_mode') }}, general mode mislukt.
-                    {% endif %}
+                    {% endif -%}
 
           - conditions:
               - condition: trigger
@@ -185,11 +185,11 @@ actions:
                   title: "⚠️ General Mode Watchdog"
                   message: >
                     Grid follower gestart wegens te grote afwijking in general mode.
-                    {% if states('script.emhass_grid_follower') == 'on' %}
+                    {% if states('script.emhass_grid_follower') == 'on' -%}
                       ✅ Grid follower succesvol gestart.
-                    {% else %}
+                    {% else -%}
                       ❌ Grid follower kon niet gestart worden.
-                    {% endif %}
+                    {% endif -%}
                   data:
                     actions:
                       - action: "URI" # Must be set to URI if you plan to use a URI

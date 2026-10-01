@@ -84,13 +84,31 @@
       unit_of_measurement: "W"
       device_class: power
       state: >
-        {% set use = (states("sensor.huidig_verbruik") | float(default=0) -
-                      states("sensor.wasmachien_vermogen") | float(default=0) -
-                      states("sensor.droogkast_vermogen") | float(default=0) -
-                      states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
-                      states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
-                      states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) -%}
+        {% set huidig = states("sensor.huidig_verbruik") | float(default=0) -%}
+        {% set wasmachien = states("sensor.wasmachien_vermogen") | float(default=0) -%}
+        {% set droogkast = states("sensor.droogkast_vermogen") | float(default=0) -%}
+        {% set afwasmachien = states("sensor.afwasmachien_vermogen") | float(default=0) -%}
+        {% set warmtepompboiler = states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -%}
+        {% set warmtepomp = states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -%}
+        {% set brouwerij = states("sensor.brouwerij_vermogen") | float(default=0) -%}
+        {% set brouwketel = brouwerij if brouwerij > 1000 else 0 -%}
+
+        {% set use = (huidig -
+                      wasmachien -
+                      droogkast -
+                      afwasmachien -
+                      warmtepompboiler -
+                      warmtepomp -
+                      brouwketel) | round(1) -%}
         {{ [275, use] | max | round(0) }}
+      # state: >
+      #   {% set use = (states("sensor.huidig_verbruik") | float(default=0) -
+      #                 states("sensor.wasmachien_vermogen") | float(default=0) -
+      #                 states("sensor.droogkast_vermogen") | float(default=0) -
+      #                 states("sensor.warmtepompboiler_huidig_verbruik") | float(default=0) -
+      #                 states("sensor.warmtepomp_huidig_verbruik") | float(default=0) -
+      #                 states("sensor.afwasmachien_vermogen") | float(default=0)) | round(1) -%}
+      #   {{ [275, use] | max | round(0) }}
 
     - name: "Huidig fluvius"
       unit_of_measurement: "W"
