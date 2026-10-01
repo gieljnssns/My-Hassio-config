@@ -33,14 +33,14 @@ actions:
     data:
       title: 🌬️ Boven verluchten
       message: >
-        {% set list = [] %}
-        {% if is_state('binary_sensor.badkamer_raam_openen','off') -%}{% set list = list + ["Badkamer"] %} {% endif -%}
-        {% if is_state('binary_sensor.slaapkamer_raam_openen','off') -%}{% set list = list + ['Slaapkamer'] %} {% endif -%}
-        {% if is_state('binary_sensor.slaapkamer_fien_raam_openen','off') -%}{% set list = list + ["Slaapkamer Fien"] %} {% endif -%}
-        {% if is_state('binary_sensor.slaapkamer_noor_raam_openen','off') -%}{% set list = list + ["Slaapkamer Noor"] %} {% endif -%}
-        {% if is_state('binary_sensor.velux_openen','off') -%}{% set list = list + ["Slaapkamer velux"] %} {% endif -%}
-        {% if is_state('binary_sensor.raam_openen','off') -%}{% set list = list + ["Drumkot"] %} {% endif -%}
-        {% if is_state('binary_sensor.raam_openen_2','off') -%}{% set list = list + ["Gang raam"] %} {% endif -%}
-        {% if is_state('binary_sensor.dubbel_raam_openen','off') -%}{% set list = list + ["Gang dubbel raam"] %} {% endif -%}
+        {% set list = [] -%}
+        {% if is_state('binary_sensor.badkamer_raam_openen','off') -%}{% set list = list + ["Badkamer"] -%} {% endif -%}
+        {% if is_state('binary_sensor.slaapkamer_raam_openen','off') -%}{% set list = list + ['Slaapkamer'] -%} {% endif -%}
+        {% if is_state('binary_sensor.slaapkamer_fien_raam_openen','off') -%}{% set list = list + ["Slaapkamer Fien"] -%} {% endif -%}
+        {% if is_state('binary_sensor.slaapkamer_noor_raam_openen','off') -%}{% set list = list + ["Slaapkamer Noor"] -%} {% endif -%}
+        {% if is_state('binary_sensor.velux_openen','off') -%}{% set list = list + ["Slaapkamer velux"] -%} {% endif -%}
+        {% if is_state('binary_sensor.raam_openen','off') -%}{% set list = list + ["Drumkot"] -%} {% endif -%}
+        {% if is_state('binary_sensor.raam_openen_2','off') -%}{% set list = list + ["Gang raam"] -%} {% endif -%}
+        {% if is_state('binary_sensor.dubbel_raam_openen','off') -%}{% set list = list + ["Gang dubbel raam"] -%} {% endif -%}
         Ramen die open kunnen:
           {{ list | join(", ") }}

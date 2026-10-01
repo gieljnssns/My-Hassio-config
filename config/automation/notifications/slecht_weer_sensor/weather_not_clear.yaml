@@ -7,14 +7,14 @@ triggers:
 conditions:
   - condition: template
     value_template: >
-      {% set weather = states('weather.home_2') %}
+      {% set weather = states('weather.home_2') -%}
       {% set frost =
         states('sensor.buiten_temperatuur') | float(0) < 4
         and states('sensor.buiten_dauwpunt') | float(0) < 6
         and state_attr('weather.home_2', 'wind_speed') | float(0) < 12
         and state_attr('weather.home_2', 'cloud_coverage') | float(0) < 20
         and states('sensor.buiten_luchtvochtigheid') | float(0) > 50
-      %}
+      -%}
       {{ weather not in ['snowy', 'snowy-rainy', 'rainy', 'pouring', 'lightning-rainy'] and not frost }}
 
 actions:

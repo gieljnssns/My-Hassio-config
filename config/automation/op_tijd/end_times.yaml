@@ -46,7 +46,7 @@ actions:
                   {% set slaapkamer = states("sensor.condensatie_marge_slaapkamer") | float (0) -%}
                   {% set noor = states("sensor.condensatie_marge_noor") | float (0) -%}
                   {% set fien = states("sensor.condensatie_marge_fien") | float (0) -%}
-                  {{ [keuken, slaapkamer, noor, fien] | min > 3 }}
+                  {{ [keuken, slaapkamer, noor, fien] | min > 2 }}
             then:
               - action: switch.turn_off
                 entity_id: switch.verluchting
@@ -68,7 +68,7 @@ actions:
                   {% set slaapkamer = states("sensor.condensatie_marge_slaapkamer") | float (0) -%}
                   {% set noor = states("sensor.condensatie_marge_noor") | float (0) -%}
                   {% set fien = states("sensor.condensatie_marge_fien") | float (0) -%}
-                  {{ [keuken, slaapkamer, noor, fien] | min > 3 }}
+                  {{ [keuken, slaapkamer, noor, fien] | min > 2 }}
             then:
               - action: switch.turn_off
                 entity_id: switch.luchtdroger
