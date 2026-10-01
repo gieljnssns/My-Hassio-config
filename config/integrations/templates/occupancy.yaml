@@ -7,37 +7,54 @@
                     | map(attribute="entity_id")
                     | list
                     | count }}
-    
+
+    - name: Giel status
+      unique_id: 84f14658-687a-4768-b412-ac757efc49e8
+      state: >
+        {{ states("input_select.giel_status_dropdown") }}
+    - name: Martine status
+      unique_id: 5cd54ceb-a71e-4c96-9044-ae5489850472
+      state: >
+        {{ states("input_select.martine_status_dropdown") }}
+    - name: Noor status
+      unique_id: 5e205609-c5ad-4b08-afc0-aa183989500c
+      state: >
+        {{ states("input_select.noor_status_dropdown") }}
+    - name: Fien status
+      unique_id: 1166a2a3-6237-436e-9d5a-8f800a03a086
+      state: >
+        {{ states("input_select.fien_status_dropdown") }}
+
     - name: People arrive count
       unique_id: 62fa5b78-7977-4606-a95d-2e89a5fb55c7
       state: >-
         {% set count = 0 -%}
-        {% if is_state("sensor.martine_location", "just_arrived") -%}
+        {% if is_state("sensor.martine_status", "Juist Aangekomen") -%}
           {% set count = count + 1 -%}
         {% endif -%}
-        {% if is_state("sensor.giel_location", "just_arrived") -%}
+        {% if is_state("sensor.giel_status", "Juist Aangekomen") -%}
           {% set count = count + 1 -%}
         {% endif -%}
-        {% if is_state("sensor.noor_location", "just_arrived") -%}
+        {% if is_state("sensor.noor_status", "Juist Aangekomen") -%}
           {% set count = count + 1 -%}
         {% endif -%}
-        {% if is_state("sensor.fien_location", "just_arrived") -%}
+        {% if is_state("sensor.fien_status", "Juist Aangekomen") -%}
           {% set count = count + 1 -%}
         {% endif -%}
         {{count}}
       attributes:
         people: >
           {% set people = [] -%}
-          {% if is_state("sensor.martine_location", "just_arrived") -%}
+          {% if is_state('sensor.martine_status', 'Juist Aangekomen') -%}
             {% set people = people + ['Martine'] -%}
           {% endif -%}
-          {% if is_state("sensor.giel_location", "just_arrived") -%}
+          {% if is_state('sensor.giel_status', 'Juist Aangekomen') -%}
             {% set people = people + ['Giel'] -%}
           {% endif -%}
-          {% if is_state("sensor.noor_location", "just_arrived") -%}
+          {% if is_state('sensor.noor_status', 'Juist Aangekomen') -%}
             {% set people = people + ['Noor'] -%}
           {% endif -%}
-          {% if is_state("sensor.fien_location", "just_arrived") -%}
+          {% if is_state('sensor.fien_status', 'Juist Aangekomen') -%}
             {% set people = people + ['Fien'] -%}
           {% endif -%}
           {{ people }}

@@ -21,19 +21,19 @@
       icon: mdi:account-multiple-plus
       state: >-
         {% if is_state("sensor.people_arrive_count", "2") -%}
-            {% if is_state("sensor.martine_location", "just_arrived") and is_state("sensor.noor_location", "just_arrived") -%}
+            {% if is_state("sensor.martine_status", "Juist Aangekomen") and is_state("sensor.noor_status", "Juist Aangekomen") -%}
               {% set person1 = 'Martine' -%}
               {% set person2 = 'Noor' -%}
-            {% elif is_state("sensor.martine_location", "just_arrived") and is_state("sensor.fien_location", "just_arrived") -%}
+            {% elif is_state("sensor.martine_status", "Juist Aangekomen") and is_state("sensor.fien_status", "Juist Aangekomen") -%}
               {% set person1 = 'Martine' -%}
               {% set person2 = 'Fien' -%}
-            {% elif is_state("sensor.giel_location", "just_arrived") and is_state("sensor.martine_location", "just_arrived") -%}
+            {% elif is_state("sensor.giel_status", "Juist Aangekomen") and is_state("sensor.martine_status", "Juist Aangekomen") -%}
               {% set person1 = 'Giel' -%}
               {% set person2 = 'Martine' -%}
-            {% elif is_state("sensor.giel_location", "just_arrived") and is_state("sensor.noor_location", "just_arrived") -%}
+            {% elif is_state("sensor.giel_status", "Juist Aangekomen") and is_state("sensor.noor_status", "Juist Aangekomen") -%}
               {% set person1 = 'Giel' -%}
               {% set person2 = 'Noor' -%}
-            {% elif is_state("sensor.giel_location", "just_arrived") and is_state("sensor.fien_location", "just_arrived") -%}
+            {% elif is_state("sensor.giel_status", "Juist Aangekomen") and is_state("sensor.fien_status", "Juist Aangekomen") -%}
               {% set person1 = 'Giel' -%}
               {% set person2 = 'Fien' -%}
             {% else -%}
@@ -41,19 +41,19 @@
               {% set person2 = 'Fien' -%}
             {% endif -%}
           {% elif is_state("sensor.people_arrive_count", "3") -%}
-            {% if is_state("sensor.giel_location", "just_arrived") and is_state("sensor.martine_location", "just_arrived") and is_state("sensor.noor_location", "just_arrived") -%}
+            {% if is_state("sensor.giel_status", "Juist Aangekomen") and is_state("sensor.martine_status", "Juist Aangekomen") and is_state("sensor.noor_status", "Juist Aangekomen") -%}
               {% set person1 = 'Giel' -%}
               {% set person2 = 'Martine' -%}
               {% set person3 = 'Noor' -%}
-            {% elif is_state("sensor.giel_location", "just_arrived") and is_state("sensor.fien_location", "just_arrived") and is_state("sensor.noor_location", "just_arrived") -%}
+            {% elif is_state("sensor.giel_status", "Juist Aangekomen") and is_state("sensor.fien_status", "Juist Aangekomen") and is_state("sensor.noor_status", "Juist Aangekomen") -%}
               {% set person1 = 'Giel' -%}
               {% set person2 = 'Noor' -%}
               {% set person3 = 'Fien' -%}
-            {% elif is_state("sensor.giel_location", "just_arrived") and is_state("sensor.martine_location", "just_arrived") and is_state("sensor.fien_location", "just_arrived") -%}
+            {% elif is_state("sensor.giel_status", "Juist Aangekomen") and is_state("sensor.martine_status", "Juist Aangekomen") and is_state("sensor.fien_status", "Juist Aangekomen") -%}
               {% set person1 = 'Giel' -%}
               {% set person2 = 'Martine' -%}
               {% set person3 = 'Fien' -%}
-            {% elif is_state("sensor.martine_location", "just_arrived") and is_state("sensor.noor_location", "just_arrived") and is_state("sensor.fien_location", "just_arrived") -%}
+            {% elif is_state("sensor.martine_status", "Juist Aangekomen") and is_state("sensor.noor_status", "Juist Aangekomen") and is_state("sensor.fien_status", "Juist Aangekomen") -%}
               {% set person1 = 'Martine' -%}
               {% set person2 = 'Noor' -%}
               {% set person3 = 'Fien' -%}
@@ -86,19 +86,19 @@
       unique_id: 55d18525-4936-4db8-a590-15b851b9e753
       icon: mdi:account-multiple
       state: >-
-        {% if states("sensor.giel_location") == "just_arrived" -%}
+        {% if states("sensor.giel_status") == 'Juist Aangekomen' -%}
             {% set person = 'Giel' -%}
-          {% elif states("sensor.martine_location") == "just_arrived" -%}
+          {% elif states("sensor.martine_status") == 'Juist Aangekomen' -%}
             {% set person = 'Martine' -%}
-          {% elif states("sensor.noor_location") == "just_arrived" -%}
+          {% elif states("sensor.noor_status") == 'Juist Aangekomen' -%}
             {% set person = 'Noor' -%}
-          {% elif states("sensor.fien_location") == "just_arrived" -%}
+          {% elif states("sensor.fien_status") == 'Juist Aangekomen' -%}
             {% set person = 'Fien' -%}
           {% else -%}
             None
           {% endif -%}
 
-          {% if states("sensor.giel_location") == "just_arrived" -%}
+          {% if states("sensor.giel_status") == 'Juist Aangekomen' -%}
             {{ [
             "Hallo " + person + "  welkom thuis",
             "Welkom thuis " + person + "  zware dag gehad",
@@ -119,7 +119,7 @@
             "De bloemen scheiden het gras in de tuin    Pipi is geel een kaka is bruin",
             "Huisregels    Regel één    Vader heeft altijd gelijk      Regel twee    Wanneer vader geen gelijk heeft  treedt regel één in werking"
             ] | random }}
-          {% elif states("sensor.martine_location") == "just_arrived" -%}
+          {% elif states("sensor.martine_status") == 'Juist Aangekomen' -%}
             {{ [
             "Hallo " + person + "  welkom thuis",
             "Welkom thuis " + person + "  zware dag gehad",
@@ -149,7 +149,7 @@
             "Ik voel me Poké-tastic vandaag",
             "Wie weet   waar is de raid"
             ] | random }}
-          {% elif states("sensor.noor_location") == "just_arrived" -%}
+          {% elif states("sensor.noor_status") == 'Juist Aangekomen' -%}
             {{ [
             "De jeugd eindigt wanneer men relaties gaat maken in plaats van vrienden",
             "Jeugd voelt verder dan ervaring ziet",
@@ -176,7 +176,7 @@
             "Hoor je een vogel in mei    Dan is april voorbij",
             "De bloemen scheiden het gras in de tuin    Pipi is geel een kaka is bruin"
             ] | random }}
-          {% elif states("sensor.fien_location") == "just_arrived" -%}
+          {% elif states("sensor.fien_status") == 'Juist Aangekomen' -%}
             {{ [
             "De jeugd eindigt wanneer men relaties gaat maken in plaats van vrienden",
             "Jeugd voelt verder dan ervaring ziet",

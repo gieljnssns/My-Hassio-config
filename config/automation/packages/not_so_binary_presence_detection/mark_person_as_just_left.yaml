@@ -38,26 +38,26 @@ conditions:
         {{ (as_timestamp(now()) - as_timestamp(states("sensor.uptime"))) / 3600 | float > 0.03 | float }}
     - condition: template
       value_template: >
-        {% if trigger.id == 'giel' %}
+        {% if trigger.id == 'giel' -%}
           {{ is_state('binary_sensor.giel_thuis_nacht', 'off') }}
-        {% elif trigger.id == 'martine' %}
+        {% elif trigger.id == 'martine' -%}
           {{ is_state('binary_sensor.martine_thuis_nacht', 'off') }}
-        {% elif trigger.id == 'noor' %}
+        {% elif trigger.id == 'noor' -%}
           {{ is_state('binary_sensor.noor_thuis_nacht', 'off') }}
-        {% elif trigger.id == 'fien' %}
+        {% elif trigger.id == 'fien' -%}
           {{ is_state('binary_sensor.fien_thuis_nacht', 'off') }}
-        {% endif %}
+        {% endif -%}
 actions:
   - action: input_select.select_option
     data_template:
       entity_id: >
-        {% if trigger.id == 'giel' %}
+        {% if trigger.id == 'giel' -%}
           input_select.giel_status_dropdown
-        {% elif trigger.id == 'martine' %}
+        {% elif trigger.id == 'martine' -%}
           input_select.martine_status_dropdown
-        {% elif trigger.id == 'noor' %}
+        {% elif trigger.id == 'noor' -%}
           input_select.noor_status_dropdown
-        {% else %}
+        {% else -%}
           input_select.fien_status_dropdown
-        {% endif %}
+        {% endif -%}
       option: Juist Weg

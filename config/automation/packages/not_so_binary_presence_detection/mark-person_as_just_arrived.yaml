@@ -1,0 +1,82 @@
+alias: Mark person as just arrived
+id: ac072b45-25fa-44af-b15e-62c1c57bb35b
+mode: parallel
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.giel_bayesian
+    from: "off"
+    to: "on"
+    id: giel
+  - trigger: state
+    entity_id: binary_sensor.martine_bayesian
+    from: "off"
+    to: "on"
+    id: martine
+  - trigger: state
+    entity_id: binary_sensor.noor_bayesian
+    from: "off"
+    to: "on"
+    id: noor
+  - trigger: state
+    entity_id: binary_sensor.fien_bayesian
+    from: "off"
+    to: "on"
+    id: fien
+  - trigger: state
+    entity_id: device_tracker.gphone_bermuda
+    to: "home"
+    id: giel
+  - trigger: state
+    entity_id: device_tracker.mphone_bermuda
+    to: "home"
+    id: martine
+  - trigger: state
+    entity_id: device_tracker.nphone_bermuda
+    to: "home"
+    id: noor
+  - trigger: state
+    entity_id: device_tracker.fphone_bermuda
+    to: "home"
+    id: fien
+
+conditions:
+  condition: and
+  conditions:
+    - condition: template
+      value_template: >
+        {{ (as_timestamp(now()) - as_timestamp(states("sensor.uptime"))) / 3600 | float > 0.03 | float }}
+    - condition: template
+      value_template: >
+        {% if trigger.id == 'giel' -%}
+          {{ states('input_select.giel_status_dropdown') is not in ['Thuis', "Juist Aangekomen"] }}
+        {% elif trigger.id == 'martine' -%}
+          {{ states('input_select.martine_status_dropdown') is not in ['Thuis', "Juist Aangekomen"] }}
+        {% elif trigger.id == 'noor' -%}
+          {{ states('input_select.noor_status_dropdown') is not in ['Thuis', "Juist Aangekomen"] }}
+        {% elif trigger.id == 'fien' -%}
+          {{ states('input_select.fien_status_dropdown') is not in ['Thuis', "Juist Aangekomen"] }}
+        {% endif -%}
+actions:
+  - action: input_select.select_option
+    data_template:
+      entity_id: >
+        {% if trigger.id == 'giel' -%}
+          input_select.giel_status_dropdown
+        {% elif trigger.id == 'martine' -%}
+          input_select.martine_status_dropdown
+        {% elif trigger.id == 'noor' -%}
+          input_select.noor_status_dropdown
+        {% elif trigger.id == 'fien' -%}
+          input_select.fien_status_dropdown
+        {% endif -%}
+      option: Juist Aangekomen
+  - action: >
+      {% if trigger.id == 'giel' -%}
+        script.request_gphone_update
+      {% elif trigger.id == 'martine' -%}
+        script.request_mphone_update
+      {% elif trigger.id == 'noor' -%}
+        script.request_nphone_update
+      {% elif trigger.id == 'fien' -%}
+        script.request_fphone_update
+      {% endif -%}
