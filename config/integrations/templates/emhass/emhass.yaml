@@ -10,7 +10,7 @@
         {% set buy = state_attr(buy_sensor, 'prijzen') | length if state_attr(buy_sensor, 'prijzen') else 0 -%}
         {% set sell = state_attr(sell_sensor, 'prijzen') | length if state_attr(sell_sensor, 'prijzen') else 0 -%}
         {% set pv = state_attr('sensor.pv_power_forecast_list_interpolated', 'list') | length if state_attr('sensor.pv_power_forecast_list_interpolated', 'list') else 0 -%}
-        {% set total = [buy, sell, pv, 360] | min -%}
+        {% set total = [buy, sell, pv, 432] | min -%}
 
         {% set droogkast = states("sensor.droogkast_end_timesteps") | int(0) if states("sensor.droogkast_end_timesteps") | int(0) < total else total -%}
         {% set wasmachien = states("sensor.wasmachien_end_timesteps") | int(0) if states("sensor.wasmachien_end_timesteps") | int(0) < total else total -%}
@@ -50,7 +50,7 @@
         {% set verbruik_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieverbruik.last_updated, 0)) < 10 -%}
         {% set productie_updated = (now_ts - as_timestamp(states.sensor.electricity_meter_energieproductie.last_updated, 0)) < 10 -%}
         {% set dsmr_fresh = verbruik_updated or productie_updated -%}
-        {% set forecast_length = 360 if state_attr("sensor.ridge_p_pv_forecast", "forecasts") is none else state_attr("sensor.ridge_p_pv_forecast", "forecasts") | length -%}
+        {% set forecast_length = 432 if state_attr("sensor.ridge_p_pv_forecast", "forecasts") is none else state_attr("sensor.ridge_p_pv_forecast", "forecasts") | length -%}
         {{
           states("sensor.emhass_optim_status") not in ["Optimal", "Optimal (Relaxed)"]
           or not dsmr_fresh
@@ -65,7 +65,7 @@
           or states("sensor.ecopower_injectieprijzen") in ["unavailable", "unknown"]
           or states("sensor.ecopower_afnameprijzen") in ["unavailable", "unknown"]
           or states("sensor.ecopower_afnameprijzen_predicted") in ["unavailable", "unknown"]
-          or forecast_length < 360
+          or forecast_length < 432
         }}
 
 - trigger:
@@ -236,3 +236,4 @@
 # DELETE FROM statistics_short_term
 # WHERE metadata_id = (SELECT id FROM statistics_meta WHERE statistic_id = 'sensor.grid_production_kwh_old')
 # AND start_ts >= strftime('%s', '2025-11-19 17:00:00');
+

@@ -48,7 +48,7 @@
           {% set time_diff = (start_ts - now_ts) -%}
           {% set timesteps = (time_diff / 300) | round(0, 'ceil') | int -%}
           {% set end_timesteps = states("sensor.brouwen_end_timesteps") | int -%}
-          {% if 0 < end_timesteps < 360 -%}
+          {% if 0 < end_timesteps < 432 -%}
             {% if states("sensor.branduren_brouwketel") | float(0) > 0 -%}
               0
             {% else -%}
@@ -71,7 +71,7 @@
           {% set now_ts = as_timestamp(now()) -%}
           {% set time_diff = (end_ts - now_ts) -%}
           {% set timesteps = (time_diff / 300) | round(0, 'ceil') | int -%}
-          {% if 0 < timesteps < 360 -%}
+          {% if 0 < timesteps < 432 -%}
             {{ timesteps }}
           {% else -%}
             0
@@ -114,3 +114,4 @@
 #       unique_id: 76cdeed9-861a-4f38-8ea9-67273a31811a
 #       state: >
 #         {{ as_timestamp(states.binary_sensor.warmtepomp_aan.last_changed) }}
+

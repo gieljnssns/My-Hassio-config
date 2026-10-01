@@ -154,8 +154,8 @@
         interval_minutes: "5"
         source_interval_minutes: "15"
         five_minute_series: >
-          {% set huawei = (state_attr('sensor.huawei_power_now', 'forecast') or [])[:240] -%}
-          {% set solaredge = (state_attr('sensor.solaredge_power_now', 'forecast') or [])[:240] -%}
+          {% set huawei = (state_attr('sensor.huawei_power_now', 'forecast') or [])[:245] -%}
+          {% set solaredge = (state_attr('sensor.solaredge_power_now', 'forecast') or [])[:245] -%}
           {% set n = [huawei | length, solaredge | length] | min -%}
           {% set watts = namespace(result=[]) -%}
           {% for i in range(n) -%}

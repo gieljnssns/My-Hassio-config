@@ -71,7 +71,7 @@ actions:
                 {% if (states("sensor.ecopower_afnameprijzen_predicted") and states("sensor.ecopower_afnameprijzen")) in ["unavailable", "unknown"] -%}
                   {% set problems = problems + ["Afnameprijzen"] -%}
                 {% endif -%}
-                {% if state_attr("sensor.ridge_p_pv_forecast", "forecasts") | length < 360 -%}
+                {% if state_attr("sensor.ridge_p_pv_forecast", "forecasts") | length < 432 -%}
                   {% set problems = problems + ["Emhass waarschijnlijk infeasible, forecast length (raakt niet op tijd aan 100%)"] -%}
                 {% endif -%}
                 {{ problems | join(", ") }}
