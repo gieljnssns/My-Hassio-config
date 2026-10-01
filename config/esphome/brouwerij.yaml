@@ -1,0 +1,83 @@
+# Board: Generic ESP32 Board (Generic)
+# Definition: definitions/boards/generic-esp32/manifest.yaml
+
+substitutions:
+  devicename: brouwerij
+  upper_devicename: Brouwerij
+  platform: esp32
+  board: esp32dev
+
+esp32:
+  variant: esp32
+  framework:
+    type: esp-idf
+    advanced:
+      sram1_as_iram: true
+      minimum_chip_revision: "3.1"
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/device_base_new_style.yaml
+
+# esphome:
+#   on_boot:
+#     then:
+#       - pzemac.reset_energy: brouwerij
+        
+wifi:
+  # ...
+  power_save_mode: LIGHT
+
+esp32_ble_tracker:
+  scan_parameters:
+    # We currently use the defaults to ensure Bluetooth
+    # can co-exist with WiFi In the future we may be able to
+    # enable the built-in coexistence logic in ESP-IDF
+    active: false
+
+bluetooth_proxy:
+  active: true
+
+captive_portal:
+
+uart:
+  - id: ubus
+    tx_pin: GPIO1
+    rx_pin: GPIO3
+    baud_rate: 9600
+    stop_bits: 1
+
+modbus:
+  id: mbus
+  uart_id: ubus
+
+sensor:   
+  - platform: pzemac
+    id: brouwerij
+    address: 1
+    modbus_id: mbus
+    current:
+      name: "Brouwerij stroom"
+      id: currentbrouwerij
+      internal: true
+    voltage:
+      name: "Brouwerij spanning"
+      id: voltagebrouwerij
+      internal: true
+    energy:
+      name: "Brouwerij energie"
+      id: energybrouwerij
+      # internal: true
+    power:
+      name: "Brouwerij vermogen"
+      id: powerbrouwerij
+      # internal: true
+    frequency:
+      name: "Brouwerij frequentie"
+      id: freqbrouwerij
+      internal: true
+    power_factor:
+      name: "Brouwerij cos phi"
+      id: cosphibrouwerij
+      internal: true
+    update_interval: 2s

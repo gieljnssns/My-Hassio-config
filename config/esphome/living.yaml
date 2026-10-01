@@ -6,31 +6,13 @@ substitutions:
   platform: esp32
   board: esp32dev
 
-# external_components:
-#   - source: github://esphome/esphome@2025.7.1
-#     components: [i2c, uart, ld2410]
-  # - source: github://esphome/esphome@2025.10.5
-  #   components: [uart]
-  # - source:
-  #     type: git
-  #     url: https://github.com/esphome/esphome
-  #     ref: 2025.8.0
-  #   components: [ "uart" ]
-#   - source: github://the-smart-home-maker/esphome-4cello@gc9a01
-#     components: ["gc9a01"]
-  # - source: github://esphome/esphome@2025.8.0
-  #   components: [uart, ld2410]
-  # - source: github://esphome/esphome@2025.8.1
-  #   components: [ "uart" ]
-
-web_server:
-  port: 80
-
 esp32:
+  variant: esp32
   framework:
     type: esp-idf
-    # version: 5.3.2
-    # platform_version: 53.3.13
+    advanced:
+      sram1_as_iram: true
+      minimum_chip_revision: "3.1"
 
 packages:
   wifi: !include common/wifi.yaml
@@ -51,7 +33,6 @@ bluetooth_proxy:
   active: true
 
 logger:
-  # level: DEBUG
   baud_rate: 0
 
 i2c:
@@ -64,35 +45,21 @@ uart:
   - id: zithoek1
     tx_pin: GPIO1
     rx_pin: GPIO3
-    # rx_pin: 
-    #   number: GPIO3
-      #mode:
-      #  input: true
-      #  pullup: true
     baud_rate: 256000
     parity: NONE
     stop_bits: 1
-    # debug:
   - id: danszaal1
     tx_pin: 17
-    # rx_pin: 
-    #   number: GPIO16
-    #   mode:
-    #     input: true
-    #     pullup: true
     rx_pin: 16
     baud_rate: 256000
     parity: NONE
     stop_bits: 1
-    # debug:
 
 ld2410:
   - id: zithoek
     uart_id: zithoek1
-    # throttle: 1500ms
   - id: danszaal
     uart_id: danszaal1
-    # throttle: 1500ms
 
 button:
   - platform: ld2410

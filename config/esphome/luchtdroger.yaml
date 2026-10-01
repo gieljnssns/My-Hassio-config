@@ -45,100 +45,89 @@ switch:
   - platform: gpio
     pin:
       number: 32
-      # number: 16
       inverted: yes
     name: ${upper_devicename}
     id: luchtdroger
     restore_mode: RESTORE_DEFAULT_OFF
 
-  # - platform: gpio
-  #   pin:
-  #     # number: 33
-  #     number: 17
-  #     # inverted: yes
-  #   #internal: true
-  #   name: low
-  #   id: low
-  #   restore_mode: RESTORE_DEFAULT_OFF
-
   - platform: gpio
     pin:
-      # number: 25
       number: 16
       inverted: yes
-    # internal: true
     name: Verluchting
     id: ventilator
     restore_mode: RESTORE_DEFAULT_OFF
-    on_turn_on:
-      then:
-        - lambda: |-
-            if (id(condensatie_marge_keuken).state < 3) {
-              id(luchtdroger).turn_on();
-            }
-            if (id(condensatie_marge_slaapkamer).state < 3) {
-              id(luchtdroger).turn_on();
-            }
-            if (id(condensatie_marge_noor).state < 3) {
-              id(luchtdroger).turn_on();
-            }
-            if (id(condensatie_marge_fien).state < 3) {
-              id(luchtdroger).turn_on();
-            }
-            if ((id(living_luchtvochtigheid).state > 59) && (id(beneden_temperatuur).state < 19)) {
-              id(luchtdroger).turn_on();
-            }
-            if ((id(ha_temp).state > -7) && (id(ha_temp).state < 32) && (id(living_absolute_luchtvochtigheid).state < id(buiten_absolute_luchtvochtigheid).state) && (id(beneden_temperatuur).state < 19)) {
-              id(luchtdroger).turn_on();
-            } 
-            if ((id(ha_temp).state > -7) && (id(ha_temp).state < 7)) {
-              id(luchtdroger).turn_on();
-            }
-        # - lambda: |-
-        #     if ((id(living_luchtvochtigheid).state > 59) && (id(living_temperatuur).state < 21)) {
-        #       id(luchtdroger).turn_on();
-        #     }
-        #     if ((id(temp_in).state > 1) && (id(ha_temp).state < 32) && (id(living_absolute_luchtvochtigheid).state > id(buiten_absolute_luchtvochtigheid).state) && (id(living_temperatuur).state < 21)) {
-        #       id(luchtdroger).turn_on();
-        #     }
-
+    # on_turn_on:
+    #   then:
+    #     - lambda: |-
+    #         if (id(condensatie_marge_keuken).state < 2) {
+    #           id(luchtdroger).turn_on();
+    #         }
+    #         if (id(condensatie_marge_slaapkamer).state < 2) {
+    #           id(luchtdroger).turn_on();
+    #         }
+    #         if (id(condensatie_marge_noor).state < 2) {
+    #           id(luchtdroger).turn_on();
+    #         }
+    #         if (id(condensatie_marge_fien).state < 2) {
+    #           id(luchtdroger).turn_on();
+    #         }
+    #         if ((id(living_luchtvochtigheid).state > 59) && (id(beneden_temperatuur).state < 19)) {
+    #           id(luchtdroger).turn_on();
+    #         }
+    #         if ((id(ha_temp).state > -7) && (id(ha_temp).state < 32) && (id(living_absolute_luchtvochtigheid).state < id(buiten_absolute_luchtvochtigheid).state) && (id(beneden_temperatuur).state < 19)) {
+    #           id(luchtdroger).turn_on();
+    #         } 
+    #         if ((id(ha_temp).state > -7) && (id(ha_temp).state < 7)) {
+    #           id(luchtdroger).turn_on();
+    #         }
     on_turn_off:
       then:
         - switch.turn_off: luchtdroger
 
   - platform: gpio
     pin:
-      # number: 19
       number: 4
       inverted: yes
     internal: true
     id: reserve
     restore_mode: RESTORE_DEFAULT_OFF
 
-# binary_sensor:
-#   - platform: homeassistant
-#     id: u
-#     internal: true
-#     entity_id: script.verluchting_1_uur
-#     on_press:
-#       then:
-#         - delay: 110min
-#         - switch.turn_off: luchtdroger
-#         # - delay: 2h
-#         - delay: 10min
-#         - switch.turn_off: ventilator
+interval:
+  - interval: 5min
+    then:
+      - lambda: |-
+          // Luchtdroger mag hoe dan ook nooit draaien zonder ventilator
+          if (!id(ventilator).state) {
+            if (id(luchtdroger).state) {
+              id(luchtdroger).turn_off();
+            }
+            return;
+          }
 
-#   - platform: homeassistant
-#     id: uu
-#     internal: true
-#     entity_id: script.verluchting_2_uur
-#     on_press:
-#       then:
-#         - delay: 170min
-#         - switch.turn_off: luchtdroger
-#         # - delay: 3h
-#         - delay: 10min
-#         - switch.turn_off: ventilator
+          bool moet_aan = false;
+
+          if (id(condensatie_marge_keuken).state < 2)      moet_aan = true;
+          if (id(condensatie_marge_slaapkamer).state < 2)  moet_aan = true;
+          if (id(condensatie_marge_noor).state < 2)        moet_aan = true;
+          if (id(condensatie_marge_fien).state < 2)        moet_aan = true;
+
+          if ((id(living_luchtvochtigheid).state > 59) &&
+              (id(beneden_temperatuur).state < 19)) {
+            moet_aan = true;
+          }
+
+          if ((id(ha_temp).state > -7) && (id(ha_temp).state < 32) &&
+              (id(living_absolute_luchtvochtigheid).state < id(buiten_absolute_luchtvochtigheid).state) &&
+              (id(beneden_temperatuur).state < 19)) {
+            moet_aan = true;
+          }
+
+          if (moet_aan) {
+            if (!id(luchtdroger).state) id(luchtdroger).turn_on();
+          } else {
+            if (id(luchtdroger).state) id(luchtdroger).turn_off();
+          }
 
 sensor:
   - platform: sht3xd

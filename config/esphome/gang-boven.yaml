@@ -4,28 +4,13 @@ substitutions:
   platform: esp32
   board: esp32dev
 
-# external_components:
-#   - source: github://esphome/esphome@2025.10
-#     components: [uart]  
-#   - source: github://esphome/esphome@2025.10
-#     components: [ld2410]  
-
 esp32:
+  variant: esp32
   framework:
     type: esp-idf
-    advanced: 
+    advanced:
+      sram1_as_iram: true
       minimum_chip_revision: "3.1"
-    # version: 5.4.1
-  variant: ESP32
-  # variant: esp32
-
-# esphome:
-#   on_boot:
-#     - priority: 1001
-#       then:
-#         - lambda: |-
-#             gpio_reset_pin((gpio_num_t)01);
-#             gpio_reset_pin((gpio_num_t)03);
 
 packages:
   wifi: !include common/wifi.yaml
@@ -37,7 +22,7 @@ wifi:
 
 logger:
   baud_rate: 0
-  level: DEBUG
+  # level: DEBUG
 
 esp32_ble_tracker:
   scan_parameters:
@@ -49,48 +34,14 @@ esp32_ble_tracker:
 bluetooth_proxy:
   active: true
 
-# uart:
-#   # id: uart_0
-#   tx_pin: GPIO1
-#   # tx_pin: TX1
-#   rx_pin: 
-#     number: GPIO3
-#     mode:
-#       pullup: true
-#       input: true
-#   baud_rate: 128000
-#   stop_bits: 1
-#   data_bits: 8
-#   parity: NONE
-#   rx_full_threshold: 23
-#   debug:
-#     direction: BOTH
-#     dummy_receiver: true
-#     after:
-#       delimiter: "\n"
-#     sequence:
-#       - lambda: UARTDebug::log_hex(direction, bytes, 32);
 uart:
-  tx_pin: TX
+  tx_pin: 
+    number: GPIO1
   rx_pin: 
-    number: RX
-    mode:
-      input: true
-      pullup: true
+    number: GPIO3
   baud_rate: 256000
   parity: NONE
   stop_bits: 1
-# uart:
-#   tx_pin: GPIO1
-#   rx_pin: 
-#     number: GPIO3
-#     mode:
-#       input: true
-#       pullup: true
-#   baud_rate: 256000
-#   parity: NONE
-#   stop_bits: 1
-#   # debug:
 
 ld2410:
 
