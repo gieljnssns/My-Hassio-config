@@ -1,0 +1,954 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Belgische elektriciteitsprijzen",
+        "description": "Kies je leverancier en regio. Energie- en nettarieven worden live opgehaald uit de eigen publicatie van de leverancier.",
+        "data": {
+          "supplier": "Leverancier",
+          "region": "Regio"
+        }
+      },
+      "contract": {
+        "title": "Contract",
+        "description": "Kies je contract. De integratie haalt bij elke verversing de actuele tariefkaart op.",
+        "data": {
+          "contract": "Contract",
+          "contract_start_date": "Startdatum van het contract (optioneel)",
+          "tariff_card_date": "Maand van de tariefkaart (optioneel)",
+          "contract_end_date": "Einddatum van het contract (optioneel)",
+          "ytd_from_contract_start": "Reken de kost van dit jaar vanaf de startdatum van het contract"
+        },
+        "data_description": {
+          "contract_start_date": "De datum waarop uw levering onder dit contract is gestart. Uw tarief wordt dan gelezen van de tariefkaart van die maand in plaats van de huidige, bij elke leverancier die zijn oude kaarten archiveert, en zowel voor vaste, dynamische als maandelijks geïndexeerde contracten. Draagt de tariefkaart die u tekende een andere maand, vul die dan hieronder in. Het attribuut signing_card van de sensor current_price noemt de kaart waarop deze invoer is uitgekomen. Laat leeg om altijd de huidige kaart te gebruiken.",
+          "tariff_card_date": "Een willekeurige datum in de maand van de tariefkaart waarop uw contract loopt. Een vast of dynamisch contract wordt geprijsd op de kaart die gold toen u tekende, en een overstap duurt ongeveer een maand, dus die kaart draagt vaak de maand voor de start van uw levering. energie.be zet ze in de productnaam (Elektriciteit dynamisch particulier online 06/26). Laat leeg om de maand van de start van uw levering te gebruiken, wat klopt als u in dezelfde maand tekende en startte. Alleen het opzoeken van de kaart leest dit: uw kost van dit jaar en vaste kosten blijven tellen vanaf de startdatum hierboven.",
+          "contract_end_date": "De datum waarop uw contract afloopt. Wordt als tijdstempelsensor beschikbaar gesteld zodat een automatisering u aan verlenging kan herinneren, en wordt door de voortschrijdende jaarkost gebruikt om aan te geven welk deel van het jaar nog onder dit contract valt. Het wijzigt geen enkel gefactureerd tarief.",
+          "ytd_from_contract_start": "Standaard telt de kost van dit jaar vanaf 1 januari, ongeacht wie u toen leverde. Vink dit aan om te starten op de startdatum van het contract hierboven, zodat het bedrag alleen dit contract dekt. Vaste kosten worden over dezelfde periode pro rata berekend, en de waarde daalt de eerste keer dat dit van toepassing is. Geldt alleen voor het eerste kalenderjaar van het contract; vanaf de volgende 1 januari zijn beide gelijk."
+        }
+      },
+      "signed_rate": {
+        "title": "Tarief bij ondertekening (optioneel)",
+        "description": "Laat deze stap leeg, tenzij uw contractbevestiging andere cijfers vermeldt dan de gepubliceerde tariefkaart van uw leverancier. Veel aanbiedingen, ook promoties via vergelijkingssites, hebben een eigen tariefkaart, die de integratie al leest. Vul alleen een cijfer in dat uw contract vermeldt: het vervangt de waarde van de kaart, en een leeg veld behoudt die. Houdt uw leverancier een archief van oude tariefkaarten bij, dan vult de kaart van uw ondertekeningsmaand de lege velden aan; anders doet de huidige kaart dat. De spotfactor vermenigvuldigt de marktprijs in EUR/kWh en de spotbasis is in EUR/kWh, dus een formule in c€/kWh op een Belpex in EUR/MWh moet worden omgerekend: (0,1068 × Belpex + 1,5) × 1,06 c€/kWh is een factor van 1,13208 en een basis van 0,0159. Waarden per kWh zijn inclusief btw bij een residentieel contract, en exclusief btw bij een professioneel contract en op de kaarten van Ecopower; het jaarlijkse vaste bedrag is inclusief btw.",
+        "data": {
+          "manual_energy_single": "Vastgelegd energietarief (EUR/kWh)",
+          "manual_energy_peak": "Vastgelegd piektarief (EUR/kWh)",
+          "manual_energy_offpeak": "Vastgelegd daltarief (EUR/kWh)",
+          "manual_energy_exclusive_night": "Vastgelegd exclusief-nachttarief (EUR/kWh)",
+          "manual_energy_factor": "Vastgelegde spotfactor",
+          "manual_energy_base": "Vastgelegde spotbasis (EUR/kWh)",
+          "manual_yearly_fee": "Vastgelegd jaarlijks vast bedrag (EUR, incl. btw)"
+        }
+      },
+      "dso": {
+        "title": "Distributienetbeheerder",
+        "data": {
+          "dso": "DNB"
+        }
+      },
+      "meter": {
+        "title": "Metertype",
+        "description": "Enkelvoudige meter (mono), tweevoudige meter (dag/nacht), of digitale meter voor dynamische contracten. Het exclusief-nachtcircuit is alleen voor een tweede invoer voor een aparte meter die enkel 's nachts telt: hier gekozen rekent het de hele invoer tegen het nachttarief aan.",
+        "data": {
+          "meter": "Meter"
+        }
+      },
+      "professional": {
+        "title": "Professioneel contract",
+        "description": "Professionele tariefkaarten worden exclusief btw gepubliceerd, en de federale accijns is degressief volgens het jaarvolume. Twee antwoorden zijn nodig om ze te tariferen.",
+        "data": {
+          "include_vat": "Prijzen inclusief btw (21%)",
+          "annual_consumption_kwh": "Geschat jaarverbruik"
+        },
+        "data_description": {
+          "include_vat": "Zet dit uit als uw onderneming btw kan aftrekken: prijzen, vergoedingen en kosten worden dan exclusief btw gerapporteerd. Injectie volgt dezelfde keuze.",
+          "annual_consumption_kwh": "Uw jaarverbruik. De accijns wordt per schijf aangerekend (20 000 en 50 000 kWh per jaar: elk deel van het jaar aan zijn eigen tarief), en de vergelijkingen gebruiken het ook. Zodra er een volledig jaar op uw meters gemeten is, wordt de meting gebruikt; 0 gebruikt de meting, of 3500 kWh zolang er geen is."
+        }
+      },
+      "direct_debit": {
+        "title": "Domiciliëring",
+        "description": "Sommige tariefkaarten rekenen een gezin dat met domiciliëring betaalt anders aan.",
+        "data": {
+          "direct_debit": "Ik betaal via domiciliëring"
+        },
+        "data_description": {
+          "direct_debit": "Wordt enkel getoond wanneer de tariefkaart een verschil vermeldt, en wat het verschuift hangt van de kaart af. Bij de zeventien producten van Mega gaat het om de welkomstkorting: vier kennen ze alleen aan een domiciliëringsbetaler toe, de rest legt er een supplement bovenop. Bij EnergyVision Groene stroom (in Brussel verkocht als Brusol) is het de jaarlijkse vaste vergoeding, 250 EUR per jaar tegenover 230."
+        }
+      },
+      "dso_tariff_mode": {
+        "title": "Distributietarief (Wallonie)",
+        "description": "Hoe je netbeheerder het netgebruik factureert. 'Simple' / 'Bi-horaire' volgen de bestaande meterconventie. 'Tarif Impact' gebruikt de 3 CWaPE-tijdvakken (PIC 17-22, MEDIUM 7-11 + 22-1, ECO 1-7 + 11-17) en vereist een digitale meter.",
+        "data": {
+          "dso_tariff_mode": "Distributiemodus"
+        }
+      },
+      "connection_power": {
+        "title": "Aansluitvermogen (Brussel)",
+        "description": "Uw contractueel aansluitvermogen in kVA. Brussel rekent een Brugel-bijdrage voor openbaredienstverplichtingen aan die hiermee schaalt, en boven 13 kVA de hogere vermogensterm van Sibelga. De meeste woningen zitten op 13 kVA of minder; een 3x400 V / 25 A-aansluiting met een warmtepomp of een laadpaal zit daarboven.",
+        "data": {
+          "connection_kva_tier": "Aansluitvermogen"
+        }
+      },
+      "api_key": {
+        "title": "ENTSO-E API-sleutel",
+        "description": "Vereist voor dit contract. De energieprijs wordt bepaald door de Belgische day-ahead markt: per slot bij een dynamisch contract, of op het gemiddelde van de leveringsmaand bij een maandelijks geindexeerd contract. Gratis aan te vragen op transparency.entsoe.eu.",
+        "data": {
+          "api_key": "ENTSO-E API-sleutel"
+        }
+      },
+      "injection_api_key": {
+        "title": "ENTSO-E API-sleutel (optioneel)",
+        "description": "Optioneel. Dit contract indexeert zijn energieprijs op het day-ahead-gemiddelde van de leveringsmaand, of zijn injectie op de day-ahead spotprijs, of beide, en heeft daarvoor een gratis ENTSO-E-sleutel van transparency.entsoe.eu nodig. Laat leeg om over te slaan; zonder sleutel wordt een kaart die een maandbedrag drukt daarop aangerekend, dat van vorige maand, terwijl een injectieformule die per tijdslot wordt afgerekend niet gecrediteerd wordt en haar prijs onbeschikbaar blijft.",
+        "data": {
+          "api_key": "ENTSO-E API-sleutel"
+        }
+      },
+      "api_key_unreachable": {
+        "title": "ENTSO-E is niet bereikbaar",
+        "description": "Uw API-sleutel kon niet worden gecontroleerd omdat het ENTSO-E Transparency Platform momenteel niet antwoordt. Dat betekent niet dat de sleutel fout is: ENTSO-E kan een dag of langer onbereikbaar zijn, en zolang dat duurt valt een goede sleutel niet van een foute te onderscheiden.\n\nU kunt straks opnieuw controleren, of doorgaan en de sleutel laten controleren bij de eerste prijsverversing. Blijkt hij toch geweigerd, dan verschijnt er een reparatiemelding en kunt u hem alsnog corrigeren.",
+        "menu_options": {
+          "api_key_recheck": "Sleutel opnieuw controleren",
+          "api_key_unverified": "Doorgaan zonder controle"
+        }
+      },
+      "capacity": {
+        "title": "Capaciteitstarief (Vlaanderen)",
+        "description": "Kies bij voorkeur de maandpieksensor van je meter (DSMR 5B publiceert \"Maximum demand current month\"), dat is de kwartierpiek die Fluvius aanrekent. Een gewone vermogenssensor wordt elk uur bemonsterd en benadert die alleen. Of gebruik een vaste waarde.",
+        "data": {
+          "capacity_mode": "Bron van de piek",
+          "capacity_peak_sensor": "Maandpieksensor",
+          "capacity_fixed_kw": "Vaste piek (kW)"
+        }
+      },
+      "solar": {
+        "title": "Zonnepanelen",
+        "description": "Vermogen van de omvormer in kVA en het regime dat van toepassing is op je installatie. De Waalse compensatieregeling geldt enkel voor installaties gecertificeerd voor 2024-01-01 en blijft geldig tot 2030-12-31; nieuwe installaties en Vlaamse digitale meters vallen onder het injectietarief.",
+        "data": {
+          "solar_kva": "Vermogen omvormer (kVA)",
+          "solar_regime": "Regime",
+          "double_flow_meter": "Meter telt afname en injectie apart"
+        },
+        "data_description": {
+          "double_flow_meter": "Alleen voor het Waalse compensatieregime. Vink aan bij een tweerichtingsmeter of digitale meter: de netbeheerder rekent dan distributie en transport aan op je bruto afname in de plaats van het prosumententarief, telkens dat goedkoper is. Laat uit bij een terugdraaiende teller."
+        }
+      },
+      "meters": {
+        "title": "Energiemeters (kost dit jaar)",
+        "description": "Optioneel. Wijs ofwel de vier dag/nacht registers van de meter aan (voorkeur - exact vanaf het begin), of enkele cumulatieve verbruik- / injectiesensoren (de integratie leest kWh uit de HA recorder en splitst het totaal van elke voorbije dag in dag/nacht via het dag/nachtschema waar nodig). Elke kant - verbruik, injectie - wordt onafhankelijk bepaald; je kan een kant als registers en de andere als enkele totaalsensor invullen. Wanneer beide bedradingen zijn ingevuld voor dezelfde kant, winnen de dag/nacht registers zolang ze volledig rapporteren; het totaal neemt het over van een paar met een dode, bevroren of laat gestarte helft, of met helften die andere periodes rapporteren. Heb je het HA Energie-dashboard al ingesteld, dan worden de cumulatieve velden - en de dag/nacht registers wanneer een utility_meter helper de gridbron in piek/dal (of dag/nacht, jour/nuit, peak/offpeak) tarieven splitst - automatisch voorgeselecteerd. Voorgeselecteerde waarden blijven aanpasbaar.",
+        "data": {
+          "day_consumption_kwh": "Verbruik dag (kWh)",
+          "night_consumption_kwh": "Verbruik nacht (kWh)",
+          "day_injection_kwh": "Injectie dag (kWh)",
+          "night_injection_kwh": "Injectie nacht (kWh)",
+          "consumption_kwh": "Totaal verbruik (kWh)",
+          "injection_kwh": "Totale injectie (kWh)",
+          "daily_compare": "Vergelijk elke leverancier dagelijks",
+          "card_archive": "Oude tariefkaarten uit het projectarchief lezen",
+          "ev_home_charging_rate": "CREG-tarief voor thuisladen van een bedrijfswagen publiceren"
+        },
+        "data_description": {
+          "day_consumption_kwh": "Cumulatieve meterstand in kWh, die alleen maar oploopt. Een sensor die terugvalt naar nul, zoals een totaal 'huidig jaar', wordt alleen juist gelezen als zijn state class total_increasing is of hij last_reset publiceert; elke andere daling telt als nul.",
+          "night_consumption_kwh": "Cumulatieve meterstand in kWh, die alleen maar oploopt. Een sensor die terugvalt naar nul, zoals een totaal 'huidig jaar', wordt alleen juist gelezen als zijn state class total_increasing is of hij last_reset publiceert; elke andere daling telt als nul.",
+          "day_injection_kwh": "Cumulatieve meterstand in kWh, die alleen maar oploopt. Een sensor die terugvalt naar nul, zoals een totaal 'huidig jaar', wordt alleen juist gelezen als zijn state class total_increasing is of hij last_reset publiceert; elke andere daling telt als nul.",
+          "night_injection_kwh": "Cumulatieve meterstand in kWh, die alleen maar oploopt. Een sensor die terugvalt naar nul, zoals een totaal 'huidig jaar', wordt alleen juist gelezen als zijn state class total_increasing is of hij last_reset publiceert; elke andere daling telt als nul.",
+          "consumption_kwh": "Wordt gebruikt voor zijn kant wanneer de twee registers van die kant leeg zijn, en in de plaats van een paar dat uitvalt, bevriest of andere periodes rapporteert: een meter zonder dag/nacht-onderscheid, een klemmeter, of een omvormer die maar één totaal geeft. Zelfde regel, hij mag alleen oplopen.",
+          "injection_kwh": "Wordt gebruikt voor zijn kant wanneer de twee registers van die kant leeg zijn, en in de plaats van een paar dat uitvalt, bevriest of andere periodes rapporteert: een meter zonder dag/nacht-onderscheid, een klemmeter, of een omvormer die maar één totaal geeft. Zelfde regel, hij mag alleen oplopen.",
+          "daily_compare": "Standaard uit. Eenmaal per dag, op een vast tijdstip afgeleid van deze invoer zodat installaties niet allemaal tegelijk ophalen, wordt elk contract van uw soort in uw regio berekend en de jaarlijkse besparing van het beste als sensor gepubliceerd. De meeste dagen kost dit slechts enkele controles, want tariefkaarten worden ongeveer één keer per maand opnieuw gepubliceerd.",
+          "card_archive": "Standaard aan. Voor een voorbije maand waarvoor uw leverancier geen kaart meer publiceert, wordt de kaart opgehaald die het archief van dit project ervoor bewaarde: één klein bestand per maand vanaf GitHub, met enkel de leverancier, het contract, de regio en de maand. Leest ook, één keer per dag, het btw-tarief waarover de gearchiveerde kaarten het eens zijn, voor de prijzen die een kaart zonder tarief vermeldt, en levert de lezing van dit project van een kaart die als paginafoto's verschijnt, zodat een leverancier die dat doet (Ecofix sinds augustus 2026) zonder prijzen zit als dit uit staat. Als de huidige kaart onleesbaar is en er geen kaart bewaard is, neemt de kaart van vorige maand uit het archief het over. Zet uit om te vermijden dat de integratie GitHub contacteert; die maanden worden dan op de huidige kaart berekend, en een btw-tarief dat een kaart niet vermeldt is het laatste dat gelezen werd toen dit aan stond, of anders 6% voor een gezin en 21% bij een professioneel contract.",
+          "ev_home_charging_rate": "Standaard uit. Voor een bedrijfswagen die thuis laadt: publiceert het maximum per kWh dat uw werkgever belastingvrij mag terugbetalen volgens de forfaitaire methode, voor uw regio en het lopende kwartaal, zoals de FOD Financiën het vastlegt op basis van de prijzen van de CREG. Uw werkgever mag minder betalen, of uw werkelijke kost terugbetalen. Aangevinkt leest de integratie één keer per kwartaal een klein bestand van creg.be."
+        }
+      },
+      "custom_energy": {
+        "title": "Aangepaste energieformule",
+        "description": "Let op: expertoptie, alleen voor leveranciers die GEEN publieke tariefkaart publiceren. Publiceert je leverancier er wel een, open dan liever een issue op GitHub om die als volwaardige leverancier toe te voegen, en hetzelfde als je leverancier al in de lijst staat maar het item je contract niet prijst zoals je tariefkaart (een formule vastgezet op je ondertekeningsmaand, een rij die de parser mist): open een issue met je kaart zodat het voor iedereen wordt opgelost in plaats van hier nagebouwd. Een handmatig ingevoerd contract is een statische momentopname zonder live kaartverversing en zonder driftcontrole, dus de waarden blijven alleen correct als je ze zelf bijhoudt. Voer de commoditycijfers van je contract in exclusief btw; het btw-tarief op de belastingstap rekent ze door. Voor de dynamische en maandgemiddelde modi is de prijs factor x index + basis, met de index (de live spot, of het maandgemiddelde) en de basis allebei in EUR/kWh. Een formule in c€/kWh op een Belpex in EUR/MWh moet worden omgerekend: (0,1068 x Belpex + 1,5) c€/kWh is een factor van 1.068 en een basis van 0.015. Voorbeeld (Yuso dynamisch): factor 1.0, basis 0.02.",
+        "data": {
+          "custom_energy_factor": "Energiefactor (vermenigvuldiger op de index in EUR/kWh)",
+          "custom_energy_base": "Energiebasis (EUR/kWh, excl. btw)",
+          "custom_energy_quarter_hourly": "Facturatie per kwartier",
+          "custom_energy_single": "Enkeltarief (EUR/kWh, excl. btw)",
+          "custom_energy_peak": "Dagtarief (EUR/kWh, excl. btw)",
+          "custom_energy_offpeak": "Nachttarief (EUR/kWh, excl. btw)",
+          "custom_energy_exclusive_night": "Exclusief nachttarief (EUR/kWh, excl. btw)",
+          "custom_yearly_fixed_fee": "Jaarlijkse vaste vergoeding (EUR/jaar, excl. btw)"
+        }
+      },
+      "custom_injection": {
+        "title": "Aangepaste injectieformule",
+        "description": "Hoe je zonne-injectie wordt vergoed. Een vast tarief is een vaste EUR/kWh-vergoeding; een formule is factor x index + basis op de live spot (dynamisch) of het maandgemiddelde. De index en de basis zijn allebei in EUR/kWh, en de basis behoudt haar teken: een kaart met (0,07 x Belpex - 2) c€/kWh, op een Belpex in EUR/MWh, is een factor van 0.7 en een basis van -0.02. Vink de ondergrens aan als het contract garandeert dat de injectieprijs nooit negatief is. Vink 'injectie wegen met het zonneprofiel' aan om het maandgemiddelde van de injectie te wegen met het zonneproductieprofiel van Synergrid (live opgehaald; een ex-ante prognose, dus dicht bij maar niet exact de definitieve SPP-waarde).",
+        "data": {
+          "custom_injection_mode": "Injectietarifering",
+          "custom_injection_current": "Vast injectietarief (EUR/kWh)",
+          "custom_injection_factor": "Injectiefactor (vermenigvuldiger op de index in EUR/kWh)",
+          "custom_injection_base": "Injectiebasis (EUR/kWh, negatief voor een aftrek)",
+          "custom_injection_floor": "Nooit negatief (ondergrens 0)",
+          "custom_injection_spp_weighted": "Injectie wegen met het zonneprofiel (SPP)"
+        }
+      },
+      "custom_dso": {
+        "title": "Nettarieven (DNB)",
+        "description": "Gereguleerde netkosten, gelijk voor elke leverancier op je DNB. Neem ze over van je factuur of de tariefkaart van je DNB, exclusief btw. Enkel distributie is verplicht. Laat de vakken voor dag, nacht en de tariefblokken leeg als je tarief die opsplitsing niet kent: leeg rekent het enkelvoudige distributietarief aan, 0 rekent niets aan. Laat andere kosten die je niet betaalt op 0. Het jaarlijkse veld neemt de databeheervergoeding in Vlaanderen, de vaste term (terme fixe) in Wallonie, die het Impact-tarief niet aanrekent, en de meet- en vaste kosten samen in Brussel.",
+        "data": {
+          "custom_dso_distribution_single": "Distributie (EUR/kWh)",
+          "custom_dso_distribution_peak": "Distributie dag (EUR/kWh)",
+          "custom_dso_distribution_offpeak": "Distributie nacht (EUR/kWh)",
+          "custom_dso_distribution_exclusive_night": "Distributie exclusief nacht (EUR/kWh)",
+          "custom_dso_transport": "Transport (EUR/kWh)",
+          "custom_dso_data_management_per_year": "Databeheervergoeding of vaste term (EUR/jaar)",
+          "custom_dso_capacity_eur_per_kw_year": "Capaciteitstarief (EUR/kW/jaar)",
+          "custom_dso_prosumer_eur_per_kva_year": "Prosumententarief (EUR/kVA/jaar)",
+          "custom_dso_distribution_pic": "Distributie PIC-band (EUR/kWh)",
+          "custom_dso_distribution_medium": "Distributie MEDIUM-band (EUR/kWh)",
+          "custom_dso_distribution_eco": "Distributie ECO-band (EUR/kWh)",
+          "custom_dso_brussels_osp": "Brugel OSP-vergoeding (EUR/jaar)"
+        }
+      },
+      "custom_tax": {
+        "title": "Belastingen en heffingen",
+        "description": "Gereguleerde belastingen en heffingen, exclusief btw. Het btw-tarief hieronder rekent energie, net en belastingen door (injectie blijft btw-vrij). De Belgische residentiele btw is 0.06; zet 0 als je alles inclusief btw hebt ingevoerd.",
+        "data": {
+          "custom_tax_federal_excise": "Federale accijns (EUR/kWh)",
+          "custom_tax_energy_contribution": "Energiebijdrage (EUR/kWh)",
+          "custom_tax_regional_renewables": "Groene heffing: GSC + WKK in Vlaanderen, bijdrage groene stroom in Wallonië en Brussel (EUR/kWh)",
+          "custom_tax_region_connection_fee": "Waalse aansluitingsvergoeding (redevance de raccordement, btw-vrij, enkel Wallonië) (EUR/kWh)",
+          "custom_tax_energy_fund_per_month": "Energiefonds (EUR/maand)",
+          "custom_vat_rate": "Btw-tarief (bv. 0.06)"
+        }
+      },
+      "settlement": {
+        "title": "Afrekening",
+        "description": "Hoe je leverancier dit contract afrekent. Vink het vakje alleen aan als je per kwartier wordt afgerekend, of je dat nu bij de inschrijving koos of later hebt aangevraagd.",
+        "data": {
+          "quarter_hourly": "Afrekening per kwartier"
+        },
+        "data_description": {
+          "quarter_hourly": "Alleen zichtbaar als je leverancier de keuze laat. Frank Energie: uit voor de uurprijzen die de tariefkaart afdrukt, aan als je je account in de app op kwartierprijzen hebt gezet. Bolt: uit voor variabel afrekenen, waarbij je maand op het RLP-gewogen maandgemiddelde wordt afgerekend, aan voor dynamisch afrekenen, waarbij elk kwartier tegen zijn eigen Belpex-waarde wordt afgerekend. De formule blijft dezelfde, alleen de marktprijs die ze leest verandert."
+        }
+      }
+    },
+    "abort": {
+      "supplier_region_unavailable": "Deze leverancier biedt geen residentiele elektriciteit aan in de gekozen regio. Begin opnieuw en kies een andere leverancier of regio.",
+      "already_configured": "Een andere invoer bevraagt al dezelfde combinatie (leverancier, contract, regio, DNB). Pas die invoer aan, of kies een andere combinatie. Een exclusief-nachtcircuit is de uitzondering: dat maakt u aan als een eigen extra invoer, dus het botst niet met uw hoofdinvoer.",
+      "compare_no_alternative": "Geen andere leverancier of contract beschikbaar in jouw regio om mee te vergelijken.",
+      "compare_done": "Vergelijking voltooid - geen wijzigingen opgeslagen."
+    },
+    "error": {
+      "invalid_api_key": "ENTSO-E heeft deze token geweigerd. Controleer de waarde op transparency.entsoe.eu (My Account Settings -> Web API Security Token).",
+      "empty_api_key": "Voer uw ENTSO-E token in. Dit contract wordt geprijsd op de day-ahead markt en kan niet zonder token worden ingesteld. Vraag hem aan op transparency.entsoe.eu (My Account Settings -> Web API Security Token).",
+      "cannot_connect": "Kon ENTSO-E niet bereiken om de token te verifieren. Controleer uw netwerk en probeer opnieuw.",
+      "start_date_in_future": "De startdatum van het contract kan niet in de toekomst liggen.",
+      "card_date_in_future": "De maand van de tariefkaart kan niet in de toekomst liggen.",
+      "end_before_start": "De einddatum van het contract moet na de startdatum liggen.",
+      "register_pair_incomplete": "Vul zowel het dag- als het nachtregister in, of vul in de plaats de totaalsensor in, of laat ze alle drie leeg. Met een register van het paar en geen totaal kan de kost van dit jaar uw verbruik niet splitsen en valt hij terug op enkel de vaste kosten.",
+      "compensation_kva_missing": "Het Waalse prosumententarief van het compensatieregime wordt op het omvormervermogen berekend: vul het in kVA in.",
+      "supplier_region_unavailable": "Deze leverancier biedt geen residentiele elektriciteit aan in de gekozen regio. Kies een andere leverancier of regio."
+    }
+  },
+  "options": {
+    "abort": {
+      "supplier_region_unavailable": "Deze leverancier biedt geen residentiele elektriciteit aan in de gekozen regio. Begin opnieuw en kies een andere leverancier of regio.",
+      "already_configured": "Een andere invoer bevraagt al dezelfde combinatie (leverancier, contract, regio, DNB). Pas die invoer aan, of kies een andere combinatie. Een exclusief-nachtcircuit is de uitzondering: dat maakt u aan als een eigen extra invoer, dus het botst niet met uw hoofdinvoer.",
+      "compare_no_alternative": "Geen andere leverancier of contract beschikbaar in jouw regio om mee te vergelijken.",
+      "compare_done": "Vergelijking voltooid - geen wijzigingen opgeslagen.",
+      "compare_all_no_alternatives": "Er wordt in uw gewest geen ander contract van dit type verkocht, dus er valt niets te rangschikken. De eenmalige vergelijking kan nog steeds een ander type contract berekenen.",
+      "compare_all_unknown_contract": "Het contract van deze invoer staat niet meer in de catalogus van de leverancier en kan dus niet naast de andere worden geplaatst. Kies het eerst opnieuw bij Instellingen wijzigen.",
+      "compare_all_entry_reloading": "De invoer wordt nog geladen. Probeer het zo meteen opnieuw.",
+      "no_switch_recorded": "Er is dit jaar geen leverancierswissel geregistreerd voor deze invoer."
+    },
+    "error": {
+      "invalid_api_key": "ENTSO-E heeft deze token geweigerd. Controleer de waarde op transparency.entsoe.eu (My Account Settings -> Web API Security Token).",
+      "empty_api_key": "Voer uw ENTSO-E token in. Dit contract wordt geprijsd op de day-ahead markt en kan niet zonder token worden ingesteld. Vraag hem aan op transparency.entsoe.eu (My Account Settings -> Web API Security Token).",
+      "cannot_connect": "Kon ENTSO-E niet bereiken om de token te verifieren. Controleer uw netwerk en probeer opnieuw.",
+      "start_date_in_future": "De startdatum van het contract kan niet in de toekomst liggen.",
+      "start_date_before_switch": "De startdatum van het contract kan niet voor de laatste geregistreerde leverancierswissel van deze invoer liggen.",
+      "card_date_in_future": "De maand van de tariefkaart kan niet in de toekomst liggen.",
+      "end_before_start": "De einddatum van het contract moet na de startdatum liggen.",
+      "register_pair_incomplete": "Vul zowel het dag- als het nachtregister in, of vul in de plaats de totaalsensor in, of laat ze alle drie leeg. Met een register van het paar en geen totaal kan de kost van dit jaar uw verbruik niet splitsen en valt hij terug op enkel de vaste kosten.",
+      "compensation_kva_missing": "Het Waalse prosumententarief van het compensatieregime wordt op het omvormervermogen berekend: vul het in kVA in.",
+      "supplier_region_unavailable": "Deze leverancier biedt geen residentiele elektriciteit aan in de gekozen regio. Kies een andere leverancier of regio.",
+      "whatif_volumes_required": "Een ander regime offreren vereist je jaarlijkse afname en injectie in kWh: aan deze invoer is geen injectiemeter gekoppeld, dus ze kunnen niet uit je meters gelezen worden.",
+      "switch_date_outside_year": "De wisseldatum moet tussen 2 januari en vandaag liggen.",
+      "switch_date_before_last": "De wisseldatum moet na de laatste geregistreerde wissel van dit jaar liggen.",
+      "switch_date_before_start": "De wisseldatum moet na de startdatum liggen van het contract dat u verlaat."
+    },
+    "step": {
+      "init": {
+        "title": "Belgische elektriciteitsprijzen",
+        "menu_options": {
+          "edit": "Instellingen wijzigen",
+          "switch": "Leverancierswissel registreren",
+          "remove_switch": "Laatste leverancierswissel verwijderen",
+          "compare": "Andere leverancier vergelijken (eenmalige offerte)",
+          "compare_all": "Alle contracten van uw soort vergelijken (rangschikking)"
+        }
+      },
+      "switch": {
+        "title": "Leverancierswissel registreren",
+        "description": "In de loop van het jaar van leverancier gewisseld? Geef de eerste leveringsdag van het nieuwe contract op. Uw huidige instellingen blijven bewaard als het contract dat u tot de dag ervoor had, en de volgende stappen stellen het nieuwe in, vertrekkend van wat u nu hebt. De kost sinds het begin van het jaar rekent dan elk contract af op zijn eigen tariefkaarten voor zijn eigen dagen. In Wallonië onder het compensatiestelsel verrekent elk contract zijn eigen injectie, zoals de regulator bepaalt bij een wissel in de loop van het jaar.",
+        "data": {
+          "switch_date": "Eerste dag met het nieuwe contract"
+        },
+        "data_description": {
+          "switch_date": "De dag waarop de nieuwe leverancier begon te leveren, zoals op zijn welkomstbrief of op de slotfactuur van de vorige leverancier. Tussen 2 januari en vandaag, en na een eerder geregistreerde wissel van dit jaar."
+        }
+      },
+      "remove_switch": {
+        "title": "Laatste leverancierswissel verwijderen",
+        "description": "Dit verwijdert de wissel die geregistreerd is op {until}, toen u {supplier} - {contract} verliet, en zet de invoer terug zoals ze was voor die wissel werd geregistreerd: {supplier} - {contract} wordt opnieuw uw huidige contract, met de instellingen van toen, en alles wat sindsdien gewijzigd is wordt ongedaan gemaakt, behalve het antwoord op een vraag die pas na de registratie van de wissel bijkwam: dat blijft behouden. Om een wisseldatum te verbeteren, verwijdert u de wissel, registreert u hem opnieuw met de juiste datum en kiest u het nieuwe contract opnieuw. Bevestig om hem te verwijderen."
+      },
+      "edit": {
+        "title": "Belgische elektriciteitsprijzen",
+        "description": "Kies je leverancier en regio. Energie- en nettarieven worden live opgehaald uit de eigen publicatie van de leverancier.",
+        "data": {
+          "supplier": "Leverancier",
+          "region": "Regio"
+        }
+      },
+      "compare": {
+        "title": "Andere leverancier vergelijken",
+        "description": "Kies een leverancier om mee te vergelijken. Regio, DNB en piek blijven dezelfde als bij je huidige invoer; het metertype (tenzij het contract een digitale meter vereist) en, bij een invoer met zonnepanelen, het zonneregime kun je in een latere stap wijzigen voor een wat-als-berekening. Zowel statische als dynamische leveranciers worden getoond, zodat je over contractsoorten heen kunt vergelijken.",
+        "data": {
+          "supplier": "Leverancier"
+        }
+      },
+      "compare_contract": {
+        "title": "Andere leverancier vergelijken",
+        "description": "Kies een contract bij {supplier}. Zowel vaste als dynamische contracten staan in de lijst, zodat u over contracttypes heen kunt vergelijken, en uw eigen contract staat er ook bij: kies het om te zien wat hetzelfde contract zou kosten met een ander metertype of zonneregime, waar die stappen worden aangeboden: de meter alleen bij een contract zonder verplichte digitale meter, het zonneregime alleen bij een invoer met zonnepanelen.",
+        "data": {
+          "contract": "Contract"
+        }
+      },
+      "compare_meter": {
+        "title": "Andere leverancier vergelijken",
+        "description": "Metertype voor de vergelijking. Standaard de instelling van je huidige invoer; wijzig om te zien wat de factuur zou zijn onder een ander factuurmodel (mono = enkelvoudig tarief, bi = piek / dal).",
+        "data": {
+          "meter": "Metertype"
+        }
+      },
+      "compare_solar": {
+        "title": "Andere leverancier vergelijken",
+        "description": "Zonneregime voor deze offerte. Kies een ander regime om te zien wat je zou betalen onder een andere meteropstelling; het regime van je invoer staat voorgeselecteerd. Anders dan het metertype geldt dit voor beide zijden, want het regime hoort bij je netaansluiting en niet bij de leverancier. Er wordt niets opgeslagen. De twee volumevelden verschijnen wanneer er geen injectiemeter aan deze invoer gekoppeld is: een terugdraaiende teller meldt het verbruik al verrekend met de injectie, en dat is niet wat het injectietarief factureert. Vul dan je bruto jaarcijfers in uit je omvormer-app of je jaarlijkse meterstand.",
+        "data": {
+          "solar_regime": "Regime",
+          "whatif_consumption_kwh": "Van het net afgenomen (kWh/jaar)",
+          "whatif_injection_kwh": "Op het net geinjecteerd (kWh/jaar)"
+        }
+      },
+      "compare_api_key": {
+        "title": "Andere leverancier vergelijken",
+        "description": "Deze vergelijking heeft ENTSO-E day-ahead prijzen nodig: een contract dat op de spot geprijsd wordt (een dynamisch per kwartier of uur, een maandgeïndexeerd op het maandgemiddelde), of, in injectieregime, een contract waarvan de zonne-injectie aan de spot gekoppeld is. Plak een ENTSO-E API-token zodat de spotprijzen opgehaald kunnen worden. De token wordt enkel voor deze vergelijking gebruikt, niet opgeslagen. Laat het veld leeg om zonder token verder te gaan: een contract dat op de spot geprijsd wordt krijgt dan geen prijs, een injectievergoeding die per tijdslot de spot volgt wordt weggelaten, zoals het resultaat vermeldt, en een die op een maandgemiddelde geïndexeerd is, wordt berekend tegen het bedrag dat de kaart afdrukt. Bij een eenmalige offerte telt een token ook een injectievergoeding die per tijdslot de spot volgt, op een contract waarvan de energie niet op de spot geprijsd wordt, mee in de cijfers van dit jaar als beide leveranciers een archief van oude kaarten bijhouden. De cijfers van dit jaar in de rangschikking gebruiken de token niet, en de jaarraming van die injectievergoeding evenmin: beide lezen alleen de day-ahead prijzen die deze invoer met een eigen token heeft verzameld.",
+        "data": {
+          "api_key": "ENTSO-E API-sleutel"
+        }
+      },
+      "compare_result": {
+        "title": "Eenmalige offerte",
+        "description": "Gebruikt metertype: {meter_used}. Jaarraming gebruikt {annual_kwh} kWh verbruikt ({consumption_source}). {solar_note}\n\n**Jouw huidige invoer**\n  {current_supplier} - {current_contract}\n  Per kWh nu: {current_per_kwh} EUR/kWh\n  Geschatte jaarlijkse factuur: {current_annual} EUR/jaar\n\n**Vergeleken met**\n  {compare_supplier} - {compare_contract}\n  Per kWh nu: {compare_per_kwh} EUR/kWh\n  Geschatte jaarlijkse factuur: {compare_annual} EUR/jaar\n\n**Jaarlijks verschil**: {delta_annual} EUR/jaar (positief = alternatief is duurder).\n\n```\n{annual_chart}\n```\n\n**Sinds {ytd_from}** ({ytd_kwh} kWh verbruikt, {ytd_injection_kwh} kWh geinjecteerd, je invoer zoals de sensor 'Kost dit jaar' ze aanrekent, behalve onder een zonneregime dat voor deze offerte gekozen werd of op day-ahead prijzen die voor deze pagina opgehaald werden en die de invoer zelf niet heeft; het alternatief aan de eigen kaart van elke maand als beide leveranciers een archief van oude kaarten bijhouden, anders aan het huidige tarief):\n  Huidig: {current_ytd} EUR\n  Alternatief: {compare_ytd} EUR\n  Verschil: {delta_ytd} EUR\n\n```\n{ytd_chart}\n```\n\n{card_note}\n\n{error}\n\nEr is niets opgeslagen. Bevestig om dit dialoogvenster te sluiten."
+      },
+      "contract": {
+        "title": "Contract",
+        "description": "Kies je contract. De integratie haalt bij elke verversing de actuele tariefkaart op.",
+        "data": {
+          "contract": "Contract",
+          "contract_start_date": "Startdatum van het contract (optioneel)",
+          "tariff_card_date": "Maand van de tariefkaart (optioneel)",
+          "contract_end_date": "Einddatum van het contract (optioneel)",
+          "ytd_from_contract_start": "Reken de kost van dit jaar vanaf de startdatum van het contract"
+        },
+        "data_description": {
+          "contract_start_date": "De datum waarop uw levering onder dit contract is gestart. Uw tarief wordt dan gelezen van de tariefkaart van die maand in plaats van de huidige, bij elke leverancier die zijn oude kaarten archiveert, en zowel voor vaste, dynamische als maandelijks geïndexeerde contracten. Draagt de tariefkaart die u tekende een andere maand, vul die dan hieronder in. Het attribuut signing_card van de sensor current_price noemt de kaart waarop deze invoer is uitgekomen. Laat leeg om altijd de huidige kaart te gebruiken.",
+          "tariff_card_date": "Een willekeurige datum in de maand van de tariefkaart waarop uw contract loopt. Een vast of dynamisch contract wordt geprijsd op de kaart die gold toen u tekende, en een overstap duurt ongeveer een maand, dus die kaart draagt vaak de maand voor de start van uw levering. energie.be zet ze in de productnaam (Elektriciteit dynamisch particulier online 06/26). Laat leeg om de maand van de start van uw levering te gebruiken, wat klopt als u in dezelfde maand tekende en startte. Alleen het opzoeken van de kaart leest dit: uw kost van dit jaar en vaste kosten blijven tellen vanaf de startdatum hierboven.",
+          "contract_end_date": "De datum waarop uw contract afloopt. Wordt als tijdstempelsensor beschikbaar gesteld zodat een automatisering u aan verlenging kan herinneren, en wordt door de voortschrijdende jaarkost gebruikt om aan te geven welk deel van het jaar nog onder dit contract valt. Het wijzigt geen enkel gefactureerd tarief.",
+          "ytd_from_contract_start": "Standaard telt de kost van dit jaar vanaf 1 januari, ongeacht wie u toen leverde. Vink dit aan om te starten op de startdatum van het contract hierboven, zodat het bedrag alleen dit contract dekt. Vaste kosten worden over dezelfde periode pro rata berekend, en de waarde daalt de eerste keer dat dit van toepassing is. Geldt alleen voor het eerste kalenderjaar van het contract; vanaf de volgende 1 januari zijn beide gelijk."
+        }
+      },
+      "signed_rate": {
+        "title": "Tarief bij ondertekening (optioneel)",
+        "description": "Laat deze stap leeg, tenzij uw contractbevestiging andere cijfers vermeldt dan de gepubliceerde tariefkaart van uw leverancier. Veel aanbiedingen, ook promoties via vergelijkingssites, hebben een eigen tariefkaart, die de integratie al leest. Vul alleen een cijfer in dat uw contract vermeldt: het vervangt de waarde van de kaart, en een leeg veld behoudt die. Houdt uw leverancier een archief van oude tariefkaarten bij, dan vult de kaart van uw ondertekeningsmaand de lege velden aan; anders doet de huidige kaart dat. De spotfactor vermenigvuldigt de marktprijs in EUR/kWh en de spotbasis is in EUR/kWh, dus een formule in c€/kWh op een Belpex in EUR/MWh moet worden omgerekend: (0,1068 × Belpex + 1,5) × 1,06 c€/kWh is een factor van 1,13208 en een basis van 0,0159. Waarden per kWh zijn inclusief btw bij een residentieel contract, en exclusief btw bij een professioneel contract en op de kaarten van Ecopower; het jaarlijkse vaste bedrag is inclusief btw.",
+        "data": {
+          "manual_energy_single": "Vastgelegd energietarief (EUR/kWh)",
+          "manual_energy_peak": "Vastgelegd piektarief (EUR/kWh)",
+          "manual_energy_offpeak": "Vastgelegd daltarief (EUR/kWh)",
+          "manual_energy_exclusive_night": "Vastgelegd exclusief-nachttarief (EUR/kWh)",
+          "manual_energy_factor": "Vastgelegde spotfactor",
+          "manual_energy_base": "Vastgelegde spotbasis (EUR/kWh)",
+          "manual_yearly_fee": "Vastgelegd jaarlijks vast bedrag (EUR, incl. btw)"
+        },
+        "data_description": {
+          "manual_energy_single": "Op de huidige kaart ({card_month}): {card_single}",
+          "manual_energy_peak": "Op de huidige kaart ({card_month}): {card_peak}",
+          "manual_energy_offpeak": "Op de huidige kaart ({card_month}): {card_offpeak}",
+          "manual_energy_exclusive_night": "Op de huidige kaart ({card_month}): {card_exclusive_night}",
+          "manual_energy_factor": "Op de huidige kaart ({card_month}): {card_factor}",
+          "manual_energy_base": "Op de huidige kaart ({card_month}): {card_base}",
+          "manual_yearly_fee": "Op de huidige kaart ({card_month}): {card_fee}"
+        }
+      },
+      "dso": {
+        "title": "Distributienetbeheerder",
+        "data": {
+          "dso": "DNB"
+        }
+      },
+      "meter": {
+        "title": "Metertype",
+        "description": "Enkelvoudige meter (mono), tweevoudige meter (dag/nacht), of digitale meter voor dynamische contracten. Het exclusief-nachtcircuit is alleen voor een tweede invoer voor een aparte meter die enkel 's nachts telt: hier gekozen rekent het de hele invoer tegen het nachttarief aan.",
+        "data": {
+          "meter": "Meter"
+        }
+      },
+      "professional": {
+        "title": "Professioneel contract",
+        "description": "Professionele tariefkaarten worden exclusief btw gepubliceerd, en de federale accijns is degressief volgens het jaarvolume. Twee antwoorden zijn nodig om ze te tariferen.",
+        "data": {
+          "include_vat": "Prijzen inclusief btw (21%)",
+          "annual_consumption_kwh": "Geschat jaarverbruik"
+        },
+        "data_description": {
+          "include_vat": "Zet dit uit als uw onderneming btw kan aftrekken: prijzen, vergoedingen en kosten worden dan exclusief btw gerapporteerd. Injectie volgt dezelfde keuze.",
+          "annual_consumption_kwh": "Uw jaarverbruik. De accijns wordt per schijf aangerekend (20 000 en 50 000 kWh per jaar: elk deel van het jaar aan zijn eigen tarief), en de vergelijkingen gebruiken het ook. Zodra er een volledig jaar op uw meters gemeten is, wordt de meting gebruikt; 0 gebruikt de meting, of 3500 kWh zolang er geen is."
+        }
+      },
+      "direct_debit": {
+        "title": "Domiciliëring",
+        "description": "Sommige tariefkaarten rekenen een gezin dat met domiciliëring betaalt anders aan.",
+        "data": {
+          "direct_debit": "Ik betaal via domiciliëring"
+        },
+        "data_description": {
+          "direct_debit": "Wordt enkel getoond wanneer de tariefkaart een verschil vermeldt, en wat het verschuift hangt van de kaart af. Bij de zeventien producten van Mega gaat het om de welkomstkorting: vier kennen ze alleen aan een domiciliëringsbetaler toe, de rest legt er een supplement bovenop. Bij EnergyVision Groene stroom (in Brussel verkocht als Brusol) is het de jaarlijkse vaste vergoeding, 250 EUR per jaar tegenover 230."
+        }
+      },
+      "dso_tariff_mode": {
+        "title": "Distributietarief (Wallonie)",
+        "description": "Hoe je netbeheerder het netgebruik factureert. 'Simple' / 'Bi-horaire' volgen de bestaande meterconventie. 'Tarif Impact' gebruikt de 3 CWaPE-tijdvakken (PIC 17-22, MEDIUM 7-11 + 22-1, ECO 1-7 + 11-17) en vereist een digitale meter.",
+        "data": {
+          "dso_tariff_mode": "Distributiemodus"
+        }
+      },
+      "connection_power": {
+        "title": "Aansluitvermogen (Brussel)",
+        "description": "Uw contractueel aansluitvermogen in kVA. Brussel rekent een Brugel-bijdrage voor openbaredienstverplichtingen aan die hiermee schaalt, en boven 13 kVA de hogere vermogensterm van Sibelga. De meeste woningen zitten op 13 kVA of minder; een 3x400 V / 25 A-aansluiting met een warmtepomp of een laadpaal zit daarboven.",
+        "data": {
+          "connection_kva_tier": "Aansluitvermogen"
+        }
+      },
+      "api_key": {
+        "title": "ENTSO-E API-sleutel",
+        "description": "Vereist voor dit contract. De energieprijs wordt bepaald door de Belgische day-ahead markt: per slot bij een dynamisch contract, of op het gemiddelde van de leveringsmaand bij een maandelijks geindexeerd contract. Gratis aan te vragen op transparency.entsoe.eu.",
+        "data": {
+          "api_key": "ENTSO-E API-sleutel"
+        }
+      },
+      "injection_api_key": {
+        "title": "ENTSO-E API-sleutel (optioneel)",
+        "description": "Optioneel. Dit contract indexeert zijn energieprijs op het day-ahead-gemiddelde van de leveringsmaand, of zijn injectie op de day-ahead spotprijs, of beide, en heeft daarvoor een gratis ENTSO-E-sleutel van transparency.entsoe.eu nodig. Laat leeg om over te slaan; zonder sleutel wordt een kaart die een maandbedrag drukt daarop aangerekend, dat van vorige maand, terwijl een injectieformule die per tijdslot wordt afgerekend niet gecrediteerd wordt en haar prijs onbeschikbaar blijft.",
+        "data": {
+          "api_key": "ENTSO-E API-sleutel"
+        }
+      },
+      "api_key_unreachable": {
+        "title": "ENTSO-E is niet bereikbaar",
+        "description": "Uw API-sleutel kon niet worden gecontroleerd omdat het ENTSO-E Transparency Platform momenteel niet antwoordt. Dat betekent niet dat de sleutel fout is: ENTSO-E kan een dag of langer onbereikbaar zijn, en zolang dat duurt valt een goede sleutel niet van een foute te onderscheiden.\n\nU kunt straks opnieuw controleren, of doorgaan en de sleutel laten controleren bij de eerste prijsverversing. Blijkt hij toch geweigerd, dan verschijnt er een reparatiemelding en kunt u hem alsnog corrigeren.",
+        "menu_options": {
+          "api_key_recheck": "Sleutel opnieuw controleren",
+          "api_key_unverified": "Doorgaan zonder controle"
+        }
+      },
+      "capacity": {
+        "title": "Capaciteitstarief (Vlaanderen)",
+        "description": "Kies bij voorkeur de maandpieksensor van je meter (DSMR 5B publiceert \"Maximum demand current month\"), dat is de kwartierpiek die Fluvius aanrekent. Een gewone vermogenssensor wordt elk uur bemonsterd en benadert die alleen. Of gebruik een vaste waarde.",
+        "data": {
+          "capacity_mode": "Bron van de piek",
+          "capacity_peak_sensor": "Maandpieksensor",
+          "capacity_fixed_kw": "Vaste piek (kW)"
+        }
+      },
+      "solar": {
+        "title": "Zonnepanelen",
+        "description": "Vermogen van de omvormer in kVA en het regime dat van toepassing is op je installatie. De Waalse compensatieregeling geldt enkel voor installaties gecertificeerd voor 2024-01-01 en blijft geldig tot 2030-12-31; nieuwe installaties en Vlaamse digitale meters vallen onder het injectietarief.",
+        "data": {
+          "solar_kva": "Vermogen omvormer (kVA)",
+          "solar_regime": "Regime",
+          "double_flow_meter": "Meter telt afname en injectie apart"
+        },
+        "data_description": {
+          "double_flow_meter": "Alleen voor het Waalse compensatieregime. Vink aan bij een tweerichtingsmeter of digitale meter: de netbeheerder rekent dan distributie en transport aan op je bruto afname in de plaats van het prosumententarief, telkens dat goedkoper is. Laat uit bij een terugdraaiende teller."
+        }
+      },
+      "meters": {
+        "title": "Energiemeters (kost dit jaar)",
+        "description": "Optioneel. Wijs ofwel de vier dag/nacht registers van de meter aan (voorkeur - exact vanaf het begin), of enkele cumulatieve verbruik- / injectiesensoren (de integratie leest kWh uit de HA recorder en splitst het totaal van elke voorbije dag in dag/nacht via het dag/nachtschema waar nodig). Elke kant - verbruik, injectie - wordt onafhankelijk bepaald; je kan een kant als registers en de andere als enkele totaalsensor invullen. Wanneer beide bedradingen zijn ingevuld voor dezelfde kant, winnen de dag/nacht registers zolang ze volledig rapporteren; het totaal neemt het over van een paar met een dode, bevroren of laat gestarte helft, of met helften die andere periodes rapporteren. Heb je het HA Energie-dashboard al ingesteld, dan worden de cumulatieve velden - en de dag/nacht registers wanneer een utility_meter helper de gridbron in piek/dal (of dag/nacht, jour/nuit, peak/offpeak) tarieven splitst - automatisch voorgeselecteerd. Voorgeselecteerde waarden blijven aanpasbaar.",
+        "data": {
+          "day_consumption_kwh": "Verbruik dag (kWh)",
+          "night_consumption_kwh": "Verbruik nacht (kWh)",
+          "day_injection_kwh": "Injectie dag (kWh)",
+          "night_injection_kwh": "Injectie nacht (kWh)",
+          "consumption_kwh": "Totaal verbruik (kWh)",
+          "injection_kwh": "Totale injectie (kWh)",
+          "daily_compare": "Vergelijk elke leverancier dagelijks",
+          "card_archive": "Oude tariefkaarten uit het projectarchief lezen",
+          "ev_home_charging_rate": "CREG-tarief voor thuisladen van een bedrijfswagen publiceren"
+        },
+        "data_description": {
+          "day_consumption_kwh": "Cumulatieve meterstand in kWh, die alleen maar oploopt. Een sensor die terugvalt naar nul, zoals een totaal 'huidig jaar', wordt alleen juist gelezen als zijn state class total_increasing is of hij last_reset publiceert; elke andere daling telt als nul.",
+          "night_consumption_kwh": "Cumulatieve meterstand in kWh, die alleen maar oploopt. Een sensor die terugvalt naar nul, zoals een totaal 'huidig jaar', wordt alleen juist gelezen als zijn state class total_increasing is of hij last_reset publiceert; elke andere daling telt als nul.",
+          "day_injection_kwh": "Cumulatieve meterstand in kWh, die alleen maar oploopt. Een sensor die terugvalt naar nul, zoals een totaal 'huidig jaar', wordt alleen juist gelezen als zijn state class total_increasing is of hij last_reset publiceert; elke andere daling telt als nul.",
+          "night_injection_kwh": "Cumulatieve meterstand in kWh, die alleen maar oploopt. Een sensor die terugvalt naar nul, zoals een totaal 'huidig jaar', wordt alleen juist gelezen als zijn state class total_increasing is of hij last_reset publiceert; elke andere daling telt als nul.",
+          "consumption_kwh": "Wordt gebruikt voor zijn kant wanneer de twee registers van die kant leeg zijn, en in de plaats van een paar dat uitvalt, bevriest of andere periodes rapporteert: een meter zonder dag/nacht-onderscheid, een klemmeter, of een omvormer die maar één totaal geeft. Zelfde regel, hij mag alleen oplopen.",
+          "injection_kwh": "Wordt gebruikt voor zijn kant wanneer de twee registers van die kant leeg zijn, en in de plaats van een paar dat uitvalt, bevriest of andere periodes rapporteert: een meter zonder dag/nacht-onderscheid, een klemmeter, of een omvormer die maar één totaal geeft. Zelfde regel, hij mag alleen oplopen.",
+          "daily_compare": "Standaard uit. Eenmaal per dag, op een vast tijdstip afgeleid van deze invoer zodat installaties niet allemaal tegelijk ophalen, wordt elk contract van uw soort in uw regio berekend en de jaarlijkse besparing van het beste als sensor gepubliceerd. De meeste dagen kost dit slechts enkele controles, want tariefkaarten worden ongeveer één keer per maand opnieuw gepubliceerd.",
+          "card_archive": "Standaard aan. Voor een voorbije maand waarvoor uw leverancier geen kaart meer publiceert, wordt de kaart opgehaald die het archief van dit project ervoor bewaarde: één klein bestand per maand vanaf GitHub, met enkel de leverancier, het contract, de regio en de maand. Leest ook, één keer per dag, het btw-tarief waarover de gearchiveerde kaarten het eens zijn, voor de prijzen die een kaart zonder tarief vermeldt, en levert de lezing van dit project van een kaart die als paginafoto's verschijnt, zodat een leverancier die dat doet (Ecofix sinds augustus 2026) zonder prijzen zit als dit uit staat. Als de huidige kaart onleesbaar is en er geen kaart bewaard is, neemt de kaart van vorige maand uit het archief het over. Zet uit om te vermijden dat de integratie GitHub contacteert; die maanden worden dan op de huidige kaart berekend, en een btw-tarief dat een kaart niet vermeldt is het laatste dat gelezen werd toen dit aan stond, of anders 6% voor een gezin en 21% bij een professioneel contract.",
+          "ev_home_charging_rate": "Standaard uit. Voor een bedrijfswagen die thuis laadt: publiceert het maximum per kWh dat uw werkgever belastingvrij mag terugbetalen volgens de forfaitaire methode, voor uw regio en het lopende kwartaal, zoals de FOD Financiën het vastlegt op basis van de prijzen van de CREG. Uw werkgever mag minder betalen, of uw werkelijke kost terugbetalen. Aangevinkt leest de integratie één keer per kwartaal een klein bestand van creg.be."
+        }
+      },
+      "custom_energy": {
+        "title": "Aangepaste energieformule",
+        "description": "Let op: expertoptie, alleen voor leveranciers die GEEN publieke tariefkaart publiceren. Publiceert je leverancier er wel een, open dan liever een issue op GitHub om die als volwaardige leverancier toe te voegen, en hetzelfde als je leverancier al in de lijst staat maar het item je contract niet prijst zoals je tariefkaart (een formule vastgezet op je ondertekeningsmaand, een rij die de parser mist): open een issue met je kaart zodat het voor iedereen wordt opgelost in plaats van hier nagebouwd. Een handmatig ingevoerd contract is een statische momentopname zonder live kaartverversing en zonder driftcontrole, dus de waarden blijven alleen correct als je ze zelf bijhoudt. Voer de commoditycijfers van je contract in exclusief btw; het btw-tarief op de belastingstap rekent ze door. Voor de dynamische en maandgemiddelde modi is de prijs factor x index + basis, met de index (de live spot, of het maandgemiddelde) en de basis allebei in EUR/kWh. Een formule in c€/kWh op een Belpex in EUR/MWh moet worden omgerekend: (0,1068 x Belpex + 1,5) c€/kWh is een factor van 1.068 en een basis van 0.015. Voorbeeld (Yuso dynamisch): factor 1.0, basis 0.02.",
+        "data": {
+          "custom_energy_factor": "Energiefactor (vermenigvuldiger op de index in EUR/kWh)",
+          "custom_energy_base": "Energiebasis (EUR/kWh, excl. btw)",
+          "custom_energy_quarter_hourly": "Facturatie per kwartier",
+          "custom_energy_single": "Enkeltarief (EUR/kWh, excl. btw)",
+          "custom_energy_peak": "Dagtarief (EUR/kWh, excl. btw)",
+          "custom_energy_offpeak": "Nachttarief (EUR/kWh, excl. btw)",
+          "custom_energy_exclusive_night": "Exclusief nachttarief (EUR/kWh, excl. btw)",
+          "custom_yearly_fixed_fee": "Jaarlijkse vaste vergoeding (EUR/jaar, excl. btw)"
+        }
+      },
+      "custom_injection": {
+        "title": "Aangepaste injectieformule",
+        "description": "Hoe je zonne-injectie wordt vergoed. Een vast tarief is een vaste EUR/kWh-vergoeding; een formule is factor x index + basis op de live spot (dynamisch) of het maandgemiddelde. De index en de basis zijn allebei in EUR/kWh, en de basis behoudt haar teken: een kaart met (0,07 x Belpex - 2) c€/kWh, op een Belpex in EUR/MWh, is een factor van 0.7 en een basis van -0.02. Vink de ondergrens aan als het contract garandeert dat de injectieprijs nooit negatief is. Vink 'injectie wegen met het zonneprofiel' aan om het maandgemiddelde van de injectie te wegen met het zonneproductieprofiel van Synergrid (live opgehaald; een ex-ante prognose, dus dicht bij maar niet exact de definitieve SPP-waarde).",
+        "data": {
+          "custom_injection_mode": "Injectietarifering",
+          "custom_injection_current": "Vast injectietarief (EUR/kWh)",
+          "custom_injection_factor": "Injectiefactor (vermenigvuldiger op de index in EUR/kWh)",
+          "custom_injection_base": "Injectiebasis (EUR/kWh, negatief voor een aftrek)",
+          "custom_injection_floor": "Nooit negatief (ondergrens 0)",
+          "custom_injection_spp_weighted": "Injectie wegen met het zonneprofiel (SPP)"
+        }
+      },
+      "custom_dso": {
+        "title": "Nettarieven (DNB)",
+        "description": "Gereguleerde netkosten, gelijk voor elke leverancier op je DNB. Neem ze over van je factuur of de tariefkaart van je DNB, exclusief btw. Enkel distributie is verplicht. Laat de vakken voor dag, nacht en de tariefblokken leeg als je tarief die opsplitsing niet kent: leeg rekent het enkelvoudige distributietarief aan, 0 rekent niets aan. Laat andere kosten die je niet betaalt op 0. Het jaarlijkse veld neemt de databeheervergoeding in Vlaanderen, de vaste term (terme fixe) in Wallonie, die het Impact-tarief niet aanrekent, en de meet- en vaste kosten samen in Brussel.",
+        "data": {
+          "custom_dso_distribution_single": "Distributie (EUR/kWh)",
+          "custom_dso_distribution_peak": "Distributie dag (EUR/kWh)",
+          "custom_dso_distribution_offpeak": "Distributie nacht (EUR/kWh)",
+          "custom_dso_distribution_exclusive_night": "Distributie exclusief nacht (EUR/kWh)",
+          "custom_dso_transport": "Transport (EUR/kWh)",
+          "custom_dso_data_management_per_year": "Databeheervergoeding of vaste term (EUR/jaar)",
+          "custom_dso_capacity_eur_per_kw_year": "Capaciteitstarief (EUR/kW/jaar)",
+          "custom_dso_prosumer_eur_per_kva_year": "Prosumententarief (EUR/kVA/jaar)",
+          "custom_dso_distribution_pic": "Distributie PIC-band (EUR/kWh)",
+          "custom_dso_distribution_medium": "Distributie MEDIUM-band (EUR/kWh)",
+          "custom_dso_distribution_eco": "Distributie ECO-band (EUR/kWh)",
+          "custom_dso_brussels_osp": "Brugel OSP-vergoeding (EUR/jaar)"
+        }
+      },
+      "custom_tax": {
+        "title": "Belastingen en heffingen",
+        "description": "Gereguleerde belastingen en heffingen, exclusief btw. Het btw-tarief hieronder rekent energie, net en belastingen door (injectie blijft btw-vrij). De Belgische residentiele btw is 0.06; zet 0 als je alles inclusief btw hebt ingevoerd.",
+        "data": {
+          "custom_tax_federal_excise": "Federale accijns (EUR/kWh)",
+          "custom_tax_energy_contribution": "Energiebijdrage (EUR/kWh)",
+          "custom_tax_regional_renewables": "Groene heffing: GSC + WKK in Vlaanderen, bijdrage groene stroom in Wallonië en Brussel (EUR/kWh)",
+          "custom_tax_region_connection_fee": "Waalse aansluitingsvergoeding (redevance de raccordement, btw-vrij, enkel Wallonië) (EUR/kWh)",
+          "custom_tax_energy_fund_per_month": "Energiefonds (EUR/maand)",
+          "custom_vat_rate": "Btw-tarief (bv. 0.06)"
+        }
+      },
+      "compare_all_progress": {
+        "title": "Alternatieven berekenen"
+      },
+      "compare_all_result": {
+        "title": "Gerangschikte alternatieven",
+        "description": "Alle contracten uit dezelfde familie als het uwe (vast of variabel, spotgeïndexeerd, of met tijdsblokken) die in uw regio beschikbaar zijn, berekend met uw eigen instellingen. Uw eigen contract draagt de badge YOUR CONTRACT; elke andere regel eindigt met het verschil ten opzichte daarvan, waarbij een minteken een besparing is.\n\n{ranking}\n\nSchattingen, geen offertes. Elke regel berekent een volledig jaar van uw gemeten volumes tegen één gepubliceerde tariefkaart: het zegt wat een jaar tegen die prijzen zou kosten, niet wat u gefactureerd krijgt. Er wordt niets opgeslagen; bevestig om te sluiten.",
+        "data": {
+          "with_ytd": "Ook de kost van dit jaar berekenen (trager: haalt de kaart van elke voorbije maand op)",
+          "refresh": "Nu opnieuw berekenen (duurt ongeveer twee minuten)"
+        }
+      },
+      "settlement": {
+        "title": "Afrekening",
+        "description": "Hoe je leverancier dit contract afrekent. Vink het vakje alleen aan als je per kwartier wordt afgerekend, of je dat nu bij de inschrijving koos of later hebt aangevraagd.",
+        "data": {
+          "quarter_hourly": "Afrekening per kwartier"
+        },
+        "data_description": {
+          "quarter_hourly": "Alleen zichtbaar als je leverancier de keuze laat. Frank Energie: uit voor de uurprijzen die de tariefkaart afdrukt, aan als je je account in de app op kwartierprijzen hebt gezet. Bolt: uit voor variabel afrekenen, waarbij je maand op het RLP-gewogen maandgemiddelde wordt afgerekend, aan voor dynamisch afrekenen, waarbij elk kwartier tegen zijn eigen Belpex-waarde wordt afgerekend. De formule blijft dezelfde, alleen de marktprijs die ze leest verandert."
+        }
+      },
+      "compare_settlement": {
+        "title": "Af te rekenen tarief",
+        "description": "Op welke afrekening {contract} geprijsd wordt.",
+        "data": {
+          "quarter_hourly": "Afrekening per kwartier"
+        },
+        "data_description": {
+          "quarter_hourly": "Alleen zichtbaar als je leverancier de keuze laat. Frank Energie: uit voor de uurprijzen die de tariefkaart afdrukt, aan als je je account in de app op kwartierprijzen hebt gezet. Bolt: uit voor variabel afrekenen, waarbij je maand op het RLP-gewogen maandgemiddelde wordt afgerekend, aan voor dynamisch afrekenen, waarbij elk kwartier tegen zijn eigen Belpex-waarde wordt afgerekend. De formule blijft dezelfde, alleen de marktprijs die ze leest verandert."
+        }
+      }
+    },
+    "progress": {
+      "sweeping": "{priced} van {total} contracten berekend. De snelste kaarten worden eerst opgehaald: een pauze is een trage leverancier, geen blokkade.\n\n{ranking}"
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "flanders": "Vlaanderen",
+        "wallonia": "Wallonie",
+        "brussels": "Brussel"
+      }
+    },
+    "capacity_mode": {
+      "options": {
+        "sensor": "Vanuit een vermogenssensor",
+        "fixed": "Vaste kW-waarde"
+      }
+    },
+    "dso_tariff_mode": {
+      "options": {
+        "simple": "Enkelvoudig (één tarief, alle uren)",
+        "bi_horaire": "Tweevoudig (dag / nacht)",
+        "impact": "Tarif Impact (3 tijdvakken)"
+      }
+    },
+    "connection_kva_tier": {
+      "options": {
+        "le1_44": "1,44 kVA of minder (geen OSP-bijdrage)",
+        "le6": "Meer dan 1,44 tot 6 kVA",
+        "le9_6": "Meer dan 6 tot 9,6 kVA",
+        "le13": "Meer dan 9,6 tot 13 kVA",
+        "le18": "Meer dan 13 tot 18 kVA",
+        "le36": "Meer dan 18 tot 36 kVA",
+        "le56": "Meer dan 36 tot 56 kVA",
+        "gt56": "Meer dan 56 kVA"
+      }
+    },
+    "meter": {
+      "options": {
+        "mono": "Mono (enkel tarief)",
+        "bi": "Tweevoudig (dag / nacht)",
+        "dynamic": "Dynamisch (digitale meter)",
+        "exclusive_night": "Exclusief-nachtcircuit (aparte meter)"
+      }
+    },
+    "solar_regime": {
+      "options": {
+        "none": "Geen zonnepanelen",
+        "compensation": "Compensatieregeling (Wallonie, gecertificeerd voor 2024-01-01, tot 2030)",
+        "injection": "Injectietarief (na-2024 installatie of digitale meter)"
+      }
+    },
+    "custom_injection_mode": {
+      "options": {
+        "current": "Vast tarief",
+        "formula": "Formule (factor x index + basis)"
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "Vernieuwen",
+      "description": "Laat elke Belgian Electricity Prices-invoer meteen de tariefkaart van de leverancier, de maandkaarten waarop de kost van dit jaar berekend wordt en de ENTSO-E-prijzen van vandaag opnieuw ophalen, in plaats van te wachten op de volgende ronde. Dit raakt de cache met VROEGERE uurprijzen achter de kost van dit jaar niet aan; gebruik daarvoor Prijsgeschiedenis wissen.",
+      "fields": {
+        "clear_history": {
+          "name": "Prijsgeschiedenis wissen",
+          "description": "Verwijdert ook de opgeslagen historische uurprijzen die de kost van dit jaar opnieuw afspeelt, en haalt ze opnieuw op. Standaard uit: het haalt elke dag sinds 1 januari (of sinds de startdatum van het contract, als de invoer daarvan uitgaat) opnieuw op bij een dienst met snelheidslimiet. De dagen daarvoor worden niet opnieuw opgehaald, dus een injectievergoeding die per tijdslot de spotprijs volgt, valt uit de voortschrijdende jaarkost en de vergelijkingen tot er weer een volledig jaar beschikbaar is. Gebruik dit wanneer de kost van dit jaar verkeerd lijkt en een gewone vernieuwing dat niet oplost."
+        }
+      }
+    },
+    "cheapest_window": {
+      "name": "Goedkoopste tijdvak",
+      "description": "Geeft het goedkoopste aaneengesloten venster van N uur in de prijstabel van de komende uren terug.",
+      "fields": {
+        "duration_hours": {
+          "name": "Duur",
+          "description": "Lengte van het venster in uren, afgerond op het dichtstbijzijnde hele uur (een half uur rondt naar boven af). Bij een kwartiercontract kan het venster op elke kwartiergrens beginnen."
+        },
+        "entry_id": {
+          "name": "Entry-ID",
+          "description": "Optioneel. Zonder deze waarde wordt de eerst geladen invoer gebruikt, dus vul ze in als je meer dan één invoer hebt."
+        },
+        "earliest_start": {
+          "name": "Vroegste start",
+          "description": "Optioneel. Afgerond naar het begin van het prijsslot (het hele uur, of het kwartier bij een kwartiercontract), dus 14:30 beschouwt nog steeds het 14:00-slot. Standaard: nu."
+        },
+        "latest_end": {
+          "name": "Laatste einde",
+          "description": "Optioneel. Standaard: einde van de cache."
+        }
+      }
+    },
+    "most_expensive_window": {
+      "name": "Duurste tijdvak",
+      "description": "Geeft het duurste aaneengesloten venster van N uur in de prijstabel van de komende uren terug.",
+      "fields": {
+        "duration_hours": {
+          "name": "Duur",
+          "description": "Lengte van het venster in uren, afgerond op het dichtstbijzijnde hele uur (een half uur rondt naar boven af). Bij een kwartiercontract kan het venster op elke kwartiergrens beginnen."
+        },
+        "entry_id": {
+          "name": "Entry-ID",
+          "description": "Optioneel. Zonder deze waarde wordt de eerst geladen invoer gebruikt, dus vul ze in als je meer dan één invoer hebt."
+        },
+        "earliest_start": {
+          "name": "Vroegste start",
+          "description": "Optioneel. Afgerond naar het begin van het prijsslot (het hele uur, of het kwartier bij een kwartiercontract), dus 14:30 beschouwt nog steeds het 14:00-slot. Standaard: nu."
+        },
+        "latest_end": {
+          "name": "Laatste einde",
+          "description": "Optioneel. Standaard: einde van de cache."
+        }
+      }
+    },
+    "backfill_statistics": {
+      "name": "Statistieken aanvullen",
+      "description": "Vult de lange-termijn statistieken van de recorder aan voor de prijssensoren en current_year_cost van deze invoer over een datumbereik, zodat het Energie-dashboard ook geschiedenis toont van voor de eerste live tick. De kost wordt alleen herbouwd binnen het venster van dit jaar (vanaf 1 januari, of de startdatum van het contract als de invoer daarvan uitgaat); een bereik dat op of vóór het begin ervan eindigt, herbouwt alleen de prijssensoren.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry-ID",
+          "description": "Optioneel. Zonder deze waarde wordt de eerst geladen invoer gebruikt, dus vul ze in als je meer dan één invoer hebt."
+        },
+        "start": {
+          "name": "Start",
+          "description": "Eerste uur om aan te vullen. Standaard: het begin van het venster van dit jaar, 1 januari 00:00 van het huidige lokale jaar, of de startdatum van het contract als de invoer daarvan uitgaat."
+        },
+        "end": {
+          "name": "Eind",
+          "description": "Eerste uur dat NIET wordt aangevuld (exclusief). Standaard: huidige uur. Op of vóór het begin van het venster van dit jaar worden alleen de prijssensoren herbouwd."
+        },
+        "clear": {
+          "name": "VOLLEDIGE reeks wissen voor herimport",
+          "description": "Destructief: verwijdert elke bestaande rij van de doelreeks (niet alleen het gevraagde bereik), waarna de herimport alleen het gevraagde bereik opnieuw vult. Gebruik dit ALLEEN om het volledige venster van dit jaar opnieuw te draaien; een venster dat begint na het begin van het venster van het eindjaar (1 januari, of de startdatum van het contract als de invoer daarvan uitgaat) wordt met clear aan geweigerd, tenzij het venster eindigt op of vóór het begin van het venster van dit jaar (daar blijft de kostenreeks buiten zowel het wissen als de herimport). Voor smallere vensters: laat dit uit; de import doet upsert op (statistic_id, uur) en overschrijft de gevraagde uren al zonder iets buiten het bereik aan te raken."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "not_enough_hours": {
+      "message": "Slechts {available} prijsslots beschikbaar in het gevraagde venster; {needed} nodig."
+    },
+    "not_enough_contiguous_hours": {
+      "message": "Het gevraagde venster heeft hoogstens {available} opeenvolgende prijsslots; {needed} nodig."
+    },
+    "duration_too_small": {
+      "message": "duration_hours moet minstens 1 zijn."
+    },
+    "no_loaded_entry": {
+      "message": "Geen geladen Belgian Electricity Prices-invoer."
+    },
+    "no_loaded_entry_with_id": {
+      "message": "Geen geladen Belgian Electricity Prices-invoer met id {entry_id}."
+    },
+    "entry_reloading": {
+      "message": "De invoer wordt herladen; probeer zo dadelijk opnieuw."
+    },
+    "price_table_empty": {
+      "message": "De prijstabel is leeg; vernieuw de invoer eerst."
+    },
+    "snapshot_not_loaded": {
+      "message": "De leveranciersmomentopname is nog niet geladen; vernieuw de invoer eerst."
+    }
+  },
+  "issues": {
+    "snapshot_stale": {
+      "title": "Tariefgegevens voor {supplier} ({contract}) zijn ouder dan {days} dagen",
+      "description": "De integratie kon de tariefkaart niet bij de leverancier vernieuwen en gebruikt een cache van meer dan {days} dagen oud. Laatste fout: {last_error}. Prijzen geven mogelijk niet meer weer wat werkelijk wordt gefactureerd. Probeer de service be_electricity_prices.refresh, controleer je netwerk, of open een issue op GitHub als het probleem aanhoudt."
+    },
+    "extractor_failed": {
+      "title": "Tariefkaart voor {supplier} ({contract}) kon niet ontleed worden",
+      "description": "De leveranciers-extractor gaf een fout: {error}. Werd er eerder een kaart ingelezen, dan blijft de integratie die prijzen tonen, maar die komen mogelijk niet meer overeen met de werkelijke factuur; anders blijven de sensoren van deze invoer onbeschikbaar tot een ophaling lukt. Meestal heeft de leverancier de layout van zijn tariefkaart aangepast; open een issue op GitHub met leverancier en contract zodat de extractor bijgewerkt kan worden."
+    },
+    "extractor_unreachable": {
+      "title": "Kan de leverancier voor {supplier} ({contract}) niet bereiken",
+      "description": "De integratie kon de tariefkaart na meerdere pogingen niet downloaden: {error}. Werd er eerder een kaart ingelezen, dan blijft ze die prijzen tonen; anders blijven de sensoren van deze invoer onbeschikbaar tot een ophaling lukt. Dit is meestal een tijdelijk netwerk- of CDN-probleem dat bij de volgende vernieuwing vanzelf verdwijnt; gebruik de service be_electricity_prices.refresh of controleer je netwerk als het blijft gebeuren."
+    },
+    "extractor_card_missing": {
+      "title": "Tariefkaart voor {supplier} ({contract}) is niet beschikbaar",
+      "description": "De site van de leverancier antwoordt dat er geen tariefkaart staat op het adres dat de integratie leest: {error}. Mogelijk heeft de leverancier de kaart van deze maand nog niet gepubliceerd, het product stopgezet of zijn kaarten verplaatst. Werd er eerder een kaart ingelezen, dan blijft de integratie die prijzen tonen, maar die komen mogelijk niet meer overeen met de werkelijke factuur; anders blijven de sensoren van deze invoer onbeschikbaar tot een ophaling lukt. Deze melding verdwijnt vanzelf zodra de tariefkaart weer opgehaald kan worden. Duurt het langer dan enkele dagen terwijl de leverancier het product nog aanbiedt, open dan een issue op GitHub met leverancier en contract zodat de extractor bijgewerkt kan worden."
+    },
+    "card_read_by_ocr": {
+      "title": "De prijzen van {supplier} worden van foto's van zijn kaart gelezen",
+      "description": "{supplier} publiceert zijn tariefkaart als paginafoto's zonder tekstlaag, waardoor er niets uit het document zelf gelezen kan worden. Deze prijzen voor {contract} komen uit de eigen lezing van de kaartpixels door het project, een keer per dag gedaan en gedeeld door elke installatie. Ze leest een getal als het enige dat het kan zijn of helemaal niet, dus wat je ziet is volledig gelezen in plaats van geraden. Het blijft wel een lezing, die het loont om tegen je kaart te controleren voor je erop afgaat. Deze melding verdwijnt vanzelf zodra {supplier} weer een leesbare kaart publiceert."
+    },
+    "extractor_unreadable_no_prices": {
+      "title": "Geen prijzen voor {supplier}: de tariefkaart is onleesbaar",
+      "description": "{supplier} publiceert zijn tariefkaart als paginafoto's zonder tekstlaag, waardoor de prijzen er niet uit gelezen kunnen worden, en deze invoer heeft geen oudere kaart in cache om op terug te vallen. Dit is geen fout in de integratie en melden helpt niet: er valt niets te lezen in het document. Alle sensoren van deze invoer ({contract}) blijven onbeschikbaar tot {supplier} weer een leesbare kaart publiceert, of tot het kaartarchief van dit project zijn eigen lezing van deze kaart opslaat, wat het één keer per dag doet en wat deze invoer leest zolang \"Oude tariefkaarten uit het projectarchief lezen\" aan staat. Wil je nu prijzen, maak dan een invoer met de leverancier 'Expert: custom formula' en typ de waarden van je kaart zelf in. Deze melding verdwijnt vanzelf zodra een van beide gebeurt."
+    },
+    "extractor_unreadable": {
+      "title": "De tariefkaart van {supplier} is niet meer leesbaar",
+      "description": "{supplier} publiceert zijn tariefkaart nu als paginafoto's zonder tekstlaag, waardoor de prijzen er niet meer uit gelezen kunnen worden. Dit is geen fout in de integratie en melden helpt niet: er valt niets te lezen in het document. Deze invoer blijft de laatst succesvol ingelezen prijzen gebruiken ({contract}); die wijken elke maand verder af van je echte factuur. Om correct te blijven, stap over naar een andere leverancier of maak een invoer met de leverancier 'Expert: custom formula' en typ de waarden van je kaart zelf in. Deze melding verdwijnt vanzelf zodra {supplier} weer leesbare kaarten publiceert, of zodra het kaartarchief van dit project zijn eigen lezing van deze kaart opslaat, wat het één keer per dag doet en wat deze invoer leest zolang \"Oude tariefkaarten uit het projectarchief lezen\" aan staat."
+    },
+    "entsoe_auth_failed": {
+      "title": "ENTSO-E weigerde de API-sleutel voor {supplier} ({contract})",
+      "description": "transparency.entsoe.eu antwoordde 401 op de geconfigureerde sleutel: {error}. Bewerk de opties van deze invoer en vervang de sleutel door een nieuwe op transparency.entsoe.eu (My Account Settings -> Web API Security Token). Tot dan kan niets op deze invoer dat de day-aheadmarkt volgt berekend worden: op een dynamisch of maandelijks geïndexeerd contract zijn haar sensoren niet beschikbaar, en op een contract waarvan alleen de injectievergoeding de markt volgt, is die vergoeding het niet."
+    },
+    "supplier_deprecated": {
+      "title": "{supplier} draagt je contract op {ends_on} over aan {successor}",
+      "description": "{supplier} stopt met de levering van energie aan particulieren: je contract gaat op {ends_on} automatisch over naar {successor}. De prijzen blijven correct tot {supplier} zijn tariefkaart niet langer publiceert, dus er is nog niets stuk, maar daarna stopt deze invoer met bijwerken. Zodra {successor} je levert, open je de opties van deze invoer, kies je 'Leverancierswissel registreren', vul je de eerste dag in waarop {successor} je leverde en kies je daarna {successor} en het product dat in hun brief staat. Zo blijven de dagen van {supplier} op zijn eigen tariefkaarten berekend, terwijl 'Instellingen wijzigen' het hele jaar op de kaarten van {successor} zou berekenen. Viel die dag op 1 januari van dit jaar of vroeger, gebruik dan 'Instellingen wijzigen'. Staat het product niet in de lijst, dan kan deze integratie dat product nog niet berekenen: de leverancier 'Expert: custom formula' neemt intussen de waarden van je tariefkaart over, en een issue op GitHub is de manier om het netjes te laten ondersteunen."
+    },
+    "supplier_deprecated_ended": {
+      "title": "{supplier} heeft je contract overgedragen aan {successor}",
+      "description": "{supplier} heeft de residentiele energiemarkt verlaten op {ends_on} en je contract is automatisch overgedragen aan {successor}. Er wordt geen tariefkaart meer gepubliceerd, dus deze invoer kan niet meer bijwerken: ze toont nog de laatst ingelezen prijzen, en die komen niet meer overeen met je factuur. Om je nieuwe contract te laten berekenen, open je de opties van deze invoer, kies je 'Leverancierswissel registreren', vul je de eerste dag in waarop {successor} je leverde en kies je daarna {successor} en het product dat in hun brief staat. Zo blijven de dagen van {supplier} op zijn eigen tariefkaarten berekend, terwijl 'Instellingen wijzigen' het hele jaar op de kaarten van {successor} zou berekenen. Viel die dag op 1 januari van dit jaar of vroeger, gebruik dan 'Instellingen wijzigen'. Staat het product niet in de lijst, dan kan deze integratie dat product nog niet berekenen: de leverancier 'Expert: custom formula' neemt intussen de waarden van je tariefkaart over, en een issue op GitHub is de manier om het netjes te laten ondersteunen."
+    },
+    "supplier_deprecated_no_successor": {
+      "title": "{supplier} stopt op {ends_on} met de levering van energie aan particulieren",
+      "description": "{supplier} verlaat op {ends_on} de markt voor energie aan particulieren. De prijzen blijven correct tot de tariefkaart niet langer gepubliceerd wordt, maar daarna stopt deze invoer met bijwerken. Je contract wordt overgedragen aan een andere leverancier: kijk in de brief die je ontvangt. Zodra die leverancier je levert, kies je in de opties van deze invoer 'Leverancierswissel registreren', vul je de eerste dag in waarop hij je leverde en kies je hem daarna. 'Instellingen wijzigen' zou het hele jaar op de kaarten van de nieuwe leverancier berekenen, tenzij die dag op 1 januari van dit jaar of vroeger viel. Staat hij niet in de lijst, dan ondersteunt deze integratie hem nog niet in jouw gewest: open dan een issue op GitHub."
+    },
+    "supplier_deprecated_ended_no_successor": {
+      "title": "{supplier} levert geen residentiele energie meer",
+      "description": "{supplier} heeft de residentiele energiemarkt verlaten op {ends_on} en publiceert geen tariefkaart meer: deze invoer kan niet meer bijwerken en toont nog de laatst ingelezen prijzen, die niet meer overeenkomen met je factuur. Je contract is overgedragen aan een andere leverancier: kijk in de brief die je kreeg, kies dan in de opties van deze invoer 'Leverancierswissel registreren', vul de eerste dag in waarop de nieuwe leverancier je leverde en kies hem daarna. 'Instellingen wijzigen' zou het hele jaar op de kaarten van de nieuwe leverancier berekenen, tenzij die dag op 1 januari van dit jaar of vroeger viel. Staat hij niet in de lijst, dan dekt deze integratie hem nog niet in jouw regio: open een issue op GitHub."
+    },
+    "contract_withdrawn": {
+      "title": "{supplier} verkoopt {contract} niet meer",
+      "description": "{supplier} biedt {contract} sinds {since} niet meer aan. Deze invoer blijft rekenen met de laatste tariefkaart die {supplier} voor dit product publiceerde. Die blijft juist zolang je contract tegen die voorwaarden loopt, maar de kaart verandert niet meer. Zet {supplier} je over naar een ander product, kies dan in de opties van deze invoer 'Leverancierswissel registreren', vul de eerste dag van het nieuwe product in en kies het daarna. 'Instellingen wijzigen' zou het hele jaar op de kaarten van het nieuwe product berekenen, tenzij die dag op 1 januari van dit jaar of vroeger viel."
+    },
+    "exclusive_night_rate_missing": {
+      "title": "{supplier} ({contract}) publiceert geen distributietarief voor exclusief nacht",
+      "description": "Deze invoer is ingesteld voor een apart exclusief-nachtcircuit, maar de tariefkaart die {supplier} voor {dso} publiceert bevat geen distributietarief voor exclusief nacht en ook geen daltarief. De integratie rekent dat circuit aan het gewone distributietarief voor dag aan, dus het netgedeelte van de prijs ligt hoger dan wat u werkelijk betaalt. Het energiegedeelte klopt wel.\n\nEr kan niets automatisch worden ingevuld: de integratie bewaart nooit een prijs in haar eigen broncode, en het cijfer van een andere leverancier overnemen zou giswerk zijn. Vraag {supplier} om de kolom exclusief nacht af te drukken, of kies een leverancier waarvan de kaart die wel publiceert."
+    },
+    "impact_rates_missing": {
+      "title": "{supplier} ({contract}) publiceert geen Tarif Impact-tarieven voor {dso}",
+      "description": "Deze invoer staat op de Waalse Tarif Impact-facturatiemodus, maar de tariefkaart die {supplier} voor {contract} publiceert bevat geen PIC / MEDIUM / ECO distributietarieven. Het netgedeelte valt terug op het tweevoudige schema terwijl het energiegedeelte de Impact-blokken blijft volgen; die twee lopen uiteen tussen 22.00 en 01.00 uur, waar Impact MEDIUM aanrekent.\n\nDe factuur blijft dichtbij, maar u wordt niet gefactureerd op het tarief dat u koos. Zet de 'Distributiemodus' van deze invoer op 'Tweevoudig (dag / nacht)', of kies een contract waarvan de kaart het Impact-blok publiceert."
+    },
+    "connection_fee_missing": {
+      "title": "{supplier} ({contract}) publiceert de Waalse aansluitingsvergoeding niet meer",
+      "description": "Sinds de tariefkaart van augustus 2026 drukt {supplier} de rij \"Redevance de raccordement\" niet meer af op zijn Waalse tariefkaarten. Wallonië heft deze bijdrage nog steeds en de kaart bepaalt zelf dat taksen en netkosten volledig worden doorgerekend, maar het tarief staat nergens waar deze integratie het kan lezen.\n\nDe prijzen voor deze invoer sluiten ze daarom uit, wat ongeveer 0,075 c€/kWh te weinig aanrekent (ongeveer €2,60 per jaar bij 3500 kWh). Al de rest op de kaart, ook de nieuwe vlakke federale accijns, wordt normaal berekend. Deze melding verdwijnt automatisch zodra {supplier} de rij opnieuw afdrukt."
+    },
+    "prosumer_tariff_missing": {
+      "title": "{supplier} ({contract}) publiceert het prosumententarief van {dso} niet",
+      "description": "Deze invoer valt onder het Waalse compensatieregime, waardoor de distributienetbeheerder een prosumententarief per kVA omvormervermogen aanrekent. De kaart van {supplier} voor {contract} vermeldt wel het eigen fotovoltaïsche forfait, maar laat de kolom \"Tarif prosumer\" weg die op de andere kaarten wel staat, zodat het netgedeelte nergens staat waar deze integratie het kan lezen.\n\nDe prijzen voor deze invoer sluiten het daarom uit. Het tarief loopt van ongeveer €81 tot €99 per kVA per jaar naargelang de netbeheerder, dus een omvormer van 5 kVA wordt jaarlijks ongeveer €400 tot €500 te weinig aangerekend. Al de rest van de kaart, inclusief het forfait van de leverancier zelf, wordt normaal aangerekend. Deze melding verdwijnt automatisch zodra {supplier} de kolom opnieuw publiceert."
+    },
+    "compensation_kva_missing": {
+      "title": "Geen omvormervermogen op deze invoer met compensatie ({supplier}, {contract})",
+      "description": "Deze invoer valt onder het Waalse compensatieregime, waarvan het prosumententarief op het omvormervermogen wordt berekend, maar het omvormervermogen staat op 0. Het prosumententarief ontbreekt daardoor in elke kost die deze invoer berekent: ongeveer €81 tot €99 per kVA per jaar naargelang de netbeheerder, dus zo'n €430 per jaar voor een omvormer van 5 kVA. Met een tweerichtingsmeter of digitale meter rekent de netbeheerder in de plaats distributie en transport aan op de bruto afname, begrensd op het prosumententarief plus de netkosten op de netto afname; de integratie rekent het laagste van beide aan zodra de stap zonnepanelen zegt dat de meter afname en injectie apart telt, en voor de bovengrens is het vermogen ook nodig.\n\nBewerk de opties van de invoer en vul het omvormervermogen (kVA) in bij de stap zonnepanelen. Deze melding verdwijnt zodra het is ingevuld."
+    },
+    "register_pair_incomplete": {
+      "title": "Een meter van {supplier} ({contract}) registreert niet meer",
+      "description": "{entities} registreert niets, of is gestopt terwijl het andere register van zijn dag/nachtpaar, of de meter van de andere richting (verbruik of injectie), verder registreert. Een dag die niet alle verbruiksmeters rapporteren wordt aan geen enkele kant aangerekend, zodat de lopende kost van deze invoer te laag uitvalt; een dag die enkel een injectiemeter mist wordt zonder zijn injectie aangerekend, zodat de kost te hoog uitvalt. Geen andere foutmelding wijst daarop. Een register dat lang na zijn tweeling begon, zoals een register dat na een vervanging opnieuw gekoppeld werd, laat het paar pas vanaf zijn eerste dag aanrekenen: deze melding blijft dus staan tot het paar het grootste deel van het jaar dekt, tenzij een totaalsensor aan die kant in zijn plaats wordt aangerekend.\n\nControleer of de sensor nog bestaat en een state_class total_increasing heeft; werd hij hernoemd of vervangen, verwijs dan in de stap Energiemeters naar de nieuwe. Een sensor gevolgd door een leverancier en twee datums hoort bij een contract dat u eerder dit jaar had, en dat de meters behoudt die het had toen de leverancierswissel werd geregistreerd: om het naar een andere sensor te laten verwijzen, verwijdert u de leverancierswissel, verbetert u de stap Energiemeters en registreert u de wissel opnieuw. Deze melding verdwijnt automatisch zodra alle meters opnieuw rapporteren."
+    },
+    "register_pair_covered": {
+      "title": "Een register van {supplier} ({contract}) is defect",
+      "description": "{entities} registreert niets, is gestopt terwijl het andere register van zijn dag/nachtpaar verder registreert, of loopt niet meer op. De totaalsensor aan dezelfde kant wordt in zijn plaats aangerekend, zodat de lopende kost van deze invoer er niet door verandert.\n\nHet register is toch de moeite van herstellen waard: controleer of de sensor nog bestaat en een state_class total_increasing heeft; werd hij hernoemd of vervangen, verwijs dan in de stap Energiemeters naar de nieuwe. Deze melding verdwijnt automatisch zodra het register opnieuw rapporteert."
+    },
+    "direct_debit_unanswered": {
+      "title": "{supplier} ({contract}) rekent domiciliëring anders aan en deze invoer is niets gevraagd",
+      "description": "De tariefkaart van {contract} rekent een gezin dat met domiciliëring betaalt anders aan: naargelang de kaart betaalt een domiciliëringsbetaler een lagere vaste vergoeding, of krijgt hij een welkomstkorting, of een grotere.\n\nDeze invoer is aangemaakt voordat de vraag werd gesteld, dus er is geen antwoord opgeslagen en het verschil wordt weggelaten in plaats van geraden. Open de opties van de integratie en antwoord \"Ik betaal via domiciliëring\" om het aan te rekenen. Deze melding verdwijnt zodra er een antwoord is opgeslagen, welk ook."
+    },
+    "brussels_power_term_missing": {
+      "title": "{supplier} ({contract}) wordt aangerekend zonder de vermogensterm van Sibelga",
+      "description": "De jaarlijkse vaste vergoeding van Sibelga bestaat uit twee gereglementeerde delen, een voor de meting en een voor het ter beschikking gestelde vermogen. De kaart van {contract} drukt enkel de meethelft af, dus vult de integratie de rest aan met het cijfer dat Brugel publiceert, en die fiche kon niet gelezen worden.\n\nDe prijzen voor deze invoer sluiten het vermogensdeel daarom uit, wat ongeveer €50 per jaar te weinig aanrekent. Al de rest op de kaart wordt normaal berekend. De fiche wordt om de zes uur opnieuw geprobeerd en deze melding verdwijnt zodra ze gelezen kan worden."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_price": {
+        "name": "Huidige prijs"
+      },
+      "next_hour_price": {
+        "name": "Prijs volgend uur"
+      },
+      "today_average": {
+        "name": "Gemiddelde vandaag"
+      },
+      "today_min": {
+        "name": "Minimum vandaag"
+      },
+      "today_max": {
+        "name": "Maximum vandaag"
+      },
+      "tomorrow_average": {
+        "name": "Gemiddelde morgen"
+      },
+      "tomorrow_min": {
+        "name": "Minimum morgen"
+      },
+      "tomorrow_max": {
+        "name": "Maximum morgen"
+      },
+      "energy_component": {
+        "name": "Energiecomponent"
+      },
+      "network_component": {
+        "name": "Netwerkcomponent"
+      },
+      "taxes_component": {
+        "name": "Belastingencomponent"
+      },
+      "price_peak": {
+        "name": "Piekprijs (dag)"
+      },
+      "price_offpeak": {
+        "name": "Dalprijs (nacht)"
+      },
+      "capacity_cost": {
+        "name": "Capaciteitskost"
+      },
+      "monthly_peak_kw": {
+        "name": "Maandelijkse vermogenspiek"
+      },
+      "prosumer_cost": {
+        "name": "Prosumentkost"
+      },
+      "injection_price": {
+        "name": "Injectieprijs"
+      },
+      "injection_price_peak": {
+        "name": "Injectieprijs piek (dag)"
+      },
+      "injection_price_offpeak": {
+        "name": "Injectieprijs dal (nacht)"
+      },
+      "fixed_fee_eur_per_year": {
+        "name": "Vaste vergoeding per jaar"
+      },
+      "energy_fund_eur_per_month": {
+        "name": "Energiefonds per maand"
+      },
+      "ev_home_charging_rate": {
+        "name": "CREG-tarief thuisladen"
+      },
+      "current_year_cost": {
+        "name": "Kost dit jaar"
+      },
+      "current_month_cost": {
+        "name": "Kost deze maand"
+      },
+      "projected_year_cost": {
+        "name": "Voortschrijdende jaarkost"
+      },
+      "projected_year_end_cost": {
+        "name": "Verwachte kost op 31 december"
+      },
+      "projected_year_consumption": {
+        "name": "Verwacht jaarverbruik"
+      },
+      "projected_year_injection": {
+        "name": "Verwachte jaarinjectie"
+      },
+      "rolling_year_consumption": {
+        "name": "Voortschrijdend jaarverbruik"
+      },
+      "rolling_year_injection": {
+        "name": "Voortschrijdende jaarinjectie"
+      },
+      "contract_end_date": {
+        "name": "Einddatum van het contract"
+      },
+      "potential_saving": {
+        "name": "Mogelijke jaarlijkse besparing"
+      }
+    },
+    "binary_sensor": {
+      "tomorrow_prices_available": {
+        "name": "Prijzen voor morgen beschikbaar"
+      }
+    },
+    "button": {
+      "reset_monthly_peak": {
+        "name": "Maandpiek resetten"
+      }
+    }
+  }
+}

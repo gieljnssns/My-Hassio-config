@@ -1,0 +1,480 @@
+{
+  "title": "Belgische gasprijzen",
+  "config": {
+    "step": {
+      "postcode": {
+        "title": "Waar is de gasaansluiting?",
+        "description": "Geef de postcode van de aansluiting om de distributienetbeheerder voor gas te vinden. Laat leeg om zelf het gewest en de netbeheerder te kiezen.",
+        "data": {
+          "postcode": "Postcode"
+        },
+        "data_description": {
+          "postcode": "Belgische postcode van 4 cijfers."
+        }
+      },
+      "unpriced_network": {
+        "title": "Een deel van deze postcode valt erbuiten",
+        "description": "Een deel van postcode {postcode} krijgt gas via {operators}, een net waarvoor geen Belgische tariefkaart prijzen geeft, dus deze integratie kan het niet aanrekenen. Ga alleen verder als je gas via {dsos} komt."
+      },
+      "region": {
+        "title": "Gewest",
+        "description": "Het gewest bepaalt de netbeheerders en de heffingen op de factuur.",
+        "data": {
+          "region": "Gewest"
+        }
+      },
+      "supplier": {
+        "title": "Leverancier",
+        "description": "Je gasleverancier.",
+        "data": {
+          "supplier": "Leverancier"
+        }
+      },
+      "contract": {
+        "title": "Contract",
+        "description": "Het product dat je hebt. De datums zijn optioneel: met een startdatum wordt een vast of geïndexeerd contract aangerekend volgens de tariefkaart van de maand waarin het werd afgesloten, en de maand van de tariefkaart vervangt die maand wanneer je kaart van een andere maand is. De einddatum dient alleen voor een herinnering aan de verlenging.",
+        "data": {
+          "contract": "Contract",
+          "contract_start_date": "Startdatum contract",
+          "tariff_card_date": "Maand van de tariefkaart",
+          "contract_end_date": "Einddatum contract",
+          "ytd_from_contract_start": "De kosten van dit jaar tellen vanaf de start van het contract"
+        },
+        "data_description": {
+          "tariff_card_date": "Een dag van de maand van de kaart die je hebt getekend, als dat niet de maand is waarin de levering begon.",
+          "ytd_from_contract_start": "Uit: de lopende kosten en het verbruik van dit jaar beginnen op 1 januari. Aan: ze beginnen op de startdatum van het contract als die later valt."
+        }
+      },
+      "dso": {
+        "title": "Netbeheerder",
+        "description": "De distributienetbeheerder voor gas van de aansluiting. Die bepaalt het netgedeelte van de factuur.",
+        "data": {
+          "dso": "Netbeheerder"
+        }
+      },
+      "household": {
+        "title": "Huishouden",
+        "description": "Je jaarverbruik bepaalt de distributieschijf en de accijnsschijven tot je meter een volledig jaar heeft gemeten. De gasmeter voedt de lopende kosten; laat leeg om die van het Energiedashboard te gebruiken.",
+        "data": {
+          "annual_consumption_kwh": "Jaarverbruik",
+          "caliber": "Grootte van de gasmeter",
+          "gas_meter": "Gasmeter",
+          "conversion_mode": "Kubieke meter omrekenen naar kWh met",
+          "card_archive": "Het kaartarchief van het project gebruiken",
+          "daily_compare": "Alle contracten dagelijks vergelijken"
+        },
+        "data_description": {
+          "annual_consumption_kwh": "In kWh, zoals op je laatste jaarafrekening.",
+          "caliber": "De Brusselse heffing hangt af van het maximale debiet van de meter, dat op de meter staat (G4- en G6-meters zijn 6 of 10 m³/u).",
+          "gas_meter": "Een cumulatieve gassensor in m³ of kWh.",
+          "conversion_mode": "De factor op je factuur is die waarmee je netbeheerder factureert. De calorische bovenwaarde van het station laat de correctie van de netbeheerder voor de druk en de temperatuur aan de meter weg en telt tot enkele procent meer kWh: kies ze als je geen factuur bij de hand hebt.",
+          "card_archive": "Het kaartarchief dat het project op GitHub bijhoudt lezen voor een voorbije maand die de leverancier niet meer aanbiedt, en voor de lopende maand als de kaart van de leverancier niet gelezen kan worden. Een verzoek vermeldt de leverancier, het contract, het gewest en de maand en verder niets.",
+          "daily_compare": "Haalt één keer per dag de kaarten van alle leveranciers in je gewest op en publiceert de beste besparing als sensor."
+        }
+      },
+      "station": {
+        "title": "Gasontvangststation",
+        "description": "De netbeheerder rekent kubieke meter om naar kWh met de calorische bovenwaarde van het ontvangststation dat je aansluiting voedt, maandelijks gepubliceerd door Atrias. Ze laat de correctie van de netbeheerder voor de druk en de temperatuur aan de meter weg en telt dus tot enkele procent meer kWh dan je factuur. Kies het station dat het dichtst bij je ligt; sommige facturen vermelden het.",
+        "data": {
+          "station": "Ontvangststation"
+        }
+      },
+      "factor": {
+        "title": "Omrekeningsfactor",
+        "description": "Het aantal kWh dat één kubieke meter van je gas waard is, zoals op je factuur (ongeveer 11 tot 12 kWh/m³ sinds de omschakeling naar rijk gas). Laat het leeg om in de plaats je ontvangststation te kiezen.",
+        "data": {
+          "conversion_factor": "Omrekeningsfactor"
+        }
+      },
+      "signed_rate": {
+        "title": "Tarief bij ondertekening",
+        "description": "Alleen voor een contract waarvan de cijfers afwijken van de kaart van de maand van ondertekening, of waarvan het archief die kaart niet heeft: laat anders leeg. Prijs en basis in c€/kWh excl. btw, de factor in c€/kWh per €/MWh index (een formule in €/MWh zoals \"ZTP x 1,010 + 2,160\" is een factor van 0,1010 en een basis van 0,2160), de vergoeding in € per jaar incl. btw.",
+        "data": {
+          "manual_price": "Energieprijs (c€/kWh, excl. btw)",
+          "manual_factor": "Indexfactor",
+          "manual_base": "Basis (c€/kWh, excl. btw)",
+          "manual_fee": "Jaarlijkse vergoeding (€, incl. btw)"
+        }
+      },
+      "custom_energy": {
+        "title": "De energieprijs van je contract",
+        "description": "Geef de cijfers van je contract zoals je kaart of factuur ze vermeldt, inclusief btw. Jij houdt ze actueel: er is geen kaart om te vernieuwen.",
+        "data": {
+          "custom_price": "Energieprijs (c€/kWh, incl. btw)",
+          "custom_fee": "Vaste vergoeding leverancier (€ per jaar, incl. btw)"
+        }
+      },
+      "custom_network": {
+        "title": "Het tarief van je netbeheerder",
+        "description": "De gereguleerde cijfers van je netbeheerder en de heffingen, inclusief btw, zoals een kaart voor je gewest ze vermeldt. Distributieschijven: T1 tot 5 000 kWh per jaar, T2 tot 150 000. De accijns, de bijdrage op de energie en de Waalse aansluitingsvergoeding volgen de wet voor de maanden die de integratie ervan kent; wat je hier invult, telt buiten die maanden. Op een Fluvius-net wordt meting op 0 in 2026 aangerekend aan de gereguleerde vergoeding voor databeheer.",
+        "data": {
+          "custom_t1_fixed": "T1 vaste term (€ per jaar)",
+          "custom_t1_prop": "T1 proportionele term (c€/kWh)",
+          "custom_t2_fixed": "T2 vaste term (€ per jaar)",
+          "custom_t2_prop": "T2 proportionele term (c€/kWh)",
+          "custom_transport": "Transport (c€/kWh)",
+          "custom_metering": "Meting of databeheer (€ per jaar)",
+          "custom_excise_low": "Accijns tot 12 000 kWh (c€/kWh)",
+          "custom_excise_high": "Accijns boven 12 000 kWh (c€/kWh)",
+          "custom_contribution": "Energiebijdrage (c€/kWh)",
+          "custom_connection_fee": "Waalse aansluitingsvergoeding (c€/kWh, geen btw)",
+          "custom_levy": "Brusselse heffing voor je meter (€ per jaar)"
+        }
+      }
+    },
+    "error": {
+      "unknown_postcode": "Dit is geen Belgische postcode die de integratie kent.",
+      "no_gas_network": "Voor deze postcode is geen distributienetbeheerder voor gas aangeduid. Maak de postcode leeg om zelf de netbeheerder te kiezen.",
+      "end_before_start": "De einddatum van het contract moet na de startdatum liggen.",
+      "stations_unavailable": "De lijst van ontvangststations kon niet bij Atrias gelezen worden; geef de factor van je factuur in.",
+      "card_archive_needed": "Deze leverancier publiceert zijn kaarten als afbeeldingen, die alleen het kaartarchief van het project leest: zet deze optie aan."
+    }
+  },
+  "options": {
+    "step": {
+      "postcode": {
+        "title": "Waar is de gasaansluiting?",
+        "description": "Geef de postcode van de aansluiting om de distributienetbeheerder voor gas te vinden. Laat leeg om zelf het gewest en de netbeheerder te kiezen.",
+        "data": {
+          "postcode": "Postcode"
+        },
+        "data_description": {
+          "postcode": "Belgische postcode van 4 cijfers."
+        }
+      },
+      "unpriced_network": {
+        "title": "Een deel van deze postcode valt erbuiten",
+        "description": "Een deel van postcode {postcode} krijgt gas via {operators}, een net waarvoor geen Belgische tariefkaart prijzen geeft, dus deze integratie kan het niet aanrekenen. Ga alleen verder als je gas via {dsos} komt."
+      },
+      "region": {
+        "title": "Gewest",
+        "description": "Het gewest bepaalt de netbeheerders en de heffingen op de factuur.",
+        "data": {
+          "region": "Gewest"
+        }
+      },
+      "supplier": {
+        "title": "Leverancier",
+        "description": "Je gasleverancier.",
+        "data": {
+          "supplier": "Leverancier"
+        }
+      },
+      "contract": {
+        "title": "Contract",
+        "description": "Het product dat je hebt. De datums zijn optioneel: met een startdatum wordt een vast of geïndexeerd contract aangerekend volgens de tariefkaart van de maand waarin het werd afgesloten, en de maand van de tariefkaart vervangt die maand wanneer je kaart van een andere maand is. De einddatum dient alleen voor een herinnering aan de verlenging.",
+        "data": {
+          "contract": "Contract",
+          "contract_start_date": "Startdatum contract",
+          "tariff_card_date": "Maand van de tariefkaart",
+          "contract_end_date": "Einddatum contract",
+          "ytd_from_contract_start": "De kosten van dit jaar tellen vanaf de start van het contract"
+        },
+        "data_description": {
+          "tariff_card_date": "Een dag van de maand van de kaart die je hebt getekend, als dat niet de maand is waarin de levering begon.",
+          "ytd_from_contract_start": "Uit: de lopende kosten en het verbruik van dit jaar beginnen op 1 januari. Aan: ze beginnen op de startdatum van het contract als die later valt."
+        }
+      },
+      "dso": {
+        "title": "Netbeheerder",
+        "description": "De distributienetbeheerder voor gas van de aansluiting. Die bepaalt het netgedeelte van de factuur.",
+        "data": {
+          "dso": "Netbeheerder"
+        }
+      },
+      "household": {
+        "title": "Huishouden",
+        "description": "Je jaarverbruik bepaalt de distributieschijf en de accijnsschijven tot je meter een volledig jaar heeft gemeten. De gasmeter voedt de lopende kosten; laat leeg om die van het Energiedashboard te gebruiken.",
+        "data": {
+          "annual_consumption_kwh": "Jaarverbruik",
+          "caliber": "Grootte van de gasmeter",
+          "gas_meter": "Gasmeter",
+          "conversion_mode": "Kubieke meter omrekenen naar kWh met",
+          "card_archive": "Het kaartarchief van het project gebruiken",
+          "daily_compare": "Alle contracten dagelijks vergelijken"
+        },
+        "data_description": {
+          "annual_consumption_kwh": "In kWh, zoals op je laatste jaarafrekening.",
+          "caliber": "De Brusselse heffing hangt af van het maximale debiet van de meter, dat op de meter staat (G4- en G6-meters zijn 6 of 10 m³/u).",
+          "gas_meter": "Een cumulatieve gassensor in m³ of kWh.",
+          "conversion_mode": "De factor op je factuur is die waarmee je netbeheerder factureert. De calorische bovenwaarde van het station laat de correctie van de netbeheerder voor de druk en de temperatuur aan de meter weg en telt tot enkele procent meer kWh: kies ze als je geen factuur bij de hand hebt.",
+          "card_archive": "Het kaartarchief dat het project op GitHub bijhoudt lezen voor een voorbije maand die de leverancier niet meer aanbiedt, en voor de lopende maand als de kaart van de leverancier niet gelezen kan worden. Een verzoek vermeldt de leverancier, het contract, het gewest en de maand en verder niets.",
+          "daily_compare": "Haalt één keer per dag de kaarten van alle leveranciers in je gewest op en publiceert de beste besparing als sensor."
+        }
+      },
+      "station": {
+        "title": "Gasontvangststation",
+        "description": "De netbeheerder rekent kubieke meter om naar kWh met de calorische bovenwaarde van het ontvangststation dat je aansluiting voedt, maandelijks gepubliceerd door Atrias. Ze laat de correctie van de netbeheerder voor de druk en de temperatuur aan de meter weg en telt dus tot enkele procent meer kWh dan je factuur. Kies het station dat het dichtst bij je ligt; sommige facturen vermelden het.",
+        "data": {
+          "station": "Ontvangststation"
+        }
+      },
+      "factor": {
+        "title": "Omrekeningsfactor",
+        "description": "Het aantal kWh dat één kubieke meter van je gas waard is, zoals op je factuur (ongeveer 11 tot 12 kWh/m³ sinds de omschakeling naar rijk gas). Laat het leeg om in de plaats je ontvangststation te kiezen.",
+        "data": {
+          "conversion_factor": "Omrekeningsfactor"
+        }
+      },
+      "init": {
+        "menu_options": {
+          "settings": "Instellingen wijzigen",
+          "compare": "Vergelijk een ander contract (eenmalige offerte)",
+          "compare_all": "Vergelijk alle contracten (gerangschikt)",
+          "switch": "Een contractwissel van dit jaar vastleggen"
+        }
+      },
+      "compare": {
+        "title": "Vergelijk een ander contract",
+        "description": "Kies de leverancier om tegen je eigen contract te vergelijken.",
+        "data": {
+          "supplier": "Leverancier"
+        }
+      },
+      "compare_contract": {
+        "title": "Te vergelijken contract",
+        "description": "Beide contracten worden berekend voor jouw huishouden: je jaarverbruik, netbeheerder en schijf, volgens elke kaart zoals vandaag gepubliceerd. Je eigen contract wordt in plaats daarvan berekend zoals je item het factureert wanneer het item zijn kaart heeft, met het tarief bij ondertekening of de cijfers die je invulde.",
+        "data": {
+          "contract": "Contract"
+        }
+      },
+      "compare_result": {
+        "title": "Offerte",
+        "description": "Een jaar van {annual_kwh} kWh volgens elke kaart zoals vandaag gepubliceerd, alle kosten inbegrepen; je eigen contract zoals je item het factureert wanneer het item zijn kaart heeft. Een kruisje duidt een voorlopige prijs aan, tegen de laatste indexwaarde die de leverancier publiceerde of tegen de prijs op zijn kaart als hij er geen publiceert, die de maand nog kan wijzigen. OCR duidt een kaart aan die als afbeeldingen gepubliceerd is, geprijsd met de lezing van het kaartarchief.\n\n{table}"
+      },
+      "compare_all_result": {
+        "title": "Alle contracten, gerangschikt",
+        "description": "Een jaar van {annual_kwh} kWh volgens elke kaart die in je gewest verkocht wordt, zoals vandaag gepubliceerd, goedkoopste eerst, je eigen contract in het vet en, wanneer je item zijn kaart heeft, berekend zoals het item het factureert. Een kruisje duidt een voorlopige prijs aan, tegen de laatste gepubliceerde indexwaarde of tegen de prijs op de kaart als de leverancier er geen publiceert. OCR duidt een kaart aan die als afbeeldingen gepubliceerd is, geprijsd met de lezing van het kaartarchief. Niet bereikt binnen de tijd: {skipped}.\n\n{table}"
+      },
+      "switch": {
+        "title": "Een contractwissel vastleggen",
+        "description": "Geef de eerste dag waarop het nieuwe contract leverde. De huidige instellingen blijven bewaard als het vorige contract tot de dag ervoor, berekend volgens de kaarten van die leverancier, en de volgende stappen stellen het nieuwe contract in.",
+        "data": {
+          "switch_date": "Eerste dag van het nieuwe contract"
+        }
+      },
+      "signed_rate": {
+        "title": "Tarief bij ondertekening",
+        "description": "Alleen voor een contract waarvan de cijfers afwijken van de kaart van de maand van ondertekening, of waarvan het archief die kaart niet heeft: laat anders leeg. Prijs en basis in c€/kWh excl. btw, de factor in c€/kWh per €/MWh index (een formule in €/MWh zoals \"ZTP x 1,010 + 2,160\" is een factor van 0,1010 en een basis van 0,2160), de vergoeding in € per jaar incl. btw.",
+        "data": {
+          "manual_price": "Energieprijs (c€/kWh, excl. btw)",
+          "manual_factor": "Indexfactor",
+          "manual_base": "Basis (c€/kWh, excl. btw)",
+          "manual_fee": "Jaarlijkse vergoeding (€, incl. btw)"
+        }
+      },
+      "custom_energy": {
+        "title": "De energieprijs van je contract",
+        "description": "Geef de cijfers van je contract zoals je kaart of factuur ze vermeldt, inclusief btw. Jij houdt ze actueel: er is geen kaart om te vernieuwen.",
+        "data": {
+          "custom_price": "Energieprijs (c€/kWh, incl. btw)",
+          "custom_fee": "Vaste vergoeding leverancier (€ per jaar, incl. btw)"
+        }
+      },
+      "custom_network": {
+        "title": "Het tarief van je netbeheerder",
+        "description": "De gereguleerde cijfers van je netbeheerder en de heffingen, inclusief btw, zoals een kaart voor je gewest ze vermeldt. Distributieschijven: T1 tot 5 000 kWh per jaar, T2 tot 150 000. De accijns, de bijdrage op de energie en de Waalse aansluitingsvergoeding volgen de wet voor de maanden die de integratie ervan kent; wat je hier invult, telt buiten die maanden. Op een Fluvius-net wordt meting op 0 in 2026 aangerekend aan de gereguleerde vergoeding voor databeheer.",
+        "data": {
+          "custom_t1_fixed": "T1 vaste term (€ per jaar)",
+          "custom_t1_prop": "T1 proportionele term (c€/kWh)",
+          "custom_t2_fixed": "T2 vaste term (€ per jaar)",
+          "custom_t2_prop": "T2 proportionele term (c€/kWh)",
+          "custom_transport": "Transport (c€/kWh)",
+          "custom_metering": "Meting of databeheer (€ per jaar)",
+          "custom_excise_low": "Accijns tot 12 000 kWh (c€/kWh)",
+          "custom_excise_high": "Accijns boven 12 000 kWh (c€/kWh)",
+          "custom_contribution": "Energiebijdrage (c€/kWh)",
+          "custom_connection_fee": "Waalse aansluitingsvergoeding (c€/kWh, geen btw)",
+          "custom_levy": "Brusselse heffing voor je meter (€ per jaar)"
+        }
+      }
+    },
+    "error": {
+      "unknown_postcode": "Dit is geen Belgische postcode die de integratie kent.",
+      "no_gas_network": "Voor deze postcode is geen distributienetbeheerder voor gas aangeduid. Maak de postcode leeg om zelf de netbeheerder te kiezen.",
+      "end_before_start": "De einddatum van het contract moet na de startdatum liggen.",
+      "stations_unavailable": "De lijst van ontvangststations kon niet bij Atrias gelezen worden; geef de factor van je factuur in.",
+      "switch_date_invalid": "Het nieuwe contract moet beginnen na 1 januari, na de start van het huidige contract en na de laatst vastgelegde wissel, en uiterlijk vandaag.",
+      "card_archive_needed": "Deze leverancier publiceert zijn kaarten als afbeeldingen, die alleen het kaartarchief van het project leest: zet deze optie aan."
+    },
+    "abort": {
+      "compare_done": "Vergelijking klaar, er werd niets gewijzigd."
+    },
+    "progress": {
+      "compare_all": "Alle contracten die in je gewest verkocht worden, worden berekend. Dit duurt tot twee minuten."
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "flanders": "Vlaanderen",
+        "wallonia": "Wallonië",
+        "brussels": "Brussel"
+      }
+    },
+    "caliber": {
+      "options": {
+        "q10": "6 of 10 m³/u (G4, G6)",
+        "q16": "16 m³/u (G10)",
+        "q25": "25 m³/u (G16)",
+        "q40": "40 m³/u (G25)",
+        "q65": "65 m³/u (G40)",
+        "q100": "100 m³/u (G65)",
+        "q160": "160 m³/u (G100)",
+        "gt160": "Meer dan 160 m³/u"
+      }
+    },
+    "conversion_mode": {
+      "options": {
+        "manual": "De factor op mijn factuur",
+        "station": "De calorische bovenwaarde van mijn ontvangststation (Atrias)"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_price": {
+        "name": "Huidige prijs"
+      },
+      "current_price_m3": {
+        "name": "Huidige prijs per m³"
+      },
+      "energy_component": {
+        "name": "Energiecomponent"
+      },
+      "network_component": {
+        "name": "Netcomponent"
+      },
+      "taxes_component": {
+        "name": "Heffingencomponent"
+      },
+      "fixed_costs_eur_per_year": {
+        "name": "Vaste kosten per jaar"
+      },
+      "supplier_fixed_fee_eur_per_year": {
+        "name": "Vaste vergoeding leverancier per jaar"
+      },
+      "conversion_factor": {
+        "name": "Omrekeningsfactor"
+      },
+      "current_year_cost": {
+        "name": "Kosten dit jaar"
+      },
+      "current_month_cost": {
+        "name": "Kosten deze maand"
+      },
+      "year_to_date_consumption": {
+        "name": "Verbruik dit jaar"
+      },
+      "projected_year_cost": {
+        "name": "Kosten afgelopen 12 maanden"
+      },
+      "projected_year_end_cost": {
+        "name": "Verwachte kosten op het jaareinde"
+      },
+      "projected_year_consumption": {
+        "name": "Verwacht jaarverbruik"
+      },
+      "rolling_year_consumption": {
+        "name": "Verbruik afgelopen 12 maanden"
+      },
+      "contract_end_date": {
+        "name": "Einddatum contract"
+      },
+      "potential_saving": {
+        "name": "Mogelijke besparing"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Tariefkaart vernieuwen"
+      }
+    }
+  },
+  "issues": {
+    "snapshot_stale": {
+      "title": "Tariefkaart van {supplier} is verouderd",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Tariefkaart van {supplier} is verouderd",
+            "description": "De kaart waarop {entry} rekent is al een week niet vernieuwd, of is voor een maand die al meer dan een week voorbij is, dus de prijzen kunnen fout zijn. Laatste fout: {error}. Druk op verzenden om ze nu opnieuw op te halen."
+          }
+        },
+        "abort": {
+          "still_stale": "De kaart kon nog steeds niet vernieuwd worden. Laatste fout: {error}. Ze wordt elk uur opnieuw geprobeerd, en deze reparatie blijft staan tot dat lukt."
+        }
+      }
+    },
+    "extractor_failed": {
+      "title": "Tariefkaart van {supplier} kon niet gelezen worden",
+      "description": "De kaart voor {entry} kon twee keer na elkaar niet gelezen worden: {error}. De laatste goede kaart blijft rekenen. Als dit aanhoudt heeft de leverancier waarschijnlijk zijn opmaak gewijzigd; open een issue met de diagnostiek."
+    },
+    "card_unreadable": {
+      "title": "{supplier} publiceert zijn kaart als afbeeldingen",
+      "description": "De kaart voor {entry} heeft geen tekstlaag en kan hier dus niet gelezen worden. De laatste goede kaart blijft rekenen; het kaartarchief van het project rekent op zijn eigen lezing van de kaart zodra het die heeft, als het item het archief laat lezen."
+    },
+    "card_read_by_ocr": {
+      "title": "{supplier}-tariefkaart gelezen uit haar afbeelding",
+      "description": "{supplier} publiceert de tariefkaart van {entry} als afbeeldingen. Het kaartarchief van het project leest ze dagelijks met een OCR-programma dat de lettertypes van deze kaarten kent, en {entry} rekent met die lezing: een regel waarop het programma een teken niet zeker kon lezen, wordt weggelaten in plaats van geraden. De federale heffingen en de Waalse aansluitingsvergoeding worden volgens de wet aangerekend. Dit verdwijnt vanzelf zodra de leverancier weer een leesbare kaart publiceert."
+    },
+    "meter_unit": {
+      "title": "Gasmeter kan niet gelezen worden",
+      "description": "De gasmeter van {entry} kan niet gebruikt worden: {error}. De lopende kosten blijven onbekend tot dit is opgelost."
+    },
+    "several_meters": {
+      "title": "Meerdere gasmeters in het Energiedashboard",
+      "description": "Het Energiedashboard vermeldt {count} gasmeters en {entry} rekent op de eerste. Kies de gasmeter in de opties van de integratie."
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "Vernieuwen",
+      "description": "De tariefkaart, de indexwaarden en de calorische bovenwaarden nu opnieuw ophalen.",
+      "fields": {
+        "entry_id": {
+          "name": "Item",
+          "description": "Alleen dit item; alle items als je het weglaat."
+        }
+      }
+    },
+    "backfill_statistics": {
+      "name": "Prijsgeschiedenis aanvullen",
+      "description": "De uurstatistieken van de prijssensoren schrijven van een startdatum tot het laatste volle uur.",
+      "fields": {
+        "entry_id": {
+          "name": "Item",
+          "description": "Alleen dit item; alle items als je het weglaat."
+        },
+        "start_date": {
+          "name": "Startdatum",
+          "description": "Standaard het begin van het venster van dit jaar. Nooit vóór de laatst vastgelegde contractwissel, noch vóór 1 januari van vorig jaar, noch in de toekomst. Een maand vóór het venster wordt alleen geschreven als de eigen tariefkaart ervan te vinden is."
+        },
+        "clear": {
+          "name": "Eerst wissen",
+          "description": "Wist de statistieken van de sensoren volledig voor het schrijven; vereist een item."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "unknown_entry": {
+      "message": "Geen geladen item van Belgische gasprijzen heeft id {entry_id}."
+    },
+    "clear_needs_entry": {
+      "message": "Statistieken wissen vereist een item: ze worden volledig gewist."
+    },
+    "start_date_too_early": {
+      "message": "De startdatum mag niet vroeger zijn dan {earliest}: het kaartarchief bewaart geen oudere kaarten."
+    },
+    "start_date_in_future": {
+      "message": "De startdatum mag niet in de toekomst liggen."
+    },
+    "contract_withdrawn": {
+      "message": "De leverancier heeft het contract {contract} stopgezet en publiceert de tariefkaart ervan niet meer. Kies een ander contract in de instellingen van het item, of vul de cijfers van je contract in onder \"Expert: custom figures\"."
+    },
+    "card_archive_needed": {
+      "message": "{supplier} publiceert zijn kaarten als afbeeldingen, die alleen het kaartarchief van het project leest, en dit item sluit het archief uit. Zet de optie voor het kaartarchief aan in de instellingen van het item."
+    }
+  }
+}

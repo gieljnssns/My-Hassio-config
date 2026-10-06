@@ -20,6 +20,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import DATA_INSTANCES, EntityComponent
 from homeassistant.helpers.entity_platform import DATA_ENTITY_PLATFORM
@@ -46,6 +47,7 @@ if TYPE_CHECKING:
 _EntityT = TypeVar("_EntityT", bound=Entity, default=Entity)
 GHOST = "👻"
 SERVICE_TRANSLATION_CATEGORY = "services"
+SELECTOR_TRANSLATION_CATEGORY = "selector"
 
 
 class AbstractSpookServiceBase(ABC):
@@ -133,6 +135,8 @@ class AbstractSpookService(AbstractSpookServiceBase):
 class AbstractSpookAdminService(AbstractSpookServiceBase):
     """Abstract class to hold a Spook admin service."""
 
+    supports_response: SupportsResponse = SupportsResponse.NONE
+
     @final
     @callback
     def async_register(self) -> bool:
@@ -157,6 +161,7 @@ class AbstractSpookAdminService(AbstractSpookServiceBase):
             service=self.service,
             service_func=self.async_handle_service,
             schema=vol.Schema(self.schema) if self.schema else None,
+            supports_response=self.supports_response,
         )
 
         return True
@@ -229,6 +234,9 @@ class AbstractSpookEntityComponentService(AbstractSpookServiceBase, Generic[_Ent
 
     required_features: list[int] | None = None
     supports_response: SupportsResponse = SupportsResponse.NONE
+    #: For an action that changes how something is set up rather than what it
+    #: is doing, which Home Assistant keeps to admins. Automations still pass.
+    admin_only: bool = False
 
     @final
     @callback
@@ -251,13 +259,38 @@ class AbstractSpookEntityComponentService(AbstractSpookServiceBase, Generic[_Ent
 
         component.async_register_entity_service(
             name=self.service,
-            func=self.async_handle_service,
+            func=(
+                self._async_handle_service_as_admin
+                if self.admin_only
+                else self.async_handle_service
+            ),
             schema=self.schema,
             required_features=self.required_features,
             supports_response=self.supports_response,
         )
 
         return True
+
+    async def _async_handle_service_as_admin(
+        self,
+        entity: _EntityT,
+        call: ServiceCall,
+    ) -> ServiceResponse:
+        """Handle the call, if whoever made it may change how things are set up.
+
+        The same check Home Assistant does for an admin-only entity action. It
+        is done here rather than asked of Home Assistant, because the option
+        to ask arrived in a later version than the oldest one Spook runs on,
+        and passing it there fails registering every one of these actions.
+        """
+        if call.context.user_id:
+            user = await self.hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(context=call.context)
+            if not user.is_admin:
+                raise Unauthorized(context=call.context)
+
+        return await self.async_handle_service(entity, call)
 
     @abstractmethod
     async def async_handle_service(
@@ -278,6 +311,10 @@ class SpookServiceManager:
     _services: set[AbstractSpookService] = field(default_factory=set)
     _service_schemas: dict[str, Any] = field(default_factory=dict)
     _service_translation_overrides: dict[tuple[str, str, str], str | None] = field(
+        default_factory=dict
+    )
+    # The same, for the option labels of the selectors those actions use.
+    _selector_translation_overrides: dict[tuple[str, str, str], str | None] = field(
         default_factory=dict
     )
     _translation_listener: Callable[[], None] | None = None
@@ -436,6 +473,7 @@ class SpookServiceManager:
         domain: str,
         *,
         create: bool = False,
+        category: str = SERVICE_TRANSLATION_CATEGORY,
     ) -> dict[str, str] | None:
         """Return the Home Assistant translation cache for a component."""
         translations_cache = _async_get_translations_cache(self.hass)
@@ -459,14 +497,11 @@ class SpookServiceManager:
         if create:
             return (
                 cache.setdefault(language, {})
-                .setdefault(
-                    SERVICE_TRANSLATION_CATEGORY,
-                    {},
-                )
+                .setdefault(category, {})
                 .setdefault(domain, {})
             )
 
-        return cache.get(language, {}).get(SERVICE_TRANSLATION_CATEGORY, {}).get(domain)
+        return cache.get(language, {}).get(category, {}).get(domain)
 
     @callback
     def _inject_service_translation_strings(
@@ -500,6 +535,67 @@ class SpookServiceManager:
             )
             component_cache[key] = value
 
+    @callback
+    def _selector_translation_keys(self, service: AbstractSpookService) -> set[str]:
+        """Return the selector translation keys a Spook service's fields use."""
+        schema = self._service_schemas.get(self._service_schema_key(service)) or {}
+        keys: set[str] = set()
+        for field_schema in (schema.get("fields") or {}).values():
+            for selector_config in (
+                (field_schema or {}).get("selector") or {}
+            ).values():
+                if isinstance(selector_config, dict) and (
+                    key := selector_config.get("translation_key")
+                ):
+                    keys.add(key)
+        return keys
+
+    @callback
+    def _inject_selector_translation_strings(
+        self,
+        service: AbstractSpookService,
+        cached_spook_translations: dict[str, str],
+    ) -> None:
+        """Inject the option labels of a Spook service's selectors.
+
+        Home Assistant looks a selector's labels up under the domain the action
+        belongs to, `component.todo.selector...` for a `todo` action, and Spook
+        keeps them under its own. Without this, the options show as their raw
+        values.
+        """
+        if not (keys := self._selector_translation_keys(service)):
+            return
+
+        language = self.hass.config.language
+        component_cache = self._translation_component_cache(
+            language,
+            service.domain,
+            create=True,
+            category=SELECTOR_TRANSLATION_CATEGORY,
+        )
+        if component_cache is None:
+            return
+
+        cached_translations = async_get_cached_translations(
+            self.hass,
+            language,
+            SELECTOR_TRANSLATION_CATEGORY,
+            service.domain,
+        )
+
+        for key in keys:
+            spook_prefix = f"component.{DOMAIN}.selector.{key}."
+            target_prefix = f"component.{service.domain}.selector.{key}."
+            for spook_key, value in cached_spook_translations.items():
+                if not spook_key.startswith(spook_prefix):
+                    continue
+                target_key = f"{target_prefix}{spook_key.removeprefix(spook_prefix)}"
+                self._selector_translation_overrides.setdefault(
+                    (language, service.domain, target_key),
+                    cached_translations.get(target_key),
+                )
+                component_cache[target_key] = value
+
     async def async_inject_service_translations(self) -> None:
         """Inject Spook service strings into Home Assistant translations."""
         services = [
@@ -530,6 +626,25 @@ class SpookServiceManager:
                 cached_spook_translations,
             )
 
+        domains = {DOMAIN, *(service.domain for service in services)}
+        await async_get_translations(
+            self.hass,
+            self.hass.config.language,
+            SELECTOR_TRANSLATION_CATEGORY,
+            domains,
+        )
+        cached_spook_selector_translations = async_get_cached_translations(
+            self.hass,
+            self.hass.config.language,
+            SELECTOR_TRANSLATION_CATEGORY,
+            DOMAIN,
+        )
+        for service in services:
+            self._inject_selector_translation_strings(
+                service,
+                cached_spook_selector_translations,
+            )
+
     async def _async_core_config_updated(self, event: Event) -> None:
         """Re-inject service translations when the language changes."""
         if "language" not in event.data:
@@ -539,12 +654,22 @@ class SpookServiceManager:
     @callback
     def async_clear_service_translation_overrides(self) -> None:
         """Restore translation strings that were overridden by Spook."""
-        for (
-            language,
-            domain,
-            key,
-        ), original_value in self._service_translation_overrides.items():
-            component_cache = self._translation_component_cache(language, domain)
+        self._restore(self._service_translation_overrides, SERVICE_TRANSLATION_CATEGORY)
+        self._restore(
+            self._selector_translation_overrides, SELECTOR_TRANSLATION_CATEGORY
+        )
+
+    @callback
+    def _restore(
+        self,
+        overrides: dict[tuple[str, str, str], str | None],
+        category: str,
+    ) -> None:
+        """Put back what Spook overrode, and take away what it only added."""
+        for (language, domain, key), original_value in overrides.items():
+            component_cache = self._translation_component_cache(
+                language, domain, category=category
+            )
             if component_cache is None:
                 continue
 
@@ -553,7 +678,7 @@ class SpookServiceManager:
             else:
                 component_cache[key] = original_value
 
-        self._service_translation_overrides.clear()
+        overrides.clear()
 
     @callback
     def async_on_unload(self) -> None:

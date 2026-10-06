@@ -1,0 +1,651 @@
+# Copyright (c) 2026, Renaud Allard <renaud@allard.it>
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+"""Injection (feed-in) pricing.
+
+Split out of coordinator.py. The most shape-sensitive region in the package:
+three injection taxonomies (a printed flat indicative, a spot formula, a
+per-slot TOU triplet), a monthly-versus-hourly distinction, an optional
+zero-floor clamp, and the intraday gate that decides whether the display array
+varies at all."""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+from dataclasses import replace
+from datetime import datetime
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.util import dt as dt_util
+from statistics import fmean
+from typing import overload
+
+from .const import (
+    CONF_METER,
+    CONF_REGION,
+    CONF_SOLAR_REGIME,
+    METER_MONO,
+    REGION_FLANDERS,
+    SOLAR_REGIME_INJECTION,
+)
+from .pricing import (
+    MeterType,
+    is_offpeak,
+    tou_slot,
+)
+from .providers.base import SupplierSnapshot
+from .providers._rates import (
+    DynamicRates,
+    EnergyRates,
+    InjectionRates,
+    SpotMonthlyRates,
+    TimeOfUseRates,
+)
+from .spot_stats import (
+    _energy_is_quarter_hourly,
+    _injection_on_month_mean,
+    _now_slot_spot,
+)
+
+
+def _slot_coefficients(
+    inj: InjectionRates,
+) -> tuple[tuple[float, float], tuple[float, float], tuple[float, float]] | None:
+    """The per-slot month coefficient pairs (peak, transition, offpeak), or
+    ``None`` unless all six fields are set. Engie Empower Flextime is the card
+    that carries them; a partial set is not a formula and is ignored whole."""
+    if (
+        inj.factor_peak is None
+        or inj.base_peak is None
+        or inj.factor_transition is None
+        or inj.base_transition is None
+        or inj.factor_offpeak is None
+        or inj.base_offpeak is None
+    ):
+        return None
+    return (
+        (inj.factor_peak, inj.base_peak),
+        (inj.factor_transition, inj.base_transition),
+        (inj.factor_offpeak, inj.base_offpeak),
+    )
+
+
+def _tou_weekend_rule(energy: EnergyRates | None) -> str | None:
+    """The weekend rule of a time-of-use ENERGY leg, or ``None`` when the leg
+    is not banded by TOU slot.
+
+    A ``TimeOfUseRates`` card qualifies, and so does the ``SpotMonthlyRates``
+    leg a month-indexed TOU card is re-priced through, which carries the
+    card's rule beside ``factor_transition``. The feed-in triplet has to
+    follow the same slots whichever shape the energy leg took this tick:
+    judged on the class alone, a Flextime entry holding a key fell off the
+    slot rate onto the flat Normal credit the moment its energy re-priced.
+    """
+    if isinstance(energy, TimeOfUseRates):
+        return energy.weekend_rule
+    if isinstance(energy, SpotMonthlyRates) and energy.factor_transition is not None:
+        return energy.weekend_rule
+    return None
+
+
+def _bake_monthly_injection(
+    snapshot: SupplierSnapshot, mean: float | None
+) -> SupplierSnapshot:
+    """Turn a mean-indexed injection formula into this month's flat indicative.
+
+    A spot-monthly contract's injection is indexed to a monthly mean, not the
+    live hourly spot. Baking the formula into ``current`` routes it through the
+    monthly-indicative injection path; the floor (if any) is applied there.
+    A flat ``current`` injection or none is returned unchanged.
+
+    WHICH mean is the caller's business, and it is not always the energy leg's:
+    the Mega groepsaankoop indexes both legs on the same one, while energie.be
+    Variabel prices consumption on Belpex_RLP and injection on the
+    solar-weighted Belpex_SPP. Pass the mean the injection formula names.
+
+    ``mean=None`` wipes the leg (no credit yet) rather than leaving factor/base
+    standing, which ``_injection_is_spot_formula`` would then read as "price
+    this per hour". Skip the call entirely only for a card that has a printed
+    ``current`` to fall back to.
+
+    A per-slot triplet with its own coefficient pairs (Engie Empower Flextime)
+    is baked slot by slot into ``peak`` / ``transition`` / ``offpeak`` and the
+    pairs are cleared, so the slot rate the engine selects is this month's.
+    With no mean the printed triplet stands: those are month coefficients on
+    fields no per-hour path reads, so nothing mistakes them for a spot formula.
+    """
+    inj = snapshot.injection
+    if inj is None:
+        return snapshot
+    slots = _slot_coefficients(inj)
+    if slots is not None:
+        if mean is None:
+            return snapshot
+        (f_peak, b_peak), (f_trans, b_trans), (f_off, b_off) = slots
+        return replace(
+            snapshot,
+            injection=replace(
+                inj,
+                peak=f_peak * mean + b_peak,
+                transition=f_trans * mean + b_trans,
+                offpeak=f_off * mean + b_off,
+                factor_peak=None,
+                base_peak=None,
+                factor_transition=None,
+                base_transition=None,
+                factor_offpeak=None,
+                base_offpeak=None,
+            ),
+        )
+    if inj.factor is None or inj.base is None:
+        return snapshot
+    current = None if mean is None else inj.factor * mean + inj.base
+    return replace(
+        snapshot,
+        injection=replace(inj, current=current, factor=None, base=None),
+    )
+
+
+def _injection_needs_spot(snapshot: SupplierSnapshot, entry: ConfigEntry) -> bool:
+    """True when pricing this entry's injection requires an ENTSO-E spot
+    even though the ENERGY contract isn't dynamic.
+
+    The case is a static-energy card (Fixed / Variable / TOU) whose
+    injection is a per-slot spot formula (``factor``/``base``), either with
+    no printed indicative at all (Cociter Variable) or with one the card
+    labels an illustration (``slot_indexed``: every Bolt fixed and variable
+    card). Such a card doesn't fetch ENTSO-E spots through the DynamicRates
+    energy path, so the coordinator must fetch spots for it too (and the
+    config flow must collect an API key) to credit the injection.
+    DynamicRates contracts already fetch spots via the energy
+    path and are excluded here. Only relevant on the injection regime.
+
+    A leg carrying a MONTH index is excluded outright, whatever else is true.
+    The absent-``current`` test reads "the card printed no rate to prefer",
+    which is a tell for a per-slot formula and not a claim about the period it
+    settles on, and a month-indexed card that stops printing its indicative
+    has both. Every one of eneco, engie, luminus and totalenergies can emit
+    that shape: their extractors return the leg as long as EITHER the figure
+    or the formula parsed. It answered True here, so ``_injection_needs_spot``,
+    the predicate that means "this credit carries a PER-HOUR index", claimed it, the coordinator skipped the month bake it gates, and the
+    injection_price sensor reported nothing at all while the running bill went
+    on crediting the month formula.
+    """
+    if entry.data.get(CONF_SOLAR_REGIME) != SOLAR_REGIME_INJECTION:
+        return False
+    inj = snapshot.injection
+    return (
+        inj is not None
+        and not inj.month_indexed
+        and not inj.spp_indexed
+        and (inj.current is None or inj.slot_indexed)
+        and inj.factor is not None
+        and inj.base is not None
+        and not isinstance(snapshot.energy, DynamicRates)
+    )
+
+
+def _injection_needs_month_spot(snapshot: SupplierSnapshot, entry: ConfigEntry) -> bool:
+    """True when the injection is indexed on a MONTHLY mean that nothing
+    else on this entry fetches spots for.
+
+    energie.be Vast is the shape: a flat energy rate whose feed-in credit is
+    the monthly Belpex_SPP formula ("de terugleveringsvergoeding wordt
+    geindexeerd op basis van de Belpex_SPP parameter"). The energy leg needs
+    no spot, so without this the credit would sit at the card's printed
+    indicative forever, and that indicative is the formula on the VNR
+    FORECAST rather than the realized month.
+
+    Deliberately NOT folded into ``_injection_needs_spot``: that predicate
+    means a PER-HOUR index, and ``_injection_hourly_on_cohort`` reads it to
+    conclude the injection keeps its own hourly formula. Widening it would
+    make this monthly shape look hourly and skip the month-mean bake, which
+    is the opposite of what the card says. Contracts whose energy leg
+    already fetches spots are excluded here for the same reason: they resolve
+    through the energy path.
+    """
+    if entry.data.get(CONF_SOLAR_REGIME) != SOLAR_REGIME_INJECTION:
+        return False
+    inj = snapshot.injection
+    return (
+        inj is not None
+        and (inj.spp_indexed or inj.month_indexed)
+        and (
+            (inj.factor is not None and inj.base is not None)
+            or _slot_coefficients(inj) is not None
+        )
+        and not isinstance(snapshot.energy, (DynamicRates, SpotMonthlyRates))
+    )
+
+
+def _injection_hourly_on_cohort(
+    snapshot: SupplierSnapshot, credited: InjectionRates | None, entry: ConfigEntry
+) -> bool:
+    """True when this entry's injection keeps a PER-HOUR spot index even though
+    its energy is being priced on a monthly mean.
+
+    That happens only through a signing-cohort re-price: a variable card whose
+    ENERGY is monthly-indexed gets a SpotMonthlyRates leg spliced on, while its
+    injection formula is untouched. Cociter Tarif Variable is the one such card
+    (note (7) "indexe mensuellement ... (BELIX)" for consumption against note
+    (9) "le prix de l'injection varie chaque heure").
+
+    A card that is ITSELF monthly-indexed (the custom monthly contract, the
+    Mega groepsaankoop) indexes its injection on the month too, so it must keep
+    the month mean - and the SPP weighting when the card or the entry calls for
+    it. That is why the snapshot's own energy kind, not the effective one,
+    decides.
+
+    The feed-in leg is ``credited``, the one actually credited: a signing
+    cohort's frozen formula live, and on a past month that month's leg with
+    the cohort's formula laid on it. The live tick and the walks asked with
+    today's leg while the compare page asked with the signed one, and the two
+    part ways on a product that changes its feed-in shape after a cohort
+    signed. On every archived card they agree.
+    """
+    return _injection_needs_spot(
+        replace(snapshot, injection=credited), entry
+    ) and not isinstance(snapshot.energy, SpotMonthlyRates)
+
+
+def _injection_bakes_to_month_mean(
+    priced: SupplierSnapshot | None, today: SupplierSnapshot | None, entry: ConfigEntry
+) -> bool:
+    """Whether the feed-in credit resolves on the delivery month's mean.
+
+    The live tick's rule, written once so the compare page and the daily
+    ranking credit a cohort the way the sensor beside them does. The PRICED
+    leg decides, since a signing cohort carries its own card's formula and
+    index, and the month mean is waived when that leg keeps a per-hour index
+    under a cohort's monthly energy re-price, judged on ``today``'s own energy
+    kind (:func:`_injection_hourly_on_cohort`). The page asked today's card alone,
+    so a Trevion LifePowr cohort signed from March to May 2026, a quarter-hour
+    contract the tick credits per slot, was flattened to the plain month mean:
+    about 200 EUR a year of credit too much at 3000 kWh exported.
+    """
+    if priced is None or today is None:
+        return False
+    return _injection_on_month_mean(priced) and not _injection_hourly_on_cohort(
+        today, priced.injection, entry
+    )
+
+
+def _tou_injection_rate(
+    inj: InjectionRates,
+    energy: EnergyRates,
+    when: datetime,
+    month_mean: float | None = None,
+    *,
+    meter: MeterType = METER_MONO,
+    region: str = REGION_FLANDERS,
+) -> float | None:
+    """Per-slot injection rate for a time-of-use contract whose feed-in
+    tariff varies by slot (Engie Empower Flextime), or per register for a
+    card that prints a day and night feed-in pair (Trevion Vast).
+
+    Returns ``None`` when the contract isn't TOU or its injection is a
+    single rate (``peak`` unset), so the caller falls back to the normal
+    current / factor+base path. Uses the energy contract's own
+    ``weekend_rule`` so injection and consumption agree on the slot for a
+    given hour, whether that leg is the card's ``TimeOfUseRates`` or the
+    month-mean leg it re-prices through.
+
+    A pair on a card that is not time-of-use is read only when the card
+    flags it as the meter's register rates (``bi_hourly``), and then only
+    for a meter with two registers, on the same regional day/night schedule
+    the consumption side bills by; a single-register meter is credited at
+    ``current``, which is the rate its card prints for it. A pair without
+    the flag is not read at all, so no other supplier's credit changes.
+
+    ``month_mean`` is the delivery month's mean for a month-indexed triplet:
+    the slot's own coefficient pair is resolved against it, and the printed
+    slot rate is the answer without one. Only ever a MONTH mean, never an
+    hour's spot: the historical walks pass what ``_injection_on_month_mean``
+    says the credit settles on, and the live path passes nothing because the
+    coordinator has already baked the triplet for the tick.
+
+    Every rate it answers is clamped at the contract's floor here, the one
+    place the live and historical credits both ask: a guaranteed minimum holds
+    per slot and per register as much as on a single rate, and both callers
+    used to pass this answer on unclamped.
+    """
+    rule = _tou_weekend_rule(energy)
+    if inj.peak is None:
+        return None
+    if rule is None:
+        if not inj.bi_hourly or meter not in ("bi", "dynamic"):
+            return None
+        return _floor_injection(
+            inj.offpeak if is_offpeak(when, region) else inj.peak, inj
+        )
+    slot = tou_slot(when, rule)
+    if month_mean is not None and inj.month_indexed:
+        coefs = _slot_coefficients(inj)
+        if coefs is not None:
+            (f_peak, b_peak), (f_trans, b_trans), (f_off, b_off) = coefs
+            if slot == "peak":
+                return _floor_injection(f_peak * month_mean + b_peak, inj)
+            if slot == "transition":
+                return _floor_injection(f_trans * month_mean + b_trans, inj)
+            return _floor_injection(f_off * month_mean + b_off, inj)
+    if slot == "peak":
+        return _floor_injection(inj.peak, inj)
+    if slot == "transition":
+        return _floor_injection(inj.transition, inj)
+    return _floor_injection(inj.offpeak, inj)
+
+
+@overload
+def _floor_injection(rate: float, inj: InjectionRates) -> float: ...
+@overload
+def _floor_injection(rate: float | None, inj: InjectionRates) -> float | None: ...
+def _floor_injection(rate: float | None, inj: InjectionRates) -> float | None:
+    """Clamp an injection rate at the contract's guaranteed minimum.
+
+    ``floor_at_zero`` is the common "never negative" guarantee and clamps at 0;
+    ``minimum`` is the rarer stated floor above it (EnergyVision guarantees
+    1 c/kWh). A card sets one or the other. A ``None`` rate (no data) passes
+    through unchanged.
+    """
+    if rate is None:
+        return rate
+    if inj.minimum is not None:
+        return max(rate, inj.minimum)
+    if inj.floor_at_zero:
+        return max(rate, 0.0)
+    return rate
+
+
+def _static_injection_bands(
+    inj: InjectionRates | None,
+) -> tuple[float | None, float | None]:
+    """The day and night register rates the two band sensors publish.
+
+    Both or neither: a card that printed one of the pair would otherwise
+    publish a day rate and leave the night one unavailable, which reads as a
+    broken sensor rather than as a card that does not carry the split. Floored
+    like every other credit the entry is paid, or the pair would stand negative
+    beside a floored injection_price.
+    """
+    if inj is None or not inj.bi_hourly or inj.peak is None or inj.offpeak is None:
+        return None, None
+    return _floor_injection(inj.peak, inj), _floor_injection(inj.offpeak, inj)
+
+
+def _injection_is_spot_formula(inj: InjectionRates, energy: EnergyRates) -> bool:
+    """True when this injection leg prices off the spot rather than a printed
+    indicative: it has both coefficients, and either the energy is dynamic or
+    the card publishes no flat ``current`` to prefer.
+
+    The live scalar, the display array and the historical walk all decide
+    through this one predicate, so the array cannot drift from the billed
+    value.
+    """
+    if inj.month_indexed or inj.spp_indexed:
+        # Month coefficients are never a per-hour formula, whatever else is
+        # true. Without this a card that stopped printing its indicative would
+        # flip to pricing the credit at the current slot's spot, which is the
+        # 0.6.7 mis-credit and is silent. Both flags, because the
+        # solar-weighted index is a month too and the pair is only ever
+        # mutually exclusive by convention: on a DYNAMIC energy leg, where the
+        # branch below fires on the energy kind alone, the plain flag was the
+        # only thing standing between an SPP formula and the current quarter's
+        # spot.
+        return False
+    return (
+        inj.factor is not None
+        and inj.base is not None
+        and (
+            isinstance(energy, DynamicRates)
+            or inj.current is None
+            # A card that bills per slot says so, and then the printed figure
+            # is an illustration rather than a rate to prefer.
+            or inj.slot_indexed
+        )
+    )
+
+
+def _injection_replays_hourly_spot(inj: InjectionRates) -> bool:
+    """True when this feed-in leg settles on the hour's own spot, so a walk
+    holding no spot must not credit the printed figure.
+
+    Two shapes reach it, the same pair ``_injection_needs_spot`` collects an
+    ENTSO-E key for: a card that prints no indicative at all (Cociter Tarif
+    Variable) and one whose indicative it calls an illustration
+    (``slot_indexed``: every Bolt fixed and variable card). For the first the
+    walk already credited nothing, because there was nothing to credit; for
+    the second it credited a figure the card says is not the rate, while the
+    injection_price sensor beside it billed the formula. Bolt's printed
+    5,31 c/kWh is the formula at a Belpex of 68,5 EUR/MWh, and the formula
+    turns negative below 12,1, so the flat figure over-credits every sunny
+    quarter the panels actually export in.
+
+    Judged on the leg alone, not on the energy kind: this decides who owns
+    the credit, and the per-hour replay owns it on both shapes whatever the
+    consumption side is billed on.
+    """
+    return (
+        inj.factor is not None
+        and inj.base is not None
+        and not inj.month_indexed
+        # And not the solar-weighted sibling, which is a month index too. The
+        # pair moves together with the fallback in _historical_injection_rate:
+        # relaxing one without the others either double-credits the feed-in or
+        # drops it.
+        and not inj.spp_indexed
+        and (inj.current is None or inj.slot_indexed)
+    )
+
+
+def _injection_needs_spot_quarters(
+    snapshot: SupplierSnapshot, entry: ConfigEntry
+) -> bool:
+    """True when replaying this entry's feed-in credit needs the hour's own
+    quarter spots rather than their mean.
+
+    Every pricing formula in the package is linear in the spot, and the mean
+    of an hour's quarters prices a linear formula exactly. A floor is the
+    exception: ``max(floor, factor * spot + base)`` is convex, so the mean of
+    the floored quarters is at least the floored mean and an hour whose spot
+    crossed the floor inside it is worth more than flooring its mean says.
+    The live array already floors per slot, which is what the contract bills,
+    so without the quarters the year-to-date credit and the backfilled rows
+    sit below the injection_price sensor the user is watching, always in the
+    same direction.
+
+    Both floors ``_floor_injection`` applies count, since the argument is the
+    same for each: the common ``floor_at_zero`` and the rarer stated
+    ``minimum`` (EnergyVision's 1 c/kWh guarantee). Gating on the first alone
+    left a ``minimum`` clamped per slot on the live sensor and replayed off
+    the hourly mean in the walk, 8 EUR/MWh apart on quarters that straddle
+    the floor. No shipped card puts a ``minimum`` on a per-slot formula today
+    (EnergyVision prints its guarantee on the month-indexed fixed cards only),
+    so this is the two halves agreeing before a card makes them disagree.
+
+    Reachable from an expert custom entry, and from any card whose parser
+    reads a never-negative clause (Ecopower's dynamic extractor looks for one;
+    the 2026 cards do not print it). The 15-minute grid needs
+    ``quarter_hourly`` energy, which is always DynamicRates, so the formula
+    branch is the one that fires and neither the TOU triplet nor a month mean
+    can be in play. Callers do not have to re-ask those questions.
+
+    Deliberately NOT folded into ``_injection_needs_spot``, which means "this
+    injection carries a per-hour index" and is read that way elsewhere.
+    """
+    if entry.data.get(CONF_SOLAR_REGIME) != SOLAR_REGIME_INJECTION:
+        return False
+    inj = snapshot.injection
+    return (
+        inj is not None
+        and (inj.floor_at_zero or inj.minimum is not None)
+        and _energy_is_quarter_hourly(snapshot.energy)
+        and _injection_is_spot_formula(inj, snapshot.energy)
+    )
+
+
+def _injection_price_for_slot(
+    inj: InjectionRates,
+    energy: EnergyRates,
+    spot: float | None,
+    when: datetime,
+    *,
+    meter: MeterType = METER_MONO,
+    region: str = REGION_FLANDERS,
+) -> float | None:
+    """Injection price in EUR/kWh for a single slot.
+
+    The per-slot core shared by the live current-hour scalar and the
+    today/tomorrow injection array. Priority (identical to the historical
+    walk): a per-slot TOU or per-register rate first (Engie Empower
+    Flextime, Trevion Vast on a two-register meter), then the
+    spot-indexed formula ``factor*spot + base`` when the contract is
+    spot-indexed, otherwise the printed monthly ``current`` indicative.
+    ``spot`` is the already-resolved spot for ``when``'s billing slot (None
+    when unavailable); the spot branch returns None rather than fabricate a
+    value when it has no spot.
+
+    The spot branch fires only when the energy bills per hour (DynamicRates)
+    OR the injection is a spot formula with no monthly indicative (``current``
+    is None): e.g. Cociter Variable. A static-energy contract whose injection
+    carries a MONTHLY index but also a printed ``current`` (Ecofix Flexy's
+    BELPEX-SPP-M, EBEM Groen Variabel / B@sic+'s SPP0) uses that realized
+    monthly rate instead, keeping the live sensor consistent with the YTD
+    credit. Do NOT drop this guard: without it a flat monthly-indicative
+    credit would flip to a spot-varying one on the several dynamic-injection
+    cards that publish BOTH a ``current`` and ``factor``/``base``.
+    """
+    tou_rate = _tou_injection_rate(inj, energy, when, meter=meter, region=region)
+    if tou_rate is not None:
+        return tou_rate
+    if _injection_is_spot_formula(inj, energy):
+        if spot is None:
+            return None
+        # Guaranteed by the predicate; spelled out because a call does not
+        # narrow the Optionals the way the inline check used to.
+        assert inj.factor is not None and inj.base is not None
+        return _floor_injection(inj.factor * spot + inj.base, inj)
+    return _floor_injection(inj.current, inj)
+
+
+def _compute_injection_price(
+    snapshot: SupplierSnapshot,
+    entry: ConfigEntry,
+    spot_prices: dict[datetime, float],
+) -> float | None:
+    """Current-hour injection price in EUR/kWh for HA Energy's price entity.
+
+    Only returned when the user is on the injection regime AND the supplier's
+    snapshot has injection data. Prefers a per-slot TOU rate (Engie Empower
+    Flextime), then the formula+spot when a spot is available (dynamic
+    contracts), otherwise falls back to the snapshot's static "current"
+    indicative (Eneco Fix/Flex monthly value).
+    """
+    if entry.data.get(CONF_SOLAR_REGIME) != SOLAR_REGIME_INJECTION:
+        return None
+    inj = snapshot.injection
+    if inj is None:
+        return None
+    return _injection_price_for_slot(
+        inj,
+        snapshot.energy,
+        _now_slot_spot(snapshot.energy, spot_prices),
+        dt_util.now(),
+        meter=entry.data.get(CONF_METER, METER_MONO),
+        region=entry.data.get(CONF_REGION, REGION_FLANDERS),
+    )
+
+
+def _historical_injection_rate(
+    injection: InjectionRates | None,
+    spot: float | None = None,
+    *,
+    quarters: Sequence[float] | None = None,
+    energy: EnergyRates | None = None,
+    when: datetime | None = None,
+    meter: MeterType = METER_MONO,
+    region: str = REGION_FLANDERS,
+) -> float | None:
+    """Best-effort EUR/kWh injection rate for a *past* hour.
+
+    Mirrors the live ``_compute_injection_price`` priority: a per-slot TOU
+    or per-register rate first (Engie Empower Flextime, Trevion Vast on a
+    two-register meter, when ``energy`` + ``when`` are given; ``meter`` and
+    ``region`` say which registers and whose day/night schedule, and default
+    to a single-register meter, which is credited at ``current``), then the
+    spot-indexed formula ``factor*spot + base`` when both
+    the formula and a historical spot are available, falling back to the
+    monthly indicative ``current`` otherwise. Several dynamic-injection
+    contracts (Engie, OCTA+, TotalEnergies, Luminus, Mega) publish BOTH a
+    ``current`` indicative and ``factor``/``base``; checking ``current``
+    first made the YTD credit use the flat indicative while the live
+    injection-price sensor used the spot formula, so the two user-facing
+    numbers diverged. Static contracts have no spot, so they fall through
+    to ``current`` - unless the card calls that figure an illustration, and
+    then nothing here credits it and the per-hour replay does
+    (``_injection_replays_hourly_spot``).
+
+    ``quarters`` are the hour's own slot spots and win over ``spot`` when
+    given. Pass them only for an hour that is priced off its own spot, never
+    for one billed at a month mean, and only when
+    ``_injection_needs_spot_quarters`` holds: for every other entry they are
+    absent and this function answers exactly what it always did.
+    """
+    if injection is None:
+        return None
+    if quarters:
+        # The hour's rate is the mean of its quarters' rates, not the rate of
+        # their mean. The two agree for a formula that is linear in the spot
+        # and part company for a floored one, which is convex: flooring once,
+        # at the hour mean, credits nothing for an hour whose spot crossed the
+        # floor inside it. Recursing keeps one description of the priority
+        # chain above.
+        rates = [
+            rate
+            for rate in (
+                _historical_injection_rate(
+                    injection, q, energy=energy, when=when, meter=meter, region=region
+                )
+                for q in quarters
+            )
+            if rate is not None
+        ]
+        return fmean(rates) if rates else None
+    if energy is not None and when is not None:
+        # ``spot`` is the month mean whenever the caller settles this credit
+        # on one, which is exactly when a month-indexed triplet may use it.
+        tou_rate = _tou_injection_rate(
+            injection, energy, when, spot, meter=meter, region=region
+        )
+        if tou_rate is not None:
+            return tou_rate
+    if injection.factor is not None and injection.base is not None and spot is not None:
+        return _floor_injection(injection.factor * spot + injection.base, injection)
+    if _injection_replays_hourly_spot(injection):
+        # No spot, and the printed figure is an illustration of the formula
+        # rather than a rate. Answer "no rate" so the per-hour replay is the
+        # only thing that credits this leg, instead of both crediting it.
+        return None
+    if injection.current is not None:
+        return _floor_injection(injection.current, injection)
+    return None

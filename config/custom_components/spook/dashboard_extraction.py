@@ -14,6 +14,7 @@ so a benign string under a recognized key is dropped rather than reported.
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, Any
 
 from .entity_filtering import split_comma_separated_entity_ids
@@ -112,6 +113,25 @@ def _collect_strings(value: Any, entities: set[str]) -> None:
     entities.difference_update(_CARD_PLACEHOLDERS)
 
 
+# Bubble Card names entities under keys of its own. A pop-up can open on an
+# entity's state (`trigger_entity`), and a horizontal buttons stack numbers its
+# buttons, each with an entity and a motion sensor to sort by (`1_entity`,
+# `1_pir_sensor`, and so on). Only read on Bubble Card itself: a key shaped
+# like `1_entity` on some other card is that card's business.
+_BUBBLE_CARD_TYPE = "custom:bubble-card"
+_BUBBLE_CARD_ENTITY_KEYS = frozenset({"trigger_entity"})
+_BUBBLE_CARD_NUMBERED_ENTITY_KEY = re.compile(r"\d+_(?:entity|pir_sensor)")
+
+
+def _collect_bubble_card(node: dict[str, Any], entities: set[str]) -> None:
+    """Collect the entities Bubble Card names under keys of its own."""
+    for key, value in node.items():
+        if key in _BUBBLE_CARD_ENTITY_KEYS or (
+            isinstance(key, str) and _BUBBLE_CARD_NUMBERED_ENTITY_KEY.fullmatch(key)
+        ):
+            _collect_strings(value, entities)
+
+
 def _walk(node: Any, entities: set[str]) -> None:
     """Recursively collect entity references from a configuration node."""
     if isinstance(node, list):
@@ -125,6 +145,9 @@ def _walk(node: Any, entities: set[str]) -> None:
     for key in _ENTITY_REFERENCE_KEYS:
         if key in node:
             _collect_strings(node[key], entities)
+
+    if node.get("type") == _BUBBLE_CARD_TYPE:
+        _collect_bubble_card(node, entities)
 
     for child in _worth_descending_into(node):
         _walk(child, entities)
@@ -146,7 +169,10 @@ def extract_entities_from_dashboard_node(node: Any) -> set[str]:
 # grabs, and a custom card took it: flex-horseshoe-card prints whatever is
 # under `area` as a caption beneath its gauge, so `area: Garaj` was reported
 # as an area that had gone missing. #1609.
-_AREA_TYPE = "area"
+#
+# The Mushroom template card is the exception that earns its place: its `area`
+# is the card's area, handed to its templates as a real area ID.
+_AREA_TYPES = frozenset({"area", "custom:mushroom-template-card"})
 
 # `area_id` is a service-call target, and nobody captions with one of those.
 _AREA_ID_KEY = "area_id"
@@ -155,17 +181,26 @@ _AREA_ID_KEY = "area_id"
 def _collect_plain(value: Any, out: set[str]) -> None:
     """Collect plain string IDs from a key's string or list value.
 
-    A pattern is not a name, so `area: KG/*` is left where it is.
+    A pattern is not a name, so `area: KG/*` is left where it is. Neither is
+    a template: no area ID has braces in it, and what a template turns into
+    is not something to look up ahead of time.
     """
-    if isinstance(value, str):
-        if not is_pattern_reference(value):
-            out.add(value)
-    elif isinstance(value, list):
-        out.update(
-            item
-            for item in value
-            if isinstance(item, str) and not is_pattern_reference(item)
-        )
+    values = [value] if isinstance(value, str) else value
+    if not isinstance(values, list):
+        return
+
+    out.update(
+        item
+        for item in values
+        if isinstance(item, str)
+        and not is_pattern_reference(item)
+        and not _is_template(item)
+    )
+
+
+def _is_template(value: str) -> bool:
+    """Return whether a value is a Jinja template rather than a name."""
+    return "{{" in value or "{%" in value
 
 
 def _walk_areas(node: Any, areas: set[str]) -> None:
@@ -178,7 +213,9 @@ def _walk_areas(node: Any, areas: set[str]) -> None:
     if not isinstance(node, dict):
         return
 
-    if node.get("type") == _AREA_TYPE:
+    # Checked for a string first: the walk goes into any dict in a dashboard,
+    # and a `type` that is a list or a dict cannot be looked up in a set.
+    if isinstance(card_type := node.get("type"), str) and card_type in _AREA_TYPES:
         _collect_plain(node.get("area"), areas)
     _collect_plain(node.get(_AREA_ID_KEY), areas)
 
@@ -196,3 +233,58 @@ def extract_areas_from_dashboard_node(node: Any) -> set[str]:
     areas: set[str] = set()
     _walk_areas(node, areas)
     return areas
+
+
+# The two kinds of action that call one. `call-service` is the old name for
+# `perform-action`, and the frontend runs both the same way: the action named
+# under `perform_action`, or failing that under `service`. Read exactly like
+# that, so what is reported is what a tap would have tried to run.
+_PERFORM_ACTION_TYPES = frozenset({"perform-action", "call-service"})
+_PERFORM_ACTION_KEYS = ("perform_action", "service")
+
+# What `||` in JavaScript passes over. Not Python's idea of empty: an empty
+# list or dict is truthy over there, so the frontend stops at it and never
+# gets to `service`. Compared with `==`, which keeps an unhashable value out
+# of trouble and lets `0.0` count as the `0` it is.
+_JAVASCRIPT_FALSY = (None, "", 0, False)
+
+# Only a plain `domain.action` is a name to look up. A custom card can put a
+# template there, button-card's `[[[ ... ]]]` for one, and a half-filled
+# editor leaves it empty; neither is an action that went missing.
+_ACTION_NAME = re.compile(r"[a-z0-9_]+\.[a-z0-9_]+")
+
+
+def _walk_actions(node: Any, actions: set[str]) -> None:
+    """Recursively collect the actions a configuration node performs."""
+    if isinstance(node, list):
+        for item in node:
+            _walk_actions(item, actions)
+        return
+
+    if not isinstance(node, dict):
+        return
+
+    # Read off the action itself rather than the key it sits under:
+    # `tap_action`, `hold_action` and the rest are the frontend's, and custom
+    # cards add their own names for the same shape. Checked for a string
+    # first, like the area walk: a list or a dict cannot be looked up in a set.
+    if (
+        isinstance(action_type := node.get("action"), str)
+        and action_type in _PERFORM_ACTION_TYPES
+    ):
+        for key in _PERFORM_ACTION_KEYS:
+            if (name := node.get(key)) in _JAVASCRIPT_FALSY:
+                continue
+            if isinstance(name, str) and _ACTION_NAME.fullmatch(name):
+                actions.add(name)
+            break
+
+    for child in _worth_descending_into(node):
+        _walk_actions(child, actions)
+
+
+def extract_actions_from_dashboard_node(node: Any) -> set[str]:
+    """Return the actions performed anywhere in a dashboard node."""
+    actions: set[str] = set()
+    _walk_actions(node, actions)
+    return actions

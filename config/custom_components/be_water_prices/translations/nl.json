@@ -1,0 +1,212 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Belgische Waterprijzen",
+        "description": "Voer je postcode in en we koppelen je aan de juiste watermaatschappij. Lukt dat niet, dan kies je in de volgende stap zelf.",
+        "data": {
+          "postcode": "Postcode"
+        }
+      },
+      "manual": {
+        "title": "Kies je watermaatschappij",
+        "description": "We konden geen maatschappij koppelen aan die postcode. Kies hieronder de jouwe.",
+        "data": {
+          "utility": "Maatschappij"
+        }
+      },
+      "choose": {
+        "title": "Kies je watermaatschappij",
+        "description": "Je postcode wordt door meerdere maatschappijen bediend -- elk verzorgt andere straten in je buurt. Kies wie jou factureert (kijk je laatste waterfactuur na als je twijfelt).",
+        "data": {
+          "utility": "Maatschappij"
+        }
+      },
+      "reconfigure": {
+        "title": "Watermaatschappij opnieuw instellen",
+        "description": "Kies hoe je deze invoer wil bijwerken. Na een verhuis is opnieuw koppelen via postcode meestal de juiste keuze; kies de maatschappij rechtstreeks als de postcode-koppeling de verkeerde maatschappij heeft gekozen.",
+        "menu_options": {
+          "reconfigure_postcode": "Postcode bijwerken en maatschappij opnieuw koppelen",
+          "reconfigure_manual": "Maatschappij rechtstreeks kiezen"
+        }
+      },
+      "reconfigure_postcode": {
+        "title": "Postcode bijwerken",
+        "description": "Voer de nieuwe postcode in voor deze invoer. We koppelen opnieuw aan een maatschappij en herladen de integratie. Jaarverbruik en de watermetersensor blijven behouden. Gedomicilieerde personen en het sociaal tarief gelden alleen in Vlaanderen: ze blijven behouden bij een overstap naar een andere Vlaamse maatschappij, vervallen als de nieuwe maatschappij dat niet is, en worden gevraagd bij een overstap naar Vlaanderen; de opgeslagen gemeente wordt gewist als de gekoppelde maatschappij verandert (de nieuwe maatschappij gebruikt andere gemeente-IDs).",
+        "data": {
+          "postcode": "Postcode"
+        }
+      },
+      "reconfigure_manual": {
+        "title": "Kies je watermaatschappij",
+        "description": "Kies de maatschappij die jou bedient. Jaarverbruik en de watermetersensor blijven behouden. Gedomicilieerde personen en het sociaal tarief gelden alleen in Vlaanderen: ze blijven behouden bij een overstap naar een andere Vlaamse maatschappij, vervallen als de nieuwe maatschappij dat niet is, en worden gevraagd bij een overstap naar Vlaanderen; de opgeslagen gemeente wordt gewist als je een andere maatschappij kiest (gemeente-IDs zijn niet uitwisselbaar tussen maatschappijen). Maatschappijen die per gemeente factureren (De Watergroep / Farys / Pidpa / Water-link) vragen daarna nog je gemeente.",
+        "data": {
+          "utility": "Maatschappij"
+        }
+      },
+      "reconfigure_choose": {
+        "title": "Kies je watermaatschappij",
+        "description": "Je postcode wordt door meerdere maatschappijen bediend -- elk verzorgt andere straten in je buurt. Kies wie jou factureert. Jaarverbruik en de watermetersensor blijven behouden. Gedomicilieerde personen en het sociaal tarief gelden alleen in Vlaanderen: ze blijven behouden bij een overstap naar een andere Vlaamse maatschappij, vervallen als de nieuwe maatschappij dat niet is, en worden gevraagd bij een overstap naar Vlaanderen; de opgeslagen gemeente wordt gewist als je een andere maatschappij kiest.",
+        "data": {
+          "utility": "Maatschappij"
+        }
+      },
+      "reconfigure_household": {
+        "title": "Huishouden voor het Vlaamse tarief",
+        "description": "De nieuwe maatschappij is Vlaams, en het Vlaamse tarief hangt af van het aantal gedomicilieerde personen op het adres en van het sociaal tarief. Vul ze hier in; beide kun je later wijzigen in de opties van de invoer.",
+        "data": {
+          "gedomicilieerd_persons": "Gedomicilieerde personen",
+          "social_tariff": "Sociaal tarief (80% korting)"
+        }
+      },
+      "reconfigure_commune": {
+        "title": "Kies je gemeente",
+        "description": "Kies de gemeente waar dit adres ligt. Maatschappijen die per gemeente factureren (De Watergroep / Farys / Pidpa / Water-link) rekenen lichtjes verschillende tarieven per gemeente; laat leeg om de standaard van de maatschappij te gebruiken, behalve zoals hieronder vermeld, en kies later via de opties van de invoer.",
+        "data": {
+          "commune": "Gemeente"
+        },
+        "data_description": {
+          "commune": "Waar de maatschappij uw postcode op een eigen gemeente factureert, is die gemeente vooraf gekozen, en ze leegmaken blijft niet: ze komt terug bij de volgende herlading. Kies een andere gemeente om op een andere kaart te worden berekend."
+        }
+      },
+      "options": {
+        "title": "Jaarverbruik",
+        "description": "Je jaarlijks waterverbruik in kubieke meter. Vlaamse maatschappijen vragen ook het aantal gedomicilieerde personen (bepaalt het basisvolume) en een keuze voor het VMM-sociaal tarief. Optioneel: koppel een watermetersensor (cumulatief m³, device_class=water) zodat de YTD-kostsensor het verbruik sinds 1 januari uit de recorder kan lezen.",
+        "data": {
+          "consumption_m3_per_year": "Verbruik (m³ / jaar)",
+          "gedomicilieerd_persons": "Gedomicilieerde personen (Vlaanderen)",
+          "social_tariff": "Sociaal tarief (Vlaanderen, 80% korting)",
+          "water_meter_sensor": "Watermetersensor (optioneel; automatisch gedetecteerd vanuit het Energy-dashboard indien leeg)",
+          "card_archive": "Het kaartarchief van het project lezen wanneer de maatschappij onbereikbaar is en er geen recente kaart gecachet is (de aanvraag noemt uw maatschappij en gemeente)",
+          "commune": "Gemeente (alleen voor per-gemeente maatschappijen: De Watergroep / Farys / Pidpa / Water-link)"
+        },
+        "data_description": {
+          "commune": "Waar de maatschappij uw postcode op een eigen gemeente factureert, is die gemeente vooraf gekozen, en ze leegmaken blijft niet: ze komt terug bij de volgende herlading. Kies een andere gemeente om op een andere kaart te worden berekend."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Deze watermaatschappij is al geconfigureerd.",
+      "already_in_progress": "Deze watermaatschappij wordt al in een ander venster ingesteld.",
+      "entry_removed": "Deze invoer werd verwijderd terwijl het venster open stond; er is niets gewijzigd.",
+      "invalid_flow_state": "Configuratie werd onderbroken; herstart vanaf het begin.",
+      "reconfigure_successful": "De invoer werd bijgewerkt en herladen."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Jaarverbruik",
+        "data": {
+          "consumption_m3_per_year": "Verbruik (m³ / jaar)",
+          "gedomicilieerd_persons": "Gedomicilieerde personen (Vlaanderen)",
+          "social_tariff": "Sociaal tarief (Vlaanderen, 80% korting)",
+          "water_meter_sensor": "Watermetersensor (optioneel; automatisch gedetecteerd vanuit het Energy-dashboard indien leeg)",
+          "card_archive": "Het kaartarchief van het project lezen wanneer de maatschappij onbereikbaar is en er geen recente kaart gecachet is (de aanvraag noemt uw maatschappij en gemeente)",
+          "commune": "Gemeente (alleen voor per-gemeente maatschappijen: De Watergroep / Farys / Pidpa / Water-link)"
+        },
+        "data_description": {
+          "commune": "Waar de maatschappij uw postcode op een eigen gemeente factureert, is die gemeente vooraf gekozen, en ze leegmaken blijft niet: ze komt terug bij de volgende herlading. Kies een andere gemeente om op een andere kaart te worden berekend."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "yearly_fee": {
+        "name": "Vastrecht per jaar"
+      },
+      "basis_rate": {
+        "name": "Basistarief"
+      },
+      "comfort_rate": {
+        "name": "Comforttarief"
+      },
+      "sanering_rate": {
+        "name": "Saneringsbijdrage"
+      },
+      "all_in_basis": {
+        "name": "All-in basistarief"
+      },
+      "projected_annual_cost": {
+        "name": "Geschatte jaarkost"
+      },
+      "current_year_cost": {
+        "name": "Kost dit jaar"
+      },
+      "ytd_consumption": {
+        "name": "Verbruik dit jaar"
+      },
+      "rolling_year_consumption": {
+        "name": "Verbruik afgelopen 12 maanden"
+      },
+      "rolling_year_cost": {
+        "name": "Kosten afgelopen 12 maanden"
+      },
+      "projected_year_consumption": {
+        "name": "Verwacht jaarverbruik"
+      },
+      "projected_year_end_cost": {
+        "name": "Verwachte kosten op het jaareinde"
+      }
+    }
+  },
+  "services": {
+    "backfill_prices": {
+      "name": "Prijsgeschiedenis aanvullen",
+      "description": "Importeert vlakke uurlijkse long-term-statistics rijen voor de prijssensoren van deze integratie, zodat de History- en Energy-dashboards een tarieflijn tonen die verder teruggaat dan de installatiedatum.",
+      "fields": {
+        "entry_id": {
+          "name": "Configuratie-invoer",
+          "description": "Optioneel. De configuratie-invoer om aan te vullen. Laat leeg om elke geladen invoer aan te vullen. Verplicht wanneer Wissen voor importeren aan staat."
+        },
+        "start_date": {
+          "name": "Startdatum",
+          "description": "Optioneel. Vroegste datum om aan te vullen. Standaard 1 januari van het huidige jaar. Wordt beperkt tot de valid_from van de tariefsnapshot."
+        },
+        "clear": {
+          "name": "Wissen voor importeren",
+          "description": "Indien aan, wis de bestaande long-term-statistics voor de gekozen sensoren voordat de import gebeurt. Standaard uit. Vereist een configuratie-invoer: alle geladen invoeren tegelijk wissen is onomkeerbaar, dus die combinatie wordt geweigerd."
+        }
+      }
+    }
+  },
+  "issues": {
+    "operator_moved": {
+      "title": "{utility}: je postcode wijst nu naar een andere maatschappij",
+      "description": "De postcode van deze entry verwijst naar {resolved}, niet naar {utility}. De postcodetabel is gecorrigeerd nadat deze entry is aangemaakt, dus wordt nog altijd het tarief van {utility} opgehaald en je factuur daarop berekend.\n\nControleer het en pas het aan als het klopt: Instellingen > Apparaten en diensten > {utility} > de drie puntjes > Herconfigureren. Er wordt niets voor je gewijzigd, want van maatschappij veranderen wist ook de gemeente en de Vlaamse gezinsinstellingen."
+    },
+    "several_water_meters": {
+      "title": "{utility}: meer dan \u00e9\u00e9n watermeter op het energiedashboard",
+      "description": "Het energiedashboard bevat {count} waterbronnen en deze integratie rekent met \u00e9\u00e9n meter. Ze rekent nu met de bron die het dashboard als eerste bewaart, wat de volgorde van toevoegen weerspiegelt en niets zegt over welke meter je watermaatschappij factureert.\n\nKies de meter zelf in de opties van de integratie (Instellingen > Apparaten en diensten > {utility} > Configureren > Watermetersensor). Deze melding verdwijnt zodra er \u00e9\u00e9n is ingesteld."
+    },
+    "snapshot_stale": {
+      "title": "Tariefsnapshot van {utility} is verouderd",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Tariefophaling van {utility} opnieuw proberen",
+            "description": "Het laatst succesvol opgehaalde tarief van {utility} is {age_days} dagen oud (geldig tot {valid_until}). Laatste fout: {last_error}.\n\nKlik op Indienen om onmiddellijk te vernieuwen. De Repair-kaart verdwijnt automatisch als de volgende ophaling een nieuwe snapshot teruggeeft; zo niet, dan blijft hij staan om opnieuw te proberen of de onderliggende fout te onderzoeken (kijk naar de issues op GitHub of de dagelijkse live-check workflow run)."
+          }
+        },
+        "abort": {
+          "still_stale": "De vernieuwing is uitgevoerd, maar de snapshot van {utility} is nog steeds verouderd, dus de Repair-kaart blijft staan. Probeer het later opnieuw, of bekijk de issues op GitHub en de dagelijkse live-check workflow run voor de onderliggende fout."
+        }
+      }
+    },
+    "projection_outdated": {
+      "title": "Projectie van {utility} gebruikt een verouderd verbruik",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Uw verbruik van {year} gebruiken voor de projectie van {utility}",
+            "description": "Uw watermeter heeft {metered} m³ gemeten over heel {year}. De sensor voor de geprojecteerde jaarkost staat nog op {configured} m³ per jaar.\n\nKlik op Indienen om de ingestelde waarde te vervangen door {metered} m³. De geprojecteerde kost wordt onmiddellijk bijgewerkt. De sensoren sinds 1 januari veranderen hoe dan ook niet, want die lezen altijd de meter en niet deze instelling.\n\nNegeer deze kaart om {configured} m³ te behouden."
+          }
+        },
+        "abort": {
+          "cannot_apply": "De {utility}-invoer kan niet meer worden bijgewerkt, er is dus niets gewijzigd. Waarschijnlijk is die verwijderd terwijl deze kaart openstond."
+        }
+      }
+    }
+  }
+}

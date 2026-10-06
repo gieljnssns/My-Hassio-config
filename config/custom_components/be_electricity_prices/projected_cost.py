@@ -1,0 +1,480 @@
+# Copyright (c) 2026 Renaud Allard
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+"""Projected full-calendar-year cost.
+
+``current_year_cost`` answers "what has this year cost so far". This module
+answers "roughly what does a year on this contract cost", which is the figure a
+user can set beside a supplier's monthly advance without a translation step.
+
+It is an indication and never a forecast. A full year is priced at today's
+tariffs against a yearly volume taken from the user's own metered history.
+Tariffs move during the year and consumption does not repeat exactly, so the
+number will not match a settlement. Every leg publishes its basis as an
+attribute so the figure can be interrogated rather than trusted.
+
+It is deliberately a STANDALONE full-year estimate rather than the running bill
+plus a priced remainder. The blend reads better in principle, and is wrong in
+practice in three ways that a review demonstrated with numbers:
+
+- when no meter is wired, ``current_year_cost`` is the fees-only floor while
+  the remainder is priced off the household default, so the projection decays
+  from a plausible figure in January to the bare fees floor in December;
+- an entry whose recorder history starts mid-year has the same asymmetry in
+  weaker form, and reads about a third of the real annual cost;
+- under the Walloon compensation regime the zero-floor clamp would apply
+  separately to each leg, so a banked summer surplus is forfeited against the
+  remaining months and the projection can never fall below the running bill.
+
+Pricing the whole year in one pass fixes all three: one volume basis, one set
+of tariffs, and the compensation net clamped exactly once. It also makes the
+standing charge consistent, since a sensor that says "at today's tariffs" and
+then bills half the year off an archived card would contradict itself.
+
+What is refused is a leg carried as a FORMULA over an index nobody has yet:
+DynamicRates and SpotMonthlyRates. ENTSO-E publishes day-ahead only and there
+is no free forward curve, so those report no value and say why.
+
+The test is the shape the rate is stored in, not whether the product is called
+indexed. A Variable or Impact card is monthly-indexed in the market sense, but
+its extractor has already RESOLVED this month's rate, and holding a resolved
+rate flat is the same assumption the whole sensor rests on. A contract start
+date can move a card across that line: the signing-cohort splice rewrites a
+Variable card with parsed coefficients into SpotMonthlyRates, which genuinely
+is a formula over a future index, so such an entry reports no value and the
+basis says the cohort re-price is why. An ENTSO-E key does the same on a
+month-indexed card without any start date, and the basis names the key then.
+"""
+
+from __future__ import annotations
+
+from dataclasses import replace
+from datetime import date, datetime, timedelta
+from typing import Any
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
+
+from .const import (
+    CONF_CONTRACT_END_DATE,
+    CONF_CONTRACT_START_DATE,
+    CONF_DSO,
+    CONF_DSO_TARIFF_MODE,
+    CONF_METER,
+    CONF_REGION,
+    CONF_SOLAR_REGIME,
+    CONF_TARIFF_CARD_DATE,
+    DSO_MODE_BI_HORAIRE,
+    MEASURED_FULL_YEAR_DAYS,
+    METER_MONO,
+    SOLAR_REGIME_COMPENSATION,
+    SOLAR_REGIME_INJECTION,
+    SOLAR_REGIME_NONE,
+)
+from .providers.base import SupplierSnapshot
+from .providers._rates import (
+    DynamicRates,
+    SpotMonthlyRates,
+)
+
+_SPOT_BASIS = (
+    "not projected: this contract settles on a Belpex index for months that "
+    "have not happened yet, and no forward price exists"
+)
+_NO_INDEX_BASIS = (
+    "not projected: this contract settles on a monthly Belpex index, and this "
+    "month's is not known yet"
+)
+_NO_INJECTION_YEAR = (
+    "not folded in: needs a full year of feed-in history, and a partial one "
+    "cannot be scaled without a production profile"
+)
+_UNNETTABLE = (
+    "not projected: this meter is netted against its own feed-in, and there is "
+    "not enough feed-in history to net a full year against"
+)
+_NO_INJECTION_RATE = (
+    "measured, but not credited: this card indexes its feed-in on the spot "
+    "price, and a full year of day-ahead prices and of feed-in is not held yet"
+)
+_NO_INJECTION_CARD = "measured, but not credited: this card publishes no feed-in tariff"
+_COHORT_SPOT_BASIS = (
+    "not projected: the {setting} re-prices this card to its signing cohort, "
+    "which settles on a monthly Belpex index, and this month's is not known yet"
+)
+_KEYED_SPOT_BASIS = (
+    "not projected: with an ENTSO-E key this card is re-priced on each month's "
+    "Belpex index, as the supplier bills it, and this month's is not known yet"
+)
+
+
+def held_at_index(snapshot: SupplierSnapshot, index: float | None) -> SupplierSnapshot:
+    """``snapshot`` with a month-indexed energy leg settled on ``index``.
+
+    The running month's index, held for the months ahead the way a variable
+    card's printed rate is. Any other leg is returned as it is.
+    """
+    if not isinstance(snapshot.energy, SpotMonthlyRates):
+        return snapshot
+    return replace(snapshot, energy=replace(snapshot.energy, index_realised=index))
+
+
+def _contract_basis(entry: ConfigEntry, today: date) -> str:
+    """How much of the projected year the current contract actually covers.
+
+    The projection holds today's rate for a full year. When a contract end
+    date falls inside that year, the months after it are priced on a card the
+    user will not be on, at whatever they renew to. The figure stays as it is,
+    because nothing better exists to price those months with, but saying so is
+    the difference between an estimate and a claim.
+
+    The end date is optional and independent of the start date, and it was
+    collected as an inert renewal reminder, so some stored values are
+    approximate. Every path here degrades to "no end date set" rather than
+    refusing to produce a number.
+    """
+    from .cohort import _parse_iso_date
+
+    end = _parse_iso_date(entry.data.get(CONF_CONTRACT_END_DATE))
+    if end is None:
+        return "today's contract, no end date set"
+    if end <= today:
+        # Already expired. The entry is stale rather than wrong, and the card
+        # it still points at is the only rate available, so behave exactly as
+        # if no date were set and say which.
+        return f"today's contract, whose recorded end date ({end}) has passed"
+    horizon = date(today.year, 12, 31)
+    if end >= horizon:
+        return f"today's contract, which runs past this year (ends {end})"
+    covered = (end - today).days
+    total = (horizon - today).days
+    pct = round(100.0 * covered / total) if total else 100
+    return (
+        f"today's contract for {covered} of the {total} days left this year "
+        f"({pct}%), ends {end}; the rest is priced on a contract you have not "
+        "signed yet"
+    )
+
+
+async def _compute_projected_year_cost(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    snapshot: SupplierSnapshot,
+    priced: SupplierSnapshot,
+    *,
+    billed_peak_kw: float,
+    today: date,
+    credited: SupplierSnapshot | None = None,
+    signing: SupplierSnapshot | None = None,
+    spots: dict[datetime, float] | None = None,
+    energy_index: float | None = None,
+    breakdown: dict[str, Any] | None = None,
+) -> float | None:
+    """Cost of a full year on this contract at today's tariffs, or ``None``.
+
+    ``signing`` is the card the welcome credit is read off, the signing
+    month's where the supplier keeps an archive, the same row the running
+    bill reads; defaults to ``priced``. What is left of the household's first
+    year comes off the projected year the way it comes off the running bill,
+    or the two full-year figures on one entry disagreed by the credit.
+
+    Three snapshots, and each answers a different question. ``priced`` is the
+    cohort-spliced one, whose energy leg is what the live sensors actually
+    bill, so a signing-cohort entry takes both its per-kWh rate and its yearly
+    fixed fee from there rather than from the card a new customer would get
+    today. ``snapshot`` is the card as resolved, and is read only to tell a
+    contract that is natively spot-indexed from one the splice moved onto that
+    axis, which the basis string reports. ``credited`` is the one the feed-in
+    leg is read off: the coordinator resolves a month-indexed credit against
+    the delivery month's own index once per tick, and this is that result, so
+    the projection credits the rate the injection_price sensor shows instead
+    of the figure the card prints for the PREVIOUS month. Defaults to
+    ``priced``, which is what a card with no month index carries anyway.
+
+    ``spots`` is the day-ahead history the coordinator holds, read and never
+    written. A static card whose feed-in follows the spot price per slot
+    (every Bolt fixed and variable card) is credited on its closed days of
+    the past year, each hour weighted by what the household exported in it
+    (``compare_inputs._credit_year``), which is what the compare page's
+    annual row credits the same contract at. Short of a full year of both
+    the credit is left out and the basis says so.
+
+    ``energy_index`` is the running month's index, for a leg that settles on
+    one: held for the year (:func:`held_at_index`), it is to that leg what the
+    printed rate is to a variable card. Without it such a leg is not priced.
+
+    Returns ``None`` when the contract cannot be projected or the rate cannot
+    be resolved. It never raises: the caller runs inside the coordinator tick,
+    where an exception would mark the whole update failed and take every
+    entity on the device unavailable.
+    """
+    from .compare_quote import (
+        _annual_bill,
+        _annual_volume,
+        _covers_a_year,
+    )
+    from .compare_inputs import _credit_year
+    from .compare_weighting import (
+        _compare_injection_credit,
+        _tou_weighted_per_kwh,
+    )
+    from .meter_daily import _measured_kwh
+    from .meter_hourly import (
+        _hour_of_day_shares,
+        _measured_hour_weights,
+        _measured_hourly,
+    )
+
+    if breakdown is None:
+        breakdown = {}
+
+    held = isinstance(priced.energy, SpotMonthlyRates) and energy_index is not None
+    if held:
+        priced = held_at_index(priced, energy_index)
+        if credited is not None:
+            credited = held_at_index(credited, energy_index)
+    if isinstance(priced.energy, DynamicRates) or (
+        isinstance(priced.energy, SpotMonthlyRates) and not held
+    ):
+        # A card the user's own contract does not settle on: blaming a Belpex
+        # index reads as wrong to someone holding a Variable card, so say when
+        # the signing-cohort splice is what put them on that axis.
+        spliced = isinstance(priced.energy, SpotMonthlyRates) and not isinstance(
+            snapshot.energy, SpotMonthlyRates
+        )
+        # Two things splice that leg on: the signing month locking a cohort's
+        # formula, and on its own an ENTSO-E key on a month-indexed card, which
+        # re-prices each month on its index. The signing month is the tariff
+        # card month, else the start date (cohort._tariff_card_month), and the
+        # basis names whichever chose it: naming a start date to an entry that
+        # set none sent the user looking for the wrong box.
+        from .cohort import _parse_iso_date, _tariff_card_month
+
+        if not spliced:
+            basis = (
+                _SPOT_BASIS
+                if isinstance(priced.energy, DynamicRates)
+                else _NO_INDEX_BASIS
+            )
+        elif _tariff_card_month(entry) is not None:
+            basis = _COHORT_SPOT_BASIS.format(
+                setting=(
+                    "tariff card month"
+                    if _parse_iso_date(entry.data.get(CONF_TARIFF_CARD_DATE))
+                    else "contract start date"
+                )
+            )
+        else:
+            basis = _KEYED_SPOT_BASIS
+        breakdown["energy_basis"] = basis
+        return None
+
+    dso = entry.data[CONF_DSO]
+    region = entry.data[CONF_REGION]
+    meter = entry.data.get(CONF_METER, METER_MONO)
+    dso_mode = entry.data.get(CONF_DSO_TARIFF_MODE, DSO_MODE_BI_HORAIRE)
+
+    # Fixed, Variable, TOU and Impact all ignore the spot argument, so the
+    # energy leg needs no spot data. Only a per-slot feed-in reads the
+    # day-ahead history below, into a new dict, so the projection cannot
+    # perturb the live price table or the spot cache.
+    trailing_start = today - timedelta(days=MEASURED_FULL_YEAR_DAYS - 1)
+    # Weighted by the household's own hour-of-day shape rather than by clock
+    # hours, so a time-of-use card is projected on the kWh it actually bills.
+    hour_weights = await _measured_hour_weights(hass, entry, trailing_start, today)
+    per_kwh = _tou_weighted_per_kwh(
+        priced, dso, region, dt_util.now(), None, meter, dso_mode, hour_weights
+    )
+    if per_kwh is None:
+        return None
+
+    annual = await _annual_volume(hass, entry, trailing_start, today)
+
+    # Feed-in counts only against a full trailing year of it, gated on the
+    # INJECTION side's own coverage. Reading the consumption side's would
+    # credit a 45-day measurement as a year for a household that wired panels
+    # part-way through a metered year. Below that there is nothing honest to
+    # put here: PV is far more seasonal than consumption, so scaling a partial
+    # window by a day count would credit winter output at summer rates.
+    annual_inj = 0.0
+    injection_basis = "not applicable"
+    inj_rate: float | None = None
+    inj_hour_weights: dict[int, float] | None = None
+    regime = entry.data.get(CONF_SOLAR_REGIME, SOLAR_REGIME_NONE)
+    if regime != SOLAR_REGIME_NONE:
+        measured_inj = await _measured_kwh(
+            hass, entry, trailing_start, today, side="injection"
+        )
+        # Time-weighted, not the tick hour's slot rate. The live scalar swings
+        # with the clock on a per-slot TOU credit and on a spot-indexed one,
+        # which made this sensor step by hundreds of euro between consecutive
+        # ticks. Passing no spot leaves a spot-indexed credit unresolved, which
+        # is the honest outcome for a figure carrying no forward price.
+        # Weighted by the household's own export shape, not by slot duration:
+        # the overnight off-peak block is a third of the clock and produces
+        # nothing, so a duration mean always under-credits a per-slot card.
+        export = await _measured_hourly(
+            hass, entry, trailing_start, today, side="injection"
+        )
+        inj_hour_weights = _hour_of_day_shares(export)
+        inj_rate = _compare_injection_credit(
+            credited if credited is not None else priced,
+            entry,
+            {},
+            None,
+            None,
+            inj_hour_weights,
+        )
+        # A feed-in that follows the spot price per slot has no rate without
+        # one. The compare page credits it on the past year of day-ahead and
+        # of the household's own export, through this same helper, so the
+        # projection does too rather than quoting the same contract's year
+        # without its feed-in: on Bolt Fix in Wallonia the two stood 231 EUR
+        # apart. Closed days only, not the live table's day or two, which
+        # moved this recorded figure by tens of euro a day, and a full year
+        # of both. Asked only where the no-spot answer is empty, so every
+        # card that already had a credit keeps exactly the one it had.
+        spot_credited = False
+        year = _credit_year(spots, export, today) if spots else None
+        if inj_rate is None and year is not None:
+            inj_rate = _compare_injection_credit(
+                credited if credited is not None else priced,
+                entry,
+                {},
+                None,
+                None,
+                inj_hour_weights,
+                raw_snapshot=snapshot,
+                credit_year=year,
+            )
+            spot_credited = inj_rate is not None
+        if _covers_a_year(measured_inj.days_with_data) and measured_inj.kwh > 0:
+            # Scaled across any missing days, the same way the consumption leg
+            # is. Demanding all 365 made one absent bucket drop the whole leg,
+            # which under the netting regime stopped the meter being netted at
+            # all and multiplied the bill by ten.
+            annual_inj = (
+                measured_inj.kwh * MEASURED_FULL_YEAR_DAYS / measured_inj.days_with_data
+            )
+            injection_basis = f"measured ({measured_inj.days_with_data} days)"
+            if spot_credited:
+                injection_basis += ", credited on the past year's day-ahead prices"
+            if regime == SOLAR_REGIME_INJECTION and inj_rate is None:
+                # _annual_bill's injection branch needs a rate; without one it
+                # bills gross. Say that, rather than claiming a credit that
+                # was never applied, and say WHICH: a card with no feed-in
+                # tariff at all is a different fact from one whose feed-in is
+                # spot-indexed and therefore unpriceable here.
+                injection_basis = (
+                    _NO_INJECTION_CARD
+                    if getattr(priced, "injection", None) is None
+                    else _NO_INJECTION_RATE
+                )
+        elif regime == SOLAR_REGIME_COMPENSATION:
+            # Under netting there is no small error available. Billing the year
+            # gross because the feed-in window is short is not a missing credit,
+            # it is the wrong bill: measured at ten times the netted figure. A
+            # partial window cannot be scaled either, because PV is seasonal
+            # enough that a summer sample nets the year to the zero clamp. So
+            # refuse, the way a spot-priced contract does.
+            breakdown["injection_basis"] = _UNNETTABLE
+            breakdown["energy_basis"] = _UNNETTABLE
+            return None
+        else:
+            injection_basis = _NO_INJECTION_YEAR
+
+    # The COHORT card, not today's. The supplier's yearly fixed fee rides on
+    # the energy leg (fees._annual_static_fees reads it off snapshot.energy),
+    # and the splice is what replaces that leg, so billing the fee off
+    # `snapshot` put this figure half on the signing vintage and half on the
+    # card a new customer would get today. Every other full-year path bills
+    # the cohort: the year-to-date walk through _effective_snapshot_for_month,
+    # and the compare page by re-pointing its own snapshot at the spliced one.
+    # The overlays are untouched by the splice, so the network, tax, prosumer
+    # and capacity legs are the same either way.
+    # Under netting each side has to be priced on its own hour-of-day shape.
+    # A reversing meter nets against the rate in force at the time, and the two
+    # shapes are opposites: consumption is evening-heavy, export is a midday
+    # bell. Netting the annual totals first and pricing the residue at the
+    # CONSUMPTION-weighted rate values exported kWh at hours they were never
+    # produced in, which is what the compare page and the live sensor both
+    # stopped doing. ``None`` keeps that older behaviour for an entry with no
+    # measured export shape, which under this regime cannot happen: the branch
+    # above refuses a compensation year without a full trailing year of
+    # feed-in.
+    export_per_kwh: float | None = None
+    if regime == SOLAR_REGIME_COMPENSATION and inj_hour_weights:
+        export_per_kwh = _tou_weighted_per_kwh(
+            priced, dso, region, dt_util.now(), None, meter, dso_mode, inj_hour_weights
+        )
+    # What is left of the household's first-year welcome credit over the
+    # coming year, off the card it signed and capped on the same three
+    # components as the running bill. Zero without a start date, and zero
+    # once the first year is over.
+    from .cohort import _parse_iso_date
+    from .compare_quote import _annual_welcome_credit
+
+    welcome_credit = _annual_welcome_credit(
+        priced,
+        signing if signing is not None else priced,
+        _parse_iso_date(entry.data.get(CONF_CONTRACT_START_DATE)),
+        dt_util.now(),
+        dso,
+        region,
+        None,
+        meter,
+        dso_mode,
+        hour_weights,
+        annual.kwh,
+        annual_inj,
+        regime=regime,
+    )
+    # Under compensation each meter register nets on its own, so the bill needs
+    # the household's own day/night split of both sides rather than two annual
+    # totals; see the clamp in _annual_bill.
+    register_weights = None
+    if regime == SOLAR_REGIME_COMPENSATION and export_per_kwh is not None:
+        from .compare_weighting import _register_weights
+
+        register_weights = (
+            _register_weights(region, hour_weights, meter=meter, dso_mode=dso_mode),
+            _register_weights(region, inj_hour_weights, meter=meter, dso_mode=dso_mode),
+        )
+    projected = _annual_bill(
+        priced,
+        entry,
+        billed_peak_kw,
+        per_kwh,
+        annual.kwh,
+        annual_inj,
+        inj_rate,
+        export_per_kwh=export_per_kwh,
+        meter=meter,
+        welcome_credit_eur=welcome_credit,
+        register_weights=register_weights,
+    )
+    breakdown["welcome_credit_eur"] = welcome_credit
+
+    breakdown["energy_basis"] = (
+        "this month's index, held for a full year"
+        if held
+        else "today's published rate, held for a full year"
+    )
+    breakdown["contract_basis"] = _contract_basis(entry, today)
+    breakdown["fee_basis"] = "today's network tariffs, taxes and fees, held for a year"
+    breakdown["volume_basis"] = annual.source
+    breakdown["injection_basis"] = injection_basis
+    breakdown["annual_kwh"] = annual.kwh
+    breakdown["annual_injection_kwh"] = annual_inj
+    return projected

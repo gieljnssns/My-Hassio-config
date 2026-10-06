@@ -1,0 +1,212 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Belgische Wasserpreise",
+        "description": "Geben Sie Ihre Postleitzahl ein, wir ordnen sie dem zuständigen Wasserversorger zu. Schlägt das fehl, wählen Sie im nächsten Schritt selbst aus.",
+        "data": {
+          "postcode": "Postleitzahl"
+        }
+      },
+      "manual": {
+        "title": "Wasserversorger wählen",
+        "description": "Für diese Postleitzahl konnte kein Versorger ermittelt werden. Bitte unten auswählen.",
+        "data": {
+          "utility": "Versorger"
+        }
+      },
+      "choose": {
+        "title": "Wasserversorger wählen",
+        "description": "Ihre Postleitzahl wird von mehreren Versorgern bedient -- jeder beliefert andere Straßen in Ihrer Gegend. Wählen Sie den Versorger, der Sie abrechnet (sehen Sie im Zweifel auf Ihrer letzten Wasserrechnung nach).",
+        "data": {
+          "utility": "Versorger"
+        }
+      },
+      "reconfigure": {
+        "title": "Wasserversorger neu einrichten",
+        "description": "Wählen Sie, wie Sie diesen Eintrag aktualisieren möchten. Nach einem Umzug ist die erneute Postleitzahl-Zuordnung die richtige Wahl; wählen Sie den Versorger direkt, wenn die Postleitzahl den falschen Versorger ausgewählt hat.",
+        "menu_options": {
+          "reconfigure_postcode": "Postleitzahl aktualisieren und Versorger neu zuordnen",
+          "reconfigure_manual": "Versorger direkt auswählen"
+        }
+      },
+      "reconfigure_postcode": {
+        "title": "Postleitzahl aktualisieren",
+        "description": "Geben Sie die neue Postleitzahl für diesen Eintrag ein. Wir ermitteln den Versorger erneut und laden die Integration neu. Jahresverbrauch und der Wasserzähler-Sensor bleiben erhalten. Gemeldete Bewohner und der Sozialtarif gelten nur in Flandern: Sie bleiben beim Wechsel zu einem anderen flämischen Versorger erhalten, werden verworfen, wenn der neue Versorger nicht flämisch ist, und beim Wechsel nach Flandern abgefragt; die gespeicherte Gemeinde wird gelöscht, wenn sich der ermittelte Versorger ändert (der neue Versorger verwendet andere Gemeinde-IDs).",
+        "data": {
+          "postcode": "Postleitzahl"
+        }
+      },
+      "reconfigure_manual": {
+        "title": "Wasserversorger wählen",
+        "description": "Wählen Sie den Versorger, der Sie beliefert. Jahresverbrauch und der Wasserzähler-Sensor bleiben erhalten. Gemeldete Bewohner und der Sozialtarif gelten nur in Flandern: Sie bleiben beim Wechsel zu einem anderen flämischen Versorger erhalten, werden verworfen, wenn der neue Versorger nicht flämisch ist, und beim Wechsel nach Flandern abgefragt; die gespeicherte Gemeinde wird gelöscht, wenn Sie einen anderen Versorger wählen (Gemeinde-IDs sind zwischen Versorgern nicht austauschbar). Versorger mit gemeindeabhängigem Tarif (De Watergroep / Farys / Pidpa / Water-link) fragen anschließend die Gemeinde ab.",
+        "data": {
+          "utility": "Versorger"
+        }
+      },
+      "reconfigure_choose": {
+        "title": "Wasserversorger wählen",
+        "description": "Ihre Postleitzahl wird von mehreren Versorgern bedient -- jeder beliefert andere Straßen. Wählen Sie den Versorger, der Sie abrechnet. Jahresverbrauch und der Wasserzähler-Sensor bleiben erhalten. Gemeldete Bewohner und der Sozialtarif gelten nur in Flandern: Sie bleiben beim Wechsel zu einem anderen flämischen Versorger erhalten, werden verworfen, wenn der neue Versorger nicht flämisch ist, und beim Wechsel nach Flandern abgefragt; die gespeicherte Gemeinde wird gelöscht, wenn Sie einen anderen Versorger wählen.",
+        "data": {
+          "utility": "Versorger"
+        }
+      },
+      "reconfigure_household": {
+        "title": "Haushalt für den flämischen Tarif",
+        "description": "Der neue Versorger ist flämisch, und der flämische Tarif hängt von der Zahl der gemeldeten Bewohner an der Adresse und vom Sozialtarif ab. Geben Sie beide hier an; sie lassen sich später in den Optionen des Eintrags ändern.",
+        "data": {
+          "gedomicilieerd_persons": "Gemeldete Bewohner",
+          "social_tariff": "Sozialtarif (80% Ermäßigung)"
+        }
+      },
+      "reconfigure_commune": {
+        "title": "Gemeinde wählen",
+        "description": "Wählen Sie die Gemeinde dieser Adresse. Versorger mit gemeindeabhängigem Tarif (De Watergroep / Farys / Pidpa / Water-link) berechnen leicht unterschiedliche Tarife je Gemeinde; leer lassen, um den Standardtarif des Versorgers zu verwenden, außer wie unten angegeben, und später über die Optionen des Eintrags zu wählen.",
+        "data": {
+          "commune": "Gemeinde"
+        },
+        "data_description": {
+          "commune": "Wo der Versorger Ihre Postleitzahl über eine eigene Gemeinde abrechnet, ist diese Gemeinde vorausgewählt, und das Leeren bleibt nicht bestehen: Sie kehrt beim nächsten Neuladen zurück. Wählen Sie eine andere Gemeinde, um nach einer anderen Karte berechnet zu werden."
+        }
+      },
+      "options": {
+        "title": "Jahresverbrauch",
+        "description": "Ihr jährlicher Wasserverbrauch in Kubikmeter. Flämische Versorger benötigen außerdem die Zahl der gemeldeten Bewohner (bestimmt das Basisvolumen) und eine Option für den VMM-Sozialtarif. Optional: ein Wasserzähler-Sensor (kumulative m³, device_class=water) für den Jahres-Sensor, der den Verbrauch ab 1. Januar aus dem HA-Recorder liest.",
+        "data": {
+          "consumption_m3_per_year": "Verbrauch (m³ / Jahr)",
+          "gedomicilieerd_persons": "Gemeldete Bewohner (nur Flandern)",
+          "social_tariff": "Sozialtarif (Flandern, 80% Ermäßigung)",
+          "water_meter_sensor": "Wasserzähler-Sensor (optional; vom Energy-Dashboard automatisch erkannt, wenn leer)",
+          "card_archive": "Das Kartenarchiv des Projekts lesen, wenn der Versorger nicht erreichbar ist und keine aktuelle Karte zwischengespeichert ist (die Anfrage nennt Ihren Versorger und Ihre Gemeinde)",
+          "commune": "Gemeinde (nur für Per-Gemeinde-Versorger: De Watergroep / Farys / Pidpa / Water-link)"
+        },
+        "data_description": {
+          "commune": "Wo der Versorger Ihre Postleitzahl über eine eigene Gemeinde abrechnet, ist diese Gemeinde vorausgewählt, und das Leeren bleibt nicht bestehen: Sie kehrt beim nächsten Neuladen zurück. Wählen Sie eine andere Gemeinde, um nach einer anderen Karte berechnet zu werden."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Dieser Wasserversorger ist bereits konfiguriert.",
+      "already_in_progress": "Dieser Wasserversorger wird bereits in einem anderen Dialog eingerichtet.",
+      "entry_removed": "Dieser Eintrag wurde entfernt, während der Dialog geöffnet war; es wurde nichts geändert.",
+      "invalid_flow_state": "Die Konfiguration wurde unterbrochen; bitte von vorne beginnen.",
+      "reconfigure_successful": "Der Eintrag wurde aktualisiert und neu geladen."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Jahresverbrauch",
+        "data": {
+          "consumption_m3_per_year": "Verbrauch (m³ / Jahr)",
+          "gedomicilieerd_persons": "Gemeldete Bewohner (nur Flandern)",
+          "social_tariff": "Sozialtarif (Flandern, 80% Ermäßigung)",
+          "water_meter_sensor": "Wasserzähler-Sensor (optional; vom Energy-Dashboard automatisch erkannt, wenn leer)",
+          "card_archive": "Das Kartenarchiv des Projekts lesen, wenn der Versorger nicht erreichbar ist und keine aktuelle Karte zwischengespeichert ist (die Anfrage nennt Ihren Versorger und Ihre Gemeinde)",
+          "commune": "Gemeinde (nur für Per-Gemeinde-Versorger: De Watergroep / Farys / Pidpa / Water-link)"
+        },
+        "data_description": {
+          "commune": "Wo der Versorger Ihre Postleitzahl über eine eigene Gemeinde abrechnet, ist diese Gemeinde vorausgewählt, und das Leeren bleibt nicht bestehen: Sie kehrt beim nächsten Neuladen zurück. Wählen Sie eine andere Gemeinde, um nach einer anderen Karte berechnet zu werden."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "yearly_fee": {
+        "name": "Jährliche Grundgebühr"
+      },
+      "basis_rate": {
+        "name": "Basistarif"
+      },
+      "comfort_rate": {
+        "name": "Komforttarif"
+      },
+      "sanering_rate": {
+        "name": "Abwassergebühr"
+      },
+      "all_in_basis": {
+        "name": "Gesamtpreis Basistarif"
+      },
+      "projected_annual_cost": {
+        "name": "Geschätzte Jahreskosten"
+      },
+      "current_year_cost": {
+        "name": "Kosten dieses Jahr"
+      },
+      "ytd_consumption": {
+        "name": "Verbrauch dieses Jahr"
+      },
+      "rolling_year_consumption": {
+        "name": "Verbrauch der letzten 12 Monate"
+      },
+      "rolling_year_cost": {
+        "name": "Kosten der letzten 12 Monate"
+      },
+      "projected_year_consumption": {
+        "name": "Erwarteter Jahresverbrauch"
+      },
+      "projected_year_end_cost": {
+        "name": "Erwartete Kosten zum Jahresende"
+      }
+    }
+  },
+  "services": {
+    "backfill_prices": {
+      "name": "Preisverlauf nachladen",
+      "description": "Importiert flache stündliche Long-Term-Statistics-Zeilen für die Preissensoren dieser Integration, sodass die History- und Energy-Dashboards eine Tariflinie vor dem Installationszeitpunkt anzeigen.",
+      "fields": {
+        "entry_id": {
+          "name": "Konfigurationseintrag",
+          "description": "Optional. Der zu nachladende Konfigurationseintrag. Leer lassen, um jeden geladenen Eintrag zu nachladen. Erforderlich, wenn Vor dem Import löschen aktiv ist."
+        },
+        "start_date": {
+          "name": "Startdatum",
+          "description": "Optional. Frühestes Datum zum Nachladen. Standard ist der 1. Januar des aktuellen Jahres. Wird auf valid_from des Tarif-Snapshots begrenzt."
+        },
+        "clear": {
+          "name": "Vor dem Import löschen",
+          "description": "Wenn aktiv, werden die bestehenden Long-Term-Statistics für die gewählten Sensoren vor dem Import gelöscht. Standardmäßig deaktiviert. Erfordert einen Konfigurationseintrag: alle geladenen Einträge auf einmal zu löschen ist unumkehrbar, daher wird diese Kombination abgelehnt."
+        }
+      }
+    }
+  },
+  "issues": {
+    "operator_moved": {
+      "title": "{utility}: Ihre Postleitzahl verweist jetzt auf einen anderen Versorger",
+      "description": "Die in diesem Eintrag gespeicherte Postleitzahl verweist auf {resolved} und nicht auf {utility}. Die Postleitzahlentabelle wurde nach dem Anlegen dieses Eintrags korrigiert, daher wird weiterhin der Tarif von {utility} abgerufen und Ihre Rechnung daraus berechnet.\n\nPrüfen Sie es und wechseln Sie, wenn es zutrifft: Einstellungen > Geräte und Dienste > {utility} > die drei Punkte > Neu konfigurieren. Es wird nichts für Sie geändert, denn ein Wechsel des Versorgers löscht auch die Gemeinde und die flämischen Haushaltseinstellungen."
+    },
+    "several_water_meters": {
+      "title": "{utility}: mehr als ein Wasserz\u00e4hler im Energie-Dashboard",
+      "description": "Das Energie-Dashboard f\u00fchrt {count} Wasserquellen, und diese Integration rechnet mit einem Z\u00e4hler. Sie rechnet derzeit mit der zuerst gespeicherten Quelle, was der Reihenfolge des Hinzuf\u00fcgens entspricht und nichts dar\u00fcber aussagt, welchen Z\u00e4hler Ihr Versorger abrechnet.\n\nW\u00e4hlen Sie den Z\u00e4hler in den Optionen der Integration (Einstellungen > Ger\u00e4te und Dienste > {utility} > Konfigurieren > Wasserz\u00e4hler-Sensor). Dieser Hinweis verschwindet, sobald einer gesetzt ist."
+    },
+    "snapshot_stale": {
+      "title": "{utility}-Tarif-Snapshot ist veraltet",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "{utility}-Tarifabruf erneut versuchen",
+            "description": "Der letzte erfolgreich abgerufene {utility}-Tarif ist {age_days} Tage alt (gültig bis {valid_until}). Letzter Fehler: {last_error}.\n\nKlicken Sie auf Senden, um eine sofortige Aktualisierung auszulösen. Die Repair-Karte verschwindet automatisch, wenn der nächste Abruf einen neuen Snapshot liefert; andernfalls bleibt sie sichtbar, um es erneut zu versuchen oder die zugrundeliegende Ursache zu untersuchen (prüfen Sie die GitHub-Issues oder den täglichen live-check Workflow-Lauf)."
+          }
+        },
+        "abort": {
+          "still_stale": "Die Aktualisierung wurde ausgeführt, aber der {utility}-Snapshot ist weiterhin veraltet, daher bleibt die Repair-Karte sichtbar. Versuchen Sie es später erneut, oder prüfen Sie die GitHub-Issues und den täglichen live-check Workflow-Lauf auf die zugrundeliegende Ursache."
+        }
+      }
+    },
+    "projection_outdated": {
+      "title": "{utility}-Projektion nutzt einen veralteten Verbrauchswert",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Ihren Verbrauch von {year} für die {utility}-Projektion verwenden",
+            "description": "Ihr Wasserzähler hat im gesamten Jahr {year} {metered} m³ gemessen. Der Sensor für die projizierten Jahreskosten steht weiterhin auf {configured} m³ pro Jahr.\n\nKlicken Sie auf Senden, um den konfigurierten Wert durch {metered} m³ zu ersetzen. Die projizierten Kosten werden sofort aktualisiert. Die Sensoren seit dem 1. Januar ändern sich in beiden Fällen nicht, da sie immer den Zähler lesen und nicht diese Einstellung.\n\nIgnorieren Sie diese Karte, um {configured} m³ beizubehalten."
+          }
+        },
+        "abort": {
+          "cannot_apply": "Der {utility}-Eintrag kann nicht mehr aktualisiert werden, es wurde daher nichts geändert. Wahrscheinlich wurde er entfernt, während diese Karte offen war."
+        }
+      }
+    }
+  }
+}

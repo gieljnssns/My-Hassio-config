@@ -1,0 +1,188 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Belgian Water Prices",
+        "description": "Enter your postcode and we'll match you to the right water utility. If we can't, you'll pick from a list on the next step.",
+        "data": {
+          "postcode": "Postcode"
+        }
+      },
+      "manual": {
+        "title": "Pick your water utility",
+        "description": "We could not resolve a utility for that postcode. Pick yours below.",
+        "data": {
+          "utility": "Utility"
+        }
+      },
+      "choose": {
+        "title": "Pick your water utility",
+        "description": "Your postcode is shared by more than one utility -- they each serve different streets in your area. Pick the one that bills you (check your last water bill if you're not sure).",
+        "data": {
+          "utility": "Utility"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure water utility",
+        "description": "Pick how you want to update this entry. Re-resolving by postcode is the right call after a move; choose the utility directly if the postcode resolver picked the wrong operator for you.",
+        "menu_options": {
+          "reconfigure_postcode": "Update postcode and re-resolve the utility",
+          "reconfigure_manual": "Pick the utility directly"
+        }
+      },
+      "reconfigure_postcode": {
+        "title": "Update your postcode",
+        "description": "Enter the new postcode for this entry. We'll re-resolve the utility and reload the integration. Annual consumption and the water meter sensor are kept. Registered residents and the social tariff are Flemish-only settings: they survive a move to another Flemish operator, are dropped when the new operator is not Flemish, and are asked for on a move into Flanders; the saved commune is cleared if the resolved utility changes (the new utility uses different commune IDs).",
+        "data": {
+          "postcode": "Postcode"
+        }
+      },
+      "reconfigure_manual": {
+        "title": "Pick your water utility",
+        "description": "Pick the utility that serves you. Annual consumption and the water meter sensor are kept. Registered residents and the social tariff are Flemish-only settings: they survive a move to another Flemish operator, are dropped when the new operator is not Flemish, and are asked for on a move into Flanders; the saved commune is cleared if you pick a different operator (their commune IDs are not interchangeable). Per-commune operators (De Watergroep / Farys / Pidpa / Water-link) ask for the commune next.",
+        "data": {
+          "utility": "Utility"
+        }
+      },
+      "reconfigure_choose": {
+        "title": "Pick your water utility",
+        "description": "Your postcode is shared by more than one utility -- they each serve different streets in your area. Pick the one that bills you. Annual consumption and the water meter sensor are kept. Registered residents and the social tariff are Flemish-only settings: they survive a move to another Flemish operator, are dropped when the new operator is not Flemish, and are asked for on a move into Flanders; the saved commune is cleared if you pick a different operator.",
+        "data": {
+          "utility": "Utility"
+        }
+      },
+      "reconfigure_household": {
+        "title": "Household for the Flemish tariff",
+        "description": "The new operator is Flemish, and the Flemish tariff depends on the number of registered residents at the address and on the social tariff. Enter them here; both can be changed later in the entry's options.",
+        "data": {
+          "gedomicilieerd_persons": "Registered residents",
+          "social_tariff": "Social tariff (80% reduction)"
+        }
+      },
+      "reconfigure_commune": {
+        "title": "Pick your commune",
+        "description": "Pick the commune this address belongs to. Per-commune operators (De Watergroep / Farys / Pidpa / Water-link) charge slightly different rates per commune; leave blank to use the operator's default, except as noted below, and revisit the choice later via the entry's options.",
+        "data": {
+          "commune": "Commune"
+        },
+        "data_description": {
+          "commune": "Where the operator bills your postcode on a commune of its own, that commune is pre-selected, and clearing it does not stick: it comes back on the next reload. Pick another commune to be priced on another card."
+        }
+      },
+      "options": {
+        "title": "Annual consumption",
+        "description": "Your annual water consumption in cubic metres. Used by the projected-cost sensor; defaults to 80 m³/year. Flemish utilities also need the number of registered residents (drives the basis volume) and an opt-in for the VMM social tariff. Optionally point at a water meter sensor (cumulative m³, device_class=water) so the year-to-date cost sensor can read consumption since 1 January from Home Assistant's recorder.",
+        "data": {
+          "consumption_m3_per_year": "Consumption (m³ / year)",
+          "gedomicilieerd_persons": "Registered residents (Flanders only)",
+          "social_tariff": "Social tariff (Flanders, 80% reduction)",
+          "commune": "Commune (per-commune utilities only: De Watergroep / Farys / Pidpa / Water-link)",
+          "water_meter_sensor": "Water meter sensor (optional override; auto-detected from the Energy dashboard if blank)",
+          "card_archive": "Read the project's card archive when the utility is unreachable and no recent card is cached (the request names your utility and commune)"
+        },
+        "data_description": {
+          "commune": "Where the operator bills your postcode on a commune of its own, that commune is pre-selected, and clearing it does not stick: it comes back on the next reload. Pick another commune to be priced on another card."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This water utility is already configured.",
+      "already_in_progress": "This water utility is already being set up in another dialog.",
+      "entry_removed": "This entry was removed while the dialog was open, so nothing was changed.",
+      "invalid_flow_state": "Configuration was interrupted; please start over from the beginning.",
+      "reconfigure_successful": "The entry was updated and reloaded."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Annual consumption",
+        "data": {
+          "consumption_m3_per_year": "Consumption (m³ / year)",
+          "gedomicilieerd_persons": "Registered residents (Flanders only)",
+          "social_tariff": "Social tariff (Flanders, 80% reduction)",
+          "commune": "Commune (per-commune utilities only: De Watergroep / Farys / Pidpa / Water-link)",
+          "water_meter_sensor": "Water meter sensor (optional override; auto-detected from the Energy dashboard if blank)",
+          "card_archive": "Read the project's card archive when the utility is unreachable and no recent card is cached (the request names your utility and commune)"
+        },
+        "data_description": {
+          "commune": "Where the operator bills your postcode on a commune of its own, that commune is pre-selected, and clearing it does not stick: it comes back on the next reload. Pick another commune to be priced on another card."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "yearly_fee": {"name": "Yearly fixed fee"},
+      "basis_rate": {"name": "Basis rate"},
+      "comfort_rate": {"name": "Comfort rate"},
+      "sanering_rate": {"name": "Sewerage rate"},
+      "all_in_basis": {"name": "All-in basis rate"},
+      "projected_annual_cost": {"name": "Projected annual cost"},
+      "current_year_cost": {"name": "Current year cost"},
+      "ytd_consumption": {"name": "Year-to-date consumption"},
+      "rolling_year_consumption": {"name": "Rolling year consumption"},
+      "rolling_year_cost": {"name": "Rolling year cost"},
+      "projected_year_consumption": {"name": "Projected year consumption"},
+      "projected_year_end_cost": {"name": "Projected year-end cost"}
+    }
+  },
+  "services": {
+    "backfill_prices": {
+      "name": "Backfill price history",
+      "description": "Import flat-line hourly long-term-statistics rows for this integration's price sensors so the History and Energy dashboards show a tariff line going back further than the install date.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry",
+          "description": "Optional. The config entry to backfill. Leave empty to backfill every loaded entry. Required when Clear before importing is on."
+        },
+        "start_date": {
+          "name": "Start date",
+          "description": "Optional. Earliest date to backfill. Defaults to 1 January of the current year. Clamped to the tariff snapshot's valid_from."
+        },
+        "clear": {
+          "name": "Clear before importing",
+          "description": "If on, wipe the existing long-term statistics for the targeted sensors before importing. Off by default. Requires a config entry: clearing every loaded entry at once is irreversible, so the service refuses that combination."
+        }
+      }
+    }
+  },
+  "issues": {
+    "operator_moved": {
+      "title": "{utility}: your postcode now points to a different operator",
+      "description": "The postcode saved on this entry resolves to {resolved}, not {utility}. The resolver was corrected after this entry was set up, so it is still fetching {utility}'s tariff and your bill is computed from it.\n\nCheck it and switch if it is right: Settings > Devices & services > {utility} > the three dots > Reconfigure. Nothing is changed for you, because changing operator also clears the commune and the Flemish household settings."
+    },
+    "several_water_meters": {
+      "title": "{utility}: more than one water meter on the Energy dashboard",
+      "description": "The Energy dashboard lists {count} water sources, and this integration bills one meter. It is currently billing whichever the dashboard stores first, which reflects the order they were added and nothing about which one your utility invoices.\n\nPick the meter yourself in the integration's options (Settings > Devices & services > {utility} > Configure > Water meter sensor). This notice clears once one is set."
+    },
+    "snapshot_stale": {
+      "title": "{utility} tariff snapshot is stale",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Retry the {utility} tariff fetch",
+            "description": "The last successfully fetched {utility} tariff is {age_days} days old (valid until {valid_until}). Last fetch error: {last_error}.\n\nPress Submit to trigger an immediate refresh. The Repair card auto-clears if the next fetch returns a fresh snapshot; otherwise it stays so you can retry again or investigate the underlying failure (check the integration's GitHub issues or the daily live-check workflow run)."
+          }
+        },
+        "abort": {
+          "still_stale": "The refresh ran, but the {utility} snapshot is still stale, so the Repair card stays. Retry later, or check the integration's GitHub issues and the daily live-check workflow run for the underlying failure."
+        }
+      }
+    },
+    "projection_outdated": {
+      "title": "{utility} projection uses an outdated consumption figure",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Use your {year} water use for the {utility} projection",
+            "description": "Your water meter measured {metered} m³ over the whole of {year}. The projected annual cost sensor is still set to {configured} m³ per year.\n\nPress Submit to replace the configured figure with {metered} m³. The projected cost updates immediately. The year-to-date sensors are unaffected either way, since those always read the meter rather than this setting.\n\nIgnore this card to keep {configured} m³."
+          }
+        },
+        "abort": {
+          "cannot_apply": "The {utility} entry can no longer be updated, so nothing was changed. It was most likely removed while this card was open."
+        }
+      }
+    }
+  }
+}

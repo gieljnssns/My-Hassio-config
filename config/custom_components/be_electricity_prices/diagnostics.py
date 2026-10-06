@@ -1,0 +1,345 @@
+# Copyright (c) 2026, Renaud Allard <renaud@allard.it>
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+"""Diagnostics support for the Belgian Electricity Prices integration."""
+
+from __future__ import annotations
+
+from datetime import timedelta
+from typing import Any
+
+from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
+
+from .const import (
+    CONF_API_KEY,
+    CONF_CONTRACT,
+    CONF_REGION,
+    CONF_SUPPLIER,
+)
+from .cohort import ytd_window_start
+from .contract_periods import current_period_start
+from .coordinator import (
+    BePricesCoordinator,
+)
+from .snapshot_resolve import entry_annual_kwh
+from .energy_meters import (
+    _kwh_sensor_ids,
+    _recorder_daily_kwh,
+)
+from .meter_daily import _resolve_daily_kwh
+from .meter_hourly import _metered_sides
+from .snapshot_store import (
+    _monthly_snapshots,
+    _shared_failed_fetches,
+)
+from .pricing import breakdown_row
+from .sensor_values import _current_injection
+
+TO_REDACT = {CONF_API_KEY}
+
+
+def _scrub_secret(text: str, secret: str | None) -> str:
+    """Mask ``secret`` anywhere it appears in a free-text field.
+
+    ``async_redact_data`` only masks known config keys; the ``last_error``
+    and ``shared_failure`` strings are free text built from upstream
+    exception messages. An ENTSO-E transport error string can, in narrow
+    cases, embed the request URL (and thus the securityToken), so scrub
+    the key out of those fields too as defence-in-depth before the dump
+    leaves the instance."""
+    if secret and text:
+        return text.replace(secret, "**REDACTED**")
+    return text
+
+
+async def _kwh_window(
+    hass: HomeAssistant, entry: ConfigEntry, days: int, *, side: str
+) -> float | None:
+    """Sum of kWh for ``side`` (``consumption`` or ``injection``) over
+    the last ``days`` days from the entry's configured sensors.
+
+    Returns ``None`` only when no sensor is wired for ``side`` (rendered
+    as a missing field). A wired sensor returns its summed kWh, including
+    ``0.0`` when the recorder has no rows or the window genuinely totals
+    zero, so a bug-report reader can tell an unconfigured sensor apart
+    from a wired one that reads zero."""
+    day_id, night_id, total_id = _kwh_sensor_ids(entry, side)
+    today = dt_util.now().date()
+    start = today - timedelta(days=days)
+    if day_id and night_id:
+        d = await _recorder_daily_kwh(hass, day_id, start, today)
+        n = await _recorder_daily_kwh(hass, night_id, start, today)
+        return sum(d.values()) + sum(n.values())
+    if total_id:
+        d = await _recorder_daily_kwh(hass, total_id, start, today)
+        return sum(d.values())
+    return None
+
+
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> dict[str, Any]:
+    """Return diagnostics for one config entry."""
+    # Mid-reload, ``entry.runtime_data`` is HA's ``UNDEFINED`` singleton:
+    # a user clicking "Download diagnostics" in that window would
+    # otherwise see ``AttributeError`` rather than a usable dump.
+    # Detect the sentinel via the singleton's type name (importing
+    # UNDEFINED would couple to a HA-private symbol).
+    runtime = getattr(entry, "runtime_data", None)
+    if runtime is None or type(runtime).__name__ == "UndefinedType":
+        return {"status": "coordinator_not_ready"}
+    coordinator: BePricesCoordinator = runtime
+    data = coordinator.data
+    if data is None:
+        # Same answer for a different reason: the entry is loaded but has no
+        # price table, because the supplier's card cannot be read and no
+        # cached one could stand in. Report it rather than raising, so the bug
+        # report a user is trying to file actually gets filed. Scrubbed like
+        # the full dump's error fields below: it is the same free text.
+        return {
+            "status": "no_snapshot",
+            "last_error": _scrub_secret(
+                coordinator._last_error, entry.data.get(CONF_API_KEY)
+            ),
+        }
+
+    hourly = sorted(data.hourly.items())
+
+    # Recorder-backed consumption + injection roll-ups so the bug
+    # reporter can see at a glance whether their kWh sensors are wired
+    # up and feeding the recorder: the raw sums of the wired sensors, from
+    # the day current_year_cost reads from.
+    today = dt_util.now().date()
+    ytd_start = ytd_window_start(entry, today)
+    ytd_days = (today - ytd_start).days
+    cons_year = await _kwh_window(hass, entry, 365, side="consumption")
+    cons_ytd = await _kwh_window(hass, entry, ytd_days, side="consumption")
+    inj_year = await _kwh_window(hass, entry, 365, side="injection")
+    inj_ytd = await _kwh_window(hass, entry, ytd_days, side="injection")
+    # And what the bill actually reads beside them: the sensors each side is
+    # billed off, once a broken pair, a totals sensor standing in for one and
+    # a silent side have been accounted for. The raw sums alone hid a year
+    # billed off an empty totals sensor behind the right kWh (discussion
+    # #66). Read the way the last bill was, over the days the entry's own
+    # contract bills: the per-day walk leaves days_seen in its breakdown and
+    # decides the pair against the totals sensor day by day, so an hour one
+    # register missed can put the hourly reader on the totals sensor while the
+    # bill read the pair. The kWh are the ones that bill priced, from its
+    # breakdown: a month it left out whole (days_priced or hours_priced under
+    # the days or hours seen) is not in them, where a sum of this read was.
+    # ``None`` on a side that cannot be billed at all.
+    ytd = data.ytd_diagnostics or {}
+    own_start = current_period_start(entry.data, ytd_start)
+    billable = False
+    billed_from: dict[str, tuple[str, ...]] = {}
+    # Only the hourly reader spreads a meter read once a day over its hours;
+    # a per-day bill has no hours to spread, so the flag reads None there.
+    read_daily: dict[str, bool] = {}
+    if "days_seen" in ytd:
+        billable = (
+            await _resolve_daily_kwh(
+                hass, entry, today, start=own_start, billed=billed_from
+            )
+            is not None
+        )
+    else:
+        sides = await _metered_sides(hass, entry, own_start, today)
+        if sides is not None:
+            billable = True
+            billed_from = {
+                "consumption": sides.consumption.sensors,
+                "injection": sides.injection.sensors,
+                "silent": sides.silent,
+            }
+            read_daily = {
+                "consumption": sides.consumption.read_daily,
+                "injection": sides.injection.read_daily,
+            }
+
+    def _billed(side: str) -> dict[str, Any]:
+        if not billable:
+            return {
+                "billed_from": None,
+                "billed_ytd_kwh": None,
+                "read_once_a_day": None,
+            }
+        kwh = ytd.get(f"{side}_ytd_kwh")
+        return {
+            "billed_from": list(billed_from.get(side, ())),
+            "billed_ytd_kwh": None if kwh is None else round(kwh, 3),
+            "read_once_a_day": read_daily.get(side),
+        }
+
+    # Per-month archived snapshot publication labels: the YTD path
+    # caches one snapshot per (supplier, contract, region, YYYY-MM).
+    # Surfacing the labels makes "did the right cards land for past
+    # months?" a one-glance check in a diagnostics dump.
+    monthly_labels: dict[str, str | None] = {}
+    extractor_id = entry.data.get(CONF_SUPPLIER)
+    contract_id = entry.data.get(CONF_CONTRACT)
+    region = entry.data.get(CONF_REGION)
+    if extractor_id and contract_id and region:
+        for key, snap in sorted(_monthly_snapshots(hass).items()):
+            if key[0] == extractor_id and key[1] == contract_id and key[2] == region:
+                monthly_labels[key[3]] = (
+                    snap.publication_label if snap is not None else None
+                )
+
+    # Sibling-coordinator negative-fetch markers for this supplier
+    # tuple; lets a bug reporter see whether the integration backed
+    # off and why, without having to grep logs.
+    api_key = entry.data.get(CONF_API_KEY)
+    failed_marker = None
+    if extractor_id and contract_id and region:
+        rec = _shared_failed_fetches(hass).get((extractor_id, contract_id, region))
+        if rec is not None:
+            ts, msg, count = rec
+            failed_marker = {
+                "at": ts.isoformat(),
+                "error": _scrub_secret(msg, api_key),
+                "consecutive": count,
+            }
+
+    # Per-month summary of the replayed day-ahead cache. current_year_cost is
+    # priced off this and nothing else surfaced it, so a replay billing off
+    # wrong stored prices could not be told apart from a wrong tariff or wrong
+    # kWh without asking the user for another round of screenshots. Counts and
+    # extremes rather than the hours themselves: a year is ~8760 values and the
+    # question being asked is only "do these look like the market".
+    spots: dict[str, dict[str, float | int]] = {}
+    for when, value in sorted(coordinator._historical_spots.items()):
+        local = dt_util.as_local(when)
+        row = spots.setdefault(
+            f"{local.year:04d}-{local.month:02d}",
+            {"hours": 0, "mean": 0.0, "min": value, "max": value},
+        )
+        row["hours"] = int(row["hours"]) + 1
+        row["mean"] = float(row["mean"]) + value
+        row["min"] = min(float(row["min"]), value)
+        row["max"] = max(float(row["max"]), value)
+    for row in spots.values():
+        hours = int(row["hours"])
+        row["mean"] = round(float(row["mean"]) / hours, 5) if hours else 0.0
+        row["min"] = round(float(row["min"]), 5)
+        row["max"] = round(float(row["max"]), 5)
+
+    # A sibling map rather than a column in the rows above, which are the same
+    # shape for every entry. Empty unless the entry's feed-in formula is
+    # floored, and then it answers the one question the hourly summary cannot:
+    # how far the one-time refill of the 15-minute slots has got, since an hour
+    # missing from here is replayed off its mean and under-credits.
+    quarter_hours: dict[str, int] = {}
+    for when in coordinator._historical_spot_quarters:
+        local = dt_util.as_local(when)
+        month_key = f"{local.year:04d}-{local.month:02d}"
+        quarter_hours[month_key] = quarter_hours.get(month_key, 0) + 1
+
+    volume = data.volume_projection_diagnostics or {}
+    rolling = data.rolling_volume_diagnostics or {}
+    return {
+        "entry": {
+            "title": entry.title,
+            "data": async_redact_data(dict(entry.data), TO_REDACT),
+            "options": async_redact_data(dict(entry.options), TO_REDACT),
+        },
+        "coordinator": {
+            "snapshot_publication": data.snapshot_publication,
+            # Which card a start date actually resolved to, next to the
+            # per-month labels below: a report that says "my start date does
+            # nothing" is answered by these two lines together.
+            "signing_card": data.signing_card,
+            "snapshot_age_hours": round(data.snapshot_age_hours, 2),
+            "snapshot_stale": data.snapshot_stale,
+            "snapshot_valid_until": (
+                data.snapshot_valid_until.isoformat()
+                if data.snapshot_valid_until
+                else None
+            ),
+            "last_error": _scrub_secret(data.last_error, api_key),
+            "monthly_peak_kw": data.monthly_peak_kw,
+            "monthly_peak_month": (
+                data.monthly_peak_month.isoformat() if data.monthly_peak_month else None
+            ),
+            "capacity_cost_eur": data.capacity_cost_eur,
+            "prosumer_cost_eur": data.prosumer_cost_eur,
+            "yearly_fixed_fee_eur": data.yearly_fixed_fee_eur,
+            "energy_fund_eur_per_month": data.energy_fund_eur_per_month,
+            # Both numbers, because they legitimately differ: the first is what
+            # the last coordinator tick resolved, the second is what the
+            # injection_price entity is showing right now (the current slot of
+            # injection_hourly, falling back to the first). A triage report that
+            # carried only the tick value would not match the entity the user is
+            # complaining about.
+            "injection_price_eur_per_kwh": data.injection_price_eur_per_kwh,
+            "injection_price_current_slot": _current_injection(data),
+            "current_year_cost_eur": data.current_year_cost_eur,
+            "projected_year_cost_eur": data.projected_year_cost_eur,
+            "year_end_cost_eur": data.year_end_cost_eur,
+            "year_end": data.year_end_diagnostics,
+            # The yearly volume the excise band, the network ceiling and a
+            # volume tranche were all resolved against, which is otherwise
+            # invisible: a tiered card publishes one blended rate and nothing
+            # says which side of the tranche the split put the household on.
+            # Not the same as consumption.rolling_year_kwh below, which is the
+            # raw window sum; this is what survived the coverage gate, or the
+            # typed estimate, or the household default.
+            "annual_kwh_priced": round(entry_annual_kwh(entry), 1),
+            "hourly": [breakdown_row(dt_util.as_local(h), bd) for h, bd in hourly],
+        },
+        # rolling_year_kwh is the raw sum of the wired sensors;
+        # rolling_year_sensor_kwh is what the sensor shows, read the way the
+        # bill reads a register pair and scaled across missing days.
+        "consumption": {
+            "rolling_year_kwh": cons_year,
+            "rolling_year_sensor_kwh": data.rolling_year_consumption_kwh,
+            "rolling": rolling.get("consumption"),
+            "ytd_kwh": cons_ytd,
+            "projected_year_kwh": data.projected_year_consumption_kwh,
+            "projection": volume.get("consumption"),
+            **_billed("consumption"),
+        },
+        "injection": {
+            "rolling_year_kwh": inj_year,
+            "rolling_year_sensor_kwh": data.rolling_year_injection_kwh,
+            "rolling": rolling.get("injection"),
+            "ytd_kwh": inj_ytd,
+            "projected_year_kwh": data.projected_year_injection_kwh,
+            "projection": volume.get("injection"),
+            **_billed("injection"),
+        },
+        # The sensors of a meter side that went silent while the other carried
+        # on: a consumption side whose days the bill leaves out of both sides,
+        # or an injection side whose feed-in it leaves out.
+        "silent_meter": list(billed_from.get("silent", ())) if billable else [],
+        "monthly_snapshot_labels": monthly_labels,
+        # EUR/kWh. A month whose mean is far off the Belgian day-ahead average
+        # is the cache, not the card.
+        "spot_cache_by_month": spots,
+        "spot_quarter_hours_by_month": quarter_hours,
+        "shared_failure": failed_marker,
+    }
